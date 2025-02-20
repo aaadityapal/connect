@@ -1276,143 +1276,253 @@ document.addEventListener('DOMContentLoaded', function() {
         if (projectType === 'architecture') {
             substageOptions = `
                 <optgroup label="Concept Drawings">
-                    <option value="concept_plan">Concept Plan</option>
+                    <option value="Concept Plan">Concept Plan</option>
                     <option value="PPT">PPT</option>
                     <option value="3D Model">3D Model</option>
                 </optgroup>
                 
                 <optgroup label="Ground Floor">
-                    <option value="gf_floor_plan">Ground Floor Furniture Layout Plan</option>
-                    <option value="gf_ceiling_plan">Ground Floor Ceiling Plan</option>
-                    <option value="gf_electrical">Ground Floor Electrical Layout</option>
-                    <option value="gf_plumbing">Ground Floor Plumbing Layout</option>
-                    <option value="gf_door_window_schedule">Ground Floor Door & Window Schedule</option>
-                    <option value="gf_working_drawing">Ground Floor Working Drawing</option>
-                    <option value="gf_false_ceiling_layout">Ground Floor False Ceiling Layout Plan</option>
+                    <option value="Ground Floor Furniture Layout Plan">Ground Floor Furniture Layout Plan</option>
+                    <option value="Ground Floor Ceiling Plan">Ground Floor Ceiling Plan</option>
+                    <option value="Ground Floor Electrical Layout">Ground Floor Electrical Layout</option>
+                    <option value="Ground Floor Plumbing Layout">Ground Floor Plumbing Layout</option>
+                    <option value="Ground Floor Door & Window Schedule">Ground Floor Door & Window Schedule</option>
+                    <option value="Ground Floor Working Drawing">Ground Floor Working Drawing</option>
+                    <option value="Ground Floor False Ceiling Layout Plan">Ground Floor False Ceiling Layout Plan</option>
                 </optgroup>
                 
                 <optgroup label="First Floor">
-                    <option value="1f_floor_plan">First Floor Furniture Layout Plan</option>
-                    <option value="1f_ceiling_plan">First Floor Ceiling Plan</option>
-                    <option value="1f_electrical">First Floor Electrical Layout</option>
-                    <option value="1f_plumbing">First Floor Plumbing Layout</option>
-                    <option value="1f_door_window_schedule">First Floor Door & Window Schedule</option>
-                    <option value="1f_working_drawing">First Floor Working Drawing</option>
-                    <option value="1f_false_ceiling_layout">First Floor False Ceiling Layout Plan</option>
+                    <option value="First Floor Furniture Layout Plan">First Floor Furniture Layout Plan</option>
+                    <option value="First Floor Ceiling Plan">First Floor Ceiling Plan</option>
+                    <option value="First Floor Electrical Layout">First Floor Electrical Layout</option>
+                    <option value="First Floor Plumbing Layout">First Floor Plumbing Layout</option>
+                    <option value="First Floor Door & Window Schedule">First Floor Door & Window Schedule</option>
+                    <option value="First Floor Working Drawing">First Floor Working Drawing</option>
+                    <option value="First Floor False Ceiling Layout Plan">First Floor False Ceiling Layout Plan</option>
                 </optgroup>
                 
                 <optgroup label="Second Floor">
-                    <option value="2f_floor_plan">Second Floor Furniture Layout Plan</option>
-                    <option value="2f_ceiling_plan">Second Floor Ceiling Plan</option>
-                    <option value="2f_electrical">Second Floor Electrical Layout</option>
-                    <option value="2f_plumbing">Second Floor Plumbing Layout</option>
-                    <option value="2f_door_window_schedule">Second Floor Door & Window Schedule</option>
-                    <option value="2f_working_drawing">Second Floor Working Drawing</option>
-                    <option value="2f_false_ceiling_layout">Second Floor False Ceiling Layout Plan</option>
+                    <option value="Second Floor Furniture Layout Plan">Second Floor Furniture Layout Plan</option>
+                    <option value="Second Floor Ceiling Plan">Second Floor Ceiling Plan</option>
+                    <option value="Second Floor Electrical Layout">Second Floor Electrical Layout</option>
+                    <option value="Second Floor Plumbing Layout">Second Floor Plumbing Layout</option>
+                    <option value="Second Floor Door & Window Schedule">Second Floor Door & Window Schedule</option>
+                    <option value="Second Floor Working Drawing">Second Floor Working Drawing</option>
+                    <option value="Second Floor False Ceiling Layout Plan">Second Floor False Ceiling Layout Plan</option>
                 </optgroup>
                 
                 <optgroup label="Third Floor">
-                    <option value="3f_floor_plan">Third Floor Furniture Layout Plan</option>
-                    <option value="3f_ceiling_plan">Third Floor Ceiling Plan</option>
-                    <option value="3f_electrical">Third Floor Electrical Layout</option>
-                    <option value="3f_plumbing">Third Floor Plumbing Layout</option>
-                    <option value="3f_door_window_schedule">Third Floor Door & Window Schedule</option>
-                    <option value="3f_working_drawing">Third Floor Working Drawing</option>
-                    <option value="3f_false_ceiling_layout">Third Floor False Ceiling Layout Plan</option>
+                    <option value="Third Floor Furniture Layout Plan">Third Floor Furniture Layout Plan</option>
+                    <option value="Third Floor Ceiling Plan">Third Floor Ceiling Plan</option>
+                    <option value="Third Floor Electrical Layout">Third Floor Electrical Layout</option>
+                    <option value="Third Floor Plumbing Layout">Third Floor Plumbing Layout</option>
+                    <option value="Third Floor Door & Window Schedule">Third Floor Door & Window Schedule</option>
+                    <option value="Third Floor Working Drawing">Third Floor Working Drawing</option>
+                    <option value="Third Floor False Ceiling Layout Plan">Third Floor False Ceiling Layout Plan</option>
                 </optgroup>
                 
                 <optgroup label="Fourth Floor">
-                    <option value="4f_floor_plan">Fourth Floor Furniture Layout Plan</option>
-                    <option value="4f_ceiling_plan">Fourth Floor Ceiling Plan</option>
-                    <option value="4f_electrical">Fourth Floor Electrical Layout</option>
-                    <option value="4f_plumbing">Fourth Floor Plumbing Layout</option>
-                    <option value="4f_door_window_schedule">Fourth Floor Door & Window Schedule</option>
-                    <option value="4f_working_drawing">Fourth Floor Working Drawing</option>
-                    <option value="4f_false_ceiling_layout">Fourth Floor False Ceiling Layout Plan</option>
+                    <option value="Fourth Floor Furniture Layout Plan">Fourth Floor Furniture Layout Plan</option>
+                    <option value="Fourth Floor Ceiling Plan">Fourth Floor Ceiling Plan</option>
+                    <option value="Fourth Floor Electrical Layout">Fourth Floor Electrical Layout</option>
+                    <option value="Fourth Floor Plumbing Layout">Fourth Floor Plumbing Layout</option>
+                    <option value="Fourth Floor Door & Window Schedule">Fourth Floor Door & Window Schedule</option>
+                    <option value="Fourth Floor Working Drawing">Fourth Floor Working Drawing</option>
+                    <option value="Fourth Floor False Ceiling Layout Plan">Fourth Floor False Ceiling Layout Plan</option>
                 </optgroup>
                 
                 <optgroup label="Fifth Floor">
-                    <option value="5f_floor_plan">Fifth Floor Furniture Layout Plan</option>
-                    <option value="5f_ceiling_plan">Fifth Floor Ceiling Plan</option>
-                    <option value="5f_electrical">Fifth Floor Electrical Layout</option>
-                    <option value="5f_plumbing">Fifth Floor Plumbing Layout</option>
-                    <option value="5f_door_window_schedule">Fifth Floor Door & Window Schedule</option>
-                    <option value="5f_working_drawing">Fifth Floor Working Drawing</option>
-                    <option value="5f_false_ceiling_layout">Fifth Floor False Ceiling Layout Plan</option>
+                    <option value="Fifth Floor Furniture Layout Plan">Fifth Floor Furniture Layout Plan</option>
+                    <option value="Fifth Floor Ceiling Plan">Fifth Floor Ceiling Plan</option>
+                    <option value="Fifth Floor Electrical Layout">Fifth Floor Electrical Layout</option>
+                    <option value="Fifth Floor Plumbing Layout">Fifth Floor Plumbing Layout</option>
+                    <option value="Fifth Floor Door & Window Schedule">Fifth Floor Door & Window Schedule</option>
+                    <option value="Fifth Floor Working Drawing">Fifth Floor Working Drawing</option>
+                    <option value="Fifth Floor False Ceiling Layout Plan">Fifth Floor False Ceiling Layout Plan</option>
                 </optgroup>
                 
                 <optgroup label="Structure Drawings">
-                    <option value="excavation_layout_plan">Excavation Layout Plan</option>
-                    <option value="footing_layout_plan">Footing Layout Plan</option>
-                    <option value="column_&_setting_layout_plan">Column & Setting Layout Plan</option>
-                    <option value="column_&_footing_details">Column & Footing Details</option>
-                    <option value="plinth_beam_layout_plan">Plinth Beam Layout Plan</option>
-                    <option value="ground_floor_roof_slab_beam_layout_plan">Ground Floor Roof Slab Beam Layout Plan</option>
-                    <option value="first_floor_roof_slab_beam_layout_plan">First Floor Roof Slab Beam Layout Plan</option>
-                    <option value="second_floor_roof_slab_beam_layout_plan">Second Floor Roof Slab Beam Layout Plan</option>
-                    <option value="third_floor_roof_slab_beam_layout_plan">Third Floor Roof Slab Beam Layout Plan</option>
-                    <option value="fourth_floor_roof_slab_beam_layout_plan">Fourth Floor Roof Slab Beam Layout Plan</option>
-                    <option value="fifth_floor_roof_slab_beam_layout_plan">Fifth Floor Roof Slab Beam Layout Plan</option>
-                    <option value="slab_details">Slab Details</option>
+                    <option value="Excavation Layout Plan">Excavation Layout Plan</option>
+                    <option value="Footing Layout Plan">Footing Layout Plan</option>
+                    <option value="Column & Setting Layout Plan">Column & Setting Layout Plan</option>
+                    <option value="Column & Footing Details">Column & Footing Details</option>
+                    <option value="Plinth Beam Layout Plan">Plinth Beam Layout Plan</option>
+                    <option value="Ground Floor Roof Slab Beam Layout Plan">Ground Floor Roof Slab Beam Layout Plan</option>
+                    <option value="First Floor Roof Slab Beam Layout Plan">First Floor Roof Slab Beam Layout Plan</option>
+                    <option value="Second Floor Roof Slab Beam Layout Plan">Second Floor Roof Slab Beam Layout Plan</option>
+                    <option value="Third Floor Roof Slab Beam Layout Plan">Third Floor Roof Slab Beam Layout Plan</option>
+                    <option value="Fourth Floor Roof Slab Beam Layout Plan">Fourth Floor Roof Slab Beam Layout Plan</option>
+                    <option value="Fifth Floor Roof Slab Beam Layout Plan">Fifth Floor Roof Slab Beam Layout Plan</option>
+                    <option value="Slab Details">Slab Details</option>
                 </optgroup>
                 
                 <optgroup label="Other Drawings">
-                    <option value="site_plan">Site Plan</option>
-                    <option value="elevation_front">Front Elevation</option>
-                    <option value="elevation_rear">Rear Elevation</option>
-                    <option value="elevation_left">Left Side Elevation</option>
-                    <option value="elevation_right">Right Side Elevation</option>
-                    <option value="section_aa">Section A-A</option>
-                    <option value="section_bb">Section B-B</option>
-                    <option value="common_staircase_details">Common Staircase Details</option>
-                    <option value="toilet_detail">Toilet Detail</option>
-                    <option value="door_window_schedule_&_elevation_details">Door & Window Schedule & Elevation Details</option>
-                    <option value="compound_wall">Compound Wall Detail</option>
-                    <option value="landscape_plan">Landscape Plan</option>
+                    <option value="Site Plan">Site Plan</option>
+                    <option value="Front Elevation">Front Elevation</option>
+                    <option value="Rear Elevation">Rear Elevation</option>
+                    <option value="Left Side Elevation">Left Side Elevation</option>
+                    <option value="Right Side Elevation">Right Side Elevation</option>
+                    <option value="Section A-A">Section A-A</option>
+                    <option value="Section B-B">Section B-B</option>
+                    <option value="Common Staircase Details">Common Staircase Details</option>
+                    <option value="Toilet Detail">Toilet Detail</option>
+                    <option value="Door & Window Schedule & Elevation Details">Door & Window Schedule & Elevation Details</option>
+                    <option value="Compound Wall Detail">Compound Wall Detail</option>
+                    <option value="Landscape Plan">Landscape Plan</option>
                 </optgroup>
             `;
         } else if (projectType === 'interior') {
             substageOptions = `
                 <optgroup label="Concept Design">
-                    <option value="concept_board">Concept Board</option>
-                    <option value="mood_board">Mood Board</option>
-                    <option value="material_board">Material Board</option>
-                    <option value="3d_views">3D Views</option>
+                     <option value="Concept Plan">Concept Plan</option>
+                    <option value="PPT">PPT</option>
+                    <option value="3D Model">3D Model</option>
+                    <option value="First Floor Render Plan">First Floor Render Plan</option>
+                    <option value="Second Floor Render Plan">Second Floor Render Plan</option>
+                    <option value="Third Floor Render Plan">Third Floor Render Plan</option>
+                    <option value="Fourth Floor Render Plan">Fourth Floor Render Plan</option>
+                    <option value="Fifth Floor Render Plan">Fifth Floor Render Plan</option>
                 </optgroup>
 
-                <optgroup label="Layout Plans">
-                    <option value="furniture_layout">Furniture Layout Plan</option>
-                    <option value="flooring_layout">Flooring Layout Plan</option>
-                    <option value="ceiling_layout">Ceiling Layout Plan</option>
-                    <option value="electrical_layout">Electrical Layout Plan</option>
-                    <option value="hvac_layout">HVAC Layout Plan</option>
+                <optgroup label="3D Views">
+                    <option value="Daughter's Bed Room">Daughter's Bed Room</option>
+                    <option value="Son's Bed Room">Son's Bed Room</option>
+                    <option value="Master Bed Room">Master Bed Room</option>
+                    <option value="Guest Bed Room">Guest Bed Room</option>
+                    <option value="Toilet 1">Toilet 1</option>
+                    <option value="Toilet 2">Toilet 2</option>
+                    <option value="Toilet 3">Toilet 3</option>
+                    <option value="Toilet 4">Toilet 4</option>
+                    <option value="Toilet 5">Toilet 5</option>
+                    <option value="Prayer Room">Prayer Room</option>
+                    <option value="Study Room">Study Room</option>  
+                    <option value="Home Theater">Home Theater</option>
+                    <option value="GYM / Multi-Purpose Room">GYM / Multi-Purpose Room</option>
+                    <option value="Servant Room">Servant Room</option>
+                    <option value="Family Lounge">Family Lounge</option>
+                    <option value="Staircase">Staircase</option>
+                    <option value="Landscape Area">Landscape Area</option>
+                    <option value="Recreational Area">Recreational Area</option>
+                    <option value="Swimming Pool">Swimming Pool</option>
+                    <option value="Living & Dining Room">Living & Dining Room</option>
+                    <option value="Living Room">Living Room</option>
+                    <option value="Dining Room">Dining Room</option>
+                    <option value="Kitchen">Kitchen</option>
+                    <option value="Balcony 1">Balcony 1</option>
+                    <option value="Balcony 2">Balcony 2</option>
+                    <option value="Balcony 3">Balcony 3</option>
+                    <option value="Balcony 4">Balcony 4</option>
+                    <option value="Balcony 5">Balcony 5</option>
+                    <option value="Utility Area">Utility Area</option>
+                    <option value="Mumty">Mumty Room</option>
+                    <option value="Front Elevation">Front Elevation</option>
+                    <option value="Rear Elevation">Rear Elevation</option>
+                    <option value="Side 1 Elevation">Side 1 Elevation</option>
+                    <option value="Side 2 Elevation">Side 2 Elevation</option>
+                    <option value="Entrace Lobby">Entrace Lobby</option>
+                    <option value="Manager's Cabin">Manager's Cabin</option>
+                    <option value="Work Station Area 1">Work Station Area 1</option>
+                    <option value="Work Station Area 2">Work Station Area 2</option>
+                    <option value="Work Station Area 3">Work Station Area 3</option>
+                    <option value="Work Station Area 4">Work Station Area 4</option>
+                    <option value="Work Station Area 5">Work Station Area 5</option>
+                    <option value="Work Station Area 6">Work Station Area 6</option>
+                    <option value="Reception Area">Reception Area</option>
+                    <option value="Conference Room">Conference Room</option>
+                    <option value="Meeting Room">Meeting Room</option>
+                    <option value="Waiting Area">Waiting Area</option>  
                 </optgroup>
 
-                <optgroup label="Detail Drawings">
-                    <option value="wall_elevation">Wall Elevation</option>
-                    <option value="wall_section">Wall Section Details</option>
-                    <option value="civil_work_details">Civil Work Details</option>
-                    <option value="carpentry_details">Carpentry Details</option>
-                    <option value="kitchen_details">Kitchen Details</option>
-                    <option value="wardrobe_details">Wardrobe Details</option>
-                    <option value="toilet_details">Toilet Details</option>
-                    <option value="door_details">Door Details</option>
+                <optgroup label="Flooring Drawings">
+                    <option value="Ground Floor Flooring Layout Plan">Ground Floor Flooring Layout Plan</option>
+                    <option value="First Floor Flooring Layout Plan">First Floor Flooring Layout Plan</option>
+                    <option value="Second Floor Flooring Layout Plan">Second Floor Flooring Layout Plan</option>
+                    <option value="Third Floor Flooring Layout Plan">Third Floor Flooring Layout Plan</option>
+                    <option value="Fourth Floor Flooring Layout Plan">Fourth Floor Flooring Layout Plan</option>
+                    <option value="Fifth Floor Flooring Layout Plan">Fifth Floor Flooring Layout Plan</option>
                 </optgroup>
 
-                <optgroup label="Services">
-                    <option value="electrical_details">Electrical Details</option>
-                    <option value="plumbing_details">Plumbing Details</option>
-                    <option value="false_ceiling_details">False Ceiling Details</option>
-                    <option value="automation_details">Automation Details</option>
+                <optgroup label="False Ceiling Drawings">
+                    <option value="Ground Floor False Ceiling Layout Plan">Ground Floor False Ceiling Layout Plan</option>
+                    <option value="First Floor False Ceiling Layout Plan">First Floor False Ceiling Layout Plan</option>
+                    <option value="Second Floor False Ceiling Layout Plan">Second Floor False Ceiling Layout Plan</option>
+                    <option value="Third Floor False Ceiling Layout Plan">Third Floor False Ceiling Layout Plan</option>
+                    <option value="Fourth Floor False Ceiling Layout Plan">Fourth Floor False Ceiling Layout Plan</option>
+                    <option value="Fifth Floor False Ceiling Layout Plan">Fifth Floor False Ceiling Layout Plan</option>
+                    <option value="Master Bed Room False Ceiling Layout Plan & Section Details">Master Bed Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Daughter's Bed Room False Ceiling Layout Plan & Section Details">Daughter's Bed Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Son's Bed Room False Ceiling Layout Plan & Section Details">Son's Bed Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Guest Bed Room False Ceiling Layout Plan & Section Details">Guest Bed Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet 1 False Ceiling Layout Plan & Section Details">Toilet 1 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet 2 False Ceiling Layout Plan & Section Details">Toilet 2 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet 3 False Ceiling Layout Plan & Section Details">Toilet 3 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet 4 False Ceiling Layout Plan & Section Details">Toilet 4 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet 5 False Ceiling Layout Plan & Section Details">Toilet 5 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Prayer Room False Ceiling Layout Plan & Section Details">Prayer Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Study Room False Ceiling Layout Plan & Section Details">Study Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Home Theater False Ceiling Layout Plan & Section Details">Home Theater False Ceiling Layout Plan & Section Details</option>
+                    <option value="GYM / Multi-Purpose Room False Ceiling Layout Plan & Section Details">GYM / Multi-Purpose Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Servant Room False Ceiling Layout Plan & Section Details">Servant Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Family Lounge False Ceiling Layout Plan & Section Details">Family Lounge False Ceiling Layout Plan & Section Details</option>
+                    <option value="Staircase False Ceiling Layout Plan & Section Details">Staircase False Ceiling Layout Plan & Section Details</option>
+                    <option value="Landscape Area False Ceiling Layout Plan & Section Details">Landscape Area False Ceiling Layout Plan & Section Details</option>
+                    <option value="Recreational Area False Ceiling Layout Plan & Section Details">Recreational Area False Ceiling Layout Plan & Section Details</option>
+                    <option value="Office Space False Ceiling Layout Plan & Section Details">Office Space False Ceiling Layout Plan & Section Details</option>
+                    <option value="Conference Room False Ceiling Layout Plan & Section Details">Conference Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Waiting Area False Ceiling Layout Plan & Section Details">Waiting Area False Ceiling Layout Plan & Section Details</option>
+                    <option value="Reception Area False Ceiling Layout Plan & Section Details">Reception Area False Ceiling Layout Plan & Section Details</option>
+                    <option value="Manager's Cabin False Ceiling Layout Plan & Section Details">Manager's Cabin False Ceiling Layout Plan & Section Details</option>
+                    <option value="Work Station Area 1 False Ceiling Layout Plan & Section Details">Work Station Area 1 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Work Station Area 2 False Ceiling Layout Plan & Section Details">Work Station Area 2 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Work Station Area 3 False Ceiling Layout Plan & Section Details">Work Station Area 3 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Meeting Room False Ceiling Layout Plan & Section Details">Meeting Room False Ceiling Layout Plan & Section Details</option>
+                    <option value="Kitchen False Ceiling Layout Plan & Section Details">Kitchen False Ceiling Layout Plan & Section Details</option>
+                    <option value="Utility Area False Ceiling Layout Plan & Section Details">Utility Area False Ceiling Layout Plan & Section Details</option>
+                    
+                    
+                    
+
+                    
+                    
+                    
                 </optgroup>
 
-                <optgroup label="Final Deliverables">
-                    <option value="material_specifications">Material Specifications</option>
-                    <option value="furniture_specifications">Furniture Specifications</option>
-                    <option value="bom">Bill of Materials</option>
-                    <option value="tender_documents">Tender Documents</option>
-                    <option value="working_drawings">Working Drawings</option>
+                <optgroup label="Ceiling Drawings">
+                    <option value="Ground Floor Ceiling Layout Plan">Ground Floor Ceiling Layout Plan</option>
+                    <option value="First Floor Ceiling Layout Plan">First Floor Ceiling Layout Plan</option>
+                    <option value="Second Floor Ceiling Layout Plan">Second Floor Ceiling Layout Plan</option>
+                    <option value="Third Floor Ceiling Layout Plan">Third Floor Ceiling Layout Plan</option>
+                    <option value="Fourth Floor Ceiling Layout Plan">Fourth Floor Ceiling Layout Plan</option>
+                    <option value="Fifth Floor Ceiling Layout Plan">Fifth Floor Ceiling Layout Plan</option>
                 </optgroup>
+
+                <optgroup label="Electrical Drawings">
+                    <option value="Ground Floor Electrical Layout Plan">Ground Floor Electrical Layout Plan</option>
+                    <option value="First Floor Electrical Layout Plan">First Floor Electrical Layout Plan</option>
+                    <option value="Second Floor Electrical Layout Plan">Second Floor Electrical Layout Plan</option>
+                    <option value="Third Floor Electrical Layout Plan">Third Floor Electrical Layout Plan</option>
+                    <option value="Fourth Floor Electrical Layout Plan">Fourth Floor Electrical Layout Plan</option>
+                </optgroup>
+
+                <optgroup label="Plumbing Drawings">
+                    <option value="Ground Floor Plumbing Layout Plan">Ground Floor Plumbing Layout Plan</option>
+                    <option value="First Floor Plumbing Layout Plan">First Floor Plumbing Layout Plan</option>
+                    <option value="Second Floor Plumbing Layout Plan">Second Floor Plumbing Layout Plan</option>
+                    <option value="Third Floor Plumbing Layout Plan">Third Floor Plumbing Layout Plan</option>
+                    <option value="Fourth Floor Plumbing Layout Plan">Fourth Floor Plumbing Layout Plan</option>
+                </optgroup>
+
+                <optgroup label="Water Supply Drawings">
+                    <option value="Ground Floor Water Supply Layout Plan">Ground Floor Water Supply Layout Plan</option>
+                    <option value="First Floor Water Supply Layout Plan">First Floor Water Supply Layout Plan</option>
+                    <option value="Second Floor Water Supply Layout Plan">Second Floor Water Supply Layout Plan</option>
+                    <option value="Third Floor Water Supply Layout Plan">Third Floor Water Supply Layout Plan</option>
+                    <option value="Fourth Floor Water Supply Layout Plan">Fourth Floor Water Supply Layout Plan</option>
+                    <option value="Fifth Floor Water Supply Layout Plan">Fifth Floor Water Supply Layout Plan</option>
+                </optgroup>
+
+                <optgroup label="Interior Drawings">
+                    <option value="Master Bed Room Wall Panelling Details">Master Bed Room Wall Panelling Details</option>
             `;
         }
 
@@ -1441,13 +1551,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="task-form-group">
                         <label>Start Date & Time</label>
                         <div class="task-datetime-input">
-                            <input type="datetime-local" class="substage-start-date">
+                            <input type="datetime-local" 
+                                   class="substage-start-date" 
+                                   onchange="validateSubstageDates(this)"
+                                   min="${new Date().toISOString().slice(0, 16)}">
                         </div>
                     </div>
                     <div class="task-form-group">
                         <label>Due By</label>
                         <div class="task-datetime-input">
-                            <input type="datetime-local" class="substage-due-date">
+                            <input type="datetime-local" 
+                                   class="substage-due-date"
+                                   onchange="validateSubstageDates(this)">
                         </div>
                     </div>
                 </div>
@@ -3383,4 +3498,297 @@ document.addEventListener('DOMContentLoaded', function() {
     if (projectType) {
         updateSubstageTitles(projectType);
     }
+});
+
+// Add this JavaScript function
+function validateSubstageDates(input) {
+    const substageBlock = input.closest('.substage-block');
+    const startDate = substageBlock.querySelector('.substage-start-date');
+    const dueDate = substageBlock.querySelector('.substage-due-date');
+    
+    // Get project task due date
+    const projectDueDate = document.getElementById('taskDueDate').value;
+    
+    // Set minimum date for start date (cannot be earlier than today)
+    const today = new Date().toISOString().slice(0, 16);
+    startDate.min = today;
+    
+    // Set maximum date as project due date
+    if (projectDueDate) {
+        startDate.max = projectDueDate;
+        dueDate.max = projectDueDate;
+    }
+    
+    if (startDate.value && dueDate.value) {
+        // If due date is earlier than start date, reset it
+        if (new Date(dueDate.value) < new Date(startDate.value)) {
+            dueDate.value = '';
+            alert('Due date cannot be earlier than start date');
+        }
+        
+        // Set minimum date for due date (cannot be earlier than start date)
+        dueDate.min = startDate.value;
+    }
+    
+    // Get the stage's dates for validation
+    const stageBlock = substageBlock.closest('.stage-block');
+    if (stageBlock) {
+        const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
+        const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
+        
+        // Validate against stage dates
+        if (stageStartDate && new Date(startDate.value) < new Date(stageStartDate)) {
+            startDate.value = stageStartDate;
+            alert('Substage cannot start before the stage start date');
+        }
+        
+        if (stageDueDate && new Date(dueDate.value) > new Date(stageDueDate)) {
+            dueDate.value = stageDueDate;
+            alert('Substage must be completed before the stage due date');
+        }
+    }
+}
+
+// Function to auto-populate due dates
+function autoPopulateDueDates() {
+    const projectStartDate = new Date(document.getElementById('taskStartDate').value);
+    const projectDueDate = new Date(document.getElementById('taskDueDate').value);
+    
+    if (!projectStartDate || !projectDueDate) return;
+
+    const stages = document.querySelectorAll('.stage-block');
+    const totalStages = stages.length;
+    
+    if (totalStages === 0) return;
+
+    // Calculate total project duration in milliseconds
+    const projectDuration = projectDueDate - projectStartDate;
+    const stageDuration = projectDuration / totalStages;
+
+    stages.forEach((stage, stageIndex) => {
+        // Calculate stage dates
+        const stageStartDate = new Date(projectStartDate.getTime() + (stageDuration * stageIndex));
+        const stageDueDate = new Date(projectStartDate.getTime() + (stageDuration * (stageIndex + 1)));
+        
+        // Set stage dates
+        const stageStartInput = stage.querySelector('.stage-start-date');
+        const stageDueInput = stage.querySelector('.stage-due-date');
+        
+        if (stageStartInput && stageDueInput) {
+            stageStartInput.value = formatDateTime(stageStartDate);
+            stageDueInput.value = formatDateTime(stageDueDate);
+        }
+        
+        // Handle substages
+        const substages = stage.querySelectorAll('.substage-block');
+        const totalSubstages = substages.length;
+        
+        if (totalSubstages > 0) {
+            const substageSpan = stageDueDate - stageStartDate;
+            const substageDuration = substageSpan / totalSubstages;
+            
+            substages.forEach((substage, substageIndex) => {
+                const substageStartDate = new Date(stageStartDate.getTime() + (substageDuration * substageIndex));
+                const substageDueDate = new Date(stageStartDate.getTime() + (substageDuration * (substageIndex + 1)));
+                
+                const substageStartInput = substage.querySelector('.substage-start-date');
+                const substageDueInput = substage.querySelector('.substage-due-date');
+                
+                if (substageStartInput && substageDueInput) {
+                    substageStartInput.value = formatDateTime(substageStartDate);
+                    substageDueInput.value = formatDateTime(substageDueDate);
+                }
+            });
+        }
+    });
+}
+
+// Helper function to format date and time
+function formatDateTime(date) {
+    return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for project date changes
+    const taskStartDate = document.getElementById('taskStartDate');
+    const taskDueDate = document.getElementById('taskDueDate');
+    
+    if (taskStartDate && taskDueDate) {
+        taskStartDate.addEventListener('change', autoPopulateDueDates);
+        taskDueDate.addEventListener('change', autoPopulateDueDates);
+    }
+    
+    // Initial population if dates are already set
+    if (taskStartDate.value && taskDueDate.value) {
+        autoPopulateDueDates();
+    }
+});
+
+// Update addStage function
+function addStage() {
+    // ... existing stage addition code ...
+    setTimeout(autoPopulateDueDates, 0); // Run after stage is added
+}
+
+// Update addSubstage function
+function addSubstage(stageBlock) {
+    // ... existing substage addition code ...
+    setTimeout(autoPopulateDueDates, 0); // Run after substage is added
+}
+
+// Update remove functions
+function removeStage(button) {
+    const stageBlock = button.closest('.stage-block');
+    stageBlock.remove();
+    setTimeout(autoPopulateDueDates, 0);
+}
+
+function removeSubstage(button) {
+    const substageBlock = button.closest('.substage-block');
+    substageBlock.remove();
+    setTimeout(autoPopulateDueDates, 0);
+}
+
+// Add console logs for debugging
+function autoPopulateDueDates() {
+    console.log('autoPopulateDueDates called');
+    
+    const projectStartDate = new Date(document.getElementById('taskStartDate').value);
+    const projectDueDate = new Date(document.getElementById('taskDueDate').value);
+    
+    console.log('Project Start:', projectStartDate);
+    console.log('Project Due:', projectDueDate);
+    
+    if (!projectStartDate || !projectDueDate) {
+        console.log('Missing project dates');
+        return;
+    }
+
+    const stages = document.querySelectorAll('.stage-block');
+    const totalStages = stages.length;
+    
+    console.log('Total Stages:', totalStages);
+    
+    if (totalStages === 0) {
+        console.log('No stages found');
+        return;
+    }
+
+    // Calculate total project duration in milliseconds
+    const projectDuration = projectDueDate - projectStartDate;
+    const stageDuration = projectDuration / totalStages;
+    
+    console.log('Project Duration:', projectDuration);
+    console.log('Stage Duration:', stageDuration);
+
+    stages.forEach((stage, stageIndex) => {
+        // Calculate stage dates
+        const stageStartDate = new Date(projectStartDate.getTime() + (stageDuration * stageIndex));
+        const stageDueDate = new Date(projectStartDate.getTime() + (stageDuration * (stageIndex + 1)));
+        
+        console.log(`Stage ${stageIndex + 1} dates:`, stageStartDate, stageDueDate);
+        
+        // Set stage dates
+        const stageStartInput = stage.querySelector('.stage-start-date');
+        const stageDueInput = stage.querySelector('.stage-due-date');
+        
+        if (stageStartInput && stageDueInput) {
+            stageStartInput.value = formatDateTime(stageStartDate);
+            stageDueInput.value = formatDateTime(stageDueDate);
+            console.log(`Stage ${stageIndex + 1} inputs updated`);
+        }
+    });
+}
+
+// Make sure event listeners are attached when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    
+    // Listen for project date changes
+    const taskStartDate = document.getElementById('taskStartDate');
+    const taskDueDate = document.getElementById('taskDueDate');
+    
+    if (taskStartDate && taskDueDate) {
+        console.log('Date inputs found');
+        
+        taskStartDate.addEventListener('change', function() {
+            console.log('Start date changed');
+            autoPopulateDueDates();
+        });
+        
+        taskDueDate.addEventListener('change', function() {
+            console.log('Due date changed');
+            autoPopulateDueDates();
+        });
+    } else {
+        console.log('Date inputs not found');
+    }
+});
+
+// Update stage creation
+function createStageBlock(stageNumber) {
+    console.log('Creating stage:', stageNumber);
+    const stageHTML = `
+        <div class="stage-block" data-stage="${stageNumber}">
+            <div class="stage-header">
+                <h4>Stage ${stageNumber}</h4>
+                <button class="remove-stage-btn" onclick="removeStage(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="task-form-group">
+                <label>Assign To</label>
+                <select class="stage-assignee">
+                    <option value="">Select Employee</option>
+                </select>
+            </div>
+            <div class="task-form-row">
+                <div class="task-form-group">
+                    <label>Start Date & Time</label>
+                    <input type="datetime-local" class="stage-start-date">
+                </div>
+                <div class="task-form-group">
+                    <label>Due By</label>
+                    <input type="datetime-local" class="stage-due-date">
+                </div>
+            </div>
+            <div class="file-upload-container">
+                <input type="file" class="file-upload-input">
+                <label class="file-upload-label">
+                    <i class="fas fa-paperclip"></i>
+                    <span>Attach File</span>
+                </label>
+            </div>
+            <div class="substages-wrapper"></div>
+            <button type="button" class="add-substage-btn" onclick="addSubstage(this.closest('.stage-block'))">
+                + Add Substage
+            </button>
+        </div>
+    `;
+    
+    const stagesWrapper = document.querySelector('.stages-wrapper');
+    if (stagesWrapper) {
+        stagesWrapper.insertAdjacentHTML('beforeend', stageHTML);
+        console.log('Stage added, updating dates');
+        autoPopulateDueDates();
+    }
+}
+
+// Helper function to format date and time
+function formatDateTime(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// Add stage button click handler
+document.getElementById('addStageBtn')?.addEventListener('click', function() {
+    console.log('Add Stage button clicked');
+    const stageCount = document.querySelectorAll('.stage-block').length;
+    createStageBlock(stageCount + 1);
 });

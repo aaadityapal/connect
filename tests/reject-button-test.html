@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reject Button Test</title>
+    <!-- Include SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        
+        .substage-files-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .substage-files-table th,
+        .substage-files-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .substage-files-table th {
+            background-color: #f5f5f5;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .status-rejected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .file-rejected {
+            background-color: #fff5f5;
+        }
+    </style>
+</head>
+<body>
+    <h2>Reject Button Test</h2>
+    
+    <table class="substage-files-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>File Name</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr data-file-id="1">
+                <td>1</td>
+                <td>test-file-1.pdf</td>
+                <td class="status-column">
+                    <span class="status-badge">Pending</span>
+                </td>
+                <td class="action-buttons">
+                    <button class="action-btn delete-btn" data-file-id="1" title="Reject">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </td>
+            </tr>
+            <tr data-file-id="2">
+                <td>2</td>
+                <td>test-file-2.docx</td>
+                <td class="status-column">
+                    <span class="status-badge">In Review</span>
+                </td>
+                <td class="action-buttons">
+                    <button class="action-btn delete-btn" data-file-id="2" title="Reject">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Include Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Include your TaskOverviewManager -->
+    <script src="../assets/js/task-overview-manager.js"></script>
+    
+    <script>
+        // Initialize TaskOverviewManager
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Test page loaded - Initializing TaskOverviewManager');
+            window.taskOverviewManager = new TaskOverviewManager();
+        });
+
+        // Add test logging
+        document.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (deleteBtn) {
+                console.log('Test: Delete button clicked');
+                console.log('Test: File ID:', deleteBtn.getAttribute('data-file-id'));
+            }
+        });
+    </script>
+</body>
+</html> 

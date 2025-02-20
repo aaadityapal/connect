@@ -1,0 +1,458 @@
+[03-Feb-2025 09:19:06 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:19:06 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:19:16 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:19:16 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:19:55 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:19:55 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:06 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:06 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:08 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:08 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:09 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:11 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:11 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:24 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:20:24 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\hr\dashboard\handlers../../config/db_connect.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php:15
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\dashboard\handlers\get_file_status.php on line 15
+[03-Feb-2025 09:21:35 Europe/Berlin] Attempting to fetch file ID: 12
+[03-Feb-2025 09:21:35 Europe/Berlin] Successfully retrieved file data for ID: 12
+[03-Feb-2025 09:22:02 Europe/Berlin] Attempting to fetch file ID: 10
+[03-Feb-2025 09:22:02 Europe/Berlin] Successfully retrieved file data for ID: 10
+[03-Feb-2025 09:58:59 Europe/Berlin] Attempting to fetch file ID: 9
+[03-Feb-2025 09:58:59 Europe/Berlin] Successfully retrieved file data for ID: 9
+[03-Feb-2025 10:23:08 Europe/Berlin] Attempting to fetch file ID: 8
+[03-Feb-2025 10:23:08 Europe/Berlin] Successfully retrieved file data for ID: 8
+[03-Feb-2025 10:23:09 Europe/Berlin] Attempting to fetch file ID: 8
+[03-Feb-2025 10:23:09 Europe/Berlin] Successfully retrieved file data for ID: 8
+[03-Feb-2025 10:24:34 Europe/Berlin] Attempting to fetch file ID: 13
+[03-Feb-2025 10:24:34 Europe/Berlin] Successfully retrieved file data for ID: 13
+[03-Feb-2025 10:24:36 Europe/Berlin] Attempting to fetch file ID: 13
+[03-Feb-2025 10:24:36 Europe/Berlin] Successfully retrieved file data for ID: 13
+[03-Feb-2025 10:25:00 Europe/Berlin] Attempting to fetch file ID: 13
+[03-Feb-2025 10:25:00 Europe/Berlin] Successfully retrieved file data for ID: 13
+[03-Feb-2025 10:26:37 Europe/Berlin] Attempting to fetch file ID: 13
+[03-Feb-2025 10:26:37 Europe/Berlin] Successfully retrieved file data for ID: 13
+[03-Feb-2025 10:27:31 Europe/Berlin] Attempting to fetch file ID: 13
+[03-Feb-2025 10:27:31 Europe/Berlin] Successfully retrieved file data for ID: 13
+[03-Feb-2025 10:28:20 Europe/Berlin] Attempting to fetch file ID: 13
+[03-Feb-2025 10:28:20 Europe/Berlin] Successfully retrieved file data for ID: 13
+[03-Feb-2025 11:57:11 Europe/Berlin] Attempting to fetch file ID: 11
+[03-Feb-2025 11:57:11 Europe/Berlin] Successfully retrieved file data for ID: 11
+[03-Feb-2025 12:49:35 Europe/Berlin] Attempting to fetch file ID: 14
+[03-Feb-2025 12:49:35 Europe/Berlin] Successfully retrieved file data for ID: 14
+[03-Feb-2025 13:14:58 Europe/Berlin] Attempting to fetch file ID: 8
+[03-Feb-2025 13:14:58 Europe/Berlin] Successfully retrieved file data for ID: 8
+[03-Feb-2025 13:15:01 Europe/Berlin] Attempting to fetch file ID: 7
+[03-Feb-2025 13:15:01 Europe/Berlin] Successfully retrieved file data for ID: 7
+[03-Feb-2025 13:15:01 Europe/Berlin] Attempting to fetch file ID: 6
+[03-Feb-2025 13:15:01 Europe/Berlin] Successfully retrieved file data for ID: 6
+[03-Feb-2025 13:16:51 Europe/Berlin] Attempting to fetch file ID: 15
+[03-Feb-2025 13:16:51 Europe/Berlin] Successfully retrieved file data for ID: 15
+[04-Feb-2025 07:16:28 Europe/Berlin] Attempting to fetch file ID: 16
+[04-Feb-2025 07:16:28 Europe/Berlin] Successfully retrieved file data for ID: 16
+[04-Feb-2025 07:46:57 Europe/Berlin] Attempting to fetch file ID: 17
+[04-Feb-2025 07:46:57 Europe/Berlin] Successfully retrieved file data for ID: 17
+[04-Feb-2025 08:01:09 Europe/Berlin] Attempting to fetch file ID: 17
+[04-Feb-2025 08:01:09 Europe/Berlin] Successfully retrieved file data for ID: 17
+[04-Feb-2025 08:01:11 Europe/Berlin] Attempting to fetch file ID: 17
+[04-Feb-2025 08:01:11 Europe/Berlin] Successfully retrieved file data for ID: 17
+[04-Feb-2025 08:03:25 Europe/Berlin] Attempting to fetch file ID: 18
+[04-Feb-2025 08:03:25 Europe/Berlin] Successfully retrieved file data for ID: 18
+[04-Feb-2025 09:14:50 Europe/Berlin] Attempting to fetch file ID: 21
+[04-Feb-2025 09:14:50 Europe/Berlin] Successfully retrieved file data for ID: 21
+[04-Feb-2025 14:09:42 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:09:42 Europe/Berlin] Raw input: {"type":"stage","id":19,"projectId":12,"selectedUsers":[21]}
+[04-Feb-2025 14:09:42 Europe/Berlin] Decoded data: Array
+(
+    [type] => stage
+    [id] => 19
+    [projectId] => 12
+    [selectedUsers] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 14:09:42 Europe/Berlin] Processing user ID: 21
+[04-Feb-2025 14:10:10 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:10:10 Europe/Berlin] Raw input: {"type":{"type":"substage","projectId":12,"id":26,"stageId":19,"title":"asdas","currentAssignee":15,"projectTitle":"bcd"},"id":["21"]}
+[04-Feb-2025 14:10:10 Europe/Berlin] Decoded data: Array
+(
+    [type] => Array
+        (
+            [type] => substage
+            [projectId] => 12
+            [id] => 26
+            [stageId] => 19
+            [title] => asdas
+            [currentAssignee] => 15
+            [projectTitle] => bcd
+        )
+
+    [id] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 14:10:10 Europe/Berlin] Error in forward_task.php: Missing required data. Required: type, id, projectId, selectedUsers. Received: Array
+(
+    [type] => Array
+        (
+            [type] => substage
+            [projectId] => 12
+            [id] => 26
+            [stageId] => 19
+            [title] => asdas
+            [currentAssignee] => 15
+            [projectTitle] => bcd
+        )
+
+    [id] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 14:11:22 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:11:22 Europe/Berlin] Raw input: {"type":{"type":"stage","projectId":12,"id":19,"title":"Stage 1","currentAssignee":21,"projectTitle":"bcd"},"id":["21"],"selectedUsers":[null]}
+[04-Feb-2025 14:11:22 Europe/Berlin] Decoded data: Array
+(
+    [type] => Array
+        (
+            [type] => stage
+            [projectId] => 12
+            [id] => 19
+            [title] => Stage 1
+            [currentAssignee] => 21
+            [projectTitle] => bcd
+        )
+
+    [id] => Array
+        (
+            [0] => 21
+        )
+
+    [selectedUsers] => Array
+        (
+            [0] => 
+        )
+
+)
+
+[04-Feb-2025 14:11:22 Europe/Berlin] Error in forward_task.php: Missing required data. Required: type, id, projectId, selectedUsers. Received: Array
+(
+    [type] => Array
+        (
+            [type] => stage
+            [projectId] => 12
+            [id] => 19
+            [title] => Stage 1
+            [currentAssignee] => 21
+            [projectTitle] => bcd
+        )
+
+    [id] => Array
+        (
+            [0] => 21
+        )
+
+    [selectedUsers] => Array
+        (
+            [0] => 
+        )
+
+)
+
+[04-Feb-2025 14:11:30 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:11:30 Europe/Berlin] Raw input: {"type":{"type":"substage","projectId":12,"id":25,"stageId":19,"title":"asda","currentAssignee":21,"projectTitle":"bcd"},"id":["21"],"selectedUsers":[null]}
+[04-Feb-2025 14:11:30 Europe/Berlin] Decoded data: Array
+(
+    [type] => Array
+        (
+            [type] => substage
+            [projectId] => 12
+            [id] => 25
+            [stageId] => 19
+            [title] => asda
+            [currentAssignee] => 21
+            [projectTitle] => bcd
+        )
+
+    [id] => Array
+        (
+            [0] => 21
+        )
+
+    [selectedUsers] => Array
+        (
+            [0] => 
+        )
+
+)
+
+[04-Feb-2025 14:11:30 Europe/Berlin] Error in forward_task.php: Missing required data. Required: type, id, projectId, selectedUsers. Received: Array
+(
+    [type] => Array
+        (
+            [type] => substage
+            [projectId] => 12
+            [id] => 25
+            [stageId] => 19
+            [title] => asda
+            [currentAssignee] => 21
+            [projectTitle] => bcd
+        )
+
+    [id] => Array
+        (
+            [0] => 21
+        )
+
+    [selectedUsers] => Array
+        (
+            [0] => 
+        )
+
+)
+
+[04-Feb-2025 14:12:56 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:12:56 Europe/Berlin] Raw input: {"type":"stage","id":19,"projectId":12,"selectedUsers":[21]}
+[04-Feb-2025 14:12:56 Europe/Berlin] Decoded data: Array
+(
+    [type] => stage
+    [id] => 19
+    [projectId] => 12
+    [selectedUsers] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 14:12:56 Europe/Berlin] Processing user ID: 21
+[04-Feb-2025 14:13:05 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:13:05 Europe/Berlin] Raw input: {"type":"substage","id":25,"projectId":12,"selectedUsers":[21]}
+[04-Feb-2025 14:13:05 Europe/Berlin] Decoded data: Array
+(
+    [type] => substage
+    [id] => 25
+    [projectId] => 12
+    [selectedUsers] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 14:13:05 Europe/Berlin] Processing user ID: 21
+[04-Feb-2025 14:13:12 Europe/Berlin] Starting forward_task.php processing
+[04-Feb-2025 14:13:12 Europe/Berlin] Raw input: {"type":"substage","id":26,"projectId":12,"selectedUsers":[21]}
+[04-Feb-2025 14:13:12 Europe/Berlin] Decoded data: Array
+(
+    [type] => substage
+    [id] => 26
+    [projectId] => 12
+    [selectedUsers] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 14:13:12 Europe/Berlin] Processing user ID: 21
+[04-Feb-2025 18:45:19 Asia/Kolkata] Starting forward_task.php processing
+[04-Feb-2025 18:45:19 Asia/Kolkata] Raw input: {"type":"stage","id":19,"projectId":12,"selectedUsers":[21]}
+[04-Feb-2025 18:45:19 Asia/Kolkata] Decoded data: Array
+(
+    [type] => stage
+    [id] => 19
+    [projectId] => 12
+    [selectedUsers] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 18:45:19 Asia/Kolkata] Processing user ID: 21
+[04-Feb-2025 18:45:24 Asia/Kolkata] Starting forward_task.php processing
+[04-Feb-2025 18:45:24 Asia/Kolkata] Raw input: {"type":"substage","id":26,"projectId":12,"selectedUsers":[21]}
+[04-Feb-2025 18:45:24 Asia/Kolkata] Decoded data: Array
+(
+    [type] => substage
+    [id] => 26
+    [projectId] => 12
+    [selectedUsers] => Array
+        (
+            [0] => 21
+        )
+
+)
+
+[04-Feb-2025 18:45:24 Asia/Kolkata] Processing user ID: 21
+[04-Feb-2025 14:37:53 Europe/Berlin] Attempting to connect using path: C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php
+[04-Feb-2025 14:37:53 Europe/Berlin] Trying alternate path: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:53 Europe/Berlin] Found db_connect.php at: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:53 Europe/Berlin] Processing request for user_id: 21
+[04-Feb-2025 14:37:53 Europe/Berlin] Error in forwarded_tasks.php: Table 'crm.stages' doesn't exist
+[04-Feb-2025 14:37:53 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\hr\dashboard\handlers\forwarded_tasks.php(97): mysqli->prepare('\r\n        SELEC...')
+#1 {main}
+[04-Feb-2025 14:37:53 Europe/Berlin] Attempting to connect using path: C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php
+[04-Feb-2025 14:37:53 Europe/Berlin] Trying alternate path: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:53 Europe/Berlin] Found db_connect.php at: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:53 Europe/Berlin] Processing request for user_id: 21
+[04-Feb-2025 14:37:53 Europe/Berlin] Error in forwarded_tasks.php: Table 'crm.stages' doesn't exist
+[04-Feb-2025 14:37:53 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\hr\dashboard\handlers\forwarded_tasks.php(97): mysqli->prepare('\r\n        SELEC...')
+#1 {main}
+[04-Feb-2025 14:37:54 Europe/Berlin] Attempting to connect using path: C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php
+[04-Feb-2025 14:37:54 Europe/Berlin] Trying alternate path: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:54 Europe/Berlin] Found db_connect.php at: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:54 Europe/Berlin] Processing request for user_id: 21
+[04-Feb-2025 14:37:54 Europe/Berlin] Error in forwarded_tasks.php: Table 'crm.stages' doesn't exist
+[04-Feb-2025 14:37:54 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\hr\dashboard\handlers\forwarded_tasks.php(97): mysqli->prepare('\r\n        SELEC...')
+#1 {main}
+[04-Feb-2025 14:37:54 Europe/Berlin] Attempting to connect using path: C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php
+[04-Feb-2025 14:37:54 Europe/Berlin] Trying alternate path: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:54 Europe/Berlin] Found db_connect.php at: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:37:54 Europe/Berlin] Processing request for user_id: 21
+[04-Feb-2025 14:37:54 Europe/Berlin] Error in forwarded_tasks.php: Table 'crm.stages' doesn't exist
+[04-Feb-2025 14:37:54 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\hr\dashboard\handlers\forwarded_tasks.php(97): mysqli->prepare('\r\n        SELEC...')
+#1 {main}
+[04-Feb-2025 14:38:44 Europe/Berlin] Attempting to connect using path: C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php
+[04-Feb-2025 14:38:44 Europe/Berlin] Trying alternate path: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:38:44 Europe/Berlin] Found db_connect.php at: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:38:44 Europe/Berlin] Processing request for user_id: 21
+[04-Feb-2025 14:38:44 Europe/Berlin] Error in forwarded_tasks.php: Table 'crm.stages' doesn't exist
+[04-Feb-2025 14:38:44 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\hr\dashboard\handlers\forwarded_tasks.php(97): mysqli->prepare('\r\n        SELEC...')
+#1 {main}
+[04-Feb-2025 14:38:44 Europe/Berlin] Attempting to connect using path: C:\xampp\htdocs\hr\dashboard\handlers/../../../config/db_connect.php
+[04-Feb-2025 14:38:44 Europe/Berlin] Trying alternate path: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:38:44 Europe/Berlin] Found db_connect.php at: C:\xampp\htdocs\hr\dashboard\handlers/../../config/db_connect.php
+[04-Feb-2025 14:38:44 Europe/Berlin] Processing request for user_id: 21
+[04-Feb-2025 14:38:44 Europe/Berlin] Error in forwarded_tasks.php: Table 'crm.stages' doesn't exist
+[04-Feb-2025 14:38:44 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\hr\dashboard\handlers\forwarded_tasks.php(97): mysqli->prepare('\r\n        SELEC...')
+#1 {main}
+[04-Feb-2025 19:25:04 Asia/Kolkata] Starting forward_task.php processing
+[04-Feb-2025 19:25:04 Asia/Kolkata] Raw input: {"type":"stage","id":17,"projectId":11,"selectedUsers":[15]}
+[04-Feb-2025 19:25:04 Asia/Kolkata] Decoded data: Array
+(
+    [type] => stage
+    [id] => 17
+    [projectId] => 11
+    [selectedUsers] => Array
+        (
+            [0] => 15
+        )
+
+)
+
+[04-Feb-2025 19:25:04 Asia/Kolkata] Processing user ID: 15
+[04-Feb-2025 19:25:09 Asia/Kolkata] Starting forward_task.php processing
+[04-Feb-2025 19:25:10 Asia/Kolkata] Raw input: {"type":"substage","id":23,"projectId":11,"selectedUsers":[15]}
+[04-Feb-2025 19:25:10 Asia/Kolkata] Decoded data: Array
+(
+    [type] => substage
+    [id] => 23
+    [projectId] => 11
+    [selectedUsers] => Array
+        (
+            [0] => 15
+        )
+
+)
+
+[04-Feb-2025 19:25:10 Asia/Kolkata] Processing user ID: 15
+[04-Feb-2025 14:55:52 Europe/Berlin] Attempting to fetch file ID: 22
+[04-Feb-2025 14:55:52 Europe/Berlin] Successfully retrieved file data for ID: 22
+[04-Feb-2025 14:56:24 Europe/Berlin] Attempting to fetch file ID: 22
+[04-Feb-2025 14:56:24 Europe/Berlin] Successfully retrieved file data for ID: 22
+[04-Feb-2025 14:57:21 Europe/Berlin] Attempting to fetch file ID: 23
+[04-Feb-2025 14:57:21 Europe/Berlin] Successfully retrieved file data for ID: 23
+[05-Feb-2025 14:39:14 Asia/Kolkata] Starting forward_task.php processing
+[05-Feb-2025 14:39:14 Asia/Kolkata] Raw input: {"type":"stage","id":6,"projectId":4,"selectedUsers":[15]}
+[05-Feb-2025 14:39:14 Asia/Kolkata] Decoded data: Array
+(
+    [type] => stage
+    [id] => 6
+    [projectId] => 4
+    [selectedUsers] => Array
+        (
+            [0] => 15
+        )
+
+)
+
+[05-Feb-2025 14:39:14 Asia/Kolkata] Processing user ID: 15
+[08-Feb-2025 10:35:45 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 10:35:45 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 10:35:47 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 10:35:47 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 10:36:01 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 10:36:01 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 10:42:21 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 10:42:21 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 10:49:19 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 10:49:19 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 10:50:29 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 10:50:29 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:14:46 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:14:46 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:15:27 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:15:27 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:16:49 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:16:49 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:18:28 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:18:28 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:22:21 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:22:21 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:36:03 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:36:03 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 11:36:05 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 11:36:05 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 12:44:54 Europe/Berlin] Attempting to fetch file ID: 24
+[08-Feb-2025 12:44:54 Europe/Berlin] Successfully retrieved file data for ID: 24
+[08-Feb-2025 17:27:12 Asia/Kolkata] Starting forward_task.php processing
+[08-Feb-2025 17:27:12 Asia/Kolkata] Raw input: {"type":"stage","id":21,"projectId":13,"selectedUsers":[1,21]}
+[08-Feb-2025 17:27:12 Asia/Kolkata] Decoded data: Array
+(
+    [type] => stage
+    [id] => 21
+    [projectId] => 13
+    [selectedUsers] => Array
+        (
+            [0] => 1
+            [1] => 21
+        )
+
+)
+
+[08-Feb-2025 17:27:12 Asia/Kolkata] Processing user ID: 1
+[08-Feb-2025 17:27:12 Asia/Kolkata] Processing user ID: 21

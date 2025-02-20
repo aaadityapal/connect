@@ -1,0 +1,260 @@
+/* Base Dialog Styles */
+.notification-dialog {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #333;
+}
+
+.notification-container {
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Task Overview / Stage */
+.stage-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.stage-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+}
+
+.stage-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    color: #666;
+    font-size: 14px;
+}
+
+.stage-dates {
+    display: flex;
+    gap: 24px;
+}
+
+.stage-dates span {
+    white-space: nowrap;
+}
+
+.stage-assignee {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.assignee-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Status Badges */
+.status-pending,
+.status-in-progress,
+.status-completed,
+.status-comment {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-pending {
+    background: #FFE4E4;
+    color: #FF4444;
+}
+
+/* Substages Section */
+.substages-container {
+    margin-top: 30px;
+}
+
+.substages-container h3 {
+    font-size: 18px;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.substage-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid #eee;
+}
+
+.substage-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+.substage-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    color: #666;
+    font-size: 14px;
+}
+
+.substage-dates {
+    display: flex;
+    gap: 24px;
+}
+
+.substage-assignee {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Files Section */
+.files-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+
+.files-container h4 {
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.file-icon {
+    color: #666;
+    margin-right: 12px;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.file-meta {
+    font-size: 13px;
+    color: #666;
+}
+
+.file-actions a {
+    color: #666;
+    text-decoration: none;
+}
+
+/* Timeline Section */
+.activity-timeline {
+    margin-top: 30px;
+}
+
+.activity-timeline h3 {
+    font-size: 18px;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.timeline-item {
+    padding: 16px;
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #eee;
+}
+
+.timeline-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.timeline-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.timeline-user-name {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.timeline-user-position {
+    font-size: 13px;
+    color: #666;
+}
+
+.timeline-time {
+    font-size: 13px;
+    color: #666;
+    margin-left: auto;
+}
+
+.timeline-content {
+    color: #444;
+    line-height: 1.5;
+}
+
+/* SweetAlert2 Customization */
+.swal2-popup {
+    border-radius: 12px !important;
+    padding: 0 !important;
+}
+
+.swal2-title {
+    font-size: 20px !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #eee !important;
+}
+
+.swal2-html-container {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.swal2-close:focus {
+    box-shadow: none !important;
+}
+
+/* Scrollbar */
+.notification-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notification-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notification-container::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 4px;
+}
+
+.notification-container::-webkit-scrollbar-thumb:hover {
+    background: #ccc;
+} 

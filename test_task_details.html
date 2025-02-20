@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Details Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .task-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .task-dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .task-details-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1001;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .task-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .task-info-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .task-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .task-header h2 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-badge, .priority-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .status-badge.pending { background-color: #fff3cd; color: #856404; }
+        .status-badge.in-progress { background-color: #cce5ff; color: #004085; }
+        .status-badge.completed { background-color: #d4edda; color: #155724; }
+
+        .priority-badge.high { background-color: #f8d7da; color: #721c24; }
+        .priority-badge.medium { background-color: #fff3cd; color: #856404; }
+        .priority-badge.low { background-color: #d4edda; color: #155724; }
+
+        .description-text {
+            white-space: pre-line;
+            line-height: 1.5;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .task-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.edit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .action-btn.status-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Test Task Cards -->
+    <div class="task-card" data-task-id="1">
+        <h3>Test Task 1</h3>
+        <p>Click to view details</p>
+    </div>
+
+    <div class="task-card" data-task-id="2">
+        <h3>Test Task 2</h3>
+        <p>Click to view details</p>
+    </div>
+
+    <!-- Dialog Components -->
+    <div class="task-dialog-overlay"></div>
+    <div class="task-details-dialog">
+        <div class="task-dialog-content"></div>
+    </div>
+
+    <script>
+        function showTaskDetails(taskId) {
+            console.log('Showing details for task:', taskId);
+            
+            const overlay = document.querySelector('.task-dialog-overlay');
+            const dialog = document.querySelector('.task-details-dialog');
+            const content = document.querySelector('.task-dialog-content');
+            
+            overlay.style.display = 'block';
+            dialog.style.display = 'block';
+            
+            content.innerHTML = `
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i> Loading task details...
+                </div>
+            `;
+
+            // Log the full URL being fetched
+            const fetchUrl = `test_task_details.php?task_id=${taskId}`;
+            console.log('Fetching from:', window.location.origin + '/' + fetchUrl);
+
+            fetch(fetchUrl)
+                .then(async response => {
+                    // Log the response details
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    if (!response.ok) {
+                        const text = await response.text();
+                        console.error('Error response:', text);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(task => {
+                    console.log('Received task data:', task);
+                    
+                    if (task.error) {
+                        throw new Error(task.error);
+                    }
+
+                    content.innerHTML = `
+                        <div class="task-header">
+                            <h2>${task.title}</h2>
+                            <div class="task-meta">
+                                <span class="status-badge ${task.status.toLowerCase()}">${task.status}</span>
+                                <span class="priority-badge ${task.priority.toLowerCase()}">${task.priority}</span>
+                            </div>
+                        </div>
+
+                        <div class="task-info-grid">
+                            <div class="task-info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i> Assigned To
+                                </div>
+                                <div class="info-value">${task.assigned_to}</div>
+                            </div>
+                            <div class="task-info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-user-plus"></i> Created By
+                                </div>
+                                <div class="info-value">${task.created_by}</div>
+                            </div>
+                            <div class="task-info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-building"></i> Department
+                                </div>
+                                <div class="info-value">${task.department}</div>
+                            </div>
+                            <div class="task-info-item">
+                                <div class="info-label">
+                                    <i class="far fa-calendar-alt"></i> Due Date
+                                </div>
+                                <div class="info-value">${task.due_date}</div>
+                            </div>
+                            <div class="task-info-item">
+                                <div class="info-label">
+                                    <i class="far fa-clock"></i> Due Time
+                                </div>
+                                <div class="info-value">${task.due_time}</div>
+                            </div>
+                            <div class="task-info-item">
+                                <div class="info-label">
+                                    <i class="fas fa-history"></i> Created At
+                                </div>
+                                <div class="info-value">${task.created_at}</div>
+                            </div>
+                        </div>
+
+                        <div class="task-description-section">
+                            <div class="info-label">
+                                <i class="fas fa-align-left"></i> Description
+                            </div>
+                            <div class="info-value description-text">
+                                ${task.description || 'No description provided'}
+                            </div>
+                        </div>
+
+                        <div class="task-actions">
+                            <button class="action-btn edit-btn" onclick="editTask(${task.id})">
+                                <i class="fas fa-edit"></i> Edit Task
+                            </button>
+                            <button class="action-btn status-btn" onclick="updateStatus(${task.id})">
+                                <i class="fas fa-sync-alt"></i> Update Status
+                            </button>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Detailed error:', error);
+                    content.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading task details</p>
+                            <small>${error.message}</small>
+                            <div class="error-actions">
+                                <button onclick="showTaskDetails(${taskId})" class="retry-btn">
+                                    <i class="fas fa-redo"></i> Retry
+                                </button>
+                                <button onclick="checkConnection()" class="check-btn">
+                                    <i class="fas fa-network-wired"></i> Check Connection
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+        }
+
+        // Add these placeholder functions for the buttons
+        function editTask(taskId) {
+            console.log('Edit task:', taskId);
+            // Implement edit functionality
+        }
+
+        function updateStatus(taskId) {
+            console.log('Update status:', taskId);
+            // Implement status update functionality
+        }
+
+        // Close dialog when clicking overlay
+        document.querySelector('.task-dialog-overlay').addEventListener('click', () => {
+            document.querySelector('.task-dialog-overlay').style.display = 'none';
+            document.querySelector('.task-details-dialog').style.display = 'none';
+        });
+
+        // Add click handlers to task cards
+        document.querySelectorAll('.task-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const taskId = card.getAttribute('data-task-id');
+                showTaskDetails(taskId);
+            });
+        });
+
+        // Add a connection check function
+        function checkConnection() {
+            console.log('Checking connection...');
+            fetch('test_task_details.php?check=1')
+                .then(response => response.text())
+                .then(text => {
+                    console.log('Connection test response:', text);
+                    alert('Server is reachable. Check console for details.');
+                })
+                .catch(error => {
+                    console.error('Connection test failed:', error);
+                    alert('Could not reach server. Check file path and permissions.');
+                });
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,136 @@
+[23-Jan-2025 12:35:41 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:35:42 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:37:46 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:37:48 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:37:48 Asia/Kolkata] Punch attendance error: Already punched in today
+[23-Jan-2025 12:37:56 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:38:08 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:38:09 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:41:35 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:41:56 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:41:57 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:42:03 Asia/Kolkata] Received input: {"action":"punch_out"}
+[23-Jan-2025 12:42:42 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:42:51 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:43:11 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:43:13 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:44:13 Asia/Kolkata] Punch attendance error: Invalid request method
+[23-Jan-2025 12:44:14 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:44:14 Asia/Kolkata] Punch attendance error: Already punched in today
+[23-Jan-2025 12:45:18 Asia/Kolkata] Received input: {"action":"punch_out"}
+[23-Jan-2025 12:47:10 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:47:10 Asia/Kolkata] Punch attendance error: Failed to record punch-in: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '3-2025-01-23' for key 'unique_attendance'
+[23-Jan-2025 12:47:19 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:47:19 Asia/Kolkata] Punch attendance error: Failed to record punch-in: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '3-2025-01-23' for key 'unique_attendance'
+[23-Jan-2025 12:47:41 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:51:53 Asia/Kolkata] Received input: {"action":"punch_out"}
+[23-Jan-2025 12:51:53 Asia/Kolkata] Punch out - Working hours calculation:
+[23-Jan-2025 12:51:53 Asia/Kolkata] Punch in time: 2025-01-23 12:47:41
+[23-Jan-2025 12:51:53 Asia/Kolkata] Punch out time: 2025-01-23 12:51:53
+[23-Jan-2025 12:51:53 Asia/Kolkata] Total minutes: 4
+[23-Jan-2025 12:51:53 Asia/Kolkata] Working hours (decimal): 0.07
+[23-Jan-2025 12:53:06 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:53:06 Asia/Kolkata] Punch attendance error: Failed to record punch-in: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '3-2025-01-23' for key 'unique_attendance'
+[23-Jan-2025 12:56:21 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:58:07 Asia/Kolkata] Received input: {"action":"punch_out"}
+[23-Jan-2025 12:58:07 Asia/Kolkata] DEBUG: Punch In Time: 2025-01-23 12:56:21
+[23-Jan-2025 12:58:07 Asia/Kolkata] DEBUG: Punch Out Time: 2025-01-23 12:58:07
+[23-Jan-2025 12:58:07 Asia/Kolkata] DEBUG: Total Seconds: 106
+[23-Jan-2025 12:58:07 Asia/Kolkata] DEBUG: Working Hours: 00:01:46
+[23-Jan-2025 12:58:19 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:58:19 Asia/Kolkata] Punch attendance error: Failed to record punch-in: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '3-2025-01-23' for key 'unique_attendance'
+[23-Jan-2025 12:59:53 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 12:59:53 Asia/Kolkata] Punch attendance error: Failed to record punch-in: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '3-2025-01-23' for key 'unique_attendance'
+[23-Jan-2025 13:02:43 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 13:02:43 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 13:03:01 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 13:06:43 Asia/Kolkata] Received input: {"action":"punch_out"}
+[23-Jan-2025 13:06:43 Asia/Kolkata] DEBUG: Punch In Time: 2025-01-23 13:03:01
+[23-Jan-2025 13:06:43 Asia/Kolkata] DEBUG: Punch Out Time: 2025-01-23 13:06:43
+[23-Jan-2025 13:06:43 Asia/Kolkata] DEBUG: Total Seconds: 222
+[23-Jan-2025 13:06:43 Asia/Kolkata] DEBUG: Working Hours: 00:03:42
+[23-Jan-2025 13:06:56 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 13:06:56 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 13:18:48 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 13:18:48 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 13:27:37 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 13:27:37 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 13:27:59 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 13:27:59 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 14:23:29 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 14:23:29 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 14:28:36 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 14:28:36 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 14:36:14 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 14:36:14 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 14:36:57 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 14:36:57 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 15:11:09 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 15:11:09 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 18:13:19 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 18:13:19 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[23-Jan-2025 18:13:39 Asia/Kolkata] Received input: {"action":"punch_in"}
+[23-Jan-2025 18:13:39 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[24-Jan-2025 10:58:12 Asia/Kolkata] Received input: {"action":"punch_in"}
+[24-Jan-2025 16:09:42 Asia/Kolkata] Received input: {"action":"punch_out"}
+[24-Jan-2025 16:09:42 Asia/Kolkata] DEBUG: Punch In Time: 2025-01-24 10:58:12
+[24-Jan-2025 16:09:42 Asia/Kolkata] DEBUG: Punch Out Time: 2025-01-24 16:09:42
+[24-Jan-2025 16:09:42 Asia/Kolkata] DEBUG: Total Seconds: 18690
+[24-Jan-2025 16:09:42 Asia/Kolkata] DEBUG: Working Hours: 05:11:30
+[24-Jan-2025 18:38:35 Asia/Kolkata] Received input: {"action":"punch_in"}
+[24-Jan-2025 18:38:35 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[24-Jan-2025 19:16:05 Asia/Kolkata] Received input: {"action":"punch_in"}
+[24-Jan-2025 19:16:05 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[24-Jan-2025 19:21:29 Asia/Kolkata] Received input: {"action":"punch_in"}
+[24-Jan-2025 19:21:29 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[24-Jan-2025 19:22:43 Asia/Kolkata] Received input: {"action":"punch_in"}
+[24-Jan-2025 19:22:43 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Jan-2025 11:22:14 Asia/Kolkata] Received input: {"action":"punch_in"}
+[27-Jan-2025 11:20:27 Asia/Kolkata] Received input: {"action":"punch_in"}
+[28-Jan-2025 11:31:31 Asia/Kolkata] Received input: {"action":"punch_in"}
+[29-Jan-2025 17:31:52 Asia/Kolkata] Received input: {"action":"punch_in"}
+[30-Jan-2025 11:42:48 Asia/Kolkata] Received input: {"action":"punch_in"}
+[30-Jan-2025 17:52:29 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.6359552,"longitude":77.299712}}
+[01-Feb-2025 16:58:02 Asia/Kolkata] Received input: {"action":"punch_in"}
+[04-Feb-2025 11:26:59 Asia/Kolkata] Received input: {"action":"punch_in"}
+[04-Feb-2025 11:36:58 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.636918,"longitude":77.302636}}
+[05-Feb-2025 16:25:16 Asia/Kolkata] Received input: {"action":"punch_in"}
+[05-Feb-2025 16:28:44 Asia/Kolkata] Received input: {"action":"punch_in"}
+[05-Feb-2025 16:28:44 Asia/Kolkata] Attempting punch-in for user ID: 3
+[05-Feb-2025 16:28:44 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-02-05","2025-02-05 16:28:44","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/132.0.0.0 Safari\/537.36","present","2025-02-05 16:28:44","2025-02-05 16:28:44"]
+[05-Feb-2025 16:28:44 Asia/Kolkata] Successfully inserted attendance record with ID: 142
+[05-Feb-2025 16:29:09 Asia/Kolkata] Received input: {"action":"punch_out"}
+[05-Feb-2025 16:29:09 Asia/Kolkata] DEBUG: Punch In Time: 2025-02-05 16:28:44
+[05-Feb-2025 16:29:09 Asia/Kolkata] DEBUG: Punch Out Time: 2025-02-05 16:29:09
+[05-Feb-2025 16:29:09 Asia/Kolkata] DEBUG: Total Seconds: 25
+[05-Feb-2025 16:29:09 Asia/Kolkata] DEBUG: Working Hours: 00:00:25
+[05-Feb-2025 16:29:46 Asia/Kolkata] Received input: {"action":"punch_in"}
+[05-Feb-2025 16:29:46 Asia/Kolkata] Attempting punch-in for user ID: 3
+[05-Feb-2025 16:29:46 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-02-05","2025-02-05 16:29:46","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/132.0.0.0 Safari\/537.36","present","2025-02-05 16:29:46","2025-02-05 16:29:46"]
+[05-Feb-2025 16:29:46 Asia/Kolkata] Successfully inserted attendance record with ID: 143
+[05-Feb-2025 16:32:53 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.6484232,"longitude":77.3152004}}
+[05-Feb-2025 16:32:53 Asia/Kolkata] Attempting punch-in for user ID: 2
+[05-Feb-2025 16:32:53 Asia/Kolkata] Attempting to insert attendance with params: [2,"2025-02-05","2025-02-05 16:32:53","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/132.0.0.0 Safari\/537.36","present","2025-02-05 16:32:53","2025-02-05 16:32:53"]
+[05-Feb-2025 16:32:53 Asia/Kolkata] Successfully inserted attendance record with ID: 144
+[12-Feb-2025 15:55:16 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.637322,"longitude":77.302456}}
+[12-Feb-2025 15:55:16 Asia/Kolkata] Attempting punch-in for user ID: 2
+[12-Feb-2025 15:55:16 Asia/Kolkata] Attempting to insert attendance with params: [2,"2025-02-12","2025-02-12 15:55:16","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/132.0.0.0 Safari\/537.36 Edg\/132.0.0.0","present","2025-02-12 15:55:16","2025-02-12 15:55:16"]
+[12-Feb-2025 15:55:16 Asia/Kolkata] Successfully inserted attendance record with ID: 345
+[14-Feb-2025 11:41:16 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.636918,"longitude":77.302636}}
+[14-Feb-2025 11:41:16 Asia/Kolkata] Attempting punch-in for user ID: 2
+[14-Feb-2025 11:41:16 Asia/Kolkata] Attempting to insert attendance with params: [2,"2025-02-14","2025-02-14 11:41:16","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/133.0.0.0 Safari\/537.36 Edg\/133.0.0.0","present","2025-02-14 11:41:16","2025-02-14 11:41:16"]
+[14-Feb-2025 11:41:16 Asia/Kolkata] Successfully inserted attendance record with ID: 347
+[14-Feb-2025 12:04:52 Asia/Kolkata] Received input: {"action":"punch_out","location":{"latitude":28.637104,"longitude":77.302505}}
+[14-Feb-2025 12:04:52 Asia/Kolkata] DEBUG: Punch In Time: 2025-02-14 11:41:16
+[14-Feb-2025 12:04:52 Asia/Kolkata] DEBUG: Punch Out Time: 2025-02-14 12:04:52
+[14-Feb-2025 12:04:52 Asia/Kolkata] DEBUG: Total Seconds: 1416
+[14-Feb-2025 12:04:52 Asia/Kolkata] DEBUG: Working Hours: 00:23:36
+[15-Feb-2025 15:12:43 Asia/Kolkata] Received input: {"action":"punch_in"}
+[15-Feb-2025 15:12:43 Asia/Kolkata] Attempting punch-in for user ID: 3
+[15-Feb-2025 15:12:43 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-02-15","2025-02-15 15:12:43","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/132.0.0.0 Safari\/537.36","present","2025-02-15 15:12:43","2025-02-15 15:12:43"]
+[15-Feb-2025 15:12:43 Asia/Kolkata] Successfully inserted attendance record with ID: 349
+[15-Feb-2025 20:03:31 Asia/Kolkata] Received input: {"action":"punch_out"}
+[15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Punch In Time: 2025-02-15 15:12:43
+[15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Punch Out Time: 2025-02-15 20:03:31
+[15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Total Seconds: 17448
+[15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Working Hours: 04:50:48

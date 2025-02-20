@@ -1,0 +1,389 @@
+ /* Approval Board Section Styles */
+.approval-board-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.approval-board-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Column Styles */
+.approval-column {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.column-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.column-header i {
+    font-size: 1.25rem;
+}
+
+.column-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.column-header .count {
+    background: #e2e8f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Approval Items Styles */
+.approval-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.approval-item {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.approval-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.approval-type {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.approval-type.purchase { background: #e0f2f1; color: #00897b; }
+.approval-type.leave { background: #f3e5f5; color: #8e24aa; }
+.approval-type.expense { background: #fff3e0; color: #f57c00; }
+.approval-type.project { background: #e3f2fd; color: #1976d2; }
+
+.approval-date {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.approval-content h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.approval-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.approval-meta {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.approval-meta > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.approval-meta i {
+    color: #64748b;
+}
+
+.approval-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.approval-actions button {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.approve-btn {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.reject-btn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.approve-btn:hover { background: #bbf7d0; }
+.reject-btn:hover { background: #fecaca; }
+
+.approval-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.status-badge.approved {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.reviewer, .approval-time {
+    color: #64748b;
+}
+
+/* Scrollbar Styles */
+.approval-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.approval-items::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.approval-items::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.approval-items::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Approval Board Header and Filters */
+.approval-board-header {
+    margin-bottom: 2rem;
+}
+
+.approval-filters {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+/* Search Filter */
+.search-filter {
+    flex: 1;
+    min-width: 250px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 1rem;
+    color: #64748b;
+}
+
+#approvalSearch {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+#approvalSearch:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Date Filters */
+.date-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.date-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.date-input-wrapper i {
+    position: absolute;
+    left: 1rem;
+    color: #64748b;
+}
+
+.date-filters input[type="date"] {
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    min-width: 160px;
+    transition: all 0.2s ease;
+}
+
+.date-filters input[type="date"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.date-separator {
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Filter Actions */
+.filter-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn.apply {
+    background: #6366f1;
+    color: white;
+}
+
+.filter-btn.apply:hover {
+    background: #4f46e5;
+}
+
+.filter-btn.reset {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.filter-btn.reset:hover {
+    background: #e2e8f0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .approval-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-filter,
+    .date-filters,
+    .filter-actions {
+        width: 100%;
+    }
+
+    .date-filters {
+        flex-direction: column;
+    }
+
+    .date-separator {
+        display: none;
+    }
+
+    .filter-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 640px) {
+    .filter-actions {
+        flex-direction: column;
+    }
+
+    .filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Custom Date Input Styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+}
+
+/* Placeholder Styling */
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+    color: #64748b;
+}
+
+input[type="date"]:focus::-webkit-datetime-edit-text,
+input[type="date"]:focus::-webkit-datetime-edit-month-field,
+input[type="date"]:focus::-webkit-datetime-edit-day-field,
+input[type="date"]:focus::-webkit-datetime-edit-year-field {
+    color: #1e293b;
+}

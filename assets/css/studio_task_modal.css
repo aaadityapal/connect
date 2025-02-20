@@ -1,0 +1,401 @@
+/* Modal Base Styles */
+.studio-task-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: none;
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+.studio-task-modal__content {
+    width: 90%;
+    max-width: 1200px;
+    margin: 30px auto;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    padding: 2.5rem;
+}
+
+/* Header Styles */
+.studio-task-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #f0f4f8;
+}
+
+.studio-task-modal__header h2 {
+    font-size: 1.75rem;
+    color: #1a202c;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.studio-task-modal__close {
+    background: none;
+    border: none;
+    color: #718096;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0.5rem;
+}
+
+.studio-task-modal__close:hover {
+    color: #e53e3e;
+}
+
+/* Form Styles */
+.studio-task-form__group {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Labels */
+.studio-task-form__group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+/* Select Inputs */
+.studio-task-form__group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234a5568' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5l-4-4h8l-4 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+}
+
+/* Date Inputs */
+.studio-task-form__group input[type="date"] {
+    min-height: 42px;
+}
+
+/* File Upload */
+.studio-task-form__group .file-upload {
+    position: relative;
+    display: inline-block;
+}
+
+.studio-task-form__group input[type="file"] {
+    display: none;
+}
+
+.studio-task-form__group .file-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #4b5563;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.studio-task-form__group .file-upload-btn:hover {
+    background: #e5e7eb;
+}
+
+/* Substage Section */
+.studio-task-substage {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.studio-task-substage input,
+.studio-task-substage select {
+    margin-bottom: 1rem;
+}
+
+/* Add Substage Button */
+.studio-task-stage__add {
+    width: 100%;
+    padding: 0.75rem;
+    background: #edf2f7;
+    border: 1px dashed #cbd5e0;
+    border-radius: 6px;
+    color: #4a5568;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.studio-task-stage__add:hover {
+    background: #e2e8f0;
+    border-color: #a0aec0;
+}
+
+/* Common Input Styles */
+.studio-task-form__group input,
+.studio-task-form__group select,
+.studio-task-form__group textarea {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1a202c;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.studio-task-form__group input:focus,
+.studio-task-form__group select:focus,
+.studio-task-form__group textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Placeholder Styles */
+.studio-task-form__group input::placeholder,
+.studio-task-form__group select::placeholder,
+.studio-task-form__group textarea::placeholder {
+    color: #a0aec0;
+}
+
+/* Priority Select Custom Styling */
+.priority-select {
+    position: relative;
+    width: 150px;
+}
+
+.priority-select select {
+    width: 100%;
+    padding-right: 2rem;
+}
+
+/* Stage Styles */
+.studio-task-stage {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 2px solid #e5e7eb;
+}
+
+.studio-task-stage__header {
+    margin-bottom: 1.5rem;
+}
+
+.studio-task-stage__title h3 {
+    color: #2d3748;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.studio-task-stage__controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Substage Styles */
+.studio-task-substage {
+    background: #ffffff;
+    padding: 1.25rem;
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    border: 2px solid #e5e7eb;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: start;
+}
+
+/* Button Styles */
+.studio-task-stage__add,
+.studio-task-substage__add {
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    padding: 0.875rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+.studio-task-stage__add:hover,
+.studio-task-substage__add:hover {
+    background: #e2e8f0;
+    color: #2d3748;
+}
+
+.studio-task-substage__remove {
+    background: none;
+    border: none;
+    color: #718096;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+
+.studio-task-substage__remove:hover {
+    color: #e53e3e;
+}
+
+/* Form Actions */
+.studio-task-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #edf2f7;
+}
+
+.studio-task-form__submit,
+.studio-task-form__cancel {
+    padding: 0.875rem 2rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.studio-task-form__submit {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    letter-spacing: 0.01em;
+}
+
+.studio-task-form__submit:hover {
+    background: #2563eb;
+}
+
+.studio-task-form__cancel {
+    background: #fff;
+    color: #718096;
+    border: 2px solid #e5e7eb;
+}
+
+.studio-task-form__cancel:hover {
+    background: #f8fafc;
+    color: #4a5568;
+}
+
+/* File Upload Styles */
+.file-upload-container {
+    margin-top: 0.5rem;
+}
+
+.file-list {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+/* Scrollbar Styles */
+.studio-task-modal__content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.studio-task-modal__content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.studio-task-modal__content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.studio-task-modal__content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Substage Layout */
+.studio-task-substage .substage-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+}
+
+.substage-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .studio-task-modal__content {
+        width: 95%;
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .studio-task-modal__content {
+        width: 98%;
+        padding: 1.5rem;
+    }
+
+    .studio-task-stage__controls {
+        grid-template-columns: 1fr;
+    }
+
+    .substage-controls {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Ensure inputs and selects maintain proper width */
+.input-wrapper {
+    width: 100%;
+}
+
+.input-wrapper input,
+.input-wrapper select,
+.input-wrapper textarea {
+    width: 100%;
+    min-width: 200px;
+}
+
+/* File upload improvements */
+.file-upload {
+    width: 100%;
+}
+
+.file-upload-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Stage and Substage spacing */
+.studio-task-stage {
+    margin-bottom: 2.5rem;
+    padding: 2rem;
+}
+
+.studio-task-substage {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+} 

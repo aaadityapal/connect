@@ -1,0 +1,479 @@
+.sf-container {
+    padding: 20px;
+}
+
+.sf-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.sf-tab-btn {
+    padding: 8px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #666;
+    border-radius: 4px;
+}
+
+.sf-tab-btn.sf-active {
+    background: #4CAF50;
+    color: white;
+}
+
+.sf-tab-content {
+    display: none;
+}
+
+.sf-tab-content.sf-active {
+    display: block;
+}
+
+.sf-file-item, .sf-comment-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sf-file-item::before, .sf-comment-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    background: #4CAF50;
+    border-radius: 50%;
+    transform: translateY(-50%);
+}
+
+.sf-file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sf-uploader {
+    color: #666;
+    font-size: 0.9em;
+    margin-left: auto;
+}
+
+.sf-file-icon {
+    color: #4CAF50;
+    font-size: 20px;
+}
+
+.sf-file-name {
+    font-weight: 500;
+}
+
+.sf-file-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.sf-download-btn {
+    padding: 6px 12px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s;
+}
+
+.sf-download-btn:hover {
+    background: #45a049;
+}
+
+.sf-comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.sf-commenter-name {
+    font-weight: 500;
+    color: #4CAF50;
+}
+
+.sf-comment-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.sf-comment-text {
+    white-space: pre-wrap;
+    color: #333;
+    line-height: 1.5;
+}
+
+.sf-no-data {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+.sf-input-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.sf-comment-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    resize: vertical;
+}
+
+.sf-file-upload {
+    position: relative;
+    margin: 10px 0;
+}
+
+.sf-file-input {
+    display: none;
+}
+
+.sf-file-label {
+    display: inline-block;
+    padding: 8px 15px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.sf-file-label:hover {
+    background: #45a049;
+}
+
+.sf-selected-files {
+    margin-top: 10px;
+}
+
+.sf-selected-file {
+    padding: 5px 10px;
+    background: #e9ecef;
+    border-radius: 4px;
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.sf-selected-filename {
+    font-weight: 500;
+}
+
+.sf-selected-filesize {
+    color: #666;
+}
+
+.sf-submit-btn {
+    width: 100%;
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.sf-submit-btn:hover {
+    background: #45a049;
+}
+
+.sf-timeline {
+    border-left: 2px solid #4CAF50;
+    padding-left: 20px;
+    margin-top: 20px;
+}
+
+.sf-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sf-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    background: #4CAF50;
+    border-radius: 50%;
+}
+
+.sf-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.sf-user-name {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.sf-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.sf-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sf-file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.sf-file-icon {
+    color: #4CAF50;
+    font-size: 20px;
+}
+
+.sf-file-name {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+.sf-download-btn {
+    padding: 6px 12px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.sf-download-btn:hover {
+    background: #45a049;
+}
+
+.sf-comment-text {
+    white-space: pre-wrap;
+    color: #333;
+    line-height: 1.5;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.sf-comment-required {
+    color: #dc3545;
+    font-size: 0.9em;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.sf-comment-box {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.sf-comment-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.sf-comment-btn {
+    padding: 8px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.sf-comment-btn:hover {
+    background-color: #45a049;
+}
+
+.sf-comment-btn i {
+    margin-right: 5px;
+}
+
+.sf-comment-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.sf-comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.sf-commenter-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.sf-comment-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.sf-comment-text {
+    color: #333;
+    white-space: pre-wrap;
+}
+
+.sf-attachment-area {
+    margin: 10px 0;
+}
+
+.sf-file-input {
+    display: none;
+}
+
+.sf-file-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #000000;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.sf-file-label:hover {
+    background: red;
+}
+
+.sf-file-label i {
+    margin-right: 5px;
+}
+
+.sf-selected-file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+    background: #000000;
+    border-radius: 4px;
+}
+
+.sf-selected-file-item i {
+    color: #4CAF50;
+}
+
+.sf-selected-file-item small {
+    color: #666;
+    margin-left: auto;
+}
+
+.sf-file-attachment {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sf-file-link {
+    color: #2196F3;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sf-file-link:hover {
+    text-decoration: underline;
+}
+
+.sf-file-attachment i {
+    color: #4CAF50;
+}
+
+.sf-file-link i {
+    color: #2196F3;
+}
+
+.sf-status-item {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.sf-status-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.sf-status-user {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.sf-status-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.sf-status-change {
+    color: #555;
+}
+
+.sf-status-old, .sf-status-new {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.sf-status-old {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.sf-status-new {
+    background: #e8f5e9;
+    color: #2e7d32;
+} 

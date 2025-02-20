@@ -1,0 +1,5468 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Fixed Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #000000;
+    color: white;
+    width: 250px;
+    height: 100vh;
+    transition: all 0.3s ease;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Remove all scrolling */
+    z-index: 1000;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar-header {
+    display: none;
+}
+
+/* Toggle button with higher z-index */
+.toggle-btn {
+    position: fixed; /* Changed from absolute to fixed */
+    left: 238px; /* Positioned relative to viewport instead of sidebar */
+    top: 40px;
+    background: #000000;
+    border: none;
+    color: white;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1001; /* Higher than sidebar */
+    transition: all 0.3s;
+}
+
+/* Adjust toggle button position when sidebar is collapsed */
+.sidebar.collapsed .toggle-btn {
+    left: 58px; /* Adjust based on collapsed sidebar width */
+}
+
+.toggle-btn:hover {
+    background-color: #e80f0f;
+}
+
+.toggle-btn i {
+    font-size: 14px;
+    transition: transform 0.3s;
+}
+
+.sidebar.collapsed .toggle-btn i {
+    transform: rotate(180deg);
+}
+
+/* Nav Links Container */
+.nav-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px); /* Account for logo space and padding */
+}
+
+/* Logo Container */
+.logo-container {
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Nav Items */
+.nav-links li {
+    padding: 0;
+    margin: 0;
+}
+
+.nav-links li a {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+/* Logout button at bottom */
+.nav-links li:last-child {
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
+.nav-links a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.nav-links a i {
+    margin-right: 12px;
+    width: 20px;
+    font-size: 18px;
+}
+
+.nav-links li:first-child a {
+    background-color: #e80d0d;
+    margin-bottom: 10px;
+}
+
+.nav-links li:first-child a:hover {
+    background-color: #e80d0d;
+}
+
+/* Create groups of menu items with spacing */
+.nav-links li:nth-child(3) {
+    margin-bottom: 20px; /* Space after Create Project */
+}
+
+.nav-links li:nth-child(5) {
+    margin-bottom: 20px; /* Space after Leave Management */
+}
+
+.nav-links li:nth-child(6) {
+    margin-bottom: 20px; /* Space after Reports */
+}
+
+/* Add subtle hover effects */
+.nav-links a:hover i {
+    transform: scale(1.1);
+}
+
+/* Add active state */
+.nav-links a.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+}
+
+.sidebar.collapsed .nav-links span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-links a {
+    justify-content: center;
+    padding: 12px;
+}
+
+.sidebar.collapsed .nav-links a i {
+    margin-right: 0;
+    font-size: 20px;
+}
+
+/* Adjust margins for collapsed state */
+.sidebar.collapsed .nav-links li {
+    margin: 4px;
+}
+
+.sidebar.collapsed .nav-links li:last-child {
+    margin-bottom: 20px;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex: 1;
+    min-height: 100vh;
+    padding: 30px;
+    background: #f5f6fa;
+    margin-left: 250px; /* Same as sidebar width */
+    transition: margin-left 0.3s ease;
+    overflow-y: auto;
+}
+
+/* Adjust main content when sidebar is collapsed */
+.sidebar.collapsed + .main-content {
+    margin-left: 70px;
+}
+
+/* Greeting Section Base Styles */
+.greeting-section {
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Morning Theme (5:00 AM - 11:59 AM) */
+.greeting-morning {
+    background: linear-gradient(135deg, #FFE5C0, #FFA726);
+    color: #2C3E50;
+}
+
+.greeting-morning h1 {
+    color: #2C3E50;
+}
+
+.greeting-morning p {
+    color: #34495E;
+}
+
+/* Afternoon Theme (12:00 PM - 4:59 PM) */
+.greeting-afternoon {
+    background: linear-gradient(135deg, #64B5F6, #1976D2);
+    color: white;
+}
+
+.greeting-afternoon h1 {
+    color: white;
+}
+
+.greeting-afternoon p {
+    color: #E3F2FD;
+}
+
+/* Evening Theme (5:00 PM - 7:59 PM) */
+.greeting-evening {
+    background: linear-gradient(135deg, #FF7043, #C43E00);
+    color: white;
+}
+
+.greeting-evening h1 {
+    color: white;
+}
+
+.greeting-evening p {
+    color: #FFE0B2;
+}
+
+/* Night Theme (8:00 PM - 4:59 AM) */
+.greeting-night {
+    background: linear-gradient(135deg, #1A237E, #0D47A1);
+    color: white;
+}
+
+.greeting-night h1 {
+    color: white;
+}
+
+.greeting-night p {
+    color: #90CAF9;
+}
+
+/* Common styles for greeting content */
+.greeting-section h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.greeting-section p {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+/* Add subtle animation */
+.greeting-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.logo-container img {
+    max-width: 100px;
+    height: auto;
+}
+
+.sidebar.collapsed .logo-container img {
+    max-width: 40px;
+    transition: max-width 0.3s ease;
+}
+
+.top-bar {
+    position: relative;
+    width: 100%;
+    padding: 20px;
+}
+
+.greeting-section {
+    background: linear-gradient(135deg, #FFE5C0, #FFA726);
+    border-radius: 15px;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.greeting-content {
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 99999;
+}
+
+.avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid white;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.greeting-text h1 {
+    color: #2C3E50;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.greeting-text p {
+    color: #34495E;
+    font-size: 16px;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 1000;
+}
+
+.notification-icon {
+    position: relative;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.notification-icon i {
+    font-size: 24px;
+    color: #2C3E50;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.punch-button {
+    background: #2C3E50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.punch-button:hover {
+    background: #34495E;
+    transform: translateY(-2px);
+}
+
+.punch-button i {
+    font-size: 18px;
+}
+
+/* Add animation for notification bell */
+@keyframes bellShake {
+    0% { transform: rotate(0); }
+    15% { transform: rotate(5deg); }
+    30% { transform: rotate(-5deg); }
+    45% { transform: rotate(4deg); }
+    60% { transform: rotate(-4deg); }
+    75% { transform: rotate(2deg); }
+    85% { transform: rotate(-2deg); }
+    92% { transform: rotate(1deg); }
+    100% { transform: rotate(0); }
+}
+
+.notification-icon:hover i {
+    animation: bellShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Punch button active state */
+.punch-button.active {
+    background: #e74c3c;
+}
+
+.punch-button.active span {
+    content: "Punch Out";
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .greeting-section {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .user-info {
+        flex-direction: column;
+    }
+
+    .action-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Reset and simplify the avatar container styles */
+.avatar-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Dropdown styles */
+.profile-dropdown {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    width: 280px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+    display: none;
+    z-index: 100000;
+}
+
+.profile-dropdown.show {
+    display: block;
+}
+
+.dropdown-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dropdown-header img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.dropdown-menu {
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+}
+
+.dropdown-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #2C3E50;
+    text-decoration: none;
+    gap: 12px;
+}
+
+.dropdown-menu li a:hover {
+    background: #f8f9fa;
+}
+
+.dropdown-menu li a i {
+    width: 20px;
+    color: #7F8C8D;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.user-role {
+    font-size: 13px;
+    color: #7F8C8D;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #eee;
+    margin: 8px 0;
+}
+
+.logout-btn {
+    color: #E74C3C !important;
+}
+
+.logout-btn i {
+    color: #E74C3C !important;
+}
+
+/* Add arrow at top of dropdown */
+.profile-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 24px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    transform: rotate(45deg);
+    border-left: 1px solid #eee;
+    border-top: 1px solid #eee;
+}
+
+/* Dark mode styles for entire page */
+:root {
+    --bg-light: #ffffff;
+    --text-light: #2C3E50;
+    --bg-dark: #1a1a1a;
+    --text-dark: #ffffff;
+    --sidebar-dark: #2c3e50;
+    --card-dark: #2c3e50;
+    --border-dark: #34495e;
+}
+
+/* Main dark mode styles */
+body.dark-mode {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* Dark mode for all main containers */
+body.dark-mode .main-content,
+body.dark-mode .sidebar,
+body.dark-mode .top-bar {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* Dark mode for cards and containers */
+body.dark-mode .card,
+body.dark-mode .container,
+body.dark-mode .box,
+body.dark-mode .panel {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+    border-color: var(--border-dark);
+}
+
+/* Dark mode for inputs and form elements */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .form-control {
+    background-color: #34495e;
+    color: var(--text-dark);
+    border-color: var(--border-dark);
+}
+
+/* Dark mode for tables */
+body.dark-mode table,
+body.dark-mode th,
+body.dark-mode td {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+    border-color: var(--border-dark);
+}
+
+/* Dark mode for table stripes if any */
+body.dark-mode tr:nth-child(even) {
+    background-color: #34495e;
+}
+
+/* Dark mode for buttons */
+body.dark-mode .btn,
+body.dark-mode button {
+    background-color: #34495e;
+    color: var(--text-dark);
+    border-color: var(--border-dark);
+}
+
+/* Dark mode for links */
+body.dark-mode a {
+    color: #3498db;
+}
+
+body.dark-mode a:hover {
+    color: #2980b9;
+}
+
+/* Dark mode for sidebar */
+body.dark-mode .sidebar {
+    background-color: var(--sidebar-dark);
+    border-color: var(--border-dark);
+}
+
+/* Dark mode for menu items */
+body.dark-mode .menu-item,
+body.dark-mode .nav-link {
+    color: var(--text-dark);
+}
+
+body.dark-mode .menu-item:hover,
+body.dark-mode .nav-link:hover {
+    background-color: #34495e;
+}
+
+/* Dark mode for headers */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+    color: var(--text-dark);
+}
+
+/* Dark mode for icons */
+body.dark-mode .icon,
+body.dark-mode .fas,
+body.dark-mode .far,
+body.dark-mode .fab {
+    color: var(--text-dark);
+}
+
+/* Keep existing dark mode styles */
+body.dark-mode .greeting-section {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+}
+
+body.dark-mode .profile-dropdown {
+    background-color: #2c3e50;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Add smooth transition for theme switching */
+body,
+body * {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Update greeting time color for dark mode */
+#greeting-time {
+    color: var(--text-light);
+    transition: color 0.3s ease;
+}
+
+body.dark-mode #greeting-time {
+    color: var(--text-dark);
+}
+
+/* Also ensure the username in greeting stays visible */
+body.dark-mode #user-name {
+    color: var(--text-dark);
+}
+
+/* Employee Overview Section */
+.employee-overview {
+    margin-top: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.section-header i {
+    font-size: 24px;
+    color: #2C3E50;
+}
+
+.section-header h2 {
+    font-size: 20px;
+    color: #2C3E50;
+    margin: 0;
+}
+
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);  /* Creates 3 columns */
+    gap: 20px;
+    max-width: 100%;
+    position: relative; /* Add relative positioning to container */
+}
+
+/* Calendar card spans two rows */
+.overview-card.calendar {
+    grid-row: span 2;
+    background: linear-gradient(135deg, #f6f8fa, #e9ecef);
+    min-height: 400px; /* Ensure minimum height */
+}
+
+.overview-card {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eee;
+    z-index: 1; /* Base z-index for cards */
+}
+
+.overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1002; /* Higher than other cards and tooltip */
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.overview-card.present .card-icon {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.overview-card.leave .card-icon {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.overview-card.pending .card-icon {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.overview-card.short .card-icon {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-content h3 {
+    font-size: 16px;
+    color: #2C3E50;
+    margin: 0 0 5px 0;
+}
+
+.stat {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.stat .number {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.stat .total {
+    font-size: 16px;
+    color: #7F8C8D;
+}
+
+.card-content p {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: #7F8C8D;
+}
+
+/* Dark mode styles for employee overview */
+body.dark-mode .employee-overview {
+    background: var(--card-dark);
+}
+
+body.dark-mode .section-header i,
+body.dark-mode .section-header h2 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .overview-card {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .card-content h3,
+body.dark-mode .stat .number {
+    color: var(--text-dark);
+}
+
+body.dark-mode .stat .total,
+body.dark-mode .card-content p {
+    color: #95a5a6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .overview-cards {
+        grid-template-columns: 1fr;  /* Stack cards vertically on mobile */
+    }
+    
+    .overview-card.calendar {
+        grid-row: auto;  /* Reset the span on mobile */
+        min-height: 350px;
+    }
+}
+
+/* Calendar Styles */
+#mini-calendar {
+    padding: 20px;
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 15px;
+}
+
+.calendar-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.calendar-header h4 {
+    font-size: 22px;
+    color: #2C3E50;
+    margin: 0;
+    font-weight: 600;
+}
+
+.calendar-nav {
+    background: none;
+    border: none;
+    color: #2C3E50;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav:hover {
+    background-color: #f0f2f5;
+    color: #e80d0d;
+}
+
+.calendar-nav i {
+    font-size: 14px;
+}
+
+/* Dark mode support for navigation */
+body.dark-mode .calendar-nav {
+    color: #ecf0f1;
+}
+
+body.dark-mode .calendar-nav:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #e80d0d;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: #95a5a6;
+    margin-bottom: 15px;
+}
+
+.calendar-dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-date {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #2c3e50;
+}
+
+.calendar-date:not(.empty):hover {
+    background-color: #f0f2f5;
+    color: #e80d0d;
+}
+
+.calendar-date.today {
+    background-color: #e80d0d;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(232, 13, 13, 0.3);
+}
+
+.calendar-date.empty {
+    cursor: default;
+}
+
+/* Remove the card title since month/year is shown in calendar */
+.overview-card.calendar .card-icon,
+.overview-card.calendar .card-content h3 {
+    display: none;
+}
+
+/* Dark mode support */
+body.dark-mode #mini-calendar {
+    background: #2c3e50;
+}
+
+body.dark-mode .calendar-header h4 {
+    color: #ecf0f1;
+}
+
+body.dark-mode .calendar-weekdays {
+    color: #7f8c8d;
+}
+
+body.dark-mode .calendar-date {
+    color: #ecf0f1;
+}
+
+body.dark-mode .calendar-date:not(.empty):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #e80d0d;
+}
+
+body.dark-mode .calendar-date.today {
+    background-color: #e80d0d;
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70px;
+    }
+    
+    .main-content {
+        margin-left: 70px;
+    }
+    
+    .sidebar.collapsed {
+        width: 0;
+        padding: 0;
+    }
+    
+    .sidebar.collapsed + .main-content {
+        margin-left: 0;
+    }
+}
+
+/* Update Tooltip Styles */
+.tooltip-content {
+    display: none;
+    position: absolute;
+    top: calc(100% + 15px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    min-width: 320px;
+    z-index: 1001;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none; /* Prevent tooltip from interfering with hover */
+}
+
+.overview-card {
+    position: relative;
+    z-index: 1;
+}
+
+.overview-card:hover {
+    z-index: 1002; /* Ensure card stays above other elements when hovered */
+}
+
+.overview-card:hover .tooltip-content {
+    display: block;
+    opacity: 1;
+}
+
+/* Tooltip Header */
+.tooltip-header {
+    margin-bottom: 15px;
+}
+
+.tooltip-header h4 {
+    color: #2C3E50;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+}
+
+.tooltip-header .tooltip-time {
+    color: #95a5a6;
+    font-size: 13px;
+}
+
+/* Tooltip User Entry */
+.tooltip-user {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.tooltip-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.tooltip-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.tooltip-username {
+    color: #2C3E50;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.leave-days {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.days-count {
+    color: #e80d0d;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.leave-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #95a5a6;
+    font-size: 14px;
+}
+
+.leave-date i {
+    color: #95a5a6;
+    font-size: 14px;
+}
+
+/* Arrow styling */
+.tooltip-content::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: white;
+    transform: translateX(-50%) rotate(45deg);
+    box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode support */
+body.dark-mode .tooltip-content {
+    background: var(--card-dark);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .tooltip-header h4,
+body.dark-mode .tooltip-username {
+    color: #ecf0f1;
+}
+
+body.dark-mode .tooltip-time,
+body.dark-mode .tooltip-punch-time {
+    color: #7f8c8d;
+}
+
+body.dark-mode .tooltip-user {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .tooltip-content::before {
+    background: var(--card-dark);
+}
+
+/* Pending Leaves Tooltip Styles */
+.leave-request-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+}
+
+.leave-request-item:last-child {
+    border-bottom: none;
+}
+
+.leave-user-info {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.leave-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.leave-type {
+    font-size: 13px;
+    color: #e80d0d;
+    font-weight: 500;
+}
+
+.leave-duration {
+    font-size: 13px;
+    color: #7F8C8D;
+}
+
+.leave-reason {
+    font-size: 13px;
+    color: #7F8C8D;
+    margin: 5px 0;
+}
+
+.leave-actions {
+    margin-top: 12px;
+    width: 100%;
+}
+
+.action-reason {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    resize: vertical;
+    min-height: 60px;
+    font-size: 13px;
+    color: #2C3E50;
+    transition: border-color 0.2s ease;
+}
+
+.action-reason:focus {
+    outline: none;
+    border-color: #e80d0d;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.approve-btn, .reject-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.approve-btn {
+    background-color: #27AE60;
+    color: white;
+}
+
+.reject-btn {
+    background-color: #E74C3C;
+    color: white;
+}
+
+.approve-btn:hover {
+    background-color: #219A52;
+}
+
+.reject-btn:hover {
+    background-color: #D44333;
+}
+
+.approve-btn i, .reject-btn i {
+    font-size: 12px;
+}
+
+/* Disabled state */
+.approve-btn:disabled, .reject-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Dark mode support */
+body.dark-mode .leave-request-item {
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .user-name {
+    color: var(--text-dark);
+}
+
+body.dark-mode .action-reason {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+body.dark-mode .action-reason:focus {
+    border-color: #e80d0d;
+}
+
+/* Loading state for buttons */
+.approve-btn.loading, .reject-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.approve-btn.loading::after, .reject-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 2px solid white;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Dialog Styles */
+.dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    padding: 0;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.dialog-overlay.active .dialog-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dialog-header h3 {
+    margin: 0;
+    color: #2C3E50;
+    font-size: 18px;
+}
+
+.close-dialog {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #95a5a6;
+    font-size: 18px;
+    padding: 5px;
+}
+
+.dialog-body {
+    padding: 20px;
+}
+
+.leave-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.leave-info p {
+    margin: 5px 0;
+    color: #2C3E50;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2C3E50;
+    font-weight: 500;
+}
+
+#actionReason {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    min-height: 100px;
+    font-size: 14px;
+}
+
+.dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancel-btn, #confirmActionBtn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn {
+    background: #f5f6fa;
+    color: #2C3E50;
+}
+
+#confirmActionBtn {
+    background: #e80d0d;
+    color: white;
+}
+
+#confirmActionBtn:hover {
+    background: #d40c0c;
+}
+
+.cancel-btn:hover {
+    background: #eceef5;
+}
+
+/* Dark mode support */
+body.dark-mode .dialog-content {
+    background: var(--card-dark);
+}
+
+body.dark-mode .dialog-header,
+body.dark-mode .dialog-footer {
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .dialog-header h3,
+body.dark-mode .leave-info p,
+body.dark-mode .form-group label {
+    color: var(--text-dark);
+}
+
+body.dark-mode #actionReason {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+body.dark-mode .leave-info {
+    background: var(--background-dark);
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    z-index: 9999;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    border-left: 4px solid #27AE60;
+}
+
+.notification.error {
+    border-left: 4px solid #E74C3C;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification i {
+    font-size: 20px;
+}
+
+.notification.success i {
+    color: #27AE60;
+}
+
+.notification.error i {
+    color: #E74C3C;
+}
+
+.notification span {
+    color: #2C3E50;
+    font-size: 14px;
+}
+
+/* Dark mode support */
+body.dark-mode .notification {
+    background: var(--card-dark);
+}
+
+body.dark-mode .notification span {
+    color: var(--text-dark);
+}
+
+/* Calendar Date Tooltip Styles */
+.calendar-date {
+    position: relative;
+}
+
+.date-tooltip {
+    display: none;
+    position: absolute;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    min-width: 200px;
+    z-index: 1000;
+}
+
+.date-tooltip .tooltip-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.date-tooltip .tooltip-header h4 {
+    margin: 0;
+    color: #2C3E50;
+    font-size: 14px;
+}
+
+.date-tooltip .tooltip-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.attendance-stat,
+.leave-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2C3E50;
+    font-size: 13px;
+}
+
+.attendance-stat i {
+    color: #27AE60;
+}
+
+.leave-stat i {
+    color: #E74C3C;
+}
+
+/* Dark mode support */
+body.dark-mode .date-tooltip {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .date-tooltip .tooltip-header {
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .date-tooltip .tooltip-header h4,
+body.dark-mode .attendance-stat,
+body.dark-mode .leave-stat {
+    color: var(--text-dark);
+}
+
+/* Add these styles for the upcoming leaves section */
+.upcoming-leaves {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.upcoming-leaves h5 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #2C3E50;
+}
+
+.leave-user {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+
+.leave-user:last-child {
+    margin-bottom: 0;
+}
+
+.leave-user .username {
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.leave-user .leave-type {
+    color: #666;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.leave-user .leave-duration {
+    color: #666;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/* Dark mode support */
+body.dark-mode .upcoming-leaves {
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .upcoming-leaves h5 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .leave-user {
+    background: var(--background-dark);
+}
+
+body.dark-mode .leave-user .username {
+    color: var(--text-dark);
+}
+
+body.dark-mode .leave-user .leave-type,
+body.dark-mode .leave-user .leave-duration {
+    color: var(--text-secondary-dark);
+}
+
+/* Task Overview Styles */
+.task-overview-container {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    margin-top: 24px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+.task-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.task-overview-header h2 {
+    font-size: 20px;
+    color: #2C3E50;
+    margin: 0;
+    font-weight: 600;
+}
+
+.task-view-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-left: auto; /* This will push the controls to the right */
+}
+
+/* View Toggle Styles */
+.view-toggle-container {
+    padding: 4px;
+    margin-left: auto; /* This will push the toggle specifically to the right */
+}
+
+.view-toggle {
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 4px;
+    display: inline-flex;
+    min-width: 200px;
+    position: relative;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 4px;
+}
+
+.view-toggle input[type="radio"] {
+    display: none;
+}
+
+.view-toggle label {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #6c757d;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    border-radius: 6px;
+}
+
+.view-toggle .slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: #3498db;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+}
+
+.view-toggle input[type="radio"]:checked + label {
+    color: white;
+}
+
+.view-toggle input[type="radio"]:nth-of-type(2):checked ~ .slider {
+    transform: translateX(100%);
+}
+
+/* Dark mode support */
+body.dark-mode .view-toggle {
+    background: var(--background-dark);
+}
+
+body.dark-mode .view-toggle label {
+    color: var(--text-secondary-dark);
+}
+
+body.dark-mode .view-toggle input[type="radio"]:checked + label {
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .task-overview-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .task-header-left {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .add-task-btn {
+        padding: 8px 16px;
+    }
+
+    .task-view-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+        margin-left: 0; /* Reset margin for mobile */
+    }
+
+    .view-toggle-container {
+        width: 100%;
+        margin-left: 0; /* Reset margin for mobile */
+    }
+}
+
+.task-date-filter {
+    display: flex;
+    gap: 12px;
+    background: #f8f9fa;
+    padding: 4px;
+    border-radius: 8px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 4px;
+}
+
+.task-date-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: #6c757d;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.task-date-btn:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.task-date-btn.active {
+    background: #3498db;
+    color: white;
+    box-shadow: rgba(52, 152, 219, 0.2) 0px 4px 8px;
+}
+
+.task-overview-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.task-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.task-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.task-card-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 8px;
+}
+
+.task-card.total .task-card-icon {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.task-card.completed .task-card-icon {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.task-card.pending .task-card-icon {
+    background: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+}
+
+.task-card.overdue .task-card-icon {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.task-card-content {
+    flex: 1;
+}
+
+.task-card-content h3 {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.task-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+}
+
+.task-number {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.task-total {
+    color: #95a5a6;
+    font-size: 1rem;
+}
+
+.task-card-content p {
+    margin: 0.25rem 0 0 0;
+    color: #95a5a6;
+    font-size: 0.9rem;
+}
+
+/* Dark mode support */
+body.dark-mode .task-overview-container {
+    background: var(--card-dark);
+}
+
+body.dark-mode .task-card {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .task-overview-header h2,
+body.dark-mode .task-card-content h3,
+body.dark-mode .task-number {
+    color: var(--text-dark);
+}
+
+body.dark-mode .task-date-filter {
+    background: var(--background-dark);
+}
+
+body.dark-mode .task-date-btn {
+    color: var(--text-secondary-dark);
+}
+
+body.dark-mode .task-date-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .task-total,
+body.dark-mode .task-card-content p {
+    color: var(--text-secondary-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .task-overview-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .task-date-filter {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .task-date-btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .task-overview-container {
+        padding: 24px;
+    }
+
+    .task-overview-cards {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .task-card {
+        min-height: 160px;
+        padding: 24px;
+    }
+}
+
+/* Add a medium breakpoint for tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .task-overview-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        max-width: 100%;
+    }
+
+    .task-card {
+        padding: 28px;
+    }
+}
+
+/* Task Calendar Styles */
+.task-calendar-view {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+.task-calendar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.task-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 0 16px;
+}
+
+.task-calendar-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2C3E50;
+    margin: 0;
+}
+
+.task-calendar-nav {
+    background: none;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #2C3E50;
+    transition: all 0.3s ease;
+}
+
+.task-calendar-nav:hover {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.task-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    color: #2C3E50;
+    margin-bottom: 16px;
+}
+
+.task-calendar-weekdays div {
+    padding: 12px;
+    font-size: 14px;
+}
+
+.task-calendar-dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.task-calendar-date {
+    min-height: 120px;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    position: relative;
+    background: #fff;
+    transition: all 0.3s ease;
+    border-radius: 12px; /* Added border radius */
+    margin: 4px; /* Added margin for spacing */
+}
+
+.date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.task-preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.calendar-task-preview {
+    padding: 2px 6px 2px 10px;
+    border-radius: 6px; /* Rounded corners for task previews */
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.calendar-task-preview:hover {
+    transform: translateX(2px);
+}
+
+.more-tasks {
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    padding: 2px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 2px;
+}
+
+.tasks-container {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px; /* Rounded corners for expanded container */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.task-calendar-date.expanded .tasks-container {
+    display: block;
+}
+
+.task-calendar-date.expanded .task-preview-container {
+    opacity: 0.5;
+}
+
+/* Status-based colors for preview tasks */
+.calendar-task-preview.task-pending {
+    background-color: #fff3cd;
+    border-left: 2px solid #ffc107;
+}
+
+.calendar-task-preview.task-progress {
+    background-color: #cfe2ff;
+    border-left: 2px solid #0d6efd;
+}
+
+.calendar-task-preview.task-completed {
+    background-color: #d1e7dd;
+    border-left: 2px solid #198754;
+}
+
+.calendar-task-preview.task-hold {
+    background-color: #f8d7da;
+    border-left: 2px solid #dc3545;
+}
+
+/* Make sure the add task icon doesn't overlap with previews */
+.add-task-icon {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.add-task-icon:hover {
+    opacity: 1;
+}
+
+.task-calendar-date:hover {
+    transform: translateY(-2px);
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+.task-calendar-date.today {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: #3498db;
+}
+
+.task-calendar-date .date-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.task-calendar-date .task-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #3498db;
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.task-calendar-date .task-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+}
+
+.task-calendar-date .indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.task-calendar-date .indicator-dot.pending {
+    background: #f1c40f;
+}
+
+.task-calendar-date .indicator-dot.completed {
+    background: #2ecc71;
+}
+
+.task-calendar-date .indicator-dot.overdue {
+    background: #e74c3c;
+}
+
+/* Dark mode support */
+body.dark-mode .task-calendar-view {
+    background: var(--card-dark);
+}
+
+body.dark-mode .task-calendar-title,
+body.dark-mode .task-calendar-weekdays div,
+body.dark-mode .task-calendar-date .date-number {
+    color: var(--text-dark);
+}
+
+body.dark-mode .task-calendar-date {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .task-calendar-date.today {
+    background: rgba(52, 152, 219, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .task-calendar-view {
+        padding: 16px;
+    }
+
+    .task-calendar-weekdays div {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .task-calendar-date {
+        padding: 8px;
+    }
+
+    .task-calendar-date .date-number {
+        font-size: 14px;
+    }
+}
+
+/* Task Header Styles */
+.task-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.add-task-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: rgba(52, 152, 219, 0.2) 0px 4px 12px;
+}
+
+.add-task-btn i {
+    font-size: 14px;
+}
+
+.add-task-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: rgba(52, 152, 219, 0.3) 0px 6px 16px;
+}
+
+.add-task-btn:active {
+    transform: translateY(0);
+}
+
+/* Update existing task-overview-header styles */
+.task-overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Dark mode support */
+body.dark-mode .add-task-btn {
+    background: #2980b9;
+}
+
+body.dark-mode .add-task-btn:hover {
+    background: #3498db;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .task-overview-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .task-header-left {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .add-task-btn {
+        padding: 8px 16px;
+    }
+}
+
+/* Task Date Range Styles */
+.task-date-range {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 2px 4px;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.date-input-group label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.date-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.date-input i {
+    position: absolute;
+    left: 12px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.task-date-picker {
+    padding: 8px 12px 8px 36px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #2C3E50;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.task-date-picker:hover {
+    border-color: #3498db;
+}
+
+.task-date-picker:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: rgba(52, 152, 219, 0.2) 0px 0px 0px 3px;
+}
+
+.task-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 38px;
+}
+
+.task-filter-btn i {
+    font-size: 14px;
+}
+
+.task-filter-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: rgba(52, 152, 219, 0.2) 0px 4px 12px;
+}
+
+.task-filter-btn:active {
+    transform: translateY(0);
+}
+
+/* Dark mode support */
+body.dark-mode .task-date-range {
+    background: var(--background-dark);
+}
+
+body.dark-mode .task-date-picker {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+body.dark-mode .date-input-group label {
+    color: var(--text-secondary-dark);
+}
+
+body.dark-mode .date-input i {
+    color: var(--text-secondary-dark);
+}
+
+body.dark-mode .task-filter-btn {
+    background: #2980b9;
+}
+
+body.dark-mode .task-filter-btn:hover {
+    background: #3498db;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .task-date-range {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .date-input-group {
+        width: 100%;
+    }
+
+    .task-date-picker {
+        width: 100%;
+    }
+
+    .task-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Add a medium breakpoint for tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .task-date-range {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .date-input-group {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+/* Add styles for the plus button in calendar dates */
+.task-calendar-date .add-task-icon {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: #3498db;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: rgba(52, 152, 219, 0.2) 0px 2px 8px;
+}
+
+.task-calendar-date:hover .add-task-icon {
+    opacity: 1;
+}
+
+.task-calendar-date .add-task-icon:hover {
+    transform: scale(1.1);
+    background: #2980b9;
+}
+
+/* Dark mode support */
+body.dark-mode .task-calendar-date .add-task-icon {
+    background: #2980b9;
+}
+
+body.dark-mode .task-calendar-date .add-task-icon:hover {
+    background: #3498db;
+}
+
+/* Add styles for expanded date box */
+.task-calendar-date {
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.task-calendar-date.expanded {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: auto;
+    min-height: 200px;
+    z-index: 1000;
+    background: white;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 10px 30px;
+    aspect-ratio: auto;
+    padding: 20px;
+}
+
+/* Add overlay when date is expanded */
+.calendar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.calendar-overlay.active {
+    display: block;
+}
+
+/* Handle right edge expansion */
+.task-calendar-date[data-position="5"],
+.task-calendar-date[data-position="6"] {
+    transform-origin: right;
+}
+
+.task-calendar-date[data-position="5"].expanded,
+.task-calendar-date[data-position="6"].expanded {
+    right: 0;
+}
+
+/* Dark mode support for expanded state */
+body.dark-mode .task-calendar-date.expanded {
+    background: var(--card-dark);
+}
+
+/* Task Dialog Styles */
+.task-dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.task-dialog-content {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh; /* Limit height to 90% of viewport height */
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column; /* Enable flex layout */
+}
+
+.task-dialog-overlay.active .task-dialog-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.task-dialog-header {
+    padding: 24px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 16px 16px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.task-dialog-header h3 {
+    margin: 0;
+    color: #2C3E50;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.task-close-dialog {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #95a5a6;
+    font-size: 20px;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-close-dialog:hover {
+    background: #e9ecef;
+    color: #2C3E50;
+}
+
+.task-dialog-body {
+    padding: 24px;
+    overflow-y: auto; /* Enable vertical scrolling */
+    flex-grow: 1; /* Allow body to grow */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #cbd5e0 #f8f9fa; /* Firefox */
+}
+
+/* Webkit scrollbar styles */
+.task-dialog-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.task-dialog-body::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.task-dialog-body::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 4px;
+    border: 2px solid #f8f9fa;
+}
+
+.task-dialog-body::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
+}
+
+/* Dark mode scrollbar support */
+body.dark-mode .task-dialog-body {
+    scrollbar-color: #4a5568 #2d3748; /* Firefox */
+}
+
+body.dark-mode .task-dialog-body::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+body.dark-mode .task-dialog-body::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
+    border: 2px solid #2d3748;
+}
+
+body.dark-mode .task-dialog-body::-webkit-scrollbar-thumb:hover {
+    background-color: #718096;
+}
+
+/* Keep the header and footer fixed */
+.task-dialog-header,
+.task-dialog-footer {
+    position: sticky;
+    background: white;
+    z-index: 1;
+}
+
+.task-dialog-header {
+    top: 0;
+    border-radius: 16px 16px 0 0;
+}
+
+.task-dialog-footer {
+    bottom: 0;
+    border-radius: 0 0 16px 16px;
+}
+
+/* Dark mode support for fixed header/footer */
+body.dark-mode .task-dialog-header,
+body.dark-mode .task-dialog-footer {
+    background: var(--card-dark);
+}
+
+.task-form-group {
+    margin-bottom: 24px;
+}
+
+.task-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2C3E50;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.task-form-group input,
+.task-form-group textarea,
+.task-form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #2C3E50;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+}
+
+.task-form-group input:focus,
+.task-form-group textarea:focus,
+.task-form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.task-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.task-datetime-input {
+    position: relative;
+}
+
+.task-datetime-input input {
+    padding-right: 16px;
+}
+
+.task-dialog-footer {
+    padding: 24px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+}
+
+.task-cancel-btn,
+.task-save-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.task-cancel-btn {
+    background: #e9ecef;
+    color: #2C3E50;
+}
+
+.task-save-btn {
+    background: #3498db;
+    color: white;
+}
+
+.task-cancel-btn:hover {
+    background: #dee2e6;
+}
+
+.task-save-btn:hover {
+    background: #2980b9;
+}
+
+/* Dark mode support */
+body.dark-mode .task-dialog-content {
+    background: var(--card-dark);
+}
+
+body.dark-mode .task-dialog-header,
+body.dark-mode .task-dialog-footer {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .task-dialog-header h3,
+body.dark-mode .task-form-group label {
+    color: var(--text-dark);
+}
+
+body.dark-mode .task-form-group input,
+body.dark-mode .task-form-group textarea,
+body.dark-mode .task-form-group select {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+body.dark-mode .task-form-group input:focus,
+body.dark-mode .task-form-group textarea:focus,
+body.dark-mode .task-form-group select:focus {
+    background: var(--background-dark);
+    border-color: #3498db;
+}
+
+body.dark-mode .task-close-dialog:hover {
+    background: var(--border-dark);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .task-form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .task-dialog-content {
+        width: 95%;
+        margin: 20px;
+    }
+
+    .task-dialog-header,
+    .task-dialog-body,
+    .task-dialog-footer {
+        padding: 16px;
+    }
+}
+
+/* Add these styles to your existing CSS */
+
+.stages-container {
+    margin-top: 32px;
+    border-top: 2px dashed #e9ecef;
+    padding-top: 24px;
+}
+
+.stage-block {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.stage-block:hover {
+    border-color: #3498db;
+}
+
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.stage-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.remove-stage-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.remove-stage-btn:hover {
+    background: #fee2e2;
+}
+
+.add-stage-btn {
+    width: 100%;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 2px dashed #3498db;
+    border-radius: 12px;
+    color: #3498db;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.add-stage-btn:hover {
+    background: #ebf5fb;
+}
+
+.file-upload-container {
+    margin-top: 16px;
+}
+
+.file-upload-input {
+    display: none;
+}
+
+.file-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #2C3E50;
+    transition: all 0.2s ease;
+}
+
+.file-upload-label:hover {
+    border-color: #3498db;
+    background: #f8f9fa;
+}
+
+.selected-file {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #2C3E50;
+}
+
+/* Dark mode support */
+body.dark-mode .stage-block {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .add-stage-btn {
+    background: var(--card-dark);
+}
+body.dark-mode .add-stage-btn:hover {
+    background: var(--border-dark);
+}
+
+body.dark-mode .file-upload-label {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+/* Add these styles for substages */
+.substages-container {
+    margin-top: 24px;
+    border-top: 1px dashed #e9ecef;
+    padding-top: 20px;
+}
+
+.substage-block {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+    margin-left: 16px;
+    transition: all 0.3s ease;
+}
+
+.substage-block:hover {
+    border-color: #3498db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.substage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.substage-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #3498db;
+    margin: 0;
+}
+
+.remove-substage-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.remove-substage-btn:hover {
+    background: #fee2e2;
+}
+
+.add-substage-btn {
+    width: calc(100% - 16px);
+    margin-left: 16px;
+    padding: 10px;
+    background: white;
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    color: #718096;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.add-substage-btn:hover {
+    border-color: #3498db;
+    color: #3498db;
+    background: #f8fafc;
+}
+
+/* Dark mode support */
+body.dark-mode .substage-block {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .substage-title {
+    color: #60a5fa;
+}
+
+body.dark-mode .add-substage-btn {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+body.dark-mode .add-substage-btn:hover {
+    border-color: #60a5fa;
+    color: #60a5fa;
+    background: var(--background-dark);
+}
+
+/* Add these styles for the project type select */
+.project-type-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #2C3E50;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232C3E50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+}
+
+.project-type-select:focus {
+    outline: none;
+    border-color: #3498db;
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.project-type-select option {
+    padding: 12px;
+}
+
+/* Dark mode support */
+body.dark-mode .project-type-select {
+    background-color: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode .project-type-select:focus {
+    background-color: var(--background-dark);
+    border-color: #3498db;
+}
+
+body.dark-mode .project-type-select option {
+    background-color: var(--card-dark);
+}
+
+/* Project Type Theme Styles - Light Mode */
+.task-dialog-content.theme-architecture {
+    background: linear-gradient(to bottom right, #f0f7ff, #ffffff);
+    border-color: #2196F3;
+}
+
+.task-dialog-content.theme-interior {
+    background: linear-gradient(to bottom right, #f3e5f5, #ffffff);
+    border-color: #9C27B0;
+}
+
+.task-dialog-content.theme-construction {
+    background: linear-gradient(to bottom right, #fff3e0, #ffffff);
+    border-color: #FF9800;
+}
+
+/* Project Type Theme Styles - Dark Mode */
+body.dark-mode .task-dialog-content.theme-architecture {
+    background: linear-gradient(to bottom right, #1a2942, var(--card-dark));
+    border-color: #2196F3;
+}
+
+body.dark-mode .task-dialog-content.theme-interior {
+    background: linear-gradient(to bottom right, #2a1934, var(--card-dark));
+    border-color: #9C27B0;
+}
+
+body.dark-mode .task-dialog-content.theme-construction {
+    background: linear-gradient(to bottom right, #2d2419, var(--card-dark));
+    border-color: #FF9800;
+}
+
+/* Headers - Light & Dark Mode */
+.task-dialog-content.theme-architecture .task-dialog-header,
+.task-dialog-content.theme-interior .task-dialog-header,
+.task-dialog-content.theme-construction .task-dialog-header {
+    color: white;
+}
+
+.task-dialog-content.theme-architecture .task-dialog-header {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.task-dialog-content.theme-interior .task-dialog-header {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+.task-dialog-content.theme-construction .task-dialog-header {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+/* Stage Blocks - Light Mode */
+.theme-architecture .stage-block {
+    background: rgba(33, 150, 243, 0.05);
+    border-color: rgba(33, 150, 243, 0.3);
+}
+
+.theme-interior .stage-block {
+    background: rgba(156, 39, 176, 0.05);
+    border-color: rgba(156, 39, 176, 0.3);
+}
+
+.theme-construction .stage-block {
+    background: rgba(255, 152, 0, 0.05);
+    border-color: rgba(255, 152, 0, 0.3);
+}
+
+/* Stage Blocks - Dark Mode */
+body.dark-mode .theme-architecture .stage-block {
+    background: rgba(33, 150, 243, 0.1);
+    border-color: rgba(33, 150, 243, 0.4);
+}
+
+body.dark-mode .theme-interior .stage-block {
+    background: rgba(156, 39, 176, 0.1);
+    border-color: rgba(156, 39, 176, 0.4);
+}
+
+body.dark-mode .theme-construction .stage-block {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: rgba(255, 152, 0, 0.4);
+}
+
+/* Form Elements - Dark Mode */
+body.dark-mode .task-dialog-content input,
+body.dark-mode .task-dialog-content select,
+body.dark-mode .task-dialog-content textarea {
+    background-color: var(--background-dark);
+    color: var(--text-dark);
+    border-color: var(--border-dark);
+}
+
+/* Save Button - Light & Dark Mode */
+.theme-architecture .task-save-btn {
+    background: #2196F3;
+    color: white;
+}
+
+.theme-interior .task-save-btn {
+    background: #9C27B0;
+    color: white;
+}
+
+.theme-construction .task-save-btn {
+    background: #FF9800;
+    color: white;
+}
+
+/* Hover states for buttons - Light & Dark Mode */
+.theme-architecture .add-stage-btn:hover,
+.theme-architecture .add-substage-btn:hover {
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+.theme-interior .add-stage-btn:hover,
+.theme-interior .add-substage-btn:hover {
+    border-color: #9C27B0;
+    color: #9C27B0;
+}
+
+.theme-construction .add-stage-btn:hover,
+.theme-construction .add-substage-btn:hover {
+    border-color: #FF9800;
+    color: #FF9800;
+}
+
+/* Project Type and Category Select Styles - Light Mode */
+.project-type-select,
+#taskCategory {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #2C3E50;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232C3E50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+}
+
+.project-type-select:focus,
+#taskCategory:focus {
+    outline: none;
+    border-color: #3498db;
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
+.project-type-select option,
+#taskCategory option {
+    padding: 12px;
+    background-color: white;
+}
+
+/* Dark Mode Styles for Dropdowns */
+body.dark-mode .project-type-select,
+body.dark-mode #taskCategory {
+    background-color: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+    /* Update dropdown arrow color for dark mode */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode .project-type-select:focus,
+body.dark-mode #taskCategory:focus {
+    background-color: var(--background-dark);
+    border-color: #3498db;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
+}
+
+body.dark-mode .project-type-select option,
+body.dark-mode #taskCategory option {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+}
+
+/* Hover states for dropdowns */
+body.dark-mode .project-type-select:hover,
+body.dark-mode #taskCategory:hover {
+    border-color: var(--border-dark-hover);
+}
+
+/* Selected option styles */
+body.dark-mode .project-type-select option:checked,
+body.dark-mode #taskCategory option:checked {
+    background-color: var(--background-dark);
+    color: #60a5fa;
+}
+
+/* Dropdown list background in dark mode */
+body.dark-mode .project-type-select option:hover,
+body.dark-mode #taskCategory option:hover {
+    background-color: var(--background-dark-hover);
+}
+
+/* Project Type Select Styles - Light & Dark Mode */
+.project-type-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #2C3E50;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232C3E50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+}
+
+.project-type-select option {
+    padding: 12px;
+}
+
+/* Dark mode support */
+body.dark-mode .project-type-select {
+    background-color: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode .project-type-select:focus {
+    background-color: var(--background-dark);
+    border-color: #3498db;
+}
+
+body.dark-mode .project-type-select option {
+    background-color: var(--card-dark);
+}
+
+/* Project Type Select - Dark Mode Specific */
+body.dark-mode .project-type-select {
+    color: #ffffff;
+    background-color: #2c3e50;
+    border-color: #34495e;
+}
+
+body.dark-mode .project-type-select option {
+    background-color: #2c3e50;
+    color: #ffffff;
+    padding: 12px;
+}
+
+body.dark-mode .project-type-select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+/* Dropdown list styles for dark mode */
+body.dark-mode .project-type-select option:checked {
+    background-color: #3498db;
+    color: #ffffff;
+}
+
+body.dark-mode .project-type-select option:hover {
+    background-color: #34495e;
+}
+
+/* Selected option style */
+body.dark-mode .project-type-select option:checked {
+    background: linear-gradient(0deg, #3498db 0%, #3498db 100%);
+}
+
+/* Ensure dropdown menu is visible in dark mode */
+body.dark-mode .project-type-select:focus option {
+    background-color: #2c3e50;
+    color: #ffffff;
+}
+
+.calendar-task {
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-task:hover {
+    transform: translateX(2px);
+}
+
+.calendar-task .task-title {
+    display: block;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-task .task-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.task-pending {
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+}
+
+.task-progress {
+    background-color: #cfe2ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.task-completed {
+    background-color: #d1e7dd;
+    border-left: 3px solid #198754;
+}
+
+.task-hold {
+    background-color: #f8d7da;
+    border-left: 3px solid #dc3545;
+}
+
+.tasks-container {
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.task-calendar-date.expanded .tasks-container {
+    display: block;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.indicator-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+}
+
+.indicator-dot.pending { background-color: #ffc107; }
+.indicator-dot.in-progress { background-color: #0d6efd; }
+.indicator-dot.completed { background-color: #198754; }
+.indicator-dot.on-hold { background-color: #dc3545; }
+
+/* Project Type Colors */
+.project-type-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 2px 0 0 2px;
+}
+
+/* Architecture Projects - Blue theme */
+.project-type-architecture {
+    border-left: none !important; /* Remove default border */
+    position: relative;
+    padding-left: 6px;
+}
+
+.project-type-architecture .project-type-indicator {
+    background-color: #2196F3;
+}
+
+/* Interior Projects - Purple theme */
+.project-type-interior {
+    border-left: none !important;
+    position: relative;
+    padding-left: 6px;
+}
+
+.project-type-interior .project-type-indicator {
+    background-color: #9C27B0;
+}
+
+/* Construction Projects - Orange theme */
+.project-type-construction {
+    border-left: none !important;
+    position: relative;
+    padding-left: 6px;
+}
+
+.project-type-construction .project-type-indicator {
+    background-color: #FF9800;
+}
+
+/* Add a legend for project types */
+.calendar-legend {
+    display: flex;
+    gap: 16px;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #666;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.legend-color.architecture { background-color: #2196F3; }
+.legend-color.interior { background-color: #9C27B0; }
+.legend-color.construction { background-color: #FF9800; }
+
+/* Update calendar task preview styles */
+.calendar-task-preview {
+    padding: 2px 6px 2px 10px;
+    border-radius: 6px; /* Rounded corners for task previews */
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Hover effect for better visibility */
+.calendar-task-preview:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Add default project type style */
+.project-type-default {
+    border-left: none !important;
+    position: relative;
+    padding-left: 6px;
+}
+
+.project-type-default .project-type-indicator {
+    background-color: #9E9E9E; /* Grey color for default/undefined project types */
+}
+
+/* Calendar date styling */
+.task-calendar-date {
+    min-height: 120px;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    position: relative;
+    background: #fff;
+    transition: all 0.3s ease;
+    border-radius: 12px; /* Added border radius */
+    margin: 4px; /* Added margin for spacing */
+}
+
+/* Style for today's date */
+.task-calendar-date.today {
+    background-color: #f8f9fa;
+    border: 2px solid #0d6efd;
+}
+
+/* Style for empty dates */
+.task-calendar-date.empty {
+    background-color: #f8f9fa;
+    border: none;
+}
+
+/* Calendar task preview container */
+.task-preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+/* Calendar task preview items */
+.calendar-task-preview {
+    padding: 2px 6px 2px 10px;
+    border-radius: 6px; /* Rounded corners for task previews */
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* More tasks indicator */
+.more-tasks {
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    padding: 2px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 2px;
+}
+
+/* Calendar grid container */
+.task-calendar-dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    padding: 4px;
+    background-color: #f8f9fa;
+    border-radius: 12px; /* Added border radius to calendar container */
+}
+
+/* Expanded task container */
+.tasks-container {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px; /* Rounded corners for expanded container */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    padding: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Date number styling */
+.date-number {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Today's date number */
+.task-calendar-date.today .date-number {
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 4px;
+}
+
+/* Hover effect for date boxes */
+.task-calendar-date:not(.empty):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Add to your existing task card styles */
+.task-card.pending-stages {
+    background: white;
+}
+
+.task-card.pending-stages .task-card-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.task-card.pending-substages {
+    background: white   ;
+}
+
+.task-card.pending-substages .task-card-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Update grid layout to accommodate 6 cards */
+.task-overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+@media (min-width: 1400px) {
+    .task-overview-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1399px) and (min-width: 768px) {
+    .task-overview-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .task-overview-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Project Details Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 30px auto;
+    padding: 0;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: modalSlideIn 0.3s ease;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    z-index: 1001; /* Ensure it's above other modal content */
+}
+
+.close-modal:hover {
+    background-color: #f1f1f1;
+    color: #e74c3c;
+    transform: rotate(90deg);
+}
+
+/* Make sure the button is clickable in dark mode */
+body.dark-mode .close-modal {
+    color: #fff;
+}
+
+body.dark-mode .close-modal:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ff6b6b;
+}
+
+.modal-body {
+    padding: 30px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+/* Project Info Section */
+.project-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.info-row .label {
+    width: 160px;
+    color: #666;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.info-row i {
+    margin-right: 10px;
+    width: 16px;
+    color: #3498db;
+}
+
+.project-description {
+    margin: 25px 0;
+    line-height: 1.6;
+    color: #555;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eee;
+}
+
+/* Stages Section */
+.project-stages {
+    margin-top: 30px;
+}
+
+.project-stages h4 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.stages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stage-item {
+    border-left: 4px solid #ffc107; /* Default yellow border for pending */
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fff5e6; /* Light yellow background */
+    transition: transform 0.2s ease; /* Keep transition for stages */
+}
+
+.stage-item:hover {
+    transform: translateX(5px); /* Keep hover effect for stages */
+}
+
+.stage-item.status-pending {
+    border-left-color: #ffc107; /* Yellow for pending */
+}
+
+.stage-item.status-in-progress {
+    border-left-color: #2196F3; /* Blue for in progress */
+}
+
+.stage-item.status-completed {
+    border-left-color: #4CAF50; /* Green for completed */
+}
+
+.stage-item.status-delayed {
+    border-left-color: #f44336; /* Red for delayed */
+}
+
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.stage-header h5 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.stage-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+/* Status Colors */
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-in-progress {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.stage-meta {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.stage-meta span {
+    display: flex;
+    align-items: center;
+}
+
+.stage-meta i {
+    margin-right: 8px;
+    color: #3498db;
+}
+
+/* Substages Section */
+.substages-list {
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 2px solid #e1e8ed;
+}
+
+.substage-item {
+    border-left: 4px solid #ffc107; /* Default yellow border for pending */
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    margin-left: 20px;
+    background: #ffffff; /* White background */
+}
+
+
+.substage-item.status-pending {
+    border-left-color: #ffc107; /* Yellow for pending */
+}
+
+.substage-item.status-in-progress {
+    border-left-color: #2196F3; /* Blue for in progress */
+}
+
+.substage-item.status-completed {
+    border-left-color: #4CAF50; /* Green for completed */
+}
+
+.substage-item.status-delayed {
+    border-left-color: #f44336; /* Red for delayed */
+}
+
+
+
+.substage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.substage-header h6 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+/* Files Section */
+.project-files, .stage-files {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.project-files h4, .stage-files h6 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.project-files ul, .stage-files ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.project-files li, .stage-files li {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    color: #555;
+}
+
+.project-files i, .stage-files i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+/* Dark Mode Styles */
+body.dark-mode .modal-content {
+    background-color: #1a2635;
+    color: #fff;
+}
+
+body.dark-mode .modal-header {
+    background-color: #2c3e50;
+    border-bottom-color: #34495e;
+}
+
+body.dark-mode .project-info {
+    background-color: #2c3e50;
+}
+
+body.dark-mode .info-row {
+    border-bottom-color: #34495e;
+}
+
+body.dark-mode .stage-item {
+    background-color: #2c3e50;
+    border-color: #34495e;
+}
+
+body.dark-mode .substage-item {
+    background-color: #1a2635;
+}
+
+body.dark-mode .project-files,
+body.dark-mode .stage-files {
+    background-color: #2c3e50;
+}
+
+/* Animation */
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Scrollbar Styling */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 15px auto;
+    }
+
+    .modal-header {
+        padding: 15px 20px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .info-row .label {
+        margin-bottom: 5px;
+    }
+
+    .stage-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .stage-meta {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Calendar Expanded View Styles */
+.task-calendar-date {
+    position: relative;
+    transition: all 0.3s ease;
+    min-height: 100px;
+    border: 1px solid #e0e0e0;
+}
+
+.task-calendar-date.expanded {
+    position: absolute;
+    z-index: 1000;
+    background: white;
+    min-height: 300px;
+    width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 15px;
+    transform-origin: center center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Container for tasks in expanded view */
+.tasks-container, .task-preview-container {
+    max-height: calc(100% - 30px);
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Prevent content jumping */
+.task-calendar-dates {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    padding: 10px;
+}
+
+/* Scrollbar styling for expanded view */
+.task-calendar-date.expanded::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-calendar-date.expanded::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.task-calendar-date.expanded::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+/* Task items in expanded view */
+.calendar-task, .calendar-task-preview {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #007bff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-task:hover, .calendar-task-preview:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+/* Project Details Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 50px auto;
+    width: 80%;
+    max-width: 900px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+    color: #e74c3c;
+}
+
+/* Add animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Project Type Color Bands */
+.modal-header {
+    position: relative;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 4px 4px 0 0;
+}
+
+/* Project Type-specific colors */
+.modal-header.project-type-architecture::before {
+    background-color: #4CAF50; /* Green for Architecture */
+}
+
+.modal-header.project-type-interior::before {
+    background-color: #2196F3; /* Blue for Interior */
+}
+
+.modal-header.project-type-construction::before {
+    background-color: #FF9800; /* Orange for Construction */
+}
+
+/* Status badge styles */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.status-badge.status-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-badge.status-in-progress {
+    background-color: #2196F3;
+}
+
+.status-badge.status-completed {
+    background-color: #4CAF50;
+}
+
+.status-badge.status-delayed {
+    background-color: #f44336;
+}
+
+/* Toggle arrow and table styles */
+.toggle-files {
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center horizontally */
+    margin-top: 10px;
+    width: 100%; /* Take full width */
+    gap: 5px; /* Space between icon and text */
+}
+
+.toggle-files i {
+    transition: transform 0.3s ease;
+}
+
+.toggle-files.active i {
+    transform: rotate(180deg);
+}
+
+/* Table styles with horizontal lines */
+.substage-files-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: white;
+}
+
+.substage-files-table[data-state="hidden"] {
+    display: none !important;
+}
+
+.substage-files-table[data-state="visible"] {
+    display: table !important;
+}
+
+.substage-files-table th,
+.substage-files-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.substage-files-table th {
+    background-color: #f5f5f5;
+}
+
+.substage-files-table .empty-row {
+    background-color: #f9f9f9;
+}
+
+.file-actions {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.file-actions button {
+    padding: 4px 8px;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.file-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-actions button i {
+    font-size: 14px;
+}
+
+/* Add styles for table header icons */
+.substage-files-table th i {
+    margin-right: 5px;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+/* Hide the text for screen readers but keep it accessible */
+.substage-files-table th span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Update action buttons styling */
+.file-actions {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    min-width: 200px; /* Ensure minimum width */
+}
+
+.file-actions button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    background-color: transparent;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.file-actions button:hover {
+    background-color: #e9ecef;
+}
+
+/* Specific colors for different actions */
+.file-actions button:nth-child(1) { /* View */
+    color: #0d6efd;
+}
+.file-actions button:nth-child(2) { /* Download */
+    color: #198754;
+}
+.file-actions button:nth-child(3) { /* Send */
+    color: #0dcaf0;
+}
+.file-actions button:nth-child(4) { /* Approve */
+    color: #198754;
+}
+.file-actions button:nth-child(5) { /* Reject */
+    color: #dc3545;
+}
+
+/* Update table column widths */
+.substage-files-table {
+    width: 100%;
+    table-layout: fixed; /* For better column width control */
+}
+
+.substage-files-table th,
+.substage-files-table td {
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Specific column widths */
+.substage-files-table th:nth-child(1),
+.substage-files-table td:nth-child(1) { /* S.No */
+    width: 8%;
+}
+
+.substage-files-table th:nth-child(2),
+.substage-files-table td:nth-child(2) { /* File Name */
+    width: 35%;
+}
+
+.substage-files-table th:nth-child(3),
+.substage-files-table td:nth-child(3) { /* Uploads */
+    width: 15%;
+}
+
+.substage-files-table th:nth-child(4),
+.substage-files-table td:nth-child(4) { /* Status */
+    width: 15%;
+}
+
+.substage-files-table th:nth-child(5),
+.substage-files-table td:nth-child(5) { /* Actions */
+    width: 27%;
+}
+
+/* Keep existing action buttons styling */
+.file-actions {
+    display: flex;
+    gap: 8px; /* Slightly increased gap between buttons */
+    justify-content: center;
+    min-width: 200px;
+}
+
+/* Rest of your existing styles... */
+
+/* Add hover effect with plus icon */
+.substage-files-table td {
+    position: relative;
+    cursor: pointer;
+}
+
+.substage-files-table td:not(:last-child)::after {
+    content: '\f067'; /* Font Awesome plus icon */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #0d6efd;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 5px;
+    border-radius: 50%;
+}
+
+.substage-files-table td:not(:last-child):hover::after {
+    opacity: 1;
+}
+
+/* Add hover background effect */
+.substage-files-table td:not(:last-child):hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Exclude the actions column from the plus icon effect */
+.substage-files-table td:last-child:hover::after {
+    content: none;
+}
+
+/* Keep existing styles... */
+
+/* File Upload Dialog Styles */
+.file-upload-dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.file-upload-dialog-content {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.file-upload-dialog-overlay.active {
+    display: flex;
+}
+
+.file-upload-dialog-overlay.active .file-upload-dialog-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.file-upload-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 16px 16px 0 0;
+}
+
+.file-upload-dialog-header h3 {
+    margin: 0;
+    color: #2C3E50;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.file-upload-dialog-body {
+    padding: 20px;
+}
+
+.file-upload-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+}
+
+/* Dark mode support */
+body.dark-mode .file-upload-dialog-content {
+    background: var(--card-dark);
+}
+
+body.dark-mode .file-upload-dialog-header,
+body.dark-mode .file-upload-dialog-footer {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .file-upload-dialog-header h3 {
+    color: var(--text-dark);
+}
+
+/* File table styles */
+.substage-files-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: white;
+}
+
+.substage-files-table[data-state="hidden"] {
+    display: none !important;
+}
+
+.substage-files-table[data-state="visible"] {
+    display: table !important;
+}
+
+.substage-files-table th,
+.substage-files-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.substage-files-table th {
+    background-color: #f5f5f5;
+}
+
+.file-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.file-actions button {
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.file-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Dark mode support */
+body.dark-mode .substage-files-table {
+    background: var(--card-dark);
+}
+
+body.dark-mode .substage-files-table th {
+    background: var(--background-dark);
+    color: var(--text-dark);
+}
+
+body.dark-mode .substage-files-table td {
+    border-color: var(--border-dark);
+}
+
+body.dark-mode .substage-files-table tr:hover {
+    background: var(--background-dark);
+}
+
+body.dark-mode .file-actions button:hover {
+    background: var(--border-dark);
+}
+
+.substage-files-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    display: none; /* Hidden by default */
+}
+
+.substage-files-table th,
+.substage-files-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.substage-files-table th {
+    background-color: #f5f5f5;
+}
+
+.file-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.file-actions button {
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.file-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.substage-files-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: white;
+}
+
+.substage-files-table[data-state="hidden"] {
+    display: none !important;
+}
+
+.substage-files-table[data-state="visible"] {
+    display: table !important;
+}
+
+.substage-files-table th,
+.substage-files-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.substage-files-table th {
+    background-color: #f5f5f5;
+}
+
+.file-actions {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.file-actions button {
+    padding: 4px 8px;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.file-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-actions button i {
+    font-size: 14px;
+}
+
+/* Add these styles for the file status colors in the table */
+.substage-files-table tr.file-status-pending {
+    background-color: #fff3e0; /* Light orange for pending */
+}
+
+.substage-files-table tr.file-status-approved {
+    background-color: #e8f5e9; /* Light green for approved */
+}
+
+.substage-files-table tr.file-status-rejected {
+    background-color: #ffebee; /* Light red for rejected */
+}
+
+.substage-files-table tr.file-status-in-review {
+    background-color: #e3f2fd; /* Light blue for in review */
+}
+
+/* Dark mode support */
+body.dark-mode .substage-files-table tr.file-status-pending {
+    background-color: rgba(255, 152, 0, 0.2); /* Dark orange for pending */
+}
+
+body.dark-mode .substage-files-table tr.file-status-approved {
+    background-color: rgba(76, 175, 80, 0.2); /* Dark green for approved */
+}
+
+body.dark-mode .substage-files-table tr.file-status-rejected {
+    background-color: rgba(244, 67, 54, 0.2); /* Dark red for rejected */
+}
+
+body.dark-mode .substage-files-table tr.file-status-in-review {
+    background-color: rgba(33, 150, 243, 0.2); /* Dark blue for in review */
+}
+
+/* Add hover effects */
+.substage-files-table tr[class*="file-status-"]:hover {
+    filter: brightness(0.95);
+}
+
+body.dark-mode .substage-files-table tr[class*="file-status-"]:hover {
+    filter: brightness(1.1);
+}
+
+/* File status colors in the table */
+.substage-files-table tr.file-status-pending {
+    background-color: #fff3e0; /* Light orange for pending */
+}
+
+.substage-files-table tr.file-status-sent-for-approval {
+    background-color: #e3f2fd; /* Light blue for sent for approval */
+}
+
+.substage-files-table tr.file-status-approved {
+    background-color: #e8f5e9; /* Light green for approved */
+}
+
+.substage-files-table tr.file-status-rejected {
+    background-color: #ffebee; /* Light red for rejected */
+}
+
+/* Dark mode support */
+body.dark-mode .substage-files-table tr.file-status-pending {
+    background-color: rgba(255, 152, 0, 0.2); /* Dark orange for pending */
+}
+
+body.dark-mode .substage-files-table tr.file-status-sent-for-approval {
+    background-color: rgba(33, 150, 243, 0.2); /* Dark blue for sent for approval */
+}
+
+body.dark-mode .substage-files-table tr.file-status-approved {
+    background-color: rgba(76, 175, 80, 0.2); /* Dark green for approved */
+}
+
+body.dark-mode .substage-files-table tr.file-status-rejected {
+    background-color: rgba(244, 67, 54, 0.2); /* Dark red for rejected */
+}
+
+/* Add hover effects */
+.substage-files-table tr[class*="file-status-"]:hover {
+    filter: brightness(0.95);
+}
+
+body.dark-mode .substage-files-table tr[class*="file-status-"]:hover {
+    filter: brightness(1.1);
+}
+
+/* File status colors in the table */
+.substage-files-table tr.file-status-pending {
+    background-color: #fff3e0;
+}
+
+.substage-files-table tr.file-status-approved {
+    background-color: #e8f5e9;
+}
+
+.substage-files-table tr.file-status-rejected {
+    background-color: #ffebee;
+}
+
+/* Action button states */
+.file-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-actions button.approve-btn:not(:disabled):hover {
+    color: #4CAF50;
+    transform: scale(1.1);
+}
+
+.file-actions button.reject-btn:not(:disabled):hover {
+    color: #f44336;
+    transform: scale(1.1);
+}
+
+/* Status transition animation */
+.file-status {
+    transition: all 0.3s ease;
+}
+
+/* Dark mode support */
+body.dark-mode .substage-files-table tr.file-status-approved {
+    background-color: rgba(76, 175, 80, 0.2);
+}
+
+body.dark-mode .substage-files-table tr.file-status-rejected {
+    background-color: rgba(244, 67, 54, 0.2);
+}
+
+/* File action buttons */
+.action-btn {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.approve-btn:not(:disabled):hover {
+    color: #4CAF50;
+    transform: scale(1.1);
+}
+
+.reject-btn:not(:disabled):hover {
+    color: #f44336;
+    transform: scale(1.1);
+}
+
+/* File status styles */
+.file-status-approved {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.file-status-rejected {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 4px;
+    color: white;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification.success {
+    background-color: #4CAF50;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* File status styles */
+.file-status-rejected {
+    background-color: rgba(244, 67, 54, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+/* Dark mode support */
+body.dark-mode .file-status-rejected {
+    background-color: rgba(244, 67, 54, 0.2);
+}
+
+/* Notification styles for reject action */
+.notification.error {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Stage Status Update Styles */
+.stage-status-update {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.status-dropdown {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-dropdown:hover {
+    border-color: #2196F3;
+}
+
+.update-status-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.update-status-btn.active {
+    opacity: 1;
+    color: #2196F3;
+}
+
+.update-status-btn:hover {
+    transform: scale(1.1);
+}
+
+.update-status-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Status-specific styles */
+.stage-item.status-pending {
+    border-left: 4px solid #FFC107;
+}
+
+.stage-item.status-in-progress {
+    border-left: 4px solid #2196F3;
+}
+
+.stage-item.status-completed {
+    border-left: 4px solid #4CAF50;
+}
+
+.stage-item.status-delayed {
+    border-left: 4px solid #f44336;
+}
+
+/* Dark mode support */
+body.dark-mode .status-dropdown {
+    background-color: #333;
+    color: #fff;
+    border-color: #555;
+}
+
+body.dark-mode .status-dropdown:hover {
+    border-color: #2196F3;
+}
+
+/* Stage Status Dropdown Styles */
+.stage-status-dropdown {
+    padding: 6px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 13px;
+    color: #2C3E50;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 10px;
+    min-width: 140px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232C3E50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+.stage-status-dropdown:hover {
+    border-color: #3498db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stage-status-dropdown:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* Status-specific option styles */
+.stage-status-dropdown option {
+    padding: 8px;
+}
+
+/* Status-specific colors */
+.stage-status-dropdown option[value="pending"] {
+    color: #ffc107;
+}
+
+.stage-status-dropdown option[value="in_progress"] {
+    color: #2196F3;
+}
+
+.stage-status-dropdown option[value="completed"] {
+    color: #4CAF50;
+}
+
+.stage-status-dropdown option[value="on_hold"] {
+    color: #dc3545;
+}
+
+.stage--status-dropdown option[value="cancelled"] {
+    color: #6c757d;
+}
+
+.stage-status-dropdown option[value="Freezed"]{
+    color: #90CAF9;
+}
+
+.stage-status-dropdown option[value="Sent To Client"]{
+    color: #0d6efd;
+}
+
+/* Dark mode support */
+body.dark-mode .stage-status-dropdown {
+    background-color: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode .stage-status-dropdown:hover {
+    border-color: #3498db;
+    background-color: var(--background-dark);
+}
+
+body.dark-mode .stage-status-dropdown:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+body.dark-mode .stage-status-dropdown option {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+}
+
+/* Stage header with status dropdown layout */
+.stage-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: rgba(52, 152, 219, 0.05);
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.stage-header h5 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2C3E50;
+    flex: 0 0 auto;
+}
+
+/* Status badge positioning */
+.status-badge {
+    margin-left: auto;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+/* Dark mode for stage header */
+body.dark-mode .stage-header {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+body.dark-mode .stage-header h5 {
+    color: var(--text-dark);
+}
+
+/* Status Badge Styles */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+/* Status-specific colors */
+.status-badge.status-not_started {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+}
+
+.status-badge.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.status-badge.status-in_progress {
+    background-color: #cce5ff;
+    color: #004085;
+    border: 1px solid #b8daff;
+}
+
+.status-badge.status-in_review {
+    background-color: #e0cffc;
+    color: #5a3b94;
+    border: 1px solid #d4bffa;
+}
+
+.status-badge.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-badge.status-on_hold {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.status-badge.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-badge.status-blocked {
+    background-color: #ffe5e5;
+    color: #cc0000;
+    border: 1px solid #ffcccc;
+}
+
+.status-badge.status-freezed {
+    background-color: #e8f4fd;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-badge.status-sent_to_client {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Dark mode support */
+body.dark-mode .stage-status-dropdown {
+    background-color: var(--card-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+body.dark-mode .stage-status-dropdown:hover {
+    border-color: #3498db;
+    background-color: var(--background-dark);
+}
+
+body.dark-mode .stage-status-dropdown option {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .stage-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .stage-status-dropdown {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+}
+
+.category-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    color: #333;
+}
+
+.category-select optgroup {
+    font-weight: bold;
+    color: #2196F3;
+    background-color: #f5f5f5;
+}
+
+.category-select option {
+    padding: 8px;
+    color: #333;
+    background-color: white;
+}
+
+.category-select option:hover {
+    background-color: #f0f0f0;
+}
+
+/* Dark mode support */
+body.dark-mode .category-select {
+    background-color: #2d3436;
+    color: #fff;
+    border-color: #4a4a4a;
+}
+
+body.dark-mode .category-select optgroup {
+    background-color: #1e272e;
+    color: #3498db;
+}
+
+body.dark-mode .category-select option {
+    background-color: #2d3436;
+    color: #fff;
+}
+
+body.dark-mode .category-select option:hover {
+    background-color: #3d4d5d;
+}
+
+.substage-drawing-type {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.substage-drawing-type optgroup {
+    font-weight: bold;
+    color: #2196F3;
+    background-color: #f5f5f5;
+    padding: 8px;
+}
+
+.substage-drawing-type option {
+    padding: 8px;
+    color: #333;
+    background-color: white;
+}
+
+.substage-drawing-type option:hover {
+    background-color: #f0f0f0;
+}
+
+/* Dark mode support */
+body.dark-mode .substage-drawing-type {
+    background-color: #2d3436;
+    color: #fff;
+    border-color: #4a4a4a;
+}
+
+body.dark-mode .substage-drawing-type optgroup {
+    background-color: #1e272e;
+    color: #3498db;
+}
+
+body.dark-mode .substage-drawing-type option {
+    background-color: #2d3436;
+    color: #fff;
+}
+
+body.dark-mode .substage-drawing-type option:hover {
+    background-color: #3d4d5d;
+}
+
+.substage-name {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+    color: #333;
+}
+
+.substage-name optgroup {
+    font-weight: bold;
+    color: #2196F3;
+    background-color: #f5f5f5;
+}
+
+.substage-name option {
+    padding: 8px;
+    color: #333;
+    background-color: white;
+}
+
+.substage-name option:hover {
+    background-color: #f0f0f0;
+}
+
+/* Dark mode support */
+body.dark-mode .substage-name {
+    background-color: #2d3436;
+    color: #fff;
+    border-color: #4a4a4a;
+}
+
+body.dark-mode .substage-name optgroup {
+    background-color: #1e272e;
+    color: #3498db;
+}
+
+body.dark-mode .substage-name option {
+    background-color: #2d3436;
+    color: #fff;
+}
+
+body.dark-mode .substage-name option:hover {
+    background-color: #3d4d5d;
+}
+

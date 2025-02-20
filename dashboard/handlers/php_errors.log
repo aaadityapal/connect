@@ -1,0 +1,122 @@
+[01-Feb-2025 12:44:58 Europe/Berlin] Script started
+[01-Feb-2025 12:44:58 Europe/Berlin] Session started
+[01-Feb-2025 12:44:58 Europe/Berlin] Attempting to include database file: C:/xampp/htdocs/hr/config/db_connect.php
+[01-Feb-2025 12:44:58 Europe/Berlin] Database file included
+[01-Feb-2025 12:44:58 Europe/Berlin] Database connection verified
+[01-Feb-2025 12:44:58 Europe/Berlin] Raw input received: {"file_id":"uploads/projects/8/stages/16/679dcca7bcbd6_dfsdf.pdf","status":"approved","action":"approve"}
+[01-Feb-2025 12:44:58 Europe/Berlin] Input decoded: Array
+(
+    [file_id] => uploads/projects/8/stages/16/679dcca7bcbd6_dfsdf.pdf
+    [status] => approved
+    [action] => approve
+)
+
+[01-Feb-2025 12:44:58 Europe/Berlin] ERROR in update_file_status.php: Missing required fields: substage_id 
+[01-Feb-2025 12:44:58 Europe/Berlin] Stack trace: #0 {main}
+[03-Feb-2025 08:25:03 Europe/Berlin] Script started
+[03-Feb-2025 08:25:03 Europe/Berlin] Session started
+[03-Feb-2025 08:25:03 Europe/Berlin] Attempting to include database file: C:/xampp/htdocs/hr/config/db_connect.php
+[03-Feb-2025 08:25:03 Europe/Berlin] Database file included
+[03-Feb-2025 08:25:03 Europe/Berlin] Database connection verified
+[03-Feb-2025 08:25:05 Europe/Berlin] Script started
+[03-Feb-2025 08:25:05 Europe/Berlin] Session started
+[03-Feb-2025 08:25:05 Europe/Berlin] Attempting to include database file: C:/xampp/htdocs/hr/config/db_connect.php
+[03-Feb-2025 08:25:05 Europe/Berlin] Database file included
+[03-Feb-2025 08:25:05 Europe/Berlin] Database connection verified
+[03-Feb-2025 08:25:21 Europe/Berlin] Script started
+[03-Feb-2025 08:25:21 Europe/Berlin] Session started
+[03-Feb-2025 08:25:21 Europe/Berlin] Attempting to include database file: C:/xampp/htdocs/hr/config/db_connect.php
+[03-Feb-2025 08:25:21 Europe/Berlin] Database file included
+[03-Feb-2025 08:25:21 Europe/Berlin] Database connection verified
+[03-Feb-2025 08:26:01 Europe/Berlin] Script started
+[03-Feb-2025 08:26:01 Europe/Berlin] Session started
+[03-Feb-2025 08:26:01 Europe/Berlin] Attempting to include database file: C:/xampp/htdocs/hr/config/db_connect.php
+[03-Feb-2025 08:26:01 Europe/Berlin] Database file included
+[03-Feb-2025 08:26:01 Europe/Berlin] Database connection verified
+[03-Feb-2025 08:42:50 Europe/Berlin] Received data: {"file_id":12,"action":"approve"}
+[03-Feb-2025 08:42:50 Europe/Berlin] Error in update_file_status.php: File is not in pending status
+[03-Feb-2025 08:43:20 Europe/Berlin] Received data: {"file_id":12,"action":"approve"}
+[03-Feb-2025 08:43:20 Europe/Berlin] Error in update_file_status.php: File is not in pending status
+[03-Feb-2025 09:21:35 Europe/Berlin] Received data: {"file_id":12,"action":"approve"}
+[03-Feb-2025 09:21:35 Europe/Berlin] File ID: 12 status updated to: approved
+[03-Feb-2025 09:22:02 Europe/Berlin] Received data: {"file_id":10,"action":"approve"}
+[03-Feb-2025 09:22:02 Europe/Berlin] File ID: 10 status updated to: approved
+[03-Feb-2025 09:58:59 Europe/Berlin] Received data: {"file_id":9,"action":"approve"}
+[03-Feb-2025 09:58:59 Europe/Berlin] File ID: 9 status updated to: approved
+[03-Feb-2025 10:24:34 Europe/Berlin] Received data: {"file_id":13,"action":"approve"}
+[03-Feb-2025 10:24:34 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[03-Feb-2025 10:24:36 Europe/Berlin] Received data: {"file_id":13,"action":"approve"}
+[03-Feb-2025 10:24:36 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[03-Feb-2025 10:25:00 Europe/Berlin] Received data: {"file_id":13,"action":"approve"}
+[03-Feb-2025 10:25:00 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[03-Feb-2025 10:26:37 Europe/Berlin] Received data: {"file_id":13,"action":"approve"}
+[03-Feb-2025 10:26:37 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[03-Feb-2025 10:27:31 Europe/Berlin] Received data: {"file_id":13,"action":"approve"}
+[03-Feb-2025 10:27:31 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[03-Feb-2025 10:28:20 Europe/Berlin] Received data: {"file_id":13,"action":"approve"}
+[03-Feb-2025 10:28:21 Europe/Berlin] File ID: 13 status updated from sent_for_approval to approved
+[03-Feb-2025 11:57:11 Europe/Berlin] Received data: {"file_id":11,"action":"approve"}
+[03-Feb-2025 11:57:11 Europe/Berlin] File ID: 11 status updated from sent_for_approval to approved
+[03-Feb-2025 12:49:35 Europe/Berlin] Received data: {"file_id":14,"action":"approve"}
+[03-Feb-2025 12:49:35 Europe/Berlin] File ID: 14 status updated from sent_for_approval to approved
+[03-Feb-2025 13:14:58 Europe/Berlin] Received data: {"file_id":8,"action":"approve"}
+[03-Feb-2025 13:14:58 Europe/Berlin] File ID: 8 status updated from sent_for_approval to approved
+[03-Feb-2025 13:15:01 Europe/Berlin] Received data: {"file_id":7,"action":"approve"}
+[03-Feb-2025 13:15:01 Europe/Berlin] File ID: 7 status updated from sent_for_approval to approved
+[03-Feb-2025 13:15:01 Europe/Berlin] Received data: {"file_id":6,"action":"approve"}
+[03-Feb-2025 13:15:01 Europe/Berlin] File ID: 6 status updated from sent_for_approval to approved
+[03-Feb-2025 13:16:51 Europe/Berlin] Received data: {"file_id":15,"action":"approve"}
+[03-Feb-2025 13:16:51 Europe/Berlin] File ID: 15 status updated from sent_for_approval to approved
+[04-Feb-2025 07:16:28 Europe/Berlin] Received data: {"file_id":16,"action":"approve"}
+[04-Feb-2025 07:16:28 Europe/Berlin] File ID: 16 status updated from sent_for_approval to approved
+[04-Feb-2025 07:46:57 Europe/Berlin] Received data: {"file_id":17,"action":"approve"}
+[04-Feb-2025 07:46:57 Europe/Berlin] File ID: 17 status updated from sent_for_approval to approved
+[04-Feb-2025 08:03:25 Europe/Berlin] Received data: {"file_id":18,"action":"approve"}
+[04-Feb-2025 08:03:25 Europe/Berlin] File ID: 18 status updated from sent_for_approval to approved
+[04-Feb-2025 09:07:06 Europe/Berlin] Received data: {"file_id":18,"action":"reject"}
+[04-Feb-2025 09:07:12 Europe/Berlin] Received data: {"file_id":19,"action":"reject"}
+[04-Feb-2025 09:10:59 Europe/Berlin] Received data: {"file_id":19,"action":"reject"}
+[04-Feb-2025 09:11:13 Europe/Berlin] Received data: {"file_id":20,"action":"reject"}
+[04-Feb-2025 09:14:50 Europe/Berlin] Received data: {"file_id":21,"action":"approve"}
+[04-Feb-2025 14:55:52 Europe/Berlin] Received data: {"file_id":22,"action":"approve"}
+[04-Feb-2025 14:55:52 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[04-Feb-2025 14:55:59 Europe/Berlin] Received data: {"file_id":22,"action":"reject"}
+[04-Feb-2025 14:57:21 Europe/Berlin] Received data: {"file_id":23,"action":"approve"}
+[08-Feb-2025 10:35:45 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:35:45 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:35:47 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:35:47 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:36:01 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:36:01 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:40:53 Europe/Berlin] Received data: {"file_id":24,"action":"approve","status":"approved","updated_at":"2025-02-08T09:40:53.339Z"}
+[08-Feb-2025 10:41:17 Europe/Berlin] Received data: {"file_id":24,"action":"approve","status":"approved","updated_at":"2025-02-08T09:41:17.244Z"}
+[08-Feb-2025 10:41:17 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:42:21 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:42:21 Europe/Berlin] Error in update_file_status.php: Unknown column 'status' in 'field list'
+[08-Feb-2025 10:49:19 Europe/Berlin] Received data: {"file_id":24,"status":"approved"}
+[08-Feb-2025 10:49:19 Europe/Berlin] Error in update_file_status.php: Missing required parameters
+[08-Feb-2025 10:50:29 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:50:29 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:51:26 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:51:26 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:51:57 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:51:57 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:52:46 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:52:46 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:54:52 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 10:54:52 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:56:39 Europe/Berlin] Received data: {"file_id":24,"action":"approve","status":"approved","updated_at":"2025-02-08T09:56:39.281Z","last_modified_at":"2025-02-08T09:56:39.281Z"}
+[08-Feb-2025 10:56:39 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 10:59:05 Europe/Berlin] Received data: {"file_id":24,"substage_id":null,"action":"approve","status":"approved","activity_type":"file_approval","description":"File has been approved","performed_at":"2025-02-08T09:59:05.955Z"}
+[08-Feb-2025 10:59:05 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 11:14:46 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 11:14:46 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 11:15:27 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 11:15:27 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 11:16:49 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 11:16:49 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 11:18:28 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 11:18:28 Europe/Berlin] Error in update_file_status.php: Unknown column 'updated_by' in 'field list'
+[08-Feb-2025 11:22:21 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}
+[08-Feb-2025 11:35:42 Europe/Berlin] Received data: {"file_id":24,"action":"reject"}
+[08-Feb-2025 12:44:54 Europe/Berlin] Received data: {"file_id":24,"action":"approve"}

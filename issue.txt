@@ -1,0 +1,22 @@
+create all dashboard for all users
+make sure one users can assign many roles
+create and show hireacy for all users    
+set calender functions 
+in HR dashboard add a function edit the role of the user after setting the role
+
+
+fix the shifts issues
+
+show the password in the employee_passwords.php
+
+make the task management for the employees
+
+
+deleted employees page is not working
+
+fix the update employee page
+
+still the auto punchout is not working fix that 
+connect the quick view attendance with the table attendance
+payroll of all the users and get updated into the HR dashboard
+HR avatar is not working

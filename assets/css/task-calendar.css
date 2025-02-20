@@ -1,0 +1,166 @@
+.calendar-view {
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-nav {
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.calendar-nav:hover {
+    background: #f1f5f9;
+}
+
+.calendar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.calendar-weekday {
+    padding: 5px;
+}
+
+.calendar-dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-date {
+    aspect-ratio: 1;
+    padding: 8px;
+    border-radius: 8px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    min-height: 100px;
+}
+
+.calendar-date:hover {
+    background: #f1f5f9;
+    transform: translateY(-2px);
+}
+
+.calendar-date.has-tasks {
+    background: #eff6ff;
+    border: 1px solid #6366f1;
+}
+
+.calendar-date.today {
+    background-color: #e8f4ff;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+/* Add styles for the add task button */
+.add-task-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.calendar-date:hover .add-task-btn {
+    opacity: 1;
+}
+
+.add-task-btn:hover {
+    background: #4338ca;
+    transform: scale(1.1);
+}
+
+/* Add these rules to fix modal scrolling issues */
+.modal {
+    overflow-y: auto !important;
+}
+
+.modal-open {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1040;
+}
+
+.tasks-container {
+    margin-top: 5px;
+    max-height: 80px;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.calendar-task {
+    font-size: 0.8em;
+    margin: 2px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+}
+
+.task-stage {
+    font-weight: bold;
+    margin-right: 4px;
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+.task-substage {
+    font-size: 0.9em;
+    margin-right: 4px;
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+.task-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 150px;
+} 

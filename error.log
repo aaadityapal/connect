@@ -1,0 +1,5 @@
+[27-Nov-2024 07:05:24 Europe/Berlin] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\hr\add_event.php on line 66
+[27-Nov-2024 07:05:24 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\hr\add_event.php:66
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\add_event.php on line 66

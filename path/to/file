@@ -1,0 +1,20 @@
+def generate_contract(sequence_number):
+    # ... existing code ...
+
+    # Create a PDF file
+    c = canvas.Canvas("contract.pdf", pagesize=letter)
+    width, height = letter  # keep for later
+
+    # Place the logo in the top right corner
+    logo_path = "Hive Tag line 11 (1).png"  # Ensure this path points to your logo file
+    logo_width = 100  # Adjust as needed
+    logo_height = 50  # Adjust as needed
+    c.drawImage(logo_path, width - logo_width - 30, height - logo_height - 30, width=logo_width, height=logo_height)
+
+    # ... existing code to add text fields ...
+
+    # Save the PDF
+    c.save()
+
+    print("Contract generated successfully and saved to 'contract.pdf'.")
+    return sequence_number + 1

@@ -1,0 +1,68 @@
+.employee-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.stat-box {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.stat-box i {
+    font-size: 2.5rem;
+    color: #4a90e2;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.stat-info .stat-number {
+    margin: 5px 0 0 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Tooltip styles */
+.stat-box[data-tooltip] {
+    cursor: pointer;
+}
+
+.stat-box[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.stat-box[data-tooltip]:hover::after {
+    visibility: visible;
+    opacity: 1;
+} 

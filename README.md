@@ -48,7 +48,7 @@ A comprehensive Customer Relationship Management (CRM) system built with PHP, de
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/php-crm-app.git
+git clone https://github.com/aaadityapal/connect.git
 cd php-crm-app
 ```
 
@@ -135,7 +135,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🤝 Support
 
-For support, email your-email@domain.com or create an issue in the repository.
+For support, email your-aaadityapal69@gmail.com or create an issue in the repository.
 
 ## 🙏 Acknowledgments
 
@@ -143,9 +143,7 @@ For support, email your-email@domain.com or create an issue in the repository.
 - PHP community for excellent documentation
 - All contributors who helped in building this CRM
 
-## 📸 Screenshots
 
-[Add screenshots of your application here]
 
 ## 🔮 Future Enhancements
 

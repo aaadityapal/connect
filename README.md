@@ -1,6 +1,6 @@
 # PHP CRM Web Application
 
-A comprehensive Customer Relationship Management (CRM) system built with PHP, designed to help businesses manage their customer interactions, sales processes, and administrative tasks efficiently.
+A comprehensive Customer Relationship Management (CRM) System built with PHP, designed to help businesses manage their customer interactions, sales processes, and administrative tasks efficiently.
 
 ## 🌟 Features
 

@@ -572,6 +572,21 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             background-color: #f8fafc;
             cursor: not-allowed;
         }
+
+        .table-filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .table-filters .form-group {
+            min-width: 200px;
+        }
     </style>
 </head>
 <body>
@@ -686,6 +701,17 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
                     Add Leave Request
                 </button>
             </form>
+        </div>
+
+        <!-- Add this filter section before the table -->
+        <div class="table-filters">
+            <div class="form-group">
+                <label for="filterMonth">
+                    <i class="fas fa-filter"></i>
+                    Filter by Month
+                </label>
+                <input type="month" id="filterMonth" class="form-control" value="<?php echo $selected_month; ?>">
+            </div>
         </div>
 
         <table class="leave-table">
@@ -991,6 +1017,12 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             console.log('Time From:', document.getElementById('timeFrom').value);
             console.log('Time To:', document.getElementById('timeTo').value);
             console.log('Shift:', document.getElementById('shiftTime').value);
+        });
+
+        // Add this to your existing JavaScript
+        document.getElementById('filterMonth').addEventListener('change', function() {
+            const selectedMonth = this.value;
+            window.location.href = `edit_leave.php?month=${selectedMonth}`;
         });
     </script>
 </body>

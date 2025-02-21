@@ -1376,12 +1376,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 <optgroup label="Concept Design">
                      <option value="Concept Plan">Concept Plan</option>
                     <option value="PPT">PPT</option>
-                    <option value="3D Model">3D Model</option>
-                    <option value="First Floor Render Plan">First Floor Render Plan</option>
-                    <option value="Second Floor Render Plan">Second Floor Render Plan</option>
-                    <option value="Third Floor Render Plan">Third Floor Render Plan</option>
-                    <option value="Fourth Floor Render Plan">Fourth Floor Render Plan</option>
-                    <option value="Fifth Floor Render Plan">Fifth Floor Render Plan</option>
+                    <option value="3D Views">3D Views</option>
+                    <option value="Render Plan Basement">Render Plan Basement</option>
+                    <option value="Stilt Plan">Stilt Plan</option>
+                    <option value="Render Plan First Floor">Render Plan First Floor</option>
+                    <option value="Render Plan Second Floor">Render Plan Second Floor</option>
+                    <option value="Render Plan Third Floor">Render Plan Third Floor</option>
+                    <option value="Render Plan Fourth Floor">Render Plan Fourth Floor</option>
+                    <option value="Render Plan Fifth Floor">Render Plan Fifth Floor</option>
+                    <option value="Render Plan Ground Floor">Render Plan Ground Floor</option>
                 </optgroup>
 
                 <optgroup label="3D Views">
@@ -1389,11 +1392,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="Son's Bed Room">Son's Bed Room</option>
                     <option value="Master Bed Room">Master Bed Room</option>
                     <option value="Guest Bed Room">Guest Bed Room</option>
-                    <option value="Toilet 1">Toilet 1</option>
-                    <option value="Toilet 2">Toilet 2</option>
-                    <option value="Toilet 3">Toilet 3</option>
-                    <option value="Toilet 4">Toilet 4</option>
-                    <option value="Toilet 5">Toilet 5</option>
+                    <option value="Toilet -01">Toilet -01</option>
+                    <option value="Toilet -02">Toilet -02</option>
+                    <option value="Toilet -03">Toilet -03</option>
+                    <option value="Toilet -04">Toilet -04</option>
+                    <option value="Toilet -05">Toilet -05</option>
                     <option value="Prayer Room">Prayer Room</option>
                     <option value="Study Room">Study Room</option>  
                     <option value="Home Theater">Home Theater</option>
@@ -1408,56 +1411,65 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="Living Room">Living Room</option>
                     <option value="Dining Room">Dining Room</option>
                     <option value="Kitchen">Kitchen</option>
-                    <option value="Balcony 1">Balcony 1</option>
-                    <option value="Balcony 2">Balcony 2</option>
-                    <option value="Balcony 3">Balcony 3</option>
-                    <option value="Balcony 4">Balcony 4</option>
-                    <option value="Balcony 5">Balcony 5</option>
+                    <option value="Balcony - 01">Balcony - 01</option>
+                    <option value="Balcony - 02">Balcony - 02</option>
+                    <option value="Balcony - 03">Balcony - 03</option>
+                    <option value="Balcony - 04">Balcony - 04</option>
+                    <option value="Balcony - 05">Balcony - 05</option>
                     <option value="Utility Area">Utility Area</option>
-                    <option value="Mumty">Mumty Room</option>
+                    <option value="Mumty False Ceiling Plan">Mumty False Ceiling Plan</option>
+                    <option value="Mumty">Mumty</option>
                     <option value="Front Elevation">Front Elevation</option>
                     <option value="Rear Elevation">Rear Elevation</option>
                     <option value="Side 1 Elevation">Side 1 Elevation</option>
                     <option value="Side 2 Elevation">Side 2 Elevation</option>
                     <option value="Entrace Lobby">Entrace Lobby</option>
                     <option value="Manager's Cabin">Manager's Cabin</option>
-                    <option value="Work Station Area 1">Work Station Area 1</option>
-                    <option value="Work Station Area 2">Work Station Area 2</option>
-                    <option value="Work Station Area 3">Work Station Area 3</option>
-                    <option value="Work Station Area 4">Work Station Area 4</option>
-                    <option value="Work Station Area 5">Work Station Area 5</option>
-                    <option value="Work Station Area 6">Work Station Area 6</option>
+                    <option value="Work Station Area - 01">Work Station Area - 01</option>
+                    <option value="Work Station Area - 02">Work Station Area - 02</option>
+                    <option value="Work Station Area - 03">Work Station Area - 03</option>
+                    <option value="Work Station Area - 04">Work Station Area - 04</option>
+                    <option value="Work Station Area - 05">Work Station Area - 05</option>
+                    <option value="Work Station Area - 06">Work Station Area - 06</option>
                     <option value="Reception Area">Reception Area</option>
                     <option value="Conference Room">Conference Room</option>
                     <option value="Meeting Room">Meeting Room</option>
-                    <option value="Waiting Area">Waiting Area</option>  
+                    <option value="Waiting Area">Waiting Area</option> 
+                    <option value="Lobby - 01">Lobby - 01</option>
+                    <option value="Lobby - 02">Lobby - 02</option>
+                    <option value="Lobby - 03">Lobby - 03</option>
                 </optgroup>
 
                 <optgroup label="Flooring Drawings">
-                    <option value="Ground Floor Flooring Layout Plan">Ground Floor Flooring Layout Plan</option>
-                    <option value="First Floor Flooring Layout Plan">First Floor Flooring Layout Plan</option>
-                    <option value="Second Floor Flooring Layout Plan">Second Floor Flooring Layout Plan</option>
-                    <option value="Third Floor Flooring Layout Plan">Third Floor Flooring Layout Plan</option>
-                    <option value="Fourth Floor Flooring Layout Plan">Fourth Floor Flooring Layout Plan</option>
-                    <option value="Fifth Floor Flooring Layout Plan">Fifth Floor Flooring Layout Plan</option>
+                    <option value="Flooring Layout Plan Basement">Flooring Layout Plan Basement</option>
+                    <option value="Flooring Layout Plan Stilt">Flooring Layout Plan Stilt</option>
+                    <option value="Flooring Layout Plan Ground Floor">Flooring Layout Plan Ground Floor</option>
+                    <option value="Flooring Layout Plan First Floor">Flooring Layout Plan First Floor</option>
+                    <option value="Flooring Layout Plan Second Floor">Flooring Layout Plan Second Floor</option>
+                    <option value="Flooring Layout Plan Third Floor">Flooring Layout Plan Third Floor</option>
+                    <option value="Flooring Layout Plan Fourth Floor">Flooring Layout Plan Fourth Floor</option>
+                    <option value="Flooring Layout Plan Fifth Floor">Flooring Layout Plan Fifth Floor</option>
+
                 </optgroup>
 
                 <optgroup label="False Ceiling Drawings">
-                    <option value="Ground Floor False Ceiling Layout Plan">Ground Floor False Ceiling Layout Plan</option>
-                    <option value="First Floor False Ceiling Layout Plan">First Floor False Ceiling Layout Plan</option>
-                    <option value="Second Floor False Ceiling Layout Plan">Second Floor False Ceiling Layout Plan</option>
-                    <option value="Third Floor False Ceiling Layout Plan">Third Floor False Ceiling Layout Plan</option>
-                    <option value="Fourth Floor False Ceiling Layout Plan">Fourth Floor False Ceiling Layout Plan</option>
-                    <option value="Fifth Floor False Ceiling Layout Plan">Fifth Floor False Ceiling Layout Plan</option>
+                    <option value="False Ceiling Layout Plan Basement">False Ceiling Layout Plan Basement</option>
+                    <option value="False Ceiling Layout Plan Stilt">False Ceiling Layout Plan Stilt</option>
+                    <option value="False Ceiling Layout Plan Ground Floor">False Ceiling Layout Plan Ground Floor</option>
+                    <option value="False Ceiling Layout Plan First Floor">False Ceiling Layout Plan First Floor</option>
+                    <option value="False Ceiling Layout Plan Second Floor">False Ceiling Layout Plan Second Floor</option>
+                    <option value="False Ceiling Layout Plan Third Floor">False Ceiling Layout Plan Third Floor</option>
+                    <option value="False Ceiling Layout Plan Fourth Floor">False Ceiling Layout Plan Fourth Floor</option>
+                    <option value="False Ceiling Layout Plan Fifth Floor">False Ceiling Layout Plan Fifth Floor</option>
                     <option value="Master Bed Room False Ceiling Layout Plan & Section Details">Master Bed Room False Ceiling Layout Plan & Section Details</option>
                     <option value="Daughter's Bed Room False Ceiling Layout Plan & Section Details">Daughter's Bed Room False Ceiling Layout Plan & Section Details</option>
                     <option value="Son's Bed Room False Ceiling Layout Plan & Section Details">Son's Bed Room False Ceiling Layout Plan & Section Details</option>
                     <option value="Guest Bed Room False Ceiling Layout Plan & Section Details">Guest Bed Room False Ceiling Layout Plan & Section Details</option>
-                    <option value="Toilet 1 False Ceiling Layout Plan & Section Details">Toilet 1 False Ceiling Layout Plan & Section Details</option>
-                    <option value="Toilet 2 False Ceiling Layout Plan & Section Details">Toilet 2 False Ceiling Layout Plan & Section Details</option>
-                    <option value="Toilet 3 False Ceiling Layout Plan & Section Details">Toilet 3 False Ceiling Layout Plan & Section Details</option>
-                    <option value="Toilet 4 False Ceiling Layout Plan & Section Details">Toilet 4 False Ceiling Layout Plan & Section Details</option>
-                    <option value="Toilet 5 False Ceiling Layout Plan & Section Details">Toilet 5 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet - 01 False Ceiling Layout Plan & Section Details">Toilet - 01 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet - 02 False Ceiling Layout Plan & Section Details">Toilet - 02 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet - 03 False Ceiling Layout Plan & Section Details">Toilet - 03 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet - 04 False Ceiling Layout Plan & Section Details">Toilet - 04 False Ceiling Layout Plan & Section Details</option>
+                    <option value="Toilet - 05 False Ceiling Layout Plan & Section Details">Toilet - 05 False Ceiling Layout Plan & Section Details</option>
                     <option value="Prayer Room False Ceiling Layout Plan & Section Details">Prayer Room False Ceiling Layout Plan & Section Details</option>
                     <option value="Study Room False Ceiling Layout Plan & Section Details">Study Room False Ceiling Layout Plan & Section Details</option>
                     <option value="Home Theater False Ceiling Layout Plan & Section Details">Home Theater False Ceiling Layout Plan & Section Details</option>
@@ -1477,48 +1489,50 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="Work Station Area 3 False Ceiling Layout Plan & Section Details">Work Station Area 3 False Ceiling Layout Plan & Section Details</option>
                     <option value="Meeting Room False Ceiling Layout Plan & Section Details">Meeting Room False Ceiling Layout Plan & Section Details</option>
                     <option value="Kitchen False Ceiling Layout Plan & Section Details">Kitchen False Ceiling Layout Plan & Section Details</option>
-                    <option value="Utility Area False Ceiling Layout Plan & Section Details">Utility Area False Ceiling Layout Plan & Section Details</option>
-                    
-                    
-                    
-
-                    
-                    
-                    
+                    <option value="Utility Area False Ceiling Layout Plan & Section Details">Utility Area False Ceiling Layout Plan & Section Details</option>   
                 </optgroup>
 
                 <optgroup label="Ceiling Drawings">
-                    <option value="Ground Floor Ceiling Layout Plan">Ground Floor Ceiling Layout Plan</option>
-                    <option value="First Floor Ceiling Layout Plan">First Floor Ceiling Layout Plan</option>
-                    <option value="Second Floor Ceiling Layout Plan">Second Floor Ceiling Layout Plan</option>
-                    <option value="Third Floor Ceiling Layout Plan">Third Floor Ceiling Layout Plan</option>
-                    <option value="Fourth Floor Ceiling Layout Plan">Fourth Floor Ceiling Layout Plan</option>
-                    <option value="Fifth Floor Ceiling Layout Plan">Fifth Floor Ceiling Layout Plan</option>
+                    <option value="Ceiling Layout Plan Basement">Ceiling Layout Plan Basement</option>
+                    <option value="Ceiling Layout Plan Stilt">Ceiling Layout Plan Stilt</option>
+                    <option value="Ceiling Layout Plan Ground Floor">Ceiling Layout Plan Ground Floor</option>
+                    <option value="Ceiling Layout Plan First Floor">Ceiling Layout Plan First Floor</option>
+                    <option value="Ceiling Layout Plan Second Floor">Ceiling Layout Plan Second Floor</option>
+                    <option value="Ceiling Layout Plan Third Floor">Ceiling Layout Plan Third Floor</option>
+                    <option value="Ceiling Layout Plan Fourth Floor">Ceiling Layout Plan Fourth Floor</option>
+                    <option value="Ceiling Layout Plan Fifth Floor">Ceiling Layout Plan Fifth Floor</option>
                 </optgroup>
 
                 <optgroup label="Electrical Drawings">
-                    <option value="Ground Floor Electrical Layout Plan">Ground Floor Electrical Layout Plan</option>
-                    <option value="First Floor Electrical Layout Plan">First Floor Electrical Layout Plan</option>
-                    <option value="Second Floor Electrical Layout Plan">Second Floor Electrical Layout Plan</option>
-                    <option value="Third Floor Electrical Layout Plan">Third Floor Electrical Layout Plan</option>
-                    <option value="Fourth Floor Electrical Layout Plan">Fourth Floor Electrical Layout Plan</option>
+                    <option value="Electrical Layout Plan Basement">Electrical Layout Plan Basement</option>
+                    <option value="Electrical Layout Plan Stilt">Electrical Layout Plan Stilt</option>
+                    <option value="Electrical Layout Plan Ground Floor">Electrical Layout Plan Ground Floor</option>
+                    <option value="Electrical Layout Plan First Floor">Electrical Layout Plan First Floor</option>
+                    <option value="Electrical Layout Plan Second Floor">Electrical Layout Plan Second Floor</option>
+                    <option value="Electrical Layout Plan Third Floor">Electrical Layout Plan Third Floor</option>
+                    <option value="Electrical Layout Plan Fourth Floor">Electrical Layout Plan Fourth Floor</option>
+                    <option value="Electrical Layout Plan Fifth Floor">Electrical Layout Plan Fifth Floor</option>
                 </optgroup>
 
                 <optgroup label="Plumbing Drawings">
-                    <option value="Ground Floor Plumbing Layout Plan">Ground Floor Plumbing Layout Plan</option>
-                    <option value="First Floor Plumbing Layout Plan">First Floor Plumbing Layout Plan</option>
-                    <option value="Second Floor Plumbing Layout Plan">Second Floor Plumbing Layout Plan</option>
-                    <option value="Third Floor Plumbing Layout Plan">Third Floor Plumbing Layout Plan</option>
-                    <option value="Fourth Floor Plumbing Layout Plan">Fourth Floor Plumbing Layout Plan</option>
+                    <option value="Plumbing Layout Plan Basement">Plumbing Layout Plan Basement</option>
+                    <option value="Plumbing Layout Plan Stilt">Plumbing Layout Plan Stilt</option>
+                    <option value="Plumbing Layout Plan Ground Floor">Plumbing Layout Plan Ground Floor</option>
+                    <option value="Plumbing Layout Plan First Floor">Plumbing Layout Plan First Floor</option>
+                    <option value="Plumbing Layout Plan Second Floor">Plumbing Layout Plan Second Floor</option>
+                    <option value="Plumbing Layout Plan Third Floor">Plumbing Layout Plan Third Floor</option>
+                    <option value="Plumbing Layout Plan Fourth Floor">Plumbing Layout Plan Fourth Floor</option>
                 </optgroup>
 
                 <optgroup label="Water Supply Drawings">
-                    <option value="Ground Floor Water Supply Layout Plan">Ground Floor Water Supply Layout Plan</option>
-                    <option value="First Floor Water Supply Layout Plan">First Floor Water Supply Layout Plan</option>
-                    <option value="Second Floor Water Supply Layout Plan">Second Floor Water Supply Layout Plan</option>
-                    <option value="Third Floor Water Supply Layout Plan">Third Floor Water Supply Layout Plan</option>
-                    <option value="Fourth Floor Water Supply Layout Plan">Fourth Floor Water Supply Layout Plan</option>
-                    <option value="Fifth Floor Water Supply Layout Plan">Fifth Floor Water Supply Layout Plan</option>
+                    <option value="Water Supply Layout Plan Basement">Water Supply Layout Plan Basement</option>
+                    <option value="Water Supply Layout Plan Stilt">Water Supply Layout Plan Stilt</option>
+                    <option value="Water Supply Layout Plan Ground Floor">Water Supply Layout Plan Ground Floor</option>
+                    <option value="Water Supply Layout Plan First Floor">Water Supply Layout Plan First Floor</option>
+                    <option value="Water Supply Layout Plan Second Floor">Water Supply Layout Plan Second Floor</option>
+                    <option value="Water Supply Layout Plan Third Floor">Water Supply Layout Plan Third Floor</option>
+                    <option value="Water Supply Layout Plan Fourth Floor">Water Supply Layout Plan Fourth Floor</option>
+                    <option value="Water Supply Layout Plan Fifth Floor">Water Supply Layout Plan Fifth Floor</option>
                 </optgroup>
 
                 <optgroup label="Interior Drawings">

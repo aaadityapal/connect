@@ -328,10 +328,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Function to calculate overtime rate
 function calculateOvertimeRate($baseSalary, $totalWorkingDays, $shiftHours) {
-    if ($totalWorkingDays <= 0 || $shiftHours <= 0) return 0;
+    error_log("Calculate Overtime Rate - Input values:");
+    error_log("Base Salary: $baseSalary");
+    error_log("Total Working Days: $totalWorkingDays");
+    error_log("Shift Hours: $shiftHours");
+    
+    if ($totalWorkingDays <= 0 || $shiftHours <= 0) {
+        error_log("Warning: Invalid working days ($totalWorkingDays) or shift hours ($shiftHours)");
+        return 0;
+    }
     
     $perDaySalary = $baseSalary / $totalWorkingDays;
     $perHourSalary = $perDaySalary / $shiftHours;
+    
+    error_log("Per Day Salary: $perDaySalary");
+    error_log("Per Hour Salary: $perHourSalary");
     
     return round($perHourSalary, 2);
 }
@@ -949,10 +960,12 @@ Leave Deduction Rules:
                         $monthSalary = ($perDaySalary * ($user['present_days'] ?? 0)) - $leaveDeduction;
 
                         // Calculate overtime amount
+                        $shiftHours = $user['shift_hours'] ?? 8;
+                        error_log("Shift Hours from user record: " . ($user['shift_hours'] ?? 'not set'));
                         $suggestedRate = calculateOvertimeRate(
                             $user['base_salary'], 
                             $workingDaysInfo['working_days'],
-                            $user['shift_hours']
+                            $shiftHours
                         );
                         $overtime_hours = $user['overtime_hours'] ?: '0:00';
                         list($hours, $minutes) = explode(':', $overtime_hours);
@@ -1034,7 +1047,7 @@ Leave Deduction Rules:
                                     $suggestedRate = calculateOvertimeRate(
                                         $user['base_salary'], 
                                         $workingDaysInfo['working_days'],
-                                        $user['shift_hours']
+                                        $shiftHours
                                     );
                                     ?>
                                     <input type="number" 
@@ -1055,6 +1068,13 @@ Leave Deduction Rules:
                                         $overtime_hours = $user['overtime_hours'] ?: '0:00';
                                         list($hours, $minutes) = explode(':', $overtime_hours);
                                         $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
+                                        
+                                        // Add debug output
+                                        error_log("Debug - User: {$user['username']}");
+                                        error_log("Overtime hours: $overtime_hours");
+                                        error_log("Decimal hours: $decimal_hours");
+                                        error_log("Suggested rate: $suggestedRate");
+                                        
                                         $overtime_amount = $decimal_hours * $suggestedRate;
                                         echo number_format($overtime_amount, 2);
                                         ?>
@@ -1093,17 +1113,15 @@ Leave Deduction Rules:
     function updateOvertimeRate(baseSalaryInput) {
         const userId = baseSalaryInput.dataset.userId;
         const baseSalary = parseFloat(baseSalaryInput.value) || 0;
-        const workingDays = <?php echo $workingDaysInfo['working_days']; ?>;
-        const shiftHours = <?php echo $user['shift_hours']; ?>;
+        const workingDays = parseInt(baseSalaryInput.closest('tr').querySelector('td:nth-child(3)').textContent) || 0;
+        const shiftHours = <?php echo $user['shift_hours'] ?? 8 ?>;
         
-        // Calculate new overtime rate
         let overtimeRate = 0;
         if (workingDays > 0 && shiftHours > 0) {
             const perDaySalary = baseSalary / workingDays;
             overtimeRate = (perDaySalary / shiftHours).toFixed(2);
         }
         
-        // Update the overtime rate input
         const overtimeInput = document.querySelector(`.overtime-rate[data-user-id="${userId}"]`);
         if (overtimeInput) {
             overtimeInput.value = overtimeRate;

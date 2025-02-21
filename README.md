@@ -6,7 +6,7 @@ A comprehensive Customer Relationship Management (CRM) system built with PHP, de
 
 - **User Authentication & Authorization**
   - Secure login system
-  - Role-based access control (Admin, Staff, & HR etc.)
+  - Role-based access control (Admin, Staff, & encryption.)
   - Password encryption
 
 - **Customer Management**

@@ -1565,18 +1565,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="task-form-group">
                         <label>Start Date & Time</label>
                         <div class="task-datetime-input">
-                            <input type="datetime-local" 
-                                   class="substage-start-date" 
-                                   onchange="validateSubstageDates(this)"
-                                   min="${new Date().toISOString().slice(0, 16)}">
+                            <input type="datetime-local" class="substage-start-date">
                         </div>
                     </div>
                     <div class="task-form-group">
                         <label>Due By</label>
                         <div class="task-datetime-input">
-                            <input type="datetime-local" 
-                                   class="substage-due-date"
-                                   onchange="validateSubstageDates(this)">
+                            <input type="datetime-local" class="substage-due-date">
                         </div>
                     </div>
                 </div>
@@ -3441,6 +3436,10 @@ function updateSubstageTitles(projectType) {
                 <option value="plinth_beam_layout_plan">Plinth Beam Layout Plan</option>
                 <option value="ground_floor_roof_slab_beam_layout_plan">Ground Floor Roof Slab Beam Layout Plan</option>
                 <option value="first_floor_roof_slab_beam_layout_plan">First Floor Roof Slab Beam Layout Plan</option>
+                <option value="second_floor_roof_slab_beam_layout_plan">Second Floor Roof Slab Beam Layout Plan</option>
+                <option value="third_floor_roof_slab_beam_layout_plan">Third Floor Roof Slab Beam Layout Plan</option>
+                <option value="fourth_floor_roof_slab_beam_layout_plan">Fourth Floor Roof Slab Beam Layout Plan</option>
+                <option value="fifth_floor_roof_slab_beam_layout_plan">Fifth Floor Roof Slab Beam Layout Plan</option>
                 <option value="slab_details">Slab Details</option>
             </optgroup>
             
@@ -3514,295 +3513,76 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Add this JavaScript function
-function validateSubstageDates(input) {
-    const substageBlock = input.closest('.substage-block');
-    const startDate = substageBlock.querySelector('.substage-start-date');
-    const dueDate = substageBlock.querySelector('.substage-due-date');
-    
-    // Get project task due date
-    const projectDueDate = document.getElementById('taskDueDate').value;
-    
-    // Set minimum date for start date (cannot be earlier than today)
-    const today = new Date().toISOString().slice(0, 16);
-    startDate.min = today;
-    
-    // Set maximum date as project due date
-    if (projectDueDate) {
-        startDate.max = projectDueDate;
-        dueDate.max = projectDueDate;
-    }
-    
-    if (startDate.value && dueDate.value) {
-        // If due date is earlier than start date, reset it
-        if (new Date(dueDate.value) < new Date(startDate.value)) {
-            dueDate.value = '';
-            alert('Due date cannot be earlier than start date');
-        }
-        
-        // Set minimum date for due date (cannot be earlier than start date)
-        dueDate.min = startDate.value;
-    }
-    
-    // Get the stage's dates for validation
-    const stageBlock = substageBlock.closest('.stage-block');
-    if (stageBlock) {
-        const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
-        const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
-        
-        // Validate against stage dates
-        if (stageStartDate && new Date(startDate.value) < new Date(stageStartDate)) {
-            startDate.value = stageStartDate;
-            alert('Substage cannot start before the stage start date');
-        }
-        
-        if (stageDueDate && new Date(dueDate.value) > new Date(stageDueDate)) {
-            dueDate.value = stageDueDate;
-            alert('Substage must be completed before the stage due date');
-        }
-    }
-}
-
-// Function to auto-populate due dates
-function autoPopulateDueDates() {
-    const projectStartDate = new Date(document.getElementById('taskStartDate').value);
-    const projectDueDate = new Date(document.getElementById('taskDueDate').value);
-    
-    if (!projectStartDate || !projectDueDate) return;
-
-    const stages = document.querySelectorAll('.stage-block');
-    const totalStages = stages.length;
-    
-    if (totalStages === 0) return;
-
-    // Calculate total project duration in milliseconds
-    const projectDuration = projectDueDate - projectStartDate;
-    const stageDuration = projectDuration / totalStages;
-
-    stages.forEach((stage, stageIndex) => {
-        // Calculate stage dates
-        const stageStartDate = new Date(projectStartDate.getTime() + (stageDuration * stageIndex));
-        const stageDueDate = new Date(projectStartDate.getTime() + (stageDuration * (stageIndex + 1)));
-        
-        // Set stage dates
-        const stageStartInput = stage.querySelector('.stage-start-date');
-        const stageDueInput = stage.querySelector('.stage-due-date');
-        
-        if (stageStartInput && stageDueInput) {
-            stageStartInput.value = formatDateTime(stageStartDate);
-            stageDueInput.value = formatDateTime(stageDueDate);
-        }
-        
-        // Handle substages
-        const substages = stage.querySelectorAll('.substage-block');
-        const totalSubstages = substages.length;
-        
-        if (totalSubstages > 0) {
-            const substageSpan = stageDueDate - stageStartDate;
-            const substageDuration = substageSpan / totalSubstages;
-            
-            substages.forEach((substage, substageIndex) => {
-                const substageStartDate = new Date(stageStartDate.getTime() + (substageDuration * substageIndex));
-                const substageDueDate = new Date(stageStartDate.getTime() + (substageDuration * (substageIndex + 1)));
-                
-                const substageStartInput = substage.querySelector('.substage-start-date');
-                const substageDueInput = substage.querySelector('.substage-due-date');
-                
-                if (substageStartInput && substageDueInput) {
-                    substageStartInput.value = formatDateTime(substageStartDate);
-                    substageDueInput.value = formatDateTime(substageDueDate);
-                }
-            });
-        }
-    });
-}
-
-// Helper function to format date and time
-function formatDateTime(date) {
-    return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
-}
-
-// Add event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Listen for project date changes
-    const taskStartDate = document.getElementById('taskStartDate');
-    const taskDueDate = document.getElementById('taskDueDate');
-    
-    if (taskStartDate && taskDueDate) {
-        taskStartDate.addEventListener('change', autoPopulateDueDates);
-        taskDueDate.addEventListener('change', autoPopulateDueDates);
-    }
-    
-    // Initial population if dates are already set
-    if (taskStartDate.value && taskDueDate.value) {
-        autoPopulateDueDates();
-    }
-});
-
-// Update addStage function
-function addStage() {
-    // ... existing stage addition code ...
-    setTimeout(autoPopulateDueDates, 0); // Run after stage is added
-}
-
-// Update addSubstage function
-function addSubstage(stageBlock) {
-    // ... existing substage addition code ...
-    setTimeout(autoPopulateDueDates, 0); // Run after substage is added
-}
-
-// Update remove functions
-function removeStage(button) {
-    const stageBlock = button.closest('.stage-block');
-    stageBlock.remove();
-    setTimeout(autoPopulateDueDates, 0);
-}
-
-function removeSubstage(button) {
-    const substageBlock = button.closest('.substage-block');
-    substageBlock.remove();
-    setTimeout(autoPopulateDueDates, 0);
-}
-
-// Add console logs for debugging
-function autoPopulateDueDates() {
-    console.log('autoPopulateDueDates called');
-    
-    const projectStartDate = new Date(document.getElementById('taskStartDate').value);
-    const projectDueDate = new Date(document.getElementById('taskDueDate').value);
-    
-    console.log('Project Start:', projectStartDate);
-    console.log('Project Due:', projectDueDate);
-    
-    if (!projectStartDate || !projectDueDate) {
-        console.log('Missing project dates');
-        return;
-    }
-
-    const stages = document.querySelectorAll('.stage-block');
-    const totalStages = stages.length;
-    
-    console.log('Total Stages:', totalStages);
-    
-    if (totalStages === 0) {
-        console.log('No stages found');
-        return;
-    }
-
-    // Calculate total project duration in milliseconds
-    const projectDuration = projectDueDate - projectStartDate;
-    const stageDuration = projectDuration / totalStages;
-    
-    console.log('Project Duration:', projectDuration);
-    console.log('Stage Duration:', stageDuration);
-
-    stages.forEach((stage, stageIndex) => {
-        // Calculate stage dates
-        const stageStartDate = new Date(projectStartDate.getTime() + (stageDuration * stageIndex));
-        const stageDueDate = new Date(projectStartDate.getTime() + (stageDuration * (stageIndex + 1)));
-        
-        console.log(`Stage ${stageIndex + 1} dates:`, stageStartDate, stageDueDate);
-        
-        // Set stage dates
-        const stageStartInput = stage.querySelector('.stage-start-date');
-        const stageDueInput = stage.querySelector('.stage-due-date');
-        
-        if (stageStartInput && stageDueInput) {
-            stageStartInput.value = formatDateTime(stageStartDate);
-            stageDueInput.value = formatDateTime(stageDueDate);
-            console.log(`Stage ${stageIndex + 1} inputs updated`);
-        }
-    });
-}
-
-// Make sure event listeners are attached when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded');
-    
-    // Listen for project date changes
-    const taskStartDate = document.getElementById('taskStartDate');
-    const taskDueDate = document.getElementById('taskDueDate');
-    
-    if (taskStartDate && taskDueDate) {
-        console.log('Date inputs found');
-        
-        taskStartDate.addEventListener('change', function() {
-            console.log('Start date changed');
-            autoPopulateDueDates();
-        });
-        
-        taskDueDate.addEventListener('change', function() {
-            console.log('Due date changed');
-            autoPopulateDueDates();
-        });
-    } else {
-        console.log('Date inputs not found');
-    }
-});
-
-// Update stage creation
-function createStageBlock(stageNumber) {
-    console.log('Creating stage:', stageNumber);
-    const stageHTML = `
-        <div class="stage-block" data-stage="${stageNumber}">
-            <div class="stage-header">
-                <h4>Stage ${stageNumber}</h4>
-                <button class="remove-stage-btn" onclick="removeStage(this)">
+// Remove the validateSubstageDates function
+function createSubstageHTML(stageNumber, substageNumber) {
+    return `
+        <div class="substage-block" data-substage="${substageNumber}">
+            <div class="substage-header">
+                <h5 class="substage-title">Task ${String(substageNumber).padStart(2, '0')}</h5>
+                <button class="remove-substage-btn" onclick="removeSubstage(this)">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
             <div class="task-form-group">
+                <label>Substage Title</label>
+                <select class="substage-name" required>
+                    <option value="">Select Title</option>
+                    ${substageOptions}
+                </select>
+            </div>
+            <div class="task-form-group">
                 <label>Assign To</label>
-                <select class="stage-assignee">
+                <select class="substage-assignee">
                     <option value="">Select Employee</option>
                 </select>
             </div>
             <div class="task-form-row">
                 <div class="task-form-group">
                     <label>Start Date & Time</label>
-                    <input type="datetime-local" class="stage-start-date">
+                    <div class="task-datetime-input">
+                        <input type="datetime-local" class="substage-start-date">
+                    </div>
                 </div>
                 <div class="task-form-group">
                     <label>Due By</label>
-                    <input type="datetime-local" class="stage-due-date">
+                    <div class="task-datetime-input">
+                        <input type="datetime-local" class="substage-due-date">
+                    </div>
                 </div>
             </div>
             <div class="file-upload-container">
-                <input type="file" class="file-upload-input">
-                <label class="file-upload-label">
+                <input type="file" id="substageFile${stageNumber}_${substageNumber}" class="file-upload-input">
+                <label for="substageFile${stageNumber}_${substageNumber}" class="file-upload-label">
                     <i class="fas fa-paperclip"></i>
                     <span>Attach File</span>
                 </label>
+                <div class="selected-file"></div>
             </div>
-            <div class="substages-wrapper"></div>
-            <button type="button" class="add-substage-btn" onclick="addSubstage(this.closest('.stage-block'))">
-                + Add Substage
-            </button>
         </div>
     `;
-    
-    const stagesWrapper = document.querySelector('.stages-wrapper');
-    if (stagesWrapper) {
-        stagesWrapper.insertAdjacentHTML('beforeend', stageHTML);
-        console.log('Stage added, updating dates');
-        autoPopulateDueDates();
+}
+
+// Remove autoPopulateDueDates function and its related event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Keep other initialization code
+    const addStageBtn = document.getElementById('addStageBtn');
+    if (addStageBtn) {
+        addStageBtn.addEventListener('click', function() {
+            console.log('Add Stage button clicked');
+            addStage();
+        });
     }
-}
-
-// Helper function to format date and time
-function formatDateTime(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-// Add stage button click handler
-document.getElementById('addStageBtn')?.addEventListener('click', function() {
-    console.log('Add Stage button clicked');
-    const stageCount = document.querySelectorAll('.stage-block').length;
-    createStageBlock(stageCount + 1);
 });
+
+// Update stage and substage removal functions to remove date-related code
+function removeStage(button) {
+    const stageBlock = button.closest('.stage-block');
+    stageBlock.remove();
+}
+
+function removeSubstage(button) {
+    const substageBlock = button.closest('.substage-block');
+    substageBlock.remove();
+}
+
+// ... rest of existing code ...

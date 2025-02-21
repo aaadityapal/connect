@@ -147,6 +147,7 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/css/substage-details.css">
+    <link rel="stylesheet" href="css/chat.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -785,16 +786,7 @@ if ($user_data && isset($user_data['shift_id'])) {
             }
         }
 
-        .chat-widget {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
+        
         .chat-button {
             width: 60px;
             height: 60px;
@@ -818,69 +810,11 @@ if ($user_data && isset($user_data['shift_id'])) {
             font-size: 24px;
         }
 
-        .chat-container {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        
 
-        .chat-container.active {
-            display: flex;
-        }
 
-        .chat-header {
-            padding: 15px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
 
-        .chat-tabs {
-            display: flex;
-            gap: 20px;
-            padding: 15px;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .chat-tab {
-            cursor: pointer;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 500;
-            color: #6c757d;
-            transition: all 0.3s ease;
-        }
-
-        .chat-tab:hover {
-            background-color: #f8f9fa;
-            color: #212529;
-        }
-
-        .chat-tab.active {
-            background-color: #0084ff;
-            color: white;
-        }
-
-        .chat-actions {
-            padding: 15px;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        /* Show/hide create group button based on active tab */
-        .chat-tab[data-tab="groups"].active ~ .chat-actions .create-group-btn {
-            display: flex !important;
-        }
+       
 
         /* Update container styles */
         .user-list,
@@ -1178,13 +1112,7 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: rgba(255, 255, 255, 0.8);
         }
 
-        .chat-header {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
+
 
         .back-button {
             cursor: pointer;
@@ -1354,322 +1282,10 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: #6c757d;
         }
 
-        /* Add a create group button to the chat header */
-        .chat-actions {
-            display: flex;
-            gap: 10px;
-        }
+        
+        
 
-        .create-group-btn {
-            padding: 8px 16px;
-            background: #0084ff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9em;
-            transition: all 0.3s ease;
-        }
-
-        .create-group-btn:hover {
-            background: #0055ff;
-            transform: translateY(-1px);
-        }
-
-        .create-group-btn i {
-            font-size: 1.1em;
-        }
-
-        /* Initially hide the button when in Chats tab */
-        .chat-tab[data-tab="chats"].active ~ .chat-actions .create-group-btn {
-            display: none;
-        }
-
-        /* Add these styles for group chat */
-        .group-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .group-members-btn {
-            padding: 8px;
-            cursor: pointer;
-            border-radius: 50%;
-            transition: background-color 0.3s ease;
-        }
-
-        .group-members-btn:hover {
-            background-color: #e9ecef;
-        }
-
-        .group-members-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .group-member-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .member-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .member-info {
-            flex: 1;
-        }
-
-        .member-name {
-            font-weight: 500;
-        }
-
-        .member-role {
-            font-size: 0.8em;
-            color: #6c757d;
-        }
-
-        .message-sender {
-            font-size: 0.8em;
-            font-weight: 500;
-            color: #6c757d;
-            margin-bottom: 2px;
-        }
-
-        .message.sent .message-sender {
-            display: none;
-        }
-
-        /* Add these styles */
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .empty-state i {
-            font-size: 3em;
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
-
-        .empty-state p {
-            color: #6c757d;
-            margin-bottom: 20px;
-        }
-
-        .no-groups-message {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-        }
-
-        .no-groups-message .create-group-btn {
-            padding: 8px 16px;
-            background: #0084ff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
-        }
-
-        .no-groups-message .create-group-btn:hover {
-            background: #0055ff;
-        }
-
-        /* Update message box styles */
-        .message-box {
-            position: sticky;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 15px;
-            border-top: 1px solid #dee2e6;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .message-input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 20px;
-            outline: none;
-            font-size: 0.95em;
-            transition: border-color 0.3s ease;
-        }
-
-        .message-input:focus {
-            border-color: #0084ff;
-        }
-
-        .send-button {
-            background: #0084ff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .send-button:hover {
-            background: #0055ff;
-            transform: scale(1.05);
-        }
-
-        .send-button i {
-            font-size: 1.1em;
-        }
-
-        /* Update chat body to account for message box */
-        .chat-body {
-            height: calc(100% - 60px); /* Adjust height when message box is visible */
-            overflow-y: auto;
-        }
-
-        /* Add transition for smooth show/hide */
-        .message-box {
-            transition: all 0.3s ease;
-        }
-
-        /* Update status indicator styles */
-        .status-indicator {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-
-        .status-indicator.online {
-            background: #22c55e;
-            animation: pulse 2s infinite;
-        }
-
-        .status-indicator.offline {
-            background: #94a3b8;
-        }
-
-        .user-status {
-            font-size: 0.8em;
-            color: #64748b;
-        }
-
-        .user-status.online {
-            color: #22c55e;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-            }
-            70% {
-                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-            }
-        }
-
-        /* Update user item hover state */
-        .user-item:hover {
-            background-color: #f8f9fa;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .user-item.has-unread {
-            background-color: rgba(239, 68, 68, 0.05);
-        }
-
-        /* Add styles for group actions */
-        .group-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .group-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            cursor: pointer;
-        }
-
-        .group-actions {
-            display: flex;
-            gap: 8px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .group-item:hover .group-actions {
-            opacity: 1;
-        }
-
-        .group-action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: transparent;
-            color: #64748b;
-        }
-
-        .group-action-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .group-action-btn.edit:hover {
-            background: #0084ff;
-            color: white;
-        }
-
-        .group-action-btn.delete:hover {
-            background: #ef4444;
-            color: white;
-        }
-
-        .group-action-btn i {
-            font-size: 1em;
-        }
-
+       
         .file-attach-btn {
             cursor: pointer;
             padding: 8px;
@@ -1711,37 +1327,7 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: #dc2626;
         }
 
-        /* Update message-box styles */
-        .message-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 15px;
-            background: white;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .message-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            outline: none;
-            font-size: 0.95em;
-        }
-
-        .message-input:focus {
-            border-color: #0084ff;
-        }
-
-        .message-box {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            gap: 10px;
-            background: #fff;
-            border-top: 1px solid #e0e0e0;
-        }
+        
 
         .file-attach-btn {
             cursor: pointer;
@@ -2925,40 +2511,12 @@ if ($user_data && isset($user_data['shift_id'])) {
                     </div>
                 </div>
             </div>
-
-            <div class="chat-widget">
-                <div class="chat-container" id="chatContainer">
-                    <div class="chat-header">
-                        <div class="chat-tabs">
-                            <div class="chat-tab active" data-tab="chats">Chats</div>
-                            <div class="chat-tab" data-tab="groups">Groups</div>
-                        </div>
-                        <div class="chat-actions">
-                            <button class="create-group-btn" onclick="window.chat.createNewGroup()">
-                                <i class="fas fa-users"></i>
-                                New Group
-                            </button>
-                        </div>
-                    </div>
-                    <div class="chat-body" id="chatBody">
-                        <!-- Chat content will be loaded here -->
-                    </div>
-                    <div class="message-box" id="messageBox" style="display: none;">
-                        <label for="fileInput" class="file-attach-btn">
-                            <i class="fas fa-paperclip"></i>
-                        </label>
-                        <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
-                        <input type="text" id="messageInput" placeholder="Type a message..." class="message-input">
-                        <button class="send-button">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="chat-button" onclick="toggleChat()">
-                    <i class="fas fa-comments"></i>
-                    <span class="unread-badge" style="display: none;">0</span>
-                </div>
-            </div>
+<!-- Chat Icon -->
+<div class="chat-icon" id="chatIcon">
+    <i class="fas fa-comments"></i>
+    <span class="unread-badge" style="display: none;">0</span>
+</div>
+           
         </div>
     </div>
 
@@ -3202,55 +2760,9 @@ if ($user_data && isset($user_data['shift_id'])) {
             setInterval(updateTimer, 1000);
         <?php endif; ?>
         
-        function toggleChat() {
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.classList.toggle('active');
-        }
+      
 
-        function createNewChat() {
-            Swal.fire({
-                title: 'Start New Chat',
-                html: `
-                    <input type="text" id="searchUser" class="swal2-input" placeholder="Search for users...">
-                    <div id="userList" style="margin-top: 10px;"></div>
-                `,
-                showCancelButton: true,
-                showConfirmButton: false,
-                didOpen: () => {
-                    const searchInput = document.getElementById('searchUser');
-                    searchInput.addEventListener('input', debounce(searchUsers, 300));
-                }
-            });
-        }
-
-        function createNewGroup() {
-            Swal.fire({
-                title: 'Create New Group',
-                html: `
-                    <input type="text" id="groupName" class="swal2-input" placeholder="Group name">
-                    <input type="text" id="searchMembers" class="swal2-input" placeholder="Search for members...">
-                    <div id="selectedMembers" style="margin-top: 10px;"></div>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'Create Group',
-                preConfirm: () => {
-                    const groupName = document.getElementById('groupName').value;
-                    // Add validation and group creation logic here
-                }
-            });
-        }
-
-        function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
-            
-            if (message) {
-                // Add your message sending logic here
-                // This should integrate with your backend
-                console.log('Sending message:', message);
-                messageInput.value = '';
-            }
-        }
+       
 
         function debounce(func, wait) {
             let timeout;
@@ -3263,16 +2775,9 @@ if ($user_data && isset($user_data['shift_id'])) {
                 timeout = setTimeout(later, wait);
             };
         }
-
-        function searchUsers(query) {
-            // Add your user search logic here
-            // This should integrate with your backend
-            console.log('Searching users:', query);
-        }
-        
+   
     </script>
     
-    <script src="assets/js/simple-chat.js"></script>
    
     <!-- Update the initialization script -->
     <script>
@@ -3319,10 +2824,7 @@ if ($user_data && isset($user_data['shift_id'])) {
         // Make it globally available
         window.taskManager = taskManager;
     });
-</script>   
-    
-
-    
-
+</script>  
+<script src="js/chat.js"></script>
 </body>
 </html>

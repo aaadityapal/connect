@@ -3746,20 +3746,21 @@ window.addSubstage = function(stageNumber) {
     // Get stage assignee
     const stageAssignee = stageBlock.querySelector('.stage-assignee');
     const selectedStageAssigneeId = stageAssignee ? stageAssignee.value : '';
-    
-    // Get stage dates
-    const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
-    const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
+    const selectedStageAssigneeText = stageAssignee ? stageAssignee.options[stageAssignee.selectedIndex].text : '';
     
     // Increment substage counter
     substageCounters[stageNumber] = (substageCounters[stageNumber] || 0) + 1;
     const substageNumber = substageCounters[stageNumber];
     
+    // Get stage dates
+    const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
+    const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
+    
     // Calculate substage dates
     const substageDates = calculateSubstageDates(stageStartDate, stageDueDate, substageNumber);
     const currentSubstageDates = substageDates[substageNumber - 1];
     
-    const newSubstage = createSubstageHTML(stageNumber, substageNumber, currentSubstageDates);
+    const newSubstage = createSubstageHTML(stageNumber, substageNumber, selectedStageAssigneeId, selectedStageAssigneeText);
     substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
     
     // Get the newly added substage element
@@ -3774,22 +3775,44 @@ window.addSubstage = function(stageNumber) {
         dueDateInput.value = currentSubstageDates.endDate;
     }
 
-    // Populate the assignee dropdown for the new substage
-    const substageAssigneeSelect = lastSubstage.querySelector('.substage-assignee');
-    if (substageAssigneeSelect && window.usersData) {
-        populateUserDropdown(substageAssigneeSelect, window.usersData);
-        // Set the same assignee as the stage
-        if (selectedStageAssigneeId) {
-            substageAssigneeSelect.value = selectedStageAssigneeId;
-        }
-    }
-
     // Add file input event listener
     const fileInput = document.getElementById(`substageFile${stageNumber}_${substageNumber}`);
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
     }
 };
+
+// Modify createSubstageHTML to accept the selected assignee
+function createSubstageHTML(stageNumber, substageNumber, selectedAssigneeId, selectedAssigneeText) {
+    const projectType = document.getElementById('projectType').value;
+    
+    // Your existing substageOptions code...
+    
+    return `
+        <div class="substage-block" data-substage="${substageNumber}">
+            <div class="substage-header">
+                <h5 class="substage-title">Task ${String(substageNumber).padStart(2, '0')}</h5>
+                <button class="remove-substage-btn" onclick="removeSubstage(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="task-form-group">
+                <label>Substage Title</label>
+                <select class="substage-name" required>
+                    <option value="">Select Title</option>
+                    ${substageOptions}
+                </select>
+            </div>
+            <div class="task-form-group">
+                <label>Assign To</label>
+                <select class="substage-assignee">
+                    <option value="${selectedAssigneeId}">${selectedAssigneeText}</option>
+                </select>
+            </div>
+            <!-- Rest of your substage HTML -->
+        </div>
+    `;
+}
 
 // Add event listeners for project date changes
 document.addEventListener('DOMContentLoaded', function() {

@@ -1206,6 +1206,9 @@ window.addStage = function() {
 
     const stageElement = stagesWrapper.lastElementChild;
     populateStageAssignee(stageElement);
+    
+    // Add the stage assignee change listener
+    setupStageAssigneeListener(stageElement);
 
     // Set the calculated dates
     const startDateInput = stageElement.querySelector('.stage-start-date');
@@ -1288,6 +1291,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function createSubstageHTML(stageNumber, substageNumber) {
         // Get the current project type
         const projectType = document.getElementById('projectType').value;
+        
+        // Get the stage assignee value
+        const stageBlock = document.querySelector(`.stage-block[data-stage="${stageNumber}"]`);
+        const stageAssignee = stageBlock ? stageBlock.querySelector('.stage-assignee').value : '';
         
         // Base HTML structure
         let substageOptions = '';
@@ -1577,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="task-form-group">
                     <label>Assign To</label>
-                    <select class="substage-assignee">
+                    <select class="substage-assignee" value="${stageAssignee}">
                         <option value="">Select Employee</option>
                     </select>
                 </div>
@@ -1653,14 +1660,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const newSubstage = createSubstageHTML(stageNumber, substageNumber, currentSubstageDates);
         substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
         
-        // Set the calculated dates
+        // Get the newly added substage element
         const lastSubstage = substagesWrapper.lastElementChild;
+        
+        // Set the calculated dates
         const startDateInput = lastSubstage.querySelector('.substage-start-date');
         const dueDateInput = lastSubstage.querySelector('.substage-due-date');
         
         if (startDateInput && dueDateInput) {
             startDateInput.value = currentSubstageDates.startDate;
             dueDateInput.value = currentSubstageDates.endDate;
+        }
+
+        // Populate the assignee dropdown for the new substage
+        const substageAssigneeSelect = lastSubstage.querySelector('.substage-assignee');
+        if (substageAssigneeSelect && window.usersData) {
+            populateUserDropdown(substageAssigneeSelect, window.usersData);
         }
 
         // Add file input event listener
@@ -3566,7 +3581,7 @@ function createSubstageHTML(stageNumber, substageNumber) {
             </div>
             <div class="task-form-group">
                 <label>Assign To</label>
-                <select class="substage-assignee">
+                <select class="substage-assignee" value="${stageAssignee}">
                     <option value="">Select Employee</option>
                 </select>
             </div>
@@ -3677,6 +3692,9 @@ window.addStage = function() {
 
     const stageElement = stagesWrapper.lastElementChild;
     populateStageAssignee(stageElement);
+    
+    // Add the stage assignee change listener
+    setupStageAssigneeListener(stageElement);
 
     // Set the calculated dates
     const startDateInput = stageElement.querySelector('.stage-start-date');
@@ -3725,6 +3743,10 @@ window.addSubstage = function(stageNumber) {
     const substagesWrapper = document.getElementById(`substagesWrapper${stageNumber}`);
     const stageBlock = substagesWrapper.closest('.stage-block');
     
+    // Get stage assignee
+    const stageAssignee = stageBlock.querySelector('.stage-assignee');
+    const selectedStageAssigneeId = stageAssignee ? stageAssignee.value : '';
+    
     // Get stage dates
     const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
     const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
@@ -3740,14 +3762,26 @@ window.addSubstage = function(stageNumber) {
     const newSubstage = createSubstageHTML(stageNumber, substageNumber, currentSubstageDates);
     substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
     
-    // Set the calculated dates
+    // Get the newly added substage element
     const lastSubstage = substagesWrapper.lastElementChild;
+    
+    // Set the calculated dates
     const startDateInput = lastSubstage.querySelector('.substage-start-date');
     const dueDateInput = lastSubstage.querySelector('.substage-due-date');
     
     if (startDateInput && dueDateInput) {
         startDateInput.value = currentSubstageDates.startDate;
         dueDateInput.value = currentSubstageDates.endDate;
+    }
+
+    // Populate the assignee dropdown for the new substage
+    const substageAssigneeSelect = lastSubstage.querySelector('.substage-assignee');
+    if (substageAssigneeSelect && window.usersData) {
+        populateUserDropdown(substageAssigneeSelect, window.usersData);
+        // Set the same assignee as the stage
+        if (selectedStageAssigneeId) {
+            substageAssigneeSelect.value = selectedStageAssigneeId;
+        }
     }
 
     // Add file input event listener
@@ -3801,3 +3835,35 @@ document.addEventListener('DOMContentLoaded', function() {
         projectDueDate.addEventListener('change', updateAllDates);
     }
 });
+
+// Add event listener for stage assignee changes
+function setupStageAssigneeListener(stageElement) {
+    const stageAssignee = stageElement.querySelector('.stage-assignee');
+    
+    stageAssignee.addEventListener('change', function(e) {
+        const selectedUserId = e.target.value;
+        
+        // Find all substages within this stage and update their assignees
+        const substages = stageElement.querySelectorAll('.substage-block');
+        substages.forEach(substage => {
+            const substageAssignee = substage.querySelector('.substage-assignee');
+            if (substageAssignee) {
+                substageAssignee.value = selectedUserId;
+            }
+        });
+    });
+}
+
+// Add this after your createSubstageHTML function
+function setupStageAssigneeListener(stageElement) {
+    const stageAssignee = stageElement.querySelector('.stage-assignee');
+    
+    stageAssignee.addEventListener('change', function(e) {
+        const selectedValue = e.target.value;
+        const substages = stageElement.querySelectorAll('.substage-block .substage-assignee');
+        
+        substages.forEach(substageAssignee => {
+            substageAssignee.value = selectedValue;
+        });
+    });
+}

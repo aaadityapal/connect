@@ -1133,7 +1133,7 @@ let stageCount = 0;
 let substageCounters = {};
 
 // Keep only one createStageHTML function (the global one)
-window.createStageHTML = function(stageNumber) {
+window.createStageHTML = function(stageNumber, dates = null) {
     substageCounters[stageNumber] = 0;
     return `
         <div class="stage-block" data-stage="${stageNumber}">
@@ -1153,13 +1153,15 @@ window.createStageHTML = function(stageNumber) {
                 <div class="task-form-group">
                     <label>Start Date & Time</label>
                     <div class="task-datetime-input">
-                        <input type="datetime-local" class="stage-start-date">
+                        <input type="datetime-local" class="stage-start-date" 
+                            value="${dates ? dates.startDate : ''}" required>
                     </div>
                 </div>
                 <div class="task-form-group">
                     <label>Due By</label>
                     <div class="task-datetime-input">
-                        <input type="datetime-local" class="stage-due-date">
+                        <input type="datetime-local" class="stage-due-date" 
+                            value="${dates ? dates.endDate : ''}" required>
                     </div>
                 </div>
             </div>
@@ -1190,11 +1192,29 @@ window.createStageHTML = function(stageNumber) {
 window.addStage = function() {
     stageCount++;
     const stagesWrapper = document.getElementById('stagesWrapper');
-    const newStage = createStageHTML(stageCount);
+    
+    // Get project dates
+    const projectStartDate = document.getElementById('projectStartDate').value;
+    const projectEndDate = document.getElementById('projectDueDate').value;
+    
+    // Calculate stage dates
+    const stageDates = calculateDistributedDates(projectStartDate, projectEndDate, stageCount);
+    const currentStageDates = stageDates[stageCount - 1];
+    
+    const newStage = createStageHTML(stageCount, currentStageDates);
     stagesWrapper.insertAdjacentHTML('beforeend', newStage);
 
     const stageElement = stagesWrapper.lastElementChild;
     populateStageAssignee(stageElement);
+
+    // Set the calculated dates
+    const startDateInput = stageElement.querySelector('.stage-start-date');
+    const dueDateInput = stageElement.querySelector('.stage-due-date');
+    
+    if (startDateInput && dueDateInput) {
+        startDateInput.value = currentStageDates.startDate;
+        dueDateInput.value = currentStageDates.endDate;
+    }
 
     const fileInput = document.getElementById(`stageFile${stageCount}`);
     if (fileInput) {
@@ -1615,21 +1635,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to add a substage
     window.addSubstage = function(stageNumber) {
-        if (!substageCounters[stageNumber]) {
-            substageCounters[stageNumber] = 0;
-        }
-        const substageNumber = ++substageCounters[stageNumber];  // Increment then use
         const substagesWrapper = document.getElementById(`substagesWrapper${stageNumber}`);
-        const newSubstage = createSubstageHTML(stageNumber, substageNumber);
-        substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
-
-        // Get the newly added substage element
-        const substageElement = substagesWrapper.lastElementChild;
+        const stageBlock = substagesWrapper.closest('.stage-block');
         
-        // Populate the assignee dropdown for the new substage
-        populateSubstageAssignee(substageElement);
+        // Get stage dates
+        const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
+        const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
+        
+        // Increment substage counter
+        substageCounters[stageNumber] = (substageCounters[stageNumber] || 0) + 1;
+        const substageNumber = substageCounters[stageNumber];
+        
+        // Calculate substage dates
+        const substageDates = calculateSubstageDates(stageStartDate, stageDueDate, substageNumber);
+        const currentSubstageDates = substageDates[substageNumber - 1];
+        
+        const newSubstage = createSubstageHTML(stageNumber, substageNumber, currentSubstageDates);
+        substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
+        
+        // Set the calculated dates
+        const lastSubstage = substagesWrapper.lastElementChild;
+        const startDateInput = lastSubstage.querySelector('.substage-start-date');
+        const dueDateInput = lastSubstage.querySelector('.substage-due-date');
+        
+        if (startDateInput && dueDateInput) {
+            startDateInput.value = currentSubstageDates.startDate;
+            dueDateInput.value = currentSubstageDates.endDate;
+        }
 
-        // Add file change listener
+        // Add file input event listener
         const fileInput = document.getElementById(`substageFile${stageNumber}_${substageNumber}`);
         if (fileInput) {
             fileInput.addEventListener('change', handleFileSelect);
@@ -3586,3 +3620,184 @@ function removeSubstage(button) {
 }
 
 // ... rest of existing code ...
+
+// Add this function to calculate distributed dates
+function calculateDistributedDates(projectStartDate, projectEndDate, numberOfStages) {
+    const start = new Date(projectStartDate);
+    const end = new Date(projectEndDate);
+    const totalDuration = end.getTime() - start.getTime();
+    const stageDuration = totalDuration / numberOfStages;
+    
+    const dates = [];
+    for (let i = 0; i < numberOfStages; i++) {
+        const stageStart = new Date(start.getTime() + (stageDuration * i));
+        const stageEnd = new Date(start.getTime() + (stageDuration * (i + 1)));
+        dates.push({
+            startDate: stageStart.toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
+            endDate: stageEnd.toISOString().slice(0, 16)
+        });
+    }
+    return dates;
+}
+
+// Add this function to calculate substage dates
+function calculateSubstageDates(stageStartDate, stageEndDate, numberOfSubstages) {
+    const start = new Date(stageStartDate);
+    const end = new Date(stageEndDate);
+    const totalDuration = end.getTime() - start.getTime();
+    const substageDuration = totalDuration / numberOfSubstages;
+    
+    const dates = [];
+    for (let i = 0; i < numberOfSubstages; i++) {
+        const substageStart = new Date(start.getTime() + (substageDuration * i));
+        const substageEnd = new Date(start.getTime() + (substageDuration * (i + 1)));
+        dates.push({
+            startDate: substageStart.toISOString().slice(0, 16),
+            endDate: substageEnd.toISOString().slice(0, 16)
+        });
+    }
+    return dates;
+}
+
+// Modify the addStage function
+window.addStage = function() {
+    stageCount++;
+    const stagesWrapper = document.getElementById('stagesWrapper');
+    
+    // Get project dates
+    const projectStartDate = document.getElementById('projectStartDate').value;
+    const projectEndDate = document.getElementById('projectDueDate').value;
+    
+    // Calculate stage dates
+    const stageDates = calculateDistributedDates(projectStartDate, projectEndDate, stageCount);
+    const currentStageDates = stageDates[stageCount - 1];
+    
+    const newStage = createStageHTML(stageCount, currentStageDates);
+    stagesWrapper.insertAdjacentHTML('beforeend', newStage);
+
+    const stageElement = stagesWrapper.lastElementChild;
+    populateStageAssignee(stageElement);
+
+    // Set the calculated dates
+    const startDateInput = stageElement.querySelector('.stage-start-date');
+    const dueDateInput = stageElement.querySelector('.stage-due-date');
+    
+    if (startDateInput && dueDateInput) {
+        startDateInput.value = currentStageDates.startDate;
+        dueDateInput.value = currentStageDates.endDate;
+    }
+
+    const fileInput = document.getElementById(`stageFile${stageCount}`);
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+};
+
+// Modify createStageHTML function to accept dates
+window.createStageHTML = function(stageNumber, dates = null) {
+    substageCounters[stageNumber] = 0;
+    return `
+        <div class="stage-block" data-stage="${stageNumber}">
+            <!-- ... existing HTML ... -->
+            <div class="task-form-row">
+                <div class="task-form-group">
+                    <label>Start Date & Time</label>
+                    <div class="task-datetime-input">
+                        <input type="datetime-local" class="stage-start-date" 
+                            value="${dates ? dates.startDate : ''}" required>
+                    </div>
+                </div>
+                <div class="task-form-group">
+                    <label>Due By</label>
+                    <div class="task-datetime-input">
+                        <input type="datetime-local" class="stage-due-date" 
+                            value="${dates ? dates.endDate : ''}" required>
+                    </div>
+                </div>
+            </div>
+            <!-- ... rest of the HTML ... -->
+        </div>
+    `;
+};
+
+// Modify addSubstage function
+window.addSubstage = function(stageNumber) {
+    const substagesWrapper = document.getElementById(`substagesWrapper${stageNumber}`);
+    const stageBlock = substagesWrapper.closest('.stage-block');
+    
+    // Get stage dates
+    const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
+    const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
+    
+    // Increment substage counter
+    substageCounters[stageNumber] = (substageCounters[stageNumber] || 0) + 1;
+    const substageNumber = substageCounters[stageNumber];
+    
+    // Calculate substage dates
+    const substageDates = calculateSubstageDates(stageStartDate, stageDueDate, substageNumber);
+    const currentSubstageDates = substageDates[substageNumber - 1];
+    
+    const newSubstage = createSubstageHTML(stageNumber, substageNumber, currentSubstageDates);
+    substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
+    
+    // Set the calculated dates
+    const lastSubstage = substagesWrapper.lastElementChild;
+    const startDateInput = lastSubstage.querySelector('.substage-start-date');
+    const dueDateInput = lastSubstage.querySelector('.substage-due-date');
+    
+    if (startDateInput && dueDateInput) {
+        startDateInput.value = currentSubstageDates.startDate;
+        dueDateInput.value = currentSubstageDates.endDate;
+    }
+
+    // Add file input event listener
+    const fileInput = document.getElementById(`substageFile${stageNumber}_${substageNumber}`);
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+};
+
+// Add event listeners for project date changes
+document.addEventListener('DOMContentLoaded', function() {
+    const projectStartDate = document.getElementById('projectStartDate');
+    const projectDueDate = document.getElementById('projectDueDate');
+    
+    function updateAllDates() {
+        if (projectStartDate.value && projectDueDate.value) {
+            const stages = document.querySelectorAll('.stage-block');
+            const stageDates = calculateDistributedDates(projectStartDate.value, projectDueDate.value, stages.length);
+            
+            stages.forEach((stage, index) => {
+                const dates = stageDates[index];
+                const startDateInput = stage.querySelector('.stage-start-date');
+                const dueDateInput = stage.querySelector('.stage-due-date');
+                
+                if (startDateInput && dueDateInput) {
+                    startDateInput.value = dates.startDate;
+                    dueDateInput.value = dates.endDate;
+                }
+                
+                // Update substage dates
+                const substages = stage.querySelectorAll('.substage-block');
+                if (substages.length > 0) {
+                    const substageDates = calculateSubstageDates(dates.startDate, dates.endDate, substages.length);
+                    substages.forEach((substage, subIndex) => {
+                        const subDates = substageDates[subIndex];
+                        const subStartInput = substage.querySelector('.substage-start-date');
+                        const subDueInput = substage.querySelector('.substage-due-date');
+                        
+                        if (subStartInput && subDueInput) {
+                            subStartInput.value = subDates.startDate;
+                            subDueInput.value = subDates.endDate;
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    if (projectStartDate && projectDueDate) {
+        projectStartDate.addEventListener('change', updateAllDates);
+        projectDueDate.addEventListener('change', updateAllDates);
+    }
+});

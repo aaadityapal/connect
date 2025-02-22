@@ -1013,40 +1013,37 @@ function showProjectDetailsModal(project) {
                     </div>
                     ${stage.substages && stage.substages.length > 0 ? `
                         <div class="substages-list">
-                            ${stage.substages.map(substage => {
-                                const substageStatus = (substage.status || 'pending').toLowerCase();
-                                return `
-                                    <div class="substage-item status-${substageStatus}">
-                                        <div class="substage-header">
-                                            <h6>${substage.title}</h6>
-                                            <span class="status-badge status-${substageStatus}">
-                                                ${substage.status || 'Pending'}
-                                            </span>
-                                        </div>
-                                        <div class="stage-meta">
-                                            <span><i class="fas fa-user"></i> ${substage.assignee_name || 'Unassigned'}</span>
-                                            <span><i class="fas fa-calendar"></i> Due: ${formatDate(substage.end_date)}</span>
-                                        </div>
-                                        <div class="toggle-files" data-substage-id="${substage.id}">
-                                            <i class="fas fa-chevron-down"></i> 
-                                        </div>
-                                        <table class="substage-files-table" id="files-table-${substage.id}" style="display: none;">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>File Name</th>
-                                                    <th>Type</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!-- Files will be loaded here -->
-                                            </tbody>
-                                        </table>
+                            ${stage.substages.map(substage => `
+                                <div class="substage-item status-${substage.status}" data-substage-id="${substage.id}">
+                                    <div class="substage-header">
+                                        <h6>${substage.title}</h6>
+                                        <span class="status-badge status-${substage.status}">
+                                            ${substage.status || 'Pending'}
+                                        </span>
                                     </div>
-                                `;
-                            }).join('')}
+                                    <div class="stage-meta">
+                                        <span><i class="fas fa-user"></i> ${substage.assignee_name || 'Unassigned'}</span>
+                                        <span><i class="fas fa-calendar"></i> Due: ${formatDate(substage.end_date)}</span>
+                                    </div>
+                                    <div class="toggle-files" data-substage-id="${substage.id}">
+                                        <i class="fas fa-chevron-down"></i> 
+                                    </div>
+                                    <table class="substage-files-table" id="files-table-${substage.id}" style="display: none;">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>File Name</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Files will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `).join('')}
                         </div>
                     ` : ''}
                 `;
@@ -1128,11 +1125,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Keep the global variables and createStageHTML function at the top
+// Keep only one global stageCount variable
 let stageCount = 0;
 let substageCounters = {};
 
-// Keep only one createStageHTML function (the global one)
+// Keep only one global createStageHTML function
 window.createStageHTML = function(stageNumber, dates = null) {
     substageCounters[stageNumber] = 0;
     return `
@@ -1188,29 +1185,32 @@ window.createStageHTML = function(stageNumber, dates = null) {
     `;
 };
 
-// Remove the duplicate addStage function and keep only the global one
+// Update addStage function to ensure sequential numbering
 window.addStage = function() {
-    stageCount++;
+    // Get the stages wrapper
     const stagesWrapper = document.getElementById('stagesWrapper');
+    
+    // Get all existing stages and calculate next stage number
+    const existingStages = stagesWrapper.querySelectorAll('.stage-block');
+    const nextStageNumber = existingStages.length + 1;
     
     // Get project dates
     const projectStartDate = document.getElementById('projectStartDate').value;
     const projectEndDate = document.getElementById('projectDueDate').value;
     
     // Calculate stage dates
-    const stageDates = calculateDistributedDates(projectStartDate, projectEndDate, stageCount);
-    const currentStageDates = stageDates[stageCount - 1];
+    const stageDates = calculateDistributedDates(projectStartDate, projectEndDate, nextStageNumber);
+    const currentStageDates = stageDates[nextStageNumber - 1];
     
-    const newStage = createStageHTML(stageCount, currentStageDates);
+    // Create new stage with the correct number
+    const newStage = createStageHTML(nextStageNumber, currentStageDates);
     stagesWrapper.insertAdjacentHTML('beforeend', newStage);
 
+    // Setup the new stage
     const stageElement = stagesWrapper.lastElementChild;
     populateStageAssignee(stageElement);
-    
-    // Add the stage assignee change listener
-    setupStageAssigneeListener(stageElement);
 
-    // Set the calculated dates
+    // Set the dates
     const startDateInput = stageElement.querySelector('.stage-start-date');
     const dueDateInput = stageElement.querySelector('.stage-due-date');
     
@@ -1219,10 +1219,58 @@ window.addStage = function() {
         dueDateInput.value = currentStageDates.endDate;
     }
 
-    const fileInput = document.getElementById(`stageFile${stageCount}`);
+    // Setup file input
+    const fileInput = document.getElementById(`stageFile${nextStageNumber}`);
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
     }
+    
+    // Update global stageCount
+    stageCount = nextStageNumber;
+};
+
+// Update removeStage function to ensure proper renumbering
+window.removeStage = function(button) {
+    const stageBlock = button.closest('.stage-block');
+    const stagesWrapper = document.getElementById('stagesWrapper');
+    
+    // Remove the stage
+    stageBlock.remove();
+    
+    // Get all remaining stages
+    const remainingStages = stagesWrapper.querySelectorAll('.stage-block');
+    
+    // Renumber all remaining stages sequentially
+    remainingStages.forEach((stage, index) => {
+        const newStageNumber = index + 1;
+        
+        // Update stage title
+        const stageTitle = stage.querySelector('.stage-title');
+        if (stageTitle) {
+            stageTitle.textContent = `Stage ${newStageNumber}`;
+        }
+        
+        // Update data attribute
+        stage.setAttribute('data-stage', newStageNumber);
+        
+        // Update file input ID and label
+        const fileInput = stage.querySelector('.file-upload-input');
+        const fileLabel = stage.querySelector('.file-upload-label');
+        if (fileInput && fileLabel) {
+            const newFileId = `stageFile${newStageNumber}`;
+            fileInput.id = newFileId;
+            fileLabel.setAttribute('for', newFileId);
+        }
+        
+        // Update substages wrapper ID
+        const substagesWrapper = stage.querySelector('.substages-wrapper');
+        if (substagesWrapper) {
+            substagesWrapper.id = `substagesWrapper${newStageNumber}`;
+        }
+    });
+    
+    // Update global stageCount
+    stageCount = remainingStages.length;
 };
 
 // Add Task Dialog Functionality
@@ -3676,7 +3724,10 @@ function calculateSubstageDates(stageStartDate, stageEndDate, numberOfSubstages)
 
 // Modify the addStage function
 window.addStage = function() {
+    // Increment stage count
     stageCount++;
+    
+    // Get the stages wrapper
     const stagesWrapper = document.getElementById('stagesWrapper');
     
     // Get project dates
@@ -3687,16 +3738,15 @@ window.addStage = function() {
     const stageDates = calculateDistributedDates(projectStartDate, projectEndDate, stageCount);
     const currentStageDates = stageDates[stageCount - 1];
     
+    // Create new stage
     const newStage = createStageHTML(stageCount, currentStageDates);
     stagesWrapper.insertAdjacentHTML('beforeend', newStage);
 
+    // Setup the new stage
     const stageElement = stagesWrapper.lastElementChild;
     populateStageAssignee(stageElement);
-    
-    // Add the stage assignee change listener
-    setupStageAssigneeListener(stageElement);
 
-    // Set the calculated dates
+    // Set the dates
     const startDateInput = stageElement.querySelector('.stage-start-date');
     const dueDateInput = stageElement.querySelector('.stage-due-date');
     
@@ -3705,6 +3755,7 @@ window.addStage = function() {
         dueDateInput.value = currentStageDates.endDate;
     }
 
+    // Setup file input
     const fileInput = document.getElementById(`stageFile${stageCount}`);
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
@@ -3890,3 +3941,47 @@ function setupStageAssigneeListener(stageElement) {
         });
     });
 }
+
+// Add this function to handle stage removal
+window.removeStage = function(button) {
+    const stageBlock = button.closest('.stage-block');
+    const stagesWrapper = document.getElementById('stagesWrapper');
+    
+    // Remove the stage
+    stageBlock.remove();
+    
+    // Get all remaining stages
+    const remainingStages = stagesWrapper.querySelectorAll('.stage-block');
+    
+    // Renumber all remaining stages sequentially
+    remainingStages.forEach((stage, index) => {
+        const newStageNumber = index + 1;
+        
+        // Update stage title
+        const stageTitle = stage.querySelector('.stage-title');
+        if (stageTitle) {
+            stageTitle.textContent = `Stage ${newStageNumber}`;
+        }
+        
+        // Update data attribute
+        stage.setAttribute('data-stage', newStageNumber);
+        
+        // Update file input ID and label
+        const fileInput = stage.querySelector('.file-upload-input');
+        const fileLabel = stage.querySelector('.file-upload-label');
+        if (fileInput && fileLabel) {
+            const newFileId = `stageFile${newStageNumber}`;
+            fileInput.id = newFileId;
+            fileLabel.setAttribute('for', newFileId);
+        }
+        
+        // Update substages wrapper ID
+        const substagesWrapper = stage.querySelector('.substages-wrapper');
+        if (substagesWrapper) {
+            substagesWrapper.id = `substagesWrapper${newStageNumber}`;
+        }
+    });
+    
+    // Update global stage count
+    stageCount = remainingStages.length;
+};

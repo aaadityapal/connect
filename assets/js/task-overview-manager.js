@@ -1992,7 +1992,7 @@ const taskManager = new TaskOverviewManager();
 // Update the file action functions
 window.viewFile = async (fileId, filePath) => {
     try {
-        const response = await fetch(`dashboard/handlers/view_file.php?file_id=${fileId}`, {
+        const response = await fetch(`dashboard/handlers/get_file_viewer.php?file_id=${fileId}`, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -2000,10 +2000,23 @@ window.viewFile = async (fileId, filePath) => {
             credentials: 'include'
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+        
         if (data.success) {
-            // Open file in new window/tab
-            window.open(data.data.file_path, '_blank');
+            // For PHP files, display content in a new window instead of executing
+            if (data.data.file_name.toLowerCase().endsWith('.php')) {
+                // Use a text viewer or code viewer for PHP files
+                const viewerUrl = `/hr/dashboard/code-viewer.php?file_id=${fileId}`;
+                window.open(viewerUrl, '_blank');
+            } else {
+                // For other files, open directly
+                const fileUrl = data.data.file_path;
+                window.open(fileUrl, '_blank');
+            }
         } else {
             throw new Error(data.message || 'Failed to view file');
         }
@@ -2012,7 +2025,7 @@ window.viewFile = async (fileId, filePath) => {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Failed to view file. Please try again.'
+            text: 'Failed to view file: ' + error.message
         });
     }
 };

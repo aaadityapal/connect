@@ -1355,79 +1355,135 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="PPT">PPT</option>
                     <option value="3D Model">3D Model</option>
                 </optgroup>
-                
-                <optgroup label="Ground Floor">
-                    <option value="Ground Floor Furniture Layout Plan">Ground Floor Furniture Layout Plan</option>
-                    <option value="Ground Floor Ceiling Plan">Ground Floor Ceiling Plan</option>
-                    <option value="Ground Floor Electrical Layout">Ground Floor Electrical Layout</option>
-                    <option value="Ground Floor Plumbing Layout">Ground Floor Plumbing Layout</option>
-                    <option value="Ground Floor Door & Window Schedule">Ground Floor Door & Window Schedule</option>
-                    <option value="Ground Floor Working Drawing">Ground Floor Working Drawing</option>
-                    <option value="Ground Floor False Ceiling Layout Plan">Ground Floor False Ceiling Layout Plan</option>
-                </optgroup>
-                
-                <optgroup label="First Floor">
-                    <option value="First Floor Furniture Layout Plan">First Floor Furniture Layout Plan</option>
-                    <option value="First Floor Ceiling Plan">First Floor Ceiling Plan</option>
-                    <option value="First Floor Electrical Layout">First Floor Electrical Layout</option>
-                    <option value="First Floor Plumbing Layout">First Floor Plumbing Layout</option>
-                    <option value="First Floor Door & Window Schedule">First Floor Door & Window Schedule</option>
-                    <option value="First Floor Working Drawing">First Floor Working Drawing</option>
-                    <option value="First Floor False Ceiling Layout Plan">First Floor False Ceiling Layout Plan</option>
-                </optgroup>
-                
-                <optgroup label="Second Floor">
-                    <option value="Second Floor Furniture Layout Plan">Second Floor Furniture Layout Plan</option>
-                    <option value="Second Floor Ceiling Plan">Second Floor Ceiling Plan</option>
-                    <option value="Second Floor Electrical Layout">Second Floor Electrical Layout</option>
-                    <option value="Second Floor Plumbing Layout">Second Floor Plumbing Layout</option>
-                    <option value="Second Floor Door & Window Schedule">Second Floor Door & Window Schedule</option>
-                    <option value="Second Floor Working Drawing">Second Floor Working Drawing</option>
-                    <option value="Second Floor False Ceiling Layout Plan">Second Floor False Ceiling Layout Plan</option>
-                </optgroup>
-                
-                <optgroup label="Third Floor">
-                    <option value="Third Floor Furniture Layout Plan">Third Floor Furniture Layout Plan</option>
-                    <option value="Third Floor Ceiling Plan">Third Floor Ceiling Plan</option>
-                    <option value="Third Floor Electrical Layout">Third Floor Electrical Layout</option>
-                    <option value="Third Floor Plumbing Layout">Third Floor Plumbing Layout</option>
-                    <option value="Third Floor Door & Window Schedule">Third Floor Door & Window Schedule</option>
-                    <option value="Third Floor Working Drawing">Third Floor Working Drawing</option>
-                    <option value="Third Floor False Ceiling Layout Plan">Third Floor False Ceiling Layout Plan</option>
-                </optgroup>
-                
-                <optgroup label="Fourth Floor">
-                    <option value="Fourth Floor Furniture Layout Plan">Fourth Floor Furniture Layout Plan</option>
-                    <option value="Fourth Floor Ceiling Plan">Fourth Floor Ceiling Plan</option>
-                    <option value="Fourth Floor Electrical Layout">Fourth Floor Electrical Layout</option>
-                    <option value="Fourth Floor Plumbing Layout">Fourth Floor Plumbing Layout</option>
-                    <option value="Fourth Floor Door & Window Schedule">Fourth Floor Door & Window Schedule</option>
-                    <option value="Fourth Floor Working Drawing">Fourth Floor Working Drawing</option>
-                    <option value="Fourth Floor False Ceiling Layout Plan">Fourth Floor False Ceiling Layout Plan</option>
-                </optgroup>
-                
-                <optgroup label="Fifth Floor">
-                    <option value="Fifth Floor Furniture Layout Plan">Fifth Floor Furniture Layout Plan</option>
-                    <option value="Fifth Floor Ceiling Plan">Fifth Floor Ceiling Plan</option>
-                    <option value="Fifth Floor Electrical Layout">Fifth Floor Electrical Layout</option>
-                    <option value="Fifth Floor Plumbing Layout">Fifth Floor Plumbing Layout</option>
-                    <option value="Fifth Floor Door & Window Schedule">Fifth Floor Door & Window Schedule</option>
-                    <option value="Fifth Floor Working Drawing">Fifth Floor Working Drawing</option>
-                    <option value="Fifth Floor False Ceiling Layout Plan">Fifth Floor False Ceiling Layout Plan</option>
-                </optgroup>
-                
-                <optgroup label="Structure Drawings">
+
+                <optgroup label="Structure Drawings - All Floor">
                     <option value="Excavation Layout Plan">Excavation Layout Plan</option>
+                    <option value="Setting Layout Plan">Setting Layout Plan</option>
+                    <option value="Foundation Plan">Foundation Plan</option>
+                    <option value="Foundation Details">Foundation Details</option>
+                    <option value="Column Layout Plan">Column Layout Plan</option>
+                    <option value="Column Details">Column Details</option>
                     <option value="Footing Layout Plan">Footing Layout Plan</option>
                     <option value="Column & Setting Layout Plan">Column & Setting Layout Plan</option>
                     <option value="Column & Footing Details">Column & Footing Details</option>
                     <option value="Plinth Beam Layout Plan">Plinth Beam Layout Plan</option>
+                    <option value="Basement Roof Slab Beam Layout Plan">Basement Roof Slab Beam Layout Plan</option>
+                    <option value="Stilt Roof Slab Beam Layout Plan">Stilt Roof Slab Beam Layout Plan</option>
+                    <option value="Stilt Floor Roof Slab Beam Layout Plan">Stilt Floor Roof Slab Beam Layout Plan</option>
                     <option value="Ground Floor Roof Slab Beam Layout Plan">Ground Floor Roof Slab Beam Layout Plan</option>
                     <option value="First Floor Roof Slab Beam Layout Plan">First Floor Roof Slab Beam Layout Plan</option>
                     <option value="Second Floor Roof Slab Beam Layout Plan">Second Floor Roof Slab Beam Layout Plan</option>
                     <option value="Third Floor Roof Slab Beam Layout Plan">Third Floor Roof Slab Beam Layout Plan</option>
                     <option value="Fourth Floor Roof Slab Beam Layout Plan">Fourth Floor Roof Slab Beam Layout Plan</option>
                     <option value="Fifth Floor Roof Slab Beam Layout Plan">Fifth Floor Roof Slab Beam Layout Plan</option>
+                    <option value="Terrace Roof Slab Beam Layout Plan">Terrace Roof Slab Beam Layout Plan</option>
+                    <option value="Basement Slab Beam Details">Basement Slab Beam Details</option>
+                    <option value="Stilt Floor Slab Beam Details">Stilt Floor Slab Beam Details</option>
+                    <option value="Ground Floor Slab Beam Details">Ground Floor Slab Beam Details</option>
+                    <option value="First Floor Slab Beam Details">First Floor Slab Beam Details</option>
+                    <option value="Second Floor Slab Beam Details">Second Floor Slab Beam Details</option>
+                    <option value="Third Floor Slab Beam Details">Third Floor Slab Beam Details</option>
+                    <option value="Fourth Floor Slab Beam Details">Fourth Floor Slab Beam Details</option>
+                    <option value="Fifth Floor Slab Beam Details">Fifth Floor Slab Beam Details</option>
+                    <option value="Terrace Slab Beam Details">Terrace Slab Beam Details</option>
+                </optgroup>
+                
+                <optgroup label="Architecture Working Drawings - All Floor">
+                    <option value="Basement Furniture Layout Plan">Basement Furniture Layout Plan</option>
+                    <option value="Stilt Floor Furniture Layout Plan">Stilt Floor Furniture Layout Plan</option>
+                    <option value="Ground Floor Furniture Layout Plan">Ground Floor Furniture Layout Plan</option>
+                    <option value="First Floor Furniture Layout Plan">First Floor Furniture Layout Plan</option>
+                    <option value="Second Floor Furniture Layout Plan">Second Floor Furniture Layout Plan</option>
+                    <option value="Third Floor Furniture Layout Plan">Third Floor Furniture Layout Plan</option>
+                    <option value="Fourth Floor Furniture Layout Plan">Fourth Floor Furniture Layout Plan</option>
+                    <option value="Fifth Floor Furniture Layout Plan">Fifth Floor Furniture Layout Plan</option>
+                    <option value="Terrace Furniture Layout Plan">Terrace Furniture Layout Plan</option>
+                    <option value="Basement Working Layout Plan">Basement Working Layout Plan</option>
+                    <option value="Stilt Working Layout Plan">Stilt Working Layout Plan</option>
+                    <option value="Ground Floor Working Layout Plan">Ground Floor Working Layout Plan</option>
+                    <option value="First Floor Working Layout Plan">First Floor Working Layout Plan</option>
+                    <option value="Second Floor Working Layout Plan">Second Floor Working Layout Plan</option>
+                    <option value="Third Floor Working Layout Plan">Third Floor Working Layout Plan</option>
+                    <option value="Fourth Floor Working Layout Plan">Fourth Floor Working Layout Plan</option>
+                    <option value="Fifth Floor Working Layout Plan">Fifth Floor Working Layout Plan</option>
+                    <option value="Terrace Working Layout Plan">Terrace Working Layout Plan</option>
+                    <option value="Basement Door & Window Schedule Details">Basement Door & Window Schedule Details</option>
+                    <option value="Stilt Floor Door Window Schedule & Details">Stilt Floor Door Window Schedule & Details</option>
+                    <option value="Ground Floor Door Window Schedule & Details">Ground Floor Door Window Schedule & Details</option>
+                    <option value="First Floor Door Window Schedule & Details">First Floor Door Window Schedule & Details</option>
+                    <option value="Second Floor Door Window Schedule & Details">Second Floor Door Window Schedule & Details</option>
+                    <option value="Third Floor Door Window Schedule & Details">Third Floor Door Window Schedule & Details</option>
+                    <option value="Fourth Floor Door Window Schedule & Details">Fourth Floor Door Window Schedule & Details</option>
+                    <option value="Fifth Floor Door Window Schedule & Details">Fifth Floor Door Window Schedule & Details</option>
+                    <option value="Terrace Door Window Schedule & Details">Terrace Door Window Schedule & Details</option>
+                    <option value="Front Elevation Details">Front Elevation Details</option>
+                    <option value="Rear Elevation Details">Rear Elevation Details</option>
+                    <option value="Side 1 Elevation Details">Side 1 Elevation Details</option>
+                    <option value="Side 2 Elevation Details">Side 2 Elevation Details</option>
+                    <option value="Section Elevations X-X">Section Elevations X-X</option>
+                    <option value="Section Elevations Y-Y">Section Elevations Y-Y</option>
+                    <option value="Site Plans">Site Plans</option>
+                </optgroup>
+                
+                <optgroup label="Electrical Drawings - All Floor">
+                    <option value="Basement Wall Electrical Layout">Basement Wall Electrical Layout</option>
+                    <option value="Stilt Floor Wall Electrical Layout">Stilt Floor Wall Electrical Layout</option>
+                    <option value="Ground Floor Wall Electrical Layout">Ground Floor Wall Electrical Layout</option>
+                    <option value="First Floor Wall Electrical Layout">First Floor Wall Electrical Layout</option>
+                    <option value="Second Floor Wall Electrical Layout">Second Floor Wall Electrical Layout</option>
+                    <option value="Third Floor Wall Electrical Layout">Third Floor Wall Electrical Layout</option>
+                    <option value="Fourth Floor Wall Electrical Layout">Fourth Floor Wall Electrical Layout</option>
+                    <option value="Fifth Floor Wall Electrical Layout">Fifth Floor Wall Electrical Layout</option>
+                    <option value="Terrace Wall Electrical Layout">Terrace Wall Electrical Layout</option>
+                </optgroup>
+                
+                <optgroup label="Ceiling Drawings - All Floor">
+                    <option value="Basement Ceiling Layout Plan">Basement Ceiling Layout Plan</option>
+                    <option value="Stilt Floor Ceiling Layout Plan">Stilt Floor Ceiling Layout Plan</option>
+                    <option value="Ground Floor Ceiling Layout Plan">Ground Floor Ceiling Layout Plan</option>
+                    <option value="First Floor Ceiling Layout Plan">First Floor Ceiling Layout Plan</option>
+                    <option value="Second Floor Ceiling Layout Plan">Second Floor Ceiling Layout Plan</option>
+                    <option value="Third Floor Ceiling Layout Plan">Third Floor Ceiling Layout Plan</option>
+                    <option value="Fourth Floor Ceiling Layout Plan">Fourth Floor Ceiling Layout Plan</option>
+                    <option value="Fifth Floor Ceiling Layout Plan">Fifth Floor Ceiling Layout Plan</option>
+                    <option value="Terrace Ceiling Layout Plan">Terrace Ceiling Layout Plan</option>
+                </optgroup>
+                
+                <optgroup label="Plumbing Drawings - All Floor">
+                    <option value="Basement Plumbing Layout Plan">Basement Plumbing Layout Plan</option>
+                    <option value="Stilt Floor Plumbing Layout Plan">Stilt Floor Plumbing Layout Plan</option>
+                    <option value="Ground Floor Plumbing Layout Plan">Ground Floor Plumbing Layout Plan</option>
+                    <option value="First Floor Plumbing Layout Plan">First Floor Plumbing Layout Plan</option>
+                    <option value="Second Floor Plumbing Layout Plan">Second Floor Plumbing Layout Plan</option>
+                    <option value="Third Floor Plumbing Layout Plan">Third Floor Plumbing Layout Plan</option>
+                    <option value="Fourth Floor Plumbing Layout Plan">Fourth Floor Plumbing Layout Plan</option>
+                    <option value="Fifth Floor Plumbing Layout Plan">Fifth Floor Plumbing Layout Plan</option>
+                    <option value="Terrace Plumbing Layout Plan">Terrace Plumbing Layout Plan</option>
+                </optgroup>
+                
+                <optgroup label="Water Supply Drawings - All Floor">
+                    <option value="Basement Water Supply Layout Plan">Basement Water Supply Layout Plan</option>
+                    <option value="Stilt Floor Water Supply Layout Plan">Stilt Floor Water Supply Layout Plan</option>
+                    <option value="Ground Floor Water Supply Layout Plan">Ground Floor Water Supply Layout Plan</option>
+                    <option value="First Floor Water Supply Layout Plan">First Floor Water Supply Layout Plan</option>
+                    <option value="Second Floor Water Supply Layout Plan">Second Floor Water Supply Layout Plan</option>
+                    <option value="Third Floor Water Supply Layout Plan">Third Floor Water Supply Layout Plan</option>
+                    <option value="Fourth Floor Water Supply Layout Plan">Fourth Floor Water Supply Layout Plan</option>
+                    <option value="Fifth Floor Water Supply Layout Plan">Fifth Floor Water Supply Layout Plan</option>
+                    <option value="Terrace Water Supply Layout Plan">Terrace Water Supply Layout Plan</option>
+                </optgroup>
+                
+                <optgroup label="Detail Drawings">
+                    <option value="Staircase Details">Staircase Details</option>
+                    <option value="Ramp Details">Ramp Details</option>
+                    <option value="Kitchen Details">Kitchen Details</option>
+                    <option value="Lift Details">Lift Details</option>
+                    <option value="Toilet Details">Toilet Details</option>
+                    <option value="Saptic Tanks Details">Saptic Tanks Details</option>
+                    <option value="Compound Wall Details">Compound Wall Details</option>
+                    <option value="Landscape Details">Landscape Details</option>
+                    <option value="Slab Details">Slab Details</option>
+                    <option value="Slab Details">Slab Details</option>
                     <option value="Slab Details">Slab Details</option>
                 </optgroup>
                 

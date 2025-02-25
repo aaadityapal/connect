@@ -25,6 +25,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
         /* Add these new styles */
         .dashboard-container {

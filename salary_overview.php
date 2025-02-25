@@ -390,6 +390,7 @@ function getWeeklyOffs($conn, $userId, $date) {
     <meta charset="UTF-8">
     <title>Salary Overview</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
         :root {
             --primary-color: #2563eb;

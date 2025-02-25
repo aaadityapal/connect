@@ -183,6 +183,7 @@ function fetchCategories($conn, $parent_id = null) {
     <title>Manager Dashboard</title>
     <link rel="stylesheet" href="dashboard/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
     <meta name="user-id" content="<?php echo htmlspecialchars($_SESSION['user_id']); ?>">
     <script>
         window.USER_ID = <?php echo json_encode($_SESSION['user_id']); ?>;

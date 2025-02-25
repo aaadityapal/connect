@@ -251,6 +251,7 @@ while ($row = $result->fetch_assoc()) {
     <meta charset="UTF-8">
     <title>Edit Attendance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
         .attendance-form {
             background: white;

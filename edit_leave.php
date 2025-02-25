@@ -92,6 +92,7 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
     <meta charset="UTF-8">
     <title>Edit Leave | HR Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
         :root {
             --primary-color: #2563eb;

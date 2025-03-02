@@ -340,9 +340,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             fetch('get_hr_documents.php')
             .then(response => response.json())
             .then(data => {
+                console.log('Response from server:', data);
                 const documentsList = document.getElementById('documentsList');
                 
                 if (!data.documents || data.documents.length === 0) {
+                    console.log('No documents found');
                     documentsList.innerHTML = `
                         <div class="no-documents">
                             <i class="fas fa-folder-open"></i>
@@ -379,8 +381,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                 `).join('');
             })
             .catch(error => {
-                console.error('Error loading documents:', error);
-                Swal.fire('Error', 'Failed to load documents', 'error');
+                console.error('Detailed error:', error);
+                Swal.fire('Error', 'Failed to load documents: ' + error.message, 'error');
             });
         }
 

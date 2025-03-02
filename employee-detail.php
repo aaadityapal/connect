@@ -1058,7 +1058,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </h2>
                     </div>
                     <div id="hrDocumentsList" class="documents-list">
-                        <!-- Documents will be loaded here -->
+                        <!-- Add this JavaScript to load and display HR documents with acknowledgment status -->
+                        <script>
+                        function loadHRDocuments() {
+                            fetch('get_hr_documents.php')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        const container = document.getElementById('hrDocumentsList');
+                                        container.innerHTML = data.documents.map(doc => `
+                                            <div class="document-item">
+                                                <div class="document-info">
+                                                    <h4>${doc.original_name}</h4>
+                                                    <p>Uploaded: ${doc.upload_date}</p>
+                                                    <p>Size: ${doc.formatted_size}</p>
+                                                    ${doc.acknowledgment_status === 'acknowledged' ? 
+                                                        `<span class="badge badge-success">
+                                                            <i class="fas fa-check"></i> Acknowledged
+                                                        </span>` : 
+                                                        `<span class="badge badge-warning">
+                                                            <i class="fas fa-clock"></i> Pending
+                                                        </span>
+                                                        <button class="btn-acknowledge" onclick="acknowledgeDocument(${doc.id})">
+                                                            Read & Accept
+                                                        </button>`
+                                                    }
+                                                </div>
+                                                <div class="document-actions">
+                                                    <button class="btn-action view" onclick="viewDocument(${doc.id})">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                    <button class="btn-action download" onclick="downloadDocument(${doc.id})">
+                                                        <i class="fas fa-download"></i> Download
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `).join('');
+                                    } else {
+                                        throw new Error(data.message || 'Failed to load documents');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error loading documents:', error);
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: error.message
+                                    });
+                                });
+                        }
+
+                        // Add acknowledgment function
+                        function acknowledgeDocument(docId) {
+                            if (!docId) return;
+
+                            Swal.fire({
+                                title: 'Confirm Acknowledgment',
+                                text: 'By clicking "Confirm", you acknowledge that you have read and accepted this document.',
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'Confirm',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    fetch('acknowledge_document.php', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            document_id: docId
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Success!',
+                                                text: 'Document has been acknowledged.'
+                                            });
+                                            loadHRDocuments(); // Reload the documents list
+                                        } else {
+                                            throw new Error(data.message || 'Failed to acknowledge document');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: error.message
+                                        });
+                                    });
+                                }
+                            });
+                        }
+
+                        // Load documents when page loads
+                        document.addEventListener('DOMContentLoaded', loadHRDocuments);
+                        </script>
                     </div>
                 </div>
 
@@ -1377,75 +1475,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Calculate initial values
     document.addEventListener('DOMContentLoaded', calculateSalary);
-
-    function loadHRDocuments() {
-        fetch('get_hr_documents.php')
-            .then(response => response.json())
-            .then(data => {
-                const documentsList = document.getElementById('hrDocumentsList');
-                
-                if (!data.success || !data.documents || data.documents.length === 0) {
-                    documentsList.innerHTML = `
-                        <div class="no-documents">
-                            <i class="ri-folder-open-line"></i>
-                            <p>No HR documents available</p>
-                        </div>`;
-                    return;
-                }
-
-                documentsList.innerHTML = data.documents.map(doc => `
-                    <div class="document-item">
-                        <div class="document-main">
-                            <div class="document-header">
-                                <div class="document-icon">
-                                    <i class="ri-file-pdf-line"></i>
-                                </div>
-                                <div class="document-info">
-                                    <div class="document-name">${doc.original_name || doc.filename}</div>
-                                    <div class="document-type">${formatDocumentType(doc.type)}</div>
-                                </div>
-                            </div>
-                            <div class="document-meta">
-                                <div class="meta-item">
-                                    <i class="ri-calendar-line"></i>
-                                    ${doc.upload_date}
-                                </div>
-                                <div class="action-links">
-                                    <a href="#" class="action-link" onclick="viewDocument(${doc.id}); return false;">
-                                        <i class="ri-eye-line"></i>
-                                        View
-                                    </a>
-                                    <a href="#" class="action-link download" onclick="downloadDocument(${doc.id}); return false;">
-                                        <i class="ri-download-line"></i>
-                                        Download
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            })
-            .catch(error => {
-                console.error('Error loading HR documents:', error);
-            });
-    }
-
-    function formatDocumentType(type) {
-        return type.split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-    }
-
-    // Update the view and download functions to use the correct PHP endpoints
-    function viewDocument(docId) {
-        if (!docId) return;
-        window.open(`view_document.php?id=${docId}`, '_blank');
-    }
-
-    function downloadDocument(docId) {
-        if (!docId) return;
-        window.location.href = `download_document.php?id=${docId}`;
-    }
     </script>
+
+    <!-- Add SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html> 

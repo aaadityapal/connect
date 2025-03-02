@@ -8,6 +8,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
+    // Add debugging
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    
     // Base query with acknowledgment status from document_acknowledgments
     $sql = "SELECT 
         d.id,
@@ -18,17 +22,18 @@ try {
         d.file_size,
         d.file_type,
         d.last_modified,
-        COALESCE(da.status, 'pending') as status,
-        u.username as uploaded_by_name,
+        d.status,
+        d.uploaded_by,
+        d.created_at,
         CASE 
             WHEN d.file_size < 1024 THEN CONCAT(d.file_size, ' B')
             WHEN d.file_size < 1048576 THEN CONCAT(ROUND(d.file_size/1024, 2), ' KB')
             ELSE CONCAT(ROUND(d.file_size/1048576, 2), ' MB')
         END as formatted_size,
         CASE 
-            WHEN da.status = 'acknowledged' THEN 1 
-            ELSE 0 
-        END as is_acknowledged,
+            WHEN da.acknowledged_at IS NOT NULL THEN 'acknowledged'
+            ELSE 'pending'
+        END as acknowledgment_status,
         da.acknowledged_at
     FROM hr_documents d
     LEFT JOIN users u ON d.uploaded_by = u.id
@@ -39,7 +44,10 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$_SESSION['user_id']]);
     $documents = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+    
+    // Debug output
+    error_log("Documents found: " . json_encode($documents));
+    
     // Process each document to add file icon class
     foreach ($documents as &$doc) {
         $doc['icon_class'] = getFileIconClass($doc['filename']);
@@ -54,7 +62,7 @@ try {
     error_log("Error in get_hr_documents.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error retrieving documents'
+        'message' => 'Error retrieving documents: ' . $e->getMessage()
     ]);
 }
 

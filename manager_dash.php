@@ -203,11 +203,11 @@ function fetchCategories($conn, $parent_id = null) {
             <ul class="nav-links">
                 <li><a href="manager_dash.php"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
                 <li><a href="#"><i class="fas fa-users"></i> <span>Team</span></a></li>
-                <li><a href="#"><i class="fas fa-tasks"></i> <span>Create Project</span></a></li>
+                <li><a href="edit_project.php"><i class="fas fa-tasks"></i> <span>Edit Project</span></a></li>
                 <li><a href="leave.php"><i class="fas fa-calendar-plus"></i> <span>Apply Leave</span></a></li>
                 <li><a href="#"><i class="fas fa-calendar-check"></i> <span>Leave Management</span></a></li>
                 <li><a href="project_activity.php"><i class="fas fa-chart-bar"></i> <span>Reports</span></a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+                <li><a href="view_projects.php"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
                 <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
             </ul>
         </nav>

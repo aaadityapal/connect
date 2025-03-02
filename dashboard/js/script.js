@@ -1681,14 +1681,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="task-form-group">
                     <label>Substage Title</label>
-                    <select class="substage-name" required>
-                        <option value="">Select Title</option>
-                        ${substageOptions}
-                    </select>
+                    <div class="input-wrapper">
+                        <select class="substage-name" required>
+                            <option value="">Select Title</option>
+                            <option value="custom">Custom Title</option>
+                            ${substageOptions}
+                        </select>
+                        <input type="text" class="custom-input substage-custom-title" placeholder="Enter custom title" style="display: none;">
+                        <button type="button" class="back-button" title="Back to dropdown" style="display: none;">↩</button>
+                    </div>
                 </div>
                 <div class="task-form-group">
                     <label>Assign To</label>
-                    <select class="substage-assignee" value="${stageAssignee}">
+                    <select class="substage-assignee">
                         <option value="">Select Employee</option>
                     </select>
                 </div>
@@ -1696,14 +1701,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="task-form-group">
                         <label>Start Date & Time</label>
                         <div class="task-datetime-input">
-                            <input type="datetime-local" class="substage-start-date">
+                        <input type="datetime-local" class="substage-start-date">
                         </div>
                     </div>
                     <div class="task-form-group">
                         <label>Due By</label>
                         <div class="task-datetime-input">
-                            <input type="datetime-local" class="substage-due-date">
-                        </div>
+                        <input type="datetime-local" class="substage-due-date">
+                    </div>
                     </div>
                 </div>
                 <div class="file-upload-container">
@@ -1757,36 +1762,47 @@ document.addEventListener('DOMContentLoaded', function() {
         substageCounters[stageNumber] = (substageCounters[stageNumber] || 0) + 1;
         const substageNumber = substageCounters[stageNumber];
         
-        // Calculate substage dates
-        const substageDates = calculateSubstageDates(stageStartDate, stageDueDate, substageNumber);
-        const currentSubstageDates = substageDates[substageNumber - 1];
-        
-        const newSubstage = createSubstageHTML(stageNumber, substageNumber, currentSubstageDates);
+        const newSubstage = createSubstageHTML(stageNumber, substageNumber);
         substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
         
         // Get the newly added substage element
         const lastSubstage = substagesWrapper.lastElementChild;
         
-        // Set the calculated dates
-        const startDateInput = lastSubstage.querySelector('.substage-start-date');
-        const dueDateInput = lastSubstage.querySelector('.substage-due-date');
-        
-        if (startDateInput && dueDateInput) {
-            startDateInput.value = currentSubstageDates.startDate;
-            dueDateInput.value = currentSubstageDates.endDate;
-        }
+        // Setup custom title handlers
+        const dropdown = lastSubstage.querySelector('.substage-name');
+        const customInput = lastSubstage.querySelector('.substage-custom-title');
+        const backButton = lastSubstage.querySelector('.back-button');
 
-        // Populate the assignee dropdown for the new substage
-        const substageAssigneeSelect = lastSubstage.querySelector('.substage-assignee');
-        if (substageAssigneeSelect && window.usersData) {
-            populateUserDropdown(substageAssigneeSelect, window.usersData);
-        }
+        // Add event listeners
+        dropdown.addEventListener('change', function() {
+            console.log('Dropdown changed:', this.value); // Debug log
+            if (this.value === 'custom') {
+                this.style.display = 'none';
+                customInput.style.display = 'block';
+                backButton.style.display = 'block';
+                customInput.focus();
+            }
+        });
 
-        // Add file input event listener
-        const fileInput = document.getElementById(`substageFile${stageNumber}_${substageNumber}`);
-        if (fileInput) {
-            fileInput.addEventListener('change', handleFileSelect);
-        }
+        backButton.addEventListener('click', function() {
+            customInput.style.display = 'none';
+            backButton.style.display = 'none';
+            dropdown.style.display = 'block';
+            dropdown.value = '';
+        });
+
+        customInput.addEventListener('blur', function(e) {
+            if (!e.relatedTarget || e.relatedTarget.id !== 'backButton') {
+                if (this.value.trim() === '') {
+                    this.style.display = 'none';
+                    backButton.style.display = 'none';
+                    dropdown.style.display = 'block';
+                    dropdown.value = '';
+                }
+            }
+        });
+
+        // ... rest of your existing addSubstage code ...
     };
 
     // Function to remove a substage
@@ -3678,14 +3694,19 @@ function createSubstageHTML(stageNumber, substageNumber) {
             </div>
             <div class="task-form-group">
                 <label>Substage Title</label>
-                <select class="substage-name" required>
-                    <option value="">Select Title</option>
-                    ${substageOptions}
-                </select>
+                <div class="input-wrapper">
+                    <select class="substage-name" required>
+                        <option value="">Select Title</option>
+                        <option value="custom">Custom Title</option>
+                        ${substageOptions}
+                    </select>
+                    <input type="text" class="custom-input substage-custom-title" placeholder="Enter custom title" style="display: none;">
+                    <button type="button" class="back-button" title="Back to dropdown" style="display: none;">↩</button>
+                </div>
             </div>
             <div class="task-form-group">
                 <label>Assign To</label>
-                <select class="substage-assignee" value="${stageAssignee}">
+                <select class="substage-assignee">
                     <option value="">Select Employee</option>
                 </select>
             </div>
@@ -3850,73 +3871,74 @@ window.addSubstage = function(stageNumber) {
     const substagesWrapper = document.getElementById(`substagesWrapper${stageNumber}`);
     const stageBlock = substagesWrapper.closest('.stage-block');
     
-    // Get stage assignee
-    const stageAssignee = stageBlock.querySelector('.stage-assignee');
-    const selectedStageAssigneeId = stageAssignee ? stageAssignee.value : '';
-    const selectedStageAssigneeText = stageAssignee ? stageAssignee.options[stageAssignee.selectedIndex].text : '';
+    // Get stage dates
+    const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
+    const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
     
     // Increment substage counter
     substageCounters[stageNumber] = (substageCounters[stageNumber] || 0) + 1;
     const substageNumber = substageCounters[stageNumber];
     
-    // Get stage dates
-    const stageStartDate = stageBlock.querySelector('.stage-start-date').value;
-    const stageDueDate = stageBlock.querySelector('.stage-due-date').value;
-    
-    // Calculate substage dates
-    const substageDates = calculateSubstageDates(stageStartDate, stageDueDate, substageNumber);
-    const currentSubstageDates = substageDates[substageNumber - 1];
-    
-    const newSubstage = createSubstageHTML(stageNumber, substageNumber, selectedStageAssigneeId, selectedStageAssigneeText);
+    const newSubstage = createSubstageHTML(stageNumber, substageNumber);
     substagesWrapper.insertAdjacentHTML('beforeend', newSubstage);
     
     // Get the newly added substage element
     const lastSubstage = substagesWrapper.lastElementChild;
     
-    // Set the calculated dates
-    const startDateInput = lastSubstage.querySelector('.substage-start-date');
-    const dueDateInput = lastSubstage.querySelector('.substage-due-date');
-    
-    if (startDateInput && dueDateInput) {
-        startDateInput.value = currentSubstageDates.startDate;
-        dueDateInput.value = currentSubstageDates.endDate;
-    }
+    // Setup custom title handlers
+    const dropdown = lastSubstage.querySelector('.substage-name');
+    const customInput = lastSubstage.querySelector('.substage-custom-title');
+    const backButton = lastSubstage.querySelector('.back-button');
 
-    // Add file input event listener
-    const fileInput = document.getElementById(`substageFile${stageNumber}_${substageNumber}`);
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileSelect);
-    }
+    // Add event listeners
+    dropdown.addEventListener('change', function() {
+        console.log('Dropdown changed:', this.value); // Debug log
+        if (this.value === 'custom') {
+            this.style.display = 'none';
+            customInput.style.display = 'block';
+            backButton.style.display = 'block';
+            customInput.focus();
+        }
+    });
+
+    backButton.addEventListener('click', function() {
+        customInput.style.display = 'none';
+        backButton.style.display = 'none';
+        dropdown.style.display = 'block';
+        dropdown.value = '';
+    });
+
+    customInput.addEventListener('blur', function(e) {
+        if (!e.relatedTarget || e.relatedTarget.id !== 'backButton') {
+            if (this.value.trim() === '') {
+                this.style.display = 'none';
+                backButton.style.display = 'none';
+                dropdown.style.display = 'block';
+                dropdown.value = '';
+            }
+        }
+    });
+
+    // ... rest of your existing addSubstage code ...
 };
 
 // Modify createSubstageHTML to accept the selected assignee
-function createSubstageHTML(stageNumber, substageNumber, selectedAssigneeId, selectedAssigneeText) {
-    const projectType = document.getElementById('projectType').value;
-    
-    // Your existing substageOptions code...
-    
+function createSubstageHTML(stageNumber, substageNumber, selectedAssigneeId = '', selectedAssigneeText = '') {
+    // Get the stage's assignee dropdown to copy its options
+    const stageBlock = document.querySelector(`[data-stage="${stageNumber}"]`);
+    const stageAssignee = stageBlock.querySelector('.stage-assignee');
+    const userOptions = stageAssignee ? stageAssignee.innerHTML : '';
+
     return `
         <div class="substage-block" data-substage="${substageNumber}">
-            <div class="substage-header">
-                <h5 class="substage-title">Task ${String(substageNumber).padStart(2, '0')}</h5>
-                <button class="remove-substage-btn" onclick="removeSubstage(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-            <div class="task-form-group">
-                <label>Substage Title</label>
-                <select class="substage-name" required>
-                    <option value="">Select Title</option>
-                    ${substageOptions}
-                </select>
-            </div>
+            <!-- ... existing substage HTML ... -->
             <div class="task-form-group">
                 <label>Assign To</label>
                 <select class="substage-assignee">
-                    <option value="${selectedAssigneeId}">${selectedAssigneeText}</option>
+                    ${userOptions}
                 </select>
             </div>
-            <!-- Rest of your substage HTML -->
+            <!-- ... rest of substage HTML ... -->
         </div>
     `;
 }
@@ -4041,3 +4063,111 @@ window.removeStage = function(button) {
     // Update global stage count
     stageCount = remainingStages.length;
 };
+
+// Add this function to your existing code
+function setupCustomTitleHandlers(stageBlock) {
+    const dropdown = stageBlock.querySelector('.substage-name');
+    const customInput = stageBlock.querySelector('.substage-custom-title');
+    const backButton = stageBlock.querySelector('.back-button');
+
+    if (dropdown && customInput && backButton) {
+        dropdown.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                this.style.display = 'none';
+                customInput.style.display = 'block';
+                backButton.style.display = 'block';
+                customInput.focus();
+            }
+        });
+
+        backButton.addEventListener('click', function() {
+            customInput.style.display = 'none';
+            backButton.style.display = 'none';
+            dropdown.style.display = 'block';
+            dropdown.value = '';
+        });
+
+        customInput.addEventListener('blur', function(e) {
+            if (!e.relatedTarget || e.relatedTarget.id !== 'backButton') {
+                if (this.value.trim() === '') {
+                    this.style.display = 'none';
+                    backButton.style.display = 'none';
+                    dropdown.style.display = 'block';
+                    dropdown.value = '';
+                }
+            }
+        });
+    }
+}
+
+// Modify your addSubstage function to include the setup
+window.addSubstage = function(stageNumber) {
+    // ... existing code ...
+    
+    const lastSubstage = substagesWrapper.lastElementChild;
+    setupCustomTitleHandlers(lastSubstage);
+    
+    // ... rest of existing code ...
+};
+
+function getSubstageTitle(substageBlock) {
+    const dropdown = substageBlock.querySelector('.substage-name');
+    const customInput = substageBlock.querySelector('.substage-custom-title');
+    
+    if (dropdown.value === 'custom' && customInput.style.display === 'block') {
+        return customInput.value.trim();
+    }
+    return dropdown.value;
+}
+
+// Add this function to populate user options
+function getUserOptions() {
+    const users = Array.from(document.getElementById('taskAssignee').options).map(option => {
+        return {
+            id: option.value,
+            name: option.text
+        };
+    });
+    
+    let optionsHTML = '<option value="">Select Employee</option>';
+    users.forEach(user => {
+        if (user.id) { // Skip empty/placeholder options
+            optionsHTML += `<option value="${user.id}">${user.name}</option>`;
+        }
+    });
+    return optionsHTML;
+}
+
+// Modify createSubstageHTML to include user options
+function createSubstageHTML(stageNumber, substageNumber) {
+    const userOptions = getUserOptions();
+    return `
+        <div class="substage-block" data-substage="${substageNumber}">
+            <div class="substage-header">
+                <h5 class="substage-title">Task ${String(substageNumber).padStart(2, '0')}</h5>
+                <button class="remove-substage-btn" onclick="removeSubstage(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="task-form-group">
+                <label>Substage Title</label>
+                <div class="input-wrapper">
+                    <select class="substage-name" required>
+                        <option value="">Select Title</option>
+                        <option value="custom">Custom Title</option>
+                        ${substageOptions}
+                    </select>
+                    <input type="text" class="custom-input substage-custom-title" placeholder="Enter custom title" style="display: none;">
+                    <button type="button" class="back-button" title="Back to dropdown" style="display: none;">↩</button>
+                </div>
+            </div>
+            <div class="task-form-group">
+                <label>Assign To</label>
+                <select class="substage-assignee">
+                    ${userOptions}
+                </select>
+            </div>
+            <!-- ... rest of the existing substage HTML ... -->
+        </div>
+    `;
+}

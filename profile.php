@@ -641,7 +641,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
                                         <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id})">
                                             <i class="fas fa-download"></i> Download
                                         </button>
-                                        ${doc.status === 'acknowledged' ? `
+                                        ${doc.acknowledgment_status === 'acknowledged' ? `
                                             <button class="btn btn-success btn-sm" disabled>
                                                 <i class="fas fa-check"></i> Acknowledged
                                             </button>
@@ -659,10 +659,11 @@ $user_role = $_SESSION['role'] ?? 'employee';
                     }
                 })
                 .catch(error => {
+                    console.error('Error loading documents:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Failed to load HR documents: ' + error.message
+                        text: error.message
                     });
                 });
         }

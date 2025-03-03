@@ -2,6 +2,9 @@
 session_start();
 require_once 'config.php';
 
+// Add this near the top of the file after session_start()
+$current_tab = isset($_GET['tab']) ? $_GET['tab'] : 'company';
+
 // Check authentication and HR role
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
     header('Location: login.php');
@@ -122,6 +125,46 @@ $company_settings = $pdo->query("SELECT * FROM company_settings WHERE id = 1")->
 $leave_settings = $pdo->query("SELECT * FROM leave_settings WHERE id = 1")->fetch(PDO::FETCH_ASSOC);
 $attendance_settings = $pdo->query("SELECT * FROM attendance_settings WHERE id = 1")->fetch(PDO::FETCH_ASSOC);
 $payroll_settings = $pdo->query("SELECT * FROM payroll_settings WHERE id = 1")->fetch(PDO::FETCH_ASSOC);
+
+// Add this after your existing queries
+$users_query = "SELECT id, username, department FROM users WHERE status = 'active' ORDER BY username";
+$users = $pdo->query($users_query)->fetchAll(PDO::FETCH_ASSOC);
+
+// Update the acknowledgments query to support filtering
+$filter_user = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+$filter_condition = $filter_user > 0 ? "AND da.user_id = :user_id" : "";
+
+$acknowledgments_query = "
+    SELECT 
+        da.id,
+        da.document_id,
+        da.user_id,
+        da.acknowledged_at,
+        da.status,
+        da.created_at as request_date,
+        hd.original_name,
+        hd.type as document_type,
+        u.username,
+        u.designation,
+        u.department,
+        COALESCE(u.profile_picture, 'default.jpg') as profile_picture
+    FROM document_acknowledgments da
+    JOIN hr_documents hd ON da.document_id = hd.id
+    JOIN users u ON da.user_id = u.id
+    WHERE 1=1 $filter_condition
+    ORDER BY da.acknowledged_at DESC";
+
+if ($filter_user > 0) {
+    $stmt = $pdo->prepare($acknowledgments_query);
+    $stmt->execute(['user_id' => $filter_user]);
+    $acknowledgments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $acknowledgments = $pdo->query($acknowledgments_query)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function formatDocumentType($type) {
+    return ucwords(str_replace('_', ' ', $type));
+}
 ?>
 
 <!DOCTYPE html>
@@ -314,6 +357,268 @@ $payroll_settings = $pdo->query("SELECT * FROM payroll_settings WHERE id = 1")->
             font-weight: 900;
             color: var(--primary-color);
         }
+
+        .acknowledgments-table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .acknowledgments-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .acknowledgments-table th,
+        .acknowledgments-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-color);
+        }
+
+        .acknowledgments-table th {
+            background-color: #F8FAFC;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .acknowledgments-table tr:hover {
+            background-color: #F8FAFC;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.acknowledged {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-badge.pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .no-records {
+            text-align: center;
+            color: var(--gray-600);
+            padding: 20px !important;
+        }
+
+        .acknowledgments-table td {
+            vertical-align: middle;
+        }
+
+        .employee-cell {
+            min-width: 200px;
+        }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .employee-name {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .employee-designation {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .document-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .document-name {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .document-type {
+            font-size: 12px;
+            color: var(--gray-600);
+            text-transform: capitalize;
+        }
+
+        .date-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .time-text {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .status-badge.acknowledged {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-badge.pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .acknowledgments-table th {
+            white-space: nowrap;
+            padding: 16px;
+            font-size: 14px;
+            background-color: #F8FAFC;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .acknowledgments-table td {
+            padding: 16px;
+            vertical-align: middle;
+        }
+
+        .acknowledgments-table tr:hover {
+            background-color: #F8FAFC;
+        }
+
+        @media (max-width: 768px) {
+            .acknowledgments-table-wrapper {
+                margin: 0 -20px;
+            }
+            
+            .employee-designation,
+            .document-type,
+            .time-text {
+                display: none;
+            }
+            
+            .employee-avatar {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .status-badge {
+                padding: 4px 8px;
+            }
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-form .form-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-form label {
+            font-weight: 500;
+            color: var(--gray-600);
+            white-space: nowrap;
+        }
+
+        .filter-form select {
+            min-width: 250px;
+            padding: 8px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background-color: white;
+        }
+
+        .acknowledgments-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-card i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        @media (max-width: 768px) {
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-form {
+                flex-direction: column;
+            }
+
+            .filter-form .form-group {
+                width: 100%;
+            }
+
+            .filter-form select {
+                width: 100%;
+            }
+
+            .acknowledgments-stats {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -336,6 +641,7 @@ $payroll_settings = $pdo->query("SELECT * FROM payroll_settings WHERE id = 1")->
             <button class="tab-button" onclick="showTab('attendance')">Attendance</button>
             <button class="tab-button" onclick="showTab('payroll')">Payroll</button>
             <button class="tab-button" onclick="showTab('documents')">Documents</button>
+            <button class="tab-button" onclick="showTab('acknowledge')">Acknowledge Documents</button>
         </div>
 
         <!-- Company Settings -->
@@ -492,6 +798,116 @@ $payroll_settings = $pdo->query("SELECT * FROM payroll_settings WHERE id = 1")->
                 </ul>
             </div>
         </div>
+
+        <!-- Acknowledge Documents Settings -->
+        <div id="acknowledge-settings" class="settings-section" style="display: none;">
+            <div class="documents-header">
+                <h2>Document Acknowledgments</h2>
+                <div class="filter-controls">
+                    <form id="filterForm" class="filter-form">
+                        <div class="form-group">
+                            <label for="user_filter">Filter by Employee:</label>
+                            <select id="user_filter" name="user_id" class="form-control" onchange="submitFilter(this)">
+                                <option value="0">All Employees</option>
+                                <?php foreach ($users as $user): ?>
+                                    <option value="<?php echo $user['id']; ?>" 
+                                            <?php echo $filter_user == $user['id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($user['username']); ?> 
+                                        (<?php echo htmlspecialchars($user['department']); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <input type="hidden" name="tab" value="acknowledge">
+                    </form>
+                </div>
+            </div>
+            
+            <div class="acknowledgments-stats">
+                <div class="stat-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="stat-info">
+                        <span class="stat-value"><?php echo count(array_filter($acknowledgments, function($a) { return $a['status'] === 'acknowledged'; })); ?></span>
+                        <span class="stat-label">Acknowledged</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-info">
+                        <span class="stat-value"><?php echo count(array_filter($acknowledgments, function($a) { return $a['status'] === 'pending'; })); ?></span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-file-alt"></i>
+                    <div class="stat-info">
+                        <span class="stat-value"><?php echo count($acknowledgments); ?></span>
+                        <span class="stat-label">Total Documents</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acknowledgments-table-wrapper">
+                <table class="acknowledgments-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Document Details</th>
+                            <th>Department</th>
+                            <th>Acknowledgment Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($acknowledgments)): ?>
+                        <tr>
+                            <td colspan="5" class="no-records">No acknowledgments found</td>
+                        </tr>
+                        <?php else: ?>
+                            <?php foreach ($acknowledgments as $ack): ?>
+                            <tr>
+                                <td class="employee-cell">
+                                    <div class="employee-info">
+                                        <?php
+                                        $profilePicPath = 'uploads/profile_pictures/' . $ack['profile_pictures'];
+                                        $defaultPicPath = 'assets/images/default-avatar.png'; // Adjust this path to your default avatar
+                                        $displayPicPath = file_exists($profilePicPath) ? $profilePicPath : $defaultPicPath;
+                                        ?>
+                                        <img src="<?php echo htmlspecialchars($displayPicPath); ?>" 
+                                             alt="Profile" 
+                                             class="employee-avatar"
+                                             onerror="this.src='<?php echo $defaultPicPath; ?>'">
+                                        <div>
+                                            <div class="employee-name"><?php echo htmlspecialchars($ack['username']); ?></div>
+                                            <div class="employee-designation"><?php echo htmlspecialchars($ack['designation']); ?></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="document-info">
+                                        <div class="document-name"><?php echo htmlspecialchars($ack['original_name']); ?></div>
+                                        <div class="document-type"><?php echo htmlspecialchars(formatDocumentType($ack['document_type'])); ?></div>
+                                    </div>
+                                </td>
+                                <td><?php echo htmlspecialchars($ack['department']); ?></td>
+                                <td>
+                                    <div class="date-info">
+                                        <div><?php echo date('M d, Y', strtotime($ack['acknowledged_at'])); ?></div>
+                                        <div class="time-text"><?php echo date('h:i A', strtotime($ack['acknowledged_at'])); ?></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge <?php echo strtolower($ack['status']); ?>">
+                                        <?php echo htmlspecialchars($ack['status']); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -510,6 +926,16 @@ $payroll_settings = $pdo->query("SELECT * FROM payroll_settings WHERE id = 1")->
             document.getElementById(tabName + '-settings').style.display = 'block';
             document.querySelector(`button[onclick="showTab('${tabName}')"]`).classList.add('active');
         }
+
+        function submitFilter(selectElement) {
+            const form = document.getElementById('filterForm');
+            form.submit();
+        }
+
+        // Show the current tab on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            showTab('<?php echo $current_tab; ?>');
+        });
 
         // Show success message using SweetAlert2
         <?php if (isset($success_message)): ?>

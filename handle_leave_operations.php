@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config/db_connect.php';
+require_once 'config.php';
 require_once 'manage_leave_balance.php';
 
 // Add this at the top for debugging
@@ -268,6 +268,49 @@ try {
         }
     }
 
+    // Handle delete operation
+    if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['leave_id'])) {
+        error_log("Processing delete request for leave_id: " . $_POST['leave_id']); // Debug log
+        
+        $leave_id = intval($_POST['leave_id']);
+        
+        // First check if the leave request exists
+        $check_query = "SELECT id FROM leave_request WHERE id = ?";
+        $stmt = $conn->prepare($check_query);
+        $stmt->bind_param("i", $leave_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        error_log("Check query result rows: " . $result->num_rows); // Debug log
+        
+        if ($result->num_rows === 0) {
+            error_log("Leave request not found for ID: " . $leave_id); // Debug log
+            echo json_encode(['success' => false, 'message' => 'Leave request not found']);
+            exit;
+        }
+        
+        // Delete the leave request
+        $delete_query = "DELETE FROM leave_request WHERE id = ?";
+        $stmt = $conn->prepare($delete_query);
+        $stmt->bind_param("i", $leave_id);
+        
+        $delete_result = $stmt->execute();
+        error_log("Delete execution result: " . ($delete_result ? 'true' : 'false')); // Debug log
+        
+        if ($delete_result) {
+            error_log("Successfully deleted leave request ID: " . $leave_id); // Debug log
+            echo json_encode(['success' => true, 'message' => 'Leave request deleted successfully']);
+        } else {
+            error_log("Failed to delete leave request. Error: " . $stmt->error); // Debug log
+            echo json_encode(['success' => false, 'message' => 'Failed to delete leave request']);
+        }
+        
+        $stmt->close();
+        exit;
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Invalid action or missing leave ID']);
+    }
+
     error_log("Form submitted with data: " . print_r($_POST, true));
 
 } catch (Exception $e) {
@@ -282,4 +325,7 @@ try {
 // If we get here, something went wrong
 $_SESSION['error'] = "Invalid request";
 header('Location: edit_leave.php');
-exit(); 
+exit();
+
+$conn->close();
+?> 

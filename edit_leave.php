@@ -887,8 +887,7 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
 
         function deleteLeave(leaveId) {
             if (confirm('Are you sure you want to delete this leave record?')) {
-                // Implement delete functionality
-                window.location.href = `process_leave.php?action=delete&id=${leaveId}`;
+                window.location.href = `handle_leave_operations.php?action=delete&id=${leaveId}`;
             }
         }
 

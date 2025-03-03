@@ -276,6 +276,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                         <select id="docType" name="type" required>
                             <option value="">Select Document Type</option>
                             <option value="hr_policy">HR Policy</option>
+                            <option value="senior_manager_handbook">Senior Manager HandBook</option>
+                            <option value="travel_expenses_reimbursement_form">Travel Expenses Reimbursement Form</option>
                             <option value="employee_handbook">Employee Handbook</option>
                             <option value="code_of_conduct">Code of Conduct</option>
                             <option value="safety_guidelines">Safety Guidelines</option>

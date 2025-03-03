@@ -367,10 +367,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                             </p>
                         </div>
                         <div class="document-actions">
-                            <button onclick="viewDocument('${doc.file_path}')" class="btn-action view">
+                            <button onclick="viewDocument(${doc.id})" class="btn-action view">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="downloadDocument('${doc.file_path}')" class="btn-action download">
+                            <button onclick="downloadDocument(${doc.id})" class="btn-action download">
                                 <i class="fas fa-download"></i>
                             </button>
                             <button onclick="deleteHRDocument(${doc.id})" class="btn-action delete">
@@ -402,12 +402,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             ).join(' ');
         }
 
-        function viewDocument(filePath) {
-            window.open(filePath, '_blank');
+        function viewDocument(docId) {
+            window.open(`hr_document_handler.php?action=view&id=${docId}`, '_blank');
         }
 
-        function downloadDocument(filePath) {
-            window.location.href = filePath;
+        function downloadDocument(docId) {
+            window.location.href = `hr_document_handler.php?action=download&id=${docId}`;
         }
 
         function deleteHRDocument(docId) {

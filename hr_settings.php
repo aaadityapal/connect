@@ -130,7 +130,7 @@ $payroll_settings = $pdo->query("SELECT * FROM payroll_settings WHERE id = 1")->
 $users_query = "SELECT id, username, department FROM users WHERE status = 'active' ORDER BY username";
 $users = $pdo->query($users_query)->fetchAll(PDO::FETCH_ASSOC);
 
-// Update the acknowledgments query to support filtering
+// Update the acknowledgments query to match your table structure
 $filter_user = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 $filter_condition = $filter_user > 0 ? "AND da.user_id = :user_id" : "";
 
@@ -140,13 +140,16 @@ $acknowledgments_query = "
         da.document_id,
         da.user_id,
         da.acknowledged_at,
-        da.status,
         da.created_at as request_date,
         hd.original_name,
         hd.type as document_type,
         u.username,
         u.designation,
         u.department,
+        CASE 
+            WHEN da.acknowledged_at IS NOT NULL THEN 'acknowledged'
+            ELSE 'pending'
+        END as status,
         COALESCE(u.profile_picture, 'default.jpg') as profile_picture
     FROM document_acknowledgments da
     JOIN hr_documents hd ON da.document_id = hd.id
@@ -154,12 +157,29 @@ $acknowledgments_query = "
     WHERE 1=1 $filter_condition
     ORDER BY da.acknowledged_at DESC";
 
-if ($filter_user > 0) {
-    $stmt = $pdo->prepare($acknowledgments_query);
-    $stmt->execute(['user_id' => $filter_user]);
-    $acknowledgments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    $acknowledgments = $pdo->query($acknowledgments_query)->fetchAll(PDO::FETCH_ASSOC);
+// Add error reporting for debugging
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    if ($filter_user > 0) {
+        $stmt = $pdo->prepare($acknowledgments_query);
+        $stmt->execute(['user_id' => $filter_user]);
+        $acknowledgments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $acknowledgments = $pdo->query($acknowledgments_query)->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // Debug output
+    echo "<!-- Query executed successfully -->\n";
+    echo "<!-- Records found: " . count($acknowledgments) . " -->\n";
+    
+} catch (PDOException $e) {
+    echo "<!-- Database Error: " . $e->getMessage() . " -->\n";
+    $error_message = "Database error: " . $e->getMessage();
+} catch (Exception $e) {
+    echo "<!-- General Error: " . $e->getMessage() . " -->\n";
+    $error_message = "An error occurred: " . $e->getMessage();
 }
 
 function formatDocumentType($type) {
@@ -642,6 +662,7 @@ function formatDocumentType($type) {
             <button class="tab-button" onclick="showTab('payroll')">Payroll</button>
             <button class="tab-button" onclick="showTab('documents')">Documents</button>
             <button class="tab-button" onclick="showTab('acknowledge')">Acknowledge Documents</button>
+            <!-- Add other tab buttons as needed -->
         </div>
 
         <!-- Company Settings -->
@@ -804,7 +825,7 @@ function formatDocumentType($type) {
             <div class="documents-header">
                 <h2>Document Acknowledgments</h2>
                 <div class="filter-controls">
-                    <form id="filterForm" class="filter-form">
+                    <form id="filterForm" class="filter-form" method="GET">
                         <div class="form-group">
                             <label for="user_filter">Filter by Employee:</label>
                             <select id="user_filter" name="user_id" class="form-control" onchange="submitFilter(this)">
@@ -869,9 +890,17 @@ function formatDocumentType($type) {
                                 <td class="employee-cell">
                                     <div class="employee-info">
                                         <?php
-                                        $profilePicPath = 'uploads/profile_pictures/' . $ack['profile_pictures'];
-                                        $defaultPicPath = 'assets/images/default-avatar.png'; // Adjust this path to your default avatar
+                                        $profilePicPath = 'uploads/profile_pictures/' . $ack['profile_picture'];
+                                        $defaultPicPath = 'assets/images/default-avatar.png';
                                         $displayPicPath = file_exists($profilePicPath) ? $profilePicPath : $defaultPicPath;
+                                        
+                                        // Debug profile picture paths
+                                        echo "<!-- 
+                                            Profile Picture Debug:
+                                            Attempted path: {$profilePicPath}
+                                            File exists: " . (file_exists($profilePicPath) ? 'Yes' : 'No') . "
+                                            Using path: {$displayPicPath}
+                                        -->\n";
                                         ?>
                                         <img src="<?php echo htmlspecialchars($displayPicPath); ?>" 
                                              alt="Profile" 
@@ -898,7 +927,11 @@ function formatDocumentType($type) {
                                 </td>
                                 <td>
                                     <span class="status-badge <?php echo strtolower($ack['status']); ?>">
-                                        <?php echo htmlspecialchars($ack['status']); ?>
+                                        <?php 
+                                        // Make sure to display the actual status from database
+                                        $status = $ack['status'] ? htmlspecialchars($ack['status']) : 'pending';
+                                        echo $status;
+                                        ?>
                                     </span>
                                 </td>
                             </tr>
@@ -911,51 +944,57 @@ function formatDocumentType($type) {
     </div>
 
     <script>
+        // Define the showTab function
         function showTab(tabName) {
             // Hide all sections
-            document.querySelectorAll('.settings-section').forEach(section => {
+            const sections = document.querySelectorAll('.settings-section');
+            sections.forEach(section => {
                 section.style.display = 'none';
             });
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab-button').forEach(button => {
+
+            // Show the selected section
+            const selectedSection = document.getElementById(tabName + '-settings');
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+
+            // Update active state of tab buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
                 button.classList.remove('active');
             });
-            
-            // Show selected section and activate tab
-            document.getElementById(tabName + '-settings').style.display = 'block';
-            document.querySelector(`button[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+            // Add active class to selected tab
+            const activeButton = document.querySelector(`button[onclick="showTab('${tabName}')"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
         }
 
+        // Function to handle filter submission
         function submitFilter(selectElement) {
             const form = document.getElementById('filterForm');
+            // Always set tab to 'acknowledge' when filtering
+            const tabInput = form.querySelector('input[name="tab"]');
+            if (tabInput) {
+                tabInput.value = 'acknowledge';
+            }
             form.submit();
         }
 
-        // Show the current tab on page load
+        // Initialize the page with the correct tab
         document.addEventListener('DOMContentLoaded', function() {
-            showTab('<?php echo $current_tab; ?>');
+            const currentTab = '<?php echo $current_tab; ?>';
+            showTab(currentTab);
+            
+            // Log debug information
+            console.log('Database connection status:', '<?php echo isset($pdo) ? "Connected" : "Not connected"; ?>');
+            console.log('Query results:', <?php echo json_encode($acknowledgments ?? null); ?>);
+            
+            <?php if (isset($error_message)): ?>
+            console.error('Error:', <?php echo json_encode($error_message); ?>);
+            <?php endif; ?>
         });
-
-        // Show success message using SweetAlert2
-        <?php if (isset($success_message)): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: '<?php echo $success_message; ?>',
-            timer: 2000,
-            showConfirmButton: false
-        });
-        <?php endif; ?>
-
-        // Show error message using SweetAlert2
-        <?php if (isset($error_message)): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: '<?php echo $error_message; ?>'
-        });
-        <?php endif; ?>
     </script>
 </body>
 </html> 

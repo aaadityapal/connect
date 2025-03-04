@@ -3,131 +3,592 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard with Login</title>
+    <title>Project Test Page | ArchitectsHive</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1e90ff, #ff69b4);
-            color: #fff;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
         }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-
-        .header {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .sub-header {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-        }
-
-        .login-box {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            width: 300px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .login-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.4);
-        }
-
-        .login-box h2 {
-            margin-bottom: 20px;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+        .project-card {
             border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        .progress {
+            height: 10px;
             border-radius: 5px;
-            outline: none;
-            font-size: 1rem;
         }
-
-        .login-box input[type="submit"] {
-            background: #ff69b4;
-            color: #fff;
+        .team-member {
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .team-member img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+        .btn-link {
+            color: #333;
+            text-decoration: none;
+            width: 80%;
+            text-align: left;
+            font-weight: 500;
+        }
+        .btn-link:hover {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+        }
+        .stages-section .card-header {
+            background: #f8f9fa;
+            border-radius: 5px !important;
+        }
+        .stages-section .card {
+            border: 1px solid rgba(0,0,0,.125);
+        }
+        .project-search-dropdown {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+        .project-search-item {
+            padding: 8px 12px;
             cursor: pointer;
-            transition: background 0.3s ease;
+            border-bottom: 1px solid #eee;
         }
-
-        .login-box input[type="submit"]:hover {
-            background: #ff1493;
+        .project-search-item:hover {
+            background-color: #f8f9fa;
         }
-
-        .footer {
-            margin-top: 20px;
-            font-size: 0.9rem;
+        .project-search-item:last-child {
+            border-bottom: none;
         }
-
-        .footer a {
-            color: #fff;
-            text-decoration: underline;
-        }
-
-        @media (max-width: 600px) {
-            .header {
-                font-size: 2rem;
-            }
-
-            .sub-header {
-                font-size: 1rem;
-            }
-
-            .login-box {
-                width: 90%;
-            }
+        .form-group {
+            position: relative;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">Welcome to Your Dashboard</div>
-        <div class="sub-header">Manage your account and explore features</div>
-
-        <div class="login-box">
-            <h2>Login</h2>
-            <form id="loginForm">
-                <input type="text" id="username" placeholder="Username" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <input type="submit" value="Login">
-            </form>
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h1>Project Dashboard</h1>
+            <button class="btn btn-success" data-toggle="modal" data-target="#addProjectModal">
+                <i class="fas fa-plus"></i> Add Project
+            </button>
         </div>
+        
+        <!-- Add Project Modal -->
+        <div class="modal fade" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addProjectForm">
+                            <div class="form-group">
+                                <label for="projectName">Project Name</label>
+                                <input type="text" class="form-control" id="projectName" required>
+                                <div id="projectSearchDropdown" class="project-search-dropdown"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectStatus">Status</label>
+                                <select class="form-control" id="projectStatus" required>
+                                    <option value="active">Active</option>
+                                    <option value="planning">In Planning</option>
+                                    <option value="progress">In Progress</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectClient">Client</label>
+                                <input type="text" class="form-control" id="projectClient" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectLocation">Location</label>
+                                <input type="text" class="form-control" id="projectLocation" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectBudget">Budget</label>
+                                <input type="number" class="form-control" id="projectBudget" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="projectProgress">Progress (%)</label>
+                                <input type="number" class="form-control" id="projectProgress" min="0" max="100" required>
+                            </div>
+                            
+                            <!-- Project Stages Section -->
+                            <div class="form-group">
+                                <label>Project Stages</label>
+                                <div id="stagesContainer">
+                                    <!-- Template for a stage -->
+                                    <div class="stage-group mb-4 border p-3 rounded">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">Stage 1</h6>
+                                            <button type="button" class="btn btn-danger btn-sm remove-stage">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="text" class="form-control" placeholder="Stage Name" required>
+                                        </div>
+                                        <div class="substages-container">
+                                            <!-- Initial substage container is empty -->
+                                        </div>
+                                        <button type="button" class="btn btn-info btn-sm add-substage mt-2">
+                                            <i class="fas fa-plus"></i> Add Substage
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary mt-2" id="addStage">
+                                    <i class="fas fa-plus"></i> Add Stage
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" form="addProjectForm" class="btn btn-success">Add Project</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Project Card 1 -->
+            <div class="col-md-6">
+                <div class="card project-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Luxury Villa Design</h5>
+                        <span class="badge badge-success status-badge">Active</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Project ID:</strong> PRJ001</p>
+                        <p><strong>Client:</strong> John Smith</p>
+                        <p><strong>Location:</strong> Beverly Hills</p>
+                        <p><strong>Budget:</strong> $2.5M</p>
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Progress:</strong> 75%</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        <p><strong>Team:</strong></p>
+                        <div class="team-members mb-3">
+                            <span class="team-member" title="Lead Architect">
+                                <i class="fas fa-user-circle fa-2x text-primary"></i>
+                            </span>
+                            <span class="team-member" title="Designer">
+                                <i class="fas fa-user-circle fa-2x text-success"></i>
+                            </span>
+                            <span class="team-member" title="3D Artist">
+                                <i class="fas fa-user-circle fa-2x text-info"></i>
+                            </span>
+                        </div>
+                        <div class="stages-section">
+                            <p><strong>Project Stages:</strong></p>
+                            <div class="accordion" id="stagesAccordion1">
+                                <!-- Stage 1 -->
+                                <div class="card mb-2">
+                                    <div class="card-header p-2" id="stage1Header">
+                                        <h6 class="mb-0 d-flex justify-content-between align-items-center">
+                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#stage1Collapse">
+                                                Planning Phase
+                                            </button>
+                                            <span class="badge badge-success">Completed</span>
+                                        </h6>
+                                    </div>
+                                    <div id="stage1Collapse" class="collapse" data-parent="#stagesAccordion1">
+                                        <div class="card-body p-2">
+                                            <ul class="list-unstyled mb-0">
+                                                <li><i class="fas fa-check text-success"></i> Initial Consultation</li>
+                                                <li><i class="fas fa-check text-success"></i> Site Analysis</li>
+                                                <li><i class="fas fa-check text-success"></i> Concept Development</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Stage 2 -->
+                                <div class="card mb-2">
+                                    <div class="card-header p-2" id="stage2Header">
+                                        <h6 class="mb-0">
+                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#stage2Collapse">
+                                                Design Development
+                                            </button>
+                                            <span class="badge badge-warning float-right">In Progress</span>
+                                        </h6>
+                                    </div>
+                                    <div id="stage2Collapse" class="collapse" data-parent="#stagesAccordion1">
+                                        <div class="card-body p-2">
+                                            <ul class="list-unstyled mb-0">
+                                                <li><i class="fas fa-check text-success"></i> Schematic Design</li>
+                                                <li><i class="fas fa-spinner text-warning"></i> Design Development</li>
+                                                <li><i class="fas fa-clock text-secondary"></i> Construction Documents</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-3">View Details</button>
+                    </div>
+                </div>
+            </div>
 
-        <div class="footer">
-            <p>Don't have an account? <a href="#">Sign up here</a></p>
+            <!-- Project Card 2 -->
+            <div class="col-md-6">
+                <div class="card project-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Commercial Complex</h5>
+                        <span class="badge badge-warning status-badge">In Planning</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Project ID:</strong> PRJ002</p>
+                        <p><strong>Client:</strong> Tech Corp Inc.</p>
+                        <p><strong>Location:</strong> Downtown</p>
+                        <p><strong>Budget:</strong> $5.8M</p>
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Progress:</strong> 25%</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 25%"></div>
+                            </div>
+                        </div>
+                        <p><strong>Team:</strong></p>
+                        <div class="team-members mb-3">
+                            <span class="team-member" title="Project Manager">
+                                <i class="fas fa-user-circle fa-2x text-danger"></i>
+                            </span>
+                            <span class="team-member" title="Architect">
+                                <i class="fas fa-user-circle fa-2x text-warning"></i>
+                            </span>
+                        </div>
+                        <div class="stages-section">
+                            <p><strong>Project Stages:</strong></p>
+                            <div class="accordion" id="stagesAccordion2">
+                                <!-- Stage 1 -->
+                                <div class="card mb-2">
+                                    <div class="card-header p-2" id="proj2stage1Header">
+                                        <h6 class="mb-0">
+                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#proj2stage1Collapse">
+                                                Feasibility Study
+                                            </button>
+                                            <span class="badge badge-warning float-right">In Progress</span>
+                                        </h6>
+                                    </div>
+                                    <div id="proj2stage1Collapse" class="collapse" data-parent="#stagesAccordion2">
+                                        <div class="card-body p-2">
+                                            <ul class="list-unstyled mb-0">
+                                                <li><i class="fas fa-check text-success"></i> Market Analysis</li>
+                                                <li><i class="fas fa-spinner text-warning"></i> Financial Modeling</li>
+                                                <li><i class="fas fa-clock text-secondary"></i> Environmental Impact Study</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-3">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Card 3 -->
+            <div class="col-md-6">
+                <div class="card project-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Residential Complex</h5>
+                        <span class="badge badge-info status-badge">In Progress</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Project ID:</strong> PRJ003</p>
+                        <p><strong>Client:</strong> Green Living Ltd.</p>
+                        <p><strong>Location:</strong> Suburbia</p>
+                        <p><strong>Budget:</strong> $8.2M</p>
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Progress:</strong> 45%</p>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <p><strong>Team:</strong></p>
+                        <div class="team-members mb-3">
+                            <span class="team-member" title="Senior Architect">
+                                <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                            </span>
+                            <span class="team-member" title="Design Team Lead">
+                                <i class="fas fa-user-circle fa-2x text-dark"></i>
+                            </span>
+                        </div>
+                        <button class="btn btn-primary btn-sm">View Details</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        const loginForm = document.getElementById('loginForm');
+        $(document).ready(function() {
+            // Project data (in real application, this would come from your backend)
+            const projectsData = {
+                'Luxury Villa Design': {
+                    status: 'active',
+                    client: 'John Smith',
+                    location: 'Beverly Hills',
+                    budget: 2500000,
+                    progress: 75,
+                    stages: [
+                        {
+                            name: 'Planning Phase',
+                            substages: ['Initial Consultation', 'Site Analysis', 'Concept Development']
+                        },
+                        {
+                            name: 'Design Development',
+                            substages: ['Schematic Design', 'Design Development', 'Construction Documents']
+                        }
+                    ]
+                },
+                'Commercial Complex': {
+                    status: 'planning',
+                    client: 'Tech Corp Inc.',
+                    location: 'Downtown',
+                    budget: 5800000,
+                    progress: 25,
+                    stages: [
+                        {
+                            name: 'Feasibility Study',
+                            substages: ['Market Analysis', 'Financial Modeling', 'Environmental Impact Study']
+                        }
+                    ]
+                },
+                'Residential Complex': {
+                    status: 'progress',
+                    client: 'Green Living Ltd.',
+                    location: 'Suburbia',
+                    budget: 8200000,
+                    progress: 45,
+                    stages: [
+                        {
+                            name: 'Initial Planning',
+                            substages: ['Site Survey', 'Requirements Gathering']
+                        }
+                    ]
+                }
+            };
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            // Search functionality
+            $('#projectName').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                const $dropdown = $('#projectSearchDropdown');
+                
+                if (searchTerm.length === 0) {
+                    $dropdown.hide();
+                    return;
+                }
 
-            if (username === "admin" && password === "password") {
-                alert("Login successful! Redirecting to dashboard...");
-                window.location.href = "#"; // Replace with your dashboard URL
-            } else {
-                alert("Invalid username or password. Please try again.");
-            }
+                // Filter projects based on search term
+                const matchingProjects = Object.keys(projectsData).filter(projectName => 
+                    projectName.toLowerCase().includes(searchTerm)
+                );
+
+                if (matchingProjects.length > 0) {
+                    // Build dropdown content
+                    const dropdownHtml = matchingProjects.map(projectName => `
+                        <div class="project-search-item" data-project="${projectName}">
+                            ${projectName}
+                        </div>
+                    `).join('');
+                    
+                    $dropdown.html(dropdownHtml).show();
+                } else {
+                    $dropdown.hide();
+                }
+            });
+
+            // Handle project selection from dropdown
+            $(document).on('click', '.project-search-item', function() {
+                const projectName = $(this).data('project');
+                $('#projectName').val(projectName);
+                $('#projectSearchDropdown').hide();
+                
+                // Fetch project data
+                const projectData = projectsData[projectName];
+                if (projectData) {
+                    // Fill in basic project details
+                    $('#projectStatus').val(projectData.status);
+                    $('#projectClient').val(projectData.client);
+                    $('#projectLocation').val(projectData.location);
+                    $('#projectBudget').val(projectData.budget);
+                    $('#projectProgress').val(projectData.progress);
+
+                    // Clear existing stages
+                    $('#stagesContainer').empty();
+
+                    // Add stages and substages
+                    projectData.stages.forEach((stage, index) => {
+                        const stageTemplate = `
+                            <div class="stage-group mb-4 border p-3 rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">Stage ${index + 1}</h6>
+                                    <button type="button" class="btn btn-danger btn-sm remove-stage">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Stage Name" value="${stage.name}" required>
+                                </div>
+                                <div class="substages-container">
+                                    ${stage.substages.map(substage => `
+                                        <div class="substage-group mb-2">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" placeholder="Substage Name" value="${substage}" required>
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-danger remove-substage">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <button type="button" class="btn btn-info btn-sm add-substage mt-2">
+                                    <i class="fas fa-plus"></i> Add Substage
+                                </button>
+                            </div>
+                        `;
+                        $('#stagesContainer').append(stageTemplate);
+                    });
+                }
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.form-group').length) {
+                    $('#projectSearchDropdown').hide();
+                }
+            });
+
+            // Add new stage
+            $('#addStage').click(function() {
+                const stageCount = $('.stage-group').length + 1;
+                const stageTemplate = `
+                    <div class="stage-group mb-4 border p-3 rounded">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Stage ${stageCount}</h6>
+                            <button type="button" class="btn btn-danger btn-sm remove-stage">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Stage Name" required>
+                        </div>
+                        <div class="substages-container">
+                            <!-- Initial substage container is empty -->
+                        </div>
+                        <button type="button" class="btn btn-info btn-sm add-substage mt-2">
+                            <i class="fas fa-plus"></i> Add Substage
+                        </button>
+                    </div>
+                `;
+                $('#stagesContainer').append(stageTemplate);
+            });
+
+            // Add new substage
+            $(document).on('click', '.add-substage', function() {
+                const substageTemplate = `
+                    <div class="substage-group mb-2">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Substage Name" required>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-danger remove-substage">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $(this).siblings('.substages-container').append(substageTemplate);
+            });
+
+            // Remove stage
+            $(document).on('click', '.remove-stage', function() {
+                $(this).closest('.stage-group').remove();
+                // Renumber remaining stages
+                $('.stage-group').each(function(index) {
+                    $(this).find('h6').text('Stage ' + (index + 1));
+                });
+            });
+
+            // Remove substage
+            $(document).on('click', '.remove-substage', function() {
+                $(this).closest('.substage-group').remove();
+            });
+
+            // Form submission
+            $('#addProjectForm').on('submit', function(e) {
+                e.preventDefault();
+                // Here you would handle the form submission
+                // Including collecting all stages and substages data
+                const formData = {
+                    name: $('#projectName').val(),
+                    status: $('#projectStatus').val(),
+                    client: $('#projectClient').val(),
+                    location: $('#projectLocation').val(),
+                    budget: $('#projectBudget').val(),
+                    progress: $('#projectProgress').val(),
+                    stages: []
+                };
+
+                $('.stage-group').each(function() {
+                    const stage = {
+                        name: $(this).find('input[placeholder="Stage Name"]').val(),
+                        substages: []
+                    };
+
+                    $(this).find('.substage-group input').each(function() {
+                        stage.substages.push($(this).val());
+                    });
+
+                    formData.stages.push(stage);
+                });
+
+                console.log('Form Data:', formData);
+                // Here you would typically send this data to your backend
+                $('#addProjectModal').modal('hide');
+            });
         });
     </script>
 </body>

@@ -435,6 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <option value="Senior Manager (Sales)">Senior Manager (Sales)</option>
                                 <option value="Design Team">Design Team</option>
                                 <option value="Working Team">Working Team</option>
+                                <option value="Draughtsman">Draughtsman</option>
                                 <option value="3D Designing Team">3D Designing Team</option>
                                 <option value="Studio Trainees">Studio Trainees</option>
                                 <option value="Business Developer">Business Developer</option>

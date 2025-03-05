@@ -144,10 +144,13 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/project-metrics-dashboard.css">
+    <script src="assets/js/project-metrics-dashboard.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/css/substage-details.css">
-    <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="assets/css/chat-widget.css">
+    <script src="assets/js/chat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -786,7 +789,16 @@ if ($user_data && isset($user_data['shift_id'])) {
             }
         }
 
-        
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
         .chat-button {
             width: 60px;
             height: 60px;
@@ -810,11 +822,69 @@ if ($user_data && isset($user_data['shift_id'])) {
             font-size: 24px;
         }
 
-        
+        .chat-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
+        .chat-container.active {
+            display: flex;
+        }
 
+        .chat-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-       
+        .chat-tabs {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .chat-tab {
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .chat-tab:hover {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .chat-tab.active {
+            background-color: #0084ff;
+            color: white;
+        }
+
+        .chat-actions {
+            padding: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Show/hide create group button based on active tab */
+        .chat-tab[data-tab="groups"].active ~ .chat-actions .create-group-btn {
+            display: flex !important;
+        }
 
         /* Update container styles */
         .user-list,
@@ -1112,7 +1182,13 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: rgba(255, 255, 255, 0.8);
         }
 
-
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
 
         .back-button {
             cursor: pointer;
@@ -1282,10 +1358,322 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: #6c757d;
         }
 
-        
-        
+        /* Add a create group button to the chat header */
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
 
-       
+        .create-group-btn {
+            padding: 8px 16px;
+            background: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .create-group-btn:hover {
+            background: #0055ff;
+            transform: translateY(-1px);
+        }
+
+        .create-group-btn i {
+            font-size: 1.1em;
+        }
+
+        /* Initially hide the button when in Chats tab */
+        .chat-tab[data-tab="chats"].active ~ .chat-actions .create-group-btn {
+            display: none;
+        }
+
+        /* Add these styles for group chat */
+        .group-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .group-members-btn {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .group-members-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .group-members-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .group-member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 500;
+        }
+
+        .member-role {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        .message-sender {
+            font-size: 0.8em;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .message.sent .message-sender {
+            display: none;
+        }
+
+        /* Add these styles */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .no-groups-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .no-groups-message .create-group-btn {
+            padding: 8px 16px;
+            background: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .no-groups-message .create-group-btn:hover {
+            background: #0055ff;
+        }
+
+        /* Update message box styles */
+        .message-box {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            outline: none;
+            font-size: 0.95em;
+            transition: border-color 0.3s ease;
+        }
+
+        .message-input:focus {
+            border-color: #0084ff;
+        }
+
+        .send-button {
+            background: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: #0055ff;
+            transform: scale(1.05);
+        }
+
+        .send-button i {
+            font-size: 1.1em;
+        }
+
+        /* Update chat body to account for message box */
+        .chat-body {
+            height: calc(100% - 60px); /* Adjust height when message box is visible */
+            overflow-y: auto;
+        }
+
+        /* Add transition for smooth show/hide */
+        .message-box {
+            transition: all 0.3s ease;
+        }
+
+        /* Update status indicator styles */
+        .status-indicator {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .status-indicator.online {
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: #94a3b8;
+        }
+
+        .user-status {
+            font-size: 0.8em;
+            color: #64748b;
+        }
+
+        .user-status.online {
+            color: #22c55e;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        /* Update user item hover state */
+        .user-item:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user-item.has-unread {
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+
+        /* Add styles for group actions */
+        .group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .group-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .group-item:hover .group-actions {
+            opacity: 1;
+        }
+
+        .group-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #64748b;
+        }
+
+        .group-action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .group-action-btn.edit:hover {
+            background: #0084ff;
+            color: white;
+        }
+
+        .group-action-btn.delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .group-action-btn i {
+            font-size: 1em;
+        }
+
         .file-attach-btn {
             cursor: pointer;
             padding: 8px;
@@ -1327,7 +1715,37 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: #dc2626;
         }
 
-        
+        /* Update message-box styles */
+        .message-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 15px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            outline: none;
+            font-size: 0.95em;
+        }
+
+        .message-input:focus {
+            border-color: #0084ff;
+        }
+
+        .message-box {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            gap: 10px;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+        }
 
         .file-attach-btn {
             cursor: pointer;
@@ -1782,6 +2200,7 @@ if ($user_data && isset($user_data['shift_id'])) {
     </style>
     <!-- Add this in the head section or before closing body tag -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>">
     <div class="dashboard-container">
@@ -1945,101 +2364,324 @@ if ($user_data && isset($user_data['shift_id'])) {
                 </div>
             </div>
 
-            <!-- Add Task Overview Section here, after greeting-section -->
-            <div class="task-overview-section">
-                <div class="task-overview-header">
-                    <h2 class="task-overview-title">Task Overview</h2>
-                    <div class="task-filters">
-                        <div class="date-filters">
-                            <div class="date-filter">
-                                <label>From:</label>
-                                <input type="date" id="dateFrom">
-                            </div>
-                            <div class="date-filter">
-                                <label>To:</label>
-                                <input type="date" id="dateTo">
-                            </div>
-                            <button class="apply-filter-btn">Apply Filter</button>
-                            <button class="clear-filter-btn">Clear</button>
-                        </div>
+           <!-- Task Overview Section -->
+            <div class="container">
+<div class="project-metrics-dashboard">
+    <div class="metrics-header">
+        <h2 class="metrics-title">Project Metrics</h2>
+        <div class="metrics-filters">
+            <div class="metrics-date-range">
+                <div class="metrics-date-input">
+                    <label>From:</label>
+                    <input type="date" id="metricsStartDate">
+                </div>
+                <div class="metrics-date-input">
+                    <label>To:</label>
+                    <input type="date" id="metricsEndDate">
+                </div>
+                <button class="metrics-apply-btn">Apply Filter</button>
+                <button class="metrics-reset-btn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="pmd-metrics-cards-wrapper">
+        <!-- Active Projects Overview Card -->
+        <div class="pmd-metrics-card active-projects">
+            <div class="metrics-card-header">
+                <h3>Active Projects Overview</h3>
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div class="metrics-data-grid">
+                <?php
+                // Database connection
+                $host = 'localhost';
+                $username = 'root';
+                $password = '';
+                $database = 'crm'; // replace with your database name
+
+                // Create connection
+                $db = new mysqli($host, $username, $password, $database);
+
+                // Check connection
+                if ($db->connect_error) {
+                    die("Connection failed: " . $db->connect_error);
+                }
+
+                // Get total projects assigned to current user
+                $totalProjects = $db->query("
+                    SELECT COUNT(*) as count 
+                    FROM projects 
+                    WHERE deleted_at IS NULL 
+                    AND assigned_to = '$user_id'"
+                )->fetch_object()->count;
+
+                // Get in progress projects assigned to current user
+                $inProgress = $db->query("
+                    SELECT COUNT(*) as count 
+                    FROM projects 
+                    WHERE deleted_at IS NULL 
+                    AND status = 'in_progress'
+                    AND assigned_to = '$user_id'"
+                )->fetch_object()->count;
+
+                // Get due projects assigned to current user
+                $due = $db->query("
+                    SELECT COUNT(*) as count 
+                    FROM projects 
+                    WHERE deleted_at IS NULL 
+                    AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                    AND status != 'completed'
+                    AND assigned_to = '$user_id'"
+                )->fetch_object()->count;
+
+                // Get overdue projects assigned to current user
+                $overdue = $db->query("
+                    SELECT COUNT(*) as count 
+                    FROM projects 
+                    WHERE deleted_at IS NULL 
+                    AND end_date < CURDATE() 
+                    AND status != 'completed'
+                    AND assigned_to = '$user_id'"
+                )->fetch_object()->count;
+                ?>
+
+                <div class="metric-item small">
+                    <div class="metric-icon total-active">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Total Projects</span>
+                        <span class="metric-value" id="totalProjects"><?php echo $totalProjects; ?></span>
                     </div>
                 </div>
-
-                <div class="task-cards-container">
-                    <!-- Task Card 1 (Projects) -->
-                    <div class="task-card">
-                        <div class="card-header">
-                            <h3>Active Projects</h3>
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="task-description">
-                            <i class="fas fa-tasks"></i>
-                            Currently working on 3 active projects
-                        </div>
-                        <div class="task-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 75%"></div>
-                            </div>
-                        </div>
-                        <div class="task-meta">
-                            <div class="task-due-date">
-                                <i class="far fa-calendar"></i>
-                                Due: Apr 28, 2024
-                            </div>
-                            <div class="task-status status-in-progress">In Progress</div>
-                        </div>
+                <div class="metric-item small">
+                    <div class="metric-icon pending">
+                        <i class="fas fa-clock"></i>
                     </div>
-
-                    <!-- Task Card 2 (Stages) -->
-                    <div class="task-card">
-                        <div class="card-header">
-                            <h3>Project Stages</h3>
-                            <i class="fas fa-layer-group"></i>
-                        </div>
-                        <div class="task-description">
-                            <i class="fas fa-list-ul"></i>
-                            Loading stages...
-                        </div>
-                        <div class="task-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="task-meta">
-                            <div class="task-due-date">
-                                <i class="far fa-calendar"></i>
-                                Loading...
-                            </div>
-                            <div class="task-status status-pending">Loading...</div>
-                        </div>
+                    <div class="metric-info">
+                        <span class="metric-label">In Progress</span>
+                        <span class="metric-value" id="inProgressProjects"><?php echo $inProgress; ?></span>
                     </div>
-
-                    <!-- Task Card 3 (Substages) -->
-                    <div class="task-card">
-                        <div class="card-header">
-                            <h3>Project Substages</h3>
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <div class="task-description">
-                            <i class="fas fa-list-ul"></i>
-                            Loading substages...
-                        </div>
-                        <div class="task-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="task-meta">
-                            <div class="task-due-date">
-                                <i class="far fa-calendar"></i>
-                                Loading...
-                            </div>
-                            <div class="task-status status-pending">Loading...</div>
-                        </div>
+                </div>
+                <div class="metric-item small">
+                    <div class="metric-icon due">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Due Soon</span>
+                        <span class="metric-value" id="dueProjects"><?php echo $due; ?></span>
+                    </div>
+                </div>
+                <div class="metric-item small">
+                    <div class="metric-icon overdue">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="metric-info">
+                        <span class="metric-label">Overdue</span>
+                        <span class="metric-value" id="overdueProjects"><?php echo $overdue; ?></span>
                     </div>
                 </div>
             </div>
+            <div class="metrics-chart-container">
+                <?php
+                // Get data for chart
+                $chartData = $db->query("
+                    SELECT 
+                        status,
+                        COUNT(*) as count
+                    FROM projects 
+                    WHERE deleted_at IS NULL 
+                    GROUP BY status
+                ")->fetch_all(MYSQLI_ASSOC);
+                ?>
+                <canvas id="projectStatusChart"></canvas>
+                <script>
+                    // Initialize the chart
+                    const ctx = document.getElementById('projectStatusChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: <?php echo json_encode(array_column($chartData, 'status')); ?>,
+                            datasets: [{
+                                data: <?php echo json_encode(array_column($chartData, 'count')); ?>,
+                                backgroundColor: [
+                                    '#4CAF50', // Active
+                                    '#FFC107', // Pending
+                                    '#2196F3', // Due
+                                    '#DC3545'  // Overdue
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                </script>
+            </div>
+        </div>
 
+        <!-- Upcoming Project Stages Card -->
+<div class="pmd-metrics-card upcoming-stages">
+    <div class="metrics-card-header">
+        <h3>Upcoming Project Stages</h3>
+        <i class="fas fa-ellipsis-v"></i>
+    </div>
+    <div class="pmd-upcoming-stages-list" id="upcomingStagesList">
+        <?php
+        // Get upcoming stages assigned to current user
+        $upcomingStages = $db->query("
+            SELECT 
+                ps.*, 
+                p.title as project_title
+            FROM project_stages ps
+            JOIN projects p ON p.id = ps.project_id
+            WHERE ps.deleted_at IS NULL 
+            AND ps.assigned_to = '$user_id'
+            AND ps.status IN ('in_progress', 'not_started')
+            ORDER BY ps.end_date ASC
+            LIMIT 5"
+        );
+
+        while ($stage = $upcomingStages->fetch_object()) {
+            ?>
+            <div class="pmd-stage-item">
+                <div class="pmd-stage-markers">
+                    <div class="pmd-marker-yellow"></div>
+                </div>
+                <div class="stage-content">
+                    <div class="stage-main">
+                        <h4><?php echo htmlspecialchars($stage->project_title); ?></h4>
+                        <div class="stage-info">
+                            <div class="due-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span><?php echo date('M d, Y', strtotime($stage->end_date)); ?></span>
+                            </div>
+                            <span class="status-badge <?php echo $stage->status; ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $stage->status)); ?>
+                            </span>
+                        </div>
+                        <div class="stage-phase">Stage <?php echo $stage->stage_number; ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php
+        }
+        
+        if ($upcomingStages->num_rows == 0) {
+            echo '<div class="no-stages">No upcoming stages found</div>';
+        }
+        ?>
+    </div>
+</div>
+        <div class="pmd-milestone-container">
+    <!-- Header Section -->
+    <div class="pmd-milestone-header">
+        <div class="pmd-header-left">
+            <h2 class="pmd-milestone-title">Project Substages</h2>
+            <span class="pmd-milestone-count">
+                <?php 
+                // Get count of pending substages for current user only
+                $pending_count_query = "SELECT COUNT(*) as count 
+                    FROM project_substages 
+                    WHERE (status = 'pending' OR status = 'not_started') 
+                    AND deleted_at IS NULL 
+                    AND assigned_to = '$user_id'";  // Add filter for current user
+                $pending_result = $db->query($pending_count_query);
+                $count_row = $pending_result->fetch_assoc();
+                echo $count_row['count'] . ' pending';
+                ?>
+            </span>
+        </div>
+    </div>
+
+    <!-- Substage Items -->
+    <div class="pmd-milestone-list">
+        <?php
+        // Get current user ID (assuming you have it in a session or similar)
+        $current_user_id = $_SESSION['user_id']; // Adjust this according to how you store user sessions
+
+        // Updated query to show only substages assigned to current user
+        $substages_query = "
+            SELECT ps.*, u.username as assignee_name 
+            FROM project_substages ps
+            LEFT JOIN users u ON ps.assigned_to = u.id 
+            WHERE ps.status IN ('pending', 'not_started') 
+            AND ps.deleted_at IS NULL 
+            AND ps.assigned_to = $current_user_id  /* Added this line to filter by user */
+            ORDER BY ps.end_date ASC
+        ";
+
+        // Update the count query as well
+        $pending_count_query = "
+            SELECT COUNT(*) as count 
+            FROM project_substages 
+            WHERE (status = 'pending' OR status = 'not_started') 
+            AND deleted_at IS NULL 
+            AND assigned_to = $current_user_id  /* Added this line to filter by user */
+        ";
+
+        $pending_result = $db->query($pending_count_query);
+        $substages_result = $db->query($substages_query);
+
+        while ($substage = $substages_result->fetch_assoc()):
+            $progress = 0;
+            if ($substage['status'] === 'pending') {
+                $progress = 30; // You can adjust this or fetch actual progress
+            }
+        ?>
+        <div class="pmd-milestone-item">
+            <div class="pmd-milestone-main">
+                <div class="pmd-milestone-info">
+                    <h3 class="pmd-milestone-item-title">
+                        <?php echo htmlspecialchars($substage['title']); ?>
+                    </h3>
+                    <p class="pmd-milestone-item-subtitle">
+                        <?php echo htmlspecialchars($substage['substage_identifier']); ?> - 
+                        Assigned to: <?php echo htmlspecialchars($substage['assignee_name']); ?>
+                    </p>
+                </div>
+                
+                <div class="pmd-milestone-status-group">
+                    <div class="pmd-due-date">
+                        <i class="far fa-calendar-alt"></i>
+                        <span><?php echo date('M d, Y', strtotime($substage['end_date'])); ?></span>
+                    </div>
+                    <span class="pmd-status-badge <?php echo $substage['status']; ?>">
+                        <?php echo ucfirst($substage['status']); ?>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="pmd-progress-wrapper">
+                <div class="pmd-progress-bar">
+                    <div class="pmd-progress-fill <?php echo $progress === 0 ? 'empty' : ''; ?>" 
+                         style="width: <?php echo $progress; ?>%">
+                    </div>
+                </div>
+                <span class="pmd-progress-value"><?php echo $progress; ?>%</span>
+            </div>
+        </div>
+        <?php endwhile; ?>
+    </div>
+</div>
+        
+    </div>
+</div>
+</div>
             
 
             <div class="kanban-board">
@@ -2511,12 +3153,115 @@ if ($user_data && isset($user_data['shift_id'])) {
                     </div>
                 </div>
             </div>
-<!-- Chat Icon -->
-<div class="chat-icon" id="chatIcon">
-    <i class="fas fa-comments"></i>
-    <span class="unread-badge" style="display: none;">0</span>
-</div>
-           
+
+            <div class="chat-widget">
+                <div class="chat-container" id="chatContainer">
+                    <!-- Left Panel - Chat List -->
+                    <div class="chat-sidebar">
+                        <!-- Header with user profile -->
+                        <div class="sidebar-header">
+                            <div class="user-profile">
+                                <div class="user-avatar">
+                                    <?php if (!empty($user_data['profile_picture'])): ?>
+                                        <img src="<?php echo htmlspecialchars($user_data['profile_picture']); ?>" alt="Profile">
+                                    <?php else: ?>
+                                        <i class="fas fa-user-circle"></i>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="header-actions">
+                                <button class="action-btn" title="Status">
+                                    <i class="fas fa-circle-notch"></i>
+                                </button>
+                                <button class="action-btn" title="New Chat" onclick="startNewChat()">
+                                    <i class="fas fa-message"></i>
+                                </button>
+                                <button class="action-btn" title="Menu">
+                                    <i class="fas fa-ellipsis-vertical"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search Bar -->
+                        <div class="search-container">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search or start new chat" id="chatSearch">
+                            </div>
+                        </div>
+
+                        <!-- Chat List -->
+                        <div class="chat-list" id="chatList">
+                            <!-- Chat items will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <!-- Right Panel - Chat Area -->
+                    <div class="chat-area" id="chatArea">
+                        <!-- Default welcome screen -->
+                        <div class="welcome-screen" id="welcomeScreen">
+                            <div class="welcome-content">
+                                <div class="welcome-image">
+                                    <img src="assets/images/chat-welcome.png" alt="Welcome">
+                                </div>
+                                <h1>Keep your phone connected</h1>
+                                <p>Send and receive messages without keeping your phone online.</p>
+                            </div>
+                        </div>
+
+                        <!-- Active chat screen (hidden by default) -->
+                        <div class="active-chat" id="activeChat" style="display: none;">
+                            <!-- Chat Header -->
+                            <div class="chat-header">
+                                <div class="chat-contact-info">
+                                    <div class="contact-avatar">
+                                        <img src="" alt="" id="activeChatAvatar">
+                                    </div>
+                                    <div class="contact-details">
+                                        <h3 id="activeChatName"></h3>
+                                        <span class="online-status" id="activeChatStatus"></span>
+                                    </div>
+                                </div>
+                                <div class="chat-actions">
+                                    <button class="action-btn" title="Search">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button class="action-btn" title="Menu">
+                                        <i class="fas fa-ellipsis-vertical"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Chat Messages -->
+                            <div class="chat-messages" id="chatMessages">
+                                <!-- Messages will be dynamically added here -->
+                            </div>
+
+                            <!-- Message Input -->
+                            <div class="message-input-container">
+                                <button class="action-btn" title="Emoji">
+                                    <i class="far fa-smile"></i>
+                                </button>
+                                <button class="action-btn" title="Attach">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                                <div class="message-input-wrapper">
+                                    <input type="text" id="messageInput" placeholder="Type a message">
+                                </div>
+                                <button class="action-btn voice-btn" title="Voice Message">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Toggle Button -->
+                <div class="chat-button" onclick="toggleChat()">
+                    <i class="fas fa-comments"></i>
+                    <span class="unread-badge" style="display: none;">0</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2760,9 +3505,55 @@ if ($user_data && isset($user_data['shift_id'])) {
             setInterval(updateTimer, 1000);
         <?php endif; ?>
         
-      
+        function toggleChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.classList.toggle('active');
+        }
 
-       
+        function createNewChat() {
+            Swal.fire({
+                title: 'Start New Chat',
+                html: `
+                    <input type="text" id="searchUser" class="swal2-input" placeholder="Search for users...">
+                    <div id="userList" style="margin-top: 10px;"></div>
+                `,
+                showCancelButton: true,
+                showConfirmButton: false,
+                didOpen: () => {
+                    const searchInput = document.getElementById('searchUser');
+                    searchInput.addEventListener('input', debounce(searchUsers, 300));
+                }
+            });
+        }
+
+        function createNewGroup() {
+            Swal.fire({
+                title: 'Create New Group',
+                html: `
+                    <input type="text" id="groupName" class="swal2-input" placeholder="Group name">
+                    <input type="text" id="searchMembers" class="swal2-input" placeholder="Search for members...">
+                    <div id="selectedMembers" style="margin-top: 10px;"></div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Create Group',
+                preConfirm: () => {
+                    const groupName = document.getElementById('groupName').value;
+                    // Add validation and group creation logic here
+                }
+            });
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                // Add your message sending logic here
+                // This should integrate with your backend
+                console.log('Sending message:', message);
+                messageInput.value = '';
+            }
+        }
 
         function debounce(func, wait) {
             let timeout;
@@ -2775,9 +3566,16 @@ if ($user_data && isset($user_data['shift_id'])) {
                 timeout = setTimeout(later, wait);
             };
         }
-   
+
+        function searchUsers(query) {
+            // Add your user search logic here
+            // This should integrate with your backend
+            console.log('Searching users:', query);
+        }
+        
     </script>
     
+    <script src="assets/js/simple-chat.js"></script>
    
     <!-- Update the initialization script -->
     <script>
@@ -2824,7 +3622,6 @@ if ($user_data && isset($user_data['shift_id'])) {
         // Make it globally available
         window.taskManager = taskManager;
     });
-</script>  
-<script src="js/chat.js"></script>
+</script>   
 </body>
 </html>

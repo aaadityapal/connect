@@ -108,3 +108,16 @@ CREATE TABLE document_acknowledgments (
     FOREIGN KEY (document_id) REFERENCES hr_documents(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+
+
+
+
+
+
+
+ALTER TABLE projects
+ADD INDEX idx_status (status),
+ADD INDEX idx_dates (start_date, end_date),
+ADD INDEX idx_deleted (deleted_at);

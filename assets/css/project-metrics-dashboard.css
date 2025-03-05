@@ -1,0 +1,1394 @@
+/* Container styles */
+.container {
+    width: 100%;
+    padding: 20px;
+    margin-right: auto;
+    margin-left: auto;
+    max-width: auto;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+/* Project Metrics Dashboard */
+.project-metrics-dashboard {
+    padding: 20px;
+    background: #f8f9fa;
+    margin-bottom: 2rem;
+    width: 95%;
+    box-sizing: border-box;
+}
+
+/* Header section */
+.metrics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.metrics-title {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0;
+}
+
+.metrics-filters {
+    display: flex;
+    gap: 1rem;
+}
+
+.metrics-date-range {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.metrics-date-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.metrics-date-input input {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.metrics-apply-btn, .metrics-reset-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.metrics-apply-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.metrics-reset-btn {
+    background: #6c757d;
+    color: white;
+}
+
+/* Updated class names for unique identification */
+.pmd-metrics-cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pmd-metrics-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+    box-sizing: border-box;
+}
+
+.pmd-metrics-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.pmd-upcoming-stages-list {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.pmd-stage-item {
+    display: flex;
+    padding: 0.625rem 0.875rem;
+    position: relative;
+    transition: all 0.2s ease;
+    background: white;
+    border-radius: 8px;
+    margin: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+    box-sizing: border-box;
+}
+
+.pmd-stage-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.pmd-stage-markers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 1.25rem;
+    box-sizing: border-box;
+}
+
+.pmd-marker-yellow {
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+    box-sizing: border-box;
+}
+
+.metrics-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(to right, #ffffff, #f8fafc);
+    box-sizing: border-box;
+}
+
+.metrics-card-header h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    letter-spacing: -0.01em;
+    box-sizing: border-box;
+}
+
+.metrics-card-header i {
+    color: #64748b;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.metrics-card-header i:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.metrics-data-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    box-sizing: border-box;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+    box-sizing: border-box;
+}
+
+.metric-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    box-sizing: border-box;
+}
+
+.metric-icon i {
+    font-size: 1.5rem;
+    color: white;
+    box-sizing: border-box;
+}
+
+.metric-icon.total-active {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    box-sizing: border-box;
+}
+
+.metric-icon.pending {
+    background: linear-gradient(45deg, #FFC107, #ffb300);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+    box-sizing: border-box;
+}
+
+.metric-icon.due {
+    background: linear-gradient(45deg, #2196F3, #1e88e5);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+    box-sizing: border-box;
+}
+
+.metric-icon.overdue {
+    background: linear-gradient(45deg, #DC3545, #d32f2f);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+    box-sizing: border-box;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0.5rem 0;
+    font-weight: 500;
+    box-sizing: border-box;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+    box-sizing: border-box;
+}
+
+.metrics-chart {
+    height: 200px;
+    margin-top: 1rem;
+    box-sizing: border-box;
+}
+
+/* Stages and Substages common styles */
+.upcoming-stages-list,
+.pending-substages-list {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+    box-sizing: border-box;
+}
+
+.upcoming-stages-list::-webkit-scrollbar,
+.pending-substages-list::-webkit-scrollbar {
+    width: 6px;
+    box-sizing: border-box;
+}
+
+.upcoming-stages-list::-webkit-scrollbar-track,
+.pending-substages-list::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+.upcoming-stages-list::-webkit-scrollbar-thumb,
+.pending-substages-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.upcoming-stages-list::-webkit-scrollbar-thumb:hover,
+.pending-substages-list::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+/* Make the cards equal height */
+.metrics-card.upcoming-stages,
+.metrics-card.pending-substages {
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+    box-sizing: border-box;
+}
+
+.metrics-card-header {
+    flex-shrink: 0;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    box-sizing: border-box;
+}
+
+/* Smooth scrolling */
+.upcoming-stages-list,
+.pending-substages-list {
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+}
+
+/* Add some spacing between items */
+.stage-item,
+.substage
+.container {
+    width: 100%;
+    padding: 20px;
+    margin-right: auto;
+    margin-left: auto;
+    max-width: auto;
+    background: #fff;
+}
+
+/* Project Metrics Dashboard */
+.project-metrics-dashboard {
+    padding: 20px;
+    background: #f8f9fa;
+    margin-bottom: 2rem;
+    width: 95%;
+}
+
+/* Header section */
+.metrics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.metrics-title {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.metrics-filters {
+    display: flex;
+    gap: 1rem;
+}
+
+.metrics-date-range {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.metrics-date-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.metrics-date-input input {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.metrics-apply-btn, .metrics-reset-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.metrics-apply-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.metrics-reset-btn {
+    background: #6c757d;
+    color: white;
+}
+
+/* Updated class names for unique identification */
+.pmd-metrics-cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.pmd-metrics-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.pmd-metrics-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.pmd-upcoming-stages-list {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.pmd-stage-item {
+    display: flex;
+    padding: 0.625rem 0.875rem;
+    position: relative;
+    transition: all 0.2s ease;
+    background: white;
+    border-radius: 8px;
+    margin: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.pmd-stage-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.pmd-stage-markers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 1.25rem;
+}
+
+.pmd-marker-yellow {
+    width: 4px;
+    height: 22px;
+    background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+}
+
+.metrics-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(to right, #ffffff, #f8fafc);
+}
+
+.metrics-card-header h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.metrics-card-header i {
+    color: #64748b;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.metrics-card-header i:hover {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.metrics-data-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+}
+
+.metric-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
+.metric-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.metric-icon.total-active {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.metric-icon.pending {
+    background: linear-gradient(45deg, #FFC107, #ffb300);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+.metric-icon.due {
+    background: linear-gradient(45deg, #2196F3, #1e88e5);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.metric-icon.overdue {
+    background: linear-gradient(45deg, #DC3545, #d32f2f);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.metrics-chart {
+    height: 200px;
+    margin-top: 1rem;
+}
+
+/* Stages and Substages common styles */
+.upcoming-stages-list,
+.pending-substages-list {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.upcoming-stages-list::-webkit-scrollbar,
+.pending-substages-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.upcoming-stages-list::-webkit-scrollbar-track,
+.pending-substages-list::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 3px;
+}
+
+.upcoming-stages-list::-webkit-scrollbar-thumb,
+.pending-substages-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+.upcoming-stages-list::-webkit-scrollbar-thumb:hover,
+.pending-substages-list::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+/* Make the cards equal height */
+.metrics-card.upcoming-stages,
+.metrics-card.pending-substages {
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+}
+
+.metrics-card-header {
+    flex-shrink: 0;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Smooth scrolling */
+.upcoming-stages-list,
+.pending-substages-list {
+    scroll-behavior: smooth;
+}
+
+/* Add some spacing between items */
+.stage-item,
+.substage-item {
+    margin-bottom: 0.75rem;
+}
+
+.stage-item:last-child,
+.substage-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Substage specific styling */
+.substage-content {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.substage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.substage-project {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.substage-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge.pending-review {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.stage-status,
+.substage-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.stage-status.pending,
+.substage-status.pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ff9800;
+}
+
+.stage-status.not-started,
+.substage-status.not-started {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.substage-progress {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.stages-loading,
+.substages-loading {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem;
+}
+
+.metric-item.small {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.metric-item.small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.metric-item.small .metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.metric-item.small .metric-icon i {
+    font-size: 1rem;
+}
+
+.metric-item.small .metric-label {
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.metric-item.small .metric-value {
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.metrics-chart-container {
+    height: 250px;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Updated and new styles */
+.stage-info,
+.substage-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.due-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.due-date i {
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+.status-badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.688rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.status-badge::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.status-badge.pending {
+    background: linear-gradient(45deg, #fef3c7, #fff7ed);
+    color: #92400e;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.status-badge.pending::before {
+    background-color: #f59e0b;
+}
+
+.status-badge.in-progress {
+    background: linear-gradient(45deg, #dbeafe, #eff6ff);
+    color: #1e40af;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.status-badge.in-progress::before {
+    background-color: #3b82f6;
+}
+
+.status-badge.not-started {
+    background: linear-gradient(45deg, #f1f5f9, #f8fafc);
+    color: #475569;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.status-badge.not-started::before {
+    background-color: #94a3b8;
+}
+
+.stage-phase,
+.substage-project {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stage-phase::before,
+.substage-project::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+}
+
+.progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.progress-bar {
+    flex-grow: 1;
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #4ade80, #22c55e);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 40px;
+}
+
+/* Hover effects */
+.stage-item:hover,
+.substage-item:hover {
+    background: linear-gradient(to right, #f8fafc, #ffffff);
+}
+
+.status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* Additional professional touches */
+.metrics-card {
+    border: 1px solid #e2e8f0;
+}
+
+.metrics-card-header {
+    background: linear-gradient(to right, #ffffff, #f8fafc);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.marker-yellow {
+    box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+}
+
+/* Project Milestones specific styling */
+.project-milestones {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.project-milestones .header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.milestone-count {
+    font-size: 0.8rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.pmd-milestones-list {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.pmd-milestone-item {
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.pmd-milestone-item:hover {
+    border-color: #D1D5DB;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.pmd-milestone-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.875rem;
+}
+
+.pmd-milestone-info {
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.pmd-milestone-item-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.pmd-milestone-item-subtitle {
+    font-size: 0.75rem;
+    color: #6B7280;
+}
+
+.pmd-milestone-status-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.pmd-due-date {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: #6B7280;
+    padding: 0.25rem 0.5rem;
+    background: #F9FAFB;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+}
+
+.pmd-status-badge {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Progress bar styling */
+.pmd-progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pmd-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: #E5E7EB;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.pmd-progress-fill {
+    height: 100%;
+    background: #2563EB;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.pmd-progress-value {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6B7280;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+/* Status badge colors */
+.pmd-status-badge.pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+.pmd-status-badge.not-started {
+    background: #F3F4F6;
+    color: #4B5563;
+    border: 1px solid #E5E7EB;
+}
+
+/* Hover effects */
+.pmd-milestone-item:hover {
+    border-color: #D1D5DB;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.pmd-milestone-item:hover .pmd-progress-fill {
+    background: #1D4ED8;
+}
+
+/* Project Milestones Box Styling */
+.pmd-milestone-wrapper {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.pmd-milestone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.pmd-milestone-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1a2b4b;
+    letter-spacing: -0.01em;
+}
+
+.pmd-milestone-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.pmd-milestone-box {
+    background: white;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pmd-milestone-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.pmd-milestone-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pmd-milestone-progress {
+    background: #f8fafc;
+    padding: 0.75rem;
+    border-radius: 6px;
+}
+
+.pmd-progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.pmd-progress-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.pmd-progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, #3b82f6, #2563eb);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+/* Project Milestones Card Styling */
+.pmd-milestone-container {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+    height: fit-content;
+}
+
+.pmd-milestone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.pmd-milestone-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    letter-spacing: -0.01em;
+}
+
+.pmd-milestone-count {
+    font-size: 0.75rem;
+    color: #6B7280;
+    background: #F3F4F6;
+    padding: 0.25rem 0.625rem;
+    border-radius: 16px;
+    font-weight: 500;
+}
+
+.pmd-milestone-item {
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.875rem;
+    border: 1px solid #E5E7EB;
+    transition: all 0.2s ease;
+    min-height: 120px;
+    margin-right: 2px;
+}
+
+.pmd-milestone-item:hover {
+    border-color: #D1D5DB;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.pmd-milestone-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.pmd-milestone-item-title {
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.pmd-milestone-item-subtitle {
+    font-size: 0.813rem;
+    color: #6B7280;
+}
+
+.pmd-milestone-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pmd-due-date {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.813rem;
+    color: #6B7280;
+    padding: 0.25rem 0.5rem;
+    background: #F9FAFB;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+}
+
+.pmd-due-date i {
+    font-size: 0.813rem;
+    color: #9CA3AF;
+}
+
+.pmd-status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.pmd-status-badge.pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+.pmd-status-badge.not-started {
+    background: #F3F4F6;
+    color: #4B5563;
+    border: 1px solid #E5E7EB;
+}
+
+.pmd-progress-section {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #F9FAFB;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+}
+
+.pmd-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.pmd-progress-label {
+    font-size: 0.813rem;
+    color: #6B7280;
+    font-weight: 500;
+}
+
+.pmd-progress-value {
+    font-size: 0.813rem;
+    color: #111827;
+    font-weight: 600;
+}
+
+.pmd-progress-bar {
+    height: 6px;
+    background: #E5E7EB;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.pmd-progress-fill {
+    height: 100%;
+    background: #2563EB;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Empty State Progress */
+.pmd-progress-fill.empty {
+    background: #E5E7EB;
+}
+
+/* Enhanced hover states */
+.pmd-milestone-item:hover .pmd-milestone-item-title {
+    color: #0f172a;
+}
+
+.pmd-milestone-item:hover .pmd-progress-fill.blue {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+}
+
+/* Additional refinements */
+.pmd-milestone-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pmd-date-display {
+    font-size: 0.75rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.pmd-date-display i {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Add subtle animations */
+.pmd-milestone-item {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pmd-progress-fill {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Updated stage item text size */
+.pmd-stage-item h4 {
+    font-size: 0.813rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+/* Substage specific styles */
+.pmd-milestone-item-subtitle {
+    font-size: 0.75rem;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pmd-milestone-item-subtitle::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #D1D5DB;
+}
+
+/* Status badge variations */
+.pmd-status-badge.not_started {
+    background: #F3F4F6;
+    color: #4B5563;
+    border: 1px solid #E5E7EB;
+}
+
+/* Hover effect refinements */
+.pmd-milestone-item:hover .pmd-milestone-item-subtitle {
+    color: #4B5563;
+}
+
+/* Update the milestone list container for scrolling */
+.pmd-milestone-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+/* Customize scrollbar for webkit browsers */
+.pmd-milestone-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.pmd-milestone-list::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 3px;
+}
+
+.pmd-milestone-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+.pmd-milestone-list::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+/* Update milestone container to accommodate scrolling */
+.pmd-milestone-container {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+    height: fit-content;
+}
+
+/* Ensure milestone items maintain their style within scroll */
+.pmd-milestone-item {
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+    min-height: 120px;
+    margin-right: 2px;
+} 

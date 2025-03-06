@@ -121,3 +121,19 @@ ALTER TABLE projects
 ADD INDEX idx_status (status),
 ADD INDEX idx_dates (start_date, end_date),
 ADD INDEX idx_deleted (deleted_at);
+
+
+CREATE TABLE daily_thoughts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    thought TEXT NOT NULL,
+    author VARCHAR(100),
+    date_added DATE NOT NULL
+);
+
+
+INSERT INTO daily_thoughts (thought, author, date_added) VALUES
+('Success is not final, failure is not fatal: it is the courage to continue that counts.', 'Winston Churchill', CURRENT_DATE),
+('The only way to do great work is to love what you do.', 'Steve Jobs', DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)),
+('Innovation distinguishes between a leader and a follower.', 'Steve Jobs', DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),
+('The future belongs to those who believe in the beauty of their dreams.', 'Eleanor Roosevelt', DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY)),
+('It does not matter how slowly you go as long as you do not stop.', 'Confucius', DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY));

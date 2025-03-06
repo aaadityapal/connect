@@ -39,30 +39,51 @@ while ($row = $leave_types_result->fetch_assoc()) {
 // Fetch user's leave balance for current year
 $balance_query = "SELECT 
     lt.id,
-    lt.name, 
-    lt.description, 
-    lt.max_days,
+    lt.name,
+    lt.description,
     lt.color_code,
     CASE 
-        WHEN lt.name IN ('Sick Leave', 'Short Leave') THEN lt.max_days * (MONTH(CURRENT_DATE))
-        ELSE lt.max_days 
+        WHEN lt.name = 'Compensate Leave' THEN (
+            SELECT COUNT(*) 
+            FROM attendance a
+            JOIN user_shifts us ON a.user_id = us.user_id
+                AND a.date >= us.effective_from
+                AND (us.effective_to IS NULL OR a.date <= us.effective_to)
+            WHERE a.user_id = ? 
+            AND a.status = 'present'
+            AND DAYNAME(a.date) = us.weekly_offs
+            AND YEAR(a.date) = YEAR(CURRENT_DATE())
+        )
+        ELSE lt.max_days
     END as total_leaves,
-    COALESCE(lb.used_leaves, 0) as used_leaves
-FROM leave_types lt 
-LEFT JOIN leave_balance lb ON lt.id = lb.leave_type_id 
-    AND lb.user_id = ? 
-    AND lb.year = YEAR(CURRENT_DATE)
-WHERE lt.status = 'active'
-ORDER BY lt.name ASC";
+    COALESCE(
+        CASE 
+            WHEN lt.name = 'Compensate Leave' THEN (
+                SELECT COALESCE(SUM(duration), 0)
+                FROM leave_request lr
+                WHERE lr.user_id = ? 
+                AND lr.leave_type = lt.id
+                AND lr.status = 'approved'
+                AND YEAR(lr.start_date) = YEAR(CURRENT_DATE())
+            )
+            ELSE (
+                SELECT COALESCE(SUM(duration), 0)
+                FROM leave_request lr
+                WHERE lr.user_id = ? 
+                AND lr.leave_type = lt.id
+                AND lr.status = 'approved'
+                AND YEAR(lr.start_date) = YEAR(CURRENT_DATE())
+            )
+        END, 0
+    ) as used_leaves
+FROM leave_types lt
+WHERE lt.status = 'active'";
 
 $stmt = $conn->prepare($balance_query);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param('iii', $user_id, $user_id, $user_id);
 $stmt->execute();
 $balance_result = $stmt->get_result();
-$leave_balance = [];
-while ($row = $balance_result->fetch_assoc()) {
-    $leave_balance[] = $row;
-}
+$leave_balance = $balance_result->fetch_all(MYSQLI_ASSOC);
 
 // Fetch user's leave history
 $history_query = "SELECT 

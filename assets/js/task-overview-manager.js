@@ -284,9 +284,7 @@ class TaskOverviewManager {
                 credentials: 'include'
             });
 
-            console.log('Response status:', response.status);
-            const responseText = await response.text();
-            console.log('Raw response:', responseText);
+            
 
             let stagesData;
             try {

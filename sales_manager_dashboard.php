@@ -452,6 +452,772 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                 justify-content: center;
             }
         }
+
+        /* Add these new styles */
+        .project-section {
+            padding: 0 20px 20px;
+        }
+
+        .project-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .project-card {
+            background: #fcfcfc;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .architecture .card-icon {
+            background: #fff5f5;
+            color: #ff6b6b;
+        }
+
+        .interior .card-icon {
+            background: #f3f0ff;
+            color: #845ef7;
+        }
+
+        .construction .card-icon {
+            background: #fff9db;
+            color: #fab005;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-content h3 {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 8px 0;
+            font-weight: 500;
+        }
+
+        .project-count {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .project-count .number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .project-count .label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 1024px) {
+            .project-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .project-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .project-section {
+                padding: 0 15px 15px;
+            }
+        }
+
+        /* Update existing styles and add new ones */
+        .overview-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 0 20px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .header-left h2 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin: 0 0 4px 0;
+            font-weight: 600;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            color: #888;
+            margin: 0;
+        }
+
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .filter-item {
+            position: relative;
+        }
+
+        .filter-item label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .date-input {
+            position: relative;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            min-width: 160px;
+            cursor: pointer;
+        }
+
+        .date-input:hover {
+            border-color: #d0d0d0;
+        }
+
+        .date-display {
+            border: none;
+            background: none;
+            font-size: 14px;
+            color: #333;
+            width: calc(100% - 24px);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .month-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .date-input i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .filter-separator {
+            color: #666;
+            font-size: 16px;
+            margin: 0 4px;
+            margin-top: 24px;
+        }
+
+        /* Responsive styles */
+        @media screen and (max-width: 768px) {
+            .date-filter {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .date-input {
+                min-width: 140px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .date-filter {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .filter-separator {
+                margin: 0;
+            }
+
+            .date-input {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+
+        /* Add these new styles */
+        .overview-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .main-content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .followups-section {
+            background: #fcfcfc;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .followups-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .followups-header h3 {
+            font-size: 15px;
+            color: #333;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .view-all {
+            font-size: 13px;
+            color: #ff6b6b;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .followups-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .followup-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .followup-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: #fff5f5;
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .followup-content {
+            flex: 1;
+        }
+
+        .followup-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .followup-title h4 {
+            font-size: 14px;
+            color: #333;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .time {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .followup-content p {
+            font-size: 13px;
+            color: #666;
+            margin: 0 0 8px 0;
+        }
+
+        .followup-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .client i {
+            font-size: 11px;
+        }
+
+        .status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.scheduled {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 1200px) {
+            .overview-content {
+                grid-template-columns: 1fr;
+            }
+
+            .followups-section {
+                margin-top: 20px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .followup-item {
+                padding: 10px;
+            }
+        }
+
+        /* Add these new styles */
+        .projects-list-section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .projects-list-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-tabs {
+            display: flex;
+            gap: 16px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn i {
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            background: #fff5f5;
+            color: #ff6b6b;
+        }
+
+        .add-project {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-project:hover {
+            background: #ff5252;
+        }
+
+        .projects-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .projects-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .projects-table th {
+            background: #fcfcfc;
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .projects-table td {
+            padding: 16px 20px;
+            font-size: 13px;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .project-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .project-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .project-icon.architecture {
+            background: #fff5f5;
+            color: #ff6b6b;
+        }
+
+        .project-info h4 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .project-info span {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.in-progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .progress-bar {
+            width: 120px;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #ff6b6b;
+            border-radius: 3px;
+        }
+
+        .progress-bar span {
+            position: absolute;
+            right: -30px;
+            top: -5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 1024px) {
+            .projects-list-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .header-tabs {
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .projects-table-wrapper {
+                margin-top: 16px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .tab-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .projects-table th,
+            .projects-table td {
+                padding: 12px 16px;
+            }
+        }
+
+        .tab-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 0;  /* Remove gap between tabs */
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 20px;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn i {
+            font-size: 14px;
+        }
+
+        .tab-btn:hover {
+            color: #ff6b6b;
+            background: #fff5f5;
+        }
+
+        .tab-btn.active {
+            color: #ff6b6b;
+            background: #fff5f5;
+        }
+
+        .add-project {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-project:hover {
+            background: #ff5252;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .tab-navigation {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .tab-group {
+                width: 100%;
+                overflow-x: auto;
+            }
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .location-filter {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 32px 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+            min-width: 140px;
+        }
+
+        .location-filter i {
+            position: absolute;
+            right: 12px;
+            color: #666;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .filter-select:hover {
+            border-color: #d0d0d0;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .add-project {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-project:hover {
+            background: #ff5252;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .list-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .tab-group {
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .location-filter {
+                width: 100%;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .add-project {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -557,6 +1323,222 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                     </div>
                 </div>
             </div>
+
+            <!-- Add this after the greeting-section div -->
+            <div class="overview-container">
+                <div class="section-header">
+                    <div class="header-left">
+                        <h2>Project Overview</h2>
+                        <p>Track your project statistics</p>
+                    </div>
+                    <div class="header-right">
+                        <div class="date-filter">
+                            <div class="filter-item">
+                                <label>From</label>
+                                <div class="date-input">
+                                    <input type="text" class="date-display" value="March, 2025" readonly>
+                                    <input type="month" class="month-picker" value="2025-03">
+                                    <i class="far fa-calendar"></i>
+                                </div>
+                            </div>
+                            <div class="filter-separator">-</div>
+                            <div class="filter-item">
+                                <label>To</label>
+                                <div class="date-input">
+                                    <input type="text" class="date-display" value="March, 2025" readonly>
+                                    <input type="month" class="month-picker" value="2025-03">
+                                    <i class="far fa-calendar"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-content">
+                    <!-- Left side with cards and project list -->
+                    <div class="main-content-area">
+                        <!-- Project Cards -->
+                        <div class="project-cards">
+                            <div class="project-card architecture">
+                                <div class="card-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3>Architecture</h3>
+                                    <div class="project-count">
+                                        <span class="number">248</span>
+                                        <span class="label">Projects</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="project-card interior">
+                                <div class="card-icon">
+                                    <i class="fas fa-couch"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3>Interior</h3>
+                                    <div class="project-count">
+                                        <span class="number">145</span>
+                                        <span class="label">Projects</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="project-card construction">
+                                <div class="card-icon">
+                                    <i class="fas fa-hard-hat"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h3>Construction</h3>
+                                    <div class="project-count">
+                                        <span class="number">186</span>
+                                        <span class="label">Projects</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Projects List Section -->
+                        <div class="projects-list-section">
+                            <div class="list-header">
+                                <div class="tab-group">
+                                    <button class="tab-btn active">
+                                        <i class="fas fa-building"></i> Architecture
+                                    </button>
+                                    <button class="tab-btn">
+                                        <i class="fas fa-couch"></i> Interior
+                                    </button>
+                                    <button class="tab-btn">
+                                        <i class="fas fa-hard-hat"></i> Construction
+                                    </button>
+                                </div>
+                                <div class="header-actions">
+                                    <div class="location-filter">
+                                        <select class="filter-select">
+                                            <option value="">All Locations</option>
+                                            <option value="mumbai">Mumbai</option>
+                                            <option value="delhi">Delhi</option>
+                                            <option value="bangalore">Bangalore</option>
+                                            <option value="pune">Pune</option>
+                                        </select>
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <button class="add-project">
+                                        <i class="fas fa-plus"></i> Add Project
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="projects-table-wrapper">
+                                <table class="projects-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Project Name</th>
+                                            <th>Client</th>
+                                            <th>Start Date</th>
+                                            <th>Deadline</th>
+                                            <th>Budget</th>
+                                            <th>Status</th>
+                                            <th>Progress</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name">
+                                                    <div class="project-icon">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>Modern Villa Design</div>
+                                                </div>
+                                            </td>
+                                            <td>John Smith</td>
+                                            <td>01 Mar 2024</td>
+                                            <td>30 Jun 2024</td>
+                                            <td>₹1.2 Cr</td>
+                                            <td><span class="status-badge in-progress">In Progress</span></td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress" style="width: 65%"></div>
+                                                    <span>65%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right side with Follow Ups -->
+                    <div class="followups-section">
+                        <div class="followups-header">
+                            <h3>Recent Follow Ups</h3>
+                            <button class="view-all">View All</button>
+                        </div>
+                        <div class="followups-list">
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Modern Villa Project</h4>
+                                        <span class="time">2 hours ago</span>
+                                    </div>
+                                    <p>Client meeting scheduled for design review</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> John Smith</span>
+                                        <span class="status pending">Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Office Interior</h4>
+                                        <span class="time">5 hours ago</span>
+                                    </div>
+                                    <p>Sent quotation for furniture selection</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> Sarah Johnson</span>
+                                        <span class="status completed">Completed</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Residential Complex</h4>
+                                        <span class="time">1 day ago</span>
+                                    </div>
+                                    <p>Follow up on construction timeline</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> Mike Anderson</span>
+                                        <span class="status scheduled">Scheduled</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Add mobile menu button and overlay -->
@@ -632,6 +1614,61 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
         // Update time immediately and then every second
         updateISTTime();
         setInterval(updateISTTime, 1000);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthPickers = document.querySelectorAll('.month-picker');
+            const dateDisplays = document.querySelectorAll('.date-display');
+
+            monthPickers.forEach((picker, index) => {
+                picker.addEventListener('change', function() {
+                    const date = new Date(this.value + '-01');
+                    const monthYear = date.toLocaleString('default', { 
+                        month: 'long', 
+                        year: 'numeric' 
+                    });
+                    dateDisplays[index].value = monthYear;
+
+                    // Validate date range
+                    if (index === 0) { // From date
+                        if (monthPickers[1].value < this.value) {
+                            monthPickers[1].value = this.value;
+                            dateDisplays[1].value = monthYear;
+                        }
+                    } else { // To date
+                        if (monthPickers[0].value > this.value) {
+                            monthPickers[0].value = this.value;
+                            dateDisplays[0].value = monthYear;
+                        }
+                    }
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Here you would typically load the corresponding projects
+                    // based on the selected category (architecture/interior/construction)
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle location filter change
+            const locationFilter = document.querySelector('.filter-select');
+            locationFilter.addEventListener('change', function() {
+                // Add your filtering logic here
+                console.log('Selected location:', this.value);
+            });
+        });
     </script>
 </body>
 </html>

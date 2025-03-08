@@ -36,10 +36,7 @@ class TaskOverviewManager {
             allMonthsOption.classList.add('selected');
         }
 
-        console.log('TaskManager initialized with:', {
-            year: this.selectedYear,
-            month: this.selectedMonth
-        });
+
 
         // Trigger initial filtering
         this.filterTasks();
@@ -274,7 +271,7 @@ class TaskOverviewManager {
 
     async fetchProjectStages() {
         try {
-            console.log('Fetching project stages...');
+
             const response = await fetch('api/projects/stages.php', {
                 method: 'GET',
                 headers: {
@@ -290,7 +287,7 @@ class TaskOverviewManager {
             try {
                 stagesData = JSON.parse(responseText);
             } catch (e) {
-                console.error('JSON parse error:', e);
+                
                 throw new Error('Invalid JSON response from server');
             }
 
@@ -1277,7 +1274,7 @@ class TaskOverviewManager {
             try {
                 data = JSON.parse(responseText);
             } catch (e) {
-                console.error('JSON Parse Error:', e);
+                
                 throw new Error('Invalid JSON response');
             }
 

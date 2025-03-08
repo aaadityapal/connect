@@ -149,8 +149,6 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/css/substage-details.css">
-    <link rel="stylesheet" href="assets/css/chat-widget.css">
-    <script src="assets/js/chat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -3137,133 +3135,9 @@ if ($user_data && isset($user_data['shift_id'])) {
                 
             </div>
             <!-- Add Forwarded Tasks Section here, after task-overview-section -->
-            <div class="forwarded-tasks-section">
-                <div class="section-header">
-                    <h2><i class="fas fa-share-square"></i> Forwarded Tasks</h2>
-                    <div class="header-actions">
-                        <button class="refresh-btn" onclick="taskManager.fetchForwardedTasks()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="forwarded-tasks-container">
-                    <!-- Tasks will be loaded here dynamically -->
-                    <div class="loading-spinner">
-                        <i class="fas fa-circle-notch fa-spin"></i>
-                    </div>
-                </div>
-            </div>
 
-            <div class="chat-widget">
-                <div class="chat-container" id="chatContainer">
-                    <!-- Left Panel - Chat List -->
-                    <div class="chat-sidebar">
-                        <!-- Header with user profile -->
-                        <div class="sidebar-header">
-                            <div class="user-profile">
-                                <div class="user-avatar">
-                                    <?php if (!empty($user_data['profile_picture'])): ?>
-                                        <img src="<?php echo htmlspecialchars($user_data['profile_picture']); ?>" alt="Profile">
-                                    <?php else: ?>
-                                        <i class="fas fa-user-circle"></i>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <div class="header-actions">
-                                <button class="action-btn" title="Status">
-                                    <i class="fas fa-circle-notch"></i>
-                                </button>
-                                <button class="action-btn" title="New Chat" onclick="startNewChat()">
-                                    <i class="fas fa-message"></i>
-                                </button>
-                                <button class="action-btn" title="Menu">
-                                    <i class="fas fa-ellipsis-vertical"></i>
-                                </button>
-                            </div>
-                        </div>
 
-                        <!-- Search Bar -->
-                        <div class="search-container">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Search or start new chat" id="chatSearch">
-                            </div>
-                        </div>
-
-                        <!-- Chat List -->
-                        <div class="chat-list" id="chatList">
-                            <!-- Chat items will be dynamically added here -->
-                        </div>
-                    </div>
-
-                    <!-- Right Panel - Chat Area -->
-                    <div class="chat-area" id="chatArea">
-                        <!-- Default welcome screen -->
-                        <div class="welcome-screen" id="welcomeScreen">
-                            <div class="welcome-content">
-                                <div class="welcome-image">
-                                    <img src="assets/images/chat-welcome.png" alt="Welcome">
-                                </div>
-                                <h1>Keep your phone connected</h1>
-                                <p>Send and receive messages without keeping your phone online.</p>
-                            </div>
-                        </div>
-
-                        <!-- Active chat screen (hidden by default) -->
-                        <div class="active-chat" id="activeChat" style="display: none;">
-                            <!-- Chat Header -->
-                            <div class="chat-header">
-                                <div class="chat-contact-info">
-                                    <div class="contact-avatar">
-                                        <img src="" alt="" id="activeChatAvatar">
-                                    </div>
-                                    <div class="contact-details">
-                                        <h3 id="activeChatName"></h3>
-                                        <span class="online-status" id="activeChatStatus"></span>
-                                    </div>
-                                </div>
-                                <div class="chat-actions">
-                                    <button class="action-btn" title="Search">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                    <button class="action-btn" title="Menu">
-                                        <i class="fas fa-ellipsis-vertical"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Chat Messages -->
-                            <div class="chat-messages" id="chatMessages">
-                                <!-- Messages will be dynamically added here -->
-                            </div>
-
-                            <!-- Message Input -->
-                            <div class="message-input-container">
-                                <button class="action-btn" title="Emoji">
-                                    <i class="far fa-smile"></i>
-                                </button>
-                                <button class="action-btn" title="Attach">
-                                    <i class="fas fa-paperclip"></i>
-                                </button>
-                                <div class="message-input-wrapper">
-                                    <input type="text" id="messageInput" placeholder="Type a message">
-                                </div>
-                                <button class="action-btn voice-btn" title="Voice Message">
-                                    <i class="fas fa-microphone"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chat Toggle Button -->
-                <div class="chat-button" onclick="toggleChat()">
-                    <i class="fas fa-comments"></i>
-                    <span class="unread-badge" style="display: none;">0</span>
-                </div>
-            </div>
-        </div>
-    </div>
+           
 
     <script>
         function togglePanel() {
@@ -3575,7 +3449,7 @@ if ($user_data && isset($user_data['shift_id'])) {
         
     </script>
     
-    <script src="assets/js/simple-chat.js"></script>
+
    
     <!-- Update the initialization script -->
     <script>
@@ -3615,13 +3489,6 @@ if ($user_data && isset($user_data['shift_id'])) {
     </script>
     
    
-    <script>
-    let taskManager;
-    document.addEventListener('DOMContentLoaded', () => {
-        taskManager = new TaskOverviewManager();
-        // Make it globally available
-        window.taskManager = taskManager;
-    });
-</script>   
+   
 </body>
 </html>

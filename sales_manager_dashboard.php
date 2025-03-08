@@ -155,10 +155,12 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             margin-left: 220px;
             padding: 20px;
             transition: margin-left 0.3s ease;
+            max-width: calc(100% - 220px);
         }
 
         .main-content.expanded {
             margin-left: 60px;
+            max-width: calc(100% - 60px);
         }
 
         /* Update closed sidebar hover states */
@@ -462,22 +464,14 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            margin-bottom: 20px;
         }
 
         .project-card {
-            background: #fcfcfc;
-            border: 1px solid #f0f0f0;
+            background: white;
             border-radius: 8px;
             padding: 24px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.2s ease;
-        }
-
-        .project-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
         }
 
         .card-icon {
@@ -558,6 +552,10 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             margin: 0 20px 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             border: 1px solid #f0f0f0;
+            height: calc(100vh - 120px);
+            min-height: 700px;
+            width: 100%;
+            overflow: hidden;
         }
 
         .section-header {
@@ -683,61 +681,135 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
 
         /* Add these new styles */
         .overview-content {
+            height: calc(100% - 60px);
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: minmax(0, 1fr) 350px;
             gap: 24px;
             margin-top: 24px;
         }
 
         .main-content-area {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .followups-section {
-            background: #fcfcfc;
-            border: 1px solid #f0f0f0;
+            background: white;
             border-radius: 8px;
-            padding: 20px;
+            border: 1px solid #f0f0f0;
+            height: 560px; /* Fixed height */
+            display: flex;
+            flex-direction: column;
         }
 
         .followups-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         .followups-header h3 {
-            font-size: 15px;
+            font-size: 13px;
             color: #333;
-            font-weight: 600;
             margin: 0;
+            font-weight: 500;
         }
 
-        .view-all {
-            font-size: 13px;
-            color: #ff6b6b;
-            background: none;
-            border: none;
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 4px 24px 4px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+            background: white;
             cursor: pointer;
-            padding: 0;
+            appearance: none;
+            min-width: 90px;
+        }
+
+        .filter-dropdown i {
+            position: absolute;
+            right: 8px;
+            color: #666;
+            font-size: 8px;
+            pointer-events: none;
+        }
+
+        .add-followup-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-followup-btn i {
+            font-size: 9px;
+        }
+
+        .add-followup-btn:hover {
+            background: #ff5252;
         }
 
         .followups-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            overflow-y: auto;
+            padding: 16px;
+            flex: 1;
         }
 
         .followup-item {
-            display: flex;
-            gap: 12px;
             padding: 12px;
-            background: white;
-            border-radius: 6px;
             border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: white;
+        }
+
+        .followup-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Scrollbar styling specifically for followups */
+        .followups-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .followups-list::-webkit-scrollbar-track {
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+
+        .followups-list::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .followups-list::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
         }
 
         .followup-icon {
@@ -822,19 +894,23 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
         }
 
         /* Responsive adjustments */
+        @media screen and (max-width: 1400px) {
+            .overview-content {
+                grid-template-columns: minmax(0, 1fr) 300px;
+            }
+
+            .followups-section {
+                width: 300px;
+            }
+        }
+
         @media screen and (max-width: 1200px) {
             .overview-content {
                 grid-template-columns: 1fr;
             }
 
             .followups-section {
-                margin-top: 20px;
-            }
-        }
-
-        @media screen and (max-width: 768px) {
-            .followup-item {
-                padding: 10px;
+                width: 100%;
             }
         }
 
@@ -843,6 +919,10 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             background: white;
             border-radius: 8px;
             border: 1px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+            margin-top: -8px;
         }
 
         .projects-list-header {
@@ -900,7 +980,23 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
         }
 
         .projects-table-wrapper {
-            overflow-x: auto;
+            overflow-y: auto;
+            flex-grow: 1;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .projects-table-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Keep the table header sticky */
+        .projects-table thead {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .projects-table {
@@ -1049,16 +1145,13 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
         }
 
         .tab-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             padding: 12px 16px;
             border-bottom: 1px solid #f0f0f0;
         }
 
         .tab-group {
             display: flex;
-            gap: 0;  /* Remove gap between tabs */
+            gap: 0;
         }
 
         .tab-btn {
@@ -1217,6 +1310,52 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                 width: 100%;
                 justify-content: center;
             }
+        }
+
+        /* Update the project count cards style */
+        .project-count-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .project-count-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .project-count-card.architecture .icon {
+            background: #fff5f5;
+            color: #ff6b6b;
+        }
+
+        .project-count-card.interior .icon {
+            background: #f3f0ff;
+            color: #845ef7;
+        }
+
+        .project-count-card.construction .icon {
+            background: #fff9db;
+            color: #fab005;
+        }
+
+        .project-count-info h3 {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 4px 0;
+        }
+
+        .project-count-info span {
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
@@ -1472,6 +1611,114 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                                                 </div>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name">
+                                                    <div class="project-icon">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>Eco-Friendly Office Tower</div>
+                                                </div>
+                                            </td>
+                                            <td>Robert Brown</td>
+                                            <td>05 Mar 2024</td>
+                                            <td>15 Sep 2024</td>
+                                            <td>₹4.8 Cr</td>
+                                            <td><span class="status-badge in-progress">In Progress</span></td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress" style="width: 35%"></div>
+                                                    <span>35%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name">
+                                                    <div class="project-icon">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>Heritage Restoration</div>
+                                                </div>
+                                            </td>
+                                            <td>Alice Cooper</td>
+                                            <td>10 Mar 2024</td>
+                                            <td>20 Jul 2024</td>
+                                            <td>₹3.2 Cr</td>
+                                            <td><span class="status-badge pending">Pending</span></td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress" style="width: 15%"></div>
+                                                    <span>15%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name">
+                                                    <div class="project-icon">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>Smart Home Complex</div>
+                                                </div>
+                                            </td>
+                                            <td>Peter Wang</td>
+                                            <td>12 Mar 2024</td>
+                                            <td>25 Aug 2024</td>
+                                            <td>₹5.5 Cr</td>
+                                            <td><span class="status-badge completed">Completed</span></td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress" style="width: 100%"></div>
+                                                    <span>100%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name">
+                                                    <div class="project-icon">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                    <div>Shopping Mall Renovation</div>
+                                                </div>
+                                            </td>
+                                            <td>Maria Garcia</td>
+                                            <td>15 Mar 2024</td>
+                                            <td>30 Jun 2024</td>
+                                            <td>₹6.7 Cr</td>
+                                            <td><span class="status-badge on-hold">On Hold</span></td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress" style="width: 45%"></div>
+                                                    <span>45%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-btn"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1482,7 +1729,20 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                     <div class="followups-section">
                         <div class="followups-header">
                             <h3>Recent Follow Ups</h3>
-                            <button class="view-all">View All</button>
+                            <div class="header-actions">
+                                <div class="filter-dropdown">
+                                    <select class="filter-select">
+                                        <option value="all">All Types</option>
+                                        <option value="meeting">Meetings</option>
+                                        <option value="call">Calls</option>
+                                        <option value="email">Emails</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <button class="add-followup-btn">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
                         </div>
                         <div class="followups-list">
                             <div class="followup-item">
@@ -1532,6 +1792,74 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                                     <div class="followup-meta">
                                         <span class="client"><i class="fas fa-user"></i> Mike Anderson</span>
                                         <span class="status scheduled">Scheduled</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-file-signature"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Smart Home Complex</h4>
+                                        <span class="time">3 hours ago</span>
+                                    </div>
+                                    <p>Contract signing and documentation review</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> Peter Wang</span>
+                                        <span class="status completed">Completed</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Shopping Mall Renovation</h4>
+                                        <span class="time">6 hours ago</span>
+                                    </div>
+                                    <p>Budget discussion and timeline review</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> Maria Garcia</span>
+                                        <span class="status pending">Pending</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Heritage Restoration</h4>
+                                        <span class="time">8 hours ago</span>
+                                    </div>
+                                    <p>Site inspection and material approval</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> Alice Cooper</span>
+                                        <span class="status scheduled">Scheduled</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="followup-item">
+                                <div class="followup-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <div class="followup-content">
+                                    <div class="followup-title">
+                                        <h4>Eco-Friendly Office Tower</h4>
+                                        <span class="time">1 day ago</span>
+                                    </div>
+                                    <p>Progress report presentation</p>
+                                    <div class="followup-meta">
+                                        <span class="client"><i class="fas fa-user"></i> Robert Brown</span>
+                                        <span class="status completed">Completed</span>
                                     </div>
                                 </div>
                             </div>

@@ -27,23 +27,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
         if (isset($_POST['assign_shift'])) {
-            // First, check if there's an existing active shift assignment
-            $stmt = $pdo->prepare("UPDATE user_shifts SET effective_to = CURRENT_DATE() - INTERVAL 1 DAY 
-                                 WHERE user_id = ? AND (effective_to IS NULL OR effective_to >= CURRENT_DATE())");
-            $stmt->execute([$_POST['user_id']]);
+            $pdo->beginTransaction();
+            
+            // First, check if user already has an active shift assignment
+            $checkStmt = $pdo->prepare("SELECT id FROM user_shifts 
+                                       WHERE user_id = ? 
+                                       AND (effective_to IS NULL OR effective_to >= CURRENT_DATE())");
+            $checkStmt->execute([$_POST['user_id']]);
+            $existingShift = $checkStmt->fetch();
+
+            if ($existingShift) {
+                // Update the end date of the existing shift to one day before new shift
+                $updateStmt = $pdo->prepare("UPDATE user_shifts 
+                                           SET effective_to = DATE_SUB(?, INTERVAL 1 DAY)
+                                           WHERE user_id = ? 
+                                           AND (effective_to IS NULL OR effective_to >= ?)");
+                $updateStmt->execute([
+                    $_POST['effective_from'],
+                    $_POST['user_id'],
+                    $_POST['effective_from']
+                ]);
+            }
 
             // Insert new shift assignment
-            $stmt = $pdo->prepare("INSERT INTO user_shifts (user_id, shift_id, weekly_offs, effective_from) 
-                                 VALUES (?, ?, ?, ?)");
-            $stmt->execute([
+            $insertStmt = $pdo->prepare("INSERT INTO user_shifts 
+                                        (user_id, shift_id, weekly_offs, effective_from) 
+                                        VALUES (?, ?, ?, ?)");
+            $insertStmt->execute([
                 $_POST['user_id'],
                 $_POST['shift_id'],
                 implode(',', $_POST['weekly_offs'] ?? []),
                 $_POST['effective_from']
             ]);
+
+            $pdo->commit();
             $_SESSION['success_message'] = "Shift assigned successfully!";
         }
     } catch (PDOException $e) {
+        $pdo->rollBack();
         $_SESSION['error_message'] = "Error: " . $e->getMessage();
     }
     
@@ -77,6 +98,12 @@ $stmt = $pdo->query("SELECT us.*, u.username, u.employee_id, s.shift_name, s.sta
                      JOIN users u ON us.user_id = u.id 
                      JOIN shifts s ON us.shift_id = s.id 
                      WHERE (us.effective_to IS NULL OR us.effective_to >= CURRENT_DATE())
+                     AND us.effective_from = (
+                         SELECT MAX(effective_from)
+                         FROM user_shifts us2
+                         WHERE us2.user_id = us.user_id
+                         AND (us2.effective_to IS NULL OR us2.effective_to >= CURRENT_DATE())
+                     )
                      ORDER BY u.username");
 $current_assignments = $stmt->fetchAll();
 ?>
@@ -300,8 +327,7 @@ $current_assignments = $stmt->fetchAll();
 
                     <div class="form-group">
                         <label for="effective_from">Effective From</label>
-                        <input type="date" id="effective_from" name="effective_from" class="form-control" 
-                               required min="<?php echo date('Y-m-d'); ?>">
+                        <input type="date" id="effective_from" name="effective_from" class="form-control" required>
                     </div>
 
                     <div class="form-group">

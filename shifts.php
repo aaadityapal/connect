@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch all active users
-$users_query = "SELECT id, username, employee_id, designation FROM users WHERE deleted_at IS NULL ORDER BY username";
+$users_query = "SELECT id, username, unique_id, designation FROM users WHERE deleted_at IS NULL ORDER BY username";
 $users = $pdo->query($users_query);
 if (!$users) {
     echo "Error fetching users: " . print_r($pdo->errorInfo(), true);
@@ -93,7 +93,7 @@ echo "<!-- Number of users: " . count($users) . " -->";
 echo "<!-- Number of shifts: " . count($shifts) . " -->";
 
 // Fetch current shift assignments
-$stmt = $pdo->query("SELECT us.*, u.username, u.employee_id, s.shift_name, s.start_time, s.end_time 
+$stmt = $pdo->query("SELECT us.*, u.username, u.unique_id, s.shift_name, s.start_time, s.end_time 
                      FROM user_shifts us 
                      JOIN users u ON us.user_id = u.id 
                      JOIN shifts s ON us.shift_id = s.id 
@@ -305,7 +305,7 @@ $current_assignments = $stmt->fetchAll();
                             <option value="">Select User</option>
                             <?php foreach ($users as $user): ?>
                                 <option value="<?php echo $user['id']; ?>">
-                                    <?php echo htmlspecialchars($user['username'] . ' (' . $user['employee_id'] . ')'); ?>
+                                    <?php echo htmlspecialchars($user['username'] . ' (' . $user['unique_id'] . ')'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -367,7 +367,7 @@ $current_assignments = $stmt->fetchAll();
                         <?php foreach ($current_assignments as $assignment): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($assignment['username']); ?></td>
-                                <td><?php echo htmlspecialchars($assignment['employee_id']); ?></td>
+                                <td><?php echo htmlspecialchars($assignment['unique_id']); ?></td>
                                 <td><?php echo htmlspecialchars($assignment['shift_name']); ?></td>
                                 <td>
                                     <?php 

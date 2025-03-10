@@ -451,37 +451,65 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupTooltip(cardSelector, tooltipId) {
         const card = document.querySelector(cardSelector);
         const tooltip = document.getElementById(tooltipId);
+        let timeoutId;
+        let isOverCard = false;
+        let isOverTooltip = false;
         
         if (card && tooltip) {
+            // Show tooltip when entering card
             card.addEventListener('mouseenter', function(e) {
+                isOverCard = true;
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                
                 // Hide all other tooltips first
                 document.querySelectorAll('.tooltip-content').forEach(t => {
-                    t.style.display = 'none';
-                    t.style.opacity = '0';
+                    if (t !== tooltip) {
+                        t.style.display = 'none';
+                        t.style.opacity = '0';
+                    }
                 });
 
                 // Show this tooltip
                 tooltip.style.display = 'block';
-                
-                // Add animation
                 requestAnimationFrame(() => {
                     tooltip.style.opacity = '1';
                     tooltip.style.transform = 'translateX(-50%) translateY(0)';
                 });
             });
 
+            // Track when leaving card
             card.addEventListener('mouseleave', function(e) {
-                const tooltipRect = tooltip.getBoundingClientRect();
-                const mouseY = e.clientY;
-                const mouseX = e.clientX;
+                isOverCard = false;
+                // Don't hide immediately, wait to see if mouse enters tooltip
+                setTimeout(() => {
+                    if (!isOverTooltip && !isOverCard) {
+                        hideTooltip(tooltip);
+                    }
+                }, 100); // Small delay to allow mouse to enter tooltip
+            });
 
-                if (mouseY < tooltipRect.top || mouseY > tooltipRect.bottom ||
-                    mouseX < tooltipRect.left || mouseX > tooltipRect.right) {
-                    hideTooltip(tooltip);
+            // Track when entering tooltip
+            tooltip.addEventListener('mouseenter', function() {
+                isOverTooltip = true;
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
                 }
             });
 
-            tooltip.addEventListener('mouseleave', () => hideTooltip(tooltip));
+            // Track when leaving tooltip
+            tooltip.addEventListener('mouseleave', function() {
+                isOverTooltip = false;
+                // Only hide if not over card
+                if (!isOverCard) {
+                    timeoutId = setTimeout(() => {
+                        if (!isOverCard && !isOverTooltip) {
+                            hideTooltip(tooltip);
+                        }
+                    }, 500);
+                }
+            });
         }
     }
 
@@ -489,8 +517,10 @@ document.addEventListener('DOMContentLoaded', function() {
         tooltip.style.opacity = '0';
         tooltip.style.transform = 'translateX(-50%) translateY(-10px)';
         setTimeout(() => {
-            tooltip.style.display = 'none';
-        }, 200);
+            if (tooltip.style.opacity === '0') { // Only hide if still faded out
+                tooltip.style.display = 'none';
+            }
+        }, 300);
     }
 
     // Setup tooltips for both cards

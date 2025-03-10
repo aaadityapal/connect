@@ -1040,29 +1040,38 @@ body.dark-mode .calendar-date.today {
 
 /* Update Tooltip Styles */
 .tooltip-content {
-    display: none;
     position: absolute;
-    top: calc(100% + 15px);
+    top: calc(100% - 10px); /* Reduce gap between card and tooltip */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(0);
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    min-width: 320px;
-    z-index: 1001;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 15px;
+    min-width: 250px;
+    z-index: 1000;
+    display: none;
     opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none; /* Prevent tooltip from interfering with hover */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Add padding to create hoverable area */
+    padding-top: 20px; /* Extra padding on top to create safe hover zone */
+    margin-top: -10px; /* Negative margin to offset padding */
 }
 
+/* Add a pseudo-element to create a safe hover zone */
+.tooltip-content::before {
+    content: '';
+    position: absolute;
+    top: -20px; /* Match padding-top */
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: transparent;
+}
+
+/* Ensure the overview card has proper positioning */
 .overview-card {
     position: relative;
-    z-index: 1;
-}
-
-.overview-card:hover {
-    z-index: 1002; /* Ensure card stays above other elements when hovered */
 }
 
 .overview-card:hover .tooltip-content {

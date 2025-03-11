@@ -1,0 +1,762 @@
+:root {
+    --architecture-color: #ff6b6b;
+    --interior-color: #845ef7;
+    --construction-color: #fab005;
+    --default-border: #e0e0e0;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 50px auto;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    position: relative;
+    animation: modalAppear 0.3s ease;
+    border: 2px solid var(--default-border);
+    transition: border-color 0.3s ease;
+}
+
+/* Add animation for modal appearance */
+@keyframes modalAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.category-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+.category-indicator.visible {
+    opacity: 1;
+}
+
+.indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--default-border);
+    transition: background-color 0.3s ease;
+}
+
+.architecture .indicator-dot {
+    background-color: var(--architecture-color);
+}
+
+.interior .indicator-dot {
+    background-color: var(--interior-color);
+}
+
+.construction .indicator-dot {
+    background-color: var(--construction-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+/* Style the close button */
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 28px; /* Made slightly bigger for better visibility */
+    cursor: pointer;
+    color: #ff3b3b; /* Bright red color */
+    transition: all 0.3s ease;
+    padding: 5px 10px;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    font-weight: bold;
+}
+
+.close-modal:hover {
+    color: #ff0000; /* Darker red on hover */
+    transform: scale(1.1); /* Slight scale effect on hover */
+}
+
+/* Override any category-specific styles to ensure the red color remains */
+.modal-content.architecture .close-modal,
+.modal-content.interior .close-modal,
+.modal-content.construction .close-modal {
+    color: #ff3b3b !important;
+}
+
+.modal-content.architecture .close-modal:hover,
+.modal-content.interior .close-modal:hover,
+.modal-content.construction .close-modal:hover {
+    color: #ff0000 !important;
+}
+
+#addProjectForm {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group.half {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #444;
+}
+
+/* Default field styles */
+input[type="text"],
+input[type="date"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+/* Architecture category styles */
+.modal-content.architecture input[type="text"],
+.modal-content.architecture input[type="date"],
+.modal-content.architecture select,
+.modal-content.architecture textarea {
+    border-color: var(--architecture-color);
+}
+
+/* Interior category styles */
+.modal-content.interior input[type="text"],
+.modal-content.interior input[type="date"],
+.modal-content.interior select,
+.modal-content.interior textarea {
+    border-color: var(--interior-color);
+}
+
+/* Construction category styles */
+.modal-content.construction input[type="text"],
+.modal-content.construction input[type="date"],
+.modal-content.construction select,
+.modal-content.construction textarea {
+    border-color: var(--construction-color);
+}
+
+/* Focus states for each category */
+.modal-content.architecture input:focus,
+.modal-content.architecture select:focus,
+.modal-content.architecture textarea:focus {
+    border-color: var(--architecture-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.modal-content.interior input:focus,
+.modal-content.interior select:focus,
+.modal-content.interior textarea:focus {
+    border-color: var(--interior-color);
+    box-shadow: 0 0 0 3px rgba(132, 94, 247, 0.1);
+}
+
+.modal-content.construction input:focus,
+.modal-content.construction select:focus,
+.modal-content.construction textarea:focus {
+    border-color: var(--construction-color);
+    box-shadow: 0 0 0 3px rgba(250, 176, 5, 0.1);
+}
+
+/* Update button styles to match category colors */
+.modal-content.architecture .btn-primary {
+    background-color: var(--architecture-color);
+}
+
+.modal-content.interior .btn-primary {
+    background-color: var(--interior-color);
+}
+
+.modal-content.construction .btn-primary {
+    background-color: var(--construction-color);
+}
+
+/* Hover states */
+.modal-content.architecture input:hover,
+.modal-content.architecture select:hover,
+.modal-content.architecture textarea:hover {
+    border-color: var(--architecture-color);
+    opacity: 0.8;
+}
+
+.modal-content.interior input:hover,
+.modal-content.interior select:hover,
+.modal-content.interior textarea:hover {
+    border-color: var(--interior-color);
+    opacity: 0.8;
+}
+
+.modal-content.construction input:hover,
+.modal-content.construction select:hover,
+.modal-content.construction textarea:hover {
+    border-color: var(--construction-color);
+    opacity: 0.8;
+}
+
+/* Reset styles when no category is selected */
+.modal-content input[type="text"],
+.modal-content input[type="date"],
+.modal-content select,
+.modal-content textarea {
+    border-color: #ddd;
+}
+
+textarea {
+    border-radius: 20px;
+    padding: 16px;
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--default-border);
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 20px;
+        width: auto;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+.modal-content.architecture {
+    border-color: var(--architecture-color);
+}
+
+.modal-content.architecture input:focus,
+.modal-content.architecture select:focus,
+.modal-content.architecture textarea:focus {
+    border-color: var(--architecture-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+.modal-content.interior {
+    border-color: var(--interior-color);
+}
+
+.modal-content.interior input:focus,
+.modal-content.interior select:focus,
+.modal-content.interior textarea:focus {
+    border-color: var(--interior-color);
+    box-shadow: 0 0 0 3px rgba(132, 94, 247, 0.1);
+}
+
+.modal-content.construction {
+    border-color: var(--construction-color);
+}
+
+.modal-content.construction input:focus,
+.modal-content.construction select:focus,
+.modal-content.construction textarea:focus {
+    border-color: var(--construction-color);
+    box-shadow: 0 0 0 3px rgba(250, 176, 5, 0.1);
+}
+
+/* Add category-specific header styles */
+.modal-content.architecture .modal-header {
+    background-color: var(--architecture-color);
+    border-bottom-color: var(--architecture-color);
+}
+
+.modal-content.interior .modal-header {
+    background-color: var(--interior-color);
+    border-bottom-color: var(--interior-color);
+}
+
+.modal-content.construction .modal-header {
+    background-color: var(--construction-color);
+    border-bottom-color: var(--construction-color);
+}
+
+/* Update header text color when category is selected */
+.modal-content.architecture .modal-header h2,
+.modal-content.interior .modal-header h2,
+.modal-content.construction .modal-header h2 {
+    color: #ffffff;
+}
+
+/* Optional: Add a subtle gradient overlay for better text visibility */
+.modal-content.architecture .modal-header,
+.modal-content.interior .modal-header,
+.modal-content.construction .modal-header {
+    position: relative;
+}
+
+.modal-content.architecture .modal-header::after,
+.modal-content.interior .modal-header::after,
+.modal-content.construction .modal-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0));
+    border-radius: 8px 8px 0 0;
+    pointer-events: none;
+}
+
+/* Style for the date input calendar icon */
+input[type="date"] {
+    padding-right: 30px;
+}
+
+/* Optional: Style the select dropdown arrow */
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+/* Focus states */
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--default-border);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Error state for required fields */
+input:invalid,
+select:invalid,
+textarea:invalid {
+    border-color: #ff6b6b;
+}
+
+/* Hover states */
+input[type="text"]:hover,
+input[type="date"]:hover,
+select:hover,
+textarea:hover {
+    border-color: #bbb;
+}
+
+/* Stages Container */
+.stages-container {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Stage Card */
+.stage-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
+}
+
+.stage-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Stage Header */
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stage-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
+}
+
+/* Delete Stage Button */
+.delete-stage {
+    background: none;
+    border: none;
+    color: #dc3545;
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.delete-stage:hover {
+    opacity: 1;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* Form Groups */
+.stage-form-group {
+    margin-bottom: 20px;
+}
+
+.stage-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Form Controls */
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    background: #f8f9fa;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #80bdff;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Date Inputs Row */
+.stage-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Attach File Button */
+.attach-file-btn {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: #495057;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.attach-file-btn:hover {
+    background: #fff;
+    border-color: #80bdff;
+    color: #0056b3;
+}
+
+.attach-file-btn i {
+    font-size: 14px;
+}
+
+/* Add Substage Button */
+.add-substage-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background: none;
+    border: 1px dashed #dee2e6;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.add-substage-btn:hover {
+    border-color: #80bdff;
+    color: #0056b3;
+    background: rgba(0, 123, 255, 0.02);
+}
+
+/* Add Stage Button */
+.add-stage-btn {
+    padding: 16px;
+    background: none;
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    color: #6c757d;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+}
+
+.add-stage-btn:hover {
+    border-color: #80bdff;
+    color: #0056b3;
+    background: rgba(0, 123, 255, 0.02);
+}
+
+/* Substages */
+.substages-wrapper {
+    margin-top: 20px;
+    padding-left: 24px;
+    border-left: 1px dashed #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.substage {
+    background: #fcfcfc;
+    margin-bottom: 16px;
+}
+
+/* Category-specific styles */
+.stage-card.architecture {
+    border-left: 3px solid var(--architecture-color);
+}
+
+.stage-card.interior {
+    border-left: 3px solid var(--interior-color);
+}
+
+.stage-card.construction {
+    border-left: 3px solid var(--construction-color);
+}
+
+/* Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stage-card {
+    animation: slideIn 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stage-form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stages-container {
+        gap: 15px;
+    }
+}
+
+.project-title-wrapper {
+    position: relative;
+}
+
+.project-suggestions {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+}
+
+.suggestion-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.suggestion-title {
+    font-weight: 500;
+    color: #333;
+}
+
+.suggestion-category {
+    font-size: 12px;
+    color: #666;
+}
+
+.suggestion-date {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Category indicators */
+.suggestion-item.architecture .suggestion-category {
+    color: var(--architecture-color);
+}
+
+.suggestion-item.interior .suggestion-category {
+    color: var(--interior-color);
+}
+
+.suggestion-item.construction .suggestion-category {
+    color: var(--construction-color);
+}
+
+/* Add these styles to your existing CSS */
+select option {
+    padding: 8px;
+}
+
+select option[data-position]:hover {
+    background-color: #f8f9fa;
+}
+
+/* Style for user options with departments */
+select option[data-department]::after {
+    content: attr(data-department);
+    font-size: 0.9em;
+    color: #666;
+    margin-left: 8px;
+}
+
+/* Add these styles to your existing CSS */
+.form-group select option[title] {
+    cursor: help;
+}
+
+.form-group .help-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Style for showing description on hover */
+.form-group select:hover option:hover {
+    background-color: #f8f9fa;
+} 

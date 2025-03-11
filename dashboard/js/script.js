@@ -451,64 +451,58 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupTooltip(cardSelector, tooltipId) {
         const card = document.querySelector(cardSelector);
         const tooltip = document.getElementById(tooltipId);
-        let timeoutId;
-        let isOverCard = false;
-        let isOverTooltip = false;
+        let timeoutId; // For tracking the timeout
         
         if (card && tooltip) {
-            // Show tooltip when entering card
             card.addEventListener('mouseenter', function(e) {
-                isOverCard = true;
+                // Clear any existing timeout
                 if (timeoutId) {
                     clearTimeout(timeoutId);
                 }
-                
+
                 // Hide all other tooltips first
                 document.querySelectorAll('.tooltip-content').forEach(t => {
-                    if (t !== tooltip) {
-                        t.style.display = 'none';
-                        t.style.opacity = '0';
-                    }
+                    t.style.display = 'none';
+                    t.style.opacity = '0';
                 });
 
                 // Show this tooltip
                 tooltip.style.display = 'block';
+                
+                // Add animation
                 requestAnimationFrame(() => {
                     tooltip.style.opacity = '1';
                     tooltip.style.transform = 'translateX(-50%) translateY(0)';
                 });
             });
 
-            // Track when leaving card
             card.addEventListener('mouseleave', function(e) {
-                isOverCard = false;
-                // Don't hide immediately, wait to see if mouse enters tooltip
-                setTimeout(() => {
-                    if (!isOverTooltip && !isOverCard) {
+                const tooltipRect = tooltip.getBoundingClientRect();
+                const mouseY = e.clientY;
+                const mouseX = e.clientX;
+
+                // Only hide if mouse is not over tooltip
+                if (mouseY < tooltipRect.top || mouseY > tooltipRect.bottom ||
+                    mouseX < tooltipRect.left || mouseX > tooltipRect.right) {
+                    // Set a longer timeout (3 seconds) before hiding
+                    timeoutId = setTimeout(() => {
                         hideTooltip(tooltip);
-                    }
-                }, 100); // Small delay to allow mouse to enter tooltip
+                    }, 3000); // Increased from default to 3000ms (3 seconds)
+                }
             });
 
-            // Track when entering tooltip
-            tooltip.addEventListener('mouseenter', function() {
-                isOverTooltip = true;
+            // Add mouseenter event to tooltip to clear hide timeout
+            tooltip.addEventListener('mouseenter', () => {
                 if (timeoutId) {
                     clearTimeout(timeoutId);
                 }
             });
 
-            // Track when leaving tooltip
-            tooltip.addEventListener('mouseleave', function() {
-                isOverTooltip = false;
-                // Only hide if not over card
-                if (!isOverCard) {
-                    timeoutId = setTimeout(() => {
-                        if (!isOverCard && !isOverTooltip) {
-                            hideTooltip(tooltip);
-                        }
-                    }, 500);
-                }
+            // Add mouseleave event to tooltip with delay
+            tooltip.addEventListener('mouseleave', () => {
+                timeoutId = setTimeout(() => {
+                    hideTooltip(tooltip);
+                }, 1000); // 1 second delay when leaving tooltip
             });
         }
     }
@@ -516,10 +510,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideTooltip(tooltip) {
         tooltip.style.opacity = '0';
         tooltip.style.transform = 'translateX(-50%) translateY(-10px)';
+        // Wait for transition to complete before hiding
         setTimeout(() => {
-            if (tooltip.style.opacity === '0') { // Only hide if still faded out
-                tooltip.style.display = 'none';
-            }
+            tooltip.style.display = 'none';
         }, 300);
     }
 

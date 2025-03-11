@@ -42,19 +42,27 @@
             <div class="form-row">
                 <div class="form-group half">
                     <label for="startDate">Start Date*</label>
-                    <input type="datetime-local" 
-                           id="startDate" 
-                           name="startDate" 
-                           required 
-                           value="<?php echo date('Y-m-d\TH:i'); ?>">
+                    <div class="date-input-wrapper">
+                        <input type="datetime-local" 
+                               id="startDate" 
+                               name="startDate" 
+                               required 
+                               class="date-input"
+                               value="<?php echo date('Y-m-d\TH:i'); ?>">
+                        <i class="fas fa-calendar-alt date-icon"></i>
+                    </div>
                 </div>
                 <div class="form-group half">
                     <label for="dueDate">Due Date*</label>
-                    <input type="datetime-local" 
-                           id="dueDate" 
-                           name="dueDate" 
-                           required 
-                           value="<?php echo date('Y-m-d\TH:i'); ?>">
+                    <div class="date-input-wrapper">
+                        <input type="datetime-local" 
+                               id="dueDate" 
+                               name="dueDate" 
+                               required 
+                               class="date-input"
+                               value="<?php echo date('Y-m-d\TH:i'); ?>">
+                        <i class="fas fa-calendar-alt date-icon"></i>
+                    </div>
                 </div>
             </div>
 

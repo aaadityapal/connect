@@ -19,7 +19,7 @@ try {
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
     
-    // Debug log received data
+    // Debug log
     error_log('Received data: ' . print_r($data, true));
     
     // Validate dates
@@ -27,7 +27,7 @@ try {
         throw new Exception('Start date is required');
     }
     
-    // Insert into projects table
+    // Insert project
     $projectQuery = "INSERT INTO projects (
         title, description, project_type, category_id, 
         start_date, end_date, created_by, assigned_to, 
@@ -35,148 +35,126 @@ try {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not_started', NOW())";
     
     $stmt = $conn->prepare($projectQuery);
-    
-    // Debug log the dates
-    error_log('Start Date: ' . $data['startDate']);
-    error_log('Due Date: ' . $data['dueDate']);
-    
-    $stmt->bind_param("sssissii", 
+    $stmt->bind_param("sssiisii", 
         $data['projectTitle'],
         $data['projectDescription'],
         $data['projectType'],
         $data['category_id'],
-        $data['startDate'],  // Use the date directly
-        $data['dueDate'],    // Use the date directly
+        $data['startDate'],
+        $data['dueDate'],
         $_SESSION['user_id'],
         $data['assignTo']
     );
     
-    if (!$stmt->execute()) {
-        throw new Exception("Error executing query: " . $stmt->error);
-    }
-    
+    $stmt->execute();
     $projectId = $conn->insert_id;
-    
-    // Log project creation in activity log
-    $activityQuery = "INSERT INTO project_activity_log (
-        project_id, activity_type, description, performed_by, performed_at
-    ) VALUES (?, 'create', 'Project created', ?, NOW())";
-    
-    $stmt = $conn->prepare($activityQuery);
-    $stmt->bind_param("ii", $projectId, $_SESSION['user_id']);
-    $stmt->execute();
-    
-    // Log in project history
-    $historyQuery = "INSERT INTO project_history (
-        project_id, action_type, old_value, new_value, changed_by, changed_at
-    ) VALUES (?, 'create', NULL, ?, ?, NOW())";
-    
-    $historyData = json_encode([
-        'title' => $data['projectTitle'],
-        'description' => $data['projectDescription'],
-        'project_type' => $data['projectType'],
-        'category_id' => $data['category_id'],
-        'start_date' => $data['startDate'],
-        'end_date' => $data['dueDate'],
-        'assigned_to' => $data['assignTo']
-    ]);
-    
-    $stmt = $conn->prepare($historyQuery);
-    $stmt->bind_param("isi", $projectId, $historyData, $_SESSION['user_id']);
-    $stmt->execute();
+    error_log('Project created with ID: ' . $projectId);
     
     // Insert stages
     if (!empty($data['stages'])) {
+        error_log('Processing ' . count($data['stages']) . ' stages');
+        
         foreach ($data['stages'] as $stageIndex => $stage) {
-            $stageStartDate = date('Y-m-d H:i:s', strtotime($stage['startDate']));
-            $stageDueDate = date('Y-m-d H:i:s', strtotime($stage['endDate']));
-            
             $stageQuery = "INSERT INTO project_stages (
                 project_id, stage_number, assigned_to, 
                 start_date, end_date, status, created_at
             ) VALUES (?, ?, ?, ?, ?, 'not_started', NOW())";
             
             $stmt = $conn->prepare($stageQuery);
+            if (!$stmt) {
+                throw new Exception("Stage prepare failed: " . $conn->error);
+            }
+            
             $stageNum = $stageIndex + 1;
             $stmt->bind_param("iiiss", 
                 $projectId, 
                 $stageNum,
                 $stage['assignTo'],
-                $stageStartDate,
-                $stageDueDate
+                $stage['startDate'],
+                $stage['endDate']
             );
-            $stmt->execute();
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Stage execute failed: " . $stmt->error);
+            }
+            
             $stageId = $conn->insert_id;
+            error_log("Created stage ID: " . $stageId);
             
-            // Log stage creation in activity log
-            $activityQuery = "INSERT INTO project_activity_log (
-                project_id, stage_id, activity_type, description, 
-                performed_by, performed_at
-            ) VALUES (?, ?, 'create', 'Stage created', ?, NOW())";
-            
-            $stmt = $conn->prepare($activityQuery);
-            $stmt->bind_param("iii", $projectId, $stageId, $_SESSION['user_id']);
-            $stmt->execute();
-            
-            // Insert substages if any
+            // Insert substages
             if (!empty($stage['substages'])) {
+                error_log('Processing ' . count($stage['substages']) . ' substages for stage ' . $stageId);
+                
                 foreach ($stage['substages'] as $substageIndex => $substage) {
+                    // Format dates properly
                     $substageStartDate = date('Y-m-d H:i:s', strtotime($substage['startDate']));
-                    $substageDueDate = date('Y-m-d H:i:s', strtotime($substage['endDate']));
+                    $substageEndDate = date('Y-m-d H:i:s', strtotime($substage['endDate']));
                     
                     $substageQuery = "INSERT INTO project_substages (
-                        stage_id, substage_number, title, assigned_to,
-                        start_date, end_date, status, created_at,
+                        stage_id,
+                        substage_number,
+                        title,
+                        assigned_to,
+                        start_date,
+                        end_date,
+                        status,
+                        created_at,
                         substage_identifier
                     ) VALUES (?, ?, ?, ?, ?, ?, 'not_started', NOW(), ?)";
                     
                     $stmt = $conn->prepare($substageQuery);
+                    if (!$stmt) {
+                        throw new Exception("Substage prepare failed: " . $conn->error);
+                    }
+                    
                     $substageNum = $substageIndex + 1;
                     $identifier = "S{$stageNum}.{$substageNum}";
-                    $stmt->bind_param("iisssss", 
+                    
+                    $stmt->bind_param("iisisss", 
                         $stageId,
                         $substageNum,
                         $substage['title'],
                         $substage['assignTo'],
                         $substageStartDate,
-                        $substageDueDate,
+                        $substageEndDate,
                         $identifier
                     );
-                    $stmt->execute();
-                    $substageId = $conn->insert_id;
                     
-                    // Log substage creation in activity log
-                    $activityQuery = "INSERT INTO project_activity_log (
-                        project_id, stage_id, substage_id, activity_type,
-                        description, performed_by, performed_at
-                    ) VALUES (?, ?, ?, 'create', 'Substage created', ?, NOW())";
+                    if (!$stmt->execute()) {
+                        throw new Exception("Substage execute failed: " . $stmt->error . 
+                            " Query: " . $substageQuery);
+                    }
                     
-                    $stmt = $conn->prepare($activityQuery);
-                    $stmt->bind_param("iiii", 
-                        $projectId, 
-                        $stageId, 
-                        $substageId, 
-                        $_SESSION['user_id']
-                    );
-                    $stmt->execute();
+                    error_log("Created substage with identifier: " . $identifier);
                 }
             }
         }
     }
+    
+    // Log the activity
+    $activityQuery = "INSERT INTO project_activity_log (
+        project_id, activity_type, description, performed_by, performed_at
+    ) VALUES (?, 'create', 'Project created with stages', ?, NOW())";
+    
+    $stmt = $conn->prepare($activityQuery);
+    $stmt->bind_param("ii", $projectId, $_SESSION['user_id']);
+    $stmt->execute();
     
     $conn->commit();
     echo json_encode([
         'status' => 'success', 
         'project_id' => $projectId,
         'debug' => [
-            'start_date' => $data['startDate'],
-            'due_date' => $data['dueDate']
+            'stages_count' => count($data['stages'] ?? []),
+            'project_data' => $data
         ]
     ]);
     
 } catch (Exception $e) {
     $conn->rollback();
     error_log("Error in create_project.php: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
+    
     echo json_encode([
         'status' => 'error',
         'message' => $e->getMessage(),

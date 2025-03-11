@@ -261,38 +261,65 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize project type as disabled
     projectTypeSelect.disabled = true;
 
-    // Add this function to handle form submission
+    // Update the form submission handler
     addProjectForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        // Get the selected category ID from the dropdown
-        const categorySelect = document.getElementById('projectType');
-        const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-        
-        // Get dates directly from inputs
-        const startDateValue = document.getElementById('startDate').value;
-        const dueDateValue = document.getElementById('dueDate').value;
-        
-        // Debug log the raw date values
-        console.log('Raw Start Date:', startDateValue);
-        console.log('Raw Due Date:', dueDateValue);
-        
-        // Collect form data
-        const formData = {
-            projectTitle: document.getElementById('projectTitle').value,
-            projectDescription: document.getElementById('projectDescription').value,
-            projectType: document.getElementById('projectCategory').value,
-            category_id: selectedOption.value,
-            startDate: startDateValue, // Use raw date value
-            dueDate: dueDateValue, // Use raw date value
-            assignTo: document.getElementById('assignTo').value,
-            stages: []
-        };
-        
-        // Debug log the form data
-        console.log('Form Data:', formData);
+        console.log('Form submission started...');
         
         try {
+            // Get all stage containers
+            const stagesWrapper = document.getElementById('stagesWrapper');
+            const stageElements = stagesWrapper.querySelectorAll('.stage-card:not(.substage)');
+            console.log('Found stages:', stageElements.length);
+
+            // Collect form data
+            const formData = {
+                projectTitle: document.getElementById('projectTitle').value,
+                projectDescription: document.getElementById('projectDescription').value,
+                projectType: document.getElementById('projectCategory').value,
+                category_id: parseInt(document.getElementById('projectType').value, 10),
+                startDate: formatDate(document.getElementById('startDate').value),
+                dueDate: formatDate(document.getElementById('dueDate').value),
+                assignTo: parseInt(document.getElementById('assignTo').value, 10),
+                stages: []
+            };
+
+            console.log('Basic form data collected:', formData);
+
+            // Collect stages data
+            stageElements.forEach((stage, index) => {
+                const stageData = {
+                    assignTo: parseInt(stage.querySelector('select[name="assign_to"]').value, 10),
+                    startDate: formatDate(stage.querySelector('input[name="start_date"]').value),
+                    endDate: formatDate(stage.querySelector('input[name="due_date"]').value),
+                    substages: []
+                };
+
+                // Get substages for this stage
+                const substagesWrapper = stage.querySelector('.substages-wrapper');
+                const substageElements = substagesWrapper.querySelectorAll('.substage');
+
+                console.log(`Processing stage ${index + 1}, found ${substageElements.length} substages`);
+
+                // Collect substages data
+                substageElements.forEach((substage, subIndex) => {
+                    const substageData = {
+                        title: substage.querySelector('.substage-title').value,
+                        assignTo: parseInt(substage.querySelector('.substage-assign').value, 10),
+                        startDate: formatDate(substage.querySelector('.substage-start').value),
+                        endDate: formatDate(substage.querySelector('.substage-due').value)
+                    };
+                    stageData.substages.push(substageData);
+                    console.log(`Added substage ${subIndex + 1} to stage ${index + 1}`);
+                });
+
+                formData.stages.push(stageData);
+                console.log(`Added stage ${index + 1} to form data`);
+            });
+
+            console.log('Final form data:', formData);
+
+            // Send data to server
             const response = await fetch('api/create_project.php', {
                 method: 'POST',
                 headers: {
@@ -300,26 +327,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(formData)
             });
-            
+
             const result = await response.json();
-            console.log('Server Response:', result);
-            
+            console.log('Server response:', result);
+
             if (result.status === 'success') {
                 alert('Project created successfully!');
                 closeModal();
-                this.reset();
+                // Reload projects if needed
                 if (typeof loadProjects === 'function') {
                     loadProjects();
                 }
             } else {
                 throw new Error(result.message || 'Failed to create project');
             }
-            
+
         } catch (error) {
             console.error('Form submission error:', error);
-            alert(error.message);
+            alert('Error creating project: ' + error.message);
         }
     });
+
+    // Helper function to format date
+    function formatDate(dateString) {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 19).replace('T', ' ');
+    }
 
     // Validate dates
     const startDateInput = document.getElementById('startDate');
@@ -348,7 +382,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add the new escape key handler
     document.addEventListener('keydown', handleEscape);
 
-    addStageBtn.addEventListener('click', () => {
+    // Replace onclick with event listener
+    document.getElementById('addStageBtn').addEventListener('click', function() {
         stageCount++;
         addNewStage(stageCount);
     });
@@ -357,6 +392,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const stageCard = document.createElement('div');
         stageCard.className = 'stage-card';
         stageCard.id = `stage-${stageNum}`;
+        
+        // Add data attribute to identify as stage
+        stageCard.dataset.type = 'stage';
 
         stageCard.innerHTML = `
             <div class="stage-header">
@@ -375,12 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="stage-form-group">
                 <label>Assign To</label>
                 <select class="form-control" name="assign_to" required>
-                    <option value="">Select Employee</option>
-                    <option value="1">John Doe</option>
-                    <option value="2">Jane Smith</option>
-                    <option value="3">Mike Johnson</option>
-                    <option value="4">Sarah Wilson</option>
-                    <option value="5">Robert Brown</option>
+                    ${document.getElementById('assignTo').innerHTML}
                 </select>
             </div>
             <div class="stage-form-row">
@@ -393,147 +426,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="datetime-local" class="form-control" name="due_date" required>
                 </div>
             </div>
-            <div class="file-attachment-section">
-                <label>Attachments</label>
-                <div class="file-input-wrapper">
-                    <input type="file" class="file-input" multiple style="display: none;">
-                    <button type="button" class="attach-file-btn">
-                        <i class="fas fa-paperclip"></i> Attach Files
-                    </button>
-                </div>
-                <div class="attached-files-list"></div>
-            </div>
             <div class="substages-wrapper" id="substages-${stageNum}"></div>
             <button type="button" class="add-substage-btn" onclick="addSubstage(${stageNum})">
                 <i class="fas fa-plus"></i> Add Substage
             </button>
         `;
 
-        // Add event listeners for main stage assignment changes
-        const assignSelect = stageCard.querySelector('select[name="assign_to"]');
-        assignSelect.addEventListener('change', function() {
-            const stageId = stageCard.id.split('-')[1];
-            updateSubstageAssignments(stageId, this.value, this.options[this.selectedIndex].text);
-        });
+        document.getElementById('stagesWrapper').appendChild(stageCard);
+        console.log(`Added new stage ${stageNum}`);
 
-        // Add existing date event listeners
-        const startInput = stageCard.querySelector('input[name="start_date"]');
-        const dueInput = stageCard.querySelector('input[name="due_date"]');
-
-        // Ensure due date is not before start date
-        startInput.addEventListener('change', function() {
-            if (dueInput.value && this.value > dueInput.value) {
-                dueInput.value = this.value;
-            }
-            // Update all existing substages
-            updateSubstageDates(stageNum);
-        });
-
-        dueInput.addEventListener('change', function() {
-            if (startInput.value && this.value < startInput.value) {
-                startInput.value = this.value;
-            }
-            // Update all existing substages
-            updateSubstageDates(stageNum);
-        });
-
-        stagesWrapper.appendChild(stageCard);
-
-        // Apply category-specific styling if a category is selected
-        const selectedCategory = document.getElementById('projectCategory').value;
-        if (selectedCategory) {
-            applyStageStyles(stageCard, selectedCategory);
+        // Initialize date inputs with project dates
+        const projectStartDate = document.getElementById('startDate').value;
+        const projectDueDate = document.getElementById('dueDate').value;
+        if (projectStartDate) {
+            stageCard.querySelector('input[name="start_date"]').value = projectStartDate;
+        }
+        if (projectDueDate) {
+            stageCard.querySelector('input[name="due_date"]').value = projectDueDate;
         }
 
-        // Add hover effect for the entire stage
-        stageCard.addEventListener('mouseover', function() {
-            this.style.transform = 'translateY(-1px)';
-        });
-
-        stageCard.addEventListener('mouseout', function() {
-            this.style.transform = 'translateY(0)';
-        });
-
-        // Add focus styles for inputs
-        const inputs = stageCard.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.position = 'relative';
-                this.style.backgroundColor = '#fff';
-            });
-
-            input.addEventListener('blur', function() {
-                this.style.backgroundColor = '#f8f9fa';
-            });
-        });
-
-        // Add event listener to update the stage header when title changes
-        const titleInput = stageCard.querySelector('.stage-title-input');
-        const stageHeader = stageCard.querySelector('.stage-title');
-        
-        titleInput.addEventListener('input', function() {
-            const value = this.value.trim() || `Stage ${stageNum}`;
-            stageHeader.textContent = value;
-        });
-
-        // Add file attachment functionality for stage
-        setupFileAttachment(stageCard);
-        
-        // After creating the stage card
-        const mainAssignSelect = document.getElementById('assignTo');
-        if (mainAssignSelect.options.length > 1) { // If users are already loaded
-            populateStageAssign(stageCard);
-        }
+        return stageCard;
     }
 
-    // Function to update all substage dates when main stage dates change
-    function updateSubstageDates(stageNum) {
-        const stage = document.getElementById(`stage-${stageNum}`);
-        const startDate = stage.querySelector('input[name="start_date"]').value;
-        const dueDate = stage.querySelector('input[name="due_date"]').value;
-        
-        if (!startDate || !dueDate) return;
+    // Make sure addStage is globally available
+    window.addStage = function() {
+        stageCount++;
+        addNewStage(stageCount);
+    };
 
-        const substages = stage.querySelectorAll('.substage');
-        substages.forEach(substage => {
-            const substageStart = substage.querySelector('.substage-start');
-            const substageDue = substage.querySelector('.substage-due');
-            
-            // Update min/max constraints
-            substageStart.min = startDate;
-            substageStart.max = dueDate;
-            substageDue.min = startDate;
-            substageDue.max = dueDate;
-
-            // Adjust values if they're outside the new range
-            if (substageStart.value < startDate) substageStart.value = startDate;
-            if (substageDue.value > dueDate) substageDue.value = dueDate;
-        });
-    }
-
-    // Update the delete stage function
+    // Update deleteStage function
     window.deleteStage = function(stageNum) {
         const stage = document.getElementById(`stage-${stageNum}`);
-        stage.remove();
-        
-        // Renumber remaining stages
-        const stages = document.querySelectorAll('.stage-card');
-        stages.forEach((stage, index) => {
-            const stageNumber = index + 1;
-            stage.id = `stage-${stageNumber}`;
-            stage.querySelector('.stage-title').textContent = `Stage ${stageNumber}`;
-            stage.querySelector('.substages-wrapper').id = `substages-${stageNumber}`;
+        if (stage) {
+            stage.remove();
+            console.log(`Deleted stage ${stageNum}`);
             
-            // Update substage button onclick
-            const substageBtn = stage.querySelector('.add-substage-btn');
-            substageBtn.setAttribute('onclick', `addSubstage(${stageNumber})`);
+            // Renumber remaining stages
+            const stages = document.querySelectorAll('.stage-card:not(.substage)');
+            stages.forEach((stage, index) => {
+                const newStageNum = index + 1;
+                stage.id = `stage-${newStageNum}`;
+                stage.querySelector('.stage-title').textContent = `Stage ${newStageNum}`;
+                stage.querySelector('.substages-wrapper').id = `substages-${newStageNum}`;
+                
+                // Update substage button onclick
+                const substageBtn = stage.querySelector('.add-substage-btn');
+                substageBtn.setAttribute('onclick', `addSubstage(${newStageNum})`);
+                
+                // Update delete button onclick
+                const deleteBtn = stage.querySelector('.delete-stage');
+                deleteBtn.setAttribute('onclick', `deleteStage(${newStageNum})`);
+            });
             
-            // Update delete button onclick
-            const deleteBtn = stage.querySelector('.delete-stage');
-            deleteBtn.setAttribute('onclick', `deleteStage(${stageNumber})`);
-        });
-        
-        stageCount = stages.length;
+            stageCount = stages.length;
+            console.log(`Updated stage count: ${stageCount}`);
+        }
     };
 
     // Update the add substage function

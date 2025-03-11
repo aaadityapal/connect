@@ -303,8 +303,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Collect substages data
                 substageElements.forEach((substage, subIndex) => {
+                    const titleSelect = substage.querySelector('.substage-title');
+                    const customTitleInput = substage.querySelector('.custom-title');
                     const substageData = {
-                        title: substage.querySelector('.substage-title').value,
+                        title: titleSelect.value === 'custom' ? 
+                            customTitleInput.value : 
+                            titleSelect.options[titleSelect.selectedIndex].text,
                         assignTo: parseInt(substage.querySelector('.substage-assign').value, 10),
                         startDate: formatDate(substage.querySelector('.substage-start').value),
                         endDate: formatDate(substage.querySelector('.substage-due').value)
@@ -507,8 +511,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const substageElement = document.createElement('div');
         substageElement.className = 'stage-card substage';
         
-        // Create grouped substage title options
-        let substageOptions = '<option value="">Select Substage Title</option>';
+        // Create grouped substage title options with Custom Title option
+        let substageOptions = `
+            <option value="">Select Substage Title</option>
+            <option value="custom">Custom Title</option>
+        `;
+        
         const projectCategory = document.getElementById('projectCategory').value;
         if (projectCategory && substageTypes[projectCategory]) {
             Object.entries(substageTypes[projectCategory]).forEach(([group, options]) => {
@@ -522,7 +530,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Update the substageElement innerHTML
         substageElement.innerHTML = `
             <div class="stage-header">
                 <h4 class="stage-title">Substage ${substageCount}</h4>
@@ -532,9 +539,17 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="stage-form-group">
                 <label>Substage Title</label>
+                <div class="substage-title-container">
                 <select class="form-control substage-title" name="substage_title" required>
                     ${substageOptions}
                 </select>
+                    <div class="custom-title-input" style="display: none;">
+                        <input type="text" class="form-control custom-title" placeholder="Enter custom title">
+                        <button type="button" class="back-to-select">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="stage-form-group">
                 <label>Assign To</label>
@@ -565,19 +580,42 @@ document.addEventListener('DOMContentLoaded', function() {
                         max="${parentDueDate}">
                 </div>
             </div>
-            <div class="file-attachment-section">
-                <label>Attachments</label>
-                <div class="file-input-wrapper">
-                    <input type="file" class="file-input" multiple style="display: none;">
-                    <button type="button" class="attach-file-btn">
-                        <i class="fas fa-paperclip"></i> Attach Files
-                    </button>
-                </div>
-                <div class="attached-files-list"></div>
-            </div>
         `;
         
         substagesWrapper.appendChild(substageElement);
+
+        // Set up custom title functionality
+        const titleSelect = substageElement.querySelector('.substage-title');
+        const customTitleContainer = substageElement.querySelector('.custom-title-input');
+        const customTitleInput = substageElement.querySelector('.custom-title');
+        const backButton = substageElement.querySelector('.back-to-select');
+        const substageHeader = substageElement.querySelector('.stage-title');
+
+        titleSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                this.style.display = 'none';
+                customTitleContainer.style.display = 'flex';
+                customTitleInput.focus();
+            } else if (this.value) {
+                const selectedText = this.options[this.selectedIndex].text;
+                substageHeader.textContent = `Substage ${substageCount} (${selectedText})`;
+            }
+        });
+
+        customTitleInput.addEventListener('input', function() {
+            const customValue = this.value.trim();
+            substageHeader.textContent = customValue ? 
+                `Substage ${substageCount} (${customValue})` : 
+                `Substage ${substageCount}`;
+        });
+
+        backButton.addEventListener('click', function() {
+            titleSelect.style.display = 'block';
+            customTitleContainer.style.display = 'none';
+            titleSelect.value = '';
+            customTitleInput.value = '';
+            substageHeader.textContent = `Substage ${substageCount}`;
+        });
 
         // Set the substage assign value to match parent stage
         const substageAssign = substageElement.querySelector('.substage-assign');
@@ -593,47 +631,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Add CSS class to update substage header based on selected title
-        const substageTitleSelect = substageElement.querySelector('.substage-title');
-        substageTitleSelect.addEventListener('change', function() {
-            const substageHeader = this.closest('.stage-card').querySelector('.stage-title');
-            if (this.value) {
-                const selectedText = this.options[this.selectedIndex].text;
-                substageHeader.textContent = `Substage ${substageCount} (${selectedText})`;
-            } else {
-                substageHeader.textContent = `Substage ${substageCount}`;
-            }
-        });
-
         // Setup date validation for the substage
         setupSubstageDateValidation(substageElement, parentStartDate, parentDueDate);
-
-        // Add file attachment functionality
-        setupFileAttachment(substageElement);
-
-        // Add event listener to parent stage date changes
-        const parentStartInput = parentStage.querySelector('input[name="start_date"]');
-        const parentDueInput = parentStage.querySelector('input[name="due_date"]');
-        
-        parentStartInput.addEventListener('change', function() {
-            const substageStart = substageElement.querySelector('.substage-start');
-            const substageDue = substageElement.querySelector('.substage-due');
-            substageStart.min = this.value;
-            substageDue.min = this.value;
-            if (substageStart.value < this.value) {
-                substageStart.value = this.value;
-            }
-        });
-
-        parentDueInput.addEventListener('change', function() {
-            const substageStart = substageElement.querySelector('.substage-start');
-            const substageDue = substageElement.querySelector('.substage-due');
-            substageStart.max = this.value;
-            substageDue.max = this.value;
-            if (substageDue.value > this.value) {
-                substageDue.value = this.value;
-            }
-        });
     };
 
     // Add this function to handle date validation for substages
@@ -941,6 +940,40 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     document.head.appendChild(fileAttachmentStyles);
+
+    // Add CSS for custom title input
+    const customTitleStyles = document.createElement('style');
+    customTitleStyles.textContent = `
+        .substage-title-container {
+            position: relative;
+        }
+
+        .custom-title-input {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .custom-title {
+            flex: 1;
+        }
+
+        .back-to-select {
+            background: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+                cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-to-select:hover {
+            background: #f8f9fa;
+            border-color: #80bdff;
+        }
+    `;
+    document.head.appendChild(customTitleStyles);
 
     function setupProjectSuggestions() {
         const projectTitleInput = document.getElementById('projectTitle');

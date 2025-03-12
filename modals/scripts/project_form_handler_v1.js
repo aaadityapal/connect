@@ -768,8 +768,8 @@ function updateTitleValue(stageNum, substageCount) {
 const sampleProjects = {
     "Modern Villa Design": {
         type: "architecture",
+        category: "Residential Architecture",
         description: "Luxury villa with contemporary design elements and sustainable features",
-        category: "Commercial Architecture",
         startDate: "2024-03-15T09:00",
         dueDate: "2024-06-15T18:00",
         assignTo: "1",
@@ -922,52 +922,20 @@ function handleProjectTitleInput(input) {
     }
 }
 
-function selectProject(projectName) {
-    console.log("Selecting project:", projectName);
-    const projectData = sampleProjects[projectName];
-    
-    if (!projectData) {
-        console.log("No data found for project:", projectName);
-        return;
+function selectProject(project) {
+    const projectData = sampleProjects[project];
+    if (!projectData) return;
+
+    // Set the project category
+    const categorySelect = document.getElementById('projectCategory');
+    if (categorySelect && projectData.type) {
+        console.log("Setting category to:", projectData.type);
+        categorySelect.value = projectData.type;
+        // Trigger change event to update any dependent fields
+        categorySelect.dispatchEvent(new Event('change'));
     }
 
-    // Get form elements
-    const categorySelect = document.querySelector('select[aria-label="Select Category"]');
-    const startDateInput = document.querySelector('input[placeholder="dd-mm-yyyy --:--"]');
-    const dueDateInput = document.querySelectorAll('input[placeholder="dd-mm-yyyy --:--"]')[1];
-    const assignToSelect = document.querySelector('select[aria-label="Select Team Member"]');
-
-    console.log("Found form elements:", {
-        category: categorySelect,
-        startDate: startDateInput,
-        dueDate: dueDateInput,
-        assignTo: assignToSelect
-    });
-
-    // Fill in the fields
-    if (categorySelect && projectData.category) {
-        categorySelect.value = projectData.category;
-        console.log("Set category to:", projectData.category);
-    }
-
-    if (startDateInput && projectData.startDate) {
-        const startDate = new Date(projectData.startDate);
-        const formattedStartDate = `${startDate.getDate().toString().padStart(2, '0')}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getFullYear()}`;
-        startDateInput.value = formattedStartDate;
-        console.log("Set start date to:", formattedStartDate);
-    }
-
-    if (dueDateInput && projectData.dueDate) {
-        const dueDate = new Date(projectData.dueDate);
-        const formattedDueDate = `${dueDate.getDate().toString().padStart(2, '0')}-${(dueDate.getMonth() + 1).toString().padStart(2, '0')}-${dueDate.getFullYear()}`;
-        dueDateInput.value = formattedDueDate;
-        console.log("Set due date to:", formattedDueDate);
-    }
-
-    if (assignToSelect && projectData.assignTo) {
-        assignToSelect.value = projectData.assignTo;
-        console.log("Set assign to:", projectData.assignTo);
-    }
+    // ... rest of your function ...
 }
 
 // Add this function to initialize autocomplete

@@ -1,0 +1,804 @@
+:root {
+    /* Architecture Theme */
+    --architecture-primary: #2c3e50;
+    --architecture-secondary: #34495e;
+    --architecture-accent: #3498db;
+    
+    /* Interior Theme */
+    --interior-primary: #8e44ad;
+    --interior-secondary: #9b59b6;
+    --interior-accent: #d35400;
+    
+    /* Construction Theme */
+    --construction-primary: #c0392b;
+    --construction-secondary: #e74c3c;
+    --construction-accent: #f39c12;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.modal-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.modal-container {
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active .modal-container {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 24px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+.header-text h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.project-type-label {
+    margin: 4px 0 0;
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Theme Styles */
+.modal-container[data-theme="architecture"] {
+    border-top: 4px solid var(--architecture-accent);
+}
+
+.modal-container[data-theme="architecture"] .modal-header {
+    background: var(--architecture-primary);
+    color: white;
+}
+
+.modal-container[data-theme="interior"] {
+    border-top: 4px solid var(--interior-accent);
+}
+
+.modal-container[data-theme="interior"] .modal-header {
+    background: var(--interior-primary);
+    color: white;
+}
+
+.modal-container[data-theme="construction"] {
+    border-top: 4px solid var(--construction-accent);
+}
+
+.modal-container[data-theme="construction"] .modal-header {
+    background: var(--construction-primary);
+    color: white;
+}
+
+/* Type Selector Styles */
+.type-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.type-option {
+    padding: 16px;
+    border: 2px solid #f0f0f0;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.type-option i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.type-option span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Type Option Theme States */
+.type-option[data-type="architecture"]:hover,
+.type-option[data-type="architecture"].active {
+    border-color: var(--architecture-accent);
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--architecture-primary);
+}
+
+.type-option[data-type="interior"]:hover,
+.type-option[data-type="interior"].active {
+    border-color: var(--interior-accent);
+    background: rgba(142, 68, 173, 0.1);
+    color: var(--interior-primary);
+}
+
+.type-option[data-type="construction"]:hover,
+.type-option[data-type="construction"].active {
+    border-color: var(--construction-accent);
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--construction-primary);
+}
+
+/* Form Styles */
+.modal-form {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #444;
+}
+
+.form-group label i {
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-group textarea {
+    height: 120px;
+    resize: vertical;
+}
+
+/* Theme-based focus states */
+[data-theme="architecture"] .form-group input:focus,
+[data-theme="architecture"] .form-group select:focus,
+[data-theme="architecture"] .form-group textarea:focus {
+    border-color: var(--architecture-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="interior"] .form-group input:focus,
+[data-theme="interior"] .form-group select:focus,
+[data-theme="interior"] .form-group textarea:focus {
+    border-color: var(--interior-accent);
+    box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="construction"] .form-group input:focus,
+[data-theme="construction"] .form-group select:focus,
+[data-theme="construction"] .form-group textarea:focus {
+    border-color: var(--construction-accent);
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+/* Button Styles */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+/* Theme-based button styles */
+[data-theme="architecture"] .btn-primary {
+    background: var(--architecture-accent);
+    color: white;
+}
+
+[data-theme="interior"] .btn-primary {
+    background: var(--interior-accent);
+    color: white;
+}
+
+[data-theme="construction"] .btn-primary {
+    background: var(--construction-accent);
+    color: white;
+}
+
+/* Add more styles as needed */
+
+.close-modal {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.close-modal i {
+    font-size: 18px;
+    color: #333; /* Dark gray by default */
+    transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.close-modal:hover {
+    background: rgba(220, 53, 69, 0.1); /* Light red background */
+}
+
+.close-modal:hover i {
+    color: #dc3545; /* Red color on hover */
+    transform: rotate(90deg); /* Rotation effect */
+}
+
+/* Theme-specific close button styles */
+[data-theme="architecture"] .close-modal {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="architecture"] .close-modal i {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="interior"] .close-modal {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="interior"] .close-modal i {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="construction"] .close-modal {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="construction"] .close-modal i {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Hover states for themed close buttons */
+[data-theme] .close-modal:hover {
+    background: rgba(220, 53, 69, 0.2);
+}
+
+[data-theme] .close-modal:hover i {
+    color: #ff4757; /* Bright red on hover */
+}
+
+.form-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .form-dates {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Stage styles */
+.stages-container {
+    margin-bottom: 20px;
+}
+
+.stage-block {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stage-header h3 {
+    font-size: 16px;
+    color: #495057;
+    margin: 0;
+    font-weight: 500;
+}
+
+.delete-stage {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.delete-stage:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.add-stage-btn {
+    width: 100%;
+    padding: 15px;
+    background: #e9ecef;
+    border: 2px dashed #ced4da;
+    border-radius: 12px;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.add-stage-btn:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.add-stage-btn:active {
+    transform: translateY(0);
+}
+
+.add-stage-btn i {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.add-stage-btn:hover i {
+    transform: rotate(90deg);
+}
+
+/* File input styling */
+.file-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Theme-specific stage styles */
+[data-theme="architecture"] .stage-block {
+    border-left: 4px solid var(--architecture-accent);
+}
+
+[data-theme="interior"] .stage-block {
+    border-left: 4px solid var(--interior-accent);
+}
+
+[data-theme="construction"] .stage-block {
+    border-left: 4px solid var(--construction-accent);
+}
+
+/* Substage styles */
+.substages-container {
+    margin-top: 20px;
+    padding-left: 20px;
+    border-left: 2px dashed #e9ecef;
+}
+
+.substage-block {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.substage-block::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: #e9ecef;
+}
+
+/* Theme-specific connector lines */
+.substage-block.theme-architecture::before {
+    background: var(--architecture-accent);
+}
+
+.substage-block.theme-interior::before {
+    background: var(--interior-accent);
+}
+
+.substage-block.theme-construction::before {
+    background: var(--construction-accent);
+}
+
+/* Inherited field styling */
+.substage-block select[id^="substageAssignTo"],
+.substage-block input[type="datetime-local"] {
+    background-color: #f8f9fa;
+    border-style: dashed;
+}
+
+/* Add a subtle indicator for inherited values */
+.substage-block .form-group label[for^="substageAssignTo"]::after,
+.substage-block .form-group label[for^="substageStartDate"]::after,
+.substage-block .form-group label[for^="substageDueDate"]::after {
+    content: none;
+}
+
+.substage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.substage-header h4 {
+    font-size: 14px;
+    color: #495057;
+    margin: 0;
+    font-weight: 500;
+}
+
+.delete-substage {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.delete-substage:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.add-substage-btn {
+    width: 100%;
+    padding: 12px;
+    background: white;
+    border: 2px dashed #e9ecef;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    margin-top: 16px;
+}
+
+.add-substage-btn:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.add-substage-btn i {
+    font-size: 12px;
+}
+
+/* Theme-specific substage styles */
+[data-theme="architecture"] .substage-block {
+    border-left: 3px solid var(--architecture-accent);
+}
+
+[data-theme="interior"] .substage-block {
+    border-left: 3px solid var(--interior-accent);
+}
+
+[data-theme="construction"] .substage-block {
+    border-left: 3px solid var(--construction-accent);
+}
+
+/* Update assignment info styles */
+.assignment-info {
+    display: none;
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #6c757d;
+}
+
+/* Theme-specific assignment info styles */
+[data-theme="architecture"] .assignment-info {
+    border-left-color: var(--architecture-accent);
+}
+
+[data-theme="interior"] .assignment-info {
+    border-left-color: var(--interior-accent);
+}
+
+[data-theme="construction"] .assignment-info {
+    border-left-color: var(--construction-accent);
+}
+
+/* Update stage assignment note styles to look more informational */
+.stage-assign-note {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 2px solid #adb5bd;
+    font-style: italic;
+}
+
+.stage-assign-note i {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* Theme-specific note styles - making them subtle */
+[data-theme="architecture"] .stage-assign-note {
+    background: rgba(52, 152, 219, 0.05);
+    border-left-color: var(--architecture-accent);
+}
+
+[data-theme="interior"] .stage-assign-note {
+    background: rgba(142, 68, 173, 0.05);
+    border-left-color: var(--interior-accent);
+}
+
+[data-theme="construction"] .stage-assign-note {
+    background: rgba(192, 57, 43, 0.05);
+    border-left-color: var(--construction-accent);
+}
+
+/* Smooth transition */
+.stage-assign-note {
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: translateY(-5px);
+}
+
+.stage-assign-note[style*="display: block"] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.assign-to-group {
+    position: relative;
+}
+
+/* File upload container styles */
+.file-upload-container {
+    border: 2px dashed #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+}
+
+.file-upload-container:hover {
+    border-color: #adb5bd;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.add-file-btn {
+    width: 100%;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #495057;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.add-file-btn:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+}
+
+/* Selected files display */
+.selected-files {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.file-name {
+    font-size: 13px;
+    color: #495057;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.remove-file-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.remove-file-btn:hover {
+    opacity: 1;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* Theme-specific styles */
+[data-theme="architecture"] .file-upload-container {
+    border-color: rgba(52, 152, 219, 0.2);
+}
+
+[data-theme="interior"] .file-upload-container {
+    border-color: rgba(142, 68, 173, 0.2);
+}
+
+[data-theme="construction"] .file-upload-container {
+    border-color: rgba(192, 57, 43, 0.2);
+}
+
+/* File type colors */
+.fa-file-pdf { color: #dc3545; }
+.fa-file-word { color: #0066cc; }
+.fa-file-excel { color: #217346; }
+.fa-file-powerpoint { color: #d24726; }
+.fa-file-image { color: #20c997; }
+.fa-file-archive { color: #ffc107; }
+.fa-file-alt { color: #6c757d; }
+.fa-file { color: #495057; }
+
+/* Distinguish between stage and substage file sections */
+.stage-block > .file-upload-group .file-upload-container {
+    background: #fff;
+}
+
+.substage-block .file-upload-container {
+    background: #f8f9fa;
+    border-style: dashed;
+    border-width: 1px;
+}
+
+.substage-block .file-item {
+    background: #fff;
+}

@@ -22,7 +22,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/modal.css">
+    <link rel="stylesheet" href="modals/styles/project_form_styles_v1.css">
     <style>
         * {
             margin: 0;
@@ -963,7 +963,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             color: #ff6b6b;
         }
 
-        .add-project {
+        .add-project-btn {
             background: #ff6b6b;
             color: white;
             border: none;
@@ -977,7 +977,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             transition: all 0.2s ease;
         }
 
-        .add-project:hover {
+        .add-project-btn:hover {
             background: #ff5252;
         }
 
@@ -1184,7 +1184,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             background: #fff5f5;
         }
 
-        .add-project {
+        .add-project-btn {
             background: #ff6b6b;
             color: white;
             border: none;
@@ -1198,7 +1198,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             transition: all 0.2s ease;
         }
 
-        .add-project:hover {
+        .add-project-btn:hover {
             background: #ff5252;
         }
 
@@ -1264,7 +1264,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             border-color: #ff6b6b;
         }
 
-        .add-project {
+        .add-project-btn {
             background: #ff6b6b;
             color: white;
             border: none;
@@ -1278,7 +1278,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
             transition: all 0.2s ease;
         }
 
-        .add-project:hover {
+        .add-project-btn:hover {
             background: #ff5252;
         }
 
@@ -1308,7 +1308,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                 width: 100%;
             }
 
-            .add-project {
+            .add-project-btn {
                 width: 100%;
                 justify-content: center;
             }
@@ -1565,7 +1565,7 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
                                         </select>
                                         <i class="fas fa-map-marker-alt"></i>
                                     </div>
-                                    <button class="add-project">
+                                    <button class="add-project-btn">
                                         <i class="fas fa-plus"></i> Add Project
                                     </button>
                                 </div>
@@ -1878,8 +1878,8 @@ if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
         <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
     <?php endif; ?>
 
-    <?php include 'add_project_modal.php'; ?>
-    <script src="assets/js/project-modal.js"></script>
+    <?php include 'modals/project_form.php'; ?>
+    <script src="modals/scripts/project_form_handler_v1.js"></script>
 
     <script>
         function toggleSidebar() {

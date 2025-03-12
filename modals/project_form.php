@@ -21,8 +21,15 @@
                     <i class="fas fa-heading"></i>
                     Project Title
                 </label>
-                <input type="text" id="projectTitle" name="projectTitle" required 
-                       placeholder="Enter project title">
+                <div class="autocomplete-wrapper">
+                    <input type="text" 
+                           id="projectTitle" 
+                           name="projectTitle" 
+                           required 
+                           placeholder="Enter project title"
+                           autocomplete="off">
+                    <div class="suggestions-container" id="projectSuggestions"></div>
+                </div>
             </div>
 
             <div class="form-group">

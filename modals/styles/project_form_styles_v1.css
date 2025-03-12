@@ -802,3 +802,165 @@
 .substage-block .file-item {
     background: #fff;
 }
+
+/* Title input styles */
+.title-input-container {
+    position: relative;
+}
+
+.title-dropdown-wrapper,
+.custom-title-wrapper {
+    transition: all 0.3s ease;
+}
+
+.custom-title-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.back-to-dropdown {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.back-to-dropdown:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.custom-title-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.custom-title-input:focus {
+    outline: none;
+    border-color: var(--architecture-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Theme-specific styles */
+[data-theme="architecture"] .custom-title-input:focus {
+    border-color: var(--architecture-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="interior"] .custom-title-input:focus {
+    border-color: var(--interior-accent);
+    box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="construction"] .custom-title-input:focus {
+    border-color: var(--construction-accent);
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+/* Add custom option styling */
+.title-dropdown option[value="custom"] {
+    font-style: italic;
+    color: #666;
+}
+
+/* Animation for switching */
+.title-dropdown-wrapper,
+.custom-title-wrapper {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.title-dropdown-wrapper[style*="display: none"],
+.custom-title-wrapper[style*="display: none"] {
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
+/* Update autocomplete styles */
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.suggestions-container {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+}
+
+.suggestion-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.suggestion-item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:hover {
+    background: #f8f9fa;
+}
+
+.suggestion-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #333;
+    font-size: 14px;
+}
+
+.suggestion-title mark {
+    background: #fff3cd;
+    color: #856404;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.suggestion-type {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #666;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Theme-specific styles */
+[data-theme="architecture"] .suggestion-item:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="interior"] .suggestion-item:hover {
+    background: rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="construction"] .suggestion-item:hover {
+    background: rgba(192, 57, 43, 0.1);
+}
+
+/* Input focus style */
+.autocomplete-wrapper input:focus {
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}

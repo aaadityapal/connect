@@ -211,7 +211,7 @@ function getUserName(userId) {
 // Add helper function to get user name by ID
 function getUserNameById(userId) {
     const user = globalUsers.find(u => u.id === userId);
-    return user ? `${user.username} - ${user.role}` : 'Unknown User';
+    return user ? `${user.username} - ${user.designation}` : 'Unknown User';
 }
 
 function addSubstage(stageNum) {
@@ -221,7 +221,7 @@ function addSubstage(stageNum) {
     
     // Create user options HTML using global users
     const userOptionsHtml = globalUsers.map(user => 
-        `<option value="${user.id}">${user.username} - ${user.role}</option>`
+        `<option value="${user.id}">${user.username} - ${user.designation}</option>`
     ).join('');
     
     const projectType = document.querySelector('.modal-container').dataset.theme;
@@ -322,7 +322,7 @@ function addSubstage(stageNum) {
                 <option value="">Select Team Member</option>
                 ${userOptionsHtml}
             </select>
-            <div class="stage-assign-note" style="display: none;">
+            <div class="stage-assign-note" style="display: ${parentAssignTo ? 'block' : 'none'};">
                 <i class="fas fa-info-circle"></i>
                 *The stage is assigned to ${parentUserName}
             </div>
@@ -360,6 +360,12 @@ function addSubstage(stageNum) {
     
     substagesContainer.appendChild(newSubstage);
     
+    // Set the default value to match the stage's assigned user
+    const assignSelect = newSubstage.querySelector(`#substageAssignTo${stageNum}_${substageCount}`);
+    if (assignSelect && parentAssignTo) {
+        assignSelect.value = parentAssignTo;
+    }
+    
     setTimeout(() => {
         newSubstage.style.opacity = '1';
         newSubstage.style.transform = 'translateY(0)';
@@ -368,7 +374,37 @@ function addSubstage(stageNum) {
     newSubstage.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
-// Add this new function to handle assignment changes
+// Add this function to handle stage assignment changes
+function handleStageAssignChange(stageNum) {
+    const stage = document.querySelector(`.stage-block[data-stage="${stageNum}"]`);
+    const stageAssignSelect = document.getElementById(`assignTo${stageNum}`);
+    const substages = stage.querySelectorAll('.substage-block');
+    
+    const assignedUserName = getUserNameById(stageAssignSelect.value);
+    
+    substages.forEach(substage => {
+        const substageNum = substage.dataset.substage;
+        const assignNote = substage.querySelector('.stage-assign-note');
+        const substageAssignSelect = substage.querySelector(`#substageAssignTo${stageNum}_${substageNum}`);
+        
+        if (stageAssignSelect.value) {
+            assignNote.innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                *The stage is assigned to ${assignedUserName}
+            `;
+            assignNote.style.display = 'block';
+            
+            // Optionally, update substage assignment to match stage
+            if (substageAssignSelect && !substageAssignSelect.value) {
+                substageAssignSelect.value = stageAssignSelect.value;
+            }
+        } else {
+            assignNote.style.display = 'none';
+        }
+    });
+}
+
+// Update the handleSubstageAssignChange function
 function handleSubstageAssignChange(selectElement) {
     const substageBlock = selectElement.closest('.substage-block');
     const stageBlock = substageBlock.closest('.stage-block');
@@ -551,7 +587,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </label>
                 <select id="assignTo${stageCount}" name="stages[${stageCount}][assignTo]" required>
                         <option value="">Select Team Member</option>
-                        ${globalUsers.map(user => `<option value="${user.id}">${user.username} - ${user.role }</option>`).join('')}
+                        ${globalUsers.map(user => `<option value="${user.id}">${user.username} - ${user.role  }</option>`).join('')}
                 </select>
             </div>
             <div class="form-dates">
@@ -1014,6 +1050,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         const users = await fetchUsers();
         populateUserDropdowns(users);
 
+    // Add event listeners for stage assignment changes
+    document.querySelectorAll('[id^="assignTo"]').forEach(select => {
+        select.addEventListener('change', function() {
+            const stageNum = this.id.replace('assignTo', '');
+            handleStageAssignChange(stageNum);
+        });
+    });
+
     } catch (error) {
         console.error('Error initializing form:', error);
         showNotification('Error loading form data', 'error');
@@ -1172,7 +1216,7 @@ function populateUserDropdowns(users) {
     
     // Create options for each user
     const userOptions = users.map(user => 
-        `<option value="${user.id}">${user.username} - ${user.role}</option>`
+        `<option value="${user.id}">${user.username} - ${user.designation}</option>`
     ).join('');
     
     // Populate all assign-to selects

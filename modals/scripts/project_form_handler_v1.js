@@ -14,6 +14,10 @@ let currentUser = null;
 // Replace the sampleProjects object with a function to fetch real projects
 let globalProjects = [];
 
+// Add a variable to track if we're editing a project
+let isEditMode = false;
+let currentProjectId = null;
+
 // Function to fetch project suggestions
 async function fetchProjectSuggestions() {
     try {
@@ -465,6 +469,85 @@ function validateCategoryData() {
     });
 }
 
+// Move these functions outside of DOMContentLoaded event listener
+// Add these functions for handling stage and substage files
+async function getStageFiles(stageNum) {
+    try {
+        const fileInput = document.getElementById(`stageFileInput_${stageNum}`);
+        if (!fileInput || !fileInput.files) {
+            return [];
+        }
+        return await processFiles(fileInput.files);
+    } catch (error) {
+        console.error('Error getting stage files:', error);
+        return [];
+    }
+}
+
+async function getSubstageFiles(stageNum, substageNum) {
+    try {
+        const fileInput = document.getElementById(`substageFileInput_${stageNum}_${substageNum}`);
+        if (!fileInput || !fileInput.files) {
+            return [];
+        }
+        return await processFiles(fileInput.files);
+    } catch (error) {
+        console.error('Error getting substage files:', error);
+        return [];
+    }
+}
+
+async function processFiles(files) {
+    const processedFiles = [];
+    if (!files || files.length === 0) return processedFiles;
+
+    for (const file of files) {
+        try {
+            const uploadedFile = await uploadFile(file);
+            processedFiles.push({
+                name: file.name,
+                path: uploadedFile.path || '',
+                originalName: file.name,
+                type: file.type,
+                size: file.size
+            });
+        } catch (error) {
+            console.error('Error processing file:', file.name, error);
+        }
+    }
+    return processedFiles;
+}
+
+async function uploadFile(file) {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('api/upload_files.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Failed to upload file');
+        }
+        
+        return {
+            path: result.file_path,
+            status: 'success'
+        };
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        return {
+            path: '',
+            status: 'error',
+            error: error.message
+        };
+    }
+}
+
 // Update the DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', async function() {
     try {
@@ -581,7 +664,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const userOptionsHtml = globalUsers.map(user => 
             `<option value="${user.id}">${user.username} - ${user.designation}</option>`
         ).join('');
-
+        
         newStage.innerHTML = `
             <div class="stage-header">
                 <h3>Stage ${stageCount}</h3>
@@ -687,8 +770,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     function closeModal(e) {
         if (e) e.preventDefault();
         
-        // Add closing animation
-        modal.classList.remove('active');
+        // Reset edit mode
+        isEditMode = false;
+        currentProjectId = null;
+        
+        // Reset form button and title
+        const submitBtn = document.querySelector('#createProjectForm button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Project';
+        document.querySelector('.modal-header h2').textContent = 'Create New Project';
         
         // Reset form after animation completes
         setTimeout(() => {
@@ -764,17 +853,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         const originalBtnText = submitBtn.innerHTML;
         
         try {
-            // First create the project
-            const projectData = await createProject(e);
-            
-            if (!projectData.project_id) {
-                throw new Error('No project ID returned');
+            if (isEditMode && currentProjectId) {
+                // Update existing project
+                await updateProject(e, currentProjectId);
+                showNotification('Project updated successfully!', 'success');
+            } else {
+                // Create new project
+                const projectData = await createProject(e);
+                
+                if (!projectData.project_id) {
+                    throw new Error('No project ID returned');
+                }
+                
+                // Create stages and substages
+                await createStagesAndSubstages(projectData.project_id);
+                showNotification('Project created successfully!', 'success');
             }
             
-            // Then create stages and substages
-            await createStagesAndSubstages(projectData.project_id);
-            
-            showNotification('Project created successfully!', 'success');
         closeModal();
             
         } catch (error) {
@@ -876,49 +971,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         return result;
-    }
-
-    // Helper functions for file handling
-    async function getStageFiles(stageNum) {
-        const fileInput = document.getElementById(`stageFileInput_${stageNum}`);
-        return await processFiles(fileInput.files);
-    }
-
-    async function getSubstageFiles(stageNum, substageNum) {
-        const fileInput = document.getElementById(`substageFileInput_${stageNum}_${substageNum}`);
-        return await processFiles(fileInput.files);
-    }
-
-    async function processFiles(files) {
-        const processedFiles = [];
-        for (const file of files) {
-            processedFiles.push({
-                name: file.name,
-                path: await uploadFile(file),
-                originalName: file.name,
-                type: file.type,
-                size: file.size
-            });
-        }
-        return processedFiles;
-    }
-
-    async function uploadFile(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        const response = await fetch('api/upload_files.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.status !== 'success') {
-            throw new Error('Failed to upload file');
-        }
-        
-        return result.file_path;
     }
 
     // Add notification function
@@ -1296,6 +1348,15 @@ async function selectProject(projectId) {
     }
     
     try {
+        // Set edit mode
+        isEditMode = true;
+        currentProjectId = numericId;
+        
+        // Update form button and title
+        const submitBtn = document.querySelector('#createProjectForm button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Project';
+        document.querySelector('.modal-header h2').textContent = 'Edit Project';
+        
         console.log('Loading project:', project); // Debug log
 
         // Fill basic project details
@@ -1311,7 +1372,7 @@ async function selectProject(projectId) {
             // Wait for category options to be populated
             setTimeout(() => {
                 // Set project category
-                const categorySelect = document.getElementById('projectCategory');
+    const categorySelect = document.getElementById('projectCategory');
                 if (categorySelect) {
                     console.log('Setting category:', project.category_id); // Debug log
                     categorySelect.value = project.category_id;
@@ -1343,49 +1404,49 @@ async function selectProject(projectId) {
         }
 
         // Clear existing stages
-        const stagesContainer = document.getElementById('stagesContainer');
-        stagesContainer.innerHTML = '';
-
+    const stagesContainer = document.getElementById('stagesContainer');
+    stagesContainer.innerHTML = '';
+    
         // Add stages if they exist
         if (project.stages && project.stages.length > 0) {
-            project.stages.forEach((stageData, index) => {
-                // Click add stage button to create new stage
-                document.getElementById('addStageBtn').click();
-                
-                const stageNum = index + 1;
-                const stageBlock = stagesContainer.lastElementChild;
-                
-                if (stageBlock) {
-                    // Fill stage details
-                    const assignSelect = stageBlock.querySelector(`#assignTo${stageNum}`);
-                    const startDateInput = stageBlock.querySelector(`#startDate${stageNum}`);
-                    const dueDateInput = stageBlock.querySelector(`#dueDate${stageNum}`);
+    project.stages.forEach((stageData, index) => {
+        // Click add stage button to create new stage
+        document.getElementById('addStageBtn').click();
+        
+        const stageNum = index + 1;
+        const stageBlock = stagesContainer.lastElementChild;
+        
+        if (stageBlock) {
+            // Fill stage details
+            const assignSelect = stageBlock.querySelector(`#assignTo${stageNum}`);
+            const startDateInput = stageBlock.querySelector(`#startDate${stageNum}`);
+            const dueDateInput = stageBlock.querySelector(`#dueDate${stageNum}`);
 
                     if (assignSelect) assignSelect.value = stageData.assigned_to;
                     if (startDateInput) startDateInput.value = formatDateForInput(stageData.start_date);
                     if (dueDateInput) dueDateInput.value = formatDateForInput(stageData.end_date);
 
                     // Add substages if they exist
-                    if (stageData.substages && stageData.substages.length > 0) {
-                        stageData.substages.forEach(substageData => {
-                            const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
-                            if (addSubstageBtn) {
-                                addSubstageBtn.click();
-                                
+            if (stageData.substages && stageData.substages.length > 0) {
+                stageData.substages.forEach(substageData => {
+                    const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
+                    if (addSubstageBtn) {
+                        addSubstageBtn.click();
+
                                 const substagesContainer = stageBlock.querySelector('.substages-container');
                                 const substageBlock = substagesContainer.lastElementChild;
                                 
-                                if (substageBlock) {
-                                    const titleSelect = substageBlock.querySelector('select[id^="substageTitle"]');
-                                    const assignSelect = substageBlock.querySelector('select[id^="substageAssignTo"]');
-                                    const startDateInput = substageBlock.querySelector('input[id^="substageStartDate"]');
-                                    const dueDateInput = substageBlock.querySelector('input[id^="substageDueDate"]');
+                        if (substageBlock) {
+                            const titleSelect = substageBlock.querySelector('select[id^="substageTitle"]');
+                            const assignSelect = substageBlock.querySelector('select[id^="substageAssignTo"]');
+                            const startDateInput = substageBlock.querySelector('input[id^="substageStartDate"]');
+                            const dueDateInput = substageBlock.querySelector('input[id^="substageDueDate"]');
 
-                                    if (titleSelect) {
+                            if (titleSelect) {
                                         // Handle custom titles
                                         if (titleSelect.querySelector(`option[value="${substageData.title}"]`)) {
                                             titleSelect.value = substageData.title;
-                                        } else {
+                                } else {
                                             // Create custom option
                                             const customOption = document.createElement('option');
                                             customOption.value = substageData.title;
@@ -1399,6 +1460,26 @@ async function selectProject(projectId) {
                                     if (startDateInput) startDateInput.value = formatDateForInput(substageData.start_date);
                                     if (dueDateInput) dueDateInput.value = formatDateForInput(substageData.end_date);
                                 }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // Add stage and substage IDs to the elements
+        if (project.stages && project.stages.length > 0) {
+            project.stages.forEach((stageData, index) => {
+                const stageBlock = stagesContainer.lastElementChild;
+                if (stageBlock) {
+                    stageBlock.dataset.stageId = stageData.id;
+                    
+                    // Add substage IDs
+                    if (stageData.substages && stageData.substages.length > 0) {
+                        stageData.substages.forEach(substageData => {
+                            const substageBlock = stageBlock.querySelector(`.substage-block[data-substage="${substageData.substage_number}"]`);
+                            if (substageBlock) {
+                                substageBlock.dataset.substageId = substageData.id;
                             }
                         });
                     }
@@ -1508,4 +1589,85 @@ function handleInput(e) {
     } else {
         suggestionsContainer.style.display = 'none';
     }
+}
+
+// Add function to update existing project
+async function updateProject(e, projectId) {
+    try {
+        const form = e.target;
+        
+        const projectData = {
+            projectId: projectId,
+            projectTitle: form.querySelector('#projectTitle').value,
+            projectDescription: form.querySelector('#projectDescription').value,
+            projectType: form.querySelector('#projectType').value,
+            projectCategory: form.querySelector('#projectCategory').value,
+            startDate: form.querySelector('#startDate').value,
+            dueDate: form.querySelector('#dueDate').value,
+            assignTo: form.querySelector('#assignTo').value,
+            stages: await getStagesData()
+        };
+
+        console.log('Updating project with data:', projectData); // Debug log
+
+        const response = await fetch('api/update_project.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectData)
+        });
+
+        const result = await response.json();
+        
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Failed to update project');
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Error in updateProject:', error);
+        throw error;
+    }
+}
+
+// Function to get all stages data
+async function getStagesData() {
+    const stages = [];
+    const stageBlocks = document.querySelectorAll('.stage-block');
+    
+    for (const stageBlock of stageBlocks) {
+        const stageNum = stageBlock.dataset.stage;
+        const stageId = stageBlock.dataset.stageId || null; // For existing stages
+        
+        const stageData = {
+            id: stageId,
+            assignTo: document.getElementById(`assignTo${stageNum}`).value,
+            startDate: document.getElementById(`startDate${stageNum}`).value,
+            dueDate: document.getElementById(`dueDate${stageNum}`).value,
+            files: await getStageFiles(stageNum),
+            substages: []
+        };
+        
+        // Get substages
+        const substageBlocks = stageBlock.querySelectorAll('.substage-block');
+        for (const substageBlock of substageBlocks) {
+            const substageNum = substageBlock.dataset.substage;
+            const substageId = substageBlock.dataset.substageId || null; // For existing substages
+            
+            const substageData = {
+                id: substageId,
+                title: document.getElementById(`substageTitle${stageNum}_${substageNum}`).value,
+                assignTo: document.getElementById(`substageAssignTo${stageNum}_${substageNum}`).value,
+                startDate: document.getElementById(`substageStartDate${stageNum}_${substageNum}`).value,
+                dueDate: document.getElementById(`substageDueDate${stageNum}_${substageNum}`).value,
+                files: await getSubstageFiles(stageNum, substageNum)
+            };
+            stageData.substages.push(substageData);
+        }
+        
+        stages.push(stageData);
+    }
+    
+    return stages;
 }

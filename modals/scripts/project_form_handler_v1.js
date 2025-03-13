@@ -377,7 +377,11 @@ function addSubstage(stageNum) {
 // Add this function to handle stage assignment changes
 function handleStageAssignChange(stageNum) {
     const stage = document.querySelector(`.stage-block[data-stage="${stageNum}"]`);
+    if (!stage) return; // Add safety check
+
     const stageAssignSelect = document.getElementById(`assignTo${stageNum}`);
+    if (!stageAssignSelect) return; // Add safety check
+
     const substages = stage.querySelectorAll('.substage-block');
     
     const assignedUserName = getUserNameById(stageAssignSelect.value);
@@ -387,7 +391,7 @@ function handleStageAssignChange(stageNum) {
         const assignNote = substage.querySelector('.stage-assign-note');
         const substageAssignSelect = substage.querySelector(`#substageAssignTo${stageNum}_${substageNum}`);
         
-        if (stageAssignSelect.value) {
+        if (stageAssignSelect.value && assignNote) {
             assignNote.innerHTML = `
                 <i class="fas fa-info-circle"></i>
                 *The stage is assigned to ${assignedUserName}
@@ -398,7 +402,7 @@ function handleStageAssignChange(stageNum) {
             if (substageAssignSelect && !substageAssignSelect.value) {
                 substageAssignSelect.value = stageAssignSelect.value;
             }
-        } else {
+        } else if (assignNote) {
             assignNote.style.display = 'none';
         }
     });
@@ -573,6 +577,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         newStage.className = 'stage-block';
         newStage.dataset.stage = stageCount;
         
+        // Create user options HTML using global users
+        const userOptionsHtml = globalUsers.map(user => 
+            `<option value="${user.id}">${user.username} - ${user.designation}</option>`
+        ).join('');
+
         newStage.innerHTML = `
             <div class="stage-header">
                 <h3>Stage ${stageCount}</h3>
@@ -585,9 +594,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <i class="fas fa-user-plus"></i>
                     Assign To
                 </label>
-                <select id="assignTo${stageCount}" name="stages[${stageCount}][assignTo]" required>
-                        <option value="">Select Team Member</option>
-                        ${globalUsers.map(user => `<option value="${user.id}">${user.username} - ${user.role  }</option>`).join('')}
+                <select id="assignTo${stageCount}" 
+                        name="stages[${stageCount}][assignTo]" 
+                        onchange="handleStageAssignChange(${stageCount})" 
+                        required>
+                    <option value="">Select Team Member</option>
+                    ${userOptionsHtml}
                 </select>
             </div>
             <div class="form-dates">

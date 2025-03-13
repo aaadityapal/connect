@@ -211,7 +211,7 @@ function getUserName(userId) {
 // Add helper function to get user name by ID
 function getUserNameById(userId) {
     const user = globalUsers.find(u => u.id === userId);
-    return user ? `${user.username} - ${user.designation}` : 'Unknown User';
+    return user ? `${user.username} - ${user.role}` : 'Unknown User';
 }
 
 function addSubstage(stageNum) {
@@ -221,7 +221,7 @@ function addSubstage(stageNum) {
     
     // Create user options HTML using global users
     const userOptionsHtml = globalUsers.map(user => 
-        `<option value="${user.id}">${user.username} - ${user.designation}</option>`
+        `<option value="${user.id}">${user.username} - ${user.role}</option>`
     ).join('');
     
     const projectType = document.querySelector('.modal-container').dataset.theme;
@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </label>
                 <select id="assignTo${stageCount}" name="stages[${stageCount}][assignTo]" required>
                         <option value="">Select Team Member</option>
-                        ${globalUsers.map(user => `<option value="${user.id}">${user.username} - ${user.designation}</option>`).join('')}
+                        ${globalUsers.map(user => `<option value="${user.id}">${user.username} - ${user.role }</option>`).join('')}
                 </select>
             </div>
             <div class="form-dates">

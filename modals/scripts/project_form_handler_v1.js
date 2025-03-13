@@ -1311,7 +1311,7 @@ async function selectProject(projectId) {
             // Wait for category options to be populated
             setTimeout(() => {
                 // Set project category
-    const categorySelect = document.getElementById('projectCategory');
+                const categorySelect = document.getElementById('projectCategory');
                 if (categorySelect) {
                     console.log('Setting category:', project.category_id); // Debug log
                     categorySelect.value = project.category_id;
@@ -1322,7 +1322,7 @@ async function selectProject(projectId) {
                         categorySelect.value = project.category_id.toString();
                     }
                 }
-            }, 300); // Increased timeout to ensure categories are loaded
+            }, 100);
         }
         
         // Set dates
@@ -1340,6 +1340,70 @@ async function selectProject(projectId) {
         const assignToSelect = document.getElementById('assignTo');
         if (assignToSelect && project.assigned_to) {
             assignToSelect.value = project.assigned_to;
+        }
+
+        // Clear existing stages
+        const stagesContainer = document.getElementById('stagesContainer');
+        stagesContainer.innerHTML = '';
+
+        // Add stages if they exist
+        if (project.stages && project.stages.length > 0) {
+            project.stages.forEach((stageData, index) => {
+                // Click add stage button to create new stage
+                document.getElementById('addStageBtn').click();
+                
+                const stageNum = index + 1;
+                const stageBlock = stagesContainer.lastElementChild;
+                
+                if (stageBlock) {
+                    // Fill stage details
+                    const assignSelect = stageBlock.querySelector(`#assignTo${stageNum}`);
+                    const startDateInput = stageBlock.querySelector(`#startDate${stageNum}`);
+                    const dueDateInput = stageBlock.querySelector(`#dueDate${stageNum}`);
+
+                    if (assignSelect) assignSelect.value = stageData.assigned_to;
+                    if (startDateInput) startDateInput.value = formatDateForInput(stageData.start_date);
+                    if (dueDateInput) dueDateInput.value = formatDateForInput(stageData.end_date);
+
+                    // Add substages if they exist
+                    if (stageData.substages && stageData.substages.length > 0) {
+                        stageData.substages.forEach(substageData => {
+                            const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
+                            if (addSubstageBtn) {
+                                addSubstageBtn.click();
+                                
+                                const substagesContainer = stageBlock.querySelector('.substages-container');
+                                const substageBlock = substagesContainer.lastElementChild;
+                                
+                                if (substageBlock) {
+                                    const titleSelect = substageBlock.querySelector('select[id^="substageTitle"]');
+                                    const assignSelect = substageBlock.querySelector('select[id^="substageAssignTo"]');
+                                    const startDateInput = substageBlock.querySelector('input[id^="substageStartDate"]');
+                                    const dueDateInput = substageBlock.querySelector('input[id^="substageDueDate"]');
+
+                                    if (titleSelect) {
+                                        // Handle custom titles
+                                        if (titleSelect.querySelector(`option[value="${substageData.title}"]`)) {
+                                            titleSelect.value = substageData.title;
+                                        } else {
+                                            // Create custom option
+                                            const customOption = document.createElement('option');
+                                            customOption.value = substageData.title;
+                                            customOption.textContent = substageData.title;
+                                            customOption.dataset.custom = 'true';
+                                            titleSelect.insertBefore(customOption, titleSelect.querySelector('option[value="custom"]'));
+                                            titleSelect.value = substageData.title;
+                                        }
+                                    }
+                                    if (assignSelect) assignSelect.value = substageData.assigned_to;
+                                    if (startDateInput) startDateInput.value = formatDateForInput(substageData.start_date);
+                                    if (dueDateInput) dueDateInput.value = formatDateForInput(substageData.end_date);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
         }
 
     } catch (error) {

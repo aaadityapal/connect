@@ -8,6 +8,7 @@ header('Content-Type: application/json');
 require_once '../config/db_connect.php';
 
 try {
+    // First get projects with basic info
     $query = "SELECT 
         p.id,
         p.title,
@@ -29,8 +30,83 @@ try {
     $stmt->execute();
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Add debug logging
-    error_log('Fetched projects: ' . json_encode($projects));
+    // For each project, get its stages and substages
+    foreach ($projects as &$project) {
+        // Get stages
+        $stageQuery = "SELECT 
+            id,
+            stage_number,
+            assigned_to,
+            start_date,
+            end_date,
+            status
+        FROM project_stages 
+        WHERE project_id = :project_id 
+        AND deleted_at IS NULL 
+        ORDER BY stage_number";
+        
+        $stageStmt = $pdo->prepare($stageQuery);
+        $stageStmt->execute([':project_id' => $project['id']]);
+        $stages = $stageStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // For each stage, get its substages and files
+        foreach ($stages as &$stage) {
+            // Get substages
+            $substageQuery = "SELECT 
+                id,
+                substage_number,
+                title,
+                assigned_to,
+                start_date,
+                end_date,
+                status,
+                substage_identifier
+            FROM project_substages 
+            WHERE stage_id = :stage_id 
+            AND deleted_at IS NULL 
+            ORDER BY substage_number";
+            
+            $substageStmt = $pdo->prepare($substageQuery);
+            $substageStmt->execute([':stage_id' => $stage['id']]);
+            $stage['substages'] = $substageStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get stage files
+            $stageFileQuery = "SELECT 
+                id,
+                file_name,
+                file_path,
+                original_name,
+                file_type,
+                file_size
+            FROM stage_files 
+            WHERE stage_id = :stage_id";
+            
+            $stageFileStmt = $pdo->prepare($stageFileQuery);
+            $stageFileStmt->execute([':stage_id' => $stage['id']]);
+            $stage['files'] = $stageFileStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get substage files
+            foreach ($stage['substages'] as &$substage) {
+                $substageFileQuery = "SELECT 
+                    id,
+                    file_name,
+                    file_path,
+                    type
+                FROM substage_files 
+                WHERE substage_id = :substage_id 
+                AND deleted_at IS NULL";
+                
+                $substageFileStmt = $pdo->prepare($substageFileQuery);
+                $substageFileStmt->execute([':substage_id' => $substage['id']]);
+                $substage['files'] = $substageFileStmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            unset($substage); // Clear reference
+        }
+        unset($stage); // Clear reference
+        
+        $project['stages'] = $stages;
+    }
+    unset($project); // Clear reference
     
     echo json_encode([
         'status' => 'success',

@@ -1,45 +1,37 @@
 <?php
-require_once '../config/db_connect.php';
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 header('Content-Type: application/json');
 
+require_once '../config/db_connect.php';
+
 try {
-    // Get parent categories (main types)
-    $mainQuery = "SELECT * FROM project_categories WHERE parent_id IS NULL ORDER BY id";
-    $mainResult = $conn->query($mainQuery);
+    $query = "SELECT 
+        id,
+        name,
+        description,
+        parent_id
+    FROM project_categories 
+    WHERE deleted_at IS NULL 
+    ORDER BY id ASC";
     
-    $categories = [];
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    while ($mainCategory = $mainResult->fetch_assoc()) {
-        // Get subcategories for each main category
-        $subQuery = "SELECT * FROM project_categories WHERE parent_id = ? ORDER BY id";
-        $stmt = $conn->prepare($subQuery);
-        $stmt->bind_param("i", $mainCategory['id']);
-        $stmt->execute();
-        $subResult = $stmt->get_result();
-        
-        $subcategories = [];
-        while ($subCategory = $subResult->fetch_assoc()) {
-            $subcategories[] = [
-                'id' => $subCategory['id'],
-                'name' => $subCategory['name'],
-                'description' => $subCategory['description']
-            ];
-        }
-        
-        $categories[] = [
-            'id' => $mainCategory['id'],
-            'name' => $mainCategory['name'],
-            'description' => $mainCategory['description'],
-            'subcategories' => $subcategories
-        ];
-    }
-    
-    echo json_encode(['status' => 'success', 'data' => $categories]);
+    echo json_encode([
+        'status' => 'success',
+        'data' => $categories
+    ]);
     
 } catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Failed to fetch categories: ' . $e->getMessage()
+    ]);
 }
-
-$conn->close();
-?> 
+exit;
+?>

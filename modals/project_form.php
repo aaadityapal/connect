@@ -98,10 +98,7 @@
                 </label>
                 <select id="assignTo" name="assignTo" required>
                     <option value="">Select Team Member</option>
-                    <option value="1">John Smith</option>
-                    <option value="2">Sarah Johnson</option>
-                    <option value="3">Mike Anderson</option>
-                    <!-- Add more team members as needed -->
+                    <!-- Users will be populated dynamically -->
                 </select>
             </div>
 
@@ -124,3 +121,6 @@
         </form>
     </div>
 </div>
+
+<!-- Toast container should be outside the modal -->
+<div id="toastContainer" class="toast-container"></div>

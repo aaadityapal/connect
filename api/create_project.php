@@ -1,169 +1,148 @@
 <?php
 session_start();
-require_once '../config/db_connect.php';
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 header('Content-Type: application/json');
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'User not authenticated'
-    ]);
-    exit;
-}
+require_once '../config/db_connect.php';
 
 try {
-    $conn->begin_transaction();
-    
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('User not logged in');
+    }
+
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
     
     // Debug log
-    error_log('Received data: ' . print_r($data, true));
+    error_log('Received project data: ' . json_encode($data));
     
-    // Validate dates
-    if (empty($data['startDate'])) {
-        throw new Exception('Start date is required');
+    // Validate category ID
+    if (empty($data['projectCategory'])) {
+        throw new Exception('Category ID is required');
+    }
+
+    // Verify user exists and is active
+    $userQuery = "SELECT id FROM users WHERE id = :user_id AND status = 'active'";
+    $stmt = $pdo->prepare($userQuery);
+    $stmt->execute([':user_id' => $_SESSION['user_id']]);
+    
+    if (!$stmt->fetch()) {
+        throw new Exception('Invalid user');
     }
     
-    // Insert project
+    // Start transaction
+    $pdo->beginTransaction();
+    
+    // Insert into projects table
     $projectQuery = "INSERT INTO projects (
-        title, description, project_type, category_id, 
-        start_date, end_date, created_by, assigned_to, 
-        status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not_started', NOW())";
+        title, 
+        description, 
+        project_type, 
+        category_id, 
+        start_date, 
+        end_date, 
+        created_by, 
+        assigned_to, 
+        status,
+        created_at
+    ) VALUES (
+        :title,
+        :description,
+        :project_type,
+        :category_id,
+        :start_date,
+        :end_date,
+        :created_by,
+        :assigned_to,
+        'pending',
+        NOW()
+    )";
     
-    $stmt = $conn->prepare($projectQuery);
-    $stmt->bind_param("sssiisii", 
-        $data['projectTitle'],
-        $data['projectDescription'],
-        $data['projectType'],
-        $data['category_id'],
-        $data['startDate'],
-        $data['dueDate'],
-        $_SESSION['user_id'],
-        $data['assignTo']
-    );
-    
-    $stmt->execute();
-    $projectId = $conn->insert_id;
-    error_log('Project created with ID: ' . $projectId);
-    
-    // Insert stages
-    if (!empty($data['stages'])) {
-        error_log('Processing ' . count($data['stages']) . ' stages');
-        
-        foreach ($data['stages'] as $stageIndex => $stage) {
-            $stageQuery = "INSERT INTO project_stages (
-                project_id, stage_number, assigned_to, 
-                start_date, end_date, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, 'not_started', NOW())";
-            
-            $stmt = $conn->prepare($stageQuery);
-            if (!$stmt) {
-                throw new Exception("Stage prepare failed: " . $conn->error);
-            }
-            
-            $stageNum = $stageIndex + 1;
-            $stmt->bind_param("iiiss", 
-                $projectId, 
-                $stageNum,
-                $stage['assignTo'],
-                $stage['startDate'],
-                $stage['endDate']
-            );
-            
-            if (!$stmt->execute()) {
-                throw new Exception("Stage execute failed: " . $stmt->error);
-            }
-            
-            $stageId = $conn->insert_id;
-            error_log("Created stage ID: " . $stageId);
-            
-            // Insert substages
-            if (!empty($stage['substages'])) {
-                error_log('Processing ' . count($stage['substages']) . ' substages for stage ' . $stageId);
-                
-                foreach ($stage['substages'] as $substageIndex => $substage) {
-                    // Format dates properly
-                    $substageStartDate = date('Y-m-d H:i:s', strtotime($substage['startDate']));
-                    $substageEndDate = date('Y-m-d H:i:s', strtotime($substage['endDate']));
-                    
-                    $substageQuery = "INSERT INTO project_substages (
-                        stage_id,
-                        substage_number,
-                        title,
-                        assigned_to,
-                        start_date,
-                        end_date,
-                        status,
-                        created_at,
-                        substage_identifier
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'not_started', NOW(), ?)";
-                    
-                    $stmt = $conn->prepare($substageQuery);
-                    if (!$stmt) {
-                        throw new Exception("Substage prepare failed: " . $conn->error);
-                    }
-                    
-                    $substageNum = $substageIndex + 1;
-                    $identifier = "S{$stageNum}.{$substageNum}";
-                    
-                    $stmt->bind_param("iisisss", 
-                        $stageId,
-                        $substageNum,
-                        $substage['title'],
-                        $substage['assignTo'],
-                        $substageStartDate,
-                        $substageEndDate,
-                        $identifier
-                    );
-                    
-                    if (!$stmt->execute()) {
-                        throw new Exception("Substage execute failed: " . $stmt->error . 
-                            " Query: " . $substageQuery);
-                    }
-                    
-                    error_log("Created substage with identifier: " . $identifier);
-                }
-            }
-        }
+    $stmt = $pdo->prepare($projectQuery);
+    $result = $stmt->execute([
+        ':title' => $data['projectTitle'],
+        ':description' => $data['projectDescription'],
+        ':project_type' => $data['projectType'],
+        ':category_id' => $data['projectCategory'],
+        ':start_date' => $data['startDate'],
+        ':end_date' => $data['dueDate'],
+        ':created_by' => $_SESSION['user_id'] ?? 1,
+        ':assigned_to' => $data['assignTo']
+    ]);
+
+    if (!$result) {
+        throw new Exception('Failed to insert project: ' . json_encode($stmt->errorInfo()));
     }
     
-    // Log the activity
+    $projectId = $pdo->lastInsertId();
+    
+    // Log in project_activity_log
     $activityQuery = "INSERT INTO project_activity_log (
-        project_id, activity_type, description, performed_by, performed_at
-    ) VALUES (?, 'create', 'Project created with stages', ?, NOW())";
+        project_id,
+        activity_type,
+        description,
+        performed_by,
+        performed_at
+    ) VALUES (
+        :project_id,
+        'create',
+        'Project created',
+        :performed_by,
+        NOW()
+    )";
     
-    $stmt = $conn->prepare($activityQuery);
-    $stmt->bind_param("ii", $projectId, $_SESSION['user_id']);
-    $stmt->execute();
+    $stmt = $pdo->prepare($activityQuery);
+    $stmt->execute([
+        ':project_id' => $projectId,
+        ':performed_by' => $_SESSION['user_id']  // Use session user ID
+    ]);
     
-    $conn->commit();
+    // Log in project_history
+    $historyQuery = "INSERT INTO project_history (
+        project_id,
+        action_type,
+        new_value,
+        changed_by,
+        changed_at
+    ) VALUES (
+        :project_id,
+        'create',
+        :new_value,
+        :changed_by,
+        NOW()
+    )";
+    
+    $stmt = $pdo->prepare($historyQuery);
+    $stmt->execute([
+        ':project_id' => $projectId,
+        ':new_value' => json_encode($data),
+        ':changed_by' => $_SESSION['user_id']  // Use session user ID
+    ]);
+    
+    // Commit transaction
+    $pdo->commit();
+    
     echo json_encode([
-        'status' => 'success', 
-        'project_id' => $projectId,
-        'debug' => [
-            'stages_count' => count($data['stages'] ?? []),
-            'project_data' => $data
-        ]
+        'status' => 'success',
+        'message' => 'Project created successfully',
+        'project_id' => $projectId
     ]);
     
 } catch (Exception $e) {
-    $conn->rollback();
-    error_log("Error in create_project.php: " . $e->getMessage());
-    error_log("Stack trace: " . $e->getTraceAsString());
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     
+    error_log('Error creating project: ' . $e->getMessage());
+    
+    http_response_code(500);
     echo json_encode([
         'status' => 'error',
-        'message' => $e->getMessage(),
-        'debug' => [
-            'received_data' => $data ?? null,
-            'error_details' => $e->getTraceAsString()
-        ]
+        'message' => 'Failed to create project: ' . $e->getMessage()
     ]);
 }
-
-$conn->close();
-?> 
+exit; 

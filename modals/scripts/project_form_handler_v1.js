@@ -2,6 +2,100 @@ console.log('Script loaded');
 console.log('Modal element:', document.getElementById('projectModal'));
 console.log('Open button:', document.querySelector('.add-project-btn'));
 
+// First, let's store users globally so we can access them throughout the code
+let globalUsers = [];
+
+// Add global variable for categories
+let globalCategories = [];
+
+// Add global variable for current user
+let currentUser = null;
+
+// Replace the sampleProjects object with a function to fetch real projects
+let globalProjects = [];
+
+// Function to fetch project suggestions
+async function fetchProjectSuggestions() {
+    try {
+        const response = await fetch('api/get_project_suggestions.php');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            globalProjects = data.data;
+            console.log('Loaded projects:', globalProjects); // Debug log
+            return data.data;
+        } else {
+            console.error('Error fetching projects:', data.message);
+            return [];
+        }
+    } catch (error) {
+        console.error('Failed to fetch projects:', error);
+        return [];
+    }
+}
+
+// Fetch users and store them globally
+async function fetchUsers() {
+    try {
+        console.log('Fetching users...');
+        const response = await fetch('api/get_users.php');
+        const data = await response.json();
+        console.log('Received users data:', data);
+        
+        if (data.status === 'success') {
+            globalUsers = data.data;
+            console.log('Stored global users:', globalUsers);
+            return data.data;
+        } else {
+            console.error('Error fetching users:', data.message);
+            return [];
+        }
+    } catch (error) {
+        console.error('Failed to fetch users:', error);
+        return [];
+    }
+}
+
+// Add function to fetch categories
+async function fetchCategories() {
+    try {
+        const response = await fetch('api/get_project_categories.php');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            globalCategories = data.data;
+            return data.data;
+        } else {
+            console.error('Error fetching categories:', data.message);
+            return [];
+        }
+    } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        return [];
+    }
+}
+
+// Add function to fetch current user
+async function fetchCurrentUser() {
+    try {
+        const response = await fetch('api/get_current_user.php');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            currentUser = data.data;
+            return data.data;
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Failed to fetch current user:', error);
+        showNotification('Error: Please log in again', 'error');
+        // Optionally redirect to login page
+        // window.location.href = '/login.php';
+        return null;
+    }
+}
+
 // Define these functions in the global scope
 function createSubstage(stageNum, substageNum) {
     return `
@@ -114,14 +208,25 @@ function getUserName(userId) {
     return users[userId] || 'Unknown User';
 }
 
+// Add helper function to get user name by ID
+function getUserNameById(userId) {
+    const user = globalUsers.find(u => u.id === userId);
+    return user ? `${user.username} - ${user.designation}` : 'Unknown User';
+}
+
 function addSubstage(stageNum) {
     const stage = document.querySelector(`.stage-block[data-stage="${stageNum}"]`);
     const substagesContainer = stage.querySelector('.substages-container');
     const substageCount = substagesContainer.children.length + 1;
     
+    // Create user options HTML using global users
+    const userOptionsHtml = globalUsers.map(user => 
+        `<option value="${user.id}">${user.username} - ${user.designation}</option>`
+    ).join('');
+    
     const projectType = document.querySelector('.modal-container').dataset.theme;
     const parentAssignTo = document.getElementById(`assignTo${stageNum}`).value;
-    const parentUserName = getUserName(parentAssignTo);
+    const parentUserName = getUserNameById(parentAssignTo);
     const parentStartDate = document.getElementById(`startDate${stageNum}`).value;
     const parentDueDate = document.getElementById(`dueDate${stageNum}`).value;
 
@@ -214,10 +319,8 @@ function addSubstage(stageNum) {
             <select id="substageAssignTo${stageNum}_${substageCount}" 
                     name="stages[${stageNum}][substages][${substageCount}][assignTo]" 
                     onchange="handleSubstageAssignChange(this)" required>
-                <option value="">Select Employee</option>
-                <option value="1" ${parentAssignTo === "1" ? "selected" : ""}>John Smith</option>
-                <option value="2" ${parentAssignTo === "2" ? "selected" : ""}>Sarah Johnson</option>
-                <option value="3" ${parentAssignTo === "3" ? "selected" : ""}>Mike Anderson</option>
+                <option value="">Select Team Member</option>
+                ${userOptionsHtml}
             </select>
             <div class="stage-assign-note" style="display: none;">
                 <i class="fas fa-info-circle"></i>
@@ -277,7 +380,7 @@ function handleSubstageAssignChange(selectElement) {
         if (assignNote) {
         assignNote.innerHTML = `
             <i class="fas fa-info-circle"></i>
-                Note: The stage is assigned to ${getUserName(stageAssignSelect.value)}
+                Note: The stage is assigned to ${getUserNameById(stageAssignSelect.value)}
         `;
         assignNote.style.display = 'block';
         }
@@ -308,8 +411,51 @@ function deleteSubstage(button) {
     }, 300);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM Elements
+// Add this function to verify category data
+function validateCategoryData() {
+    console.log('Global Categories:', globalCategories);
+    console.log('Global Projects:', globalProjects);
+    
+    globalProjects.forEach(project => {
+        const category = globalCategories.find(cat => cat.id === project.category_id);
+        console.log(`Project ${project.id} category:`, {
+            project_category_id: project.category_id,
+            found_category: category
+        });
+    });
+}
+
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Fetch all necessary data
+        await Promise.all([
+            fetchCurrentUser(),
+            fetchUsers(),
+            fetchCategories(),
+            fetchProjectSuggestions()
+        ]);
+        
+        validateCategoryData(); // Add this line to check category data
+        
+        console.log('Data loaded:', {
+            projects: globalProjects,
+            categories: globalCategories,
+            currentUser: currentUser
+        });
+        
+        if (!currentUser) {
+            console.error('No user logged in');
+            return;
+        }
+
+        // Initialize project title input
+        const projectTitleInput = document.getElementById('projectTitle');
+        if (projectTitleInput) {
+            projectTitleInput.addEventListener('input', (e) => handleProjectTitleInput(e.target));
+        }
+
+        // Initialize other form elements
     const modal = document.getElementById('projectModal');
     const modalContainer = modal.querySelector('.modal-container');
     const openModalBtn = document.querySelector('.add-project-btn');
@@ -323,31 +469,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const addStageBtn = document.getElementById('addStageBtn');
     const stagesContainer = document.getElementById('stagesContainer');
     let stageCount = 0; // Start from 0 since no stages exist initially
-
-    // Project Categories Data
-    const projectCategories = {
-        architecture: [
-            'Commercial Architecture',
-            'Residential Architecture',
-            'Industrial Architecture',
-            'Institutional Architecture',
-            'Landscape Architecture'
-        ],
-        interior: [
-            'Residential Interior',
-            'Commercial Interior',
-            'Office Interior',
-            'Retail Interior',
-            'Hospitality Interior'
-        ],
-        construction: [
-            'Residential Construction',
-            'Commercial Construction',
-            'Industrial Construction',
-            'Infrastructure Construction',
-            'Renovation'
-        ]
-    };
 
     // Event Listeners
     if (openModalBtn) {
@@ -398,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update project type label
             projectTypeLabel.textContent = `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} Project`;
             
-            // Update categories
+                // Update categories with the selected type
             updateCategories(selectedType);
             
             // Add animation class
@@ -429,10 +550,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     Assign To
                 </label>
                 <select id="assignTo${stageCount}" name="stages[${stageCount}][assignTo]" required>
-                    <option value="">Select Employee</option>
-                    <option value="1">John Smith</option>
-                    <option value="2">Sarah Johnson</option>
-                    <option value="3">Mike Anderson</option>
+                        <option value="">Select Team Member</option>
+                        ${globalUsers.map(user => `<option value="${user.id}">${user.username} - ${user.designation}</option>`).join('')}
                 </select>
             </div>
             <div class="form-dates">
@@ -539,38 +658,308 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCategories(selectedType) {
+        if (selectedType instanceof Event) {
+            selectedType = document.getElementById('projectType').value;
+        }
+
+        const projectCategorySelect = document.getElementById('projectCategory');
         projectCategorySelect.innerHTML = '<option value="">Select Category</option>';
         projectCategorySelect.disabled = !selectedType;
 
-        if (selectedType && projectCategories[selectedType]) {
-            projectCategories[selectedType].forEach(category => {
+        if (selectedType) {
+            // Find parent category ID based on type
+            let parentId;
+            switch(selectedType) {
+                case 'architecture':
+                    parentId = 1;
+                    break;
+                case 'interior':
+                    parentId = 2;
+                    break;
+                case 'construction':
+                    parentId = 3;
+                    break;
+            }
+
+            console.log('Updating categories for type:', selectedType, 'parentId:', parentId);
+            console.log('Available categories:', globalCategories);
+
+            // Filter categories by parent_id
+            const relevantCategories = globalCategories.filter(cat => cat.parent_id === parentId);
+            
+            if (relevantCategories.length > 0) {
+                projectCategorySelect.disabled = false;
+                
+                relevantCategories.forEach(category => {
                 const option = document.createElement('option');
-                option.value = category.toLowerCase().replace(/\s+/g, '-');
-                option.textContent = category;
+                    option.value = category.id; // Use the actual category ID
+                    option.textContent = category.name;
                 projectCategorySelect.appendChild(option);
             });
+            }
         }
     }
 
-    function handleSubmit(e) {
+    // Add this function to get category ID from name
+    function getCategoryIdByName(categoryName) {
+        const category = globalCategories.find(cat => 
+            cat.name.toLowerCase().replace(/\s+/g, '-') === categoryName.toLowerCase().replace(/\s+/g, '-')
+        );
+        return category ? category.id : null;
+    }
+
+    // Update the handleSubmit function
+    async function handleSubmit(e) {
         e.preventDefault();
         
-        // Collect form data
-        const formData = new FormData(createProjectForm);
-        const projectData = Object.fromEntries(formData);
-
-        // Here you would typically send the data to your backend
-        console.log('Project Data:', projectData);
-
-        // Show success message with theme-based styling
-        showNotification('Project created successfully!', modalContainer.dataset.theme);
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        
+        try {
+            // First create the project
+            const projectData = await createProject(e);
+            
+            if (!projectData.project_id) {
+                throw new Error('No project ID returned');
+            }
+            
+            // Then create stages and substages
+            await createStagesAndSubstages(projectData.project_id);
+            
+            showNotification('Project created successfully!', 'success');
         closeModal();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(error.message, 'error');
+        } finally {
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        }
     }
 
-    // Show themed notification
-    function showNotification(message, theme) {
-        // Add notification implementation here
+    async function createProject(e) {
+        const formData = new FormData(e.target);
+        
+        // Get the category ID directly from the select element
+        const categorySelect = document.getElementById('projectCategory');
+        const categoryId = categorySelect.value;
+
+        // Debug logs
+        console.log('Selected category ID:', categoryId);
+        
+        const projectData = {
+            projectTitle: formData.get('projectTitle'),
+            projectDescription: formData.get('projectDescription'),
+            projectType: formData.get('projectType'),
+            projectCategory: categoryId, // Use the category ID directly
+            startDate: formData.get('startDate'),
+            dueDate: formData.get('dueDate'),
+            assignTo: formData.get('assignTo'),
+            created_by: currentUser.id
+        };
+
+        // Debug log
+        console.log('Sending project data:', projectData);
+
+        const response = await fetch('api/create_project.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectData)
+        });
+
+        const result = await response.json();
+        
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Failed to create project');
+        }
+        
+        return result;
     }
+
+    async function createStagesAndSubstages(projectId) {
+        const stages = [];
+        const stageBlocks = document.querySelectorAll('.stage-block');
+        
+        for (const stageBlock of stageBlocks) {
+            const stageNum = stageBlock.dataset.stage;
+            const stageData = {
+                assignTo: document.getElementById(`assignTo${stageNum}`).value,
+                startDate: document.getElementById(`startDate${stageNum}`).value,
+                dueDate: document.getElementById(`dueDate${stageNum}`).value,
+                files: await getStageFiles(stageNum),
+                substages: []
+            };
+            
+            // Get substages
+            const substageBlocks = stageBlock.querySelectorAll('.substage-block');
+            for (const substageBlock of substageBlocks) {
+                const substageNum = substageBlock.dataset.substage;
+                const substageData = {
+                    title: document.getElementById(`substageTitle${stageNum}_${substageNum}`).value,
+                    assignTo: document.getElementById(`substageAssignTo${stageNum}_${substageNum}`).value,
+                    startDate: document.getElementById(`substageStartDate${stageNum}_${substageNum}`).value,
+                    dueDate: document.getElementById(`substageDueDate${stageNum}_${substageNum}`).value,
+                    files: await getSubstageFiles(stageNum, substageNum)
+                };
+                stageData.substages.push(substageData);
+            }
+            
+            stages.push(stageData);
+        }
+        
+        const response = await fetch('api/create_project_stages.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                project_id: projectId,
+                stages: stages
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Failed to create stages');
+        }
+        
+        return result;
+    }
+
+    // Helper functions for file handling
+    async function getStageFiles(stageNum) {
+        const fileInput = document.getElementById(`stageFileInput_${stageNum}`);
+        return await processFiles(fileInput.files);
+    }
+
+    async function getSubstageFiles(stageNum, substageNum) {
+        const fileInput = document.getElementById(`substageFileInput_${stageNum}_${substageNum}`);
+        return await processFiles(fileInput.files);
+    }
+
+    async function processFiles(files) {
+        const processedFiles = [];
+        for (const file of files) {
+            processedFiles.push({
+                name: file.name,
+                path: await uploadFile(file),
+                originalName: file.name,
+                type: file.type,
+                size: file.size
+            });
+        }
+        return processedFiles;
+    }
+
+    async function uploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('api/upload_files.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.status !== 'success') {
+            throw new Error('Failed to upload file');
+        }
+        
+        return result.file_path;
+    }
+
+    // Add notification function
+    function showNotification(message, type = 'success') {
+        // Check if container exists, if not create it
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        // Create toast content
+        toast.innerHTML = `
+            <i class="toast-icon fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <div class="toast-message">${message}</div>
+            <div class="toast-close">
+                <i class="fas fa-times"></i>
+            </div>
+        `;
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Add click handler to close button
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        });
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
+
+        // Log for debugging
+        console.log('Notification shown:', message, type);
+    }
+
+    // Add notification styles to your CSS
+    const notificationStyles = `
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        animation: slideIn 0.3s ease;
+        z-index: 1100;
+    }
+
+    .notification.success {
+        background: #28a745;
+    }
+
+    .notification.error {
+        background: #dc3545;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    `;
 
     // Add event listener for project type changes
     typeOptions.forEach(option => {
@@ -611,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for when a suggestion is selected
     projectInput.addEventListener('change', function(e) {
         console.log("Project selected:", e.target.value);
-        if (sampleProjects[e.target.value]) {
+            if (globalProjects[e.target.value]) {
             selectProject(e.target.value);
         }
     });
@@ -620,6 +1009,15 @@ document.addEventListener('DOMContentLoaded', function() {
     projectInput.addEventListener('input', function(e) {
         console.log("Input changed:", e.target.value);
     });
+
+        // Fetch and populate users
+        const users = await fetchUsers();
+        populateUserDropdowns(users);
+
+    } catch (error) {
+        console.error('Error initializing form:', error);
+        showNotification('Error loading form data', 'error');
+    }
 });
 
 function deleteStage(button) {
@@ -764,129 +1162,26 @@ function updateTitleValue(stageNum, substageCount) {
     }
 }
 
-// Add this at the top of your file - Sample project data
-const sampleProjects = {
-    "Modern Villa Design": {
-        type: "architecture",
-        category: "Residential Architecture",
-        description: "Luxury villa with contemporary design elements and sustainable features",
-        startDate: "2024-03-15T09:00",
-        dueDate: "2024-06-15T18:00",
-        assignTo: "1",
-        stages: [
-            {
-                assignTo: "1",
-                startDate: "2024-03-20T09:00",
-                dueDate: "2024-04-20T18:00",
-                files: ["site-plan.pdf", "initial-sketches.jpg"],
-                substages: [
-                    {
-                        title: "Site Analysis",
-                        assignTo: "2",
-                        startDate: "2024-03-20T09:00",
-                        dueDate: "2024-03-25T18:00",
-                        files: ["site-analysis-report.pdf"]
-                    },
-                    {
-                        title: "Concept Design",
-                        assignTo: "1",
-                        startDate: "2024-03-26T09:00",
-                        dueDate: "2024-04-05T18:00",
-                        files: ["concept-drawings.pdf"]
-                    }
-                ]
-            },
-            {
-                assignTo: "3",
-                startDate: "2024-04-21T09:00",
-                dueDate: "2024-05-20T18:00",
-                files: ["construction-docs.pdf"],
-                substages: [
-                    {
-                        title: "Construction Documents",
-                        assignTo: "3",
-                        startDate: "2024-04-21T09:00",
-                        dueDate: "2024-05-10T18:00",
-                        files: ["detailed-drawings.pdf"]
-                    }
-                ]
-            }
-        ]
-    },
-    "Commercial Office Interior": {
-        type: "interior",
-        description: "Modern office space design with focus on productivity and employee wellness",
-        category: "Commercial Architecture",
-        startDate: "2024-03-15T09:00",
-        dueDate: "2024-04-15T18:00",
-        assignTo: "2",
-        stages: [
-            {
-                assignTo: "2",
-                startDate: "2024-03-15T09:00",
-                dueDate: "2024-04-15T18:00",
-                files: ["floor-plan.pdf"],
-                substages: [
-                    {
-                        title: "Space Planning",
-                        assignTo: "2",
-                        startDate: "2024-03-15T09:00",
-                        dueDate: "2024-03-25T18:00",
-                        files: ["space-layout.pdf"]
-                    }
-                ]
-            }
-        ]
-    },
-    "Hospital Construction": {
-        type: "construction",
-        description: "New hospital building with state-of-the-art medical facilities",
-        category: "Institutional Architecture",
-        startDate: "2024-04-01T09:00",
-        dueDate: "2024-08-30T18:00",
-        assignTo: "3",
-        stages: [
-            {
-                assignTo: "3",
-                startDate: "2024-04-01T09:00",
-                dueDate: "2024-08-30T18:00",
-                files: ["construction-plan.pdf"],
-                substages: [
-                    {
-                        title: "Foundation Work",
-                        assignTo: "3",
-                        startDate: "2024-04-01T09:00",
-                        dueDate: "2024-05-15T18:00",
-                        files: ["foundation-details.pdf"]
-                    }
-                ]
-            }
-        ]
-    }
-};
-
-// Update the project title input in your form HTML
-function updateProjectTitleInput() {
-    const projectTitleContainer = document.querySelector('.form-group:first-child');
-    projectTitleContainer.innerHTML = `
-        <label for="projectTitle">
-            <i class="fas fa-heading"></i>
-            Project Title
-        </label>
-        <div class="autocomplete-wrapper">
-            <input type="text" 
-                   id="projectTitle" 
-                   name="projectTitle" 
-                   required 
-                   placeholder="Enter project title"
-                   autocomplete="off"
-                   oninput="handleProjectTitleInput(this)">
-            <div class="suggestions-container" id="projectSuggestions"></div>
-        </div>
-    `;
+// Add this function to populate user dropdowns
+function populateUserDropdowns(users) {
+    // Get all assign-to select elements
+    const assignSelects = document.querySelectorAll('select[id^="assignTo"]');
+    
+    // Create the default option
+    const defaultOption = '<option value="">Select Team Member</option>';
+    
+    // Create options for each user
+    const userOptions = users.map(user => 
+        `<option value="${user.id}">${user.username} - ${user.role}</option>`
+    ).join('');
+    
+    // Populate all assign-to selects
+    assignSelects.forEach(select => {
+        select.innerHTML = defaultOption + userOptions;
+    });
 }
 
-// Add these new functions
+// Update the handleProjectTitleInput function
 function handleProjectTitleInput(input) {
     const suggestionsContainer = document.getElementById('projectSuggestions');
     const value = input.value.trim().toLowerCase();
@@ -899,20 +1194,20 @@ function handleProjectTitleInput(input) {
     }
     
     // Filter matching projects
-    const matches = Object.keys(sampleProjects).filter(title => 
-        title.toLowerCase().includes(value)
+    const matches = globalProjects.filter(project => 
+        project.title.toLowerCase().includes(value)
     );
     
     if (matches.length > 0) {
-        suggestionsContainer.innerHTML = matches.map(title => `
-            <div class="suggestion-item" onclick="selectProject('${title}')">
+        suggestionsContainer.innerHTML = matches.map(project => `
+            <div class="suggestion-item" onclick="selectProject(${project.id})">
                 <div class="suggestion-title">
                     <i class="fas fa-project-diagram"></i>
-                    ${title}
+                    ${highlightMatch(project.title, value)}
                 </div>
                 <div class="suggestion-type">
-                    <i class="fas fa-tag"></i>
-                    ${sampleProjects[title].type}
+                    <i class="fas ${getProjectTypeIcon(project.project_type)}"></i>
+                    ${capitalizeFirstLetter(project.project_type)}
                 </div>
             </div>
         `).join('');
@@ -922,20 +1217,105 @@ function handleProjectTitleInput(input) {
     }
 }
 
-function selectProject(project) {
-    const projectData = sampleProjects[project];
-    if (!projectData) return;
-
-    // Set the project category
-    const categorySelect = document.getElementById('projectCategory');
-    if (categorySelect && projectData.type) {
-        console.log("Setting category to:", projectData.type);
-        categorySelect.value = projectData.type;
-        // Trigger change event to update any dependent fields
-        categorySelect.dispatchEvent(new Event('change'));
+// Update the selectProject function
+async function selectProject(projectId) {
+    const numericId = parseInt(projectId);
+    const project = globalProjects.find(p => p.id === numericId);
+    
+    if (!project) {
+        console.error('Project not found:', projectId);
+        return;
     }
+    
+    try {
+        console.log('Loading project:', project); // Debug log
 
-    // ... rest of your function ...
+        // Fill basic project details
+        document.getElementById('projectTitle').value = project.title;
+        document.getElementById('projectDescription').value = project.description;
+        document.getElementById('projectSuggestions').style.display = 'none';
+        
+        // Select project type and trigger theme change
+        const typeOption = document.querySelector(`.type-option[data-type="${project.project_type}"]`);
+        if (typeOption) {
+            typeOption.click(); // This triggers theme change and category updates
+            
+            // Wait for category options to be populated
+            setTimeout(() => {
+                // Set project category
+    const categorySelect = document.getElementById('projectCategory');
+                if (categorySelect) {
+                    console.log('Setting category:', project.category_id); // Debug log
+                    categorySelect.value = project.category_id;
+                    
+                    // If category wasn't set, try again with string conversion
+                    if (categorySelect.value !== project.category_id.toString()) {
+                        console.log('Retrying category selection with string value');
+                        categorySelect.value = project.category_id.toString();
+                    }
+                }
+            }, 300); // Increased timeout to ensure categories are loaded
+        }
+        
+        // Set dates
+        const startDateInput = document.getElementById('startDate');
+        const dueDateInput = document.getElementById('dueDate');
+        
+        if (startDateInput && project.start_date) {
+            startDateInput.value = formatDateForInput(project.start_date);
+        }
+        if (dueDateInput && project.end_date) {
+            dueDateInput.value = formatDateForInput(project.end_date);
+        }
+        
+        // Set assigned team member
+        const assignToSelect = document.getElementById('assignTo');
+        if (assignToSelect && project.assigned_to) {
+            assignToSelect.value = project.assigned_to;
+        }
+
+    } catch (error) {
+        console.error('Error selecting project:', error);
+        showNotification('Error loading project details', 'error');
+    }
+}
+
+// Helper function to format date for datetime-local input
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.error('Invalid date:', dateString);
+            return '';
+        }
+        return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDThh:mm
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return '';
+    }
+}
+
+// Update the getProjectTypeIcon function to handle all project types
+function getProjectTypeIcon(type) {
+    const icons = {
+        'architecture': 'fa-building',
+        'interior': 'fa-couch',
+        'construction': 'fa-hard-hat'
+    };
+    return icons[type] || 'fa-project-diagram';
+}
+
+// Helper function to highlight matching text
+function highlightMatch(text, query) {
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+// Helper function to capitalize first letter
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 // Add this function to initialize autocomplete
@@ -974,21 +1354,21 @@ function handleInput(e) {
     }
 
     // Filter matching projects
-    const matches = Object.keys(sampleProjects).filter(title => 
-        title.toLowerCase().includes(value)
+    const matches = globalProjects.filter(project => 
+        project.title.toLowerCase().includes(value)
     );
 
     // Show suggestions
     if (matches.length > 0) {
-        suggestionsContainer.innerHTML = matches.map(title => `
-            <div class="suggestion-item" onclick="selectProject('${title.replace(/'/g, "\\'")}')">
+        suggestionsContainer.innerHTML = matches.map(project => `
+            <div class="suggestion-item" onclick="selectProject(${project.id})">
                 <div class="suggestion-title">
                     <i class="fas fa-project-diagram"></i>
-                    ${highlightMatch(title, value)}
+                    ${highlightMatch(project.title, value)}
                 </div>
                 <div class="suggestion-type">
-                    <i class="fas ${getProjectTypeIcon(sampleProjects[title].type)}"></i>
-                    ${capitalizeFirstLetter(sampleProjects[title].type)}
+                    <i class="fas ${getProjectTypeIcon(project.project_type)}"></i>
+                    ${capitalizeFirstLetter(project.project_type)}
                 </div>
             </div>
         `).join('');
@@ -997,129 +1377,3 @@ function handleInput(e) {
         suggestionsContainer.style.display = 'none';
     }
 }
-
-// Helper function to highlight matching text
-function highlightMatch(text, query) {
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-}
-
-// Helper function to get project type icon
-function getProjectTypeIcon(type) {
-    const icons = {
-        'architecture': 'fa-building',
-        'interior': 'fa-couch',
-        'construction': 'fa-hard-hat'
-    };
-    return icons[type] || 'fa-project-diagram';
-}
-
-// Helper function to capitalize first letter
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-// Global function for project selection
-window.selectProject = function(title) {
-    const project = sampleProjects[title];
-    if (!project) return;
-    
-    // Fill basic project details
-    document.getElementById('projectTitle').value = title;
-    document.getElementById('projectDescription').value = project.description;
-    document.getElementById('projectSuggestions').style.display = 'none';
-    
-    // Select project type and trigger theme change
-    const typeOption = document.querySelector(`.type-option[data-type="${project.type}"]`);
-    if (typeOption) {
-        typeOption.click(); // This will trigger theme change and category updates
-    }
-    
-    // Clear existing stages first
-    const stagesContainer = document.getElementById('stagesContainer');
-    stagesContainer.innerHTML = '';
-    
-    // Add and fill stages
-    project.stages.forEach((stageData, index) => {
-        // Click add stage button to create new stage
-        document.getElementById('addStageBtn').click();
-        
-        const stageNum = index + 1;
-        const stageBlock = stagesContainer.lastElementChild;
-        
-        if (stageBlock) {
-            // Fill stage details
-            const assignSelect = stageBlock.querySelector(`#assignTo${stageNum}`);
-            const startDateInput = stageBlock.querySelector(`#startDate${stageNum}`);
-            const dueDateInput = stageBlock.querySelector(`#dueDate${stageNum}`);
-
-            if (assignSelect) assignSelect.value = stageData.assignTo;
-            if (startDateInput) startDateInput.value = stageData.startDate;
-            if (dueDateInput) dueDateInput.value = stageData.dueDate;
-
-            // Add and fill substages
-            if (stageData.substages && stageData.substages.length > 0) {
-                stageData.substages.forEach(substageData => {
-                    // Click add substage button to create new substage
-                    const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
-                    if (addSubstageBtn) {
-                        addSubstageBtn.click();
-
-                        // Get the newly created substage
-                        const substageBlock = stageBlock.querySelector('.substages-container').lastElementChild;
-                        if (substageBlock) {
-            // Fill substage details
-                            const titleSelect = substageBlock.querySelector('select[id^="substageTitle"]');
-                            const assignSelect = substageBlock.querySelector('select[id^="substageAssignTo"]');
-                            const startDateInput = substageBlock.querySelector('input[id^="substageStartDate"]');
-                            const dueDateInput = substageBlock.querySelector('input[id^="substageDueDate"]');
-
-                            // Set substage title
-                            if (titleSelect) {
-                                // Check if it's a custom title
-                                const standardTitle = titleSelect.querySelector(`option[value="${substageData.title.toLowerCase().replace(/\s+/g, '-')}"]`);
-                                
-                                if (standardTitle) {
-                                    titleSelect.value = substageData.title.toLowerCase().replace(/\s+/g, '-');
-                                } else {
-                                    // Handle custom title
-                                    titleSelect.value = 'custom';
-                                    const customTitleInput = substageBlock.querySelector('input[id^="customTitle"]');
-                                    if (customTitleInput) {
-                                        customTitleInput.value = substageData.title;
-                                        // Show custom input
-                                        const dropdownWrapper = titleSelect.closest('.title-dropdown-wrapper');
-                                        const customWrapper = dropdownWrapper.nextElementSibling;
-                                        if (dropdownWrapper && customWrapper) {
-                                            dropdownWrapper.style.display = 'none';
-                                            customWrapper.style.display = 'block';
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Set other substage fields
-                            if (assignSelect) assignSelect.value = substageData.assignTo;
-                            if (startDateInput) startDateInput.value = substageData.startDate;
-                            if (dueDateInput) dueDateInput.value = substageData.dueDate;
-
-                            // Handle substage assignment note if different from stage
-                            if (substageData.assignTo !== stageData.assignTo) {
-                                const assignNote = substageBlock.querySelector('.stage-assign-note');
-                                if (assignNote) {
-                                    assignNote.style.display = 'block';
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    });
-
-    // Scroll to top of form
-    document.querySelector('.modal-form').scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-};

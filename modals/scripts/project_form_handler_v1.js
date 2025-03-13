@@ -268,6 +268,7 @@ function addSubstage(stageNum) {
     const newSubstage = document.createElement('div');
     newSubstage.className = 'substage-block';
     newSubstage.dataset.substage = substageCount;
+    newSubstage.dataset.stageNum = stageNum;
     newSubstage.dataset.parentAssignTo = parentAssignTo;
     newSubstage.dataset.parentUserName = parentUserName;
     newSubstage.style.opacity = '0';
@@ -1595,6 +1596,9 @@ function handleInput(e) {
 async function updateProject(e, projectId) {
     try {
         const form = e.target;
+        const stages = await getStagesData();
+        
+        console.log('Collecting stages data...'); // Debug log
         
         const projectData = {
             projectId: projectId,
@@ -1605,10 +1609,10 @@ async function updateProject(e, projectId) {
             startDate: form.querySelector('#startDate').value,
             dueDate: form.querySelector('#dueDate').value,
             assignTo: form.querySelector('#assignTo').value,
-            stages: await getStagesData()
+            stages: stages
         };
 
-        console.log('Updating project with data:', projectData); // Debug log
+        console.log('Sending update project data:', projectData); // Debug log
 
         const response = await fetch('api/update_project.php', {
             method: 'POST',
@@ -1619,6 +1623,7 @@ async function updateProject(e, projectId) {
         });
 
         const result = await response.json();
+        console.log('Server response:', result); // Debug log
         
         if (result.status !== 'success') {
             throw new Error(result.message || 'Failed to update project');
@@ -1630,44 +1635,58 @@ async function updateProject(e, projectId) {
         throw error;
     }
 }
-
 // Function to get all stages data
 async function getStagesData() {
     const stages = [];
     const stageBlocks = document.querySelectorAll('.stage-block');
     
-    for (const stageBlock of stageBlocks) {
-        const stageNum = stageBlock.dataset.stage;
-        const stageId = stageBlock.dataset.stageId || null; // For existing stages
+    console.log('Found stage blocks:', stageBlocks.length); // Debug log
+    
+    for (let i = 0; i < stageBlocks.length; i++) {
+        const stageBlock = stageBlocks[i];
+        const stageNum = i + 1;
+        const stageId = stageBlock.dataset.stageId || null;
+        
+        console.log(`Processing stage ${stageNum}`, { stageId }); // Debug log
         
         const stageData = {
             id: stageId,
-            assignTo: document.getElementById(`assignTo${stageNum}`).value,
-            startDate: document.getElementById(`startDate${stageNum}`).value,
-            dueDate: document.getElementById(`dueDate${stageNum}`).value,
-            files: await getStageFiles(stageNum),
+            stage_number: stageNum,
+            assignTo: document.getElementById(`assignTo${stageBlock.dataset.stage}`).value,
+            startDate: document.getElementById(`startDate${stageBlock.dataset.stage}`).value,
+            dueDate: document.getElementById(`dueDate${stageBlock.dataset.stage}`).value,
+            files: await getStageFiles(stageBlock.dataset.stage),
             substages: []
         };
         
         // Get substages
         const substageBlocks = stageBlock.querySelectorAll('.substage-block');
-        for (const substageBlock of substageBlocks) {
-            const substageNum = substageBlock.dataset.substage;
-            const substageId = substageBlock.dataset.substageId || null; // For existing substages
+        console.log(`Found ${substageBlocks.length} substages for stage ${stageNum}`); // Debug log
+        
+        for (let j = 0; j < substageBlocks.length; j++) {
+            const substageBlock = substageBlocks[j];
+            const substageNum = j + 1;
+            const substageId = substageBlock.dataset.substageId || null;
+            
+            console.log(`Processing substage ${substageNum}`, { substageId }); // Debug log
             
             const substageData = {
                 id: substageId,
-                title: document.getElementById(`substageTitle${stageNum}_${substageNum}`).value,
-                assignTo: document.getElementById(`substageAssignTo${stageNum}_${substageNum}`).value,
-                startDate: document.getElementById(`substageStartDate${stageNum}_${substageNum}`).value,
-                dueDate: document.getElementById(`substageDueDate${stageNum}_${substageNum}`).value,
-                files: await getSubstageFiles(stageNum, substageNum)
+                substage_number: substageNum,
+                title: document.getElementById(`substageTitle${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
+                assignTo: document.getElementById(`substageAssignTo${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
+                startDate: document.getElementById(`substageStartDate${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
+                dueDate: document.getElementById(`substageDueDate${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
+                files: await getSubstageFiles(stageBlock.dataset.stage, substageBlock.dataset.substage)
             };
+
+            console.log('Substage data:', substageData); // Debug log
             stageData.substages.push(substageData);
         }
         
         stages.push(stageData);
     }
     
+    console.log('Final stages data:', stages); // Debug log
     return stages;
 }

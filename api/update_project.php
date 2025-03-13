@@ -70,6 +70,12 @@ try {
     
     // Update stages
     foreach ($data['stages'] as $stage) {
+        // Make sure stage_number is being used
+        $stage_number = $stage['stage_number'] ?? null;
+        if ($stage_number === null) {
+            throw new Exception('Stage number is required');
+        }
+        
         if (isset($stage['id'])) {
             // Update existing stage
             $stageQuery = "UPDATE project_stages SET 

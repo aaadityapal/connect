@@ -232,7 +232,7 @@ function addSubstage(stageNum) {
 
     const titleOptions = projectSubstageTitles[projectType] || [];
     const titleOptionsHtml = titleOptions.map(title => 
-        `<option value="${title.toLowerCase().replace(/\s+/g, '-')}">${title}</option>`
+        `<option value="${title}">${title}</option>`
     ).join('');
 
     // Update the file attachment section in substage with unique IDs
@@ -1174,48 +1174,60 @@ function getFileIcon(extension) {
     return iconMap[extension] || 'fas fa-file';
 }
 
-// Add these new functions to handle title input switching
+// Update the handleTitleOptionChange function
 function handleTitleOptionChange(select, stageNum, substageCount) {
+    const customTitleWrapper = select.closest('.title-input-container').querySelector('.custom-title-wrapper');
+    const customTitleInput = document.getElementById(`customTitle${stageNum}_${substageCount}`);
+    
     if (select.value === 'custom') {
-        switchToCustomInput(stageNum, substageCount);
+        // Show custom input
+        select.closest('.title-dropdown-wrapper').style.display = 'none';
+        customTitleWrapper.style.display = 'block';
+        customTitleInput.focus();
+    } else {
+        // Hide custom input if not custom
+        customTitleWrapper.style.display = 'none';
     }
 }
 
-function switchToCustomInput(stageNum, substageCount) {
-    const dropdownWrapper = document.querySelector(`#substageTitle${stageNum}_${substageCount}`).closest('.title-dropdown-wrapper');
-    const customWrapper = dropdownWrapper.nextElementSibling;
-    
-    dropdownWrapper.style.display = 'none';
-    customWrapper.style.display = 'block';
-    
-    // Focus the custom input
+// Add function to update the actual title value
+function updateTitleValue(stageNum, substageCount) {
     const customInput = document.getElementById(`customTitle${stageNum}_${substageCount}`);
-    customInput.focus();
+    const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageCount}`);
+    const customValue = customInput.value.trim();
+    
+    if (customValue) {
+        // Create a new option for the custom value
+        const customOption = document.createElement('option');
+        customOption.value = customValue; // Use the actual custom text as value
+        customOption.textContent = customValue;
+        
+        // Remove any previous custom option
+        titleSelect.querySelectorAll('option[data-custom="true"]').forEach(opt => opt.remove());
+        
+        // Add the new custom option and select it
+        customOption.dataset.custom = 'true';
+        titleSelect.insertBefore(customOption, titleSelect.querySelector('option[value="custom"]'));
+        titleSelect.value = customValue;
+    }
 }
 
+// Add function to switch back to dropdown
 function switchToDropdown(stageNum, substageCount) {
-    const select = document.getElementById(`substageTitle${stageNum}_${substageCount}`);
-    const dropdownWrapper = select.closest('.title-dropdown-wrapper');
-    const customWrapper = dropdownWrapper.nextElementSibling;
+    const titleContainer = document.querySelector(`#substageTitle${stageNum}_${substageCount}`).closest('.title-input-container');
+    const dropdownWrapper = titleContainer.querySelector('.title-dropdown-wrapper');
+    const customWrapper = titleContainer.querySelector('.custom-title-wrapper');
+    const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageCount}`);
+    const customInput = document.getElementById(`customTitle${stageNum}_${substageCount}`);
     
     customWrapper.style.display = 'none';
     dropdownWrapper.style.display = 'block';
     
-    // Reset the dropdown to "Select Title"
-    select.value = '';
-    
-    // Clear the custom input
-    document.getElementById(`customTitle${stageNum}_${substageCount}`).value = '';
-}
-
-function updateTitleValue(stageNum, substageCount) {
-    const customInput = document.getElementById(`customTitle${stageNum}_${substageCount}`);
-    const select = document.getElementById(`substageTitle${stageNum}_${substageCount}`);
-    
-    // Update the hidden select value to match the custom input
-    if (customInput.value.trim()) {
-        select.value = 'custom';
+    // Reset the dropdown to default if no custom value was entered
+    if (!customInput.value.trim()) {
+        titleSelect.value = '';
     }
+    customInput.value = '';
 }
 
 // Add this function to populate user dropdowns

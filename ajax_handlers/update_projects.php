@@ -67,8 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle stages
         if (isset($data['stages']) && is_array($data['stages'])) {
             foreach ($data['stages'] as $stage) {
-                $stage_id = null;
-                
                 if (isset($stage['id']) && $stage['id']) {
                     // Update existing stage
                     $update_stage_sql = "UPDATE project_stages SET 
@@ -79,24 +77,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         WHERE id = ? AND project_id = ?";
                     
                     $stmt = $conn->prepare($update_stage_sql);
-                    $stage_number = intval($stage['stage_number']);
                     $stmt->bind_param('sssiii',
                         $stage['assignTo'],
                         $stage['startDate'],
                         $stage['dueDate'],
-                        $stage_number,
+                        $stage['stage_number'],
                         $stage['id'],
                         $project_id
                     );
                     $stmt->execute();
                     $stage_id = $stage['id'];
-                    $kept_stage_ids[] = $stage['id'];
-
-                    // Delete existing substages for this stage
-                    $delete_substages_sql = "DELETE FROM project_substages WHERE stage_id = ?";
-                    $stmt = $conn->prepare($delete_substages_sql);
-                    $stmt->bind_param('i', $stage['id']);
-                    $stmt->execute();
+                    $kept_stage_ids[] = $stage_id;
                 } else {
                     // Insert new stage
                     $insert_stage_sql = "INSERT INTO project_stages 
@@ -104,95 +95,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         VALUES (?, ?, ?, ?, ?)";
                     
                     $stmt = $conn->prepare($insert_stage_sql);
-                    $stage_number = intval($stage['stage_number']);
                     $stmt->bind_param('isssi',
                         $project_id,
                         $stage['assignTo'],
                         $stage['startDate'],
                         $stage['dueDate'],
-                        $stage_number
+                        $stage['stage_number']
                     );
                     $stmt->execute();
                     $stage_id = $conn->insert_id;
                     $kept_stage_ids[] = $stage_id;
                 }
 
-                // Only proceed with substages if we have a valid stage_id
+                // Get existing substage IDs for this stage
+                $existing_substages = [];
                 if ($stage_id) {
-                    // Handle substages for this stage
-                    if (isset($stage['substages']) && is_array($stage['substages'])) {
-                        foreach ($stage['substages'] as $substage) {
-                            if (isset($substage['id']) && $substage['id']) {
-                                // Update existing substage
-                                $update_substage_sql = "UPDATE project_substages SET 
-                                    title = ?,
-                                    assigned_to = ?,
-                                    start_date = ?,
-                                    end_date = ?,
-                                    substage_number = ?,
-                                    stage_id = ?
-                                    WHERE id = ?";
-                                
-                                $stmt = $conn->prepare($update_substage_sql);
-                                $stmt->bind_param('ssssiii',
-                                    $substage['title'],
-                                    $substage['assignTo'],
-                                    $substage['startDate'],
-                                    $substage['dueDate'],
-                                    $substage['substage_number'],
-                                    $stage_id,
-                                    $substage['id']
-                                );
-                            } else {
-                                // Insert new substage
-                                $insert_substage_sql = "INSERT INTO project_substages 
-                                    (stage_id, title, assigned_to, start_date, end_date, substage_number) 
-                                    VALUES (?, ?, ?, ?, ?, ?)";
-                                
-                                $stmt = $conn->prepare($insert_substage_sql);
-                                $stmt->bind_param('issssi',
-                                    $stage_id,
-                                    $substage['title'],
-                                    $substage['assignTo'],
-                                    $substage['startDate'],
-                                    $substage['dueDate'],
-                                    $substage['substage_number']
-                                );
-                            }
+                    $substages_query = "SELECT id FROM project_substages WHERE stage_id = ?";
+                    $stmt = $conn->prepare($substages_query);
+                    $stmt->bind_param('i', $stage_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    while ($row = $result->fetch_assoc()) {
+                        $existing_substages[] = $row['id'];
+                    }
+                }
+
+                // Track kept substage IDs
+                $kept_substage_ids = [];
+
+                // Handle substages
+                if (isset($stage['substages']) && is_array($stage['substages'])) {
+                    foreach ($stage['substages'] as $substage) {
+                        if (isset($substage['id']) && $substage['id']) {
+                            // Update existing substage
+                            $update_substage_sql = "UPDATE project_substages SET 
+                                title = ?,
+                                assigned_to = ?,
+                                start_date = ?,
+                                end_date = ?,
+                                substage_number = ?
+                                WHERE id = ? AND stage_id = ?";
+                            
+                            $stmt = $conn->prepare($update_substage_sql);
+                            $stmt->bind_param('ssssiii',
+                                $substage['title'],
+                                $substage['assignTo'],
+                                $substage['startDate'],
+                                $substage['dueDate'],
+                                $substage['substage_number'],
+                                $substage['id'],
+                                $stage_id
+                            );
                             $stmt->execute();
+                            $kept_substage_ids[] = $substage['id'];
+                        } else {
+                            // Insert new substage
+                            $insert_substage_sql = "INSERT INTO project_substages 
+                                (stage_id, title, assigned_to, start_date, end_date, substage_number) 
+                                VALUES (?, ?, ?, ?, ?, ?)";
+                            
+                            $stmt = $conn->prepare($insert_substage_sql);
+                            $stmt->bind_param('issssi',
+                                $stage_id,
+                                $substage['title'],
+                                $substage['assignTo'],
+                                $substage['startDate'],
+                                $substage['dueDate'],
+                                $substage['substage_number']
+                            );
+                            $stmt->execute();
+                            $kept_substage_ids[] = $conn->insert_id;
                         }
                     }
                 }
 
-                // Handle files for stage if they exist
-                if (!empty($stage['files'])) {
-                    foreach ($stage['files'] as $file) {
-                        $insert_file_sql = "INSERT INTO project_files 
-                            (project_id, stage_id, file_name, file_path, file_type, file_size) 
-                            VALUES (?, ?, ?, ?, ?, ?)";
-                        
-                        $stmt = $conn->prepare($insert_file_sql);
-                        $stmt->bind_param('iissss',
-                            $project_id,
-                            $stage_id,
-                            $file['name'],
-                            $file['path'],
-                            $file['type'],
-                            $file['size']
-                        );
-                        $stmt->execute();
-                    }
+                // Delete substages that weren't kept
+                $substages_to_delete = array_diff($existing_substages, $kept_substage_ids);
+                if (!empty($substages_to_delete)) {
+                    $delete_substages_sql = "DELETE FROM project_substages WHERE id IN (" . 
+                        implode(',', array_fill(0, count($substages_to_delete), '?')) . ")";
+                    $stmt = $conn->prepare($delete_substages_sql);
+                    $types = str_repeat('i', count($substages_to_delete));
+                    $stmt->bind_param($types, ...$substages_to_delete);
+                    $stmt->execute();
                 }
             }
         }
 
-        // Delete stages that weren't kept (and their substages will be deleted via foreign key cascade)
+        // Delete stages that weren't kept
         $stages_to_delete = array_diff($existing_stage_ids, $kept_stage_ids);
         if (!empty($stages_to_delete)) {
+            // First delete associated substages
+            $delete_substages_sql = "DELETE FROM project_substages WHERE stage_id IN (" . 
+                implode(',', array_fill(0, count($stages_to_delete), '?')) . ")";
+            $stmt = $conn->prepare($delete_substages_sql);
+            $types = str_repeat('i', count($stages_to_delete));
+            $stmt->bind_param($types, ...$stages_to_delete);
+            $stmt->execute();
+
+            // Then delete the stages
             $delete_stages_sql = "DELETE FROM project_stages WHERE id IN (" . 
                 implode(',', array_fill(0, count($stages_to_delete), '?')) . ")";
             $stmt = $conn->prepare($delete_stages_sql);
-            $types = str_repeat('i', count($stages_to_delete));
             $stmt->bind_param($types, ...$stages_to_delete);
             $stmt->execute();
         }

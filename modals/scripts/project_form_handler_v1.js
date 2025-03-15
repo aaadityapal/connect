@@ -21,13 +21,19 @@ let currentProjectId = null;
 // Function to fetch project suggestions
 async function fetchProjectSuggestions() {
     try {
+        console.log('Fetching project suggestions...');
         const response = await fetch('api/get_project_suggestions.php');
         const data = await response.json();
         
         if (data.status === 'success') {
-            globalProjects = data.data;
-            console.log('Loaded projects:', globalProjects); // Debug log
-            return data.data;
+            // Ensure IDs are properly formatted
+            globalProjects = data.data.map(project => ({
+                ...project,
+                id: project.id.toString() // Ensure ID is string for consistent comparison
+            }));
+            
+            console.log('Loaded projects:', globalProjects);
+            return globalProjects;
         } else {
             console.error('Error fetching projects:', data.message);
             return [];
@@ -63,18 +69,31 @@ async function fetchUsers() {
 // Add function to fetch categories
 async function fetchCategories() {
     try {
+        console.log('Fetching categories...');
         const response = await fetch('api/get_project_categories.php');
+        
+        // Log the raw response for debugging
+        console.log('Raw response:', response);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Categories response:', data);
         
         if (data.status === 'success') {
             globalCategories = data.data;
+            console.log('Stored categories:', globalCategories);
             return data.data;
         } else {
             console.error('Error fetching categories:', data.message);
+            showNotification('Error loading categories: ' + data.message, 'error');
             return [];
         }
     } catch (error) {
         console.error('Failed to fetch categories:', error);
+        showNotification('Failed to load categories. Please check console for details.', 'error');
         return [];
     }
 }
@@ -440,6 +459,11 @@ function handleSubstageAssignChange(selectElement) {
 function deleteSubstage(button) {
     const substage = button.closest('.substage-block');
     const substagesContainer = substage.parentElement;
+    const stageBlock = substagesContainer.closest('.stage-block');
+    
+    // Store the substage ID if it exists
+    const substageId = substage.dataset.substageId;
+    console.log('Deleting substage with ID:', substageId);
     
     // Fade out animation
     substage.style.opacity = '0';
@@ -452,6 +476,9 @@ function deleteSubstage(button) {
             const substageNum = index + 1;
             block.dataset.substage = substageNum;
             block.querySelector('h4').textContent = `Task ${substageNum}`;
+            
+            // Update input names and IDs
+            updateSubstageElements(block, stageBlock.dataset.stage, substageNum);
         });
     }, 300);
 }
@@ -800,6 +827,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             selectedType = document.getElementById('projectType').value;
         }
 
+        console.log('Updating categories for type:', selectedType);
+        console.log('Available categories:', globalCategories);
+
         const projectCategorySelect = document.getElementById('projectCategory');
         projectCategorySelect.innerHTML = '<option value="">Select Category</option>';
         projectCategorySelect.disabled = !selectedType;
@@ -819,21 +849,27 @@ document.addEventListener('DOMContentLoaded', async function() {
                     break;
             }
 
-            console.log('Updating categories for type:', selectedType, 'parentId:', parentId);
-            console.log('Available categories:', globalCategories);
+            console.log('Looking for categories with parent_id:', parentId);
 
             // Filter categories by parent_id
-            const relevantCategories = globalCategories.filter(cat => cat.parent_id === parentId);
+            const relevantCategories = globalCategories.filter(cat => {
+                console.log('Checking category:', cat);
+                return parseInt(cat.parent_id) === parentId;
+            });
             
+            console.log('Filtered categories:', relevantCategories);
+
             if (relevantCategories.length > 0) {
                 projectCategorySelect.disabled = false;
                 
                 relevantCategories.forEach(category => {
-                const option = document.createElement('option');
-                    option.value = category.id; // Use the actual category ID
+                    const option = document.createElement('option');
+                    option.value = category.id;
                     option.textContent = category.name;
-                projectCategorySelect.appendChild(option);
-            });
+                    projectCategorySelect.appendChild(option);
+                });
+            } else {
+                console.log('No categories found for parent_id:', parentId);
             }
         }
     }
@@ -1320,8 +1356,13 @@ function handleProjectTitleInput(input) {
     );
     
     if (matches.length > 0) {
+        // Debug log
+        console.log('Matching projects:', matches);
+        
         suggestionsContainer.innerHTML = matches.map(project => `
-            <div class="suggestion-item" onclick="selectProject(${project.id})">
+            <div class="suggestion-item" 
+                 data-project-id="${project.id}" 
+                 onclick="selectProject('${project.id}')">
                 <div class="suggestion-title">
                     <i class="fas fa-project-diagram"></i>
                     ${highlightMatch(project.title, value)}
@@ -1338,159 +1379,139 @@ function handleProjectTitleInput(input) {
     }
 }
 
-// Update the selectProject function
+// Update the selectProject function to properly handle stage and substage IDs
 async function selectProject(projectId) {
-    const numericId = parseInt(projectId);
-    const project = globalProjects.find(p => p.id === numericId);
+    console.log('SelectProject called with ID:', projectId);
+    
+    const project = globalProjects.find(p => p.id.toString() === projectId.toString());
     
     if (!project) {
         console.error('Project not found:', projectId);
+        showNotification('Project not found', 'error');
         return;
     }
     
     try {
-        // Set edit mode
         isEditMode = true;
-        currentProjectId = numericId;
+        currentProjectId = parseInt(projectId);
         
-        // Update form button and title
+        console.log('Loading project for editing:', project);
+
+        // Update form UI
         const submitBtn = document.querySelector('#createProjectForm button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Project';
         document.querySelector('.modal-header h2').textContent = 'Edit Project';
         
-        console.log('Loading project:', project); // Debug log
-
         // Fill basic project details
         document.getElementById('projectTitle').value = project.title;
         document.getElementById('projectDescription').value = project.description;
         document.getElementById('projectSuggestions').style.display = 'none';
         
-        // Select project type and trigger theme change
+        // Handle project type and category
         const typeOption = document.querySelector(`.type-option[data-type="${project.project_type}"]`);
         if (typeOption) {
-            typeOption.click(); // This triggers theme change and category updates
-            
-            // Wait for category options to be populated
+            typeOption.click();
             setTimeout(() => {
-                // Set project category
-    const categorySelect = document.getElementById('projectCategory');
+                const categorySelect = document.getElementById('projectCategory');
                 if (categorySelect) {
-                    console.log('Setting category:', project.category_id); // Debug log
-                    categorySelect.value = project.category_id;
-                    
-                    // If category wasn't set, try again with string conversion
-                    if (categorySelect.value !== project.category_id.toString()) {
-                        console.log('Retrying category selection with string value');
-                        categorySelect.value = project.category_id.toString();
-                    }
+                    categorySelect.value = project.category_id.toString();
                 }
             }, 100);
         }
         
-        // Set dates
-        const startDateInput = document.getElementById('startDate');
-        const dueDateInput = document.getElementById('dueDate');
-        
-        if (startDateInput && project.start_date) {
-            startDateInput.value = formatDateForInput(project.start_date);
+        // Set dates and assigned team member
+        if (project.start_date) {
+            document.getElementById('startDate').value = formatDateForInput(project.start_date);
         }
-        if (dueDateInput && project.end_date) {
-            dueDateInput.value = formatDateForInput(project.end_date);
+        if (project.end_date) {
+            document.getElementById('dueDate').value = formatDateForInput(project.end_date);
         }
-        
-        // Set assigned team member
-        const assignToSelect = document.getElementById('assignTo');
-        if (assignToSelect && project.assigned_to) {
-            assignToSelect.value = project.assigned_to;
+        if (project.assigned_to) {
+            document.getElementById('assignTo').value = project.assigned_to.toString();
         }
 
-        // Clear existing stages
-    const stagesContainer = document.getElementById('stagesContainer');
-    stagesContainer.innerHTML = '';
-    
-        // Add stages if they exist
+        // Handle stages and substages
+        const stagesContainer = document.getElementById('stagesContainer');
+        
+        // Only clear existing stages if we have new ones to load
         if (project.stages && project.stages.length > 0) {
-    project.stages.forEach((stageData, index) => {
-        // Click add stage button to create new stage
-        document.getElementById('addStageBtn').click();
-        
-        const stageNum = index + 1;
-        const stageBlock = stagesContainer.lastElementChild;
-        
-        if (stageBlock) {
-            // Fill stage details
-            const assignSelect = stageBlock.querySelector(`#assignTo${stageNum}`);
-            const startDateInput = stageBlock.querySelector(`#startDate${stageNum}`);
-            const dueDateInput = stageBlock.querySelector(`#dueDate${stageNum}`);
+            console.log('Loading stages:', project.stages);
+            stagesContainer.innerHTML = '';
+            
+            for (let stageIndex = 0; stageIndex < project.stages.length; stageIndex++) {
+                const stageData = project.stages[stageIndex];
+                const stageNum = stageIndex + 1;
+                
+                // Create new stage
+                document.getElementById('addStageBtn').click();
+                const stageBlock = stagesContainer.lastElementChild;
+                
+                if (stageBlock) {
+                    // Important: Store the stage ID
+                    stageBlock.dataset.stageId = stageData.id;
+                    console.log(`Set stage ID ${stageData.id} for stage ${stageNum}`);
+                    
+                    // Fill stage details
+                    const assignSelect = document.getElementById(`assignTo${stageNum}`);
+                    const startDateInput = document.getElementById(`startDate${stageNum}`);
+                    const dueDateInput = document.getElementById(`dueDate${stageNum}`);
 
                     if (assignSelect) assignSelect.value = stageData.assigned_to;
                     if (startDateInput) startDateInput.value = formatDateForInput(stageData.start_date);
                     if (dueDateInput) dueDateInput.value = formatDateForInput(stageData.end_date);
 
-                    // Add substages if they exist
-            if (stageData.substages && stageData.substages.length > 0) {
-                stageData.substages.forEach(substageData => {
-                    const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
-                    if (addSubstageBtn) {
-                        addSubstageBtn.click();
-
+                    // Handle substages
+                    if (stageData.substages && stageData.substages.length > 0) {
+                        console.log(`Loading ${stageData.substages.length} substages for stage ${stageNum}`);
+                        
+                        for (const substageData of stageData.substages) {
+                            // Create new substage
+                            const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
+                            if (addSubstageBtn) {
+                                addSubstageBtn.click();
+                                
                                 const substagesContainer = stageBlock.querySelector('.substages-container');
                                 const substageBlock = substagesContainer.lastElementChild;
                                 
-                        if (substageBlock) {
-                            const titleSelect = substageBlock.querySelector('select[id^="substageTitle"]');
-                            const assignSelect = substageBlock.querySelector('select[id^="substageAssignTo"]');
-                            const startDateInput = substageBlock.querySelector('input[id^="substageStartDate"]');
-                            const dueDateInput = substageBlock.querySelector('input[id^="substageDueDate"]');
+                                if (substageBlock) {
+                                    // Important: Store the substage ID
+                                    substageBlock.dataset.substageId = substageData.id;
+                                    console.log(`Set substage ID ${substageData.id} for substage in stage ${stageNum}`);
+                                    
+                                    // Fill substage details
+                                    const substageNum = substageBlock.dataset.substage;
+                                    const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageNum}`);
+                                    const assignSelect = document.getElementById(`substageAssignTo${stageNum}_${substageNum}`);
+                                    const startDateInput = document.getElementById(`substageStartDate${stageNum}_${substageNum}`);
+                                    const dueDateInput = document.getElementById(`substageDueDate${stageNum}_${substageNum}`);
 
-                            if (titleSelect) {
+                                    if (titleSelect) {
                                         // Handle custom titles
-                                        if (titleSelect.querySelector(`option[value="${substageData.title}"]`)) {
-                                            titleSelect.value = substageData.title;
-                                } else {
-                                            // Create custom option
+                                        const title = substageData.title;
+                                        if (!titleSelect.querySelector(`option[value="${title}"]`)) {
                                             const customOption = document.createElement('option');
-                                            customOption.value = substageData.title;
-                                            customOption.textContent = substageData.title;
+                                            customOption.value = title;
+                                            customOption.textContent = title;
                                             customOption.dataset.custom = 'true';
                                             titleSelect.insertBefore(customOption, titleSelect.querySelector('option[value="custom"]'));
-                                            titleSelect.value = substageData.title;
                                         }
+                                        titleSelect.value = title;
                                     }
+                                    
                                     if (assignSelect) assignSelect.value = substageData.assigned_to;
                                     if (startDateInput) startDateInput.value = formatDateForInput(substageData.start_date);
                                     if (dueDateInput) dueDateInput.value = formatDateForInput(substageData.end_date);
                                 }
                             }
-                        });
+                        }
                     }
                 }
-            });
-        }
-
-        // Add stage and substage IDs to the elements
-        if (project.stages && project.stages.length > 0) {
-            project.stages.forEach((stageData, index) => {
-                const stageBlock = stagesContainer.lastElementChild;
-                if (stageBlock) {
-                    stageBlock.dataset.stageId = stageData.id;
-                    
-                    // Add substage IDs
-                    if (stageData.substages && stageData.substages.length > 0) {
-                        stageData.substages.forEach(substageData => {
-                            const substageBlock = stageBlock.querySelector(`.substage-block[data-substage="${substageData.substage_number}"]`);
-                            if (substageBlock) {
-                                substageBlock.dataset.substageId = substageData.id;
-                            }
-                        });
-                    }
-                }
-            });
+            }
         }
 
     } catch (error) {
         console.error('Error selecting project:', error);
-        showNotification('Error loading project details', 'error');
+        showNotification('Error loading project details: ' + error.message, 'error');
     }
 }
 
@@ -1575,7 +1596,9 @@ function handleInput(e) {
     // Show suggestions
     if (matches.length > 0) {
         suggestionsContainer.innerHTML = matches.map(project => `
-            <div class="suggestion-item" onclick="selectProject(${project.id})">
+            <div class="suggestion-item" 
+                 data-project-id="${project.id}" 
+                 onclick="selectProject('${project.id}')">
                 <div class="suggestion-title">
                     <i class="fas fa-project-diagram"></i>
                     ${highlightMatch(project.title, value)}
@@ -1592,11 +1615,14 @@ function handleInput(e) {
     }
 }
 
-// Add function to update existing project
+// Update the updateProject function
 async function updateProject(e, projectId) {
     try {
         const form = e.target;
         const stages = await getStagesData();
+        
+        // Debug log
+        console.log('Updating project with stages:', stages);
         
         const projectData = {
             projectId: projectId,
@@ -1607,13 +1633,19 @@ async function updateProject(e, projectId) {
             startDate: form.querySelector('#startDate').value,
             dueDate: form.querySelector('#dueDate').value,
             assignTo: form.querySelector('#assignTo').value,
-            stages: stages,
-            // Add flag to indicate this is an update
-            isUpdate: true,
-            // Add existing stage IDs to track what should be removed
-            existingStageIds: Array.from(document.querySelectorAll('.stage-block[data-stage-id]'))
-                .map(stage => stage.dataset.stageId)
+            stages: stages.map(stage => ({
+                ...stage,
+                // Ensure we're sending the correct IDs
+                id: stage.id || null,
+                substages: stage.substages.map(substage => ({
+                    ...substage,
+                    id: substage.id || null,
+                    stage_id: stage.id || null
+                }))
+            }))
         };
+
+        console.log('Sending update data:', projectData);
 
         const response = await fetch('ajax_handlers/update_projects.php', {
             method: 'POST',
@@ -1622,7 +1654,7 @@ async function updateProject(e, projectId) {
         });
 
         const result = await response.json();
-        console.log('Server response:', result); // Debug log
+        console.log('Update response:', result);
         
         if (result.status !== 'success') {
             throw new Error(result.message || 'Failed to update project');
@@ -1630,57 +1662,56 @@ async function updateProject(e, projectId) {
         
         return result;
     } catch (error) {
-        console.error('Error updating project:', error);
+        console.error('Error in updateProject:', error);
         throw error;
     }
 }
 
-// Function to get all stages data
+// Update getStagesData function to properly handle IDs
 async function getStagesData() {
     const stages = [];
     const stageBlocks = document.querySelectorAll('.stage-block');
     
+    console.log('Getting data for stages:', stageBlocks.length);
+    
     for (let i = 0; i < stageBlocks.length; i++) {
         const stageBlock = stageBlocks[i];
-        // Use i + 1 for consistent stage numbering
         const stageNum = i + 1;
         
         // Get existing stage ID if it exists
         const stageId = stageBlock.dataset.stageId || null;
+        console.log(`Processing stage ${stageNum}, ID:`, stageId);
         
         const stageData = {
             id: stageId,
-            stage_number: stageNum, // Make sure this is a number
+            stage_number: stageNum,
             assignTo: document.getElementById(`assignTo${stageBlock.dataset.stage}`).value,
             startDate: document.getElementById(`startDate${stageBlock.dataset.stage}`).value,
             dueDate: document.getElementById(`dueDate${stageBlock.dataset.stage}`).value,
             files: await getStageFiles(stageBlock.dataset.stage),
             substages: []
         };
-
-        // Log for debugging
-        console.log('Processing stage:', {
-            stageId: stageId,
-            stageNum: stageNum,
-            stageData: stageData
-        });
         
-        // Get substages with proper numbering
+        // Get substages
         const substageBlocks = stageBlock.querySelectorAll('.substage-block');
+        console.log(`Found ${substageBlocks.length} substages for stage ${stageNum}`);
+        
         for (let j = 0; j < substageBlocks.length; j++) {
             const substageBlock = substageBlocks[j];
-            const substageNum = j + 1; // Ensure proper substage numbering
+            const substageNum = substageBlock.dataset.substage;
             const substageId = substageBlock.dataset.substageId || null;
+            
+            console.log(`Processing substage ${substageNum}, ID:`, substageId);
             
             const substageData = {
                 id: substageId,
-                substage_number: substageNum,
+                substage_number: j + 1,
                 stage_id: stageId,
-                title: document.getElementById(`substageTitle${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
-                assignTo: document.getElementById(`substageAssignTo${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
-                startDate: document.getElementById(`substageStartDate${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
-                dueDate: document.getElementById(`substageDueDate${stageBlock.dataset.stage}_${substageBlock.dataset.substage}`).value,
-                files: await getSubstageFiles(stageBlock.dataset.stage, substageBlock.dataset.substage)
+                title: document.getElementById(`substageTitle${stageBlock.dataset.stage}_${substageNum}`).value,
+                assignTo: document.getElementById(`substageAssignTo${stageBlock.dataset.stage}_${substageNum}`).value,
+                startDate: document.getElementById(`substageStartDate${stageBlock.dataset.stage}_${substageNum}`).value,
+                dueDate: document.getElementById(`substageDueDate${stageBlock.dataset.stage}_${substageNum}`).value,
+                files: await getSubstageFiles(stageBlock.dataset.stage, substageNum)
             };
             
             stageData.substages.push(substageData);
@@ -1689,5 +1720,11 @@ async function getStagesData() {
         stages.push(stageData);
     }
     
+    console.log('Final stages data:', stages);
     return stages;
+}
+
+// Update the updateSubstageElements function
+function updateSubstageElements(substageBlock, stageNum, substageNum) {
+    // Implementation of updateSubstageElements function
 }

@@ -54,6 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle stages
         if (isset($data['stages']) && is_array($data['stages'])) {
             foreach ($data['stages'] as $stage) {
+                $stage_id = null;
+                
                 if (isset($stage['id']) && $stage['id']) {
                     // Update existing stage
                     $update_stage_sql = "UPDATE project_stages SET 
@@ -73,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $project_id
                     );
                     $stmt->execute();
+                    $stage_id = $stage['id'];
                 } else {
                     // Insert new stage
                     $insert_stage_sql = "INSERT INTO project_stages 
@@ -91,67 +94,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stage_id = $conn->insert_id;
                 }
 
-                // Handle substages for this stage
-                if (isset($stage['substages']) && is_array($stage['substages'])) {
-                    foreach ($stage['substages'] as $substage) {
-                        if (isset($substage['id']) && $substage['id']) {
-                            // Update existing substage
-                            $update_substage_sql = "UPDATE project_substages SET 
-                                title = ?,
-                                assigned_to = ?,
-                                start_date = ?,
-                                end_date = ?,
-                                substage_number = ?
-                                WHERE id = ? AND stage_id = ?";
-                            
-                            $stmt = $conn->prepare($update_substage_sql);
-                            $stmt->bind_param('ssssiii',
-                                $substage['title'],
-                                $substage['assignTo'],
-                                $substage['startDate'],
-                                $substage['dueDate'],
-                                $substage['substage_number'],
-                                $substage['id'],
-                                $stage_id
-                            );
-                            $stmt->execute();
-                        } else {
-                            // Insert new substage
-                            $insert_substage_sql = "INSERT INTO project_substages 
-                                (stage_id, title, assigned_to, start_date, end_date, substage_number) 
-                                VALUES (?, ?, ?, ?, ?, ?)";
-                            
-                            $stmt = $conn->prepare($insert_substage_sql);
-                            $stmt->bind_param('issssi',
-                                $stage_id,
-                                $substage['title'],
-                                $substage['assignTo'],
-                                $substage['startDate'],
-                                $substage['dueDate'],
-                                $substage['substage_number']
-                            );
-                            $stmt->execute();
-                        }
-
-                        // Handle files for substage if they exist
-                        if (!empty($substage['files'])) {
-                            foreach ($substage['files'] as $file) {
-                                $insert_file_sql = "INSERT INTO project_files 
-                                    (project_id, stage_id, substage_id, file_name, file_path, file_type, file_size) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+                // Only proceed with substages if we have a valid stage_id
+                if ($stage_id) {
+                    // Handle substages for this stage
+                    if (isset($stage['substages']) && is_array($stage['substages'])) {
+                        foreach ($stage['substages'] as $substage) {
+                            if (isset($substage['id']) && $substage['id']) {
+                                // Update existing substage
+                                $update_substage_sql = "UPDATE project_substages SET 
+                                    title = ?,
+                                    assigned_to = ?,
+                                    start_date = ?,
+                                    end_date = ?,
+                                    substage_number = ?,
+                                    stage_id = ?
+                                    WHERE id = ?";
                                 
-                                $stmt = $conn->prepare($insert_file_sql);
-                                $stmt->bind_param('iiissss',
-                                    $project_id,
+                                $stmt = $conn->prepare($update_substage_sql);
+                                $stmt->bind_param('ssssiii',
+                                    $substage['title'],
+                                    $substage['assignTo'],
+                                    $substage['startDate'],
+                                    $substage['dueDate'],
+                                    $substage['substage_number'],
                                     $stage_id,
-                                    $conn->insert_id, // substage_id
-                                    $file['name'],
-                                    $file['path'],
-                                    $file['type'],
-                                    $file['size']
+                                    $substage['id']
                                 );
-                                $stmt->execute();
+                            } else {
+                                // Insert new substage
+                                $insert_substage_sql = "INSERT INTO project_substages 
+                                    (stage_id, title, assigned_to, start_date, end_date, substage_number) 
+                                    VALUES (?, ?, ?, ?, ?, ?)";
+                                
+                                $stmt = $conn->prepare($insert_substage_sql);
+                                $stmt->bind_param('issssi',
+                                    $stage_id,
+                                    $substage['title'],
+                                    $substage['assignTo'],
+                                    $substage['startDate'],
+                                    $substage['dueDate'],
+                                    $substage['substage_number']
+                                );
                             }
+                            $stmt->execute();
                         }
                     }
                 }

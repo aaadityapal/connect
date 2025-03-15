@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     try {
-        // Start transaction
         $conn->begin_transaction();
 
         // Validate required fields
@@ -25,6 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $project_id = $data['projectId'];
+
+        // First, get all existing stage IDs for this project
+        $existing_stages_query = "SELECT id FROM project_stages WHERE project_id = ?";
+        $stmt = $conn->prepare($existing_stages_query);
+        $stmt->bind_param('i', $project_id);
+        $stmt->execute();
+        $existing_stages_result = $stmt->get_result();
+        $existing_stage_ids = [];
+        while ($row = $existing_stages_result->fetch_assoc()) {
+            $existing_stage_ids[] = $row['id'];
+        }
 
         // Update project details
         $update_project_sql = "UPDATE projects SET 
@@ -51,6 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $stmt->execute();
 
+        // Track which stage IDs we're keeping
+        $kept_stage_ids = [];
+
         // Handle stages
         if (isset($data['stages']) && is_array($data['stages'])) {
             foreach ($data['stages'] as $stage) {
@@ -66,16 +79,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         WHERE id = ? AND project_id = ?";
                     
                     $stmt = $conn->prepare($update_stage_sql);
+                    $stage_number = intval($stage['stage_number']);
                     $stmt->bind_param('sssiii',
                         $stage['assignTo'],
                         $stage['startDate'],
                         $stage['dueDate'],
-                        $stage['stage_number'],
+                        $stage_number,
                         $stage['id'],
                         $project_id
                     );
                     $stmt->execute();
                     $stage_id = $stage['id'];
+                    $kept_stage_ids[] = $stage['id'];
+
+                    // Delete existing substages for this stage
+                    $delete_substages_sql = "DELETE FROM project_substages WHERE stage_id = ?";
+                    $stmt = $conn->prepare($delete_substages_sql);
+                    $stmt->bind_param('i', $stage['id']);
+                    $stmt->execute();
                 } else {
                     // Insert new stage
                     $insert_stage_sql = "INSERT INTO project_stages 
@@ -83,15 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         VALUES (?, ?, ?, ?, ?)";
                     
                     $stmt = $conn->prepare($insert_stage_sql);
-                    $stmt->bind_param('isssj',
+                    $stage_number = intval($stage['stage_number']);
+                    $stmt->bind_param('isssi',
                         $project_id,
                         $stage['assignTo'],
                         $stage['startDate'],
                         $stage['dueDate'],
-                        $stage['stage_number']
+                        $stage_number
                     );
                     $stmt->execute();
                     $stage_id = $conn->insert_id;
+                    $kept_stage_ids[] = $stage_id;
                 }
 
                 // Only proceed with substages if we have a valid stage_id
@@ -163,14 +186,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Commit transaction
+        // Delete stages that weren't kept (and their substages will be deleted via foreign key cascade)
+        $stages_to_delete = array_diff($existing_stage_ids, $kept_stage_ids);
+        if (!empty($stages_to_delete)) {
+            $delete_stages_sql = "DELETE FROM project_stages WHERE id IN (" . 
+                implode(',', array_fill(0, count($stages_to_delete), '?')) . ")";
+            $stmt = $conn->prepare($delete_stages_sql);
+            $types = str_repeat('i', count($stages_to_delete));
+            $stmt->bind_param($types, ...$stages_to_delete);
+            $stmt->execute();
+        }
+
         $conn->commit();
 
         $response['status'] = 'success';
         $response['message'] = 'Project updated successfully';
 
     } catch (Exception $e) {
-        // Rollback transaction on error
         $conn->rollback();
         $response['message'] = 'Failed to update project: ' . $e->getMessage();
     }

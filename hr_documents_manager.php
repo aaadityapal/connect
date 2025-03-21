@@ -241,6 +241,124 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             color: var(--gray-300);
         }
 
+        .offer-letters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        .filter-group select {
+            min-width: 200px;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            background-color: white;
+            font-size: 0.875rem;
+        }
+
+        .offer-letter-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .offer-letter-table th,
+        .offer-letter-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .offer-letter-table th {
+            background-color: var(--gray-100);
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .status-accepted {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-rejected {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .employee-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
+
+        .employee-info h3 {
+            margin-bottom: 1rem;
+            color: var(--gray-800);
+            font-size: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-item label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .info-item span {
+            font-size: 0.875rem;
+            color: var(--gray-800);
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -255,6 +373,48 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             .documents-grid {
                 grid-template-columns: 1fr;
             }
+
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-group select {
+                width: 100%;
+            }
+
+            .btn-add-doc {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem !important;
+        }
+
+        .no-data-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-600);
+        }
+
+        .no-data-message i {
+            font-size: 2rem;
+            color: var(--gray-400);
         }
     </style>
 </head>
@@ -298,6 +458,81 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         <!-- Documents List -->
         <div id="documentsList" class="documents-grid">
             <!-- Documents will be loaded here -->
+        </div>
+
+        <div class="offer-letters-section">
+            <div class="section-header">
+                <h2><i class="fas fa-file-signature"></i> Employee Offer Letters</h2>
+                <div class="header-actions">
+                    <div class="filter-group">
+                        <label for="userFilter">Filter by:</label>
+                        <select id="userFilter" class="form-control" onchange="filterOfferLetters()">
+                            <option value="">All Employees</option>
+                            <!-- Will be populated with employees -->
+                        </select>
+                    </div>
+                    <button class="btn-add-doc" onclick="toggleOfferLetterForm()">
+                        <i class="fas fa-plus"></i> Add Offer Letter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Offer Letter Upload Form -->
+            <div id="offerLetterUploadForm" class="document-upload-form" style="display: none;">
+                <form id="offerLetterForm" onsubmit="handleOfferLetterUpload(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="employeeSelect">Select Employee</label>
+                            <select id="employeeSelect" name="user_id" required class="form-control">
+                                <option value="">Select Employee</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="offerLetterFile">Offer Letter (PDF)</label>
+                            <input type="file" id="offerLetterFile" name="file" required accept=".pdf" class="form-control">
+                        </div>
+                    </div>
+                    <div id="selectedEmployeeInfo" class="employee-info" style="display: none;">
+                        <h3>Employee Details</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Role:</label>
+                                <span id="empRole"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Designation:</label>
+                                <span id="empDesignation"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span id="empEmail"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Phone:</label>
+                                <span id="empPhone"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-add-doc">Upload Offer Letter</button>
+                </form>
+            </div>
+
+            <!-- Offer Letters Table -->
+            <table class="offer-letter-table">
+                <thead>
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Role</th>
+                        <th>Designation</th>
+                        <th>Upload Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="offerLettersTableBody">
+                    <!-- Will be populated via JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -455,8 +690,198 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             });
         }
 
+        function toggleOfferLetterForm() {
+            const form = document.getElementById('offerLetterUploadForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            if (form.style.display === 'block') {
+                loadEmployees();
+            }
+        }
+
+        function loadEmployees() {
+            fetch('get_employees.php')
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('employeeSelect');
+                select.innerHTML = '<option value="">Select Employee</option>';
+                data.employees.forEach(employee => {
+                    select.innerHTML += `<option value="${employee.id}" 
+                        data-role="${employee.role}"
+                        data-designation="${employee.designation}"
+                        data-email="${employee.email}"
+                        data-phone="${employee.phone}"
+                    >${employee.username}</option>`;
+                });
+
+                // Add change event listener
+                select.addEventListener('change', updateEmployeeInfo);
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Failed to load employees', 'error');
+            });
+        }
+
+        function updateEmployeeInfo() {
+            const select = document.getElementById('employeeSelect');
+            const infoDiv = document.getElementById('selectedEmployeeInfo');
+            
+            if (select.value) {
+                const option = select.options[select.selectedIndex];
+                document.getElementById('empRole').textContent = option.dataset.role;
+                document.getElementById('empDesignation').textContent = option.dataset.designation;
+                document.getElementById('empEmail').textContent = option.dataset.email;
+                document.getElementById('empPhone').textContent = option.dataset.phone;
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+
+        function handleOfferLetterUpload(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            formData.append('action', 'add_offer_letter');
+
+            fetch('update_offer_letters.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success', 'Offer letter uploaded successfully', 'success');
+                    event.target.reset();
+                    toggleOfferLetterForm();
+                    loadOfferLetters();
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+        }
+
+        function populateUserFilter() {
+            fetch('get_employees.php')
+            .then(response => response.json())
+            .then(data => {
+                const filterSelect = document.getElementById('userFilter');
+                filterSelect.innerHTML = '<option value="">All Employees</option>';
+                data.employees.forEach(employee => {
+                    filterSelect.innerHTML += `
+                        <option value="${employee.id}">${employee.username}</option>
+                    `;
+                });
+            })
+            .catch(error => {
+                console.error('Error loading employees for filter:', error);
+            });
+        }
+
+        function filterOfferLetters() {
+            const selectedUserId = document.getElementById('userFilter').value;
+            
+            fetch(`get_offer_letters.php${selectedUserId ? '?user_id=' + selectedUserId : ''}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('offerLettersTableBody');
+                if (!data.offerLetters || data.offerLetters.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="no-data">
+                                <div class="no-data-message">
+                                    <i class="fas fa-folder-open"></i>
+                                    <p>No offer letters found</p>
+                                </div>
+                            </td>
+                        </tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.offerLetters.map(letter => `
+                    <tr>
+                        <td>${letter.employee_name}</td>
+                        <td>${letter.role}</td>
+                        <td>${letter.designation}</td>
+                        <td>${letter.upload_date}</td>
+                        <td><span class="status-badge status-${letter.status}">${letter.status}</span></td>
+                        <td>
+                            <button onclick="viewOfferLetter(${letter.id})" class="btn-action view" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="downloadOfferLetter(${letter.id})" class="btn-action download" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button onclick="deleteOfferLetter(${letter.id})" class="btn-action delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Failed to load offer letters', 'error');
+            });
+        }
+
+        function loadOfferLetters() {
+            filterOfferLetters();
+        }
+
+        function viewOfferLetter(id) {
+            window.open(`offer_letter_handler.php?action=view&id=${id}`, '_blank');
+        }
+
+        function downloadOfferLetter(id) {
+            window.location.href = `offer_letter_handler.php?action=download&id=${id}`;
+        }
+
+        function deleteOfferLetter(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This offer letter will be permanently deleted",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('update_offer_letters.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'delete_offer_letter',
+                            id: id
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadOfferLetters();
+                            Swal.fire('Deleted!', 'Offer letter has been deleted.', 'success');
+                        } else {
+                            throw new Error(data.message || 'Failed to delete offer letter');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', error.message, 'error');
+                    });
+                }
+            });
+        }
+
         // Load documents when page loads
-        document.addEventListener('DOMContentLoaded', loadHRDocuments);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHRDocuments();
+            populateUserFilter();
+            loadOfferLetters();
+        });
     </script>
 </body>
 </html> 

@@ -273,6 +273,44 @@ $user_role = $_SESSION['role'] ?? 'employee';
             padding: 5px 10px;
             font-size: 0.9em;
         }
+
+        .section-subtitle {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .document-section {
+            margin-bottom: 30px;
+        }
+        
+        .mt-4 {
+            margin-top: 2rem;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-accepted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -617,45 +655,103 @@ $user_role = $_SESSION['role'] ?? 'employee';
 
         // Add this function to load HR documents
         function loadHRDocuments() {
-            fetch('get_hr_documents.php')
+            // First, load offer letters
+            fetch('ol.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         const container = document.getElementById('documents-container');
-                        container.innerHTML = data.documents.map(doc => `
-                            <div class="document-item">
-                                <div class="document-icon">
-                                    <i class="fas ${doc.icon_class}"></i>
-                                </div>
-                                <div class="document-details">
-                                    <h3>${doc.original_name}</h3>
-                                    <p>Last updated: ${doc.last_modified}</p>
-                                    <p><small>
-                                        Size: ${doc.formatted_size}
-                                        ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
-                                    </small></p>
-                                    <div class="document-actions">
-                                        <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id})">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                        <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id})">
-                                            <i class="fas fa-download"></i> Download
-                                        </button>
-                                        ${doc.acknowledgment_status === 'acknowledged' ? `
-                                            <button class="btn btn-success btn-sm" disabled>
-                                                <i class="fas fa-check"></i> Acknowledged
-                                            </button>
-                                        ` : `
-                                            <button class="btn btn-info btn-sm" onclick="acknowledgeDocument(${doc.id})">
-                                                <i class="fas fa-clipboard-check"></i> Read & Accept
-                                            </button>
-                                        `}
+                        
+                        // Add Offer Letters section
+                        container.innerHTML = `
+                            <h3 class="section-subtitle">Offer Letters</h3>
+                            <div class="document-section">
+                                ${data.offerLetters.length > 0 ? data.offerLetters.map(doc => `
+                                    <div class="document-item">
+                                        <div class="document-icon">
+                                            <i class="fas fa-file-contract"></i>
+                                        </div>
+                                        <div class="document-details">
+                                            <h3>${doc.original_name}</h3>
+                                            <p>Upload Date: ${new Date(doc.upload_date).toLocaleDateString()}</p>
+                                            <p><small>
+                                                Status: <span class="status-badge status-${doc.status.toLowerCase()}">${doc.status}</span>
+                                                ${doc.file_size ? `• Size: ${formatFileSize(doc.file_size)}` : ''}
+                                            </small></p>
+                                            <div class="document-actions">
+                                                ${doc.status === 'pending' ? `
+                                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'offer_letter')">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                    <button class="btn btn-success btn-sm" onclick="respondToOffer(${doc.id}, 'accepted')">
+                                                        <i class="fas fa-check"></i> Accept
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm" onclick="respondToOffer(${doc.id}, 'rejected')">
+                                                        <i class="fas fa-times"></i> Reject
+                                                    </button>
+                                                ` : `
+                                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'offer_letter')">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                    <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'offer_letter')">
+                                                        <i class="fas fa-download"></i> Download
+                                                    </button>
+                                                    <button class="btn-${doc.status === 'accepted' ? 'success' : 'danger'} btn-sm" disabled>
+                                                        <i class="fas fa-${doc.status === 'accepted' ? 'check' : 'times'}"></i> ${doc.status}
+                                                    </button>
+                                                `}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                `).join('') : '<p>No offer letters available.</p>'}
                             </div>
-                        `).join('');
-                    } else {
-                        throw new Error(data.message || 'Failed to load documents');
+                            <h3 class="section-subtitle mt-4">Other HR Documents</h3>
+                        `;
+
+                        // Then load other HR documents
+                        return fetch('get_hr_documents.php');
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const container = document.getElementById('documents-container');
+                        container.innerHTML += `
+                            <div class="document-section">
+                                ${data.documents.map(doc => `
+                                    <div class="document-item">
+                                        <div class="document-icon">
+                                            <i class="fas ${doc.icon_class}"></i>
+                                        </div>
+                                        <div class="document-details">
+                                            <h3>${doc.original_name}</h3>
+                                            <p>Last updated: ${doc.last_modified}</p>
+                                            <p><small>
+                                                Size: ${doc.formatted_size}
+                                                ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
+                                            </small></p>
+                                            <div class="document-actions">
+                                                <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'hr_doc')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'hr_doc')">
+                                                    <i class="fas fa-download"></i> Download
+                                                </button>
+                                                ${doc.acknowledgment_status === 'acknowledged' ? `
+                                                    <button class="btn btn-success btn-sm" disabled>
+                                                        <i class="fas fa-check"></i> Acknowledged
+                                                    </button>
+                                                ` : `
+                                                    <button class="btn btn-info btn-sm" onclick="acknowledgeDocument(${doc.id})">
+                                                        <i class="fas fa-clipboard-check"></i> Read & Accept
+                                                    </button>
+                                                `}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
                     }
                 })
                 .catch(error => {
@@ -668,15 +764,17 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 });
         }
 
-        // Update document handling functions to handle numeric IDs
-        function viewDocument(docId) {
+        // Update view and download functions
+        function viewDocument(docId, type) {
             if (!docId) return;
-            window.open(`view_document.php?id=${docId}`, '_blank');
+            const endpoint = type === 'offer_letter' ? 'view_employee_offer_letter_document.php' : 'view_document.php';
+            window.open(`${endpoint}?id=${docId}`, '_blank');
         }
 
-        function downloadDocument(docId) {
+        function downloadDocument(docId, type) {
             if (!docId) return;
-            window.location.href = `download_document.php?id=${docId}`;
+            const endpoint = type === 'offer_letter' ? 'download_employee_offer_letter_document.php' : 'download_document.php';
+            window.location.href = `${endpoint}?id=${docId}`;
         }
 
         // Add this new function for document acknowledgment
@@ -734,6 +832,58 @@ $user_role = $_SESSION['role'] ?? 'employee';
         } else {
             // Optionally preload the documents anyway
             loadHRDocuments();
+        }
+
+        // Add helper function for file size formatting
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Update the respondToOffer function
+        function respondToOffer(offerId, response) {
+            Swal.fire({
+                title: `Confirm ${response}`,
+                text: `Are you sure you want to ${response} this offer letter?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${response}`,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('offer_id', offerId);
+                    formData.append('action', response);
+
+                    fetch('handle_employee_offer_letter_response.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: `Offer letter has been ${response}.`
+                            });
+                            loadHRDocuments(); // Reload the documents list
+                        } else {
+                            throw new Error(data.message || `Failed to ${response} offer letter`);
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message || `Failed to ${response} offer letter`
+                        });
+                    });
+                }
+            });
         }
     </script>
 </body>

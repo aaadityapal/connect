@@ -1,0 +1,44 @@
+<?php
+session_start();
+require_once 'config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+if (!isset($_GET['id'])) {
+    die("Offer letter ID not provided");
+}
+
+try {
+    $offer_id = $_GET['id'];
+    $user_id = $_SESSION['user_id'];
+    $is_hr = ($_SESSION['role'] === 'HR');
+
+    // Check if user has permission to view this offer letter
+    $query = "SELECT ol.* FROM offer_letters ol 
+             WHERE ol.id = ? AND (? = 1 OR ol.user_id = ?)";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$offer_id, $is_hr, $user_id]);
+    $offer = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$offer) {
+        die("Unauthorized access or offer letter not found");
+    }
+
+    // Get file content
+    $file_path = $offer['file_path'];
+    if (!file_exists($file_path)) {
+        die("File not found");
+    }
+
+    // Output the PDF file
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="' . $offer['original_name'] . '"');
+    readfile($file_path);
+    
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
+} 

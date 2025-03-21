@@ -1412,6 +1412,251 @@ $projectCounts = getProjectCounts();
             font-size: 14px;
             color: #666;
         }
+
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            max-width: 350px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .custom-notification.show {
+            transform: translateX(0);
+        }
+
+        .custom-notification.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .custom-notification.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .custom-notification.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .notification-icon {
+            font-size: 20px;
+        }
+
+        .custom-notification.success .notification-icon {
+            color: #10b981;
+        }
+
+        .custom-notification.error .notification-icon {
+            color: #ef4444;
+        }
+
+        .custom-notification.warning .notification-icon {
+            color: #f59e0b;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .notification-close {
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .notification-close:hover {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .work-report-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 560px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            z-index: 1001;
+            animation: dialogFadeIn 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .work-report-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            animation: overlayFadeIn 0.3s ease;
+        }
+
+        .work-report-title {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #0f172a;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .work-report-title i {
+            color: #475569;
+            font-size: 1rem;
+        }
+
+        .work-report-textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: #334155;
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        .work-report-textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .work-report-textarea:focus {
+            outline: none;
+            border-color: #64748b;
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+        }
+
+        .work-report-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .work-report-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .work-report-btn.submit {
+            background: #0f172a;
+            color: white;
+            border: none;
+        }
+
+        .work-report-btn.submit:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .work-report-btn.cancel {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .work-report-btn.cancel:hover {
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .work-report-btn i {
+            font-size: 0.875rem;
+        }
+
+        /* Keyboard shortcut hints */
+        .keyboard-hint {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 6px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        @keyframes dialogFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        @keyframes overlayFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .work-report-dialog {
+                width: 95%;
+                padding: 24px;
+            }
+            
+            .work-report-actions {
+                flex-direction: column-reverse;
+            }
+            
+            .work-report-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+            }
+            
+            .keyboard-hint {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1508,10 +1753,10 @@ $projectCounts = getProjectCounts();
                             </div>
                         </div>
                         <div class="punch-section">
-                            <div class="last-punch">Last punch in: <span class="punch-time">10:44 AM</span></div>
-                            <button class="punch-btn">
+                            <div class="last-punch">Last punch: <span class="punch-time">Not punched in today</span></div>
+                            <button class="punch-btn" id="punchBtn">
                                 <i class="fas fa-fingerprint"></i>
-                                <span>Punch Out</span>
+                                <span>Punch In</span>
                             </button>
                         </div>
                     </div>
@@ -1986,21 +2231,29 @@ $projectCounts = getProjectCounts();
         });
 
         function updateISTTime() {
-            const options = {
-                timeZone: 'Asia/Kolkata',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            };
+            const istTimeElement = document.getElementById('ist-time');
             
-            const istTime = new Date().toLocaleTimeString('en-US', options);
-            document.getElementById('ist-time').textContent = istTime + ' IST';
+            // Check if element exists before updating
+            if (istTimeElement) {
+                const options = {
+                    timeZone: 'Asia/Kolkata',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                };
+                
+                const istTime = new Date().toLocaleTimeString('en-US', options);
+                istTimeElement.textContent = istTime + ' IST';
+            }
         }
 
-        // Update time immediately and then every second
-        updateISTTime();
-        setInterval(updateISTTime, 1000);
+        // Make sure DOM is loaded before starting the timer
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update time immediately and then every second
+            updateISTTime();
+            setInterval(updateISTTime, 1000);
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const monthPickers = document.querySelectorAll('.month-picker');
@@ -2056,6 +2309,278 @@ $projectCounts = getProjectCounts();
                 console.log('Selected location:', this.value);
             });
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const punchBtn = document.querySelector('.punch-btn');
+            const punchTime = document.querySelector('.punch-time');
+            
+            // Check initial punch status when page loads
+            checkPunchStatus();
+            
+            punchBtn.addEventListener('click', handlePunchAction);
+        });
+
+        // Function to handle punch actions
+        async function handlePunchAction() {
+            const punchBtn = document.querySelector('.punch-btn');
+            
+            if (!punchBtn) {
+                showNotification('Punch button not found', 'error');
+                return;
+            }
+            
+            const action = punchBtn.textContent.includes('In') ? 'punch_in' : 'punch_out';
+            let data = { action: action };
+            
+            try {
+                if (action === 'punch_out') {
+                    const workReport = await promptWorkReport();
+                    if (!workReport) return;
+                    data.work_report = workReport;
+                }
+                
+                const response = await fetch('punch.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update button state and show success notification
+                    if (action === 'punch_in') {
+                        punchBtn.innerHTML = '<i class="fas fa-fingerprint"></i><span>Punch Out</span>';
+                        const punchTimeSpan = document.querySelector('.punch-time');
+                        const lastPunchText = document.querySelector('.last-punch');
+                        if (punchTimeSpan && lastPunchText) {
+                            lastPunchText.textContent = 'Last punch in: ';
+                            punchTimeSpan.textContent = new Date().toLocaleTimeString();
+                        }
+                        showNotification('Successfully punched in', 'success');
+                    } else {
+                        punchBtn.innerHTML = '<i class="fas fa-fingerprint"></i><span>Punch In</span>';
+                        const punchTimeSpan = document.querySelector('.punch-time');
+                        const lastPunchText = document.querySelector('.last-punch');
+                        if (punchTimeSpan && lastPunchText) {
+                            lastPunchText.textContent = 'Last punch: ';
+                            punchTimeSpan.textContent = new Date().toLocaleTimeString();
+                        }
+                        showNotification('Successfully punched out', 'success');
+                    }
+                } else {
+                    showNotification(result.message || 'Failed to process request', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    showNotification('Network error: Please check your connection', 'error');
+                } else {
+                    showNotification(error.message || 'An unexpected error occurred', 'error');
+                }
+            }
+        }
+
+        // Function to check initial punch status
+        async function checkPunchStatus() {
+            try {
+                const response = await fetch('punch.php?action=check_status', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                const punchBtn = document.querySelector('.punch-btn');
+                const punchTimeSpan = document.querySelector('.punch-time');
+                const lastPunchText = document.querySelector('.last-punch');
+                
+                if (punchBtn && punchTimeSpan && lastPunchText) {
+                    if (result.is_punched_in) {
+                        punchBtn.innerHTML = '<i class="fas fa-fingerprint"></i><span>Punch Out</span>';
+                        lastPunchText.textContent = 'Last punch in: ';
+                        punchTimeSpan.textContent = result.punch_time ? 
+                            new Date(result.punch_time).toLocaleTimeString() : 
+                            new Date().toLocaleTimeString();
+                    } else {
+                        punchBtn.innerHTML = '<i class="fas fa-fingerprint"></i><span>Punch In</span>';
+                        lastPunchText.textContent = 'Last punch: ';
+                        punchTimeSpan.textContent = 'Not punched in today';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking punch status:', error);
+            }
+        }
+
+        // Function to prompt for work report (you can replace this with a modal)
+        function promptWorkReport() {
+            return new Promise((resolve) => {
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'work-report-overlay';
+                
+                // Create dialog
+                const dialog = document.createElement('div');
+                dialog.className = 'work-report-dialog';
+                
+                dialog.innerHTML = `
+                    <div class="work-report-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        Work Report
+                        <span class="keyboard-hint">Ctrl + Enter to submit</span>
+                    </div>
+                    <textarea 
+                        class="work-report-textarea" 
+                        placeholder="Please describe your work activities for today..."
+                        autofocus
+                    ></textarea>
+                    <div class="work-report-actions">
+                        <button class="work-report-btn cancel">
+                            <i class="fas fa-xmark"></i>
+                            Cancel
+                        </button>
+                        <button class="work-report-btn submit">
+                            <i class="fas fa-check"></i>
+                            Submit Report
+                        </button>
+                    </div>
+                `;
+                
+                // Add to DOM
+                document.body.appendChild(overlay);
+                document.body.appendChild(dialog);
+                
+                // Focus textarea
+                const textarea = dialog.querySelector('textarea');
+                textarea.focus();
+                
+                // Handle submit
+                const submitBtn = dialog.querySelector('.submit');
+                submitBtn.addEventListener('click', () => {
+                    const report = textarea.value.trim();
+                    if (report) {
+                        cleanup();
+                        resolve(report);
+                    } else {
+                        showNotification('Please enter your work report', 'warning');
+                        textarea.focus();
+                    }
+                });
+                
+                // Handle cancel
+                const cancelBtn = dialog.querySelector('.cancel');
+                cancelBtn.addEventListener('click', () => {
+                    cleanup();
+                    resolve(null);
+                });
+                
+                // Handle escape key
+                document.addEventListener('keydown', function escapeHandler(e) {
+                    if (e.key === 'Escape') {
+                        cleanup();
+                        resolve(null);
+                        document.removeEventListener('keydown', escapeHandler);
+                    }
+                });
+                
+                // Handle enter key (with Ctrl/Cmd)
+                textarea.addEventListener('keydown', function enterHandler(e) {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        const report = textarea.value.trim();
+                        if (report) {
+                            cleanup();
+                            resolve(report);
+                        } else {
+                            showNotification('Please enter your work report', 'warning');
+                        }
+                    }
+                });
+                
+                // Cleanup function
+                function cleanup() {
+                    dialog.remove();
+                    overlay.remove();
+                }
+            });
+        }
+
+        // Add this function to handle notifications
+        function showNotification(message, type = 'success', duration = 3000) {
+            // Remove existing notification if any
+            const existingNotification = document.querySelector('.custom-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create notification elements
+            const notification = document.createElement('div');
+            notification.className = `custom-notification ${type}`;
+
+            let icon;
+            let title;
+            switch (type) {
+                case 'success':
+                    icon = 'check-circle';
+                    title = 'Success';
+                    break;
+                case 'error':
+                    icon = 'exclamation-circle';
+                    title = 'Error';
+                    break;
+                case 'warning':
+                    icon = 'exclamation-triangle';
+                    title = 'Warning';
+                    break;
+            }
+
+            notification.innerHTML = `
+                <div class="notification-icon">
+                    <i class="fas fa-${icon}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+                <div class="notification-close">
+                    <i class="fas fa-times"></i>
+                </div>
+            `;
+
+            // Add notification to DOM
+            document.body.appendChild(notification);
+
+            // Show notification with animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+
+            // Setup close button
+            const closeBtn = notification.querySelector('.notification-close');
+            closeBtn.addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
+
+            // Auto close after duration
+            if (duration) {
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            }
+        }
     </script>
 </body>
 </html>

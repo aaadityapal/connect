@@ -114,6 +114,40 @@ function getUserShiftDetails($conn, $user_id) {
     ];
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_status') {
+    $user_id = $_SESSION['user_id'];
+    $current_date = date('Y-m-d');
+    
+    try {
+        // Check if user has punched in today
+        $query = "SELECT punch_in FROM attendance 
+                 WHERE user_id = ? AND date = ? AND punch_out IS NULL";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("is", $user_id, $current_date);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            echo json_encode([
+                'is_punched_in' => true,
+                'punch_time' => $row['punch_in']
+            ]);
+        } else {
+            echo json_encode([
+                'is_punched_in' => false,
+                'punch_time' => null
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'is_punched_in' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     $user_id = $_SESSION['user_id'];

@@ -1,32 +1,50 @@
 <?php
-include('config.php');
+session_start();
+require_once 'config/db_connect.php';
 
-if(isset($_POST['id'])) {
-    $id = (int)$_POST['id'];
-    
-    // First get the attachment path if any
-    $query = "SELECT attachment_path FROM circulars WHERE id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if($circular = $result->fetch_assoc()) {
-        // Delete the file if it exists
-        if($circular['attachment_path'] && file_exists($circular['attachment_path'])) {
-            unlink($circular['attachment_path']);
-        }
+header('Content-Type: application/json');
+
+try {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('User not authenticated');
     }
-    
-    // Delete the circular record
-    $query = "DELETE FROM circulars WHERE id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $id);
-    
-    if($stmt->execute()) {
-        echo "success";
+
+    // Validate circular ID
+    if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
+        throw new Exception('Invalid circular ID');
+    }
+
+    $circular_id = (int)$_POST['id'];
+
+    // First get the circular details to delete attachment if exists
+    $query = "SELECT attachment_path FROM circulars WHERE id = :id";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute(['id' => $circular_id]);
+    $circular = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Delete the attachment file if it exists
+    if ($circular && $circular['attachment_path'] && file_exists($circular['attachment_path'])) {
+        unlink($circular['attachment_path']);
+    }
+
+    // Delete the circular from database
+    $query = "DELETE FROM circulars WHERE id = :id";
+    $stmt = $pdo->prepare($query);
+    $result = $stmt->execute(['id' => $circular_id]);
+
+    if ($result) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Circular deleted successfully'
+        ]);
     } else {
-        echo "error";
+        throw new Exception('Failed to delete circular');
     }
+
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
-?>

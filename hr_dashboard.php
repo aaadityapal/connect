@@ -2632,6 +2632,40 @@ try {
     background-color: #FEE2E2;
     color: #991B1B;
 }
+
+.delete-circular {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.delete-circular:hover {
+    opacity: 1;
+}
+
+.tooltip-item {
+    position: relative;
+}
+
+.tooltip-item .btn-link {
+    text-decoration: none;
+}
+
+    .delete-item {
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+    }
+
+    .delete-item:hover {
+        opacity: 1;
+    }
+
+    .tooltip-item {
+        position: relative;
+    }
+
+    .tooltip-item .btn-link {
+        text-decoration: none;
+    }
     </style>
 </head>
 <body>
@@ -3185,49 +3219,38 @@ try {
                                 <div class="no-data">No active announcements</div>
                             <?php else: ?>
                                 <?php foreach ($announcements as $announcement): ?>
-                                    <div class="tooltip-item">
-                                        <div class="announcement-info">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                    <div class="tooltip-item" id="announcement-<?php echo $announcement['id']; ?>">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="announcement-info">
                                                 <span class="announcement-title">
-                                                    <?php echo isset($announcement['title']) ? htmlspecialchars($announcement['title']) : 'Untitled'; ?>
+                                                    <?php echo htmlspecialchars($announcement['title']); ?>
                                                 </span>
-                                                <?php if (isset($announcement['priority'])): ?>
-                                                    <?php 
-                                                    $priorityClass = '';
-                                                    switch($announcement['priority']) {
-                                                        case 'high':
-                                                            $priorityClass = 'high';
-                                                            break;
-                                                        case 'normal':
-                                                            $priorityClass = 'normal';
-                                                            break;
-                                                        case 'low':
-                                                            $priorityClass = 'low';
-                                                            break;
-                                                    }
-                                                    ?>
-                                                    <span class="priority-badge <?php echo $priorityClass; ?>">
-                                                        <?php echo ucfirst($announcement['priority']); ?>
-                                                    </span>
-                                                <?php endif; ?>
+                                                <span class="priority-badge <?php echo $announcement['priority']; ?>">
+                                                    <?php echo ucfirst($announcement['priority']); ?>
+                                                </span>
                                             </div>
-                                            <?php if (isset($announcement['message']) && !empty($announcement['message'])): ?>
-                                                <div class="announcement-message">
-                                                    <?php echo nl2br(htmlspecialchars($announcement['message'])); ?>
-                                                </div>
+                                            <button class="btn btn-link text-danger p-0 delete-item" 
+                                                    onclick="deleteItem('announcement', <?php echo $announcement['id']; ?>)"
+                                                    title="Delete Announcement">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <?php if (isset($announcement['message']) && !empty($announcement['message'])): ?>
+                                            <div class="announcement-message">
+                                                <?php echo nl2br(htmlspecialchars($announcement['message'])); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div class="announcement-meta">
+                                            <span class="announcement-date">
+                                                <i class="bi bi-calendar3"></i>
+                                                Posted: <?php echo isset($announcement['created_at']) ? date('d M Y', strtotime($announcement['created_at'])) : 'N/A'; ?>
+                                            </span>
+                                            <?php if (isset($announcement['display_until']) && $announcement['display_until']): ?>
+                                                <span class="announcement-expiry">
+                                                    <i class="bi bi-clock"></i>
+                                                    Expires: <?php echo date('d M Y', strtotime($announcement['display_until'])); ?>
+                                                </span>
                                             <?php endif; ?>
-                                            <div class="announcement-meta">
-                                                <span class="announcement-date">
-                                                    <i class="bi bi-calendar3"></i>
-                                                    Posted: <?php echo isset($announcement['created_at']) ? date('d M Y', strtotime($announcement['created_at'])) : 'N/A'; ?>
-                                                </span>
-                                                <?php if (isset($announcement['display_until']) && $announcement['display_until']): ?>
-                                                    <span class="announcement-expiry">
-                                                        <i class="bi bi-clock"></i>
-                                                        Expires: <?php echo date('d M Y', strtotime($announcement['display_until'])); ?>
-                                                    </span>
-                                                <?php endif; ?>
-                                            </div>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -3281,10 +3304,17 @@ try {
                                 <div class="no-data">No active circulars</div>
                             <?php else: ?>
                                 <?php foreach ($circulars as $circular): ?>
-                                    <div class="tooltip-item">
+                                    <div class="tooltip-item" id="circular-<?php echo $circular['id']; ?>">
                                         <div class="circular-info">
-                                            <div class="circular-title">
-                                                <?php echo htmlspecialchars($circular['title']); ?>
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="circular-title">
+                                                    <?php echo htmlspecialchars($circular['title']); ?>
+                                                </div>
+                                                <button class="btn btn-link text-danger p-0 delete-circular" 
+                                                        onclick="deleteCircular(<?php echo $circular['id']; ?>)"
+                                                        title="Delete Circular">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </div>
                                             <div class="circular-message">
                                                 <?php echo nl2br(htmlspecialchars($circular['description'])); ?>
@@ -3298,18 +3328,6 @@ try {
                                                     </a>
                                                 </div>
                                             <?php endif; ?>
-                                            <div class="circular-meta">
-                                                <span class="circular-date">
-                                                    <i class="bi bi-calendar3"></i>
-                                                    Posted: <?php echo date('d M Y', strtotime($circular['created_at'])); ?>
-                                                </span>
-                                                <?php if ($circular['valid_until']): ?>
-                                                    <span class="circular-expiry">
-                                                        <i class="bi bi-clock"></i>
-                                                        Expires: <?php echo date('d M Y', strtotime($circular['valid_until'])); ?>
-                                                    </span>
-                                                <?php endif; ?>
-                                            </div>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -3365,40 +3383,42 @@ try {
                                 <div class="no-data">No upcoming events</div>
                             <?php else: ?>
                                 <?php foreach ($events as $event): ?>
-                                    <div class="tooltip-item">
-                                        <div class="event-info">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                    <div class="tooltip-item" id="event-<?php echo $event['id']; ?>">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="event-info">
                                                 <span class="event-title">
                                                     <?php echo htmlspecialchars($event['title']); ?>
                                                 </span>
-                                                <span class="event-type-badge <?php echo $event['event_type']; ?>">
-                                                    <?php echo ucfirst($event['event_type']); ?>
-                                                </span>
                                             </div>
-                                            <div class="event-description">
-                                                <?php echo nl2br(htmlspecialchars($event['description'])); ?>
-                                            </div>
-                                            <div class="event-meta">
-                                                <div class="event-datetime">
-                                                    <i class="bi bi-calendar3"></i>
-                                                    <?php echo date('d M Y', strtotime($event['event_date'])); ?>
-                                                    <?php if ($event['start_time']): ?>
-                                                        <i class="bi bi-clock ms-2"></i>
-                                                        <?php 
-                                                        echo date('h:i A', strtotime($event['start_time']));
-                                                        if ($event['end_time']) {
-                                                            echo ' - ' . date('h:i A', strtotime($event['end_time']));
-                                                        }
-                                                        ?>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <?php if ($event['location']): ?>
-                                                    <div class="event-location">
-                                                        <i class="bi bi-geo-alt"></i>
-                                                        <?php echo htmlspecialchars($event['location']); ?>
-                                                    </div>
+                                            <button class="btn btn-link text-danger p-0 delete-item" 
+                                                    onclick="deleteItem('event', <?php echo $event['id']; ?>)"
+                                                    title="Delete Event">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="event-description">
+                                            <?php echo nl2br(htmlspecialchars($event['description'])); ?>
+                                        </div>
+                                        <div class="event-meta">
+                                            <div class="event-datetime">
+                                                <i class="bi bi-calendar3"></i>
+                                                <?php echo date('d M Y', strtotime($event['event_date'])); ?>
+                                                <?php if ($event['start_time']): ?>
+                                                    <i class="bi bi-clock ms-2"></i>
+                                                    <?php 
+                                                    echo date('h:i A', strtotime($event['start_time']));
+                                                    if ($event['end_time']) {
+                                                        echo ' - ' . date('h:i A', strtotime($event['end_time']));
+                                                    }
+                                                    ?>
                                                 <?php endif; ?>
                                             </div>
+                                            <?php if ($event['location']): ?>
+                                                <div class="event-location">
+                                                    <i class="bi bi-geo-alt"></i>
+                                                    <?php echo htmlspecialchars($event['location']); ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -3464,16 +3484,18 @@ try {
                             <?php else: ?>
                                 <div class="holidays-list">
                                     <?php foreach ($holidays as $holiday): ?>
-                                        <div class="holiday-item">
-                                            <div class="holiday-header">
-                                                <span class="holiday-title">
-                                                    <?php echo isset($holiday['title']) ? htmlspecialchars($holiday['title']) : 'Unnamed Holiday'; ?>
-                                                </span>
-                                                <?php if (isset($holiday['holiday_type'])): ?>
-                                                    <span class="holiday-type-badge <?php echo strtolower($holiday['holiday_type']); ?>">
-                                                        <?php echo htmlspecialchars($holiday['holiday_type']); ?>
+                                        <div class="holiday-item" id="holiday-<?php echo $holiday['id']; ?>">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="holiday-info">
+                                                    <span class="holiday-title">
+                                                        <?php echo htmlspecialchars($holiday['title']); ?>
                                                     </span>
-                                                <?php endif; ?>
+                                                </div>
+                                                <button class="btn btn-link text-danger p-0 delete-item" 
+                                                        onclick="deleteItem('holiday', <?php echo $holiday['id']; ?>)"
+                                                        title="Delete Holiday">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </div>
                                             <?php if (isset($holiday['holiday_date'])): ?>
                                                 <div class="holiday-date">
@@ -4777,6 +4799,156 @@ try {
             alert('An error occurred while processing your request');
         });
     }
+
+    function deleteCircular(id) {
+        if (!confirm('Are you sure you want to delete this circular?')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('id', id);
+
+        fetch('delete_circular.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the circular item from DOM
+                document.getElementById(`circular-${id}`).remove();
+                
+                // Show success message
+                showToast('Success', 'Circular deleted successfully');
+                
+                // If no more circulars, show no data message
+                const tooltipContent = document.querySelector('.tooltip-content');
+                if (!tooltipContent.querySelector('.tooltip-item')) {
+                    tooltipContent.innerHTML = '<div class="no-data">No active circulars</div>';
+                }
+            } else {
+                throw new Error(data.message || 'Failed to delete circular');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error', error.message);
+        });
+    }
+
+    // Add this if you haven't already defined showToast
+    function showToast(title, message) {
+        const toastHTML = `
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">${message}</div>
+            </div>
+        `;
+        
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.innerHTML = toastHTML;
+        document.body.appendChild(toastContainer);
+        
+        const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
+        toast.show();
+        
+        // Remove toast container after hiding
+        toastContainer.querySelector('.toast').addEventListener('hidden.bs.toast', () => {
+            toastContainer.remove();
+        });
+    }
+
+    function deleteItem(type, id) {
+        const itemTypes = {
+            'announcement': 'announcement',
+            'event': 'event',
+            'holiday': 'holiday'
+        };
+
+        if (!confirm(`Are you sure you want to delete this ${type}?`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('type', type);
+        formData.append('id', id);
+
+        fetch('delete_item.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the item from DOM
+                const item = document.getElementById(`${type}-${id}`);
+                if (item) {
+                    item.remove();
+                }
+
+                // Show success message
+                showToast('Success', data.message);
+
+                // Check if no items left and show no data message
+                const tooltipContent = item.closest('.tooltip-content');
+                if (tooltipContent && !tooltipContent.querySelector('.tooltip-item')) {
+                    tooltipContent.innerHTML = `<div class="no-data">No ${type === 'announcement' ? 'active' : 'upcoming'} ${type}s</div>`;
+                }
+
+                // Update the count in the main box if necessary
+                updateItemCount(type);
+            } else {
+                throw new Error(data.message || `Failed to delete ${type}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error', error.message);
+        });
+    }
+
+    // Function to update item counts
+    function updateItemCount(type) {
+        const countElements = {
+            'announcement': document.querySelector('.announcement-box .stat-numbers'),
+            'event': document.querySelector('.event-box .stat-numbers'),
+            'holiday': document.querySelector('.holiday-box .stat-numbers')
+        };
+
+        const countElement = countElements[type];
+        if (countElement) {
+            let currentCount = parseInt(countElement.textContent) || 0;
+            if (currentCount > 0) {
+                countElement.textContent = (currentCount - 1).toString();
+            }
+        }
+    }
+
+    // Add CSS for delete button
+    const style = document.createElement('style');
+    style.textContent = `
+        .delete-item {
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .delete-item:hover {
+            opacity: 1;
+        }
+
+        .tooltip-item {
+            position: relative;
+        }
+
+        .tooltip-item .btn-link {
+            text-decoration: none;
+        }
+    `;
+    document.head.appendChild(style);
     </script>
 
     <!-- Announcement Modal -->

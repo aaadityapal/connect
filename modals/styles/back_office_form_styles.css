@@ -1,0 +1,260 @@
+.back-office-form {
+    /* Inherit basic modal form styles */
+    padding: 24px;
+    display: none; /* Hidden by default */
+}
+
+.back-office-form.active {
+    display: block;
+}
+
+/* Ensure forms don't show simultaneously */
+.modal-form.hide {
+    display: none;
+}
+
+.back-office-form .form-group {
+    margin-bottom: 20px;
+}
+
+/* Priority select styling */
+#backOfficePriority {
+    border-width: 2px;
+}
+
+#backOfficePriority option[value="high"] {
+    color: #dc3545;
+}
+
+#backOfficePriority option[value="medium"] {
+    color: #ffc107;
+}
+
+#backOfficePriority option[value="low"] {
+    color: #28a745;
+}
+
+/* Category specific styling */
+#backOfficeCategory option {
+    padding: 8px;
+}
+
+/* File upload area specific to back office */
+.back-office-form .file-upload-container {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+}
+
+/* Theme variations for back office */
+[data-theme="default"] .back-office-form .btn-primary {
+    background: #6c757d;
+}
+
+[data-theme="accounting"] .back-office-form {
+    border-left: 4px solid #28a745;
+}
+
+[data-theme="hr"] .back-office-form {
+    border-left: 4px solid #17a2b8;
+}
+
+[data-theme="admin"] .back-office-form {
+    border-left: 4px solid #ffc107;
+}
+
+[data-theme="finance"] .back-office-form {
+    border-left: 4px solid #dc3545;
+}
+
+.modal-form,
+.back-office-form {
+    transition: opacity 0.3s ease;
+}
+
+#createProjectForm,
+#backOfficeForm {
+    opacity: 1;
+}
+
+#createProjectForm.hiding,
+#backOfficeForm.hiding {
+    opacity: 0;
+}
+
+/* Back Office Stage Styles */
+.back-office-stage {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+    border-left: 4px solid #6c757d;
+    transition: all 0.3s ease;
+}
+
+.back-office-stage .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.back-office-stage .stage-header h3 {
+    font-size: 16px;
+    color: #495057;
+    margin: 0;
+    font-weight: 500;
+}
+
+.back-office-stage .substages-container {
+    margin-top: 20px;
+    padding-left: 20px;
+    border-left: 2px dashed #e9ecef;
+}
+
+.back-office-stage .substage-block {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+/* Add Stage/Substage Button Styles */
+.back-office-form .add-stage-btn,
+.back-office-form .add-substage-btn {
+    width: 100%;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 2px dashed #e9ecef;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.back-office-form .add-stage-btn:hover,
+.back-office-form .add-substage-btn:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: #495057;
+}
+
+/* File upload styling for back office */
+.back-office-stage .file-upload-container {
+    border: 2px dashed #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+}
+
+.back-office-stage .file-upload-container:hover {
+    border-color: #adb5bd;
+}
+
+.back-office-stage .hidden-file-input {
+    display: none;
+}
+
+.back-office-stage .add-file-btn {
+    width: 100%;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    color: #495057;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.back-office-stage .add-file-btn:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.back-office-stage .selected-files {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.back-office-stage .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.back-office-stage .file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.back-office-stage .file-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.back-office-stage .file-name {
+    font-size: 13px;
+    color: #495057;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.back-office-stage .file-size {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.back-office-stage .remove-file-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.back-office-stage .remove-file-btn:hover {
+    opacity: 1;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* File type colors */
+.back-office-stage .fa-file-pdf { color: #dc3545; }
+.back-office-stage .fa-file-word { color: #0066cc; }
+.back-office-stage .fa-file-excel { color: #217346; }
+.back-office-stage .fa-file-powerpoint { color: #d24726; }
+.back-office-stage .fa-file-image { color: #20c997; }
+.back-office-stage .fa-file-archive { color: #ffc107; }
+.back-office-stage .fa-file-alt { color: #6c757d; }
+.back-office-stage .fa-file { color: #495057; } 

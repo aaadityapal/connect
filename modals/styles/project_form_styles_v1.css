@@ -1047,3 +1047,136 @@
         opacity: 0;
     }
 }
+
+/* Task Type Toggle Styles */
+.task-type-toggle {
+    padding: 20px 24px 0; /* Increased top padding */
+    margin: 0 0 20px;
+}
+
+.toggle-container {
+    position: relative;
+    display: flex;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 4px;
+    width: 100%;
+    max-width: 400px;
+    margin: 10px auto 0; /* Added top margin */
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.toggle-container input[type="radio"] {
+    display: none;
+}
+
+.toggle-container label {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    user-select: none;
+}
+
+.toggle-container .slider {
+    position: absolute;
+    z-index: 1;
+    top: 4px;
+    left: 4px;
+    bottom: 4px;
+    width: calc(50% - 4px);
+    background: white;
+    border-radius: 6px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Active state styling */
+.toggle-container input[type="radio"]:checked + label {
+    color: #2c3e50;
+}
+
+/* Slider movement for back office selection */
+.toggle-container input[id="backOfficeTask"]:checked ~ .slider {
+    transform: translateX(100%);
+}
+
+/* Theme-specific styles */
+[data-theme="architecture"] .toggle-container {
+    background: rgba(52, 152, 219, 0.05);
+    border-color: rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="architecture"] .toggle-container input[type="radio"]:checked + label {
+    color: var(--architecture-primary);
+}
+
+[data-theme="architecture"] .toggle-container .slider {
+    background: white;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+}
+
+[data-theme="interior"] .toggle-container {
+    background: rgba(142, 68, 173, 0.05);
+    border-color: rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="interior"] .toggle-container input[type="radio"]:checked + label {
+    color: var(--interior-primary);
+}
+
+[data-theme="interior"] .toggle-container .slider {
+    background: white;
+    box-shadow: 0 2px 8px rgba(142, 68, 173, 0.15);
+}
+
+[data-theme="construction"] .toggle-container {
+    background: rgba(192, 57, 43, 0.05);
+    border-color: rgba(192, 57, 43, 0.1);
+}
+
+[data-theme="construction"] .toggle-container input[type="radio"]:checked + label {
+    color: var(--construction-primary);
+}
+
+[data-theme="construction"] .toggle-container .slider {
+    background: white;
+    box-shadow: 0 2px 8px rgba(192, 57, 43, 0.15);
+}
+
+/* Hover effects */
+.toggle-container label:hover {
+    color: #2c3e50;
+}
+
+/* Active tab shadow effect */
+.toggle-container input[type="radio"]:checked + label {
+    text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .toggle-container {
+        max-width: 100%;
+    }
+    
+    .toggle-container label {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+}
+
+/* Add smooth transition for theme changes */
+.toggle-container, 
+.toggle-container label, 
+.toggle-container .slider {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

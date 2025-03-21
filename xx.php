@@ -1,71 +1,3 @@
-<?php
-// Start session
-session_start();
-
-// Function to check user role
-function isSeniorSalesManager() {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'Senior Manager (Sales)';
-}
-
-// Check if user is logged in and has correct role
-if (!isset($_SESSION['user_id']) || !isSeniorSalesManager()) {
-    // Redirect to login page or unauthorized page
-    header('Location: login.php');
-    exit();
-}
-
-// Database connection (adjust credentials as per your configuration)
-function getDbConnection() {
-    $host = 'localhost';
-    $dbname = 'crm';
-    $user = 'root';
-    $pass = '';
-    
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch(PDOException $e) {
-        die("Connection failed: " . $e->getMessage());
-    }
-}
-
-// Function to get project counts by type
-function getProjectCounts() {
-    try {
-        $pdo = getDbConnection();
-        $sql = "SELECT 
-                    project_type, 
-                    COUNT(*) as count 
-                FROM projects 
-                WHERE deleted_at IS NULL 
-                GROUP BY project_type";
-        
-        $stmt = $pdo->query($sql);
-        $counts = [
-            'architecture' => 0,
-            'interior' => 0,
-            'construction' => 0
-        ];
-        
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $counts[strtolower($row['project_type'])] = $row['count'];
-        }
-        
-        return $counts;
-    } catch(PDOException $e) {
-        error_log("Error fetching project counts: " . $e->getMessage());
-        return [
-            'architecture' => 0,
-            'interior' => 0,
-            'construction' => 0
-        ];
-    }
-}
-
-// Get project counts
-$projectCounts = getProjectCounts();
-?>
 
 <!DOCTYPE html>
 <html>
@@ -75,7 +7,6 @@ $projectCounts = getProjectCounts();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="modals/styles/project_form_styles_v1.css">
-    <link rel="stylesheet" href="modals/styles/back_office_form_styles.css">
     <style>
         * {
             margin: 0;
@@ -1415,7 +1346,7 @@ $projectCounts = getProjectCounts();
     </style>
 </head>
 <body>
-    <?php if (isSeniorSalesManager()): ?>
+   
         <div class="sidebar" id="sidebar">
             <button class="toggle-btn" onclick="toggleSidebar()">
                 <i class="fas fa-chevron-left" id="toggle-icon"></i>
@@ -1494,7 +1425,7 @@ $projectCounts = getProjectCounts();
                                     <i class="fas fa-sun"></i>
                                     Good Morning,
                                 </span>
-                                <h1><i class="fas fa-user"></i> <?php echo htmlspecialchars($_SESSION['username']); ?></h1>
+                                <h1><i class="fas fa-user"></i></h1>
                             </div>
                             <div class="info-lines">
                                 <div class="time-line">
@@ -1560,7 +1491,7 @@ $projectCounts = getProjectCounts();
                                 <div class="card-content">
                                     <h3>Architecture</h3>
                                     <div class="project-count">
-                                        <span class="number"><?php echo htmlspecialchars($projectCounts['architecture']); ?></span>
+                                        <span class="number">248</span>
                                         <span class="label">Projects</span>
                                     </div>
                                 </div>
@@ -1573,7 +1504,7 @@ $projectCounts = getProjectCounts();
                                 <div class="card-content">
                                     <h3>Interior</h3>
                                     <div class="project-count">
-                                        <span class="number"><?php echo htmlspecialchars($projectCounts['interior']); ?></span>
+                                        <span class="number">145</span>
                                         <span class="label">Projects</span>
                                     </div>
                                 </div>
@@ -1586,7 +1517,7 @@ $projectCounts = getProjectCounts();
                                 <div class="card-content">
                                     <h3>Construction</h3>
                                     <div class="project-count">
-                                        <span class="number"><?php echo htmlspecialchars($projectCounts['construction']); ?></span>
+                                        <span class="number">186</span>
                                         <span class="label">Projects</span>
                                     </div>
                                 </div>
@@ -1929,11 +1860,10 @@ $projectCounts = getProjectCounts();
             <i class="fas fa-bars"></i>
         </button>
         <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
-    <?php endif; ?>
+   
 
     <?php include 'modals/project_form.php'; ?>
     <script src="modals/scripts/project_form_handler_v1.js"></script>
-    <script src="modals/scripts/back_office_form_handler.js"></script>
 
     <script>
         function toggleSidebar() {

@@ -134,3 +134,12 @@
 [15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Punch Out Time: 2025-02-15 20:03:31
 [15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Total Seconds: 17448
 [15-Feb-2025 20:03:31 Asia/Kolkata] DEBUG: Working Hours: 04:50:48
+[17-Mar-2025 10:08:56 Asia/Kolkata] Received input: {"action":"punch_in"}
+[17-Mar-2025 10:08:56 Asia/Kolkata] Attempting punch-in for user ID: 3
+[17-Mar-2025 10:08:56 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-03-17","2025-03-17 10:08:56","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 Edg\/134.0.0.0","present","2025-03-17 10:08:56","2025-03-17 10:08:56"]
+[17-Mar-2025 10:08:56 Asia/Kolkata] Successfully inserted attendance record with ID: 402
+[17-Mar-2025 10:09:06 Asia/Kolkata] Received input: {"action":"punch_out"}
+[17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Punch In Time: 2025-03-17 10:08:56
+[17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Punch Out Time: 2025-03-17 10:09:06
+[17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Total Seconds: 10
+[17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Working Hours: 00:00:10

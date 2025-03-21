@@ -485,10 +485,6 @@ function fetchCategories($conn, $parent_id = null) {
                 <div class="task-overview-header">
                     <div class="task-header-left">
                         <h2>Task Overview</h2>
-                        <button class="add-task-btn">
-                            <i class="fas fa-plus"></i>
-                            <span>Add Task</span>
-                        </button>
                     </div>
                     <div class="task-view-controls">
                         <div class="view-toggle-container">
@@ -941,7 +937,6 @@ function fetchCategories($conn, $parent_id = null) {
             </div>
         </div>
     </div>
-
 
 </body>
 </html>

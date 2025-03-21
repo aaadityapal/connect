@@ -14,7 +14,19 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        
+
+        <!-- Toggle buttons -->
+        <div class="task-type-toggle">
+            <div class="toggle-container">
+                <input type="radio" id="createTask" name="taskType" value="create" checked>
+                <label for="createTask">Create Task</label>
+                <input type="radio" id="backOfficeTask" name="taskType" value="backoffice">
+                <label for="backOfficeTask">Back Office Task</label>
+                <span class="slider"></span>
+            </div>
+        </div>
+
+        <!-- Project Form -->
         <form id="createProjectForm" class="modal-form">
             <div class="form-group">
                 <label for="projectTitle">
@@ -116,6 +128,80 @@
                 <button type="submit" class="btn-primary">
                     <i class="fas fa-plus"></i>
                     Create Project
+                </button>
+            </div>
+        </form>
+
+        <!-- Back Office Form -->
+        <form id="backOfficeForm" class="back-office-form" style="display: none;">
+            <div class="form-group">
+                <label for="backOfficeTitle">
+                    <i class="fas fa-heading"></i>
+                    Task Title
+                </label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" 
+                           id="backOfficeTitle" 
+                           name="backOfficeTitle" 
+                           required 
+                           placeholder="Enter task title"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="backOfficeDescription">
+                    <i class="fas fa-align-left"></i>
+                    Task Description
+                </label>
+                <textarea id="backOfficeDescription" 
+                          name="backOfficeDescription" 
+                          required 
+                          placeholder="Enter task description"></textarea>
+            </div>
+
+            <div class="form-dates">
+                <div class="form-group">
+                    <label for="backOfficeStartDate">
+                        <i class="fas fa-calendar-plus"></i>
+                        Start Date
+                    </label>
+                    <input type="datetime-local" id="backOfficeStartDate" name="backOfficeStartDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="backOfficeDueDate">
+                        <i class="fas fa-calendar-check"></i>
+                        Due Date
+                    </label>
+                    <input type="datetime-local" id="backOfficeDueDate" name="backOfficeDueDate" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="backOfficeAssignTo">
+                    <i class="fas fa-user-plus"></i>
+                    Assign To
+                </label>
+                <select id="backOfficeAssignTo" name="backOfficeAssignTo" required>
+                    <option value="">Select Team Member</option>
+                </select>
+            </div>
+
+            <div class="stages-container" id="backOfficeStagesContainer">
+                <!-- Stages will be added here dynamically -->
+            </div>
+
+            <button type="button" class="add-stage-btn" id="backOfficeAddStageBtn">
+                <i class="fas fa-plus"></i>
+                Add Stage
+            </button>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" id="cancelBackOffice">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Create Task
                 </button>
             </div>
         </form>

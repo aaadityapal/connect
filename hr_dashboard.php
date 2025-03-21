@@ -172,18 +172,22 @@ $events = $pdo->query($events_query)->fetchAll(PDO::FETCH_ASSOC);
 $holidays_query = "
     SELECT 
         id,
-        holiday_name,  // or whatever your column name is for the holiday title
-        holiday_date,
-        holiday_type,
-        description,
-        status
+        title,           /* Changed from holiday_name to title */
+        holiday_date,    /* This matches your table */
+        holiday_type,    /* This matches your table */
+        description,     /* This matches your table */
+        status,
+        created_by,
+        created_at
     FROM holidays 
     WHERE holiday_date >= CURDATE() 
-    ORDER BY holiday_date ASC 
-    LIMIT 1";
+    AND status = 'active'
+    ORDER BY holiday_date ASC";
 
 try {
-    $holidays = $pdo->query($holidays_query)->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare($holidays_query);
+    $stmt->execute();
+    $holidays = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Holidays query error: " . $e->getMessage());
     $holidays = [];
@@ -3419,7 +3423,7 @@ try {
                                         <div class="holiday-item">
                                             <div class="holiday-header">
                                                 <span class="holiday-title">
-                                                    <?php echo isset($holiday['holiday_name']) ? htmlspecialchars($holiday['holiday_name']) : 'Unnamed Holiday'; ?>
+                                                    <?php echo isset($holiday['title']) ? htmlspecialchars($holiday['title']) : 'Unnamed Holiday'; ?>
                                                 </span>
                                                 <?php if (isset($holiday['holiday_type'])): ?>
                                                     <span class="holiday-type-badge <?php echo strtolower($holiday['holiday_type']); ?>">
@@ -3458,12 +3462,12 @@ try {
                             <?php if (empty($holidays)): ?>
                                 <div class="no-data">No upcoming holidays</div>
                             <?php else: ?>
-                                <?php foreach ($holidays as $holiday): ?>
-                                    <div class="tooltip-item">
-                                        <div class="holiday-info">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="holidays-list">
+                                    <?php foreach ($holidays as $holiday): ?>
+                                        <div class="holiday-item">
+                                            <div class="holiday-header">
                                                 <span class="holiday-title">
-                                                    <?php echo isset($holiday['holiday_name']) ? htmlspecialchars($holiday['holiday_name']) : 'Unnamed Holiday'; ?>
+                                                    <?php echo isset($holiday['title']) ? htmlspecialchars($holiday['title']) : 'Unnamed Holiday'; ?>
                                                 </span>
                                                 <?php if (isset($holiday['holiday_type'])): ?>
                                                     <span class="holiday-type-badge <?php echo strtolower($holiday['holiday_type']); ?>">
@@ -3483,8 +3487,8 @@ try {
                                                 </div>
                                             <?php endif; ?>
                                         </div>
-                                    </div>
-                                <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -4424,21 +4428,40 @@ try {
         if (circularForm) {
             circularForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                const formData = new FormData(this);
                 
+                // Show loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Adding...';
+
+                const formData = new FormData(this);
+
                 fetch('add_circular.php', {
                     method: 'POST',
-                    body: formData // FormData will automatically handle file uploads
+                    body: formData
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        bootstrap.Modal.getInstance(document.getElementById('circularModal')).hide();
+                        // Show success message
                         showToast('Success', 'Circular added successfully');
+                        
+                        // Close modal and refresh page
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('circularModal'));
+                        modal.hide();
                         location.reload();
                     } else {
-                        showToast('Error', data.message || 'Failed to add circular');
+                        throw new Error(data.message || 'Failed to add circular');
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error', error.message);
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Add Circular';
                 });
             });
         }
@@ -4812,11 +4835,11 @@ try {
                         </div>
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                            <textarea class="form-control" id="description" name="description" required></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="attachment" class="form-label">Attachment (Optional)</label>
-                            <input type="file" class="form-control" id="attachment" name="attachment">
+                            <input type="file" class="form-control" id="attachment" name="attachment_path">
                         </div>
                         <div class="mb-3">
                             <label for="valid_until" class="form-label">Valid Until (Optional)</label>

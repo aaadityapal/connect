@@ -23,7 +23,7 @@ try {
 
     // Create PDO connection
     $pdo = new PDO(
-        "mysql:host=localhost;dbname=login_system",
+        "mysql:host=localhost;dbname=crm",
         "root",  // replace with your database username
         ""       // replace with your database password
     );

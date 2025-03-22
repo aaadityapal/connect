@@ -311,6 +311,170 @@ $user_role = $_SESSION['role'] ?? 'employee';
             background-color: #f8d7da;
             color: #721c24;
         }
+
+        /* Document type tabs */
+        .document-type-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 1rem;
+        }
+
+        .doc-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            position: relative;
+        }
+
+        .doc-tab.active {
+            color: var(--primary-color);
+        }
+
+        .doc-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-accepted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border-radius: 0.2rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .document-type-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            background-color: #e9ecef;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
+        }
+
+        .document-item {
+            display: flex;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: #fff;
+            transition: box-shadow 0.2s;
+        }
+
+        .document-item:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .document-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            color: #6c757d;
+        }
+
+        .document-details {
+            flex: 1;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .no-documents, .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .no-documents i, .error-message i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Add these styles to your existing CSS */
+        .filter-section {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-section select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 14px;
+        }
+
+        .filter-section select:focus {
+            outline: none;
+            border-color: #0084ff;
+            box-shadow: 0 0 0 2px rgba(0,132,255,0.2);
+        }
     </style>
 </head>
 <body>
@@ -434,42 +598,27 @@ $user_role = $_SESSION['role'] ?? 'employee';
             <div class="profile-section" id="hr-documents">
                 <div class="hr-documents">
                     <h2 class="section-title">HR Documents</h2>
-                    <div class="documents-container">
-                        <!-- Documents will be loaded dynamically -->
-                        <div class="document-section">
-                            ${data.documents.map(doc => `
-                                <div class="document-item">
-                                    <div class="document-icon">
-                                        <i class="fas ${doc.icon_class}"></i>
-                                    </div>
-                                    <div class="document-details">
-                                        <h3>${doc.original_name}</h3>
-                                        <p>Last updated: ${doc.last_modified}</p>
-                                        <p><small>
-                                            Size: ${doc.formatted_size}
-                                            ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
-                                        </small></p>
-                                        <div class="document-actions">
-                                            <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'hr_doc')">
-                                                <i class="fas fa-eye"></i> View
-                                            </button>
-                                            <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'hr_doc')">
-                                                <i class="fas fa-download"></i> Download
-                                            </button>
-                                            ${doc.acknowledgment_status === 'acknowledged' ? `
-                                                <button class="btn btn-success btn-sm" disabled>
-                                                    <i class="fas fa-check"></i> Acknowledged
-                                                </button>
-                                            ` : `
-                                                <button class="btn btn-info btn-sm" onclick="acknowledgeDocument(${doc.id})">
-                                                    <i class="fas fa-clipboard-check"></i> Read & Accept
-                                                </button>
-                                            `}
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
+
+                    <!-- Add Tabs for Different Document Types -->
+                    <div class="document-type-tabs">
+                        <button class="doc-tab active" data-doctype="hr">HR Documents</button>
+                        <button class="doc-tab" data-doctype="official">Official Documents</button>
+                        <button class="doc-tab" data-doctype="personal">User Personal Documents</button>
+                    </div>
+
+                    <!-- HR Documents Container -->
+                    <div class="documents-container" id="hrDocuments">
+                        <!-- Existing HR documents code -->
+                    </div>
+
+                    <!-- Official Documents Container -->
+                    <div class="documents-container" id="officialDocuments" style="display: none;">
+                        <!-- Official documents will be loaded here -->
+                    </div>
+
+                    <!-- Personal Documents Container -->
+                    <div class="documents-container" id="personalDocuments" style="display: none;">
+                        <!-- Personal documents will be loaded here -->
                     </div>
                 </div>
             </div>
@@ -744,14 +893,12 @@ $user_role = $_SESSION['role'] ?? 'employee';
         // Update view and download functions
         function viewDocument(docId, type) {
             if (!docId) return;
-            const endpoint = type === 'offer_letter' ? 'view_employee_offer_letter_document.php' : 'view_document.php';
-            window.open(`${endpoint}?id=${docId}`, '_blank');
+            window.open(`employee_document_viewer.php?id=${docId}&type=${type}`, '_blank');
         }
 
         function downloadDocument(docId, type) {
             if (!docId) return;
-            const endpoint = type === 'offer_letter' ? 'download_employee_offer_letter_document.php' : 'download_document.php';
-            window.location.href = `${endpoint}?id=${docId}`;
+            window.location.href = `employee_document_download.php?id=${docId}&type=${type}`;
         }
 
         // Add this new function for document acknowledgment
@@ -818,6 +965,298 @@ $user_role = $_SESSION['role'] ?? 'employee';
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Add these functions to your existing JavaScript
+        function initializeDocumentTabs() {
+            const tabs = document.querySelectorAll('.doc-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all containers
+                    document.querySelectorAll('.documents-container').forEach(container => {
+                        container.style.display = 'none';
+                    });
+
+                    // Show appropriate container
+                    switch(tab.dataset.doctype) {
+                        case 'hr':
+                            document.getElementById('hrDocuments').style.display = 'block';
+                            loadHRDocuments();
+                            break;
+                        case 'official':
+                            document.getElementById('officialDocuments').style.display = 'block';
+                            loadOfficialDocuments();
+                            break;
+                        case 'personal':
+                            document.getElementById('personalDocuments').style.display = 'block';
+                            loadPersonalDocuments();
+                            break;
+                    }
+                });
+            });
+        }
+
+        function loadOfficialDocuments() {
+            fetch('get_employee_official_documents.php')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('officialDocuments');
+                    
+                    if (!data.documents || data.documents.length === 0) {
+                        container.innerHTML = `
+                            <div class="no-documents">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No official documents available</p>
+                            </div>`;
+                        return;
+                    }
+
+                    container.innerHTML = data.documents.map(doc => `
+                        <div class="document-item">
+                            <div class="document-icon">
+                                <i class="fas ${doc.icon_class || 'fa-file-alt'}"></i>
+                            </div>
+                            <div class="document-details">
+                                <h3>
+                                    ${doc.document_name}
+                                    <span class="status-badge status-${doc.status.toLowerCase()}">
+                                        ${doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                                    </span>
+                                </h3>
+                                <p>Last updated: ${doc.upload_date}</p>
+                                <p><small>
+                                    Type: ${doc.document_type}
+                                    • Size: ${doc.formatted_size}
+                                    ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
+                                </small></p>
+                                <div class="document-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'official')" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'official')" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    ${doc.status === 'pending' && doc.assigned_user_id === doc.current_user_id ? `
+                                        <button class="btn btn-success btn-sm" onclick="updateDocumentStatus(${doc.id}, 'accepted')" title="Accept">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="updateDocumentStatus(${doc.id}, 'rejected')" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading official documents:', error);
+                    document.getElementById('officialDocuments').innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading documents. Please try again later.</p>
+                        </div>`;
+                });
+        }
+
+        // Add function to handle status updates
+        function updateDocumentStatus(docId, status) {
+            Swal.fire({
+                title: `Confirm ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+                text: `Are you sure you want to ${status} this document?`,
+                icon: status === 'accepted' ? 'success' : 'warning',
+                showCancelButton: true,
+                confirmButtonColor: status === 'accepted' ? '#28a745' : '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: `Yes, ${status} it!`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('update_document_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            document_id: docId,
+                            status: status,
+                            type: 'official'
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'Updated!',
+                                `Document has been ${status}.`,
+                                'success'
+                            );
+                            loadOfficialDocuments();
+                        } else {
+                            throw new Error(data.message || 'Failed to update status');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Error',
+                            error.message,
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+
+        // Update the document load event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDocumentTabs();
+            
+            // Load HR documents by default (since HR tab is active by default)
+            loadHRDocuments();
+            
+            // Add click event listeners for document type tabs
+            document.querySelectorAll('.doc-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const docType = tab.dataset.doctype;
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all containers
+                    document.querySelectorAll('.documents-container').forEach(container => {
+                        container.style.display = 'none';
+                    });
+                    
+                    // Show and load appropriate container
+                    switch(docType) {
+                        case 'hr':
+                            document.getElementById('hrDocuments').style.display = 'block';
+                            loadHRDocuments();
+                            break;
+                        case 'official':
+                            document.getElementById('officialDocuments').style.display = 'block';
+                            loadOfficialDocuments();
+                            break;
+                        case 'personal':
+                            document.getElementById('personalDocuments').style.display = 'block';
+                            loadPersonalDocuments();
+                            break;
+                    }
+                });
+            });
+        });
+
+        function loadPersonalDocuments() {
+            const container = document.getElementById('personalDocuments');
+            
+            // Add filter section at the top
+            container.innerHTML = `
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select id="personalDocTypeFilter" class="form-control">
+                                <option value="">All Document Types</option>
+                                <option value="aadhar_card">Aadhar Card</option>
+                                <option value="pan_card">PAN Card</option>
+                                <option value="passport">Passport</option>
+                                <option value="driving_license">Driving License</option>
+                                <option value="voter_id">Voter ID</option>
+                                <option value="sslc_certificate">SSLC Certificate</option>
+                                <option value="hsc_certificate">HSC Certificate</option>
+                                <option value="graduation_certificate">Graduation Certificate</option>
+                                <option value="post_graduation">Post Graduation</option>
+                                <option value="diploma_certificate">Diploma Certificate</option>
+                                <option value="other_education">Other Education</option>
+                                <option value="resume">Resume</option>
+                                <option value="experience_certificate">Experience Certificate</option>
+                                <option value="relieving_letter">Relieving Letter</option>
+                                <option value="salary_slip">Salary Slip</option>
+                                <option value="bank_passbook">Bank Passbook</option>
+                                <option value="cancelled_cheque">Cancelled Cheque</option>
+                                <option value="form_16">Form 16</option>
+                                <option value="marriage_certificate">Marriage Certificate</option>
+                                <option value="caste_certificate">Caste Certificate</option>
+                                <option value="disability_certificate">Disability Certificate</option>
+                                <option value="others">Others</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="personalDocumentsContent"></div>
+            `;
+
+            // Add event listener for filter change
+            document.getElementById('personalDocTypeFilter').addEventListener('change', function() {
+                loadFilteredDocuments(this.value);
+            });
+
+            // Initial load of all documents
+            loadFilteredDocuments('');
+        }
+
+        function loadFilteredDocuments(documentType) {
+            const contentContainer = document.getElementById('personalDocumentsContent');
+            
+            fetch('get_personal_documents.php' + (documentType ? `?type=${documentType}` : ''))
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.documents || data.documents.length === 0) {
+                        contentContainer.innerHTML = `
+                            <div class="no-documents">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No personal documents available</p>
+                            </div>`;
+                        return;
+                    }
+
+                    contentContainer.innerHTML = data.documents.map(doc => `
+                        <div class="document-item">
+                            <div class="document-icon">
+                                <i class="fas ${doc.icon_class || 'fa-file-alt'}"></i>
+                            </div>
+                            <div class="document-details">
+                                <h3>
+                                    ${doc.document_name}
+                                    <span class="document-type-badge">${doc.document_type}</span>
+                                </h3>
+                                <p>Last updated: ${doc.upload_date}</p>
+                                <p><small>
+                                    Size: ${doc.formatted_size}
+                                    ${doc.document_number ? `• Document No: ${doc.document_number}` : ''}
+                                    ${doc.issuing_authority ? `• Issued By: ${doc.issuing_authority}` : ''}
+                                </small></p>
+                                ${(doc.issue_date || doc.expiry_date) ? `
+                                    <p><small>
+                                        ${doc.issue_date ? `Issue Date: ${doc.issue_date}` : ''}
+                                        ${doc.expiry_date ? ` • Expiry Date: ${doc.expiry_date}` : ''}
+                                    </small></p>
+                                ` : ''}
+                                <div class="document-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'personal')" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'personal')" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading personal documents:', error);
+                    contentContainer.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading documents. Please try again later.</p>
+                        </div>`;
+                });
         }
     </script>
 </body>

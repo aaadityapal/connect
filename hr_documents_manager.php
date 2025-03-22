@@ -17,6 +17,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
     <title>HR Documents Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
@@ -198,8 +199,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
 
         .document-actions {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 0.5rem;
+            align-items: center;
+            justify-content: flex-start;
         }
 
         .btn-action {
@@ -209,6 +212,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-action.view:hover {
@@ -219,6 +225,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         .btn-action.download:hover {
             background: var(--gray-100);
             color: var(--success-color);
+        }
+
+        .btn-action.edit:hover {
+            background: var(--gray-100);
+            color: var(--warning-color);
         }
 
         .btn-action.delete:hover {
@@ -306,6 +317,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 500;
+            display: inline-block;
         }
 
         .status-pending {
@@ -380,9 +392,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             }
 
             .header-actions {
-                width: 100%;
                 flex-direction: column;
-                gap: 0.5rem;
+                width: 100%;
             }
 
             .filter-group {
@@ -415,6 +426,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         .no-data-message i {
             font-size: 2rem;
             color: var(--gray-400);
+        }
+
+        .offer-letter-table td:last-child {
+            min-width: 160px;
         }
     </style>
 </head>
@@ -458,6 +473,185 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         <!-- Documents List -->
         <div id="documentsList" class="documents-grid">
             <!-- Documents will be loaded here -->
+        </div>
+
+        <!-- Official Documents Section -->
+        <div class="offer-letters-section">
+            <div class="section-header">
+                <h2><i class="fas fa-file-contract"></i> Official Documents</h2>
+                <div class="header-actions">
+                    <div class="filter-group">
+                        <label for="userFilter">Filter by Employee:</label>
+                        <select id="userFilter" class="form-control" onchange="filterDocuments()">
+                            <option value="">All Employees</option>
+                            <!-- Users will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <button class="btn-add-doc" onclick="toggleOfficialDocForm()">
+                        <i class="fas fa-plus"></i> Add Official Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Official Document Upload Form -->
+            <div id="officialDocUploadForm" class="document-upload-form" style="display: none;">
+                <form id="officialUploadForm" onsubmit="handleOfficialDocUpload(event)">
+                    <div class="form-group">
+                        <label for="assignedUser">Assigned User</label>
+                        <select id="assignedUser" name="user_id" class="form-control" required>
+                            <option value="">Select User</option>
+                            <!-- Users will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="officialDocType">Document Type</label>
+                        <select id="officialDocType" name="type" required>
+                            <option value="">Select Document Type</option>
+                            <option value="offer_letter">Offer Letter</option>
+                            <option value="training_letter">Training Letter</option>
+                            <option value="internship_letter">Internship Letter</option>
+                            <option value="completion_letter">Completion Letter</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="officialDocFile">Document File</label>
+                        <input type="file" id="officialDocFile" name="file" required accept=".pdf,.doc,.docx">
+                    </div>
+                    <button type="submit" class="btn-add-doc">Upload Official Document</button>
+                </form>
+            </div>
+
+            <!-- Official Documents Table -->
+            <table class="offer-letter-table">
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Type</th>
+                        <th>Upload Date</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="officialDocumentsList">
+                    <tr class="no-data">
+                        <td colspan="6">
+                            <div class="no-data-message">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No official documents available</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Users Personal Documents Section -->
+        <div class="offer-letters-section">
+            <div class="section-header">
+                <h2><i class="fas fa-user-shield"></i> Users Personal Documents</h2>
+                <div class="header-actions">
+                    <div class="filter-group">
+                        <label for="personalDocUserFilter">Filter by Employee:</label>
+                        <select id="personalDocUserFilter" class="form-control" onchange="filterPersonalDocuments()">
+                            <option value="">All Employees</option>
+                            <!-- Users will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <button class="btn-add-doc" onclick="togglePersonalDocForm()">
+                        <i class="fas fa-plus"></i> Add Personal Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Personal Document Upload Form -->
+            <div id="personalDocUploadForm" class="document-upload-form" style="display: none;">
+                <form id="personalUploadForm" onsubmit="handlePersonalDocUpload(event)">
+                    <div class="form-group">
+                        <label for="personalDocUser">Assigned User</label>
+                        <select id="personalDocUser" name="user_id" class="form-control" required>
+                            <option value="">Select User</option>
+                            <!-- Users will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="personalDocType">Document Type</label>
+                        <select id="personalDocType" name="type" required>
+                            <option value="">Select Document Type</option>
+                            <!-- Identity Documents -->
+                            <option value="aadhar_card">Aadhar Card</option>
+                            <option value="pan_card">PAN Card</option>
+                            <option value="voter_id">Voter ID</option>
+                            <option value="passport">Passport</option>
+                            <option value="driving_license">Driving License</option>
+                            <option value="ration_card">Ration Card</option>
+
+                            <!-- Educational Documents -->
+                            <optgroup label="Educational Documents">
+                                <option value="tenth_certificate">10th Certificate (Secondary School)</option>
+                                <option value="twelfth_certificate">12th Certificate (Higher Secondary)</option>
+                                <option value="graduation_certificate">Graduation Certificate</option>
+                                <option value="post_graduation">Post Graduation Certificate</option>
+                                <option value="diploma_certificate">Diploma Certificate</option>
+                                <option value="other_education">Other Educational Certificate</option>
+                            </optgroup>
+
+                            <!-- Professional Documents -->
+                            <optgroup label="Professional Documents">
+                                <option value="resume">Resume/CV</option>
+                                <option value="experience_certificate">Experience Certificate</option>
+                                <option value="relieving_letter">Relieving Letter</option>
+                                <option value="salary_slips">Salary Slips</option>
+                            </optgroup>
+
+                            <!-- Financial Documents -->
+                            <optgroup label="Financial Documents">
+                                <option value="bank_passbook">Bank Passbook/Statement</option>
+                                <option value="cancelled_cheque">Cancelled Cheque</option>
+                                <option value="form_16">Form 16</option>
+                                <option value="pf_documents">PF Documents</option>
+                            </optgroup>
+
+                            <!-- Other Documents -->
+                            <optgroup label="Other Documents">
+                                <option value="marriage_certificate">Marriage Certificate</option>
+                                <option value="caste_certificate">Caste Certificate</option>
+                                <option value="disability_certificate">Disability Certificate</option>
+                                <option value="other">Other</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="personalDocFile">Document File</label>
+                        <input type="file" id="personalDocFile" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    </div>
+                    <button type="submit" class="btn-add-doc">Upload Personal Document</button>
+                </form>
+            </div>
+
+            <!-- Personal Documents Table -->
+            <table class="offer-letter-table">
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Type</th>
+                        <th>Upload Date</th>
+                        <th>Assigned To</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="personalDocumentsList">
+                    <tr class="no-data">
+                        <td colspan="5">
+                            <div class="no-data-message">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No personal documents available</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -529,13 +723,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                             </p>
                         </div>
                         <div class="document-actions">
-                            <button onclick="viewDocument(${doc.id})" class="btn-action view">
+                            <button onclick="viewDocument(${doc.id}, 'official')" class="btn-action view">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button onclick="downloadDocument(${doc.id})" class="btn-action download">
+                            <button onclick="downloadDocument(${doc.id}, 'official')" class="btn-action download">
                                 <i class="fas fa-download"></i>
                             </button>
-                            <button onclick="deleteHRDocument(${doc.id})" class="btn-action delete">
+                            <button onclick="deleteDocument(${doc.id}, 'official')" class="btn-action delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -564,18 +758,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             ).join(' ');
         }
 
-        function viewDocument(docId) {
-            window.open(`hr_document_handler.php?action=view&id=${docId}`, '_blank');
+        function viewDocument(docId, docType) {
+            window.open(`document_action_handler.php?action=view&id=${docId}&type=${docType}`, '_blank');
         }
 
-        function downloadDocument(docId) {
-            window.location.href = `hr_document_handler.php?action=download&id=${docId}`;
+        function downloadDocument(docId, docType) {
+            window.location.href = `document_action_handler.php?action=download&id=${docId}&type=${docType}`;
         }
 
-        function deleteHRDocument(docId) {
+        function deleteDocument(docId, docType) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: "This document will be permanently deleted",
+                text: "This document will be deleted",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#EF4444',
@@ -583,41 +777,461 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const formData = new FormData();
-                    formData.append('id', docId);
-                    formData.append('action', 'delete_hr_doc');
+                    fetch('document_action_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `action=delete&id=${docId}&type=${docType}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Deleted!', 'Document has been deleted.', 'success');
+                            // Reload the appropriate document list
+                            if (docType === 'official') {
+                                loadOfficialDocuments();
+                            } else {
+                                loadPersonalDocuments();
+                            }
+                        } else {
+                            throw new Error(data.message || 'Failed to delete document');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', error.message, 'error');
+                    });
+                }
+            });
+        }
 
-                    fetch('update_hr_documents.php', {
+        function toggleOfficialDocForm() {
+            const form = document.getElementById('officialDocUploadForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handleOfficialDocUpload(event) {
+            event.preventDefault();
+            
+                    const formData = new FormData();
+            const file = document.getElementById('officialDocFile').files[0];
+            const docType = document.getElementById('officialDocType').value;
+            const assignedUserId = document.getElementById('assignedUser').value;
+
+            formData.append('file', file);
+            formData.append('type', docType);
+            formData.append('assigned_user_id', assignedUserId);
+            formData.append('category', 'official');
+
+            fetch('document_upload_handler.php', {
                         method: 'POST',
                         body: formData
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            loadHRDocuments();
-                            Swal.fire(
-                                'Deleted!',
-                                'Document has been deleted.',
-                                'success'
-                            );
+                    Swal.fire('Success', 'Document uploaded successfully', 'success');
+                    document.getElementById('officialUploadForm').reset();
+                    toggleOfficialDocForm();
+                    loadOfficialDocuments();
                         } else {
-                            throw new Error(data.message || 'Failed to delete document');
+                    throw new Error(data.message || 'Upload failed');
                         }
                     })
                     .catch(error => {
-                        Swal.fire(
-                            'Error',
-                            error.message || 'Failed to delete document',
-                            'error'
-                        );
+                Swal.fire('Error', error.message, 'error');
+            });
+        }
+
+        function handlePersonalDocUpload(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            const file = document.getElementById('personalDocFile').files[0];
+            const docType = document.getElementById('personalDocType').value;
+            const assignedUserId = document.getElementById('personalDocUser').value;
+            
+            formData.append('file', file);
+            formData.append('type', docType);
+            formData.append('assigned_user_id', assignedUserId);
+            formData.append('category', 'personal');
+
+            fetch('document_upload_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success', 'Document uploaded successfully', 'success');
+                    document.getElementById('personalUploadForm').reset();
+                    togglePersonalDocForm();
+                    loadPersonalDocuments();
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+        }
+
+        function loadUsers() {
+            fetch('get_employees.php')
+                .then(response => response.json())
+                .then(data => {
+                    const userSelect = document.getElementById('assignedUser');
+                    if (data.success && data.employees && data.employees.length > 0) {
+                        const options = data.employees.map(employee => 
+                            `<option value="${employee.id}">${employee.username} - ${employee.designation}</option>`
+                        ).join('');
+                        userSelect.innerHTML = '<option value="">Select User</option>' + options;
+                    } else {
+                        userSelect.innerHTML = '<option value="">No employees available</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading employees:', error);
+                    Swal.fire('Error', 'Failed to load employees', 'error');
+                });
+        }
+
+        function loadUserFilter() {
+            fetch('get_employees.php')
+                .then(response => response.json())
+                .then(data => {
+                    const userFilter = document.getElementById('userFilter');
+                    if (data.success && data.employees && data.employees.length > 0) {
+                        const options = data.employees.map(employee => 
+                            `<option value="${employee.id}">${employee.username} - ${employee.designation}</option>`
+                        ).join('');
+                        userFilter.innerHTML = '<option value="">All Employees</option>' + options;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading employee filter:', error);
+                });
+        }
+
+        function filterDocuments() {
+            const selectedUserId = document.getElementById('userFilter').value;
+            loadOfficialDocuments(selectedUserId);
+        }
+
+        function togglePersonalDocForm() {
+            const form = document.getElementById('personalDocUploadForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function loadPersonalDocUserFilter() {
+            fetch('get_employees.php')
+                .then(response => response.json())
+                .then(data => {
+                    const userFilter = document.getElementById('personalDocUserFilter');
+                    const personalDocUser = document.getElementById('personalDocUser');
+                    if (data.success && data.employees && data.employees.length > 0) {
+                        const options = data.employees.map(employee => 
+                            `<option value="${employee.id}">${employee.username} - ${employee.designation}</option>`
+                        ).join('');
+                        userFilter.innerHTML = '<option value="">All Employees</option>' + options;
+                        personalDocUser.innerHTML = '<option value="">Select User</option>' + options;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading employee filter:', error);
+                });
+        }
+
+        function filterPersonalDocuments() {
+            const selectedUserId = document.getElementById('personalDocUserFilter').value;
+            loadPersonalDocuments(selectedUserId);
+        }
+
+        function loadOfficialDocuments(userId = null) {
+            const queryParams = userId ? `?type=official&user_id=${userId}` : '?type=official';
+
+            fetch('document_retrieval_handler.php' + queryParams)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    const tbody = document.getElementById('officialDocumentsList');
+                    
+                    if (!data.documents || data.documents.length === 0) {
+                        tbody.innerHTML = `
+                            <tr class="no-data">
+                                <td colspan="6">
+                                    <div class="no-data-message">
+                                        <i class="fas fa-folder-open"></i>
+                                        <p>${userId ? 'No official documents found for selected employee' : 'No official documents available'}</p>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.documents.map(doc => `
+                        <tr data-user-id="${doc.assigned_user_id}">
+                            <td>
+                                <div class="document-info">
+                                    <i class="fas ${doc.icon_class} document-icon"></i>
+                                    ${doc.document_name}
+                                </div>
+                            </td>
+                            <td>${doc.document_type}</td>
+                            <td>${doc.upload_date}</td>
+                            <td>${doc.assigned_to} - ${doc.assigned_designation}</td>
+                            <td>
+                                <span class="status-badge status-${doc.status.toLowerCase()}">
+                                    ${doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="document-actions">
+                                    <button onclick="viewDocument(${doc.id}, 'official')" class="btn-action view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="downloadDocument(${doc.id}, 'official')" class="btn-action download" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    ${doc.status === 'pending' ? `
+                                        <button onclick="updateDocumentStatus(${doc.id})" class="btn-action status" title="Update Status">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="deleteDocument(${doc.id}, 'official')" class="btn-action delete" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading official documents:', error);
+                    Swal.fire('Error', error.message, 'error');
+                });
+        }
+
+        function loadPersonalDocuments(userId = null) {
+            const queryParams = userId ? `?type=personal&user_id=${userId}` : '?type=personal';
+
+            fetch('document_retrieval_handler.php' + queryParams)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    const tbody = document.getElementById('personalDocumentsList');
+                    
+                    if (!data.documents || data.documents.length === 0) {
+                        tbody.innerHTML = `
+                            <tr class="no-data">
+                                <td colspan="5">
+                                    <div class="no-data-message">
+                                        <i class="fas fa-folder-open"></i>
+                                        <p>${userId ? 'No personal documents found for selected employee' : 'No personal documents available'}</p>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.documents.map(doc => `
+                        <tr data-user-id="${doc.assigned_user_id}">
+                            <td>
+                                <div class="document-info">
+                                    <i class="fas ${doc.icon_class} document-icon"></i>
+                                    ${doc.document_name}
+                                </div>
+                            </td>
+                            <td>${doc.document_type}</td>
+                            <td>${doc.upload_date}</td>
+                            <td>${doc.assigned_to} - ${doc.assigned_designation}</td>
+                            <td>
+                                <div class="document-actions">
+                                    <button onclick="viewDocument(${doc.id}, 'personal')" class="btn-action view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="downloadDocument(${doc.id}, 'personal')" class="btn-action download" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button onclick="deleteDocument(${doc.id}, 'personal')" class="btn-action delete" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading personal documents:', error);
+                    Swal.fire('Error', error.message, 'error');
+                });
+        }
+
+        function updateDocumentStatus(docId) {
+            Swal.fire({
+                title: 'Update Document Status',
+                html: `
+                    <select id="statusUpdate" class="swal2-select">
+                        <option value="accepted">Accept</option>
+                        <option value="rejected">Reject</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Update',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    const status = document.getElementById('statusUpdate').value;
+                    return fetch('update_document_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            document_id: docId,
+                            status: status,
+                            type: 'official'
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to update status');
+                        }
+                        return data;
                     });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Success', 'Document status updated successfully', 'success');
+                    loadOfficialDocuments();
                 }
             });
         }
 
-        // Load documents when page loads
         document.addEventListener('DOMContentLoaded', () => {
             loadHRDocuments();
+            loadUsers();
+            loadUserFilter();
+            loadPersonalDocUserFilter();
+            loadOfficialDocuments();
+            loadPersonalDocuments();
+        });
+
+        function uploadDocument(formData) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: 'document_upload_handler.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        try {
+                            const result = JSON.parse(response);
+                            if (result.success) {
+                                resolve(result);
+                            } else {
+                                console.error('Upload Error:', result);
+                                reject(new Error(result.message));
+                            }
+                        } catch (e) {
+                            console.error('Parse Error:', e);
+                            reject(new Error('Invalid server response'));
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Ajax Error:', {xhr, status, error});
+                        reject(new Error('Upload failed: ' + error));
+                    }
+                });
+            });
+        }
+
+        // Form submit handler
+        $(document).on('submit', '#documentForm', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                Swal.fire({
+                    title: 'Uploading...',
+                    text: 'Please wait while we upload your document',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const result = await uploadDocument(formData);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Document uploaded successfully'
+                }).then(() => {
+                    // Refresh document list or perform other actions
+                    loadDocuments();
+                });
+            } catch (error) {
+                console.error('Upload Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload Failed',
+                    text: error.message,
+                    footer: 'Check console and server logs for more details'
+                });
+            }
+        });
+
+        function handleUploadError(error) {
+            console.error('Upload Error Details:', {
+                message: error.message,
+                url: error.sourceURL,
+                line: error.line,
+                stack: error.stack
+            });
+            
+            // Your existing error handling remains the same
+            Swal.fire({
+                icon: 'error',
+                title: 'Upload Failed',
+                text: 'An error occurred during upload. Check logs for details.'
+            });
+        }
+
+        // Modify your existing upload code to include error logging
+        $('#documentForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            $.ajax({
+                url: 'document_upload_handler.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    console.log('Upload Response:', response);
+                    // Your existing success handling
+                },
+                error: function(xhr, status, error) {
+                    console.error('Upload Failed:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    handleUploadError(error);
+                }
+            });
         });
     </script>
 </body>

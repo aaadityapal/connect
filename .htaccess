@@ -1,0 +1,14 @@
+# PHP Value Overrides
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Enable HTTP/1.1 for file uploads
+SetEnv no-gzip 1
+SetEnv dont-vary 1
+
+# Increase timeout for large uploads
+<IfModule mod_fastcgi.c>
+    FastCgiConfig -idle-timeout 300
+</IfModule> 

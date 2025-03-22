@@ -1005,6 +1005,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
             fetch('get_employee_official_documents.php')
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Document data:', data); // Debug log
                     const container = document.getElementById('officialDocuments');
                     
                     if (!data.documents || data.documents.length === 0) {
@@ -1016,43 +1017,58 @@ $user_role = $_SESSION['role'] ?? 'employee';
                         return;
                     }
 
-                    container.innerHTML = data.documents.map(doc => `
-                        <div class="document-item">
-                            <div class="document-icon">
-                                <i class="fas ${doc.icon_class || 'fa-file-alt'}"></i>
-                            </div>
-                            <div class="document-details">
-                                <h3>
-                                    ${doc.document_name}
-                                    <span class="status-badge status-${doc.status.toLowerCase()}">
-                                        ${doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-                                    </span>
-                                </h3>
-                                <p>Last updated: ${doc.upload_date}</p>
-                                <p><small>
-                                    Type: ${doc.document_type}
-                                    • Size: ${doc.formatted_size}
-                                    ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
-                                </small></p>
-                                <div class="document-actions">
-                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'official')" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'official')" title="Download">
-                                        <i class="fas fa-download"></i>
-                                    </button>
-                                    ${doc.status === 'pending' && doc.assigned_user_id === doc.current_user_id ? `
-                                        <button class="btn btn-success btn-sm" onclick="updateDocumentStatus(${doc.id}, 'accepted')" title="Accept">
-                                            <i class="fas fa-check"></i>
+                    container.innerHTML = data.documents.map(doc => {
+                        // Debug log for each document
+                        console.log('Processing document:', {
+                            id: doc.id,
+                            status: doc.status,
+                            assigned_user_id: doc.assigned_user_id,
+                            current_user_id: doc.current_user_id
+                        });
+
+                        const showActions = doc.status === 'pending' && 
+                                          parseInt(doc.assigned_user_id) === parseInt(doc.current_user_id);
+                        
+                        console.log('Show actions:', showActions); // Debug log
+
+                        return `
+                            <div class="document-item">
+                                <div class="document-icon">
+                                    <i class="fas ${doc.icon_class || 'fa-file-alt'}"></i>
+                                </div>
+                                <div class="document-details">
+                                    <h3>
+                                        ${doc.document_name}
+                                        <span class="status-badge status-${doc.status.toLowerCase()}">
+                                            ${doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                                        </span>
+                                    </h3>
+                                    <p>Last updated: ${doc.upload_date}</p>
+                                    <p><small>
+                                        Type: ${doc.document_type}
+                                        • Size: ${doc.formatted_size}
+                                        ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
+                                    </small></p>
+                                    <div class="document-actions">
+                                        <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'official')" title="View">
+                                            <i class="fas fa-eye"></i>
                                         </button>
-                                        <button class="btn btn-danger btn-sm" onclick="updateDocumentStatus(${doc.id}, 'rejected')" title="Reject">
-                                            <i class="fas fa-times"></i>
+                                        <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'official')" title="Download">
+                                            <i class="fas fa-download"></i>
                                         </button>
-                                    ` : ''}
+                                        ${showActions ? `
+                                            <button class="btn btn-success btn-sm" onclick="updateDocumentStatus(${doc.id}, 'accepted')" title="Accept">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" onclick="updateDocumentStatus(${doc.id}, 'rejected')" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 })
                 .catch(error => {
                     console.error('Error loading official documents:', error);

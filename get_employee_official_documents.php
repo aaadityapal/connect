@@ -9,62 +9,58 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
-    $db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-    if ($db->connect_error) {
-        throw new Exception('Database connection failed');
-    }
-
-    $userId = $_SESSION['user_id'];
+    $user_id = $_SESSION['user_id'];
     
+    // Debug log
+    error_log("Current user ID: " . $user_id);
+
     $query = "SELECT 
-        od.*,
-        u.username as uploaded_by_name
-    FROM official_documents od
-    LEFT JOIN users u ON od.uploaded_by = u.id
-    WHERE od.assigned_user_id = ? 
-    AND od.is_deleted = 0
-    ORDER BY od.upload_date DESC";
-
-    $stmt = $db->prepare($query);
-    $stmt->bind_param('i', $userId);
+                od.*, 
+                u.username as uploaded_by_name,
+                ? as current_user_id  -- Explicitly add current user ID
+              FROM official_documents od
+              LEFT JOIN users u ON od.uploaded_by = u.id
+              WHERE od.assigned_user_id = ? 
+              AND od.is_deleted = 0";
     
-    if (!$stmt->execute()) {
-        throw new Exception('Failed to fetch documents');
-    }
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$user_id, $user_id]);
+    $documents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Debug log
+    error_log("Documents found: " . json_encode($documents));
 
-    $result = $stmt->get_result();
-    $documents = [];
-
-    while ($row = $result->fetch_assoc()) {
-        $documents[] = [
-            'id' => $row['id'],
-            'document_name' => $row['document_name'],
-            'document_type' => formatDocumentType($row['document_type']),
-            'upload_date' => date('M d, Y H:i', strtotime($row['upload_date'])),
-            'status' => $row['status'],
-            'formatted_size' => formatFileSize($row['file_size']),
-            'uploaded_by_name' => $row['uploaded_by_name'],
-            'icon_class' => getFileIconClass($row['file_type']),
-            'assigned_user_id' => $row['assigned_user_id'],
-            'current_user_id' => $_SESSION['user_id']
+    // Ensure proper type casting and data structure
+    $documents = array_map(function($doc) use ($user_id) {
+        return [
+            'id' => (int)$doc['id'],
+            'document_name' => $doc['document_name'],
+            'document_type' => $doc['document_type'],
+            'status' => strtolower($doc['status']), // Ensure lowercase status
+            'upload_date' => $doc['upload_date'],
+            'formatted_size' => formatFileSize($doc['file_size']),
+            'uploaded_by_name' => $doc['uploaded_by_name'],
+            'assigned_user_id' => (int)$doc['assigned_user_id'],
+            'current_user_id' => (int)$user_id,
+            'icon_class' => 'fa-file-alt'
         ];
-    }
+    }, $documents);
 
     echo json_encode([
         'success' => true,
-        'documents' => $documents
+        'documents' => $documents,
+        'debug' => [
+            'user_id' => $user_id,
+            'document_count' => count($documents)
+        ]
     ]);
 
 } catch (Exception $e) {
-    http_response_code(500);
+    error_log("Error in get_employee_official_documents.php: " . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Server error: ' . $e->getMessage()
+        'message' => $e->getMessage()
     ]);
-}
-
-function formatDocumentType($type) {
-    return ucwords(str_replace('_', ' ', $type));
 }
 
 function formatFileSize($bytes) {
@@ -74,8 +70,13 @@ function formatFileSize($bytes) {
         return number_format($bytes / 1048576, 2) . ' MB';
     } elseif ($bytes >= 1024) {
         return number_format($bytes / 1024, 2) . ' KB';
+    } else {
+        return number_format($bytes) . ' bytes';
     }
-    return $bytes . ' bytes';
+}
+
+function formatDocumentType($type) {
+    return ucwords(str_replace('_', ' ', $type));
 }
 
 function getFileIconClass($fileType) {

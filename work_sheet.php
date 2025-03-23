@@ -33,6 +33,7 @@ $query = "SELECT
           LEFT JOIN shifts s ON us.shift_id = s.id
           WHERE a.user_id = ? 
           AND a.date BETWEEN ? AND ?
+          GROUP BY a.id
           ORDER BY a.date DESC";
 
 $stmt = $conn->prepare($query);
@@ -528,26 +529,117 @@ $result = $stmt->get_result();
     <script>
         let attendanceChart;
         let hoursChart;
+        
+        // Store all attendance data for local filtering
+        let attendanceData = [];
+
+        // First, let's collect all the overtime data from the table when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            collectOvertimeData();
+            updateOverviewStats();
+        });
+        
+        function collectOvertimeData() {
+            // Get all overtime cells from the table
+            const overtimeCells = document.querySelectorAll('.worksheet-table tbody tr td:nth-child(6)');
+            
+            overtimeCells.forEach(cell => {
+                const overtimeText = cell.textContent.trim();
+                if (overtimeText !== '-') {
+                    const dateCell = cell.parentElement.querySelector('td:first-child');
+                    const date = dateCell.textContent.trim();
+                    
+                    attendanceData.push({
+                        date: date,
+                        overtime: overtimeText
+                    });
+                }
+            });
+        }
 
         async function fetchOverviewData(period) {
             try {
                 const response = await fetch(`api/attendance_overview.php?period=${period}`);
                 const data = await response.json();
+                
+                // Replace the overtime hours with our filtered calculation
+                data.stats.originalOvertimeHours = data.stats.overtimeHours;
+                data.stats.overtimeHours = calculateFilteredOvertime(period);
+                
+                // Also update the chart data
+                if (data.chartData) {
+                    const filteredMinutes = convertTimeToMinutes(data.stats.overtimeHours);
+                    data.chartData.filteredOvertimeHours = filteredMinutes / 60; // Convert to hours for chart
+                    data.chartData.overtimeHours = data.chartData.filteredOvertimeHours;
+                }
+                
                 updateDashboardStats(data.stats);
                 updateCharts(data.chartData);
             } catch (error) {
                 console.error('Error fetching overview data:', error);
+                
+                // Fallback if API fails - use table data directly
+                const stats = {
+                    presentDays: countPresentDays(),
+                    totalHours: "N/A",
+                    overtimeHours: calculateFilteredOvertime(period),
+                    attendanceRate: "N/A"
+                };
+                
+                updateDashboardStats(stats);
             }
+        }
+        
+        function calculateFilteredOvertime(period) {
+            let totalFilteredMinutes = 0;
+            
+            // Loop through all the overtime entries
+            attendanceData.forEach(entry => {
+                // Parse the overtime value (format like "01:45:00" or "01:45")
+                const overtimeMinutes = convertTimeToMinutes(entry.overtime);
+                
+                // Only count overtime that's 90 minutes (1:30) or more
+                if (overtimeMinutes >= 90) {
+                    totalFilteredMinutes += overtimeMinutes;
+                }
+            });
+            
+            // Format the total filtered overtime
+            const filteredHours = Math.floor(totalFilteredMinutes / 60);
+            const filteredMinutes = totalFilteredMinutes % 60;
+            return `${String(filteredHours).padStart(2, '0')}:${String(filteredMinutes).padStart(2, '0')}`;
+        }
+        
+        function convertTimeToMinutes(timeString) {
+            if (!timeString || timeString === '-') return 0;
+            
+            const parts = timeString.split(':');
+            const hours = parseInt(parts[0], 10) || 0;
+            const minutes = parseInt(parts[1], 10) || 0;
+            
+            return (hours * 60) + minutes;
+        }
+        
+        function countPresentDays() {
+            const presentBadges = document.querySelectorAll('.status-badge.status-present');
+            return presentBadges.length;
         }
 
         function updateDashboardStats(stats) {
             document.getElementById('presentDays').textContent = stats.presentDays;
             document.getElementById('totalHours').textContent = stats.totalHours;
             document.getElementById('overtimeHours').textContent = stats.overtimeHours;
+            document.querySelector('.stat-card:nth-child(3) .stat-info h3').textContent = 'Overtime Hours (≥1:30)';
             document.getElementById('attendanceRate').textContent = `${stats.attendanceRate}%`;
         }
 
         function updateCharts(data) {
+            // Skip chart updates if no data is available
+            if (!data || !data.dates || !data.workingHours) {
+                console.warn('Cannot update charts: missing chart data');
+                return;
+            }
+            
             // Update Attendance Chart
             if (attendanceChart) {
                 attendanceChart.destroy();
@@ -587,12 +679,15 @@ $result = $stmt->get_result();
                 hoursChart.destroy();
             }
             
+            // Use filtered overtime hours if available
+            const overtimeHoursValue = data.filteredOvertimeHours || data.overtimeHours;
+            
             hoursChart = new Chart(document.getElementById('hoursChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Regular Hours', 'Overtime Hours'],
+                    labels: ['Regular Hours', 'Overtime Hours (≥1:30)'],
                     datasets: [{
-                        data: [data.regularHours, data.overtimeHours],
+                        data: [data.regularHours, overtimeHoursValue],
                         backgroundColor: [
                             'rgba(52, 152, 219, 0.5)',
                             'rgba(231, 76, 60, 0.5)'
@@ -621,11 +716,6 @@ $result = $stmt->get_result();
             const period = document.getElementById('overviewPeriod').value;
             fetchOverviewData(period);
         }
-
-        // Initial load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateOverviewStats();
-        });
 
         function filterMonthYear() {
             const month = document.getElementById('monthSelect').value;

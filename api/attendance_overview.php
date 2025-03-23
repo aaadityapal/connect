@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 $user_id = $_SESSION['user_id'];
 $month = $_GET['month'] ?? date('m');
 $year = $_GET['year'] ?? date('Y');
+$min_overtime = isset($_GET['min_overtime']) ? intval($_GET['min_overtime']) : 0;
 
 // Calculate first and last day of selected month
 $start_date = date('Y-m-01', strtotime("$year-$month-01"));
@@ -46,7 +47,11 @@ while ($row = $result->fetch_assoc()) {
     
     if ($row['overtime_hours']) {
         list($ot_hours, $ot_minutes, $ot_seconds) = explode(':', $row['overtime_hours']);
-        $totalOvertimeHours += $ot_hours + ($ot_minutes/60);
+        $total_minutes = ($ot_hours * 60) + $ot_minutes;
+        
+        if ($total_minutes > $min_overtime) {
+            $totalOvertimeHours += $total_minutes;
+        }
     }
     
     if ($row['status'] == 'present') {
@@ -57,11 +62,16 @@ while ($row = $result->fetch_assoc()) {
 
 $attendanceRate = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0;
 
+// Convert back to hours:minutes format for the response
+$overtime_hours = floor($totalOvertimeHours / 60);
+$overtime_minutes = $totalOvertimeHours % 60;
+$formatted_overtime = sprintf("%02d:%02d", $overtime_hours, $overtime_minutes);
+
 echo json_encode([
     'stats' => [
         'presentDays' => $presentDays,
         'totalHours' => round($totalRegularHours, 1),
-        'overtimeHours' => round($totalOvertimeHours, 1),
+        'overtimeHours' => $formatted_overtime,
         'attendanceRate' => $attendanceRate
     ],
     'chartData' => [

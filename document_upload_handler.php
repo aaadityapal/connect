@@ -10,15 +10,8 @@ require_once 'error_logger.php';
 class DocumentUploadHandler {
     private $db;
     private $uploadDirectory = 'uploads/documents/';
-    private $maxFileSize = 10485760; // 10MB
-    private $allowedTypes = [
-        'pdf'  => 'application/pdf',
-        'doc'  => 'application/msword',
-        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'png'  => 'image/png'
-    ];
+    private $maxFileSize = 52428800; // Increased to 50MB
+    private $allowedTypes = '*';  // Accept all file types
 
     public function __construct($db) {
         $this->db = $db;
@@ -73,36 +66,16 @@ class DocumentUploadHandler {
     }
 
     private function validateFile($file) {
-        // Validate file size (10MB limit)
-        $maxSize = 10 * 1024 * 1024; // 10MB in bytes
-        if ($file['size'] > $maxSize) {
-            throw new Exception('File size exceeds limit (10MB)');
+        // Only validate file size
+        if ($file['size'] > $this->maxFileSize) {
+            throw new Exception('File size exceeds limit (50MB)');
         }
 
         // Get file extension
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         
-        // Validate file type based on extension
-        $allowed_extensions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
-        if (!in_array($extension, $allowed_extensions)) {
-            throw new Exception('Invalid file type. Allowed types: PDF, JPEG, PNG, DOC, DOCX');
-        }
-
-        // Additional check using mime_content_type if available
-        if (function_exists('mime_content_type')) {
-            $mime_type = mime_content_type($file['tmp_name']);
-            $allowed_mimes = [
-                'application/pdf',
-                'image/jpeg',
-                'image/png',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ];
-            if (!in_array($mime_type, $allowed_mimes)) {
-                throw new Exception('Invalid file type detected');
-            }
-        }
-
+        // Remove file type validation
+        // Just return the file information
         return [
             'extension' => $extension,
             'mime_type' => $file['type']
@@ -145,7 +118,7 @@ class DocumentUploadHandler {
         }
 
         $documentName = pathinfo($file['name'], PATHINFO_FILENAME);
-        $fileType = $file['type'];
+        $fileType = $file['type'] ?: 'application/octet-stream'; // Default MIME type for unknown files
         $fileSize = $file['size'];
         $uploadedBy = $_SESSION['user_id'];
 

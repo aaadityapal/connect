@@ -437,42 +437,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-file-alt"></i> HR Documents Manager</h1>
-            <button class="btn-add-doc" onclick="toggleUploadForm()">
-                <i class="fas fa-plus"></i> Add HR Document
-            </button>
-        </div>
-
-        <!-- Document Upload Form -->
-        <div id="documentUploadForm" class="document-upload-form" style="display: none;">
-            <form id="uploadForm" onsubmit="handleDocumentUpload(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="docType">Document Type</label>
-                        <select id="docType" name="type" required>
-                            <option value="">Select Document Type</option>
-                            <option value="hr_policy">HR Policy</option>
-                            <option value="senior_manager_handbook">Senior Manager HandBook</option>
-                            <option value="travel_expenses_reimbursement_form">Travel Expenses Reimbursement Form</option>
-                            <option value="employee_handbook">Employee Handbook</option>
-                            <option value="code_of_conduct">Code of Conduct</option>
-                            <option value="safety_guidelines">Safety Guidelines</option>
-                            <option value="training_material">Training Material</option>
-                            <option value="benefits_policy">Benefits Policy</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="docFile">Document File</label>
-                        <input type="file" id="docFile" name="file" required accept=".pdf,.doc,.docx">
-                    </div>
-                </div>
-                <button type="submit" class="btn-upload">Upload Document</button>
-            </form>
-        </div>
-
-        <!-- Documents List -->
-        <div id="documentsList" class="documents-grid">
-            <!-- Documents will be loaded here -->
         </div>
 
         <!-- Official Documents Section -->
@@ -516,7 +480,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                     </div>
                     <div class="form-group">
                         <label for="officialDocFile">Document File</label>
-                        <input type="file" id="officialDocFile" name="file" required accept=".pdf,.doc,.docx">
+                        <input type="file" id="officialDocFile" name="file" required>
+                        <small class="text-muted">Maximum file size: 50MB</small>
                     </div>
                     <button type="submit" class="btn-add-doc">Upload Official Document</button>
                 </form>
@@ -624,7 +589,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                     </div>
                     <div class="form-group">
                         <label for="personalDocFile">Document File</label>
-                        <input type="file" id="personalDocFile" name="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        <input type="file" id="personalDocFile" name="file" required>
+                        <small class="text-muted">Maximum file size: 50MB</small>
                     </div>
                     <button type="submit" class="btn-add-doc">Upload Personal Document</button>
                 </form>
@@ -647,6 +613,82 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                             <div class="no-data-message">
                                 <i class="fas fa-folder-open"></i>
                                 <p>No personal documents available</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Policy Documents Section -->
+        <div class="offer-letters-section">
+            <div class="section-header">
+                <h2><i class="fas fa-book"></i> Policy Documents</h2>
+                <div class="header-actions">
+                    <div class="filter-group">
+                        <label for="policyDocTypeFilter">Filter by Type:</label>
+                        <select id="policyDocTypeFilter" class="form-control" onchange="filterPolicyDocuments()">
+                            <option value="">All Policies</option>
+                            <option value="company_policy">Company Policy</option>
+                            <option value="hr_policy">HR Policy</option>
+                            <option value="leave_policy">Leave Policy</option>
+                            <option value="travel_policy">Travel Policy</option>
+                            <option value="code_of_conduct">Code of Conduct</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <button class="btn-add-doc" onclick="togglePolicyDocForm()">
+                        <i class="fas fa-plus"></i> Add Policy Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Policy Document Upload Form -->
+            <div id="policyDocUploadForm" class="document-upload-form" style="display: none;">
+                <form id="policyUploadForm" onsubmit="handlePolicyDocUpload(event)">
+                    <div class="form-group">
+                        <label for="policyDocType">Policy Type</label>
+                        <select id="policyDocType" name="type" required>
+                            <option value="">Select Policy Type</option>
+                            <option value="company_policy">Company Policy</option>
+                            <option value="hr_policy">HR Policy</option>
+                            <option value="leave_policy">Leave Policy</option>
+                            <option value="travel_policy">Travel Policy</option>
+                            <option value="code_of_conduct">Code of Conduct</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="policyDocName">Policy Name</label>
+                        <input type="text" id="policyDocName" name="policy_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="policyDocFile">Document File</label>
+                        <input type="file" id="policyDocFile" name="file" required>
+                        <small class="text-muted">Maximum file size: 50MB</small>
+                    </div>
+                    <button type="submit" class="btn-add-doc">Upload Policy Document</button>
+                </form>
+            </div>
+
+            <!-- Policy Documents Table -->
+            <table class="offer-letter-table">
+                <thead>
+                    <tr>
+                        <th>Policy Name</th>
+                        <th>Type</th>
+                        <th>Upload Date</th>
+                        <th>Last Updated</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="policyDocumentsList">
+                    <tr class="no-data">
+                        <td colspan="6">
+                            <div class="no-data-message">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No policy documents available</p>
                             </div>
                         </td>
                     </tr>
@@ -748,6 +790,25 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                 case 'pdf': return 'fa-file-pdf';
                 case 'doc':
                 case 'docx': return 'fa-file-word';
+                case 'xls':
+                case 'xlsx': return 'fa-file-excel';
+                case 'ppt':
+                case 'pptx': return 'fa-file-powerpoint';
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                case 'gif':
+                case 'bmp': return 'fa-file-image';
+                case 'zip':
+                case 'rar':
+                case '7z': return 'fa-file-archive';
+                case 'txt': return 'fa-file-alt';
+                case 'mp4':
+                case 'avi':
+                case 'mov': return 'fa-file-video';
+                case 'mp3':
+                case 'wav':
+                case 'ogg': return 'fa-file-audio';
                 default: return 'fa-file';
             }
         }
@@ -813,32 +874,34 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         function handleOfficialDocUpload(event) {
             event.preventDefault();
             
-                    const formData = new FormData();
             const file = document.getElementById('officialDocFile').files[0];
-            const docType = document.getElementById('officialDocType').value;
-            const assignedUserId = document.getElementById('assignedUser').value;
+            if (file && file.size > 52428800) { // 50MB in bytes
+                Swal.fire('Error', 'File size exceeds 50MB limit', 'error');
+                return;
+            }
 
+            const formData = new FormData();
             formData.append('file', file);
-            formData.append('type', docType);
-            formData.append('assigned_user_id', assignedUserId);
+            formData.append('type', document.getElementById('officialDocType').value);
+            formData.append('assigned_user_id', document.getElementById('assignedUser').value);
             formData.append('category', 'official');
 
             fetch('document_upload_handler.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     Swal.fire('Success', 'Document uploaded successfully', 'success');
                     document.getElementById('officialUploadForm').reset();
                     toggleOfficialDocForm();
                     loadOfficialDocuments();
-                        } else {
+                } else {
                     throw new Error(data.message || 'Upload failed');
-                        }
-                    })
-                    .catch(error => {
+                }
+            })
+            .catch(error => {
                 Swal.fire('Error', error.message, 'error');
             });
         }
@@ -846,14 +909,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         function handlePersonalDocUpload(event) {
             event.preventDefault();
             
-            const formData = new FormData();
             const file = document.getElementById('personalDocFile').files[0];
-            const docType = document.getElementById('personalDocType').value;
-            const assignedUserId = document.getElementById('personalDocUser').value;
-            
+            if (file && file.size > 52428800) { // 50MB in bytes
+                Swal.fire('Error', 'File size exceeds 50MB limit', 'error');
+                return;
+            }
+
+            const formData = new FormData();
             formData.append('file', file);
-            formData.append('type', docType);
-            formData.append('assigned_user_id', assignedUserId);
+            formData.append('type', document.getElementById('personalDocType').value);
+            formData.append('assigned_user_id', document.getElementById('personalDocUser').value);
             formData.append('category', 'personal');
 
             fetch('document_upload_handler.php', {
@@ -1114,13 +1179,249 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             });
         }
 
+        function togglePolicyDocForm() {
+            const form = document.getElementById('policyDocUploadForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handlePolicyDocUpload(event) {
+            event.preventDefault();
+            
+            const file = document.getElementById('policyDocFile').files[0];
+            if (file && file.size > 52428800) { // 50MB in bytes
+                Swal.fire('Error', 'File size exceeds 50MB limit', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', document.getElementById('policyDocType').value);
+            formData.append('policy_name', document.getElementById('policyDocName').value);
+            formData.append('category', 'policy');
+
+            fetch('policy_document_upload_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success', 'Policy document uploaded successfully', 'success');
+                    document.getElementById('policyUploadForm').reset();
+                    togglePolicyDocForm();
+                    loadPolicyDocuments();
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+        }
+
+        function filterPolicyDocuments() {
+            const selectedType = document.getElementById('policyDocTypeFilter').value;
+            loadPolicyDocuments(selectedType);
+        }
+
+        function loadPolicyDocuments(policyType = null) {
+            const queryParams = policyType ? `?type=policy&policy_type=${policyType}` : '?type=policy';
+
+            fetch('policy_document_retrieval_handler.php' + queryParams)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    const tbody = document.getElementById('policyDocumentsList');
+                    
+                    if (!data.documents || data.documents.length === 0) {
+                        tbody.innerHTML = `
+                            <tr class="no-data">
+                                <td colspan="6">
+                                    <div class="no-data-message">
+                                        <i class="fas fa-folder-open"></i>
+                                        <p>${policyType ? 'No policy documents found for selected type' : 'No policy documents available'}</p>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.documents.map(doc => `
+                        <tr>
+                            <td>
+                                <div class="document-info">
+                                    <i class="fas ${doc.icon_class} document-icon"></i>
+                                    ${doc.policy_name}
+                                </div>
+                            </td>
+                            <td>${formatDocumentType(doc.policy_type)}</td>
+                            <td>${doc.upload_date}</td>
+                            <td>${doc.last_updated || doc.upload_date}</td>
+                            <td>
+                                <span class="status-badge status-${doc.status.toLowerCase()}">
+                                    ${doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="document-actions">
+                                    <button onclick="viewDocument(${doc.id}, 'policy')" class="btn-action view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="downloadDocument(${doc.id}, 'policy')" class="btn-action download" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button onclick="editPolicyDocument(${doc.id})" class="btn-action edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    ${doc.status === 'pending' ? `
+                                        <button onclick="updatePolicyStatus(${doc.id})" class="btn-action status" title="Update Status">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="deleteDocument(${doc.id}, 'policy')" class="btn-action delete" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading policy documents:', error);
+                    Swal.fire('Error', error.message, 'error');
+                });
+        }
+
+        function editPolicyDocument(docId) {
+            // First fetch the document details
+            fetch(`get_policy_document.php?id=${docId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    const doc = data.document;
+                    
+                    Swal.fire({
+                        title: 'Edit Policy Document',
+                        html: `
+                            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                                <label for="editPolicyName" style="display: block; margin-bottom: 5px; font-weight: 500;">Policy Name</label>
+                                <input type="text" id="editPolicyName" class="swal2-input" style="width: 100%;" value="${doc.policy_name}" placeholder="Policy Name">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                                <label for="editPolicyType" style="display: block; margin-bottom: 5px; font-weight: 500;">Policy Type</label>
+                                <select id="editPolicyType" class="swal2-select" style="width: 100%;">
+                                    <option value="company_policy" ${doc.policy_type === 'company_policy' ? 'selected' : ''}>Company Policy</option>
+                                    <option value="hr_policy" ${doc.policy_type === 'hr_policy' ? 'selected' : ''}>HR Policy</option>
+                                    <option value="leave_policy" ${doc.policy_type === 'leave_policy' ? 'selected' : ''}>Leave Policy</option>
+                                    <option value="travel_policy" ${doc.policy_type === 'travel_policy' ? 'selected' : ''}>Travel Policy</option>
+                                    <option value="code_of_conduct" ${doc.policy_type === 'code_of_conduct' ? 'selected' : ''}>Code of Conduct</option>
+                                    <option value="other" ${doc.policy_type === 'other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Update',
+                        preConfirm: () => {
+                            const policyName = document.getElementById('editPolicyName').value;
+                            const policyType = document.getElementById('editPolicyType').value;
+                            
+                            if (!policyName.trim()) {
+                                Swal.showValidationMessage('Policy name is required');
+                                return false;
+                            }
+                            
+                            return { policyName, policyType };
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const { policyName, policyType } = result.value;
+                            
+                            // Send update request
+                            fetch('update_policy_document.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    id: docId,
+                                    policy_name: policyName,
+                                    policy_type: policyType
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire('Updated!', 'Policy document has been updated.', 'success');
+                                    loadPolicyDocuments();
+                                } else {
+                                    throw new Error(data.message || 'Failed to update policy document');
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire('Error', error.message, 'error');
+                            });
+                        }
+                    });
+                })
+                .catch(error => {
+                    Swal.fire('Error', error.message, 'error');
+                });
+        }
+
+        function updatePolicyStatus(docId) {
+            Swal.fire({
+                title: 'Update Policy Status',
+                html: `
+                    <select id="policyStatusUpdate" class="swal2-select">
+                        <option value="acknowledged">Acknowledged</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Update',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    const status = document.getElementById('policyStatusUpdate').value;
+                    return fetch('update_policy_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            document_id: docId,
+                            status: status
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to update status');
+                        }
+                        return data;
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Success', 'Policy status updated successfully', 'success');
+                    loadPolicyDocuments();
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            loadHRDocuments();
             loadUsers();
             loadUserFilter();
             loadPersonalDocUserFilter();
             loadOfficialDocuments();
             loadPersonalDocuments();
+            loadPolicyDocuments();
         });
 
         function uploadDocument(formData) {

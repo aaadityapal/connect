@@ -92,3 +92,73 @@ CREATE INDEX idx_official_docs_status ON official_documents(status);
 CREATE INDEX idx_personal_docs_user ON personal_documents(assigned_user_id);
 CREATE INDEX idx_personal_docs_type ON personal_documents(document_type);
 CREATE INDEX idx_personal_docs_verification ON personal_documents(verification_status);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE company_documents (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    document_name VARCHAR(255) NOT NULL,
+    document_type ENUM(
+        'company_policy',
+        'employee_handbook',
+        'code_of_conduct',
+        'safety_guidelines',
+        'hr_policy',
+        'leave_policy',
+        'travel_policy',
+        'it_policy',
+        'benefits_policy',
+        'other'
+    ) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    file_size INT NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    uploaded_by INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    description TEXT,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add indexes for frequently searched columns
+CREATE INDEX idx_document_type ON company_documents(document_type);
+CREATE INDEX idx_upload_date ON company_documents(upload_date);
+CREATE INDEX idx_is_active ON company_documents(is_active);
+
+
+-- Add status column to existing company_documents table
+ALTER TABLE company_documents
+    ADD COLUMN status ENUM('published', 'acknowledged', 'rejected') DEFAULT 'published' AFTER document_type;
+
+-- Create table for tracking document responses
+CREATE TABLE document_responses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    document_id INT NOT NULL,
+    user_id INT NOT NULL,
+    response_status ENUM('acknowledged', 'rejected') NOT NULL,
+    response_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    comments TEXT,
+    FOREIGN KEY (document_id) REFERENCES company_documents(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE KEY unique_response (document_id, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

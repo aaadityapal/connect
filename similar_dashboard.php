@@ -155,6 +155,8 @@ if ($user_data && isset($user_data['shift_id'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="assets/css/task-overview.css">
     <script src="assets/js/task-overview-manager.js"></script>
+    <link rel="stylesheet" href="assets/css/announcements_popup.css">
+    <script src="assets/js/announcements_popup.js"></script>
 
     <style>
         .dashboard-container {

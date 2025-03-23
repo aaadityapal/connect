@@ -599,16 +599,16 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 <div class="hr-documents">
                     <h2 class="section-title">HR Documents</h2>
 
-                    <!-- Add Tabs for Different Document Types -->
+                    <!-- Change the document type tabs to remove HR Documents -->
                     <div class="document-type-tabs">
-                        <button class="doc-tab active" data-doctype="hr">HR Documents</button>
+                        <button class="doc-tab active" data-doctype="policies">Policies</button>
                         <button class="doc-tab" data-doctype="official">Official Documents</button>
                         <button class="doc-tab" data-doctype="personal">User Personal Documents</button>
                     </div>
 
-                    <!-- HR Documents Container -->
-                    <div class="documents-container" id="hrDocuments">
-                        <!-- Existing HR documents code -->
+                    <!-- Policies Container -->
+                    <div class="documents-container" id="policyDocuments">
+                        <!-- Policies will be loaded here -->
                     </div>
 
                     <!-- Official Documents Container -->
@@ -836,127 +836,11 @@ $user_role = $_SESSION['role'] ?? 'employee';
         // Load activity log when the activity tab is shown
         document.querySelector('[data-tab="activity"]').addEventListener('click', loadActivityLog);
 
-        // Update loadHRDocuments() to remove offer letter handling
-        function loadHRDocuments() {
-            fetch('get_hr_documents.php')
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.querySelector('.documents-container');
-                    
-                    if (!data.documents || data.documents.length === 0) {
-                        container.innerHTML = `
-                            <div class="no-documents">
-                                <i class="fas fa-folder-open"></i>
-                                <p>No documents available</p>
-                            </div>`;
-                        return;
-                    }
-
-                    container.innerHTML = data.documents.map(doc => `
-                        <div class="document-item">
-                            <div class="document-icon">
-                                <i class="fas ${doc.icon_class}"></i>
-                            </div>
-                            <div class="document-details">
-                                <h3>${doc.original_name}</h3>
-                                <p>Last updated: ${doc.last_modified}</p>
-                                <p><small>
-                                    Size: ${doc.formatted_size}
-                                    ${doc.uploaded_by_name ? `• Uploaded by: ${doc.uploaded_by_name}` : ''}
-                                </small></p>
-                                <div class="document-actions">
-                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${doc.id}, 'hr_doc')">
-                                        <i class="fas fa-eye"></i> View
-                                    </button>
-                                    <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${doc.id}, 'hr_doc')">
-                                        <i class="fas fa-download"></i> Download
-                                    </button>
-                                    ${doc.acknowledgment_status === 'acknowledged' ? `
-                                        <button class="btn btn-success btn-sm" disabled>
-                                            <i class="fas fa-check"></i> Acknowledged
-                                        </button>
-                                    ` : `
-                                        <button class="btn btn-info btn-sm" onclick="acknowledgeDocument(${doc.id})">
-                                            <i class="fas fa-clipboard-check"></i> Read & Accept
-                                        </button>
-                                    `}
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                })
-                .catch(error => {
-                    console.error('Error loading documents:', error);
-                });
-        }
-
-        // Update view and download functions
-        function viewDocument(docId, type) {
-            if (!docId) return;
-            window.open(`employee_document_viewer.php?id=${docId}&type=${type}`, '_blank');
-        }
-
-        function downloadDocument(docId, type) {
-            if (!docId) return;
-            window.location.href = `employee_document_download.php?id=${docId}&type=${type}`;
-        }
-
-        // Add this new function for document acknowledgment
-        function acknowledgeDocument(docId) {
-            if (!docId) return;
-
-            Swal.fire({
-                title: 'Confirm Acknowledgment',
-                text: 'By clicking "Confirm", you acknowledge that you have read and accepted this document.',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Confirm',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch('acknowledge_document.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            document_id: docId
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: 'Document has been acknowledged.'
-                            });
-                            loadHRDocuments(); // Reload the documents list
-                        } else {
-                            throw new Error(data.message || 'Failed to acknowledge document');
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: error.message
-                        });
-                    });
-                }
-            });
-        }
-
-        // Load documents when the HR documents tab is shown
-        document.querySelector('[data-tab="hr-documents"]').addEventListener('click', loadHRDocuments);
-
-        // Also load documents if it's the active tab on page load
-        if (window.location.hash === '#hr-documents') {
-            document.querySelector('[data-tab="hr-documents"]').click();
-        } else {
-            // Optionally preload the documents anyway
-            loadHRDocuments();
-        }
+        // Update this event listener
+        document.querySelector('[data-tab="hr-documents"]').addEventListener('click', () => {
+            // Remove the loadHRDocuments() call and replace with loadPolicyDocuments()
+            loadPolicyDocuments();
+        });
 
         // Add helper function for file size formatting
         function formatFileSize(bytes) {
@@ -984,9 +868,9 @@ $user_role = $_SESSION['role'] ?? 'employee';
 
                     // Show appropriate container
                     switch(tab.dataset.doctype) {
-                        case 'hr':
-                            document.getElementById('hrDocuments').style.display = 'block';
-                            loadHRDocuments();
+                        case 'policies':
+                            document.getElementById('policyDocuments').style.display = 'block';
+                            loadPolicyDocuments();
                             break;
                         case 'official':
                             document.getElementById('officialDocuments').style.display = 'block';
@@ -1131,41 +1015,12 @@ $user_role = $_SESSION['role'] ?? 'employee';
         document.addEventListener('DOMContentLoaded', () => {
             initializeDocumentTabs();
             
-            // Load HR documents by default (since HR tab is active by default)
-            loadHRDocuments();
+            // Load policy documents by default when HR Documents tab is active
+            if (document.querySelector('[data-tab="hr-documents"]').classList.contains('active')) {
+                loadPolicyDocuments();
+            }
             
-            // Add click event listeners for document type tabs
-            document.querySelectorAll('.doc-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const docType = tab.dataset.doctype;
-                    
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
-                    // Add active class to clicked tab
-                    tab.classList.add('active');
-                    
-                    // Hide all containers
-                    document.querySelectorAll('.documents-container').forEach(container => {
-                        container.style.display = 'none';
-                    });
-                    
-                    // Show and load appropriate container
-                    switch(docType) {
-                        case 'hr':
-                            document.getElementById('hrDocuments').style.display = 'block';
-                            loadHRDocuments();
-                            break;
-                        case 'official':
-                            document.getElementById('officialDocuments').style.display = 'block';
-                            loadOfficialDocuments();
-                            break;
-                        case 'personal':
-                            document.getElementById('personalDocuments').style.display = 'block';
-                            loadPersonalDocuments();
-                            break;
-                    }
-                });
-            });
+            // Rest of your existing document tab click handlers...
         });
 
         function loadPersonalDocuments() {
@@ -1273,6 +1128,141 @@ $user_role = $_SESSION['role'] ?? 'employee';
                             <p>Error loading documents. Please try again later.</p>
                         </div>`;
                 });
+        }
+
+        function loadPolicyDocuments() {
+            console.log('Loading policy documents...'); // Debug log
+            fetch('get_policy_documents.php')
+                .then(response => {
+                    console.log('Raw response:', response); // Debug log
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Policy data:', data); // Debug log
+                    const container = document.getElementById('policyDocuments');
+                    
+                    if (!data.policies || data.policies.length === 0) {
+                        container.innerHTML = `
+                            <div class="no-documents">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No policy documents available</p>
+                            </div>`;
+                        return;
+                    }
+
+                    container.innerHTML = data.policies.map(policy => `
+                        <div class="document-item">
+                            <div class="document-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="document-details">
+                                <h3>
+                                    ${policy.policy_name}
+                                    <span class="status-badge status-${policy.status.toLowerCase()}">
+                                        ${policy.status.charAt(0).toUpperCase() + policy.status.slice(1)}
+                                    </span>
+                                </h3>
+                                <p>Type: ${formatPolicyType(policy.policy_type)}</p>
+                                <p><small>
+                                    Last updated: ${policy.updated_at || policy.created_at}
+                                    • Size: ${formatFileSize(policy.file_size)}
+                                </small></p>
+                                <div class="document-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="viewDocument(${policy.id}, 'policy')" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="downloadDocument(${policy.id}, 'policy')" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    ${policy.status === 'pending' ? `
+                                        <button class="btn btn-success btn-sm" onclick="acknowledgePolicyDocument(${policy.id})" title="Acknowledge">
+                                            <i class="fas fa-check"></i> Acknowledge
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('Error loading policy documents:', error);
+                    document.getElementById('policyDocuments').innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading documents. Please try again later.</p>
+                        </div>`;
+                });
+        }
+
+        function formatPolicyType(type) {
+            return type.split('_').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        function acknowledgePolicyDocument(policyId) {
+            Swal.fire({
+                title: 'Acknowledge Policy',
+                text: 'By acknowledging this policy, you confirm that you have read and understood its contents.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Acknowledge',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('acknowledge_policy.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            policy_id: policyId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Success', 'Policy acknowledged successfully', 'success');
+                            loadPolicyDocuments(); // Reload the policies
+                        } else {
+                            throw new Error(data.message || 'Failed to acknowledge policy');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', error.message, 'error');
+                    });
+                }
+            });
+        }
+
+        function viewDocument(docId, type) {
+            fetch(`phew_document.php?id=${docId}&type=${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Open document in new window/tab
+                        window.open(data.file_url, '_blank');
+                    } else {
+                        throw new Error(data.message || 'Failed to view document');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message
+                    });
+                });
+        }
+
+        function downloadDocument(docId, type) {
+            // Create a temporary anchor element
+            const link = document.createElement('a');
+            link.href = `down_document.php?id=${docId}&type=${type}`;
+            link.setAttribute('download', ''); // This will force download instead of navigation
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>

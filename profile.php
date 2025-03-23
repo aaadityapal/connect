@@ -1236,23 +1236,10 @@ $user_role = $_SESSION['role'] ?? 'employee';
         }
 
         function viewDocument(docId, type) {
-            fetch(`phew_document.php?id=${docId}&type=${type}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Open document in new window/tab
-                        window.open(data.file_url, '_blank');
-                    } else {
-                        throw new Error(data.message || 'Failed to view document');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error.message
-                    });
-                });
+            console.log(`Attempting to view document: ID=${docId}, Type=${type}`);
+            
+            // Direct method using the new direct viewer
+            window.open(`direct_view_document.php?id=${docId}&type=${type}`, '_blank');
         }
 
         function downloadDocument(docId, type) {

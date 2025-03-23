@@ -4,18 +4,14 @@ require_once 'config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit();
+    die('Unauthorized');
 }
 
 $document_id = $_GET['id'] ?? null;
 $document_type = $_GET['type'] ?? null;
 
 if (!$document_id || !$document_type) {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Invalid request']);
-    exit();
+    die('Invalid request');
 }
 
 try {
@@ -23,38 +19,34 @@ try {
     switch ($document_type) {
         case 'policy':
             $stmt = $pdo->prepare("
-                SELECT stored_filename, file_type, original_filename
+                SELECT stored_filename, file_type, original_filename 
                 FROM policy_documents 
                 WHERE id = ?
             ");
             break;
         case 'official':
             $stmt = $pdo->prepare("
-                SELECT stored_filename, file_type, original_filename
+                SELECT stored_filename, file_type, original_filename 
                 FROM official_documents 
                 WHERE id = ?
             ");
             break;
         case 'personal':
             $stmt = $pdo->prepare("
-                SELECT stored_filename, file_type, original_filename
+                SELECT stored_filename, file_type, original_filename 
                 FROM personal_documents 
                 WHERE id = ?
             ");
             break;
         default:
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Invalid document type']);
-            exit();
+            die('Invalid document type');
     }
 
     $stmt->execute([$document_id]);
     $document = $stmt->fetch();
 
     if (!$document) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Document not found']);
-        exit();
+        die('Document not found');
     }
 
     // Determine the file path based on document type
@@ -72,23 +64,18 @@ try {
     }
     
     if (file_exists($file_path)) {
-        // Return JSON with success and direct file URL instead of a view_file.php reference
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true, 
-            'file_url' => $file_path
-        ]);
+        // Set proper headers for file viewing
+        header('Content-Type: ' . $document['file_type']);
+        header('Content-Disposition: inline; filename="' . $document['original_filename'] . '"');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+        
+        readfile($file_path);
     } else {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false, 
-            'message' => 'File not found on server',
-            'debug_path' => $file_path
-        ]);
+        die('File not found on server');
     }
 
 } catch (PDOException $e) {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    die('Database error: ' . $e->getMessage());
 }
-?>
+?> 

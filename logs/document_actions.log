@@ -188,3 +188,168 @@
         "role": "Design Team"
     }
 }
+2025-03-23 15:55:40 - {
+    "timestamp": "2025-03-23 15:55:40",
+    "message": "Cannot delete or update a parent row: a foreign key constraint fails (`crm`.`policy_acknowledgments`, CONSTRAINT `policy_acknowledgments_ibfk_1` FOREIGN KEY (`policy_id`) REFERENCES `policy_documents` (`id`))",
+    "data": {
+        "action": "delete",
+        "document_id": 5,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 173
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "5",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 15:55:46 - {
+    "timestamp": "2025-03-23 15:55:46",
+    "message": "Cannot delete or update a parent row: a foreign key constraint fails (`crm`.`policy_acknowledgments`, CONSTRAINT `policy_acknowledgments_ibfk_1` FOREIGN KEY (`policy_id`) REFERENCES `policy_documents` (`id`))",
+    "data": {
+        "action": "delete",
+        "document_id": 4,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 173
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "4",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 15:56:11 - {
+    "timestamp": "2025-03-23 15:56:11",
+    "message": "File not found on disk",
+    "data": {
+        "action": "delete",
+        "document_id": 4,
+        "document_type": "policy",
+        "file_path": "uploads\/documents\/policy\/1742719257_2_350318b0a8aef2d7.pdf"
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "4",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 15:56:11 - {
+    "timestamp": "2025-03-23 15:56:11",
+    "message": "File not found on server",
+    "data": {
+        "action": "delete",
+        "document_id": 4,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 120
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "4",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 15:56:14 - {
+    "timestamp": "2025-03-23 15:56:14",
+    "message": "File not found on disk",
+    "data": {
+        "action": "delete",
+        "document_id": 5,
+        "document_type": "policy",
+        "file_path": "uploads\/documents\/policy\/1742723614_2_677f3578d70e1f8c.pdf"
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "5",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 15:56:14 - {
+    "timestamp": "2025-03-23 15:56:14",
+    "message": "File not found on server",
+    "data": {
+        "action": "delete",
+        "document_id": 5,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 120
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "5",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 16:38:28 - {
+    "timestamp": "2025-03-23 16:38:28",
+    "message": "File not found on disk",
+    "data": {
+        "action": "delete",
+        "document_id": 5,
+        "document_type": "policy",
+        "file_path": "uploads\/documents\/policy\/1742723614_2_677f3578d70e1f8c.pdf"
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "5",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-23 16:38:28 - {
+    "timestamp": "2025-03-23 16:38:28",
+    "message": "File not found on server",
+    "data": {
+        "action": "delete",
+        "document_id": 5,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 120
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "5",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}

@@ -52,6 +52,7 @@ try {
         }
 
         $action = $data['action'] ?? '';
+        $workReport = $data['work_report'] ?? null;
         
         if (empty($action)) {
             throw new Exception('Action not specified');
@@ -160,84 +161,28 @@ try {
         // Handle punch out
         if ($action === 'punch_out') {
             $stmt = $pdo->prepare("
-                SELECT id, punch_in 
+                UPDATE attendance 
+                SET punch_out = ?, work_report = ?
+                WHERE user_id = ? AND date = ? AND punch_out IS NULL
+            ");
+            $stmt->execute([$currentTime, $workReport, $userId, $today]);
+            
+            // Calculate working hours
+            $stmt = $pdo->prepare("
+                SELECT punch_in, punch_out,
+                       TIMEDIFF(punch_out, punch_in) as working_hours
                 FROM attendance 
-                WHERE user_id = ? 
-                AND DATE(punch_in) = ? 
-                AND punch_out IS NULL
+                WHERE user_id = ? AND date = ?
             ");
             $stmt->execute([$userId, $today]);
-            $record = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$record) {
-                throw new Exception('No active punch-in found');
-            }
-
-            // Convert timestamps to DateTime objects
-            $punchIn = new DateTime($record['punch_in']);
-            $punchOut = new DateTime($currentTime);
+            $attendance = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            // Calculate the difference
-            $interval = $punchIn->diff($punchOut);
-            
-            // Calculate total seconds worked
-            $totalSeconds = ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
-            
-            // Format as HH:MM:SS
-            $hours = str_pad(floor($totalSeconds / 3600), 2, '0', STR_PAD_LEFT);
-            $minutes = str_pad(floor(($totalSeconds % 3600) / 60), 2, '0', STR_PAD_LEFT);
-            $seconds = str_pad(($totalSeconds % 60), 2, '0', STR_PAD_LEFT);
-            
-            $workingHours = "{$hours}:{$minutes}:{$seconds}";
-            
-            // Debug logging
-            error_log("DEBUG: Punch In Time: " . $punchIn->format('Y-m-d H:i:s'));
-            error_log("DEBUG: Punch Out Time: " . $punchOut->format('Y-m-d H:i:s'));
-            error_log("DEBUG: Total Seconds: " . $totalSeconds);
-            error_log("DEBUG: Working Hours: " . $workingHours);
-            
-            // Format display message
-            $timeMessage = '';
-            if ($hours > 0) {
-                $timeMessage .= intval($hours) . ' hour' . (intval($hours) != 1 ? 's' : '');
-                if ($minutes > 0) {
-                    $timeMessage .= ' and ';
-                }
-            }
-            if ($minutes > 0 || ($hours == 0 && $minutes == 0)) {
-                $timeMessage .= intval($minutes) . ' minute' . (intval($minutes) != 1 ? 's' : '');
-                if ($seconds > 0) {
-                    $timeMessage .= ' and ';
-                }
-            }
-            if ($seconds > 0 || ($hours == 0 && $minutes == 0)) {
-                $timeMessage .= intval($seconds) . ' second' . (intval($seconds) != 1 ? 's' : '');
-            }
-
-            $stmt = $pdo->prepare("
-                UPDATE attendance 
-                SET punch_out = ?,
-                    working_hours = ?,
-                    modified_at = ?
-                WHERE id = ?
-            ");
-            
-            if ($stmt->execute([$currentTime, $workingHours, $currentTime, $record['id']])) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Punched out successfully',
-                    'workingTime' => $timeMessage,
-                    'workingHours' => $workingHours,
-                    'debug' => [
-                        'punch_in' => $punchIn->format('Y-m-d H:i:s'),
-                        'punch_out' => $punchOut->format('Y-m-d H:i:s'),
-                        'total_seconds' => $totalSeconds
-                    ]
-                ]);
-                exit;
-            } else {
-                throw new Exception('Failed to update punch-out');
-            }
+            echo json_encode([
+                'success' => true,
+                'message' => 'Punched out successfully',
+                'workingTime' => $attendance['working_hours']
+            ]);
+            exit;
         }
 
         throw new Exception('Invalid action specified');
@@ -248,15 +193,10 @@ try {
         try {
             $today = date('Y-m-d');
             $stmt = $pdo->prepare("
-                SELECT 
-                    punch_in,
-                    punch_out,
-                    working_hours
+                SELECT punch_in, punch_out, 
+                       TIMEDIFF(COALESCE(punch_out, NOW()), punch_in) as working_hours
                 FROM attendance 
-                WHERE user_id = ? 
-                AND DATE(punch_in) = ?
-                ORDER BY punch_in DESC 
-                LIMIT 1
+                WHERE user_id = ? AND date = ?
             ");
             $stmt->execute([$_SESSION['user_id'], $today]);
             $attendance = $stmt->fetch(PDO::FETCH_ASSOC);

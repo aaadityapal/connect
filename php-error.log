@@ -143,3 +143,62 @@
 [17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Punch Out Time: 2025-03-17 10:09:06
 [17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Total Seconds: 10
 [17-Mar-2025 10:09:06 Asia/Kolkata] DEBUG: Working Hours: 00:00:10
+[25-Mar-2025 15:00:08 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 15:00:08 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 15:00:08 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-03-25","2025-03-25 15:00:08","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 Edg\/134.0.0.0","present","2025-03-25 15:00:08","2025-03-25 15:00:08"]
+[25-Mar-2025 15:00:08 Asia/Kolkata] Successfully inserted attendance record with ID: 414
+[25-Mar-2025 15:36:38 Asia/Kolkata] Received input: {"action":"punch_out"}
+[25-Mar-2025 15:36:38 Asia/Kolkata] DEBUG: Punch In Time: 2025-03-25 15:00:08
+[25-Mar-2025 15:36:38 Asia/Kolkata] DEBUG: Punch Out Time: 2025-03-25 15:36:38
+[25-Mar-2025 15:36:38 Asia/Kolkata] DEBUG: Total Seconds: 2190
+[25-Mar-2025 15:36:38 Asia/Kolkata] DEBUG: Working Hours: 00:36:30
+[25-Mar-2025 15:36:44 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 15:36:44 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 15:36:44 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 15:36:48 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 15:36:48 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 15:36:48 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 15:37:18 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 15:37:18 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 15:37:18 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-03-25","2025-03-25 15:37:18","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 Edg\/134.0.0.0","present","2025-03-25 15:37:18","2025-03-25 15:37:18"]
+[25-Mar-2025 15:37:18 Asia/Kolkata] Successfully inserted attendance record with ID: 415
+[25-Mar-2025 16:17:33 Asia/Kolkata] Received input: {"action":"punch_out"}
+[25-Mar-2025 16:17:33 Asia/Kolkata] DEBUG: Punch In Time: 2025-03-25 15:37:18
+[25-Mar-2025 16:17:33 Asia/Kolkata] DEBUG: Punch Out Time: 2025-03-25 16:17:33
+[25-Mar-2025 16:17:33 Asia/Kolkata] DEBUG: Total Seconds: 2415
+[25-Mar-2025 16:17:33 Asia/Kolkata] DEBUG: Working Hours: 00:40:15
+[25-Mar-2025 16:20:07 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 16:20:07 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:20:07 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 16:23:58 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 16:23:58 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:23:58 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 16:39:53 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 16:39:53 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:39:53 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 16:47:33 Asia/Kolkata] Received input: {"action":"punch_in","work_report":null}
+[25-Mar-2025 16:47:33 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:47:33 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-03-25","2025-03-25 16:47:33","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 Edg\/134.0.0.0","present","2025-03-25 16:47:33","2025-03-25 16:47:33"]
+[25-Mar-2025 16:47:33 Asia/Kolkata] Successfully inserted attendance record with ID: 416
+[25-Mar-2025 16:47:46 Asia/Kolkata] Received input: {"action":"punch_out","work_report":"testing"}
+[25-Mar-2025 16:47:53 Asia/Kolkata] Received input: {"action":"punch_in","work_report":null}
+[25-Mar-2025 16:47:53 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:47:53 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 16:49:28 Asia/Kolkata] Received input: {"action":"punch_in","work_report":null}
+[25-Mar-2025 16:49:28 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:49:28 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 16:49:44 Asia/Kolkata] Received input: {"action":"punch_in","work_report":null}
+[25-Mar-2025 16:49:44 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:49:44 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-03-25","2025-03-25 16:49:44","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36 Edg\/134.0.0.0","present","2025-03-25 16:49:44","2025-03-25 16:49:44"]
+[25-Mar-2025 16:49:44 Asia/Kolkata] Successfully inserted attendance record with ID: 417
+[25-Mar-2025 16:49:51 Asia/Kolkata] Received input: {"action":"punch_out","work_report":"dssd"}
+[25-Mar-2025 16:53:23 Asia/Kolkata] Received input: {"action":"punch_out"}
+[25-Mar-2025 16:53:34 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Mar-2025 16:53:34 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 16:53:34 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 17:00:20 Asia/Kolkata] Received input: {"action":"punch_in","work_report":null}
+[25-Mar-2025 17:00:20 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 17:00:20 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.
+[25-Mar-2025 17:25:19 Asia/Kolkata] Received input: {"action":"punch_in","work_report":null}
+[25-Mar-2025 17:25:19 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Mar-2025 17:25:19 Asia/Kolkata] Punch-in error: You have already completed your attendance for today.

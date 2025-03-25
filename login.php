@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: hr_dashboard.php');
                         break;
                     case 'Senior Manager (Studio)':
-                        header('Location: manager_dash.php');
+                        header('Location: abc.php');
                         break;  
                     case 'Senior Manager (Site)':
                         header('Location: site_manager_dashboard.php');

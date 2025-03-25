@@ -155,8 +155,8 @@ if ($user_data && isset($user_data['shift_id'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="assets/css/task-overview.css">
     <script src="assets/js/task-overview-manager.js"></script>
-    <link rel="stylesheet" href="assets/css/announcements_popup.css">
-    <script src="assets/js/announcements_popup.js"></script>
+    <link rel="stylesheet" href="assets/css/notification-system.css">
+    <script src="assets/js/notification-handler.js" defer></script>
 
     <style>
         .dashboard-container {
@@ -2235,7 +2235,7 @@ if ($user_data && isset($user_data['shift_id'])) {
             </div>
             <div class="menu-item" onclick="window.location.href='work_sheet.php'">
                 <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Work Sheet</span>
+                <span class="menu-text">Work Sheet & Attendance</span>
             </div>
             <div class="menu-item">
                 <i class="fas fa-chart-bar"></i>
@@ -2265,15 +2265,18 @@ if ($user_data && isset($user_data['shift_id'])) {
                         <h2>
                             <span class="greeting-text"><?php echo $greeting; ?>,</span>
                             <span class="user-name-text"><?php echo $user_data['username']; ?></span>
+                            
                             <?php if ($is_punched_in): ?>
                                 <span class="status-badge">
                                     <i class="fas fa-circle"></i> Online
                                 </span>
                             <?php endif; ?>
+                            
+                            <!-- Add Notification Icon Here -->
                             <div class="notification-wrapper">
                                 <div class="notification-icon">
                                     <i class="fas fa-bell"></i>
-                                    <span class="notification-badge">3</span>
+                                    <span class="notification-badge">0</span>
                                 </div>
                             </div>
                         </h2>

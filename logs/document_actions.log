@@ -353,3 +353,85 @@
         "role": "HR"
     }
 }
+2025-03-25 14:39:09 - {
+    "timestamp": "2025-03-25 14:39:09",
+    "message": "Document not found",
+    "data": {
+        "action": "delete",
+        "document_id": 8,
+        "document_type": "policy",
+        "table": "policy_documents"
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "8",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-25 14:39:09 - {
+    "timestamp": "2025-03-25 14:39:09",
+    "message": "Document not found",
+    "data": {
+        "action": "delete",
+        "document_id": 8,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 104
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "8",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-25 14:39:21 - {
+    "timestamp": "2025-03-25 14:39:21",
+    "message": "File not found on disk",
+    "data": {
+        "action": "delete",
+        "document_id": 4,
+        "document_type": "policy",
+        "file_path": "uploads\/documents\/policy\/1742719257_2_350318b0a8aef2d7.pdf"
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "4",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}
+2025-03-25 14:39:21 - {
+    "timestamp": "2025-03-25 14:39:21",
+    "message": "File not found on server",
+    "data": {
+        "action": "delete",
+        "document_id": 4,
+        "document_type": "policy",
+        "file": "C:\\xampp\\htdocs\\hr\\document_action_handler.php",
+        "line": 120
+    },
+    "get": [],
+    "post": {
+        "action": "delete",
+        "id": "4",
+        "type": "policy"
+    },
+    "session": {
+        "user_id": 2,
+        "role": "HR"
+    }
+}

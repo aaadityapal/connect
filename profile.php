@@ -601,7 +601,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
 
                     <!-- Change the document type tabs to remove HR Documents -->
                     <div class="document-type-tabs">
-                        <button class="doc-tab active" data-doctype="policies">Policies</button>
+                        <button class="doc-tab active" data-doctype="policies">Policies & Staff Requirements Forms</button>
                         <button class="doc-tab" data-doctype="official">Official Documents</button>
                         <button class="doc-tab" data-doctype="personal">User Personal Documents</button>
                     </div>

@@ -2210,46 +2210,40 @@ document.addEventListener('DOMContentLoaded', function() {
                                                             <th>File Name</th>
                                                             <th>Type</th>
                                                             <th>Status</th>
-                                                            <th>Actions</th>
+                                                            <th>
+                                                                Actions
+                                                                <button class="upload-file-btn" title="Upload New File" data-substage-id="${substage.id}">
+                                                                    <i class="fas fa-plus"></i>
+                                                                </button>
+                                                            </th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <tr>
-                                                            <td>1</td>
-                                                            <td>Initial planning</td>
-                                                            <td>PDF</td>
-                                                            <td><span class="table-status completed">Completed</span></td>
-                                                            <td class="table-actions">
-                                                                <button class="table-action-btn action-view" title="View"><i class="fas fa-eye"></i></button>
-                                                                <button class="table-action-btn action-download" title="Download"><i class="fas fa-download"></i></button>
-                                                                <button class="table-action-btn action-accept" title="Accept"><i class="fas fa-check"></i></button>
-                                                                <button class="table-action-btn action-reject" title="Reject"><i class="fas fa-times"></i></button>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>2</td>
-                                                            <td>Client feedback</td>
-                                                            <td>DOC</td>
-                                                            <td><span class="table-status pending">Pending</span></td>
-                                                            <td class="table-actions">
-                                                                <button class="table-action-btn action-view" title="View details"><i class="fas fa-eye"></i></button>
-                                                                <button class="table-action-btn action-download" title="Download"><i class="fas fa-download"></i></button>
-                                                                <button class="table-action-btn action-accept" title="Accept"><i class="fas fa-check"></i></button>
-                                                                <button class="table-action-btn action-reject" title="Reject"><i class="fas fa-times"></i></button>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>3</td>
-                                                            <td>Material selection</td>
-                                                            <td>XLS</td>
-                                                            <td><span class="table-status in_progress">In Progress</span></td>
-                                                            <td class="table-actions">
-                                                                <button class="table-action-btn action-view" title="View details"><i class="fas fa-eye"></i></button>
-                                                                <button class="table-action-btn action-download" title="Download"><i class="fas fa-download"></i></button>
-                                                                <button class="table-action-btn action-accept" title="Accept"><i class="fas fa-check"></i></button>
-                                                                <button class="table-action-btn action-reject" title="Reject"><i class="fas fa-times"></i></button>
-                                                            </td>
-                                                        </tr>
+                                                        ${substage.files && substage.files.length > 0 ? 
+                                                            substage.files.map((file, index) => `
+                                                                <tr>
+                                                                    <td>${index + 1}</td>
+                                                                    <td>${file.file_name}</td>
+                                                                    <td>${file.type}</td>
+                                                                    <td><span class="table-status ${file.status.toLowerCase()}">${file.status.replace('_', ' ')}</span></td>
+                                                                    <td class="table-actions">
+                                                                        <button class="table-action-btn action-view" title="View details" onclick="viewFile('${file.file_path}')">
+                                                                            <i class="fas fa-eye"></i>
+                                                                        </button>
+                                                                        <button class="table-action-btn action-download" title="Download" onclick="downloadFile('${file.file_path}')">
+                                                                            <i class="fas fa-download"></i>
+                                                                        </button>
+                                                                        <button class="table-action-btn action-accept" title="Accept" onclick="updateFileStatus(${file.id}, 'approved')">
+                                                                            <i class="fas fa-check"></i>
+                                                                        </button>
+                                                                        <button class="table-action-btn action-reject" title="Reject" onclick="updateFileStatus(${file.id}, 'rejected')">
+                                                                            <i class="fas fa-times"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            `).join('') 
+                                                            : '<tr><td colspan="5" class="no-files-message">No files available for this substage</td></tr>'
+                                                        }
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -2312,6 +2306,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.error('Error updating stage status:', error);
                     }
                 });
+
+                // After rendering the substage table, add this code inside the stage.substages.map function:
+                stageElement.querySelectorAll('.upload-file-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const substageId = this.dataset.substageId;
+                        showUploadModal(substageId);
+                    });
+                });
             });
         }
         
@@ -2366,6 +2368,48 @@ document.addEventListener('DOMContentLoaded', function() {
             updateInfo.textContent = 'No updates';
             updateTime.textContent = '';
         }
+
+        // Add this at the beginning of showProjectDetailsModal function after the first modal check
+        if (!document.getElementById('fileUploadModal')) {
+            const uploadModalHTML = `
+                <div id="fileUploadModal" class="file-upload-modal">
+                    <div class="file-upload-content">
+                        <div class="file-upload-header">
+                            <h3>Upload New File</h3>
+                            <button class="modal-close-btn" onclick="closeUploadModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="fileUploadForm" class="file-upload-form">
+                            <input type="hidden" id="substageIdInput" name="substage_id">
+                            <div class="form-group">
+                                <label for="fileName">File Name</label>
+                                <input type="text" id="fileName" name="file_name" required 
+                                       placeholder="Enter file name">
+                            </div>
+                            <div class="form-group">
+                                <label for="fileInput">Select File</label>
+                                <div class="file-input-container">
+                                    <input type="file" id="fileInput" name="file" required>
+                                    <div class="file-input-placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Choose a file or drag it here</span>
+                                    </div>
+                                </div>
+                                <span class="selected-file-name"></span>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" onclick="closeUploadModal()">Cancel</button>
+                                <button type="submit" class="upload-btn">
+                                    <i class="fas fa-upload"></i> Upload File
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', uploadModalHTML);
+        }
     }
 
     // Add this helper function to check scroll position
@@ -2403,5 +2447,524 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${getActionButtons(status)}
             </td>
         </tr>`;
+    }
+
+    // Add these functions after the showProjectDetailsModal function
+
+    async function viewFile(filePath) {
+        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
+        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
+    }
+
+    async function downloadFile(filePath) {
+        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
+        window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
+    }
+
+    async function updateFileStatus(fileId, status) {
+        try {
+            const response = await fetch('update_fie_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    file_id: fileId,
+                    status: status
+                })
+            });
+
+            const data = await response.json();
+            console.log('Status update response:', data);
+
+            if (data.success) {
+                showNotification(
+                    `File ${status === 'approved' ? 'approved' : 'rejected'} successfully`, 
+                    'success'
+                );
+                // Refresh the project details to show updated status
+                openProjectDetailsModal(currentProjectId);
+            } else {
+                throw new Error(data.message || 'Failed to update file status');
+            }
+        } catch (error) {
+            console.error('Error updating file status:', error);
+            showNotification('Failed to update file status', 'error');
+        }
+    }
+
+    // Update the file name generation in upload_substage_file.php
+    function generateUniqueFileName(originalName, substageId) {
+        const timestamp = new Date().getTime();
+        const random = Math.random().toString(36).substring(2, 15);
+        const extension = originalName.split('.').pop();
+        const sanitizedName = originalName
+            .split('.')[0]
+            .replace(/[^a-zA-Z0-9]/g, '_')
+            .substring(0, 30);
+        
+        return `${substageId}_${timestamp}_${random}_${sanitizedName}.${extension}`;
+    }
+
+    // Add these functions after your existing modal-related functions
+
+    function showUploadModal(substageId) {
+        const modal = document.getElementById('fileUploadModal');
+        const substageIdInput = document.getElementById('substageIdInput');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const selectedFileName = document.querySelector('.selected-file-name');
+        
+        // Reset form
+        substageIdInput.value = substageId;
+        fileInput.value = '';
+        fileName.value = '';
+        selectedFileName.textContent = '';
+        
+        // Show modal
+        modal.classList.add('active');
+        
+        // File input change handler
+        fileInput.onchange = function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                selectedFileName.textContent = file.name;
+                if (!fileName.value) {
+                    // Set the file name input to the uploaded file's name without extension
+                    fileName.value = file.name.replace(/\.[^/.]+$/, "");
+                }
+            }
+        };
+        
+        // Form submit handler
+        const form = document.getElementById('fileUploadForm');
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                // Log the form data for debugging
+                console.log('Form Data:', {
+                    substage_id: formData.get('substage_id'),
+                    file_name: formData.get('file_name'),
+                    file: formData.get('file')
+                });
+
+                const response = await fetch('upload_substage_file.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Server Response:', data); // Log the server response
+                
+                if (data.success) {
+                    showNotification('File uploaded successfully', 'success');
+                    closeUploadModal();
+                    // Refresh the project details to show the new file
+                    openProjectDetailsModal(currentProjectId);
+                } else {
+                    // Log the error details
+                    console.error('Upload Error:', {
+                        message: data.message,
+                        response: data
+                    });
+                    showNotification('Failed to upload file', 'error');
+                }
+            } catch (error) {
+                // Log the detailed error
+                console.error('Upload Error:', {
+                    error: error,
+                    message: error.message,
+                    stack: error.stack
+                });
+                showNotification('Failed to upload file', 'error');
+            }
+        };
+    }
+
+    function closeUploadModal() {
+        const modal = document.getElementById('fileUploadModal');
+        modal.classList.remove('active');
+    }
+
+    // Add drag and drop functionality
+    function initializeDragAndDrop() {
+        const dropZone = document.querySelector('.file-input-container');
+        const fileInput = document.getElementById('fileInput');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            dropZone.classList.add('drag-over');
+        }
+        
+        function unhighlight(e) {
+            dropZone.classList.remove('drag-over');
+        }
+        
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // Initialize drag and drop after modal is added to DOM
+    document.addEventListener('DOMContentLoaded', initializeDragAndDrop);
+
+    // Move this function to be at the same level as other functions, not nested inside any other function
+    window.showUploadModal = function(substageId) {
+        const modal = document.getElementById('fileUploadModal');
+        const substageIdInput = document.getElementById('substageIdInput');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const selectedFileName = document.querySelector('.selected-file-name');
+        
+        // Reset form
+        substageIdInput.value = substageId;
+        fileInput.value = '';
+        fileName.value = '';
+        selectedFileName.textContent = '';
+        
+        // Show modal
+        modal.classList.add('active');
+        
+        // File input change handler
+        fileInput.onchange = function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                selectedFileName.textContent = file.name;
+                if (!fileName.value) {
+                    // Set the file name input to the uploaded file's name without extension
+                    fileName.value = file.name.replace(/\.[^/.]+$/, "");
+                }
+            }
+        };
+        
+        // Form submit handler
+        const form = document.getElementById('fileUploadForm');
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                // Log the form data for debugging
+                console.log('Form Data:', {
+                    substage_id: formData.get('substage_id'),
+                    file_name: formData.get('file_name'),
+                    file: formData.get('file')
+                });
+
+                const response = await fetch('upload_substage_file.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Server Response:', data); // Log the server response
+                
+                if (data.success) {
+                    showNotification('File uploaded successfully', 'success');
+                    closeUploadModal();
+                    // Refresh the project details to show the new file
+                    openProjectDetailsModal(currentProjectId);
+                } else {
+                    // Log the error details
+                    console.error('Upload Error:', {
+                        message: data.message,
+                        response: data
+                    });
+                    showNotification('Failed to upload file', 'error');
+                }
+            } catch (error) {
+                // Log the detailed error
+                console.error('Upload Error:', {
+                    error: error,
+                    message: error.message,
+                    stack: error.stack
+                });
+                showNotification('Failed to upload file', 'error');
+            }
+        };
+    };
+
+    // Also make closeUploadModal globally available
+    window.closeUploadModal = function() {
+        const modal = document.getElementById('fileUploadModal');
+        modal.classList.remove('active');
+    };
+
+    // First, define the functions
+    function viewFile(fileId) {
+        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
+    }
+
+    function downloadFile(fileId) {
+        window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
+    }
+
+    function updateFileStatus(fileId, status) {
+        fetch('update_fie_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fileId: fileId,  // Match the PHP file's expected parameter name
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                // Refresh the table or update the UI as needed
+                location.reload(); // Or use a more elegant way to refresh the data
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+        });
+    }
+
+    // Update how you generate the table rows
+    function generateFileRow(file, index) {
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${file.file_name}</td>
+                <td>${file.type || 'N/A'}</td>
+                <td>
+                    <span class="status-badge ${file.status.toLowerCase()}">
+                        ${file.status}
+                    </span>
+                </td>
+                <td class="table-actions">
+                    <button class="table-action-btn action-view" title="View details" onclick="viewFile('${file.file_path}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="table-action-btn action-download" title="Download" onclick="downloadFile('${file.file_path}')">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="table-action-btn action-accept" title="Accept" onclick="updateFileStatus(${file.id}, 'approved')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="table-action-btn action-reject" title="Reject" onclick="updateFileStatus(${file.id}, 'rejected')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    // When populating your table
+    function populateFilesTable(files) {
+        const tableBody = document.querySelector('#filesTableBody'); // Make sure this ID matches your table's tbody
+        if (!files || files.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No files found</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = files.map((file, index) => generateFileRow(file, index)).join('');
+    }
+
+    // First, make sure these functions are defined at the top of your script
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click event listeners to all action buttons
+        document.addEventListener('click', function(e) {
+            // Check if the clicked element is a file action button
+            if (e.target.closest('.file-action-btn')) {
+                const button = e.target.closest('.file-action-btn');
+                const fileId = button.dataset.fileId;
+                const action = button.dataset.action;
+
+                switch(action) {
+                    case 'view':
+                        handleViewFile(fileId);
+                        break;
+                    case 'download':
+                        handleDownloadFile(fileId);
+                        break;
+                    case 'approve':
+                        handleStatusUpdate(fileId, 'approved');
+                        break;
+                    case 'reject':
+                        handleStatusUpdate(fileId, 'rejected');
+                        break;
+                }
+            }
+        });
+    });
+
+    // Handler functions
+    function handleViewFile(fileId) {
+        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
+    }
+
+    function handleDownloadFile(fileId) {
+        window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
+    }
+
+    function handleStatusUpdate(fileId, status) {
+        fetch('update_fie_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file_id: fileId,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // Or implement a more elegant refresh
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+        });
+    }
+
+    // Update how you generate the table rows
+    function generateFileRow(file, index) {
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${file.file_name}</td>
+                <td>${file.type || 'N/A'}</td>
+                <td>
+                    <span class="status-badge ${file.status.toLowerCase()}">
+                        ${file.status}
+                    </span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-info file-action-btn" 
+                        data-action="view" data-file-id="${file.id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary file-action-btn" 
+                        data-action="download" data-file-id="${file.id}">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success file-action-btn" 
+                        data-action="approve" data-file-id="${file.id}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger file-action-btn" 
+                        data-action="reject" data-file-id="${file.id}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    // Function to populate the table
+    function populateFilesTable(files) {
+        const tableBody = document.querySelector('#filesTableBody');
+        if (!files || files.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No files found</td></tr>';
+            return;
+        }
+        tableBody.innerHTML = files.map((file, index) => generateFileRow(file, index)).join('');
+    }
+
+    // Make these functions globally available by attaching them to the window object
+    window.viewFile = function(filePath) {
+        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
+        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
+    };
+
+    window.downloadFile = function(filePath) {
+        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
+        window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
+    };
+
+    window.updateFileStatus = function(fileId, status) {
+        fetch('update_fie_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file_id: fileId,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success notification
+                showNotification('Success', `File ${status === 'approved' ? 'approved' : 'rejected'} successfully`, 'success');
+                // Refresh the project details
+                if (typeof currentProjectId !== 'undefined') {
+                    openProjectDetailsModal(currentProjectId);
+                }
+            } else {
+                throw new Error(data.message || 'Failed to update status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error', 'Failed to update file status', 'error');
+        });
+    };
+
+    // Helper function for notifications
+    function showNotification(title, message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
     }
 });

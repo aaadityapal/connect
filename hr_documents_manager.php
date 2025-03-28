@@ -623,7 +623,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
         <!-- Policy Documents Section -->
         <div class="offer-letters-section">
             <div class="section-header">
-                <h2><i class="fas fa-book"></i> Policy Documents</h2>
+                <h2><i class="fas fa-book"></i> Policy Documents & Staff Requirements Forms</h2>
                 <div class="header-actions">
                     <div class="filter-group">
                         <label for="policyDocTypeFilter">Filter by Type:</label>
@@ -634,6 +634,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                             <option value="leave_policy">Leave Policy</option>
                             <option value="travel_policy">Travel Policy</option>
                             <option value="code_of_conduct">Code of Conduct</option>
+                            <option value="leave_application_form">Leave Application Form</option>
+                            <option value="travel_application_form">Travel Application Form</option>
+                            <option value="overtime_application_form">Overtime Application Form</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
@@ -655,6 +658,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
                             <option value="leave_policy">Leave Policy</option>
                             <option value="travel_policy">Travel Policy</option>
                             <option value="code_of_conduct">Code of Conduct</option>
+                            <option value="leave_application_form">Leave Application Form</option>
+                            <option value="travel_application_form">Travel Application Form</option>
+                            <option value="overtime_application_form">Overtime Application Form</option>
                             <option value="other">Other</option>
                         </select>
                     </div>

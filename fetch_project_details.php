@@ -65,7 +65,23 @@ try {
         
         $stmt = $pdo->prepare($substagesQuery);
         $stmt->execute(['stage_id' => $stage['id']]);
-        $stage['substages'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $substages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Add this new code to fetch files for each substage
+        foreach ($substages as &$substage) {
+            $filesQuery = "SELECT id, substage_id, file_name, file_path, type, 
+                          uploaded_by, uploaded_at, status, created_at, updated_at 
+                          FROM substage_files 
+                          WHERE substage_id = :substage_id 
+                          AND deleted_at IS NULL 
+                          ORDER BY created_at DESC";
+            
+            $stmt = $pdo->prepare($filesQuery);
+            $stmt->execute(['substage_id' => $substage['id']]);
+            $substage['files'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        $stage['substages'] = $substages;
     }
 
     $project['stages'] = $stages;

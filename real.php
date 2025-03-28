@@ -1,3 +1,15 @@
+<?php
+session_start();
+// Check if user is logged in and has the correct role
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Senior Manager (Studio)') {
+    // Redirect to login page if not authorized
+    header('Location: login.php');
+    exit();
+}
+
+// Debug: Print session data
+error_log("Session Data: " . print_r($_SESSION, true));
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +18,7 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard-styles.css">
+    <link rel="stylesheet" href="assets/css/notification-system.css">
 </head>
 <body>
     <div class="dashboard">
@@ -118,28 +131,83 @@
                             <span class="sun-icon-container">
                                 <i class="fas fa-sun rotating-sun"></i>
                             </span>
-                            Good morning
+                            Good morning, <?php echo htmlspecialchars($_SESSION['username']); ?>
                         </h2>
                         <div class="datetime-container">
                             <div class="time-display">
                                 <i class="fas fa-clock"></i>
-                                <span id="current-time">9:41 AM</span>
+                                <span id="current-time">11:43 am</span>
                             </div>
                             <div class="date-display">
                                 <i class="fas fa-calendar-alt"></i>
-                                <span id="current-date">Monday, January 1, 2023</span>
+                                <span id="current-date">Thursday 27 March, 2025</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="actions-container">
+                        <!-- Replace the existing notification button with this -->
                         <div class="notification-container">
-                            <button class="notification-btn">
-                                <i class="fas fa-bell"></i>
-                                <span class="notification-badge">3</span>
-                            </button>
+                            <div class="notification-wrapper">
+                                <div class="notification-icon">
+                                    <i class="fas fa-bell"></i>
+                                    <span class="notification-badge">0</span>
+                                </div>
+                            </div>
                         </div>
                         
+                        <!-- New Avatar with Dropdown -->
+                        <div class="avatar-container">
+                            <button class="avatar-btn" id="avatarBtn">
+                                <?php 
+                                // Debug: Print profile picture path
+                                error_log("Profile Picture Path: " . (isset($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : 'No profile picture set'));
+                                ?>
+                                <img src="<?php 
+                                    if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])) {
+                                        echo htmlspecialchars($_SESSION['profile_picture']);
+                                    } else {
+                                        echo 'assets/default-avatar.png';
+                                    }
+                                ?>" 
+                                alt="Profile" 
+                                class="avatar-img">
+                            </button>
+                            <div class="avatar-dropdown" id="avatarDropdown">
+                                <div class="dropdown-header">
+                                    <img src="<?php 
+                                        if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])) {
+                                            echo htmlspecialchars($_SESSION['profile_picture']);
+                                        } else {
+                                            echo 'assets/default-avatar.png';
+                                        }
+                                    ?>" 
+                                    alt="Profile" 
+                                    class="dropdown-avatar">
+                                    <div class="user-info">
+                                        <span class="user-name"><?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User'; ?></span>
+                                        <span class="user-role"><?php echo isset($_SESSION['role']) ? htmlspecialchars($_SESSION['role']) : 'Role'; ?></span>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="profile.php">
+                                            <i class="fas fa-user"></i>
+                                            My Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="logout.php">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Existing punch-in container -->
                         <div class="punch-in-container">
                             <button id="punch-button" class="punch-button">
                                 <span class="punch-icon">
@@ -177,25 +245,25 @@
                             <!-- First row -->
                             <div class="stat-row">
                                 <!-- Present Today -->
-                                    <div class="stat-card" data-tooltip="present-details">
+                                <div class="stat-card" data-tooltip="present-details">
                                     <div class="stat-card-icon present-icon">
                                         <i class="fas fa-user-check"></i>
                                     </div>
                                     <div class="stat-card-content">
                                         <h3>Present Today</h3>
-                                        <div class="stat-number">4</div>
-                                        <div class="stat-label">/ 16 Total Employees</div>
+                                        <div class="stat-number" id="present-count">0</div>
+                                        <div class="stat-label" id="present-total">/ 0 Total Employees</div>
                                     </div>
                                 </div>
                                 
                                 <!-- Pending Leaves -->
-                                    <div class="stat-card" data-tooltip="pending-details">
+                                <div class="stat-card" data-tooltip="pending-details">
                                     <div class="stat-card-icon pending-icon">
                                         <i class="fas fa-hourglass-half"></i>
                                     </div>
                                     <div class="stat-card-content">
                                         <h3>Pending Leaves</h3>
-                                        <div class="stat-number">0</div>
+                                        <div class="stat-number" id="pending-count">0</div>
                                         <div class="stat-label">Awaiting Approval</div>
                                     </div>
                                 </div>
@@ -204,39 +272,57 @@
                             <!-- Second row -->
                             <div class="stat-row">
                                 <!-- Short Leave -->
-                                    <div class="stat-card" data-tooltip="short-leave-details">
+                                <div class="stat-card" data-tooltip="short-leave-details">
                                     <div class="stat-card-icon short-leave-icon">
                                         <i class="fas fa-clock"></i>
                                     </div>
                                     <div class="stat-card-content">
                                         <h3>Short Leave</h3>
-                                        <div class="stat-number">0</div>
-                                        <div class="stat-label">/ 16 Today's Short Leaves</div>
+                                        <div class="stat-number" id="short-leave-count">0</div>
+                                        <div class="stat-label" id="short-leave-total">/ 0 Today's Short Leaves</div>
                                     </div>
                                 </div>
                                 
                                 <!-- On Leave -->
-                                    <div class="stat-card" data-tooltip="on-leave-details">
+                                <div class="stat-card" data-tooltip="on-leave-details">
                                     <div class="stat-card-icon on-leave-icon">
                                         <i class="fas fa-calendar-day"></i>
                                     </div>
                                     <div class="stat-card-content">
                                         <h3>On Leave</h3>
-                                        <div class="stat-number">0</div>
-                                        <div class="stat-label">/ 16 Full Day Leave</div>
+                                        <div class="stat-number" id="on-leave-count">0</div>
+                                        <div class="stat-label" id="on-leave-total">Full Day Leave</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Right side: calendar -->
+                        <!-- Right side: Calendar -->
                         <div class="calendar-wrapper">
                             <div class="calendar-container">
                                 <div class="calendar-header">
                                     <div class="calendar-navigation">
-                                        <button class="calendar-nav prev"><i class="fas fa-chevron-left"></i></button>
+                                        <button class="calendar-nav prev">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
                                         <h3 id="calendar-month">March 2025</h3>
-                                        <button class="calendar-nav next"><i class="fas fa-chevron-right"></i></button>
+                                        <button class="calendar-nav next">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="calendar-legend">
+                                        <div class="legend-item">
+                                            <span class="legend-dot present"></span>
+                                            <span>Present</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <span class="legend-dot leave"></span>
+                                            <span>On Leave</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <span class="legend-dot holiday"></span>
+                                            <span>Holiday</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -250,9 +336,8 @@
                                         <div>Fri</div>
                                         <div>Sat</div>
                                     </div>
-                                    
                                     <div class="calendar-days" id="calendar-days">
-                                        <!-- Calendar days will be inserted by JavaScript -->
+                                        <!-- Days will be inserted by JavaScript -->
                                     </div>
                                 </div>
                             </div>
@@ -260,31 +345,42 @@
                     </div>
                 </div>
                 
-                    <!-- New Leaves Section -->
+                    <!-- Leaves Section -->
                     <div class="leaves-section">
-                        <!-- Leaves Section Header -->
                         <div class="section-header">
                             <div class="section-title">
                                 <i class="fas fa-calendar-check"></i>
-                                <h2>Leaves</h2>
+                                <h2>Recent Leaves</h2>
+                            </div>
+                            <div class="leaves-filter">
+                                <select id="leaveTypeFilter">
+                                    <option value="all">All Types</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
                             </div>
                         </div>
                         
                         <div class="leaves-content">
-                            <!-- Add your leaves content here -->
-                            <div class="leave-card">
-                                <div class="leave-card-header">
-                                    <i class="fas fa-user"></i>
-                                    <h3>John Doe</h3>
-                                </div>
-                                <div class="leave-card-body">
-                                    <p class="leave-type">Sick Leave</p>
-                                    <p class="leave-date">Dec 15 - Dec 16</p>
-                                    <span class="leave-status pending">Pending</span>
+                            <!-- Scrollable container for leave cards -->
+                            <div class="leaves-scroll-container" id="leavesContainer">
+                                <div class="leaves-grid" id="leavesGrid">
+                                    <!-- Leave cards will be inserted here -->
                                 </div>
                             </div>
                             
-                            <!-- Add more leave cards as needed -->
+                            <!-- Empty state -->
+                            <div class="leaves-empty-state" style="display: none;">
+                                <i class="fas fa-calendar-xmark"></i>
+                                <p>No leave requests found</p>
+                            </div>
+                            
+                            <!-- Loading state -->
+                            <div class="leaves-loading">
+                                <div class="spinner"></div>
+                                <p>Loading leaves...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -300,7 +396,7 @@
                             </div>
                             
                             <!-- Add Project Button (next to title) -->
-                            <button class="add-project-btn-minimal">
+                            <button class="add-project-btn-minimal" id="openProjectModal">
                                 <i class="fas fa-plus"></i>
                                 Add Project
                             </button>
@@ -344,19 +440,19 @@
                     
                     <!-- Project Stats View (default view) -->
                     <div class="project-stats-container" id="projectStatisticsView">
-                        <!-- Project Stat Card 1: Total Projects -->
+                        <!-- Total Projects Card -->
                         <div class="project-stat-card" data-tooltip="total-projects-details">
                             <div class="project-stat-icon total-projects-icon">
                                 <i class="fas fa-tasks"></i>
                             </div>
                             <div class="project-stat-content">
                                 <h3>Total Projects</h3>
-                                <div class="project-stat-number">12</div>
+                                <div class="project-stat-number">0</div>
                                 <div class="project-stat-label">Active + Completed</div>
                             </div>
                         </div>
                         
-                        <!-- Project Stat Card 2: In Progress -->
+                        <!-- In Progress Card -->
                         <div class="project-stat-card" data-tooltip="in-progress-details">
                             <div class="project-stat-icon in-progress-icon">
                                 <i class="fas fa-spinner"></i>
@@ -368,7 +464,7 @@
                             </div>
                         </div>
                         
-                        <!-- Project Stat Card 3: Completed -->
+                        <!-- Completed Card -->
                         <div class="project-stat-card" data-tooltip="completed-details">
                             <div class="project-stat-icon completed-icon">
                                 <i class="fas fa-check-circle"></i>
@@ -380,39 +476,39 @@
                             </div>
                         </div>
                         
-                        <!-- Project Stat Card 4: Upcoming Deadlines -->
-                        <div class="project-stat-card" data-tooltip="deadline-details">
-                            <div class="project-stat-icon deadline-icon">
-                                <i class="fas fa-clock"></i>
+                        <!-- Overdue Card -->
+                        <div class="project-stat-card" data-tooltip="overdue-details">
+                            <div class="project-stat-icon overdue-icon">
+                                <i class="fas fa-exclamation-circle"></i>
                             </div>
                             <div class="project-stat-content">
-                                <h3>Upcoming Deadlines</h3>
-                                <div class="project-stat-number">3</div>
-                                <div class="project-stat-label">Within 7 days</div>
+                                <h3>Overdue</h3>
+                                <div class="project-stat-number">0</div>
+                                <div class="project-stat-label">Past deadline</div>
                             </div>
                         </div>
                         
-                        <!-- Project Stat Card 5: Budget Utilization -->
-                        <div class="project-stat-card" data-tooltip="budget-details">
-                            <div class="project-stat-icon budget-icon">
-                                <i class="fas fa-dollar-sign"></i>
+                        <!-- Stages Pending Card -->
+                        <div class="project-stat-card" data-tooltip="stages-pending-details">
+                            <div class="project-stat-icon stages-pending-icon">
+                                <i class="fas fa-layer-group"></i>
                             </div>
                             <div class="project-stat-content">
-                                <h3>Budget Utilization</h3>
-                                <div class="project-stat-number">78%</div>
-                                <div class="project-stat-label">$156K / $200K</div>
+                                <h3>Stages Pending</h3>
+                                <div class="project-stat-number">0</div>
+                                <div class="project-stat-label">Awaiting completion</div>
                             </div>
                         </div>
                         
-                        <!-- Project Stat Card 6: Project Issues -->
-                        <div class="project-stat-card" data-tooltip="issues-details">
-                            <div class="project-stat-icon issues-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
+                        <!-- Substages Pending Card -->
+                        <div class="project-stat-card" data-tooltip="substages-pending-details">
+                            <div class="project-stat-icon substages-pending-icon">
+                                <i class="fas fa-tasks"></i>
                             </div>
                             <div class="project-stat-content">
-                                <h3>Project Issues</h3>
-                                <div class="project-stat-number">5</div>
-                                <div class="project-stat-label">Requires attention</div>
+                                <h3>Substages Pending</h3>
+                                <div class="project-stat-number">0</div>
+                                <div class="project-stat-label">Tasks to be completed</div>
                             </div>
                         </div>
                     </div>
@@ -452,25 +548,21 @@
                             </div>
                         </div>
                         
-                        <!-- Department legend -->
+                        <!-- Project Type legend -->
                         <div class="project-department-legend">
-                            <h4>Departments</h4>
+                            <h4>Project Types</h4>
                             <div class="project-department-items">
                                 <div class="project-department-item">
                                     <span class="project-dept-color" style="background-color: #4361ee;"></span>
-                                    <span class="project-dept-name">Engineering</span>
+                                    <span class="project-dept-name">Architecture</span>
                                 </div>
                                 <div class="project-department-item">
                                     <span class="project-dept-color" style="background-color: #10B981;"></span>
-                                    <span class="project-dept-name">Marketing</span>
+                                    <span class="project-dept-name">Interior</span>
                                 </div>
                                 <div class="project-department-item">
                                     <span class="project-dept-color" style="background-color: #F59E0B;"></span>
-                                    <span class="project-dept-name">Sales</span>
-                                </div>
-                                <div class="project-department-item">
-                                    <span class="project-dept-color" style="background-color: #EC4899;"></span>
-                                    <span class="project-dept-name">Design</span>
+                                    <span class="project-dept-name">Construction</span>
                                 </div>
                             </div>
                         </div>
@@ -480,40 +572,33 @@
         </div>
     </div>
 
-    <!-- Add tooltip containers at the end of the body -->
+    <!-- Tooltip for Present Users -->
     <div class="tooltip" id="present-details">
         <div class="tooltip-header">
             <i class="fas fa-user-check"></i>
             <h4>Present Employees</h4>
         </div>
         <div class="tooltip-content">
-            <ul class="employee-list">
-                <li>
-                    <span class="employee-name">John Doe</span>
-                    <span class="time-info">09:00 AM</span>
-                </li>
-                <li>
-                    <span class="employee-name">Jane Smith</span>
-                    <span class="time-info">08:45 AM</span>
-                </li>
-                <!-- Add more employees as needed -->
-            </ul>
+            <div class="tooltip-stats">
+                <span class="attendance-stat">On Time: <span id="ontime-count">0</span></span>
+                <span class="attendance-stat">Late: <span id="late-count">0</span></span>
+            </div>
+            <div class="employee-list" id="present-employees-list">
+                <div class="loading-spinner">Loading...</div>
+            </div>
         </div>
     </div>
 
-    <!-- Similar tooltips for other stat cards -->
+    <!-- Tooltips -->
     <div class="tooltip" id="pending-details">
         <div class="tooltip-header">
             <i class="fas fa-hourglass-half"></i>
             <h4>Pending Leave Requests</h4>
         </div>
         <div class="tooltip-content">
-            <ul class="employee-list">
-                <li>
-                    <span class="employee-name">No pending requests</span>
-                    <span class="time-info">-</span>
-                </li>
-            </ul>
+            <div class="employee-list" id="pending-leaves-list">
+                <div class="loading-spinner">Loading...</div>
+            </div>
         </div>
     </div>
 
@@ -523,12 +608,9 @@
             <h4>Short Leaves Today</h4>
         </div>
         <div class="tooltip-content">
-            <ul class="employee-list">
-                <li>
-                    <span class="employee-name">No short leaves today</span>
-                    <span class="time-info">-</span>
-                </li>
-            </ul>
+            <div class="employee-list" id="short-leaves-list">
+                <div class="loading-spinner">Loading...</div>
+            </div>
         </div>
     </div>
 
@@ -538,12 +620,9 @@
             <h4>Employees on Leave</h4>
         </div>
         <div class="tooltip-content">
-            <ul class="employee-list">
-                <li>
-                    <span class="employee-name">No employees on leave</span>
-                    <span class="time-info">-</span>
-                </li>
-            </ul>
+            <div class="employee-list" id="on-leave-list">
+                <div class="loading-spinner">Loading...</div>
+            </div>
         </div>
     </div>
 
@@ -554,26 +633,143 @@
             <h4>Total Projects</h4>
         </div>
         <div class="project-tooltip-content">
-            <ul class="project-list">
-                <li>
-                    <span class="project-name">Website Redesign</span>
-                    <span class="project-status in-progress">In Progress</span>
-                </li>
-                <li>
-                    <span class="project-name">Mobile App Development</span>
-                    <span class="project-status in-progress">In Progress</span>
-                </li>
-                <li>
-                    <span class="project-name">Database Migration</span>
-                    <span class="project-status completed">Completed</span>
-                </li>
-                <!-- Add more projects as needed -->
+            <ul class="project-list" id="projects-list">
+                <!-- Will be populated dynamically -->
             </ul>
         </div>
     </div>
 
-    <!-- Similar tooltips for other project cards -->
+    <!-- Stages Pending Tooltip -->
+    <div class="project-tooltip" id="stages-pending-details">
+        <div class="project-tooltip-header">
+            <i class="fas fa-layer-group"></i>
+            <h4>Pending Stages</h4>
+        </div>
+        <div class="project-tooltip-content">
+            <div class="tooltip-summary">
+                <span class="tooltip-count">0 stages pending</span>
+            </div>
+            <ul class="project-list stages-list">
+                <!-- Will be populated by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Substages Pending Tooltip -->
+    <div class="project-tooltip" id="substages-pending-details">
+        <div class="project-tooltip-header">
+            <i class="fas fa-tasks"></i>
+            <h4>Pending Substages</h4>
+        </div>
+        <div class="project-tooltip-content">
+            <div class="tooltip-summary">
+                <span class="tooltip-count">0 substages pending</span>
+            </div>
+            <ul class="project-list substages-list">
+                <!-- Will be populated by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Add project modal and toast container at the end of the body before scripts -->
+    <div id="modalContainer"></div>
+
+    <!-- Work Report Modal -->
+    <div class="work-report-modal" id="workReportModal">
+        <div class="work-report-content">
+            <div class="work-report-header">
+                <h3>Daily Work Report</h3>
+                <button class="close-modal" id="closeWorkReport">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="work-report-body">
+                <div class="form-group">
+                    <label for="workReport">Please describe your work for today:</label>
+                    <textarea id="workReport" rows="5" placeholder="Enter your work description here..."></textarea>
+                </div>
+            </div>
+            <div class="work-report-footer">
+                <button class="cancel-btn" id="cancelWorkReport">Cancel</button>
+                <button class="submit-btn" id="submitWorkReport">Submit & Punch Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Action Modal -->
+    <div class="leave-action-modal" id="leaveActionModal">
+        <div class="leave-action-content">
+            <div class="leave-action-header">
+                <h3 id="modalTitle">Approve Leave Request</h3>
+                <button class="close-modal" id="closeLeaveModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="leave-action-body">
+                <div class="leave-user-preview">
+                    <img src="" alt="" id="modalUserAvatar" class="modal-user-avatar">
+                    <div class="leave-user-details">
+                        <span id="modalUsername" class="modal-username"></span>
+                        <span id="modalLeaveType" class="modal-leave-type"></span>
+                        <span id="modalLeaveDates" class="modal-leave-dates"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="actionReason">Reason for <span id="actionType">approval</span>:</label>
+                    <textarea id="actionReason" rows="3" placeholder="Enter your reason..."></textarea>
+                </div>
+            </div>
+            <div class="leave-action-footer">
+                <button class="cancel-btn" id="cancelLeaveAction">Cancel</button>
+                <button class="submit-btn" id="submitLeaveAction">Submit</button>
+            </div>
+        </div>
+    </div>
 
     <script src="dashboard-script.js"></script>
+    <!-- Add project form script -->
+    <script src="modals/scripts/project_form_handler_v1.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load the project modal HTML
+            fetch('modals/project_form.php')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('modalContainer').innerHTML = html;
+                    
+                    // Set up event listener for opening the modal
+                    document.getElementById('openProjectModal').addEventListener('click', function() {
+                        const projectModal = document.getElementById('projectModal');
+                        projectModal.style.display = 'flex';
+                        setTimeout(() => {
+                            projectModal.classList.add('active');
+                        }, 10);
+                    });
+                })
+                .catch(error => console.error('Error loading project modal:', error));
+                
+            // Add project form styles
+            const projectFormStyles = document.createElement('link');
+            projectFormStyles.rel = 'stylesheet';
+            projectFormStyles.href = 'modals/styles/project_form_styles_v1.css';
+            document.head.appendChild(projectFormStyles);
+        });
+    </script>
+    <script src="assets/js/notification-handler.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load notification modal
+        fetch('components/notification-modal.php')
+            .then(response => response.text())
+            .then(html => {
+                document.body.insertAdjacentHTML('beforeend', html);
+                // Initialize notification system
+                window.notificationSystem = new NotificationSystem();
+            })
+            .catch(error => {
+                console.error('Error loading notification modal:', error);
+            });
+    });
+    </script>
 </body>
 </html>

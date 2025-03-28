@@ -24,6 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['role'] = $user['role'];
             $_SESSION['unique_id'] = $user['unique_id'];
             $_SESSION['employee_id'] = $user['employee_id'];
+            $_SESSION['profile_picture'] = $user['profile_picture'];
+
+            // Debug: Print user data
+            error_log("User Data: " . print_r($user, true));
+            error_log("Profile Picture Set: " . (isset($user['profile_picture']) ? $user['profile_picture'] : 'No profile picture'));
 
             // Update last login time
             $update_sql = "UPDATE users SET last_login = ? WHERE id = ?";
@@ -50,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: hr_dashboard.php');
                         break;
                     case 'Senior Manager (Studio)':
-                        header('Location: abc.php');
+                        header('Location: real.php');
                         break;  
                     case 'Senior Manager (Site)':
                         header('Location: site_manager_dashboard.php');

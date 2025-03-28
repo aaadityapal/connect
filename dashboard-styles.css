@@ -302,6 +302,12 @@ html, body {
     position: relative;
 }
 
+.notification-wrapper {
+    border-radius: 50%;
+    background: grey;
+    position: relative;
+    margin-right: 16px;
+}
 .notification-btn {
     background: white;
     border: none;
@@ -785,43 +791,43 @@ html, body {
 
 /* Right side: Calendar - adjusted ratio */
 .calendar-wrapper {
-    flex: 3;  /* Adjusted ratio for proportional calendar */
-    min-width: 380px;  /* Increased minimum width */
-    max-width: 450px;  /* Added maximum width */
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .calendar-container {
-    height: calc(100% - 40px);  /* Account for margins */
-    padding: 35px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%;
 }
 
+/* Calendar Header */
 .calendar-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     margin-bottom: 20px;
 }
 
 .calendar-navigation {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
 }
 
 .calendar-nav {
     background: none;
     border: none;
-    cursor: pointer;
     width: 30px;
     height: 30px;
-    border-radius: 50%;
+    border-radius: 6px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
     color: #555;
 }
 
@@ -830,20 +836,39 @@ html, body {
     color: #333;
 }
 
-.calendar-nav i {
-    font-size: 12px;
-}
-
 .calendar-header h3 {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 1.1em;
+    font-weight: 500;
     color: #333;
+    margin: 0;
 }
 
-.calendar-body {
-    width: 100%;
+/* Calendar Legend */
+.calendar-legend {
+    display: flex;
+    gap: 12px;
+    padding: 0 10px;
 }
 
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.legend-dot.present { background-color: #22c55e; }
+.legend-dot.leave { background-color: #f97316; }
+.legend-dot.holiday { background-color: #ec4899; }
+
+/* Calendar Grid */
 .calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -852,55 +877,122 @@ html, body {
 }
 
 .calendar-weekdays div {
-    font-size: 12px;
-    color: #777;
-    padding: 5px 0;
+    font-size: 0.85em;
+    color: #666;
+    padding: 8px 0;
     font-weight: 500;
 }
 
 .calendar-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    text-align: center;
+    gap: 4px;
 }
 
 .calendar-day {
     aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #333;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: all 0.2s;
+    padding: 4px;
     position: relative;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
 .calendar-day:hover {
-    background-color: #f5f5f5;
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.calendar-day-number {
+    font-size: 0.9em;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.calendar-day.other-month .calendar-day-number {
+    color: #cbd5e1;
 }
 
 .calendar-day.today {
-    background-color: #e91e63;
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
+    background-color: #f0fdf4;
+    border-color: #22c55e;
 }
 
-.calendar-day.other-month {
-    color: #ccc;
+/* Event Dots */
+.calendar-day-events {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 3px;
 }
 
-.calendar-day.event {
-    color: #4a6cf7;
-    font-weight: 500;
+.day-event-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
 }
 
-.calendar-day.event.selected, .calendar-day.selected {
-    background-color: #4a6cf7;
-    color: white;
+.day-event-dot.present { background-color: #22c55e; }
+.day-event-dot.leave { background-color: #f97316; }
+.day-event-dot.holiday { background-color: #ec4899; }
+
+/* Date Tooltip */
+.date-tooltip {
+    position: absolute;
+    top: -45px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 6px;
+    padding: 8px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 12px;
+    z-index: 1000;
+    display: none;
+    white-space: nowrap;
+    border: 1px solid #e2e8f0;
+}
+
+.date-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid white;
+}
+
+.calendar-day:hover .date-tooltip {
+    display: block;
+}
+
+.tooltip-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    color: #555;
+}
+
+.tooltip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.tooltip-holiday {
+    color: #ec4899;
+    font-style: italic;
+    margin-top: 2px;
+    padding-top: 2px;
+    border-top: 1px dashed #eee;
 }
 
 /* Responsive adjustments */
@@ -960,151 +1052,233 @@ html, body {
 
 /* Adjust leaves section to maintain proper alignment with increased gap */
 .leaves-section {
-    flex: 2;
-    background-color: #f8f9fa;
-    border-radius: 15px;
-    padding: 40px;
-    box-shadow: 0 3px 20px rgba(0, 0, 0, 0.1);
-    min-width: 280px;
-    margin-right: 5px;  /* Add small right margin to align with greeting section */
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-top: 20px;
 }
 
-/* Leave cards styling */
-.leaves-content {
+.leaves-filter {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-top: 25px;
+    gap: 10px;
+}
+
+.leaves-filter select {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: #475569;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.leaves-content {
+    position: relative;
+    margin-top: 20px;
+}
+
+/* Scrollable container */
+.leaves-scroll-container {
+    max-height: 400px; /* Height of two cards plus some padding */
+    overflow-y: auto;
+    padding-right: 10px; /* Space for scrollbar */
+    
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Webkit scrollbar styling */
+.leaves-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.leaves-scroll-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.leaves-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+}
+
+.leaves-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
 }
 
 .leave-card {
-    background: white;
-    border-radius: 12px;
-    padding: 15px;  /* Slightly reduced padding */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between; /* Align content and actions */
 }
 
-.leave-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+.leave-card-content {
+    flex: 1;
 }
 
 .leave-card-header {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
+    gap: 12px;
+    margin-bottom: 8px;
 }
 
-.leave-card-header i {
-    font-size: 20px;
-    color: #4a6cf7;
-    margin-right: 12px;
+.leave-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-.leave-card-header h3 {
-    font-size: 15px;  /* Slightly smaller font */
-    font-weight: 600;
-    color: #333;
+.leave-user-info {
+    flex-grow: 1;
 }
 
-.leave-card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.leave-user-name {
+    font-weight: 500;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.leave-user-designation {
+    font-size: 0.85em;
+    color: #64748b;
 }
 
 .leave-type {
-    font-size: 14px;
-    color: #666;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-bottom: 8px;
 }
 
-.leave-date {
-    font-size: 14px;
-    color: #888;
+.leave-dates {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.leave-reason {
+    font-size: 0.9em;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+/* Actions container */
+.leave-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 16px;
+    border-left: 1px solid #e2e8f0;
+    margin-left: 16px;
+    justify-content: center;
+}
+
+.leave-action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.approve-btn {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.approve-btn:hover {
+    background-color: #bbf7d0;
+    transform: translateY(-1px);
+}
+
+.reject-btn {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.reject-btn:hover {
+    background-color: #fecaca;
+    transform: translateY(-1px);
 }
 
 .leave-status {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
     font-weight: 500;
-    text-transform: uppercase;
-    margin-top: 10px;
 }
 
-.leave-status.pending {
-    background-color: #fff3e0;
-    color: #ff9800;
+.status-pending {
+    background-color: #fef3c7;
+    color: #d97706;
 }
 
-.leave-status.approved {
-    background-color: #e8f5e9;
-    color: #4caf50;
+.status-approved {
+    background-color: #dcfce7;
+    color: #15803d;
 }
 
-.leave-status.rejected {
-    background-color: #ffebee;
-    color: #f44336;
+.status-rejected {
+    background-color: #fee2e2;
+    color: #b91c1c;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1600px) {
-    .employee-overview {
-        flex: 7.5;
-    }
-    
-    .leaves-section {
-        flex: 2.5;
-    }
+/* Empty state styles */
+.leaves-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
 }
 
-@media (max-width: 1400px) {
-    .dashboard-sections-wrapper {
-        flex-direction: column;
-        gap: 40px;  /* Slightly reduced gap when stacked */
-    }
-
-    .employee-overview, .leaves-section {
-        width: 100%;
-        max-width: none;
-        min-width: 0;
-    }
+.leaves-empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
 }
 
-@media (max-width: 768px) {
-    .dashboard-sections-wrapper {
-        gap: 30px;  /* Further reduced gap for mobile */
-    }
-
-    .leaves-section {
-        padding: 25px;
-    }
+/* Loading state styles */
+.leaves-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
 }
 
-/* Simple section header for Leaves */
-.leaves-section .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 35px;
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
 }
 
-.leaves-section .section-title {
-    display: flex;
-    align-items: center;
-}
-
-.leaves-section .section-title i {
-    font-size: 26px;
-    color: #4361ee;
-    margin-right: 15px;
-}
-
-.leaves-section .section-title h2 {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Tooltip Container */
@@ -1312,88 +1486,137 @@ body::-webkit-scrollbar,
 
 /* Project Stat Card */
 .project-stat-card {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 30px;
+    padding: 1.25rem;
     display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 160px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-}
-
-.project-stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
-
-/* Project Stat Icons */
-.project-stat-icon {
-    width: 60px;
-    height: 60px;
+    align-items: flex-start;
+    background: white;
     border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    position: relative;
+    transition: all 0.2s ease;
+    gap: 16px; /* Add space between icon and content */
+}
+
+/* Hover effect enhancement */
+.project-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Icon container adjustments */
+.project-stat-icon {
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 20px;
+    border-radius: 12px;
     flex-shrink: 0;
+    margin-top: 8px; /* Shift icon down */
 }
 
-.project-stat-icon i {
-    font-size: 24px;
-    color: white;
-}
-
-/* Different icon backgrounds */
-.total-projects-icon {
-    background: linear-gradient(135deg, #6366F1, #4F46E5);
-}
-
-.in-progress-icon {
-    background: linear-gradient(135deg, #3B82F6, #2563EB);
-}
-
-.completed-icon {
-    background: linear-gradient(135deg, #10B981, #059669);
-}
-
-.deadline-icon {
-    background: linear-gradient(135deg, #F59E0B, #D97706);
-}
-
-.budget-icon {
-    background: linear-gradient(135deg, #6366F1, #4338CA);
-}
-
-.issues-icon {
-    background: linear-gradient(135deg, #EF4444, #DC2626);
-}
-
-/* Project Stat Content */
+/* Content container adjustments */
 .project-stat-content {
     flex: 1;
+    padding-top: 4px; /* Adjust content spacing */
 }
 
-.project-stat-card h3 {
-    font-size: 16px;
+/* Keep your existing icon colors but add border */
+.total-projects-icon { 
+    background-color: #bfdbfe;
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.in-progress-icon { 
+    background-color: #fde68a;
+    color: #b45309;
+    border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+.completed-icon { 
+    background-color: #bbf7d0;
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.deadline-icon { 
+    background-color: #fecdd3;
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.stages-pending-icon { 
+    background-color: #e9d5ff;
+    color: #7e22ce;
+    border: 1px solid rgba(126, 34, 206, 0.2);
+}
+
+.substages-pending-icon { 
+    background-color: #cbd5e1;
+    color: #334155;
+    border: 1px solid rgba(51, 65, 85, 0.2);
+}
+
+/* Enhanced card border with subtle color accents */
+.project-stat-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 12px 0 0 12px;
+}
+
+/* Colored borders for each card type */
+.project-stat-card[data-tooltip="total-projects-details"]::before {
+    background-color: #2563eb;
+}
+
+.project-stat-card[data-tooltip="in-progress-details"]::before {
+    background-color: #b45309;
+}
+
+.project-stat-card[data-tooltip="completed-details"]::before {
+    background-color: #16a34a;
+}
+
+.project-stat-card[data-tooltip="deadline-details"]::before {
+    background-color: #dc2626;
+}
+
+.project-stat-card[data-tooltip="stages-pending-details"]::before {
+    background-color: #7e22ce;
+}
+
+.project-stat-card[data-tooltip="substages-pending-details"]::before {
+    background-color: #334155;
+}
+
+/* Typography refinements */
+.project-stat-content h3 {
+    font-size: 0.875rem;
+    color: #64748b;
     font-weight: 500;
-    color: #555;
-    margin-bottom: 8px;
+    margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .project-stat-number {
-    font-size: 32px;
+    font-size: 1.75rem;
     font-weight: 600;
-    color: #333;
-    margin-bottom: 6px;
+    color: #1e293b;
+    margin-bottom: 2px;
+    line-height: 1.2;
 }
 
 .project-stat-label {
-    font-size: 14px;
-    color: #777;
+    font-size: 0.813rem;
+    color: #94a3b8;
+    font-weight: 400;
 }
 
 /* Project Tooltips */
@@ -1872,11 +2095,11 @@ input:checked + .toggle-slider:before {
 
 .project-calendar-prev-btn,
 .project-calendar-next-btn {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background-color: #f5f7ff;
-    border: none;
+    border: 1px solid #e0e6ff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1887,7 +2110,8 @@ input:checked + .toggle-slider:before {
 
 .project-calendar-prev-btn:hover,
 .project-calendar-next-btn:hover {
-    background-color: #e8edff;
+    background-color: #4361ee;
+    color: white;
 }
 
 .project-calendar-month {
@@ -1988,6 +2212,46 @@ input:checked + .toggle-slider:before {
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.project-calendar-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Project Type Specific Styles */
+.project-calendar-event.project-type-architecture {
+    background-color: #4361ee;
+    border-left: 3px solid #3251de;
+}
+
+.project-calendar-event.project-type-interior {
+    background-color: #10B981;
+    border-left: 3px solid #0ea975;
+}
+
+.project-calendar-event.project-type-construction {
+    background-color: #F59E0B;
+    border-left: 3px solid #e59009;
+}
+
+/* Hover effects */
+.project-calendar-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.project-calendar-event.project-type-architecture:hover {
+    background-color: #3251de;
+}
+
+.project-calendar-event.project-type-interior:hover {
+    background-color: #0ea975;
+}
+
+.project-calendar-event.project-type-construction:hover {
+    background-color: #e59009;
 }
 
 /* Department Legend */
@@ -1995,18 +2259,19 @@ input:checked + .toggle-slider:before {
     background-color: #f9f9f9;
     padding: 15px;
     border-radius: 8px;
+    margin-top: 20px;
 }
 
 .project-department-legend h4 {
     font-size: 14px;
-    color: #555;
-    margin: 0 0 10px 0;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: 600;
 }
 
 .project-department-items {
     display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
+    gap: 20px;
 }
 
 .project-department-item {
@@ -2019,12 +2284,12 @@ input:checked + .toggle-slider:before {
     width: 12px;
     height: 12px;
     border-radius: 3px;
-    display: block;
 }
 
 .project-dept-name {
     font-size: 13px;
-    color: #666;
+    color: #555;
+    font-weight: 500;
 }
 
 /* Animation for view transitions */
@@ -2059,4 +2324,2658 @@ input:checked + .toggle-slider:before {
         padding: 2px 5px;
         font-size: 11px;
     }
+}
+
+/* Avatar Styles */
+.avatar-container {
+    position: relative;
+}
+
+.avatar-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.avatar-btn:hover {
+    transform: translateY(-2px);
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dropdown Styles */
+.avatar-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.avatar-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.user-role {
+    font-size: 13px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 0;
+}
+
+.dropdown-menu {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+}
+
+.dropdown-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    gap: 12px;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-menu li a i {
+    font-size: 16px;
+    color: #666;
+    width: 20px;
+    text-align: center;
+}
+
+/* Punch notification styles */
+.punch-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    border-left: 4px solid;
+}
+
+.punch-notification.show {
+    transform: translateX(0);
+}
+
+.punch-notification i {
+    font-size: 20px;
+}
+
+.punch-notification.success {
+    border-color: #10B981;
+}
+
+.punch-notification.warning {
+    border-color: #F59E0B;
+}
+
+.punch-notification.error {
+    border-color: #EF4444;
+}
+
+.punch-notification.info {
+    border-color: #3B82F6;
+}
+
+.punch-notification.success i {
+    color: #10B981;
+}
+
+.punch-notification.warning i {
+    color: #F59E0B;
+}
+
+.punch-notification.error i {
+    color: #EF4444;
+}
+
+.punch-notification.info i {
+    color: #3B82F6;
+}
+
+/* Disabled state for punch button */
+.punch-button:disabled {
+    background: #ccc !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+}
+
+.punch-button:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Style for when punched in */
+.punched-in .punch-button {
+    background: linear-gradient(135deg, #ff9a9e, #ff5252);
+}
+
+.punched-in .punch-button:hover {
+    background: linear-gradient(135deg, #ff8a8e, #ff4242);
+}
+
+/* Working time display */
+.working-time {
+    font-size: 13px;
+    color: #4a6cf7;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* Punch status container */
+.punch-status {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Work Report Modal Styles */
+.work-report-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.work-report-content {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: modalSlideIn 0.3s ease;
+}
+
+.work-report-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.work-report-header h3 {
+    font-size: 18px;
+    color: #333;
+    margin: 0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.work-report-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.1);
+}
+
+.work-report-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.cancel-btn, .submit-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    color: #666;
+}
+
+.cancel-btn:hover {
+    background: #eee;
+}
+
+.submit-btn {
+    background: #4a6cf7;
+    border: none;
+    color: white;
+}
+
+.submit-btn:hover {
+    background: #3a5cdc;
+}
+
+.submit-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.employee-list-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.employee-list-item:last-child {
+    border-bottom: none;
+}
+
+.employee-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.employee-info {
+    flex-grow: 1;
+}
+
+.employee-name {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.employee-details {
+    display: flex;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.employee-designation {
+    color: #666;
+    font-style: italic;
+}
+
+.punch-time {
+    color: #1a73e8;
+    font-weight: 500;
+    margin: 0 10px;
+}
+
+.attendance-status {
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    margin-left: auto;
+}
+
+.status-ontime {
+    background-color: #e6f4ea;
+    color: #1e8e3e;
+}
+
+.status-late {
+    background-color: #fce8e6;
+    color: #d93025;
+}
+
+.tooltip-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.attendance-stat {
+    font-size: 0.9em;
+    color: #5f6368;
+}
+
+.leave-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.leave-info {
+    flex-grow: 1;
+    margin-left: 10px;
+}
+
+.leave-dates {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 2px;
+}
+
+.leave-type-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.leave-reason {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.tooltip-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Action buttons in leave card */
+.leave-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.leave-action-btn {
+    padding: 6px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.approve-btn {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.approve-btn:hover {
+    background-color: #bbf7d0;
+}
+
+.reject-btn {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.reject-btn:hover {
+    background-color: #fecaca;
+}
+
+/* Leave Action Modal */
+.leave-action-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.leave-action-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.leave-action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.leave-action-header h3 {
+    font-size: 1.2em;
+    color: #1e293b;
+    margin: 0;
+}
+
+.leave-user-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.modal-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.leave-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modal-username {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.modal-leave-type {
+    font-size: 0.9em;
+    color: #64748b;
+}
+
+.modal-leave-dates {
+    font-size: 0.85em;
+    color: #64748b;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #475569;
+    font-size: 0.9em;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    resize: vertical;
+    font-size: 0.9em;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.leave-action-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.cancel-btn, .submit-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.cancel-btn:hover {
+    background-color: #e2e8f0;
+}
+
+.submit-btn {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.submit-btn:hover {
+    background-color: #2563eb;
+}
+
+.submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Toast Notification */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    max-width: 350px;
+}
+
+.toast-notification.show {
+    transform: translateX(0);
+}
+
+.toast-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-title {
+    font-weight: 500;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.toast-message {
+    font-size: 0.9em;
+    color: #64748b;
+}
+
+/* Success Toast */
+.toast-success {
+    border-left: 4px solid #22c55e;
+}
+
+.toast-success .toast-icon {
+    color: #22c55e;
+}
+
+/* Error Toast */
+.toast-error {
+    border-left: 4px solid #ef4444;
+}
+
+.toast-error .toast-icon {
+    color: #ef4444;
+}
+
+/* Add specific styles for stages and substages cards */
+.project-stat-card[data-tooltip="stages-pending-details"],
+.project-stat-card[data-tooltip="substages-pending-details"] {
+    position: relative;
+    overflow: hidden;
+}
+
+.project-stat-card[data-tooltip="stages-pending-details"]::before,
+.project-stat-card[data-tooltip="substages-pending-details"]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.project-stat-card[data-tooltip="stages-pending-details"]::before {
+    background-color: #a21caf;
+}
+
+.project-stat-card[data-tooltip="substages-pending-details"]::before {
+    background-color: #475569;
+}
+
+/* Hover effects for new cards */
+.project-stat-card[data-tooltip="stages-pending-details"]:hover,
+.project-stat-card[data-tooltip="substages-pending-details"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Card Typography Improvements */
+.project-stat-content {
+    padding-left: 12px;
+}
+
+.project-stat-content h3 {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.project-stat-number {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.project-stat-label {
+    font-size: 0.813rem;
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+/* Card Layout Improvements */
+.project-stat-card {
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+/* Hover effect for better interaction */
+.project-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Icon container refinements */
+.project-stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.project-stat-icon i {
+    font-size: 1.25rem;
+}
+
+/* Font family specification - make sure to include this if not already defined */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .project-stat-content h3 {
+        font-size: 0.813rem;
+    }
+    
+    .project-stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .project-stat-label {
+        font-size: 0.75rem;
+    }
+}
+
+/* Add these to your existing project status styles */
+.project-status.not-started {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.project-status.pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.project-status.in-progress {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.project-status.in-review {
+    background-color: #f3e8ff;
+    color: #9333ea;
+}
+
+.project-status.completed {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.project-status.on-hold {
+    background-color: #fef9c3;
+    color: #ca8a04;
+}
+
+.project-status.cancelled {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.project-status.blocked {
+    background-color: #fecaca;
+    color: #b91c1c;
+}
+
+.no-projects {
+    color: #64748b;
+    text-align: center;
+    padding: 10px;
+    font-style: italic;
+}
+
+/* Replace deadline-icon with overdue-icon styles */
+.overdue-icon { 
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+/* Update the card border color */
+.project-stat-card[data-tooltip="overdue-details"]::before {
+    background-color: #dc2626;
+}
+
+/* Add styles for overdue project items in tooltip */
+.project-overdue-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-overdue-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85em;
+    color: #64748b;
+}
+
+.overdue-days {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+/* Stages and Substages Tooltip Items */
+.project-stage-item,
+.project-substage-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.project-stage-item:last-child,
+.project-substage-item:last-child {
+    border-bottom: none;
+}
+
+.stage-info,
+.substage-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stage-number {
+    font-size: 0.8em;
+    color: #64748b;
+}
+
+.stage-details,
+.substage-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.days-remaining {
+    font-size: 0.8em;
+    color: #64748b;
+}
+
+.days-remaining.urgent {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+/* Update project status colors for stages/substages */
+.project-status.not-started {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.project-status.pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.project-status.in-progress {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.project-status.in-review {
+    background-color: #f3e8ff;
+    color: #9333ea;
+}
+
+/* Enhanced Tooltip Styles for Stages and Substages */
+.stage-item,
+.substage-item {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stage-item:last-child,
+.substage-item:last-child {
+    border-bottom: none;
+}
+.substage-item {
+background: #f8fafc;
+border-radius: 8px;
+padding: 12px 16px;
+margin-bottom: 12px;
+display: flex;
+justify-content: space-between;
+align-items: flex-start;
+transition: all 0.2s ease;
+border-left: 3px solid transparent;
+width: 100%; /* Ensure full width */
+box-sizing: border-box;
+}
+.stage-header,
+.substage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.stage-title,
+.substage-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-name {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.stage-identifier,
+.substage-identifier {
+    font-size: 0.85em;
+    color: #64748b;
+}
+
+.stage-details,
+.substage-details {
+    font-size: 0.9em;
+    color: #64748b;
+}
+
+.stage-dates,
+.substage-dates {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stage-dates i,
+.substage-dates i {
+    color: #94a3b8;
+}
+
+.days-count {
+    margin-left: auto;
+}
+
+.days-count.urgent {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.overdue {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.tooltip-summary {
+    padding: 8px 12px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.tooltip-count {
+    font-size: 0.9em;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.no-items {
+    text-align: center;
+    padding: 20px;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Project Calendar Detail Modal - Modern & Minimal */
+.project-calendar-detail-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.project-calendar-detail-modal.active {
+    display: flex;
+    opacity: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+.project-calendar-detail-content {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.project-calendar-detail-header {
+    padding: 24px 32px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: flex;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+.project-calendar-detail-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-type-badge {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.project-type-badge.architecture {
+    background-color: #eef2ff;
+    color: #4361ee;
+}
+
+.project-type-badge.interior {
+    background-color: #ecfdf5;
+    color: #10B981;
+}
+
+.project-type-badge.construction {
+    background-color: #fff7ed;
+    color: #F59E0B;
+}
+
+.project-calendar-detail-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.project-calendar-detail-close {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.project-calendar-detail-close:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.project-calendar-detail-body {
+    padding: 32px;
+}
+
+.project-calendar-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.info-card {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.in_progress {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-badge.completed {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.stages-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.stages-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.stages-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-bar {
+    width: 120px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4361ee;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.stage-item {
+    display: flex;
+    gap: 20px;
+    padding: 24px 0;
+}
+
+.stage-timeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 8px;
+}
+
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #e2e8f0;
+}
+
+.timeline-dot.completed {
+    background: #16a34a;
+    box-shadow: 0 0 0 2px #dcfce7;
+}
+
+.timeline-dot.in-progress {
+    background: #2563eb;
+    box-shadow: 0 0 0 2px #dbeafe;
+}
+
+.timeline-line {
+    width: 2px;
+    height: 100%;
+    background: #e2e8f0;
+    margin: 8px 0;
+}
+
+.stage-content {
+    flex: 1;
+}
+
+.stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.stage-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+}
+
+.substages-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-left: 24px;
+}
+
+.substage-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.substage-item:hover {
+    background: #f1f5f9;
+}
+
+.substage-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.substage-number {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.substage-title {
+    font-size: 0.875rem;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.substage-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.substage-item.completed {
+    border-left: 3px solid #16a34a;
+}
+
+.substage-item.in_progress {
+    border-left: 3px solid #2563eb;
+}
+
+.substage-item.pending {
+    border-left: 3px solid #d97706;
+}
+
+.no-stages {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .project-calendar-detail-content {
+        width: 95%;
+        margin: 20px;
+        max-height: 95vh;
+    }
+    
+    .project-calendar-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stages-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .stage-timeline {
+        display: none;
+    }
+    
+    .substages-container {
+        padding-left: 0;
+    }
+}
+
+/* Project Description Section */
+.project-description-section {
+    margin-bottom: 32px;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.project-description-section .section-title {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.project-description-content {
+    color: #1e293b;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.no-description {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Update Info Cards Grid */
+.project-calendar-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.info-card {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.info-card:hover {
+    background: #f1f5f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .project-description-section {
+        padding: 20px;
+    margin-bottom: 24px;
+}
+
+    .project-calendar-detail-grid {
+        grid-template-columns: 1fr;
+    gap: 12px;
+}
+}
+
+/* Update Info Card Styling */
+.info-card.update-info {
+    background: #f8fafc;
+    border-left: 3px solid #4361ee;
+}
+
+.update-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-calendar-detail-updated-by {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.update-time {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+/* Hover effect for update info card */
+.info-card.update-info:hover {
+    background: #f1f5f9;
+    cursor: help;
+}
+
+/* Add animation for recent updates */
+@keyframes pulse {
+    0% { border-left-color: #4361ee; }
+    50% { border-left-color: #818cf8; }
+    100% { border-left-color: #4361ee; }
+}
+
+.info-card.update-info.recent {
+    animation: pulse 2s infinite;
+}
+
+/* Info Cards with Project Type Border */
+.info-card {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent; /* Default transparent border */
+}
+
+/* Architecture type borders */
+.project-type-architecture ~ .project-calendar-detail-body .info-card {
+    border-left-color: #4361ee;
+}
+
+.project-type-architecture ~ .project-calendar-detail-body .info-card:hover {
+    background: rgba(67, 97, 238, 0.05);
+}
+
+/* Interior type borders */
+.project-type-interior ~ .project-calendar-detail-body .info-card {
+    border-left-color: #10B981;
+}
+
+.project-type-interior ~ .project-calendar-detail-body .info-card:hover {
+    background: rgba(16, 185, 129, 0.05);
+}
+
+/* Construction type borders */
+.project-type-construction ~ .project-calendar-detail-body .info-card {
+    border-left-color: #F59E0B;
+}
+
+.project-type-construction ~ .project-calendar-detail-body .info-card:hover {
+    background: rgba(245, 158, 11, 0.05);
+}
+
+/* Info Label styling */
+.info-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* Update the grid layout for better spacing */
+.project-calendar-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+/* Status badge colors according to project type */
+.project-type-architecture ~ .project-calendar-detail-body .status-badge {
+    background: rgba(67, 97, 238, 0.1);
+    color: #4361ee;
+}
+
+.project-type-interior ~ .project-calendar-detail-body .status-badge {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.project-type-construction ~ .project-calendar-detail-body .status-badge {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+/* Update info card specific styling */
+.info-card.update-info {
+    position: relative;
+}
+
+.update-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-calendar-detail-updated-by {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.update-time {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .project-calendar-detail-grid {
+        grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.info-card {
+        padding: 14px;
+    }
+}
+
+/* Animation for hover effect */
+.info-card {
+    transform: translateY(0);
+    transition: all 0.2s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Project Type Indicator Bar */
+.project-type-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+}
+
+/* Architecture Type Styling */
+.project-type-architecture {
+    border-top: 4px solid #4361ee !important;
+}
+
+.project-type-architecture .project-calendar-detail-header {
+    background: linear-gradient(to bottom, rgba(67, 97, 238, 0.05), transparent);
+}
+
+.project-type-architecture .project-type-badge {
+    background: rgba(67, 97, 238, 0.1);
+    color: #4361ee;
+}
+
+/* Interior Type Styling */
+.project-type-interior {
+    border-top: 4px solid #10B981 !important;
+}
+
+.project-type-interior .project-calendar-detail-header {
+    background: linear-gradient(to bottom, rgba(16, 185, 129, 0.05), transparent);
+}
+
+.project-type-interior .project-type-badge {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+/* Construction Type Styling */
+.project-type-construction {
+    border-top: 4px solid #F59E0B !important;
+}
+
+.project-type-construction .project-calendar-detail-header {
+    background: linear-gradient(to bottom, rgba(245, 158, 11, 0.05), transparent);
+}
+
+.project-type-construction .project-type-badge {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+/* Enhanced Header Styling */
+.project-calendar-detail-header {
+    padding: 24px 32px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+        align-items: flex-start;
+    position: flex;
+    top: 0;
+    z-index: 1;
+    transition: background 0.3s ease;
+}
+
+/* Project Type Badge Enhancement */
+.project-type-badge {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+/* Modal Animation */
+.project-calendar-detail-modal.active .project-calendar-detail-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Scrollbar Styling Based on Project Type */
+.project-type-architecture::-webkit-scrollbar-thumb {
+    background-color: rgba(67, 97, 238, 0.2);
+}
+
+.project-type-interior::-webkit-scrollbar-thumb {
+    background-color: rgba(16, 185, 129, 0.2);
+}
+
+.project-type-construction::-webkit-scrollbar-thumb {
+    background-color: rgba(245, 158, 11, 0.2);
+}
+
+.project-calendar-detail-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.project-calendar-detail-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.project-calendar-detail-content::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .project-calendar-detail-content {
+        width: 95%;
+        margin: 10px;
+    }
+
+    .project-calendar-detail-header {
+        padding: 20px;
+    }
+}
+
+/* Status Badge Colors Based on Project Type */
+.project-type-architecture .status-badge {
+    background: rgba(67, 97, 238, 0.1);
+    color: #4361ee;
+    border: 1px solid rgba(67, 97, 238, 0.2);
+}
+
+.project-type-interior .status-badge {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.project-type-construction .status-badge {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Progress Bar Colors Based on Project Type */
+.project-type-architecture .progress-fill {
+    background: #4361ee;
+}
+
+.project-type-interior .progress-fill {
+    background: #10B981;
+}
+
+.project-type-construction .progress-fill {
+    background: #F59E0B;
+}
+
+/* Project Calendar Event Base Styles */
+.project-calendar-event {
+    padding: 6px 8px;
+    margin: 2px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Specific Project Type Colors */
+.project-calendar-event.project-type-architecture {
+    background-color: #4361ee !important;
+    border-left: 3px solid #3251de;
+}
+
+.project-calendar-event.project-type-interior {
+    background-color: #10B981 !important;
+    border-left: 3px solid #0ea975;
+}
+
+.project-calendar-event.project-type-construction {
+    background-color: #F59E0B !important;
+    border-left: 3px solid #e59009;
+}
+
+/* Hover Effects */
+.project-calendar-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Calendar Day Styling */
+.project-calendar-day {
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.project-calendar-day-number {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+/* Projects container with scroll */
+.projects-container {
+    max-height: 70px; /* Height for 2 projects approximately */
+    overflow-y: auto;
+    margin-top: 4px;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Scrollbar styling */
+.projects-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.projects-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.projects-container::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Show more indicator */
+.more-projects-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 16px;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.9));
+        display: none;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Project event styling */
+.project-calendar-event {
+    padding: 6px 8px;
+    margin: 2px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Hover effect for project events */
+.project-calendar-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stage-meta {
+    display: flex;
+    gap: 16px;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.stage-header-left {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.stage-assigned,
+.stage-due-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stage-assigned i,
+.stage-due-date i {
+    font-size: 14px;
+    color: #94a3b8;
+}
+/* Status Dropdown Styling */
+.stage-status-dropdown {
+    position: relative;
+    min-width: 140px;
+}
+
+.status-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.1);
+}
+
+/* Status-specific colors */
+.status-select option[value="not_started"] { color: #64748b; }
+.status-select option[value="pending"] { color: #f59e0b; }
+.status-select option[value="in_progress"] { color: #3b82f6; }
+.status-select option[value="in_review"] { color: #8b5cf6; }
+.status-select option[value="completed"] { color: #10b981; }
+.status-select option[value="on_hold"] { color: #f59e0b; }
+.status-select option[value="cancelled"] { color: #ef4444; }
+.status-select option[value="blocked"] { color: #dc2626; }
+.status-select option[value="freezed"] { color: #6b7280; }
+.status-select option[value="sent_to_client"] { color: #2563eb; }
+
+/* Hover and Focus states */
+.stage-header:hover {
+    background: #f1f5f9;
+}
+
+.status-select:hover {
+    border-color: #cbd5e1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stage-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .stage-header-left {
+        margin-right: 0;
+    }
+
+    .stage-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .stage-status-dropdown {
+        width: 100%;
+    }
+}
+
+/* Updated Substage Styling */
+.substage-item {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.substage-content {
+    flex: 1;
+    margin-right: 16px;
+    width: 100%; /* Ensure full width */
+}
+
+.substage-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.substage-number {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 32px;
+}
+
+.substage-title {
+    font-size: 0.875rem;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.substage-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+}
+
+.substage-assigned {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.substage-assigned i {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.substage-assigned .not-assigned {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.substage-due-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.substage-due-date i {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.substage-status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+/* Status-specific colors for substages */
+.substage-item.not_started { border-left-color: #64748b; }
+.substage-item.pending { border-left-color: #f59e0b; }
+.substage-item.in_progress { border-left-color: #3b82f6; }
+.substage-item.in_review { border-left-color: #8b5cf6; }
+.substage-item.completed { border-left-color: #10b981; }
+.substage-item.on_hold { border-left-color: #f59e0b; }
+.substage-item.cancelled { border-left-color: #ef4444; }
+.substage-item.blocked { border-left-color: #dc2626; }
+.substage-item.freezed { border-left-color: #6b7280; }
+.substage-item.sent_to_client { border-left-color: #2563eb; }
+
+/* Status badge colors */
+.substage-status-badge.not_started { background: #f1f5f9; color: #64748b; }
+.substage-status-badge.pending { background: #fef3c7; color: #d97706; }
+.substage-status-badge.in_progress { background: #dbeafe; color: #2563eb; }
+.substage-status-badge.in_review { background: #f3e8ff; color: #9333ea; }
+.substage-status-badge.completed { background: #dcfce7; color: #16a34a; }
+.substage-status-badge.on_hold { background: #fff7ed; color: #c2410c; }
+.substage-status-badge.cancelled { background: #fee2e2; color: #dc2626; }
+.substage-status-badge.blocked { background: #fecaca; color: #b91c1c; }
+.substage-status-badge.freezed { background: #f1f5f9; color: #475569; }
+.substage-status-badge.sent_to_client { background: #dbeafe; color: #1d4ed8; }
+
+/* Hover effect */
+.substage-item:hover {
+    background: #f1f5f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .substage-item {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .substage-content {
+        margin-right: 0;
+    }
+
+    .substage-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .substage-status-badge {
+        align-self: flex-start;
+    }
+}
+
+/* Updated Substage Title Styling */
+.substage-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.substage-number {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.substage-title {
+    font-size: 0.875rem;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* Rest of your existing substage styles */
+.substage-item {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.substage-content {
+    flex: 1;
+    margin-right: 16px;
+}
+
+.substage-header {
+    margin-bottom: 8px;
+}
+
+.substage-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+}
+
+/* Stage Actions Styling */
+.stage-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Task Icon Button Styling */
+.task-icon-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-icon-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.task-icon-btn i {
+    font-size: 16px;
+}
+
+/* Substage Actions Styling */
+.substage-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Update existing substage status badge */
+.substage-status-badge {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stage-actions,
+    .substage-actions {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .task-icon-btn {
+        padding: 6px;
+    }
+}
+
+/* Add hover effect for better interaction */
+.stage-item:hover .task-icon-btn,
+.substage-item:hover .task-icon-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Optional: Add a subtle animation for the task icon */
+.task-icon-btn {
+    opacity: 0.8;
+    visibility: visible;
+    transition: all 0.2s ease;
+}
+
+.task-icon-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Update stage and substage containers for better alignment */
+.stage-header,
+.substage-item {
+    position: relative;
+}
+
+/* Toggle Button Styling */
+.substage-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0;
+    position: relative;
+    width: 125%; /* Ensure full width */
+}
+
+.substage-toggle-container::before,
+.substage-toggle-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background-color: #e2e8f0;
+}
+
+.substage-toggle-container::before {
+    left: 0;
+}
+
+.substage-toggle-container::after {
+    right: 0;
+}
+
+.substage-toggle-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    z-index: 1;
+}
+
+.substage-toggle-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.substage-toggle-btn i {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+/* Table styling */
+.substage-details-table {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.substage-details-table.active {
+    max-height: 500px;
+    opacity: 1;
+    padding: 16px;
+    margin: 12px 0;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    width: 125%;
+    box-sizing: border-box;
+}
+
+/* Improve table responsiveness */
+.table-responsive {
+    width: 125%;
+    overflow-x: auto;
+    margin-bottom: 8px;
+    border-radius: 6px;
+}
+
+/* Enhance table appearance */
+.details-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    table-layout: fixed;
+    background-color: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Improved header styling */
+.details-table th {
+    padding: 10px 12px;
+    text-align: left;
+    background-color: #f1f5f9;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+/* Better cell styling */
+.details-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Task column - make clickable looking */
+.details-table td:first-child a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.details-table td:first-child a:hover {
+    text-decoration: underline;
+}
+
+/* Hover effect for rows */
+.details-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Last row styling */
+.details-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Make status badges more attractive */
+.table-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.table-status.completed {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.table-status.pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.table-status.in_progress {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+/* Better action buttons */
+.table-action-btn {
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.table-action-btn:hover {
+    color: #1e40af;
+    background-color: #f1f5f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .substage-details-table.active {
+        padding: 12px 8px;
+        overflow-x: auto;
+    }
+    
+    .details-table {
+        font-size: 0.75rem;
+    }
+    
+    .details-table th,
+    .details-table td {
+        padding: 8px 6px;
+    }
+    
+    .substage-toggle-container::before,
+    .substage-toggle-container::after {
+        width: 25%;
+    }
+}
+
+/* Responsive table container */
+.table-responsive {
+    width: 125%;
+    overflow-x: auto;
+}
+
+/* Ensure table doesn't break mobile layout */
+@media (max-width: 768px) {
+    .details-table {
+        min-width: 600px; /* Minimum width to prevent squishing */
+    }
+    
+    .substage-details-table.active {
+        padding: 12px 0;
+    }
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 768px) {
+    .table-responsive {
+        margin: 0 -8px;
+        width: calc(100% + 16px);
+        border-radius: 0;
+    }
+    
+    .details-table {
+        min-width: 600px; /* Prevents squishing on mobile */
+    }
+    
+    .substage-details-table.active {
+        padding: 12px 8px;
+    }
+    
+    .details-table th,
+    .details-table td {
+        padding: 8px 10px;
+        font-size: 0.8125rem;
+    }
+    
+    .table-status {
+        padding: 3px 6px;
+        font-size: 0.6875rem;
+    }
+}
+
+/* Update table action buttons with new icons */
+.table-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.table-action-btn {
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.table-action-btn:hover {
+    color: #1e40af;
+    background-color: #f1f5f9;
+}
+
+/* Specific action button colors on hover */
+.action-view:hover {
+    color: #2563eb; /* Blue */
+}
+
+.action-download:hover {
+    color: #059669; /* Green */
+}
+
+.action-send:hover {
+    color: #6d28d9; /* Purple */
+}
+
+.action-accept:hover {
+    color: #16a34a; /* Green */
+}
+
+.action-reject:hover {
+    color: #dc2626; /* Red */
+}
+
+/* Updated table actions with smaller icons and no send button */
+.table-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.table-action-btn {
+    padding: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.75rem; /* Smaller icon size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Reduced width */
+    height: 24px; /* Reduced height */
+}
+
+.table-action-btn:hover {
+    color: #1e40af;
+    background-color: #f1f5f9;
+}
+
+/* Specific action button colors on hover */
+.action-view:hover {
+    color: #2563eb; /* Blue */
+}
+
+.action-download:hover {
+    color: #059669; /* Green */
+}
+
+.action-accept:hover {
+    color: #16a34a; /* Green */
+}
+
+.action-reject:hover {
+    color: #dc2626; /* Red */
+}
+
+/* Improved responsive behavior for buttons */
+@media (max-width: 768px) {
+    .table-actions {
+        gap: 4px;
+    }
+    
+    .table-action-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 0.65rem;
+    }
+}
+
+/* No changes needed to existing table action button styles */
+.table-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.table-action-btn {
+    padding: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+/* Ensure the first column (Serial Number) is narrower */
+.details-table th:nth-child(1), 
+.details-table td:nth-child(1) { 
+    width: 10%; 
+    text-align: center;
+}
+
+/* File Name column width */
+.details-table th:nth-child(2), 
+.details-table td:nth-child(2) { 
+    width: 20%; 
+}
+
+/* Type column width */
+.details-table th:nth-child(3), 
+.details-table td:nth-child(3) { 
+    width: 10%; 
+}
+
+/* Status column width */
+.details-table th:nth-child(4), 
+.details-table td:nth-child(4) { 
+    width: 20%; 
+}
+
+/* Actions column width */
+.details-table th:nth-child(5), 
+.details-table td:nth-child(5) { 
+    width: 40%; /* Increased from 25% to give more space */
 }

@@ -190,35 +190,367 @@ function createSubstage(stageNum, substageNum) {
     `;
 }
 
-// Define project type specific substage titles
+// Define project type specific substage titles with groups
 const projectSubstageTitles = {
-    architecture: [
-        'Site Analysis',
-        'Concept Design',
-        'Schematic Design',
-        'Design Development',
-        'Construction Documents',
-        'Building Permits',
-        'Construction Administration'
-    ],
-    interior: [
-        'Space Planning',
-        'Material Selection',
-        'Furniture Layout',
-        'Lighting Design',
-        'Color Scheme',
-        'Decor Selection',
-        'Installation Supervision'
-    ],
-    construction: [
-        'Site Preparation',
-        'Foundation Work',
-        'Structural Work',
-        'MEP Installation',
-        'Interior Finishing',
-        'Exterior Finishing',
-        'Quality Inspection'
-    ]
+    architecture: {
+        'Concept Drawings': [
+            'Concept Plan',
+            'PPT',
+            '3D Model'
+        ],
+        'Structure Drawings - All Floor': [
+            'Excavation Layout Plan',
+            'Setting Layout Plan',
+            'Foundation Plan',
+            'Foundation Details',
+            'Column Layout Plan',
+            'Column Details',
+            'Footing Layout Plan',
+            'Column & Setting Layout Plan',
+            'Column & Footing Details',
+            'Plinth Beam Layout Plan',
+            'Basement Roof Slab Beam Layout Plan',
+            'Stilt Roof Slab Beam Layout Plan',
+            'Stilt Floor Roof Slab Beam Layout Plan',
+            'Ground Floor Roof Slab Beam Layout Plan',
+            'First Floor Roof Slab Beam Layout Plan',
+            'Second Floor Roof Slab Beam Layout Plan',
+            'Third Floor Roof Slab Beam Layout Plan',
+            'Fourth Floor Roof Slab Beam Layout Plan',
+            'Fifth Floor Roof Slab Beam Layout Plan',
+            'Terrace Roof Slab Beam Layout Plan',
+            'Basement Roof Slab Beam Layout Plan',
+            'Stilt Roof Slab Beam Layout Plan',
+            'Stilt Floor Roof Slab Beam Layout Plan',
+            'Ground Floor Roof Slab Beam Layout Plan',
+            'First Floor Roof Slab Beam Layout Plan',
+            'Second Floor Roof Slab Beam Layout Plan',
+            'Third Floor Roof Slab Beam Layout Plan',
+            'Fourth Floor Roof Slab Beam Layout Plan',
+            'Fifth Floor Roof Slab Beam Layout Plan',
+            'Terrace Roof Slab Beam Layout Plan',
+            
+        ],
+        'Architecture Working Drawings - All Floor': [
+            'Basement Furniture Layout Plan',
+            'Stilt Floor Furniture Layout Plan',
+            'Ground Floor Furniture Layout Plan',
+            'First Floor Furniture Layout Plan',
+            'Second Floor Furniture Layout Plan',
+            'Third Floor Furniture Layout Plan',
+            'Fourth Floor Furniture Layout Plan',
+            'Fifth Floor Furniture Layout Plan',
+            'Terrace Furniture Layout Plan',
+            'Basement Working Layout Plan',
+            'Stilt Working Layout Plan',
+            'Ground Floor Working Layout Plan',
+            'First Floor Working Layout Plan',
+            'Second Floor Working Layout Plan',
+            'Third Floor Working Layout Plan',
+            'Fourth Floor Working Layout Plan',
+            'Fifth Floor Working Layout Plan',
+            'Terrace Working Layout Plan',
+            'Basement Door & Window Schedule Details',
+            'Stilt Floor Door & Window Schedule Details',
+            'Ground Floor Door & Window Schedule Details',
+            'First Floor Door & Window Schedule Details',
+            'Second Floor Door & Window Schedule Details',
+            'Third Floor Door & Window Schedule Details',
+            'Fourth Floor Door & Window Schedule Details',
+            'Fifth Floor Door & Window Schedule Details',
+            'Terrace Door & Window Schedule Details',
+            'Front Elevation Details',
+            'Side 1 Elevation Details',
+            'Side 2 Elevation Details',
+            'Section Elevations X-X',
+            'Section Elevations Y-Y',
+            'Site Plans'
+        ],
+        'Electrical Drawings - All Floor': [
+            'Basement Wall Electrical Layout',
+            'Stilt Floor Wall Electrical Layout',
+            'Ground Floor Wall Electrical Layout',
+            'First Floor Wall Electrical Layout',
+            'Second Floor Wall Electrical Layout',
+            'Third Floor Wall Electrical Layout',
+            'Fourth Floor Wall Electrical Layout',
+            'Fifth Floor Wall Electrical Layout',
+            'Terrace Wall Electrical Layout'
+        ],
+        'Electrical Drawings - All Floor': [
+            'Basement Wall Electrical Layout',
+            'Stilt Floor Wall Electrical Layout',
+            'Ground Floor Wall Electrical Layout',
+            'First Floor Wall Electrical Layout',
+            'Second Floor Wall Electrical Layout',
+            'Third Floor Wall Electrical Layout',
+            'Fourth Floor Wall Electrical Layout',
+            'Fifth Floor Wall Electrical Layout',
+            'Terrace Wall Electrical Layout'
+        ],
+        'Ceiling Drawings - All Floor': [
+            'Basement Ceiling Layout Plan',
+            'Stilt Floor Ceiling Layout Plan',
+            'Ground Floor Ceiling Layout Plan',
+            'First Floor Ceiling Layout Plan',
+            'Second Floor Ceiling Layout Plan',
+            'Third Floor Ceiling Layout Plan',
+            'Fourth Floor Ceiling Layout Plan',
+            'Fifth Floor Ceiling Layout Plan',
+            'Terrace Ceiling Layout Plan'
+        ],
+        'Plumbing Drawings - All Floor': [
+            'Basement Plumbing Layout Plan',
+            'Stilt Floor Plumbing Layout Plan',
+            'Ground Floor Plumbing Layout Plan',
+            'First Floor Plumbing Layout Plan',
+            'Second Floor Plumbing Layout Plan',
+            'Third Floor Plumbing Layout Plan',
+            'Fourth Floor Plumbing Layout Plan',
+            'Fifth Floor Plumbing Layout Plan',
+            'Terrace Plumbing Layout Plan'
+        ],
+        'Water Supply Drawings - All Floor': [
+            'Basement Water Supply Layout Plan',
+            'Stilt Floor Water Supply Layout Plan',
+            'Ground Floor Water Supply Layout Plan',
+            'First Floor Water Supply Layout Plan',
+            'Second Floor Water Supply Layout Plan',
+            'Third Floor Water Supply Layout Plan',
+            'Fourth Floor Water Supply Layout Plan',
+            'Fifth Floor Water Supply Layout Plan',
+            'Terrace Water Supply Layout Plan'
+        ],
+        'Details Drawings': [
+            'Staircase Details',
+            'Finishing Schedule',
+            'Ramp Details',
+            'Kitchen Details',
+            'Lift Details',
+            'Toilet Details',
+            'Saptic Tank Details',
+            'Compound Wall Details',
+            'Landscape Details',
+            'Slab Details',
+            'Roof Details',
+            'Wall Details',
+            'Floor Details',
+            'Ceiling Details',
+            'Door Details',
+            'Window Details'
+        ],
+        'Other Drawings': [
+            'Site Plan',
+            'Front Elevation',
+            'Rear Elevation',
+            'Side Elevation',
+            'Section Elevation',
+            'Roof Plan',
+            'Floor Plan',
+            'Ceiling Plan',
+            'Door & Window Schedule'
+        ]
+    },
+    interior: {
+        'Concept Design': [
+            'Concept Plan',
+            'PPT',
+            '3D Views',
+            'Render plan Basement',
+            'Render plan Stilt Floor',
+            'Render plan Ground Floor',
+            'Render plan First Floor',
+            'Render plan Second Floor',
+            'Render plan Third Floor',
+            'Render plan Fourth Floor',
+        ],
+        '3D Views': [
+            'Daughters Bed Room',
+            'Sons Bed Room',
+            'Master Bed Room',
+            'Guest Bed Room',
+            'Toilet - 01',
+            'Toilet - 02',
+            'Toilet - 03',
+            'Toilet - 04',
+            'Toilet - 05',
+            'Prayer Room',
+            'Study Room',
+            'Home Theater',
+            'Kitchen',
+            'Dining Room',
+            'Living Room',
+            'GYM / Multi-purpose Room',
+            'Servant Room',
+            'Family Lounge',
+            'Staircase',
+            'Landscape Area',
+            'Recreation Area',
+            'Swimming Pool',
+            'Living & Dining Room',
+            'Living Room',
+            'Dining Room',
+            'Kitchen',
+            'Balcony - 01',
+            'Balcony - 02',
+            'Balcony - 03',
+            'Balcony - 04',
+            'Balcony - 05',
+            'Utility Area',
+            'Mumty False Ceiling Plan',
+            'Mumty',
+            'Front Elevation',
+            'Side 1 Elevation',
+            'Side 2 Elevation',
+            'Section Elevation X-X',
+            'Section Elevation Y-Y',
+            'Entrance Lobby',
+            'Manager Cabin',
+            'Work Station Area - 01',
+            'Work Station Area - 02',
+            'Work Station Area - 03',
+            'Work Station Area - 04',
+            'Work Station Area - 05',
+            'Work Station Area - 06',
+            'Reception Area',
+            'Conference Room',
+            'Meeting Room',
+            'Waiting Area',
+            'Lobby - 01',
+            'Lobby - 02',
+            'Lobby - 03'
+        ],
+        'Flooring Drawings': [
+            'Flooring layout Plan Basement',
+            'Flooring layout Plan Stilt Floor',
+            'Flooring layout Plan Ground Floor',
+            'Flooring layout Plan First Floor',
+            'Flooring layout Plan Second Floor',
+            'Flooring layout Plan Third Floor',
+            'Flooring layout Plan Fourth Floor',
+            'Flooring Layout Plan Fifth Floor',
+            'Flooring layout Plan Terrace',
+        ],
+        'False Ceiling Drawings': [
+            'False Ceiling Layout Plan Basement',
+            'False Ceiling Layout Plan Stilt Floor',
+            'False Ceiling Layout Plan Ground Floor',
+            'False Ceiling Layout Plan First Floor',
+            'False Ceiling Layout Plan Second Floor',
+            'False Ceiling Layout Plan Third Floor',
+            'False Ceiling Layout Plan Fourth Floor',
+            'False Ceiling Layout Plan Fifth Floor',
+            'False Ceiling Layout Plan Terrace',
+            'Master Bed Room False Ceiling',
+            'Daughters Bed Room False Ceiling',
+            'Sons Bed Room False Ceiling',
+            'Guest Bed Room False Ceiling',
+            'Toilet - 01 False Ceiling',
+            'Toilet - 02 False Ceiling',
+            'Toilet - 03 False Ceiling',
+            'Toilet - 04 False Ceiling',
+            'Toilet - 05 False Ceiling',
+            'Prayer Room False Ceiling',
+            'Study Room False Ceiling',
+            'Home Theater False Ceiling',
+            'Kitchen False Ceiling Layout Plan & Section Details',
+            'Dining Room False Ceiling Layout Plan & Section Details',
+            'Living Room False Ceiling Layout Plan & Section Details',
+            'GYM / Multi-purpose Room False Ceiling Layout Plan & Section Details',
+            'Servant Room False Ceiling Layout Plan & Section Details',
+            'Family Lounge False Ceiling Layout Plan & Section Details',
+            'Staircase False Ceiling Layout Plan & Section Details',
+            'Landscape Area False Ceiling Layout Plan & Section Details',
+            'Recreation Area False Ceiling',
+            'Office Space False Ceiling Layout Plan & Section Details',
+            'Conference Room False Ceiling Layout Plan & Section Details',
+            'Meeting Room False Ceiling Layout Plan & Section Details',
+            'Waiting Area False Ceiling Layout Plan & Section Details',
+            'Lobby - 01 False Ceiling Layout Plan & Section Details',
+            'Lobby - 02 False Ceiling Layout Plan & Section Details',
+            'Lobby - 03 False Ceiling Layout Plan & Section Details',
+            'Reception Area False Ceiling Layout Plan & Section Details',
+            'Manager Cabin False Ceiling Layout Plan & Section Details',
+            'Work Station Area - 01 False Ceiling Layout Plan & Section Details',
+            'Work Station Area - 02 False Ceiling Layout Plan & Section Details',
+            'Work Station Area - 03 False Ceiling Layout Plan & Section Details',
+            'Work Station Area - 04 False Ceiling Layout Plan & Section Details',
+            'Work Station Area - 05 False Ceiling Layout Plan & Section Details',
+            
+        ],
+        'Ceiling Drawings': [
+            'Ceiling Layout Plan Basement',
+            'Ceiling Layout Plan Stilt Floor',
+            'Ceiling Layout Plan Ground Floor',
+            'Ceiling Layout Plan First Floor',
+            'Ceiling Layout Plan Second Floor',
+            'Ceiling Layout Plan Third Floor',
+            'Ceiling Layout Plan Fourth Floor',
+            'Ceiling Layout Plan Fifth Floor'
+        ],
+
+        'Electrical Drawings': [
+            'Electrical Layout Plan Basement',
+            'Electrical Layout Plan Stilt Floor',
+            'Electrical Layout Plan Ground Floor',
+            'Electrical Layout Plan First Floor',
+            'Electrical Layout Plan Second Floor',
+            'Electrical Layout Plan Third Floor',
+            'Electrical Layout Plan Fourth Floor',
+            'Electrical Layout Plan Fifth Floor'
+        ],
+        'Plumbing Drawings': [
+            'Plumbing Layout Plan Basement',
+            'Plumbing Layout Plan Stilt Floor',
+            'Plumbing Layout Plan Ground Floor',
+            'Plumbing Layout Plan First Floor',
+            'Plumbing Layout Plan Second Floor',
+            'Plumbing Layout Plan Third Floor',
+            'Plumbing Layout Plan Fourth Floor',
+        ],
+        'Water Supply Drawings': [
+            'Water Supply Layout Plan Basement',
+            'Water Supply Layout Plan Stilt Floor',
+            'Water Supply Layout Plan Ground Floor',
+            'Water Supply Layout Plan First Floor',
+            'Water Supply Layout Plan Second Floor',
+            'Water Supply Layout Plan Third Floor',
+            'Water Supply Layout Plan Fourth Floor',
+            'Water Supply Layout Plan Fifth Floor'
+        ],
+        'Details Drawings': [
+            'Staircase Details',
+            'Finishing Details',
+            'Ramp Details',
+            'Kitchen Details',
+            'Lift Details',
+            'Toilet Details',
+            'Saptic Tank Details',
+            'Compound Wall Details',
+            'Landscape Details',
+            'Slab Details',
+            'Roof Details',
+            'Wall Details',
+            'Floor Details',
+            'Ceiling Details',
+            
+        ]
+    },
+    construction: {
+        'Preparation Phase': [
+            'Site Preparation',
+            'Foundation Work'
+        ],
+        'Construction Phase': [
+            'Structural Work',
+            'MEP Installation'
+        ],
+        'Finishing Phase': [
+            'Interior Finishing',
+            'Exterior Finishing',
+            'Quality Inspection'
+        ]
+    }
 };
 
 // Add a helper function to get user name by ID
@@ -253,10 +585,14 @@ function addSubstage(stageNum) {
     const parentStartDate = document.getElementById(`startDate${stageNum}`).value;
     const parentDueDate = document.getElementById(`dueDate${stageNum}`).value;
 
-    const titleOptions = projectSubstageTitles[projectType] || [];
-    const titleOptionsHtml = titleOptions.map(title => 
-        `<option value="${title}">${title}</option>`
-    ).join('');
+    const titleOptions = projectSubstageTitles[projectType] || {};
+    const titleOptionsHtml = Object.entries(titleOptions).map(([group, titles]) => `
+        <optgroup label="${group}">
+            ${titles.map(title => 
+                `<option value="${title}">${title}</option>`
+            ).join('')}
+        </optgroup>
+    `).join('');
 
     // Update the file attachment section in substage with unique IDs
     const substageFileSection = `
@@ -1110,11 +1446,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const currentValue = titleSelect.value;
                 
                 // Rebuild options
-                const titleOptions = projectSubstageTitles[selectedType] || [];
+                const titleOptions = projectSubstageTitles[selectedType] || {};
                 titleSelect.innerHTML = '<option value="">Select Title</option>' + 
-                    titleOptions.map(title => 
-                        `<option value="${title.toLowerCase().replace(/\s+/g, '-')}">${title}</option>`
-                    ).join('');
+                    Object.entries(titleOptions).map(([group, titles]) => `
+                        <optgroup label="${group}">
+                            ${titles.map(title => 
+                                `<option value="${title.toLowerCase().replace(/\s+/g, '-')}">${title}</option>`
+                            ).join('')}
+                        </optgroup>
+                    `).join('');
                 
                 // Try to maintain selected value if it exists in new options
                 if (currentValue) {

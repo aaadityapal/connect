@@ -2,13 +2,17 @@
 session_start();
 require_once 'config.php';
 
-// Check authentication and HR role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
-    header('Location: login.php');
+// Check authentication and role permissions
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['HR', 'Senior Manager (Studio)'])) {
+    header('Location: unauthorized.php');
     exit();
 }
 
-// Fetch all active employees
+// Add role-based visibility restrictions
+$isHR = $_SESSION['role'] === 'HR';
+$isSeniorManager = $_SESSION['role'] === 'Senior Manager (Studio)';
+
+// Modified query - both HR and Senior Manager can see all employees
 $query = "
     SELECT * FROM users 
     WHERE deleted_at IS NULL 
@@ -713,11 +717,60 @@ foreach ($managers as $manager) {
             font-size: 14px;
             font-weight: 500;
         }
+
+        .role-indicator {
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-hr {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .badge-manager {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        /* Hide edit controls for unauthorized users */
+        .employee-card[data-self="true"] .edit-icon {
+            display: none;
+        }
+
+        .access-note {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Modify the badge-manager style to be more distinct */
+        .badge-manager {
+            background-color: #3b82f6;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Employee Management</h2>
+        <?php if ($isHR): ?>
+        <div class="role-indicator">
+            <span class="badge badge-hr">HR Access</span>
+        </div>
+        <?php elseif ($isSeniorManager): ?>
+        <div class="role-indicator">
+            <span class="badge badge-manager">Studio Manager Access</span>
+            <p class="access-note">View-only access for most operations</p>
+        </div>
+        <?php endif; ?>
 
         <div class="search-bar">
             <input type="text" id="searchInput" class="search-input" 
@@ -733,6 +786,7 @@ foreach ($managers as $manager) {
                         <div class="employee-details">
                             <h3><?php echo htmlspecialchars($employee['username']); ?></h3>
                             <p><?php echo htmlspecialchars($employee['designation']); ?></p>
+                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                             <div class="status-container">
                                 <label class="switch">
                                     <input type="checkbox" 
@@ -745,6 +799,7 @@ foreach ($managers as $manager) {
                                     <?php echo ucfirst(strtolower($employee['status'])); ?>
                                 </span>
                             </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -753,23 +808,33 @@ foreach ($managers as $manager) {
                         <div class="detail-grid">
                             <span class="label">Employee ID:</span>
                             <span class="value"><?php echo htmlspecialchars($employee['unique_id']); ?></span>
+                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                             <i class="fas fa-pencil edit-icon" onclick="editField('unique_id', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['unique_id']); ?>')"></i>
+                            <?php endif; ?>
                             
                             <span class="label">Email:</span>
                             <span class="value"><?php echo htmlspecialchars($employee['email']); ?></span>
+                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                             <i class="fas fa-pencil edit-icon" onclick="editField('email', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['email']); ?>')"></i>
+                            <?php endif; ?>
                             
                             <span class="label">Phone:</span>
                             <span class="value"><?php echo htmlspecialchars($employee['phone']); ?></span>
+                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                             <i class="fas fa-pencil edit-icon" onclick="editField('phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['phone']); ?>')"></i>
+                            <?php endif; ?>
                             
                             <span class="label">DOB:</span>
                             <span class="value"><?php echo $employee['dob'] ? date('d M Y', strtotime($employee['dob'])) : '-'; ?></span>
+                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                             <i class="fas fa-pencil edit-icon" onclick="editField('dob', '<?php echo $employee['id']; ?>', '<?php echo $employee['dob']; ?>')"></i>
+                            <?php endif; ?>
                             
                             <span class="label">Gender:</span>
                             <span class="value"><?php echo htmlspecialchars($employee['gender']); ?></span>
+                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                             <i class="fas fa-pencil edit-icon" onclick="editField('gender', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['gender']); ?>')"></i>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -784,14 +849,18 @@ foreach ($managers as $manager) {
                                     <label>Position</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['position']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('position', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['position']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="info-group" data-field="designation">
                                     <label>Department</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['designation']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('designation', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['designation']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -800,14 +869,18 @@ foreach ($managers as $manager) {
                                     <label>Joining Date</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo $employee['joining_date'] ? date('d M Y', strtotime($employee['joining_date'])) : 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('joining_date', '<?php echo $employee['id']; ?>', '<?php echo $employee['joining_date']; ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="info-group" data-field="reporting_manager">
                                     <label>Reporting To</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['reporting_manager']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('reporting_manager', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['reporting_manager']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -825,7 +898,9 @@ foreach ($managers as $manager) {
                                     <label>Address</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo !empty($employee['address']) ? htmlspecialchars($employee['address']) : ''; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('address', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['address'] ?? ''); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -834,14 +909,18 @@ foreach ($managers as $manager) {
                                     <label>City</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['city']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('city', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['city']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="info-group" data-field="state">
                                     <label>State</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['state']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('state', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['state']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -850,14 +929,18 @@ foreach ($managers as $manager) {
                                     <label>Country</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['country']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('country', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['country']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="info-group" data-field="postal_code">
                                     <label>Postal Code</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['postal_code']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('postal_code', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['postal_code']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -875,14 +958,18 @@ foreach ($managers as $manager) {
                                     <label>Name</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['emergency_contact_name']) ?: 'Not Set'; ?></span>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
                                         <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_name', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_name']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="info-group" data-field="emergency_contact_phone">
                                     <label>Phone</label>
                                     <div class="info-value">
                                         <span class="value-display"><?php echo htmlspecialchars($employee['emergency_contact_phone']) ?: 'Not Set'; ?></span>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_phone']); ?>')"></i>
+                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_phone']); ?>')"></i>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -925,7 +1012,23 @@ foreach ($managers as $manager) {
             window.location.href = `employee-detail.php?id=${employeeId}`;
         }
 
+        // Add role information to JavaScript
+        const userRole = '<?php echo $_SESSION['role']; ?>';
+        const userId = '<?php echo $_SESSION['user_id']; ?>';
+
+        // Modify edit field function to restrict Senior Manager's edit capabilities
         function editField(fieldName, employeeId, currentValue) {
+            if (userRole === 'Senior Manager (Studio)') {
+                // Senior Manager can only edit their direct reports
+                const employeeCard = document.querySelector(`.employee-card[data-employee-id="${employeeId}"]`);
+                const reportingManager = employeeCard.querySelector('[data-field="reporting_manager"] .value-display').textContent;
+                
+                if (reportingManager !== '<?php echo $_SESSION['username']; ?>') {
+                    showNotification('Access Denied', 'You can only edit information for your direct reports.', 'error');
+                    return;
+                }
+            }
+
             const modal = document.getElementById('editModal');
             const fieldInput = document.getElementById('fieldInput');
             document.getElementById('employeeId').value = employeeId;
@@ -1048,6 +1151,17 @@ foreach ($managers as $manager) {
         document.getElementById('editForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+            const employeeId = formData.get('employeeId');
+
+            if (userRole === 'Senior Manager (Studio)') {
+                const employeeCard = document.querySelector(`.employee-card[data-employee-id="${employeeId}"]`);
+                const reportingManager = employeeCard.querySelector('[data-field="reporting_manager"] .value-display').textContent;
+                
+                if (reportingManager !== '<?php echo $_SESSION['username']; ?>') {
+                    showNotification('Access Denied', 'You can only edit information for your direct reports.', 'error');
+                    return;
+                }
+            }
 
             // Show loading state
             const submitButton = this.querySelector('button[type="submit"]');
@@ -1064,7 +1178,6 @@ foreach ($managers as $manager) {
                 if(data.success) {
                     // Get the updated values
                     const fieldName = formData.get('fieldName');
-                    const employeeId = formData.get('employeeId');
                     const newValue = data.newValue || formData.get('value');
 
                     // Find the specific employee card and value element
@@ -1152,7 +1265,13 @@ foreach ($managers as $manager) {
 
         // Add event listener for status toggles
         document.querySelectorAll('.status-toggle').forEach(toggle => {
-            toggle.addEventListener('change', function() {
+            toggle.addEventListener('change', function(e) {
+                if (userRole !== 'HR') {
+                    e.preventDefault();
+                    this.checked = !this.checked;
+                    showNotification('Access Denied', 'Only HR can change employee status.', 'error');
+                    return;
+                }
                 const employeeId = this.dataset.employeeId;
                 const newStatus = this.checked ? 'active' : 'inactive';
                 const statusText = this.parentElement.nextElementSibling;
@@ -1192,6 +1311,35 @@ foreach ($managers as $manager) {
                     showNotification('Error', error.message, 'error');
                 });
             });
+        });
+
+        // Add a function to check if an employee is a direct report
+        function isDirectReport(employeeId) {
+            const employeeCard = document.querySelector(`.employee-card[data-employee-id="${employeeId}"]`);
+            const reportingManager = employeeCard.querySelector('[data-field="reporting_manager"] .value-display').textContent;
+            return reportingManager === '<?php echo $_SESSION['username']; ?>';
+        }
+
+        // Update UI elements based on permissions
+        document.addEventListener('DOMContentLoaded', function() {
+            if (userRole === 'Senior Manager (Studio)') {
+                document.querySelectorAll('.employee-card').forEach(card => {
+                    const employeeId = card.dataset.employeeId;
+                    const isDirectReportEmployee = isDirectReport(employeeId);
+                    
+                    // Hide edit icons for non-direct reports
+                    if (!isDirectReportEmployee) {
+                        card.querySelectorAll('.edit-icon').forEach(icon => {
+                            icon.style.display = 'none';
+                        });
+                    }
+                    
+                    // Hide status toggles for all employees
+                    card.querySelectorAll('.status-toggle').forEach(toggle => {
+                        toggle.parentElement.style.display = 'none';
+                    });
+                });
+            }
         });
     </script>
 </body>

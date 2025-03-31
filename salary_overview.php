@@ -19,35 +19,14 @@ function getDayNumber($dayName) {
     return $days[strtolower($dayName)] ?? null;
 }
 
-// Main query
-$query = "SELECT 
-    u.id, 
-    u.username, 
-    u.base_salary as monthly_salary,
-    (
-        SELECT 
-            DAY(LAST_DAY(?)) - 
-            (
-                SELECT COUNT(*)
-                FROM (
-                    SELECT DATE_ADD(?, INTERVAL n-1 DAY) as date
-                    FROM (
-                        SELECT 1 AS n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-                        UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
-                        UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15
-                        UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
-                        UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25
-                        UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30
-                        UNION SELECT 31
-                    ) numbers
-                    WHERE n <= DAY(LAST_DAY(?))
-                ) dates
-                LEFT JOIN user_shifts us ON us.user_id = u.id 
-                    AND us.effective_from <= dates.date
-                    AND (us.effective_to IS NULL OR us.effective_to >= dates.date)
-                LEFT JOIN office_holidays oh ON dates.date = oh.holiday_date
-                WHERE DAYOFWEEK(dates.date) = CAST(
-                    CASE LOWER(us.weekly_offs)
+// First, let's separate the working days calculation into a separate function
+function calculateWorkingDays($conn, $month_start, $month_end) {
+    $query = "SELECT 
+        us.user_id,
+        DAY(LAST_DAY(?)) - COUNT(DISTINCT CASE 
+            WHEN DAYOFWEEK(dates.date) IN (
+                SELECT CAST(
+                    CASE LOWER(TRIM(weekly_offs))
                         WHEN 'monday' THEN 2
                         WHEN 'tuesday' THEN 3
                         WHEN 'wednesday' THEN 4
@@ -56,296 +35,198 @@ $query = "SELECT
                         WHEN 'saturday' THEN 7
                         WHEN 'sunday' THEN 1
                     END AS UNSIGNED
-                )
-                OR oh.holiday_date IS NOT NULL
+                ) FROM user_shifts us2
+                WHERE us2.user_id = us.user_id
+                AND us2.effective_from <= dates.date
+                AND (us2.effective_to IS NULL OR us2.effective_to >= dates.date)
+            ) OR dates.date IN (
+                SELECT holiday_date 
+                FROM office_holidays 
+                WHERE holiday_date BETWEEN ? AND ?
             )
-    ) as total_working_days,
-    COUNT(DISTINCT CASE 
-        WHEN a.status = 'present' 
+            THEN dates.date
+        END) as working_days
+    FROM (
+        SELECT DATE_ADD(?, INTERVAL n-1 DAY) as date
+        FROM (
+            SELECT @row := @row + 1 as n
+            FROM (SELECT 0 UNION ALL SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) t1,
+                 (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4) t2,
+                 (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2) t3,
+                 (SELECT @row:=0) r
+        ) numbers
+        WHERE n <= DAY(LAST_DAY(?))
+    ) dates
+    CROSS JOIN user_shifts us
+    WHERE us.effective_from <= dates.date
+    AND (us.effective_to IS NULL OR us.effective_to >= dates.date)
+    GROUP BY us.user_id";
+    
+    $stmt = $conn->prepare($query);
+    if (!$stmt) {
+        error_log("Prepare failed: " . $conn->error);
+        return [];
+    }
+    
+    $stmt->bind_param('sssss', $month_start, $month_start, $month_end, $month_start, $month_start);
+    
+    if (!$stmt->execute()) {
+        error_log("Execute failed: " . $stmt->error);
+        return [];
+    }
+    
+    $result = $stmt->get_result();
+    if (!$result) {
+        error_log("Result fetch failed: " . $stmt->error);
+        return [];
+    }
+    
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+// Add at the beginning of the file
+function getCachedData($key) {
+    $cache_file = "cache/{$key}.json";
+    if (file_exists($cache_file) && (time() - filemtime($cache_file) < 3600)) { // 1 hour cache
+        return json_decode(file_get_contents($cache_file), true);
+    }
+    return null;
+}
+
+function setCachedData($key, $data) {
+    if (!is_dir('cache')) {
+        mkdir('cache', 0777, true);
+    }
+    file_put_contents("cache/{$key}.json", json_encode($data));
+}
+
+// Add this before the cache key definition
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+// Then the cache key
+$cache_key = "salary_overview_{$selected_month}_page_{$page}";
+$users = getCachedData($cache_key);
+
+if ($users === null) {
+    // First, get the working days calculation
+    $working_days_result = calculateWorkingDays($conn, $month_start, $month_end);
+
+    // Create a temporary table to store working days
+    $create_temp_table = "CREATE TEMPORARY TABLE temp_working_days (
+        user_id int,
+        working_days int
+    )";
+    $conn->query($create_temp_table);
+
+    // Insert the working days data into temporary table
+    $insert_temp = "INSERT INTO temp_working_days (user_id, working_days) VALUES (?, ?)";
+    $stmt_insert = $conn->prepare($insert_temp);
+    foreach ($working_days_result as $wd) {
+        $stmt_insert->bind_param('ii', $wd['user_id'], $wd['working_days']);
+        $stmt_insert->execute();
+    }
+
+    // Now modify the main query to use the temporary table
+    $query = "SELECT 
+        u.id, 
+        u.username, 
+        u.base_salary as monthly_salary,
+        COALESCE(wd.working_days, 0) as total_working_days,
+        COUNT(DISTINCT CASE WHEN a.status = 'present' THEN DATE(a.date) END) as present_days,
+        COALESCE(l.leave_count, 0) as leave_taken,
+        COALESCE(sl.short_leave_count, 0) as short_leave,
+        COALESCE(late.late_count, 0) as late,
+        COALESCE(ot.total_hours, '0:00') as overtime_hours,
+        COALESCE(s.travel_amount, 0) as travel_amount,
+        COALESCE(s.misc_amount, 0) as misc_amount
+    FROM users u
+    LEFT JOIN temp_working_days wd ON u.id = wd.user_id
+    LEFT JOIN attendance a ON u.id = a.user_id 
         AND DATE(a.date) BETWEEN ? AND ?
-        THEN DATE(a.date) 
-    END) as present_days,
-    (
-        SELECT COUNT(*)
-        FROM leave_request lr
-        WHERE lr.user_id = u.id
-        AND lr.status = 'approved'
-        AND lr.hr_approval = 'approved'
-        AND (
-            (lr.start_date BETWEEN ? AND ?)
-            OR (lr.end_date BETWEEN ? AND ?)
-            OR (lr.start_date <= ? AND lr.end_date >= ?)
-        )
-    ) as leave_taken,
-    (
-        SELECT COUNT(*)
+    LEFT JOIN (
+        SELECT user_id, COUNT(*) as leave_count
+        FROM leave_request
+        WHERE status = 'approved' AND hr_approval = 'approved'
+        AND ((start_date BETWEEN ? AND ?) OR (end_date BETWEEN ? AND ?))
+        GROUP BY user_id
+    ) l ON u.id = l.user_id
+    LEFT JOIN (
+        SELECT user_id, COUNT(*) as short_leave_count
         FROM leave_request lr
         JOIN leave_types lt ON lr.leave_type = lt.id
-        WHERE lr.user_id = u.id
-        AND lr.status = 'approved'
-        AND lr.hr_approval = 'approved'
+        WHERE lr.status = 'approved' AND lr.hr_approval = 'approved'
         AND (lt.name LIKE '%short%' OR lt.name LIKE '%half%')
-        AND (
-            (DATE(lr.start_date) BETWEEN ? AND ?)
-            OR (DATE(lr.end_date) BETWEEN ? AND ?)
-            OR (DATE(lr.start_date) <= ? AND DATE(lr.end_date) >= ?)
-        )
-    ) as short_leave,
-    (
-        SELECT COUNT(*)
+        AND ((start_date BETWEEN ? AND ?) OR (end_date BETWEEN ? AND ?))
+        GROUP BY user_id
+    ) sl ON u.id = sl.user_id
+    LEFT JOIN (
+        SELECT att.user_id, COUNT(*) as late_count
         FROM attendance att
-        JOIN user_shifts us_late ON us_late.user_id = att.user_id
-            AND us_late.effective_from <= DATE(att.date)
-            AND (us_late.effective_to IS NULL OR us_late.effective_to >= DATE(att.date))
-        JOIN shifts s ON s.id = us_late.shift_id
-        WHERE att.user_id = u.id
-            AND DATE(att.date) BETWEEN ? AND ?
-            AND att.status = 'present'
-            AND TIME(att.punch_in) > ADDTIME(TIME(s.start_time), '00:15:00')
-    ) as late,
-    (
+        JOIN user_shifts us ON us.user_id = att.user_id
+        JOIN shifts s ON s.id = us.shift_id
+        WHERE DATE(att.date) BETWEEN ? AND ?
+        AND att.status = 'present'
+        AND TIME(att.punch_in) > ADDTIME(TIME(s.start_time), '00:15:00')
+        GROUP BY att.user_id
+    ) late ON u.id = late.user_id
+    LEFT JOIN (
         SELECT 
-            COALESCE(
-                CONCAT(
-                    FLOOR(SUM(TIME_TO_SEC(overtime_hours))/3600),
-                    ':',
-                    LPAD(
-                        FLOOR(MOD(SUM(TIME_TO_SEC(overtime_hours)), 3600)/60),
-                        2,
-                        '0'
-                    )
-                ),
-                '0:00'
-            )
-        FROM attendance 
-        WHERE user_id = u.id
-        AND DATE(date) BETWEEN ? AND ?
-        AND status = 'present'
-    ) as overtime_hours,
-    ROUND((u.base_salary / (
-        SELECT 
-            DAY(LAST_DAY(?)) - 
-            (
-                SELECT COUNT(*)
-                FROM (
-                    SELECT DATE_ADD(?, INTERVAL n-1 DAY) as date
-                    FROM (
-                        SELECT 1 AS n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-                        UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
-                        UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15
-                        UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
-                        UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25
-                        UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30
-                        UNION SELECT 31
-                    ) numbers
-                    WHERE n <= DAY(LAST_DAY(?))
-                ) dates
-                LEFT JOIN user_shifts us2 ON us2.user_id = u.id 
-                    AND us2.effective_from <= dates.date
-                    AND (us2.effective_to IS NULL OR us2.effective_to >= dates.date)
-                LEFT JOIN office_holidays oh ON dates.date = oh.holiday_date
-                WHERE DAYOFWEEK(dates.date) = CAST(
-                    CASE LOWER(us2.weekly_offs)
-                        WHEN 'monday' THEN 2
-                        WHEN 'tuesday' THEN 3
-                        WHEN 'wednesday' THEN 4
-                        WHEN 'thursday' THEN 5
-                        WHEN 'friday' THEN 6
-                        WHEN 'saturday' THEN 7
-                        WHEN 'sunday' THEN 1
-                    END AS UNSIGNED
-                )
-                OR oh.holiday_date IS NOT NULL
-            )
-    )) * COUNT(DISTINCT 
-        CASE 
-            WHEN a.status = 'present' 
-            AND DATE(a.date) BETWEEN ? AND ?
-            THEN DATE(a.date) 
-        END
-    ), 2) as salary_amount,
-    ROUND(
-        (
-            (u.base_salary / (
-                SELECT 
-                    DAY(LAST_DAY(?)) - 
-                    (
-                        SELECT COUNT(*)
-                        FROM (
-                            SELECT DATE_ADD(?, INTERVAL n-1 DAY) as date
-                            FROM (
-                                SELECT 1 AS n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-                                UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
-                                UNION SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15
-                                UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
-                                UNION SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25
-                                UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30
-                                UNION SELECT 31
-                            ) numbers
-                            WHERE n <= DAY(LAST_DAY(?))
-                        ) dates
-                        LEFT JOIN user_shifts us2 ON us2.user_id = u.id 
-                            AND us2.effective_from <= dates.date
-                            AND (us2.effective_to IS NULL OR us2.effective_to >= dates.date)
-                        LEFT JOIN office_holidays oh ON dates.date = oh.holiday_date
-                        WHERE DAYOFWEEK(dates.date) = CAST(
-                            CASE LOWER(us2.weekly_offs)
-                                WHEN 'monday' THEN 2
-                                WHEN 'tuesday' THEN 3
-                                WHEN 'wednesday' THEN 4
-                                WHEN 'thursday' THEN 5
-                                WHEN 'friday' THEN 6
-                                WHEN 'saturday' THEN 7
-                                WHEN 'sunday' THEN 1
-                            END AS UNSIGNED
-                        )
-                        OR oh.holiday_date IS NOT NULL
-                    )
-            )) / TIMESTAMPDIFF(HOUR, sh.start_time, sh.end_time)
-        ) * 
-        TIME_TO_SEC(
-            CASE 
-                WHEN TIME_TO_SEC(
-                    (
-                        SELECT CONCAT(
-                            FLOOR(SUM(
-                                CASE 
-                                    WHEN TIME_TO_SEC(att2.overtime_hours) >= (90 * 60)
-                                    THEN TIME_TO_SEC(att2.overtime_hours)
-                                    ELSE 0 
-                                END
-                            )/3600),
-                            ':',
-                            LPAD(FLOOR(MOD(
-                                SUM(
-                                    CASE 
-                                        WHEN TIME_TO_SEC(att2.overtime_hours) >= (90 * 60)
-                                        THEN TIME_TO_SEC(att2.overtime_hours)
-                                        ELSE 0 
-                                    END
-                                ), 3600)/60), 2, '0')
-                        )
-                        FROM attendance att2
-                        WHERE att2.user_id = u.id
-                        AND DATE(att2.date) BETWEEN ? AND ?
-                        AND att2.status = 'present'
-                    )
-                ) >= (90 * 60)
-                THEN (
-                    SELECT CONCAT(
-                        FLOOR(SUM(
-                            CASE 
-                                WHEN TIME_TO_SEC(att3.overtime_hours) >= (90 * 60)
-                                THEN TIME_TO_SEC(att3.overtime_hours)
-                                ELSE 0 
-                            END
-                        )/3600),
-                        ':',
-                        LPAD(FLOOR(MOD(
-                            SUM(
-                                CASE 
-                                    WHEN TIME_TO_SEC(att3.overtime_hours) >= (90 * 60)
-                                    THEN TIME_TO_SEC(att3.overtime_hours)
-                                    ELSE 0 
-                                END
-                            ), 3600)/60), 2, '0')
-                    )
-                    FROM attendance att3
-                    WHERE att3.user_id = u.id
-                    AND DATE(att3.date) BETWEEN ? AND ?
-                    AND att3.status = 'present'
-                )
-                ELSE '00:00'
-            END
-        ) / 3600, 2
-    ) as overtime_amount,
-    COALESCE(s.travel_amount, 0) as travel_amount,
-    COALESCE(s.misc_amount, 0) as misc_amount
-    FROM users u
+            user_id,
+            SEC_TO_TIME(SUM(TIME_TO_SEC(overtime_hours))) as total_hours
+        FROM attendance
+        WHERE DATE(date) BETWEEN ? AND ?
+        AND overtime_hours IS NOT NULL
+        GROUP BY user_id
+    ) ot ON u.id = ot.user_id
     LEFT JOIN salary_details s ON u.id = s.user_id 
         AND DATE_FORMAT(s.month_year, '%Y-%m') = ?
-    LEFT JOIN attendance a ON u.id = a.user_id
-    LEFT JOIN user_shifts us ON u.id = us.user_id 
-        AND us.effective_from <= ?
-        AND (us.effective_to IS NULL OR us.effective_to >= ?)
-    LEFT JOIN shifts sh ON us.shift_id = sh.id
-    WHERE u.deleted_at IS NULL 
-    AND u.status = 'active'
-    GROUP BY u.id, u.username, u.base_salary
-    ORDER BY u.username";
+    WHERE u.deleted_at IS NULL AND u.status = 'active'
+    GROUP BY u.id, u.username, u.base_salary";
 
-$stmt = $conn->prepare($query);
-if (!$stmt) {
-    echo "Prepare failed: (" . $conn->errno . ") " . $conn->error;
+    // Add pagination
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = 50; // Number of records per page
+    $offset = ($page - 1) * $limit;
+    $query .= " LIMIT ? OFFSET ?";
+
+    // Execute the query with pagination
+    $stmt = $conn->prepare($query);
+    if (!$stmt) {
+        throw new Exception("Query preparation failed: " . $conn->error);
+    }
+
+    $stmt->bind_param('sssssssssssssssii', 
+        $month_start, $month_end,                  // attendance date range
+        $month_start, $month_end,                  // leave request start date range
+        $month_start, $month_end,                  // leave request end date range
+        $month_start, $month_end,                  // short leave start date range
+        $month_start, $month_end,                  // short leave end date range
+        $month_start, $month_end,                  // late attendance date range
+        $month_start, $month_end,                  // overtime date range
+        $selected_month,                           // salary details month
+        $limit, $offset                            // pagination
+    );
+
+    try {
+        if (!$stmt->execute()) {
+            throw new Exception("Query execution failed: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        if (!$result) {
+            throw new Exception("Result fetch failed: " . $stmt->error);
+        }
+        
+        $users = $result->fetch_all(MYSQLI_ASSOC);
+        setCachedData($cache_key, $users);
+    } catch (Exception $e) {
+        error_log("Salary Overview Error: " . $e->getMessage());
+        die("An error occurred while processing the salary data. Please try again later.");
+    }
+
+    // Drop the temporary table after use
+    $conn->query("DROP TEMPORARY TABLE IF EXISTS temp_working_days");
 }
-
-// First define the params array
-$params = [
-    // Working days calculation (3 params)
-    $month_start,                   // 1. LAST_DAY(?)
-    $month_start,                   // 2. DATE_ADD(?, INTERVAL...)
-    $month_start,                   // 3. DAY(LAST_DAY(?))
-    
-    // Present days (2 params)
-    $month_start, $month_end,       // 4,5. BETWEEN ? AND ?
-    
-    // Leave taken (6 params)
-    $month_start, $month_end,       // 6,7. start_date BETWEEN
-    $month_start, $month_end,       // 8,9. end_date BETWEEN
-    $month_start, $month_end,       // 10,11. span check
-    
-    // Short leave (6 params)
-    $month_start, $month_end,       // 12,13. start_date BETWEEN
-    $month_start, $month_end,       // 14,15. end_date BETWEEN
-    $month_start, $month_end,       // 16,17. span check
-    
-    // Late count (2 params)
-    $month_start, $month_end,       // 18,19. DATE(att.date) BETWEEN
-    
-    // First overtime working days (3 params)
-    $month_start,                   // 20. LAST_DAY(?)
-    $month_start,                   // 21. DATE_ADD(?, INTERVAL...)
-    $month_start,                   // 22. DAY(LAST_DAY(?))
-    
-    // First overtime subquery (2 params)
-    $month_start, $month_end,       // 23,24. DATE(att2.date) BETWEEN
-    
-    // Second overtime subquery (2 params)
-    $month_start, $month_end,       // 25,26. DATE(att3.date) BETWEEN
-    
-    // Second overtime working days (3 params)
-    $month_start,                   // 27. LAST_DAY(?)
-    $month_start,                   // 28. DATE_ADD(?, INTERVAL...)
-    $month_start,                   // 29. DAY(LAST_DAY(?))
-    
-    // Present days for salary (2 params)
-    $month_start, $month_end,       // 30,31. BETWEEN ? AND ?
-    
-    // Third overtime subquery (2 params)
-    $month_start, $month_end,       // 32,33. DATE(att3.date) BETWEEN
-    
-    // Salary details (1 param)
-    $selected_month,                // 34. DATE_FORMAT(...) = ?
-    
-    // User shifts join (2 params)
-    $month_start, $month_end        // 35,36. effective_from <= ? AND effective_to >= ?
-];
-
-// Create the type string dynamically
-$types = str_repeat('s', count($params));
-
-// Convert params array to references as required by bind_param
-$bindParams = array($types);
-foreach ($params as $key => $value) {
-    $bindParams[] = &$params[$key];
-}
-
-// Call bind_param using call_user_func_array
-call_user_func_array(array($stmt, 'bind_param'), $bindParams);
-
-$stmt->execute();
-$result = $stmt->get_result();
-$users = $result->fetch_all(MYSQLI_ASSOC);
 
 // Function to update present days in salary_details
 function updatePresentDays($conn, $userId, $monthYear, $presentDays) {
@@ -834,6 +715,34 @@ function getWeeklyOffs($conn, $userId, $date) {
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
         }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -861,6 +770,11 @@ function getWeeklyOffs($conn, $userId, $date) {
                 Export
             </button>
         </div>
+    </div>
+
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading salary data...</p>
     </div>
 
     <table>
@@ -920,9 +834,11 @@ function getWeeklyOffs($conn, $userId, $date) {
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const datePicker = document.querySelector('.date-picker');
-
+        const loadingOverlay = document.getElementById('loading-overlay');
+        
         // Month picker change
         datePicker.addEventListener('change', function() {
+            loadingOverlay.style.display = 'flex';
             window.location.href = 'salary_overview.php?month=' + this.value;
         });
 
@@ -969,6 +885,11 @@ function getWeeklyOffs($conn, $userId, $date) {
 
         // Initialize working days on page load
         updateWorkingDays();
+
+        // Show loading state when changing month
+        datePicker.addEventListener('change', function() {
+            loadingOverlay.style.display = 'flex';
+        });
     });
 
     // Add these functions to your existing JavaScript

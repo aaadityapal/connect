@@ -12,11 +12,22 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Define allowed roles
+$allowed_roles = ['HR', 'Senior Manager (Studio)'];
+$has_access = (in_array($_SESSION['role'], $allowed_roles) || isset($_SESSION['temp_admin_access']));
+
+if (!$has_access) {
+    header('Location: unauthorized.php');
+    exit();
+}
+
+// Update the is_hr variable to include Senior Manager access
+$is_hr = ($_SESSION['role'] === 'HR' || $_SESSION['role'] === 'Senior Manager (Studio)' || isset($_SESSION['temp_admin_access']));
+
 // Set default filter values
 $month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
 $user_id = isset($_GET['user_id']) ? $_GET['user_id'] : $_SESSION['user_id'];
 $show_all = ($is_hr && $user_id === 'all');
-$is_hr = ($_SESSION['role'] === 'HR' || isset($_SESSION['temp_admin_access']));
 
 // Fetch users for HR view
 $users = [];
@@ -65,17 +76,33 @@ $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $records = $stmt->fetchAll();
 
-// Calculate monthly totals
+// Add this new function to calculate valid overtime
+function calculateValidOvertime($overtime_hours) {
+    if (empty($overtime_hours)) return '00:00:00';
+    
+    // Convert overtime to decimal if it's in HH:MM:SS format
+    $overtime_decimal = is_numeric($overtime_hours) ? 
+        $overtime_hours : 
+        convertTimeToDecimal($overtime_hours);
+    
+    // Only count overtime if it's >= 1.5 hours (1 hour 30 minutes)
+    return $overtime_decimal >= 1.5 ? $overtime_hours : '00:00:00';
+}
+
+// Update the monthly totals calculation
 $total_working_hours = 0;
 $total_overtime = 0;
 foreach ($records as $record) {
+    // Calculate working hours
     $total_working_hours += is_numeric($record['working_hours']) ? 
         $record['working_hours'] : 
         convertTimeToDecimal($record['working_hours']);
     
-    $total_overtime += is_numeric($record['overtime_hours']) ? 
-        $record['overtime_hours'] : 
-        convertTimeToDecimal($record['overtime_hours']);
+    // Calculate valid overtime (≥ 1.5 hours)
+    $valid_overtime = calculateValidOvertime($record['overtime_hours']);
+    $total_overtime += is_numeric($valid_overtime) ? 
+        $valid_overtime : 
+        convertTimeToDecimal($valid_overtime);
 }
 
 // Add this helper function
@@ -506,10 +533,11 @@ function formatDecimalToTime($timeString) {
                                 $record['working_hours'] : 
                                 convertTimeToDecimal($record['working_hours']);
                             
-                            // Convert overtime if needed
-                            $overtime = is_numeric($record['overtime_hours']) ? 
-                                $record['overtime_hours'] : 
-                                convertTimeToDecimal($record['overtime_hours']);
+                            // Calculate valid overtime
+                            $valid_overtime = calculateValidOvertime($record['overtime_hours']);
+                            $overtime = is_numeric($valid_overtime) ? 
+                                $valid_overtime : 
+                                convertTimeToDecimal($valid_overtime);
                             
                             $dept_summary[$dept]['working_hours'] += $working_hours;
                             $dept_summary[$dept]['overtime'] += $overtime;
@@ -608,7 +636,8 @@ function formatDecimalToTime($timeString) {
                         <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
                         <td><?php echo formatHoursAndMinutes($record['working_hours']); ?></td>
                         <td><?php 
-                            echo isset($record['overtime_hours']) ? $record['overtime_hours'] : '00:00:00';
+                            $valid_overtime = calculateValidOvertime($record['overtime_hours']);
+                            echo $valid_overtime !== '00:00:00' ? formatDecimalToTime($valid_overtime) : '-';
                         ?></td>
                         <td>
                             <span class="status-badge <?php echo strtolower($record['status']); ?>">

@@ -2452,13 +2452,47 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add these functions after the showProjectDetailsModal function
 
     async function viewFile(filePath) {
-        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
-        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
+        try {
+            // Extract file ID from the file path
+            const fileId = filePath.split('/').pop(); // Get the filename
+            const actualFileId = fileId.split('_')[0]; // Get the ID part before the first underscore
+            
+            // Open in new tab with proper error handling
+            const viewUrl = `file_handler.php?action=view&file_id=${actualFileId}`;
+            const newWindow = window.open(viewUrl, '_blank');
+            
+            if (newWindow === null) {
+                // If popup was blocked, show notification
+                showNotification('Error', 'Please allow popups to view files', 'error');
+            }
+        } catch (error) {
+            console.error('Error viewing file:', error);
+            showNotification('Error', 'Failed to view file', 'error');
+        }
     }
 
     async function downloadFile(filePath) {
-        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
-        window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
+        try {
+            // Extract file ID from the file path
+            const fileId = filePath.split('/').pop(); // Get the filename
+            const actualFileId = fileId.split('_')[0]; // Get the ID part before the first underscore
+            
+            // Create a temporary anchor element
+            const link = document.createElement('a');
+            link.href = `file_handler.php?action=download&file_id=${actualFileId}`;
+            link.setAttribute('download', ''); // This will force download rather than navigation
+            
+            // Append to body, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show success notification
+            showNotification('Success', 'File download started', 'success');
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            showNotification('Error', 'Failed to download file', 'error');
+        }
     }
 
     async function updateFileStatus(fileId, status) {
@@ -2764,16 +2798,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                 </td>
                 <td class="table-actions">
-                    <button class="table-action-btn action-view" title="View details" onclick="viewFile('${file.file_path}')">
+                    <button class="table-action-btn action-view" 
+                        title="View details" 
+                        onclick="viewFile('${file.id}')" type="button">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="table-action-btn action-download" title="Download" onclick="downloadFile('${file.file_path}')">
+                    <button class="table-action-btn action-download" 
+                        title="Download" 
+                        onclick="downloadFile('${file.id}')" type="button">
                         <i class="fas fa-download"></i>
                     </button>
-                    <button class="table-action-btn action-accept" title="Accept" onclick="updateFileStatus(${file.id}, 'approved')">
+                    <button class="table-action-btn action-accept" 
+                        title="Accept" 
+                        onclick="updateFileStatus(${file.id}, 'approved')" type="button">
                         <i class="fas fa-check"></i>
                     </button>
-                    <button class="table-action-btn action-reject" title="Reject" onclick="updateFileStatus(${file.id}, 'rejected')">
+                    <button class="table-action-btn action-reject" 
+                        title="Reject" 
+                        onclick="updateFileStatus(${file.id}, 'rejected')" type="button">
                         <i class="fas fa-times"></i>
                     </button>
                 </td>

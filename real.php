@@ -39,33 +39,21 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </a>
                 </li>
                 <li>
-                    <a href="#">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="sidebar-text">Sales</span>
+                    <a href="leave.php">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="sidebar-text">Leaves</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="employee.php">
                         <i class="fas fa-users"></i>
-                        <span class="sidebar-text">Customers</span>
+                        <span class="sidebar-text">Employees</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
                         <i class="fas fa-box"></i>
-                        <span class="sidebar-text">Products</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-file-invoice"></i>
-                        <span class="sidebar-text">Invoices</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span class="sidebar-text">Orders</span>
+                        <span class="sidebar-text">Projects</span>
                     </a>
                 </li>
             </ul>
@@ -78,9 +66,22 @@ error_log("Session Data: " . print_r($_SESSION, true));
                 <li>
                     <a href="#">
                         <i class="fas fa-chart-line"></i>
-                        <span class="sidebar-text">Reports</span>
+                        <span class="sidebar-text"> Employee Reports</span>
                     </a>
                 </li>
+                <li>
+                    <a href="work_report.php">
+                        <i class="fas fa-file-invoice"></i>
+                        <span class="sidebar-text"> Work Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="attendance_report.php">
+                        <i class="fas fa-clock"></i>
+                        <span class="sidebar-text"> Attendance Reports</span>
+                    </a>
+                </li>
+                
             </ul>
             
             <div class="sidebar-header">
@@ -89,7 +90,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
             
             <ul class="sidebar-menu">
                 <li>
-                    <a href="#">
+                    <a href="profile.php">
                         <i class="fas fa-user"></i>
                         <span class="sidebar-text">Profile</span>
                     </a>

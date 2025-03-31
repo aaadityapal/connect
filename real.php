@@ -405,12 +405,12 @@ error_log("Session Data: " . print_r($_SESSION, true));
                         
                         <!-- Center: Toggle Switch -->
                         <div class="project-view-toggle">
-                            <span class="toggle-label active" id="projectViewStatusLabel">By Status</span>
+                            <span class="toggle-label active" id="projectViewStatusLabel">Quick View</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="projectViewToggleSwitch">
                                 <span class="toggle-slider"></span>
                             </label>
-                            <span class="toggle-label" id="projectViewDeptLabel">By Department</span>
+                            <span class="toggle-label" id="projectViewDeptLabel">Calendar View</span>
                         </div>
                         
                         <!-- Right side: Date Filter -->

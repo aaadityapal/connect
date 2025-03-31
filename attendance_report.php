@@ -207,6 +207,7 @@ function formatDecimalToTime($timeString) {
     <title>Attendance Report</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -423,28 +424,95 @@ function formatDecimalToTime($timeString) {
         }
 
         .filters-container {
-            background: #f8f9fa;
+            background: white;
             padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
         }
 
-        .filters-container label {
-            display: block;
-            margin-bottom: 5px;
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-item label {
             font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
         }
 
-        .filters-container select,
-        .filters-container input {
+        .form-control {
             width: 100%;
-            margin-bottom: 10px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .button-container {
+            display: flex;
+            align-items: flex-end;
         }
 
         @media (max-width: 768px) {
-            .filters-container .row > div {
-                margin-bottom: 15px;
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
             }
+
+            .button-container {
+                margin-top: 10px;
+            }
+
+            .btn-primary {
+                width: 100%;
+            }
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .chart-container {
+            height: 400px;  /* Fixed height for both containers */
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .chart-container canvas {
+            max-height: 350px;  /* Leave space for title */
         }
     </style>
 </head>
@@ -452,16 +520,16 @@ function formatDecimalToTime($timeString) {
     <div class="container">
         <h2>Attendance Report</h2>
 
-        <div class="filters-container mb-4">
-            <form method="GET" class="form-inline">
-                <div class="row align-items-end">
-                    <div class="col-md-3">
+        <div class="filters-container">
+            <form method="GET">
+                <div class="filters-grid">
+                    <div class="filter-item">
                         <label for="month">Select Month:</label>
                         <input type="month" id="month" name="month" class="form-control" 
                                value="<?php echo htmlspecialchars($month); ?>">
                     </div>
                     
-                    <div class="col-md-3">
+                    <div class="filter-item">
                         <label for="user_filter">Select Employee:</label>
                         <select name="user_id" id="user_filter" class="form-control">
                             <?php if ($is_hr): ?>
@@ -477,7 +545,7 @@ function formatDecimalToTime($timeString) {
                         </select>
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="filter-item button-container">
                         <button type="submit" class="btn btn-primary">Apply Filters</button>
                     </div>
                 </div>
@@ -497,6 +565,21 @@ function formatDecimalToTime($timeString) {
                 <div class="summary-item">
                     <h3>Days Present</h3>
                     <p><?php echo count($records); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="summary-card chart-container">
+                    <h3>Working Hours Trend</h3>
+                    <canvas id="workingHoursChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="summary-card chart-container">
+                    <h3>Overtime Distribution</h3>
+                    <canvas id="overtimePieChart"></canvas>
                 </div>
             </div>
         </div>
@@ -667,6 +750,127 @@ function formatDecimalToTime($timeString) {
                 });
             });
         });
+    </script>
+
+    <script>
+    // Prepare data for charts
+    <?php
+        // Data for Working Hours Line Chart
+        $dates = [];
+        $workingHours = [];
+        $overtimeHours = [];
+        
+        // Create a reversed copy of records for chronological order
+        $chronological_records = array_reverse($records);
+        
+        foreach ($chronological_records as $record) {
+            $dates[] = date('d M', strtotime($record['date']));
+            $workingHours[] = is_numeric($record['working_hours']) ? 
+                $record['working_hours'] : 
+                convertTimeToDecimal($record['working_hours']);
+            
+            $valid_overtime = calculateValidOvertime($record['overtime_hours']);
+            $overtimeHours[] = convertTimeToDecimal($valid_overtime);
+        }
+        
+        // Data for Overtime Pie Chart
+        $overtime_distribution = [
+            'No Overtime' => 0,
+            '1.5-2 Hours' => 0,
+            '2-3 Hours' => 0,
+            '3+ Hours' => 0
+        ];
+        
+        foreach ($records as $record) {
+            $overtime = convertTimeToDecimal($record['overtime_hours']);
+            if ($overtime < 1.5) {
+                $overtime_distribution['No Overtime']++;
+            } elseif ($overtime <= 2) {
+                $overtime_distribution['1.5-2 Hours']++;
+            } elseif ($overtime <= 3) {
+                $overtime_distribution['2-3 Hours']++;
+            } else {
+                $overtime_distribution['3+ Hours']++;
+            }
+        }
+    ?>
+
+    // Working Hours Line Chart
+    const workingHoursChart = new Chart(
+        document.getElementById('workingHoursChart'),
+        {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode($dates); ?>,
+                datasets: [
+                    {
+                        label: 'Working Hours',
+                        data: <?php echo json_encode($workingHours); ?>,
+                        borderColor: '#007bff',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Overtime Hours',
+                        data: <?php echo json_encode($overtimeHours); ?>,
+                        borderColor: '#dc3545',
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,  // Allow chart to fill container
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Daily Working Hours and Overtime Trend'
+                    }
+                }
+            }
+        }
+    );
+
+    // Overtime Distribution Pie Chart
+    const overtimePieChart = new Chart(
+        document.getElementById('overtimePieChart'),
+        {
+            type: 'pie',
+            data: {
+                labels: <?php echo json_encode(array_keys($overtime_distribution)); ?>,
+                datasets: [{
+                    data: <?php echo json_encode(array_values($overtime_distribution)); ?>,
+                    backgroundColor: [
+                        '#6c757d',
+                        '#28a745',
+                        '#ffc107',
+                        '#dc3545'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,  // Allow chart to fill container
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Overtime Distribution'
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        }
+    );
     </script>
 </body>
 </html>         

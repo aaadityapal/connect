@@ -2195,6 +2195,28 @@ if ($user_data && isset($user_data['shift_id'])) {
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
+        .role-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .role-badge.project-owner {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .role-badge.stage-owner {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .role-badge.substage-owner {
+            background-color: #FF9800;
+            color: white;
+        }
+
     </style>
     <!-- Add this in the head section or before closing body tag -->
     </style>
@@ -2746,22 +2768,27 @@ if ($user_data && isset($user_data['shift_id'])) {
                         <div class="kanban-cards-container">
                             <?php
                             // Query to get pending and not started projects for the current user
-                            $todo_query = "SELECT p.*, 
-                                          COUNT(DISTINCT ps.id) as total_stages,
-                                          COUNT(DISTINCT pss.id) as total_substages,
-                                          u.username as creator_name
-                                   FROM projects p
-                                   LEFT JOIN project_stages ps ON p.id = ps.project_id
-                                   LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                                   LEFT JOIN users u ON p.created_by = u.id
-                                   WHERE p.assigned_to = ? 
-                                   AND p.status IN ('pending', 'not_started')
-                                   AND p.deleted_at IS NULL
-                                   GROUP BY p.id
-                                   ORDER BY p.created_at DESC";
+                            $todo_query = "SELECT DISTINCT 
+                                p.*, 
+                                COUNT(DISTINCT ps.id) as total_stages,
+                                COUNT(DISTINCT pss.id) as total_substages,
+                                u.username as creator_name
+                            FROM projects p
+                            LEFT JOIN project_stages ps ON p.id = ps.project_id
+                            LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                            LEFT JOIN users u ON p.created_by = u.id
+                            WHERE (
+                                p.assigned_to = ? 
+                                OR ps.assigned_to = ?
+                                OR pss.assigned_to = ?
+                            )
+                            AND p.status IN ('pending', 'not_started')
+                            AND p.deleted_at IS NULL
+                            GROUP BY p.id
+                            ORDER BY p.created_at DESC";
                             
                             $stmt = $conn->prepare($todo_query);
-                            $stmt->bind_param("i", $user_id);
+                            $stmt->bind_param("iii", $user_id, $user_id, $user_id);
                             $stmt->execute();
                             $todo_result = $stmt->get_result();
 
@@ -2785,6 +2812,11 @@ if ($user_data && isset($user_data['shift_id'])) {
                                             <span class="meta-status <?php echo $project['status']; ?>">
                                                 <?php echo ucfirst($project['status']); ?>
                                             </span>
+                                            <?php if (isset($project['role_type'])): ?>
+                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $project['role_type'])); ?>">
+                                                    <?php echo $project['role_type']; ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                         
                                         <h4 class="task-title"><?php echo htmlspecialchars($project['title']); ?></h4>
@@ -2850,14 +2882,18 @@ if ($user_data && isset($user_data['shift_id'])) {
                                             LEFT JOIN project_stages ps ON p.id = ps.project_id
                                             LEFT JOIN project_substages pss ON ps.id = pss.stage_id
                                             LEFT JOIN users u ON p.created_by = u.id
-                                            WHERE p.assigned_to = ? 
+                                            WHERE (
+                                                p.assigned_to = ? 
+                                                OR ps.assigned_to = ?
+                                                OR pss.assigned_to = ?
+                                            )
                                             AND p.deleted_at IS NULL
                                             AND (ps.status = 'in_progress' OR pss.status = 'in_progress')
                                             GROUP BY p.id
                                             ORDER BY p.updated_at DESC";
                             
                             $stmt = $conn->prepare($progress_query);
-                            $stmt->bind_param("i", $user_id);
+                            $stmt->bind_param("iii", $user_id, $user_id, $user_id);
                             $stmt->execute();
                             $progress_result = $stmt->get_result();
 
@@ -2883,6 +2919,11 @@ if ($user_data && isset($user_data['shift_id'])) {
                                                 </span>
                                             </div>
                                             <span class="meta-status in_progress">In Progress</span>
+                                            <?php if (isset($project['role_type'])): ?>
+                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $project['role_type'])); ?>">
+                                                    <?php echo $project['role_type']; ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                         
                                         <h4 class="task-title"><?php echo htmlspecialchars($project['title']); ?></h4>
@@ -2946,30 +2987,39 @@ if ($user_data && isset($user_data['shift_id'])) {
                         <div class="kanban-cards-container">
                             <?php
                             // Query to get substages in review status
-                            $review_query = "SELECT 
-                                                p.id as project_id,
-                                                p.title as project_title,
-                                                p.project_type,
-                                                ps.id as stage_id,
-                                                ps.stage_number,
-                                                pss.id as substage_id,
-                                                pss.title as substage_title,
-                                                pss.substage_number,
-                                                pss.end_date,
-                                                u.username as reviewer_name
-                                            FROM project_substages pss
-                                            JOIN project_stages ps ON pss.stage_id = ps.id
-                                            JOIN projects p ON ps.project_id = p.id
-                                            LEFT JOIN users u ON pss.assigned_to = u.id
-                                            WHERE pss.status = 'in_review'
-                                            AND pss.assigned_to = ?
-                                            AND p.deleted_at IS NULL
-                                            AND ps.deleted_at IS NULL
-                                            AND pss.deleted_at IS NULL
-                                            ORDER BY pss.updated_at DESC";
+                            $review_query = "SELECT DISTINCT
+                                p.id as project_id,
+                                p.title as project_title,
+                                p.project_type,
+                                ps.id as stage_id,
+                                ps.stage_number,
+                                ps.assigned_to as stage_assigned_to,
+                                pss.id as substage_id,
+                                pss.title as substage_title,
+                                pss.substage_number,
+                                pss.end_date,
+                                pss.assigned_to as substage_assigned_to,
+                                u.username as reviewer_name,
+                                CASE 
+                                    WHEN p.assigned_to = ? THEN 'Project Owner'
+                                    WHEN ps.assigned_to = ? THEN 'Stage Owner'
+                                    WHEN pss.assigned_to = ? THEN 'Substage Owner'
+                                END as role_type
+                            FROM project_substages pss
+                            JOIN project_stages ps ON pss.stage_id = ps.id
+                            JOIN projects p ON ps.project_id = p.id
+                            LEFT JOIN users u ON pss.assigned_to = u.id
+                            WHERE (
+                                p.assigned_to = ? 
+                                OR ps.assigned_to = ?
+                                OR pss.assigned_to = ?
+                            )
+                            AND pss.status = 'in_review'
+                            AND p.deleted_at IS NULL
+                            ORDER BY pss.updated_at DESC";
                             
                             $stmt = $conn->prepare($review_query);
-                            $stmt->bind_param("i", $user_id);
+                            $stmt->bind_param("iiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
                             $stmt->execute();
                             $review_result = $stmt->get_result();
 
@@ -2989,6 +3039,11 @@ if ($user_data && isset($user_data['shift_id'])) {
                                                 </span>
                                             </div>
                                             <span class="meta-status in_review">In Review</span>
+                                            <?php if (isset($substage['role_type'])): ?>
+                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $substage['role_type'])); ?>">
+                                                    <?php echo $substage['role_type']; ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                         
                                         <h4 class="task-title">
@@ -3042,29 +3097,33 @@ if ($user_data && isset($user_data['shift_id'])) {
                         <div class="kanban-cards-container">
                             <?php
                             // Query to get completed projects where all stages and substages are completed
-                            $done_query = "SELECT 
-                                            p.*,
-                                            COUNT(DISTINCT ps.id) as total_stages,
-                                            COUNT(DISTINCT pss.id) as total_substages,
-                                            COUNT(DISTINCT CASE WHEN ps.status = 'completed' THEN ps.id END) as completed_stages,
-                                            COUNT(DISTINCT CASE WHEN pss.status = 'completed' THEN pss.id END) as completed_substages,
-                                            u.username as creator_name,
-                                            MAX(GREATEST(ps.updated_at, pss.updated_at)) as last_completed_at
-                                        FROM projects p
-                                        LEFT JOIN project_stages ps ON p.id = ps.project_id AND ps.deleted_at IS NULL
-                                        LEFT JOIN project_substages pss ON ps.id = pss.stage_id AND pss.deleted_at IS NULL
-                                        LEFT JOIN users u ON p.created_by = u.id
-                                        WHERE p.assigned_to = ?
-                                        AND p.deleted_at IS NULL
-                                        GROUP BY p.id
-                                        HAVING 
-                                            (total_stages = completed_stages AND total_stages > 0)
-                                            AND (total_substages = completed_substages AND total_substages > 0)
-                                        ORDER BY last_completed_at DESC
-                                        LIMIT 10"; // Limiting to most recent 10 completed projects
+                            $done_query = "SELECT DISTINCT
+                                p.*,
+                                COUNT(DISTINCT ps.id) as total_stages,
+                                COUNT(DISTINCT pss.id) as total_substages,
+                                COUNT(DISTINCT CASE WHEN ps.status = 'completed' THEN ps.id END) as completed_stages,
+                                COUNT(DISTINCT CASE WHEN pss.status = 'completed' THEN pss.id END) as completed_substages,
+                                u.username as creator_name,
+                                MAX(GREATEST(ps.updated_at, pss.updated_at)) as last_completed_at
+                            FROM projects p
+                            LEFT JOIN project_stages ps ON p.id = ps.project_id
+                            LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                            LEFT JOIN users u ON p.created_by = u.id
+                            WHERE (
+                                p.assigned_to = ? 
+                                OR ps.assigned_to = ?
+                                OR pss.assigned_to = ?
+                            )
+                            AND p.deleted_at IS NULL
+                            GROUP BY p.id
+                            HAVING 
+                                (total_stages = completed_stages AND total_stages > 0)
+                                AND (total_substages = completed_substages AND total_substages > 0)
+                            ORDER BY last_completed_at DESC
+                            LIMIT 10"; // Limiting to most recent 10 completed projects
                             
                             $stmt = $conn->prepare($done_query);
-                            $stmt->bind_param("i", $user_id);
+                            $stmt->bind_param("iii", $user_id, $user_id, $user_id);
                             $stmt->execute();
                             $done_result = $stmt->get_result();
 
@@ -3084,6 +3143,11 @@ if ($user_data && isset($user_data['shift_id'])) {
                                                 </span>
                                             </div>
                                             <span class="meta-status completed">Completed</span>
+                                            <?php if (isset($project['role_type'])): ?>
+                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $project['role_type'])); ?>">
+                                                    <?php echo $project['role_type']; ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                         
                                         <h4 class="task-title"><?php echo htmlspecialchars($project['title']); ?></h4>

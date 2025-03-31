@@ -102,7 +102,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="manager_settings.php">
                         <i class="fas fa-cog"></i>
                         <span class="sidebar-text">Settings</span>
                     </a>

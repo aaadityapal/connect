@@ -2016,19 +2016,31 @@ async function getStagesData() {
     
     for (let i = 0; i < stageBlocks.length; i++) {
         const stageBlock = stageBlocks[i];
-        const stageNum = i + 1;
+        const stageNum = stageBlock.dataset.stage; // Use the correct stage number from dataset
         
         // Get existing stage ID if it exists
         const stageId = stageBlock.dataset.stageId || null;
         console.log(`Processing stage ${stageNum}, ID:`, stageId);
         
+        // Add null checks for all element selections
+        const assignToElement = document.getElementById(`assignTo${stageNum}`);
+        const startDateElement = document.getElementById(`startDate${stageNum}`);
+        const dueDateElement = document.getElementById(`dueDate${stageNum}`);
+        
+        // Debug logs
+        console.log('Elements found:', {
+            assignTo: assignToElement,
+            startDate: startDateElement,
+            dueDate: dueDateElement
+        });
+        
         const stageData = {
             id: stageId,
-            stage_number: stageNum,
-            assignTo: document.getElementById(`assignTo${stageBlock.dataset.stage}`).value,
-            startDate: document.getElementById(`startDate${stageBlock.dataset.stage}`).value,
-            dueDate: document.getElementById(`dueDate${stageBlock.dataset.stage}`).value,
-            files: await getStageFiles(stageBlock.dataset.stage),
+            stage_number: parseInt(stageNum),
+            assignTo: assignToElement ? assignToElement.value : null,
+            startDate: startDateElement ? startDateElement.value : null,
+            dueDate: dueDateElement ? dueDateElement.value : null,
+            files: await getStageFiles(stageNum),
             substages: []
         };
         
@@ -2043,15 +2055,29 @@ async function getStagesData() {
             
             console.log(`Processing substage ${substageNum}, ID:`, substageId);
             
+            // Add null checks for substage elements
+            const titleElement = document.getElementById(`substageTitle${stageNum}_${substageNum}`);
+            const substageAssignElement = document.getElementById(`substageAssignTo${stageNum}_${substageNum}`);
+            const substageStartElement = document.getElementById(`substageStartDate${stageNum}_${substageNum}`);
+            const substageDueElement = document.getElementById(`substageDueDate${stageNum}_${substageNum}`);
+            
+            // Debug logs for substage elements
+            console.log('Substage elements found:', {
+                title: titleElement,
+                assign: substageAssignElement,
+                start: substageStartElement,
+                due: substageDueElement
+            });
+            
             const substageData = {
                 id: substageId,
                 substage_number: j + 1,
                 stage_id: stageId,
-                title: document.getElementById(`substageTitle${stageBlock.dataset.stage}_${substageNum}`).value,
-                assignTo: document.getElementById(`substageAssignTo${stageBlock.dataset.stage}_${substageNum}`).value,
-                startDate: document.getElementById(`substageStartDate${stageBlock.dataset.stage}_${substageNum}`).value,
-                dueDate: document.getElementById(`substageDueDate${stageBlock.dataset.stage}_${substageNum}`).value,
-                files: await getSubstageFiles(stageBlock.dataset.stage, substageNum)
+                title: titleElement ? titleElement.value : null,
+                assignTo: substageAssignElement ? substageAssignElement.value : null,
+                startDate: substageStartElement ? substageStartElement.value : null,
+                dueDate: substageDueElement ? substageDueElement.value : null,
+                files: await getSubstageFiles(stageNum, substageNum)
             };
             
             stageData.substages.push(substageData);

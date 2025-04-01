@@ -113,7 +113,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
             <div class="sidebar-footer">
                 <ul class="sidebar-menu">
                     <li>
-                        <a href="#" class="logout-btn">
+                        <a href="logout.php" class="logout-btn">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="sidebar-text">Logout</span>
                         </a>

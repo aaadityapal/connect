@@ -2217,10 +2217,235 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: white;
         }
 
+        /* Include CSS and JS dependencies */
+        <link rel="stylesheet" href="assets/css/task-overview.css">
+        <!-- Add custom styles for scrollable dropdowns -->
+        <style>
+            .year-dropdown,
+            .month-dropdown {
+                max-height: 250px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+            }
+            
+            .year-dropdown::-webkit-scrollbar,
+            .month-dropdown::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            .year-dropdown::-webkit-scrollbar-track,
+            .month-dropdown::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+            
+            .year-dropdown::-webkit-scrollbar-thumb,
+            .month-dropdown::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 10px;
+            }
+            
+            .year-dropdown::-webkit-scrollbar-thumb:hover,
+            .month-dropdown::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
     </style>
-    <!-- Add this in the head section or before closing body tag -->
     </style>
-    <!-- Add this in the head section or before closing body tag -->
+    
+    <!-- Add CSS for kanban filters -->
+    <style>
+        /* Year and Month Filter Styles */
+        .year-filter, .month-filter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .year-filter:hover, .month-filter:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+        
+        .year-dropdown, .month-dropdown {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            min-width: 150px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+            overflow-y: auto;
+            max-height: 250px;
+            display: none;
+        }
+        
+        /* Add scrollbar styling for dropdowns */
+        .year-dropdown::-webkit-scrollbar,
+        .month-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .year-dropdown::-webkit-scrollbar-track,
+        .month-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .year-dropdown::-webkit-scrollbar-thumb,
+        .month-dropdown::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .year-dropdown::-webkit-scrollbar-thumb:hover,
+        .month-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .year-option, .month-option {
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .year-option:hover, .month-option:hover {
+            background: #f1f5f9;
+        }
+        
+        .year-option.selected, .month-option.selected {
+            background: #e0e7ff;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+        
+        /* Error notification styles */
+        .filter-error-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 9999;
+            max-width: 400px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .filter-error-notification i {
+            font-size: 1.2rem;
+            color: #dc3545;
+        }
+        
+        .filter-error-notification span {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .close-notification {
+            background: none;
+            border: none;
+            color: #721c24;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .close-notification:hover {
+            opacity: 1;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Loading state for kanban columns */
+        .kanban-column.loading .kanban-cards-container {
+            position: relative;
+            min-height: 100px;
+        }
+        
+        .kanban-column.loading .kanban-cards-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .kanban-column.loading .kanban-cards-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            z-index: 11;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* Improved empty state styling */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 15px;
+            text-align: center;
+            color: #94a3b8;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+        
+        .empty-state p {
+            font-size: 0.9rem;
+            margin: 0;
+        }
+    </style>
+    
+    <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -2807,8 +3032,8 @@ if ($user_data && isset($user_data['shift_id'])) {
                         <div class="year-dropdown" id="yearDropdown">
                             <?php
                             $current_year = intval(date('Y'));
-                            // Show 5 years back and 2 years forward
-                            for ($year = $current_year - 5; $year <= $current_year + 2; $year++) {
+                            // Show 5 years back and 5 years forward
+                            for ($year = $current_year - 5; $year <= $current_year + 5; $year++) {
                                 $selected = ($year == $current_year) ? ' selected' : '';
                                 echo "<div class='year-option{$selected}' data-year='{$year}'>{$year}</div>";
                             }
@@ -3635,7 +3860,623 @@ if ($user_data && isset($user_data['shift_id'])) {
     setInterval(updateCurrentTime, 1000);
     </script>
     
-   
+    <!-- Add Kanban Board Filter Functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const yearFilter = document.getElementById('yearFilter');
+        const monthFilter = document.getElementById('monthFilter');
+        const yearDropdown = document.getElementById('yearDropdown');
+        const monthDropdown = document.getElementById('monthDropdown');
+        const projectCards = document.querySelectorAll('.kanban-card');
+        
+        // State - Initialize to current year and current month
+        const currentDate = new Date();
+        let selectedYear = currentDate.getFullYear().toString();
+        let selectedMonth = currentDate.getMonth().toString(); // Current month (0-indexed)
+        
+        // Update the initial display of filters to show current month
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        yearFilter.querySelector('span').textContent = selectedYear;
+        monthFilter.querySelector('span').textContent = monthNames[parseInt(selectedMonth)];
+        
+        // Set initial selections in dropdowns
+        document.querySelectorAll('.year-option').forEach(option => {
+            option.classList.remove('selected');
+            if (option.getAttribute('data-year') === selectedYear) {
+                option.classList.add('selected');
+            }
+        });
+        
+        document.querySelectorAll('.month-option').forEach(option => {
+            option.classList.remove('selected');
+            if (option.getAttribute('data-month') === selectedMonth) {
+                option.classList.add('selected');
+            }
+        });
+        
+        // Toggle dropdowns
+        yearFilter.addEventListener('click', function(e) {
+            e.stopPropagation();
+            yearDropdown.style.display = yearDropdown.style.display === 'block' ? 'none' : 'block';
+            monthDropdown.style.display = 'none';
+        });
+        
+        monthFilter.addEventListener('click', function(e) {
+            e.stopPropagation();
+            monthDropdown.style.display = monthDropdown.style.display === 'block' ? 'none' : 'block';
+            yearDropdown.style.display = 'none';
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function() {
+            yearDropdown.style.display = 'none';
+            monthDropdown.style.display = 'none';
+        });
+        
+        // Prevent dropdown from closing when clicking inside
+        yearDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        monthDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Year selection
+        document.querySelectorAll('.year-option').forEach(option => {
+            option.addEventListener('click', function() {
+                selectedYear = this.getAttribute('data-year');
+                yearFilter.querySelector('span').textContent = selectedYear;
+                
+                // Update selected class
+                document.querySelectorAll('.year-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                
+                // Hide dropdown
+                yearDropdown.style.display = 'none';
+                
+                // Apply filters
+                applyFilters();
+            });
+        });
+        
+        // Month selection
+        document.querySelectorAll('.month-option').forEach(option => {
+            option.addEventListener('click', function() {
+                selectedMonth = this.getAttribute('data-month');
+                
+                // Update display text
+                if (selectedMonth === 'all') {
+                    monthFilter.querySelector('span').textContent = 'All Months';
+                } else {
+                    monthFilter.querySelector('span').textContent = monthNames[parseInt(selectedMonth)];
+                }
+                
+                // Update selected class
+                document.querySelectorAll('.month-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                
+                // Hide dropdown
+                monthDropdown.style.display = 'none';
+                
+                // Apply filters
+                applyFilters();
+            });
+        });
+        
+        // Apply filters to cards
+        function applyFilters() {
+            // Show loading state
+            const columns = document.querySelectorAll('.kanban-column');
+            columns.forEach(column => {
+                column.classList.add('loading');
+            });
+            
+            // Add debugging message
+            console.log(`Applying filters - Year: ${selectedYear}, Month: ${selectedMonth}`);
+            
+            // Ensure the path is correct (fix for relative URL issues)
+            const apiUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/get_filtered_tasks.php';
+            console.log('API URL:', apiUrl);
+            
+            // Simulate loading (can be removed in production)
+            setTimeout(() => {
+                // Send AJAX request to get filtered data
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        year: selectedYear,
+                        month: selectedMonth
+                    })
+                })
+                .then(response => {
+                    console.log('Server response status:', response.status);
+                    // Check if the response is ok
+                    if (!response.ok) {
+                        console.error('Server returned error:', response.status);
+                        // Show error notification to user
+                        showErrorNotification('Failed to filter tasks. Using client-side filtering instead.');
+                        filterClientSide();
+                        return null;
+                    }
+                    return response.json().catch(error => {
+                        console.error('Error parsing JSON:', error);
+                        showErrorNotification('Error parsing server response. Using client-side filtering instead.');
+                        filterClientSide();
+                        return null;
+                    });
+                })
+                .then(data => {
+                    if (data) {
+                        console.log('Received filtered data:', data);
+                        
+                        // Check if we got data or an error message
+                        if (data.error) {
+                            console.error('Server returned error:', data.error);
+                            showErrorNotification('Error filtering tasks: ' + data.error);
+                            filterClientSide();
+                        } else {
+                            try {
+                                // Add debug check to validate data structure
+                                validateResponseData(data);
+                                
+                                // Update the DOM with server-side filtered data
+                                updateKanbanWithData(data);
+                            } catch (error) {
+                                console.error('Error processing data:', error);
+                                showErrorNotification(error.message);
+                                filterClientSide();
+                            }
+                        }
+                    }
+                    
+                    // Remove loading state
+                    columns.forEach(column => {
+                        column.classList.remove('loading');
+                    });
+                })
+                .catch(error => {
+                    console.error('Error applying filters:', error);
+                    showErrorNotification('Error filtering tasks. Using client-side filtering instead.');
+                    
+                    // Fallback to client-side filtering
+                    filterClientSide();
+                    
+                    // Remove loading state
+                    columns.forEach(column => {
+                        column.classList.remove('loading');
+                    });
+                });
+            }, 300);
+        }
+        
+        // Validate the response data structure
+        function validateResponseData(data) {
+            if (!data) {
+                throw new Error('No data received from server');
+            }
+            
+            // Check if all required sections exist
+            if (!data.todo || !Array.isArray(data.todo)) {
+                console.error('Missing or invalid todo data:', data.todo);
+                throw new Error('Invalid data structure: todo section missing');
+            }
+            
+            if (!data.in_progress || !Array.isArray(data.in_progress)) {
+                console.error('Missing or invalid in_progress data:', data.in_progress);
+                throw new Error('Invalid data structure: in_progress section missing');
+            }
+            
+            if (!data.in_review || !Array.isArray(data.in_review)) {
+                console.error('Missing or invalid in_review data:', data.in_review);
+                throw new Error('Invalid data structure: in_review section missing');
+            }
+            
+            if (!data.done || !Array.isArray(data.done)) {
+                console.error('Missing or invalid done data:', data.done);
+                throw new Error('Invalid data structure: done section missing');
+            }
+            
+            console.log('Data validation passed');
+        }
+        
+        // Helper function to show error notification
+        function showErrorNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'filter-error-notification';
+            notification.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+                <button class="close-notification"><i class="fas fa-times"></i></button>
+            `;
+            
+            // Add to the page
+            document.body.appendChild(notification);
+            
+            // Add event listener to close button
+            notification.querySelector('.close-notification').addEventListener('click', () => {
+                notification.remove();
+            });
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Temporary client-side filtering until backend is implemented
+        function filterClientSide() {
+            projectCards.forEach(card => {
+                const dateElement = card.querySelector('.meta-date span');
+                if (!dateElement) {
+                    card.style.display = 'block';
+                    return;
+                }
+                
+                const dateText = dateElement.textContent;
+                let cardDate;
+                
+                try {
+                    // Try to parse the date from the card
+                    // Format could be "Due: Mar 15" or "Completed: Mar 15"
+                    const datePart = dateText.split(':')[1].trim();
+                    const fullDate = datePart + ', ' + selectedYear;
+                    cardDate = new Date(fullDate);
+                    
+                    // If invalid date, show the card
+                    if (isNaN(cardDate.getTime())) {
+                        card.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Check if year matches
+                    const cardYear = cardDate.getFullYear().toString();
+                    const yearMatches = cardYear === selectedYear;
+                    
+                    // Check if month matches (or if all months selected)
+                    const cardMonth = cardDate.getMonth().toString();
+                    const monthMatches = selectedMonth === 'all' || cardMonth === selectedMonth;
+                    
+                    // Show or hide based on filters
+                    card.style.display = (yearMatches && monthMatches) ? 'block' : 'none';
+                    
+                } catch (e) {
+                    // If there's any error parsing, show the card
+                    card.style.display = 'block';
+                }
+            });
+            
+            // Check for empty columns after filtering
+            checkEmptyStates();
+        }
+        
+        // Check and display empty states for columns with no visible cards
+        function checkEmptyStates() {
+            document.querySelectorAll('.kanban-column').forEach(column => {
+                const cards = column.querySelectorAll('.kanban-card');
+                const visibleCards = Array.from(cards).filter(card => card.style.display !== 'none');
+                const emptyStateEl = column.querySelector('.empty-state');
+                
+                if (visibleCards.length === 0) {
+                    if (!emptyStateEl) {
+                        // Create empty state if it doesn't exist
+                        const emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state';
+                        
+                        const icon = document.createElement('i');
+                        icon.className = getEmptyStateIcon(column);
+                        
+                        const text = document.createElement('p');
+                        text.textContent = 'No tasks for selected filters';
+                        
+                        emptyState.appendChild(icon);
+                        emptyState.appendChild(text);
+                        
+                        column.querySelector('.kanban-cards-container').appendChild(emptyState);
+                    } else {
+                        emptyStateEl.style.display = 'flex';
+                    }
+                } else if (emptyStateEl) {
+                    emptyStateEl.style.display = 'none';
+                }
+            });
+        }
+        
+        // Helper to get appropriate icon for empty state based on column
+        function getEmptyStateIcon(column) {
+            const headerText = column.querySelector('.column-title').textContent.toLowerCase();
+            
+            if (headerText.includes('to do')) return 'fas fa-clipboard-list';
+            if (headerText.includes('progress')) return 'fas fa-tasks';
+            if (headerText.includes('review')) return 'fas fa-clipboard-check';
+            if (headerText.includes('done')) return 'fas fa-check-circle';
+            
+            return 'fas fa-clipboard-list';
+        }
+        
+        // Function to update the kanban board with server-side filtered data
+        function updateKanbanWithData(data) {
+            // Process each section of the kanban board
+            updateColumn('todo', data.todo);
+            updateColumn('in_progress', data.in_progress);
+            updateColumn('in_review', data.in_review);
+            updateColumn('done', data.done);
+        }
+        
+        // Helper function to update a single column with new data
+        function updateColumn(columnType, items) {
+            // Find the correct column
+            let columnIndex;
+            switch(columnType) {
+                case 'todo': columnIndex = 0; break;
+                case 'in_progress': columnIndex = 1; break;
+                case 'in_review': columnIndex = 2; break;
+                case 'done': columnIndex = 3; break;
+                default: return;
+            }
+            
+            const column = document.querySelectorAll('.kanban-column')[columnIndex];
+            const container = column.querySelector('.kanban-cards-container');
+            
+            // Clear existing cards
+            container.innerHTML = '';
+            
+            // If no items, show empty state
+            if (items.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                
+                const icon = document.createElement('i');
+                icon.className = getEmptyStateIcon(column);
+                
+                const text = document.createElement('p');
+                text.textContent = 'No tasks for selected filters';
+                
+                emptyState.appendChild(icon);
+                emptyState.appendChild(text);
+                
+                container.appendChild(emptyState);
+                return;
+            }
+            
+            // Create and append cards based on the column type
+            items.forEach(item => {
+                let cardHTML = '';
+                
+                if (columnType === 'todo') {
+                    cardHTML = `
+                        <div class="kanban-card project-card" 
+                             data-project-id="${item.id}"
+                             data-project-type="${item.project_type.toLowerCase()}">
+                            <div class="card-tags">
+                                <div class="tag-container">
+                                    <span class="card-tag tag-${item.project_type.toLowerCase()}">
+                                        ${item.project_type}
+                                    </span>
+                                </div>
+                                <span class="meta-status ${item.status}">
+                                    ${item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                </span>
+                                ${item.role_type ? 
+                                    `<span class="role-badge ${item.role_type.toLowerCase().replace(' ', '-')}">
+                                        ${item.role_type}
+                                    </span>` : ''}
+                            </div>
+                            
+                            <h4 class="task-title">${item.title}</h4>
+                            <p class="task-description">
+                                ${item.description.length > 100 ? 
+                                    item.description.substring(0, 100) + '...' : 
+                                    item.description}
+                            </p>
+                            <div class="project-stats">
+                                <span class="stat-item">
+                                    <i class="fas fa-layer-group"></i>
+                                    ${item.total_stages} Stages
+                                </span>
+                                <span class="stat-item">
+                                    <i class="fas fa-tasks"></i>
+                                    ${item.total_substages} Substages
+                                </span>
+                            </div>
+                            <div class="card-meta">
+                                <span class="meta-date">
+                                    <i class="far fa-calendar"></i>
+                                    Due: ${item.due_date}
+                                </span>
+                                <span class="meta-assigned">
+                                    <i class="far fa-user"></i>
+                                    By: ${item.creator_name}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                } else if (columnType === 'in_progress') {
+                    cardHTML = `
+                        <div class="kanban-card project-card" 
+                             data-project-id="${item.id}"
+                             data-project-type="${item.project_type.toLowerCase()}">
+                            <div class="card-tags">
+                                <div class="tag-container">
+                                    <span class="card-tag tag-${item.project_type.toLowerCase()}">
+                                        ${item.project_type}
+                                    </span>
+                                </div>
+                                <span class="meta-status in_progress">In Progress</span>
+                                ${item.role_type ? 
+                                    `<span class="role-badge ${item.role_type.toLowerCase().replace(' ', '-')}">
+                                        ${item.role_type}
+                                    </span>` : ''}
+                            </div>
+                            
+                            <h4 class="task-title">${item.title}</h4>
+                            <p class="task-description">
+                                ${item.description.length > 100 ? 
+                                    item.description.substring(0, 100) + '...' : 
+                                    item.description}
+                            </p>
+                            
+                            <div class="task-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${item.progress_percentage}%"></div>
+                                </div>
+                                <span class="progress-text">${item.progress_percentage}%</span>
+                            </div>
+                            
+                            <div class="project-stats">
+                                <span class="stat-item">
+                                    <i class="fas fa-layer-group"></i>
+                                    ${item.in_progress_stages}/${item.total_stages} Stages
+                                </span>
+                                <span class="stat-item">
+                                    <i class="fas fa-tasks"></i>
+                                    ${item.in_progress_substages}/${item.total_substages} Substages
+                                </span>
+                            </div>
+                            
+                            <div class="card-meta">
+                                <span class="meta-date">
+                                    <i class="far fa-calendar"></i>
+                                    Due: ${item.due_date}
+                                </span>
+                                <span class="meta-assigned">
+                                    <i class="far fa-user"></i>
+                                    By: ${item.creator_name}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                } else if (columnType === 'in_review') {
+                    cardHTML = `
+                        <div class="kanban-card project-card" 
+                             data-project-id="${item.project_id}"
+                             data-substage-id="${item.substage_id}">
+                            <div class="card-tags">
+                                <div class="tag-container">
+                                    <span class="card-tag tag-${item.project_type.toLowerCase()}">
+                                        ${item.project_type}
+                                    </span>
+                                </div>
+                                <span class="meta-status in_review">In Review</span>
+                                ${item.role_type ? 
+                                    `<span class="role-badge ${item.role_type.toLowerCase().replace(' ', '-')}">
+                                        ${item.role_type}
+                                    </span>` : ''}
+                            </div>
+                            
+                            <h4 class="task-title">
+                                ${item.project_title}
+                            </h4>
+                            <p class="task-description">
+                                Stage ${item.stage_number} > 
+                                Substage ${item.substage_number}: 
+                                ${item.substage_title}
+                            </p>
+                            
+                            <div class="review-info">
+                                <span class="review-status">
+                                    <i class="fas fa-clock"></i>
+                                    Awaiting Review
+                                </span>
+                            </div>
+                            
+                            <div class="card-meta">
+                                <span class="meta-date">
+                                    <i class="far fa-calendar"></i>
+                                    Due: ${item.due_date}
+                                </span>
+                                <span class="meta-assigned">
+                                    <i class="far fa-user"></i>
+                                    Reviewer: ${item.reviewer_name}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                } else if (columnType === 'done') {
+                    cardHTML = `
+                        <div class="kanban-card project-card" 
+                             data-project-id="${item.id}"
+                             data-project-type="${item.project_type.toLowerCase()}">
+                            <div class="card-tags">
+                                <div class="tag-container">
+                                    <span class="card-tag tag-${item.project_type.toLowerCase()}">
+                                        ${item.project_type}
+                                    </span>
+                                </div>
+                                <span class="meta-status completed">Completed</span>
+                                ${item.role_type ? 
+                                    `<span class="role-badge ${item.role_type.toLowerCase().replace(' ', '-')}">
+                                        ${item.role_type}
+                                    </span>` : ''}
+                            </div>
+                            
+                            <h4 class="task-title">${item.title}</h4>
+                            <p class="task-description">
+                                ${item.description.length > 100 ? 
+                                    item.description.substring(0, 100) + '...' : 
+                                    item.description}
+                            </p>
+                            
+                            <div class="completion-info">
+                                <div class="completion-stats">
+                                    <span class="stat-item">
+                                        <i class="fas fa-layer-group"></i>
+                                        ${item.total_stages} Stages
+                                    </span>
+                                    <span class="stat-item">
+                                        <i class="fas fa-tasks"></i>
+                                        ${item.total_substages} Substages
+                                    </span>
+                                </div>
+                                <div class="completion-indicator">
+                                    <i class="fas fa-check-circle"></i>
+                                    100% Complete
+                                </div>
+                            </div>
+                            
+                            <div class="card-meta">
+                                <span class="meta-date">
+                                    <i class="far fa-calendar-check"></i>
+                                    Completed: ${item.completion_date}
+                                </span>
+                                <span class="meta-assigned">
+                                    <i class="far fa-user"></i>
+                                    By: ${item.creator_name}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Append the card to the container
+                container.innerHTML += cardHTML;
+            });
+        }
+        
+        // Apply initial styling to the dropdowns
+        yearDropdown.style.display = 'none';
+        monthDropdown.style.display = 'none';
+        
+        // Apply initial filters when page loads
+        setTimeout(() => {
+            applyFilters();
+        }, 500);
+    });
+    </script>
    
 </body>
 </html>

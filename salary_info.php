@@ -103,6 +103,7 @@ function calculateLeaveDeductions($leavesTaken, $perDaySalary) {
     $shortLeaveCount = 0;
     $compensateLeaveCount = 0;
     $compensateLeaveAllowed = 0;
+    $halfDayLeaveCount = 0;  // New counter for half day leaves
     
     // First pass: Count leaves by type
     foreach ($leaves as $leave) {
@@ -119,7 +120,9 @@ function calculateLeaveDeductions($leavesTaken, $perDaySalary) {
                 $compensateLeaveCount += $taken;
                 $compensateLeaveAllowed = max($compensateLeaveAllowed, $allowed);
             } elseif ($leaveType === 'U.L.') {
-                $deduction += ($perDaySalary * $taken); // Cut one day salary per unpaid leave
+                $deduction += ($perDaySalary * $taken);
+            } elseif ($leaveType === 'H.L.') {  // New condition for half day leave
+                $deduction += ($perDaySalary * 0.5 * $taken);  // Deduct half day salary for each H.L.
             }
         }
     }
@@ -161,18 +164,21 @@ $query = "WITH user_leaves AS (
                 WHEN '11' THEN 'SH.L.' -- Short Leave
                 WHEN '12' THEN 'CO.L.' -- Compensate Leave
                 WHEN '13' THEN 'U.L.'  -- Unpaid Leave
+                WHEN '14' THEN 'H.L.'  -- Half Day Leave
                 ELSE CONCAT('Type ', lt.id)
             END,
             ': ',
             CASE 
                 WHEN lt.id = '11' THEN COUNT(*)
+                WHEN lt.id = '14' THEN COUNT(*)  -- Count number of half day leaves
                 ELSE SUM(lr.duration)
             END,
             '/',
             CASE 
-                WHEN lt.id = '3' THEN 1
-                WHEN lt.id = '11' THEN 2
-                WHEN lt.id = '12' THEN (
+                WHEN lt.id = '3' THEN 1          -- Casual Leave: 1 per month
+                WHEN lt.id = '11' THEN 2         -- Short Leave: 2 per month
+                WHEN lt.id = '14' THEN 30        -- Half Day Leave: no limit (using 30 as max)
+                WHEN lt.id = '12' THEN (         -- Compensate Leave: based on worked weekly offs
                     SELECT COUNT(*) 
                     FROM attendance a2
                     JOIN user_shifts us3 ON a2.user_id = us3.user_id

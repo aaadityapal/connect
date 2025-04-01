@@ -54,12 +54,21 @@ $balance_query = "SELECT
             AND DAYNAME(a.date) = us.weekly_offs
             AND YEAR(a.date) = YEAR(CURRENT_DATE())
         )
+        WHEN lt.name = 'Half Day Leave' THEN 30  -- Set default max days for Half Day Leave
         ELSE lt.max_days
     END as total_leaves,
     COALESCE(
         CASE 
             WHEN lt.name = 'Compensate Leave' THEN (
                 SELECT COALESCE(SUM(duration), 0)
+                FROM leave_request lr
+                WHERE lr.user_id = ? 
+                AND lr.leave_type = lt.id
+                AND lr.status = 'approved'
+                AND YEAR(lr.start_date) = YEAR(CURRENT_DATE())
+            )
+            WHEN lt.name = 'Half Day Leave' THEN (
+                SELECT COUNT(*)  -- Count number of half day leaves
                 FROM leave_request lr
                 WHERE lr.user_id = ? 
                 AND lr.leave_type = lt.id
@@ -80,7 +89,7 @@ FROM leave_types lt
 WHERE lt.status = 'active'";
 
 $stmt = $conn->prepare($balance_query);
-$stmt->bind_param('iii', $user_id, $user_id, $user_id);
+$stmt->bind_param('iiii', $user_id, $user_id, $user_id, $user_id);  // Added one more parameter
 $stmt->execute();
 $balance_result = $stmt->get_result();
 $leave_balance = $balance_result->fetch_all(MYSQLI_ASSOC);
@@ -129,14 +138,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_leave'])) {
     $user_id = $_SESSION['user_id'];
     $leave_type = $_POST['leave_type'];
     $start_date = $_POST['start_date'];
-    $end_date = $_POST['end_date'];
+    $end_date = isset($_POST['end_date']) ? $_POST['end_date'] : $_POST['start_date'];
+    $half_day_type = isset($_POST['half_day_type']) ? $_POST['half_day_type'] : null;
     $reason = $_POST['reason'];
     
-    // Calculate duration between start and end date
-    $start = new DateTime($start_date);
-    $end = new DateTime($end_date);
-    $interval = $start->diff($end);
-    $duration = $interval->days + 1;
+    // Get leave type details
+    $leave_type_query = "SELECT name FROM leave_types WHERE id = ?";
+    $stmt = $conn->prepare($leave_type_query);
+    $stmt->bind_param("i", $leave_type);
+    $stmt->execute();
+    $leave_type_result = $stmt->get_result();
+    $leave_type_data = $leave_type_result->fetch_assoc();
+    
+    // Calculate duration
+    if ($leave_type_data['name'] === 'Half Day Leave') {
+        $duration = 0.5;  // Set duration to 0.5 for half day leave
+        $end_date = $start_date; // For half day, end date is same as start date
+    } else {
+        $start = new DateTime($start_date);
+        $end = new DateTime($end_date);
+        $interval = $start->diff($end);
+        $duration = $interval->days + 1;
+    }
 
     try {
         // Insert into leave_request table
@@ -145,20 +168,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_leave'])) {
             leave_type,
             start_date,
             end_date,
-            reason,
+            half_day_type,
             duration,
+            reason,
             status,
             created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())";
         
         $stmt = $conn->prepare($insert_query);
-        $stmt->bind_param("iisssi", 
+        $stmt->bind_param("iisssds", 
             $user_id,
             $leave_type,
             $start_date,
             $end_date,
-            $reason,
-            $duration
+            $half_day_type,
+            $duration,  // This will now be 0.5 for half day leaves
+            $reason
         );
 
         if ($stmt->execute()) {
@@ -703,15 +728,26 @@ CREATE TABLE IF NOT EXISTS leaves (
                         </span>
                         <span class="leave-balance">
                             <?php 
-                            $remaining = $balance['total_leaves'] - $balance['used_leaves'];
-                            echo $remaining . '/' . $balance['total_leaves'];
+                            if ($balance['name'] === 'Half Day Leave') {
+                                $remaining = $balance['total_leaves'] - $balance['used_leaves'];
+                                echo $remaining . '/' . $balance['total_leaves'];
+                            } else {
+                                $remaining = $balance['total_leaves'] - $balance['used_leaves'];
+                                echo $remaining . '/' . $balance['total_leaves'];
+                            }
                             ?>
                         </span>
                     </div>
                     <div class="leave-card-body">
                         <div class="progress">
                             <div class="progress-bar" 
-                                 style="width: <?php echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100; ?>%">
+                                 style="width: <?php 
+                                 if ($balance['name'] === 'Half Day Leave') {
+                                     echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100;
+                                 } else {
+                                     echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100;
+                                 }
+                                 ?>%">
                             </div>
                         </div>
                         <span class="days-label">days remaining</span>
@@ -738,7 +774,8 @@ CREATE TABLE IF NOT EXISTS leaves (
                             <option value="">Select Leave Type</option>
                             <?php foreach ($leave_types as $type): ?>
                                 <option value="<?php echo $type['id']; ?>" 
-                                        data-max-days="<?php echo $type['max_days']; ?>">
+                                        data-max-days="<?php echo $type['max_days']; ?>"
+                                        data-is-half-day="<?php echo $type['name'] === 'Half Day Leave' ? '1' : '0'; ?>">
                                     <?php echo htmlspecialchars($type['name']); ?> 
                                     (Max: <?php echo $type['max_days']; ?> days)
                                 </option>
@@ -747,11 +784,19 @@ CREATE TABLE IF NOT EXISTS leaves (
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="start_date">Start Date</label>
+                        <label class="form-label" for="start_date">Date</label>
                         <input type="date" class="form-control" name="start_date" id="start_date" required>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="halfDaySection" style="display: none;">
+                        <label class="form-label" for="half_day_type">Time</label>
+                        <select class="form-control" name="half_day_type" id="half_day_type">
+                            <option value="first_half">First Half (Morning)</option>
+                            <option value="second_half">Second Half (Afternoon)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="endDateSection">
                         <label class="form-label" for="end_date">End Date</label>
                         <input type="date" class="form-control" name="end_date" id="end_date" required>
                     </div>
@@ -831,7 +876,16 @@ CREATE TABLE IF NOT EXISTS leaves (
                             <td><?php echo htmlspecialchars($leave['leave_type_name']); ?></td>
                             <td><?php echo date('M d, Y', strtotime($leave['start_date'])); ?></td>
                             <td><?php echo date('M d, Y', strtotime($leave['end_date'])); ?></td>
-                            <td><?php echo $leave['duration']; ?></td>
+                            <td>
+                                <?php 
+                                // Format the duration to show 1 day for half day leaves
+                                if ($leave['leave_type_name'] === 'Half Day Leave') {
+                                    echo '1';
+                                } else {
+                                    echo number_format($leave['duration'], 1);
+                                }
+                                ?>
+                            </td>
                             <td><?php echo htmlspecialchars($leave['reason']); ?></td>
                             <td>
                                 <div class="status-cell">
@@ -893,16 +947,39 @@ CREATE TABLE IF NOT EXISTS leaves (
             const daysDisplay = document.getElementById('daysDisplay');
             const daysCount = daysDisplay.querySelector('.days-count');
             const leaveType = document.getElementById('leave_type');
+            const halfDaySection = document.getElementById('halfDaySection');
+            const endDateSection = document.getElementById('endDateSection');
+            const halfDayType = document.getElementById('half_day_type');
+
+            function toggleHalfDayControls() {
+                const selectedOption = leaveType.options[leaveType.selectedIndex];
+                const isHalfDay = selectedOption.getAttribute('data-is-half-day') === '1';
+                
+                halfDaySection.style.display = isHalfDay ? 'block' : 'none';
+                endDateSection.style.display = isHalfDay ? 'none' : 'block';
+                endDate.required = !isHalfDay;
+                
+                if (isHalfDay) {
+                    endDate.value = startDate.value;
+                }
+                calculateDays();
+            }
 
             function calculateDays() {
-                if (startDate.value && endDate.value && leaveType.value) {
-                    const start = new Date(startDate.value);
-                    const end = new Date(endDate.value);
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                    
-                    // Get max days from selected leave type
+                if (startDate.value && leaveType.value) {
                     const selectedOption = leaveType.options[leaveType.selectedIndex];
+                    const isHalfDay = selectedOption.getAttribute('data-is-half-day') === '1';
+                    
+                    let diffDays;
+                    if (isHalfDay) {
+                        diffDays = 0.5;
+                    } else {
+                        const start = new Date(startDate.value);
+                        const end = new Date(endDate.value);
+                        const diffTime = Math.abs(end - start);
+                        diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    }
+                    
                     const maxDays = parseInt(selectedOption.getAttribute('data-max-days'));
                     
                     daysDisplay.style.display = 'inline-flex';
@@ -911,9 +988,6 @@ CREATE TABLE IF NOT EXISTS leaves (
                         daysDisplay.className = 'days-display error';
                         daysDisplay.innerHTML = `<i class="fas fa-exclamation-circle"></i> 
                             You are requesting ${diffDays} days, which exceeds the maximum allowed (${maxDays} days)`;
-                    } else if (maxDays && diffDays > maxDays * 0.8) {
-                        daysDisplay.className = 'days-display warning';
-                        daysDisplay.innerHTML = `You are requesting <span class="days-count">${diffDays}</span> day(s)`;
                     } else {
                         daysDisplay.className = 'days-display';
                         daysDisplay.innerHTML = `You are requesting <span class="days-count">${diffDays}</span> day(s)`;
@@ -926,27 +1000,14 @@ CREATE TABLE IF NOT EXISTS leaves (
             // Add event listeners
             startDate.addEventListener('change', calculateDays);
             endDate.addEventListener('change', calculateDays);
-            leaveType.addEventListener('change', calculateDays);
-
-            // Validate end date is not before start date
-            endDate.addEventListener('change', function() {
-                if (startDate.value && this.value) {
-                    if (new Date(this.value) < new Date(startDate.value)) {
-                        this.value = startDate.value;
-                        alert('End date cannot be before start date');
-                    }
-                    calculateDays();
-                }
+            leaveType.addEventListener('change', function() {
+                toggleHalfDayControls();
+                calculateDays();
             });
+            halfDayType.addEventListener('change', calculateDays);
 
-            startDate.addEventListener('change', function() {
-                if (endDate.value && this.value) {
-                    if (new Date(endDate.value) < new Date(this.value)) {
-                        endDate.value = this.value;
-                    }
-                    calculateDays();
-                }
-            });
+            // Initial setup
+            toggleHalfDayControls();
         });
 
         document.getElementById('leave_type').addEventListener('change', function() {

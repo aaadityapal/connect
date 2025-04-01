@@ -2433,42 +2433,115 @@ if ($user_data && isset($user_data['shift_id'])) {
                     die("Connection failed: " . $db->connect_error);
                 }
 
-                // Get total projects assigned to current user
+                // Update the Project Metrics queries
                 $totalProjects = $db->query("
-                    SELECT COUNT(*) as count 
-                    FROM projects 
-                    WHERE deleted_at IS NULL 
-                    AND assigned_to = '$user_id'"
+                    SELECT COUNT(DISTINCT p.id) as count 
+                    FROM projects p
+                    LEFT JOIN project_stages ps ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE p.deleted_at IS NULL 
+                    AND (
+                        p.assigned_to = '$user_id'
+                        OR ps.assigned_to = '$user_id'
+                        OR pss.assigned_to = '$user_id'
+                    )"
                 )->fetch_object()->count;
 
-                // Get in progress projects assigned to current user
+                // Get in progress projects
                 $inProgress = $db->query("
-                    SELECT COUNT(*) as count 
-                    FROM projects 
-                    WHERE deleted_at IS NULL 
-                    AND status = 'in_progress'
-                    AND assigned_to = '$user_id'"
+                    SELECT COUNT(DISTINCT p.id) as count 
+                    FROM projects p
+                    LEFT JOIN project_stages ps ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE p.deleted_at IS NULL 
+                    AND (
+                        (p.assigned_to = '$user_id' AND p.status = 'in_progress')
+                        OR (ps.assigned_to = '$user_id' AND ps.status = 'in_progress')
+                        OR (pss.assigned_to = '$user_id' AND pss.status = 'in_progress')
+                    )"
                 )->fetch_object()->count;
 
-                // Get due projects assigned to current user
+                // Get due soon projects (next 7 days)
                 $due = $db->query("
-                    SELECT COUNT(*) as count 
-                    FROM projects 
-                    WHERE deleted_at IS NULL 
-                    AND end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-                    AND status != 'completed'
-                    AND assigned_to = '$user_id'"
+                    SELECT COUNT(DISTINCT p.id) as count 
+                    FROM projects p
+                    LEFT JOIN project_stages ps ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE p.deleted_at IS NULL 
+                    AND (
+                        (p.assigned_to = '$user_id' AND p.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY))
+                        OR (ps.assigned_to = '$user_id' AND ps.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY))
+                        OR (pss.assigned_to = '$user_id' AND pss.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY))
+                    )
+                    AND p.status != 'completed'"
                 )->fetch_object()->count;
 
-                // Get overdue projects assigned to current user
+                // Get overdue projects
                 $overdue = $db->query("
-                    SELECT COUNT(*) as count 
-                    FROM projects 
-                    WHERE deleted_at IS NULL 
-                    AND end_date < CURDATE() 
-                    AND status != 'completed'
-                    AND assigned_to = '$user_id'"
+                    SELECT COUNT(DISTINCT p.id) as count 
+                    FROM projects p
+                    LEFT JOIN project_stages ps ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE p.deleted_at IS NULL 
+                    AND (
+                        (p.assigned_to = '$user_id' AND p.end_date < CURDATE())
+                        OR (ps.assigned_to = '$user_id' AND ps.end_date < CURDATE())
+                        OR (pss.assigned_to = '$user_id' AND pss.end_date < CURDATE())
+                    )
+                    AND p.status != 'completed'"
                 )->fetch_object()->count;
+
+                // Update the chart data query
+                $chartData = $db->query("
+                    SELECT 
+                        CASE 
+                            WHEN p.status = 'completed' THEN 'Completed'
+                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
+                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
+                            ELSE 'Pending'
+                        END as status,
+                        COUNT(DISTINCT p.id) as count
+                    FROM projects p
+                    LEFT JOIN project_stages ps ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE p.deleted_at IS NULL 
+                    AND (
+                        p.assigned_to = '$user_id'
+                        OR ps.assigned_to = '$user_id'
+                        OR pss.assigned_to = '$user_id'
+                    )
+                    GROUP BY 
+                        CASE 
+                            WHEN p.status = 'completed' THEN 'Completed'
+                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
+                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
+                            ELSE 'Pending'
+                        END"
+                )->fetch_all(MYSQLI_ASSOC);
+
+                // Update the upcoming stages query
+                $upcomingStages = $db->query("
+                    SELECT 
+                        ps.*, 
+                        p.title as project_title,
+                        CASE 
+                            WHEN p.assigned_to = '$user_id' THEN 'Project Owner'
+                            WHEN ps.assigned_to = '$user_id' THEN 'Stage Owner'
+                            WHEN pss.assigned_to = '$user_id' THEN 'Substage Owner'
+                        END as role_type
+                    FROM project_stages ps
+                    JOIN projects p ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE ps.deleted_at IS NULL 
+                    AND (
+                        p.assigned_to = '$user_id'
+                        OR ps.assigned_to = '$user_id'
+                        OR pss.assigned_to = '$user_id'
+                    )
+                    AND ps.status IN ('in_progress', 'not_started')
+                    ORDER BY ps.end_date ASC
+                    LIMIT 5"
+                );
                 ?>
 
                 <div class="metric-item small">
@@ -2513,12 +2586,30 @@ if ($user_data && isset($user_data['shift_id'])) {
                 // Get data for chart
                 $chartData = $db->query("
                     SELECT 
-                        status,
-                        COUNT(*) as count
-                    FROM projects 
-                    WHERE deleted_at IS NULL 
-                    GROUP BY status
-                ")->fetch_all(MYSQLI_ASSOC);
+                        CASE 
+                            WHEN p.status = 'completed' THEN 'Completed'
+                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
+                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
+                            ELSE 'Pending'
+                        END as status,
+                        COUNT(DISTINCT p.id) as count
+                    FROM projects p
+                    LEFT JOIN project_stages ps ON p.id = ps.project_id
+                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
+                    WHERE p.deleted_at IS NULL 
+                    AND (
+                        p.assigned_to = '$user_id'
+                        OR ps.assigned_to = '$user_id'
+                        OR pss.assigned_to = '$user_id'
+                    )
+                    GROUP BY 
+                        CASE 
+                            WHEN p.status = 'completed' THEN 'Completed'
+                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
+                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
+                            ELSE 'Pending'
+                        END"
+                )->fetch_all(MYSQLI_ASSOC);
                 ?>
                 <canvas id="projectStatusChart"></canvas>
                 <script>
@@ -2566,23 +2657,7 @@ if ($user_data && isset($user_data['shift_id'])) {
         <i class="fas fa-ellipsis-v"></i>
     </div>
     <div class="pmd-upcoming-stages-list" id="upcomingStagesList">
-        <?php
-        // Get upcoming stages assigned to current user
-        $upcomingStages = $db->query("
-            SELECT 
-                ps.*, 
-                p.title as project_title
-            FROM project_stages ps
-            JOIN projects p ON p.id = ps.project_id
-            WHERE ps.deleted_at IS NULL 
-            AND ps.assigned_to = '$user_id'
-            AND ps.status IN ('in_progress', 'not_started')
-            ORDER BY ps.end_date ASC
-            LIMIT 5"
-        );
-
-        while ($stage = $upcomingStages->fetch_object()) {
-            ?>
+        <?php while ($stage = $upcomingStages->fetch_object()): ?>
             <div class="pmd-stage-item">
                 <div class="pmd-stage-markers">
                     <div class="pmd-marker-yellow"></div>
@@ -2598,18 +2673,21 @@ if ($user_data && isset($user_data['shift_id'])) {
                             <span class="status-badge <?php echo $stage->status; ?>">
                                 <?php echo ucfirst(str_replace('_', ' ', $stage->status)); ?>
                             </span>
+                            <?php if (isset($stage->role_type)): ?>
+                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $stage->role_type)); ?>">
+                                    <?php echo $stage->role_type; ?>
+                                </span>
+                            <?php endif; ?>
                         </div>
                         <div class="stage-phase">Stage <?php echo $stage->stage_number; ?></div>
                     </div>
                 </div>
             </div>
-            <?php
-        }
+        <?php endwhile; ?>
         
-        if ($upcomingStages->num_rows == 0) {
-            echo '<div class="no-stages">No upcoming stages found</div>';
-        }
-        ?>
+        <?php if ($upcomingStages->num_rows == 0): ?>
+            <div class="no-stages">No upcoming stages found</div>
+        <?php endif; ?>
     </div>
 </div>
         <div class="pmd-milestone-container">

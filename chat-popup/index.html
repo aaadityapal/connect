@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="popup.css">
+    <script src="popup.js"></script>
+</head>
+<body>
+    <div class="chat-icon" id="chatIcon">
+        <i class="fab fa-whatsapp fa-lg"></i>
+    </div>
+    
+    <div class="chat-popup" id="chatPopup">
+        <div class="chat-header">
+            <div class="back-btn" id="backBtn">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div id="chatTitle">Chats</div>
+            <div class="close-btn" id="closeBtn">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        
+        <div class="search-bar">
+            <input type="text" placeholder="Search or start new chat" id="searchInput">
+        </div>
+        
+        <div class="chat-contacts" id="chatContacts">
+            <!-- Contacts will be added here -->
+        </div>
+        
+        <div class="chat-body" id="chatBody">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="chat-footer">
+            <input type="text" id="messageInput" placeholder="Type a message">
+            <button id="sendBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</body>
+</html> 

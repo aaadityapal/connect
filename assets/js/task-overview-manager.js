@@ -1,6 +1,5 @@
 class TaskOverviewManager {
     constructor() {
-        console.log('TaskOverviewManager initialized');
         // Get user role safely
         this.userRole = document.body?.dataset?.userRole || 'default'; // Provide a default role
         
@@ -35,8 +34,6 @@ class TaskOverviewManager {
             monthOptions.forEach(opt => opt.classList.remove('selected'));
             allMonthsOption.classList.add('selected');
         }
-
-
 
         // Trigger initial filtering
         this.filterTasks();

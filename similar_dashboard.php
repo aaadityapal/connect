@@ -146,6 +146,8 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/project-metrics-dashboard.css">
     <script src="assets/js/project-metrics-dashboard.js"></script>
+    <link rel="stylesheet" href="assets/css/chat.css">
+    <script src="assets/js/chat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="assets/css/substage-details.css">
@@ -1634,7 +1636,7 @@ if ($user_data && isset($user_data['shift_id'])) {
         .group-actions {
             display: flex;
             gap: 8px;
-            opacity: 0;
+            opacity: 10;
             transition: opacity 0.3s ease;
         }
 
@@ -2217,9 +2219,7 @@ if ($user_data && isset($user_data['shift_id'])) {
             color: white;
         }
 
-        /* Include CSS and JS dependencies */
-        <link rel="stylesheet" href="assets/css/task-overview.css">
-        <!-- Add custom styles for scrollable dropdowns -->
+        
         <style>
             .year-dropdown,
             .month-dropdown {
@@ -2249,7 +2249,7 @@ if ($user_data && isset($user_data['shift_id'])) {
             .month-dropdown::-webkit-scrollbar-thumb:hover {
                 background: #555;
             }
-    </style>
+        </style>
     </style>
     
     <!-- Add CSS for kanban filters -->
@@ -3507,9 +3507,224 @@ if ($user_data && isset($user_data['shift_id'])) {
                 
             </div>
             <!-- Add Forwarded Tasks Section here, after task-overview-section -->
+                            <!-- Chat Icon -->
+<div class="floating-chat-trigger">
+    <div class="chat-bubble-wrapper">
+        <span class="chat-notification-bubble">3</span>
+        <button class="chat-bubble-button" onclick="toggleChatInterface()">
+            <i class="fas fa-comments"></i>
+        </button>
+    </div>
+</div>
 
+<!-- Chat Interface -->
+<div class="floating-chat-interface">
+    <div class="chat-interface-header">
+        <h3>Chats</h3>
+        <div class="header-actions">
+            <button class="new-chat-button">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="new-group-button">
+                <i class="fas fa-users"></i>
+            </button>
+            <button class="chat-close-button" onclick="toggleChatInterface()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="chat-search">
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search or start new chat">
+        </div>
+    </div>
 
-           
+    <div class="chat-users-list">
+        <!-- Sarah Johnson -->
+        <div class="chat-user-item">
+            <div class="user-avatar">
+                <img src="assets/default-avatar.png" alt="Sarah Johnson">
+            </div>
+            <div class="user-info">
+                <div class="user-name">Sarah Johnson</div>
+                <div class="message-preview">Hi, how are you doing?</div>
+            </div>
+            <div class="message-metadata">
+                <div class="message-time">10:30 AM</div>
+                <div class="unread-count">2</div>
+            </div>
+        </div>
+
+        <!-- John Smith -->
+        <div class="chat-user-item">
+            <div class="user-avatar">
+                <img src="assets/default-avatar.png" alt="John Smith">
+            </div>
+            <div class="user-info">
+                <div class="user-name">John Smith</div>
+                <div class="message-preview">Can we meet tomorrow?</div>
+            </div>
+            <div class="message-metadata">
+                <div class="message-time">9:45 AM</div>
+            </div>
+        </div>
+
+        <!-- Emily Wilson -->
+        <div class="chat-user-item">
+            <div class="user-avatar">
+                <img src="assets/default-avatar.png" alt="Emily Wilson">
+            </div>
+            <div class="user-info">
+                <div class="user-name">Emily Wilson</div>
+                <div class="message-preview">Thanks for your help!</div>
+            </div>
+            <div class="message-metadata">
+                <div class="message-time">Yesterday</div>
+            </div>
+        </div>
+        
+        <!-- Michael Brown -->
+        <div class="chat-user-item">
+            <div class="user-avatar">
+                <img src="assets/default-avatar.png" alt="Michael Brown">
+            </div>
+            <div class="user-info">
+                <div class="user-name">Michael Brown</div>
+                <div class="message-preview">I sent you the files</div>
+            </div>
+            <div class="message-metadata">
+                <div class="message-time">Yesterday</div>
+                <div class="unread-count">1</div>
+            </div>
+        </div>
+        
+        <!-- Jessica Taylor -->
+        <div class="chat-user-item">
+            <div class="user-avatar">
+                <img src="assets/default-avatar.png" alt="Jessica Taylor">
+            </div>
+            <div class="user-info">
+                <div class="user-name">Jessica Taylor</div>
+                <div class="message-preview">Let me know when you are free...</div>
+            </div>
+            <div class="message-metadata">
+                <div class="message-time">Tuesday</div>
+            </div>
+        </div>
+    </div>
+    <!-- Add this right after the chat-users-list div -->
+<div class="chat-conversation" style="display: none;">
+    <div class="chat-conversation-header">
+        <button class="back-button">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="chat-contact-info">
+            <div class="contact-avatar">
+                <img src="assets/default-avatar.png" alt="User">
+            </div>
+            <div class="contact-details">
+                <div class="contact-name">User Name</div>
+                <div class="contact-status">online</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="chat-close-button" onclick="toggleChatInterface()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <!-- Add this search bar -->
+    <div class="chat-conversation-search" style="display: none;">
+    <div class="search-input-container">
+        <i class="fas fa-arrow-left search-back"></i>
+        <i class="fas fa-times search-clear"></i>
+        <input type="text" class="conversation-search-input" placeholder="Search...">
+    </div>
+    <div class="search-results-info">
+        <span class="results-count">0/0</span>
+        <div class="search-navigation">
+            <button class="search-up-btn"><i class="fas fa-chevron-up"></i></button>
+            <button class="search-down-btn"><i class="fas fa-chevron-down"></i></button>
+        </div>
+    </div>
+    </div>
+    <script>
+    // Add this right after the existing header HTML
+    document.querySelector('.chat-contact-info').insertAdjacentHTML('afterend', 
+        `<button class="search-toggle-btn">
+            <i class="fas fa-search"></i>
+        </button>`
+    );
+</script>
+    
+    
+    <div class="chat-messages">
+        <!-- Messages will appear here -->
+    </div>
+    
+    <div class="chat-input-area">
+        <div class="chat-input-actions">
+            <button class="emoji-button">
+                <i class="far fa-smile"></i>
+            </button>
+            <label for="file-input" class="attachment-button">
+                <i class="fas fa-paperclip"></i>
+            </label>
+            <input type="file" id="file-input" style="display: none" multiple>
+        </div>
+        <div class="input-wrapper">
+            <input type="text" class="message-input" placeholder="Type a message">
+        </div>
+        <button class="send-button">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+        
+        <!-- Emoji picker -->
+        <div class="emoji-picker" style="display: none;">
+            <div class="emoji-categories">
+                <button class="category-button active" data-category="smileys">😊</button>
+                <button class="category-button" data-category="people">👨</button>
+                <button class="category-button" data-category="animals">🐶</button>
+                <button class="category-button" data-category="food">🍎</button>
+                <button class="category-button" data-category="travel">🚗</button>
+                <button class="category-button" data-category="activities">⚽</button>
+                <button class="category-button" data-category="objects">💡</button>
+                <button class="category-button" data-category="symbols">❤️</button>
+            </div>
+            <div class="emoji-container">
+                <!-- Smileys/Emotions -->
+                <div class="emoji-grid" data-category="smileys">
+                    <span class="emoji-item">😀</span>
+                    <span class="emoji-item">😁</span>
+                    <span class="emoji-item">😂</span>
+                    <span class="emoji-item">🤣</span>
+                    <span class="emoji-item">😃</span>
+                    <span class="emoji-item">😄</span>
+                    <span class="emoji-item">😅</span>
+                    <span class="emoji-item">😆</span>
+                    <span class="emoji-item">😉</span>
+                    <span class="emoji-item">😊</span>
+                    <span class="emoji-item">😋</span>
+                    <span class="emoji-item">😎</span>
+                    <span class="emoji-item">😍</span>
+                    <span class="emoji-item">😘</span>
+                    <span class="emoji-item">🥰</span>
+                    <span class="emoji-item">😗</span>
+                    <span class="emoji-item">😙</span>
+                    <span class="emoji-item">😚</span>
+                    <span class="emoji-item">🙂</span>
+                    <span class="emoji-item">🤗</span>
+                </div>
+                <!-- More emoji categories would go here -->
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+            
+
 
     <script>
         function togglePanel() {

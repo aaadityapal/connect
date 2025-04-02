@@ -6,8 +6,14 @@ class ProjectMetricsDashboard {
     }
 
     initializeCharts() {
+        // 1. Destroy any existing chart instances first
+        if (window.projectStatusChart) {
+            window.projectStatusChart.destroy();
+        }
+        
+        // 2. Then create the new chart instance
         const ctx = document.getElementById('projectStatusChart').getContext('2d');
-        this.statusChart = new Chart(ctx, {
+        window.projectStatusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Total Active', 'Pending', 'Due', 'Overdue'],
@@ -71,13 +77,13 @@ class ProjectMetricsDashboard {
         this.updateMetricDisplay('overdueProjects', dummyData.overdue, 'overdue');
 
         // Update chart
-        this.statusChart.data.datasets[0].data = [
+        window.projectStatusChart.data.datasets[0].data = [
             dummyData.totalActive,
             dummyData.pending,
             dummyData.due,
             dummyData.overdue
         ];
-        this.statusChart.update();
+        window.projectStatusChart.update();
     }
 
     updateMetricDisplay(elementId, value, className) {
@@ -140,13 +146,13 @@ class ProjectMetricsDashboard {
         this.updateMetricDisplay('overdueProjects', data.overdue, 'overdue');
 
         // Update chart
-        this.statusChart.data.datasets[0].data = [
+        window.projectStatusChart.data.datasets[0].data = [
             data.totalActive,
             data.pending,
             data.due,
             data.overdue
         ];
-        this.statusChart.update();
+        window.projectStatusChart.update();
     }
 
     renderUpcomingStages(stages) {

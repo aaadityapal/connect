@@ -239,8 +239,9 @@ SELECT
         SELECT CONCAT(
             FLOOR(SUM(
                 CASE 
-                    WHEN TIME_TO_SEC(overtime_hours) >= (90 * 60)
-                    THEN TIME_TO_SEC(overtime_hours)
+                    -- Only count time after shift's end time as overtime
+                    WHEN att.punch_out IS NOT NULL AND TIME(att.punch_out) > s2.end_time AND TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) >= (90 * 60)
+                    THEN TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time))
                     ELSE 0 
                 END
             )/3600),
@@ -248,13 +249,18 @@ SELECT
             LPAD(FLOOR(MOD(
                 SUM(
                     CASE 
-                        WHEN TIME_TO_SEC(overtime_hours) >= (90 * 60)
-                        THEN TIME_TO_SEC(overtime_hours)
+                        -- Only count time after shift's end time as overtime
+                        WHEN att.punch_out IS NOT NULL AND TIME(att.punch_out) > s2.end_time AND TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) >= (90 * 60)
+                        THEN TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time))
                         ELSE 0 
                     END
                 ), 3600)/60), 2, '0')
         )
         FROM attendance att
+        INNER JOIN user_shifts us2 ON us2.user_id = att.user_id
+            AND att.date >= us2.effective_from 
+            AND (us2.effective_to IS NULL OR att.date <= us2.effective_to)
+        INNER JOIN shifts s2 ON s2.id = us2.shift_id
         WHERE att.user_id = users.id
         AND DATE(att.date) BETWEEN ? AND ?
         AND att.status = 'present'
@@ -925,6 +931,12 @@ Leave Deduction Rules:
                                 <i class="fas fa-info-circle"></i>
                             </span>
                         </th>
+                        <th>
+                            Half Day Deduction
+                            <span class="info-tooltip" title="Salary deductions for half day leaves">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </th>
                         <th>Monthly Salary</th>
                         <th>
                             Overtime Hours
@@ -959,15 +971,88 @@ Leave Deduction Rules:
                         $perDaySalary = $workingDaysInfo['working_days'] > 0 ? 
                             ($user['base_salary'] / $workingDaysInfo['working_days']) : 0;
                         
-                        // Calculate leave deductions using our function
-                        $leaveDeduction = calculateLeaveDeductions($user['leaves_taken'], $perDaySalary);
+                        // Count casual leaves taken
+                        $casualLeaveCount = 0;
+                        if (!empty($user['leaves_taken'])) {
+                            $leaves = explode("\n", $user['leaves_taken']);
+                            foreach ($leaves as $leave) {
+                                if (preg_match('/^C\.L\.: (\d+)\//', $leave, $matches)) {
+                                    $casualLeaveCount = (int)$matches[1];
+                                    break;
+                                }
+                            }
+                        }
                         
-                        // Update monthly salary calculation to include leave deductions
-                        $monthSalary = ($perDaySalary * ($user['present_days'] ?? 0)) - $leaveDeduction;
+                        // Count short leaves taken
+                        $shortLeaveCount = 0;
+                        if (!empty($user['leaves_taken'])) {
+                            $leaves = explode("\n", $user['leaves_taken']);
+                            foreach ($leaves as $leave) {
+                                if (preg_match('/^SH\.L\.: (\d+)\//', $leave, $matches)) {
+                                    $shortLeaveCount = (int)$matches[1];
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Calculate adjusted present days (add casual leaves to present days)
+                        $presentDays = ($user['present_days'] ?? 0);
+                        $adjustedPresentDays = $presentDays + $casualLeaveCount;
+                        
+                        // Calculate adjusted late days (subtract short leaves up to 2)
+                        $lateDays = $user['late_days'] ?? 0;
+                        $adjustedLateDays = max(0, $lateDays - min(2, $shortLeaveCount));
+                        
+                        // Calculate late deduction based on adjusted late days
+                        $deductionDays = floor($adjustedLateDays / 3); // Get number of complete sets of 3 late days
+                        if ($workingDaysInfo['working_days'] > 0) {
+                            $perDaySalary = $user['base_salary'] / $workingDaysInfo['working_days'];
+                            $lateDeduction = $deductionDays * ($perDaySalary * 0.5); // Half day salary for each set of 3 late days
+                        } else {
+                            $lateDeduction = 0;
+                        }
+                        
+                        // Calculate leave deductions excluding half day leaves
+                        $leaveDeductionWithoutHalfDay = 0;
+                        if (!empty($user['leaves_taken'])) {
+                            $leaves = explode("\n", $user['leaves_taken']);
+                            foreach ($leaves as $leave) {
+                                if (preg_match('/^(.*?): (\d+)\/(\d+)/', $leave, $matches)) {
+                                    $leaveType = $matches[1];
+                                    $taken = (int)$matches[2];
+                                    $allowed = (int)$matches[3];
+
+                                    if ($leaveType === 'C.L.' && $taken > 1) {
+                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - 1);
+                                    } elseif ($leaveType === 'SH.L.' && $taken > 2) {
+                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * 0.5) * ($taken - 2);
+                                    } elseif ($leaveType === 'CO.L.' && $taken > $allowed) {
+                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - $allowed);
+                                    } elseif ($leaveType === 'U.L.') {
+                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * $taken);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Calculate half day deductions
+                        $halfDayDeduction = 0;
+                        if (!empty($user['leaves_taken'])) {
+                            $leaves = explode("\n", $user['leaves_taken']);
+                            foreach ($leaves as $leave) {
+                                if (preg_match('/^H\.L\.: (\d+)\/(\d+)/', $leave, $matches)) {
+                                    $taken = (int)$matches[1];
+                                    $halfDayDeduction = $perDaySalary * 0.5 * $taken;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Update monthly salary calculation to use adjusted present days and include half day deduction
+                        $monthSalary = ($perDaySalary * $adjustedPresentDays) - $lateDeduction - $halfDayDeduction;
 
                         // Calculate overtime amount
                         $shiftHours = $user['shift_hours'] ?? 8;
-                        error_log("Shift Hours from user record: " . ($user['shift_hours'] ?? 'not set'));
                         $suggestedRate = calculateOvertimeRate(
                             $user['base_salary'], 
                             $workingDaysInfo['working_days'],
@@ -978,21 +1063,11 @@ Leave Deduction Rules:
                         $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
                         $overtime_amount = $decimal_hours * $suggestedRate;
                         
-                        // Calculate late deduction
-                        $lateDays = $user['late_days'] ?? 0;
-                        $deductionDays = floor($lateDays / 3); // Get number of complete sets of 3 late days
-                        if ($workingDaysInfo['working_days'] > 0) {
-                            $perDaySalary = $user['base_salary'] / $workingDaysInfo['working_days'];
-                            $lateDeduction = $deductionDays * ($perDaySalary * 0.5); // Half day salary for each set of 3 late days
-                        } else {
-                            $lateDeduction = 0;
-                        }
-                        
                         // Calculate leaves taken
                         $leavesTaken = $user['leaves_taken'] ?? 0;
                         
-                        // Calculate total salary
-                        $totalSalary = $monthSalary + $overtime_amount - $lateDeduction;
+                        // Calculate total salary - include monthly salary (which already has late deduction) and overtime only
+                        $totalSalary = $monthSalary + $overtime_amount;
                     ?>
                         <tr>
                             <td><?php echo htmlspecialchars($user['username']); ?></td>
@@ -1008,10 +1083,16 @@ Leave Deduction Rules:
                                 <?php echo $workingDaysInfo['working_days']; ?>
                             </td>
                             <td>
-                                <?php echo $user['present_days'] ?? 0; ?>
+                                <?php echo $presentDays; ?> 
+                                <?php if ($casualLeaveCount > 0): ?>
+                                    <span class="rate-info">(<?php echo $adjustedPresentDays; ?> with C.L.)</span>
+                                <?php endif; ?>
                             </td>
                             <td>
-                                <?php echo $user['late_days'] ?? 0; ?>
+                                <?php echo $user['late_days'] ?? 0; ?> 
+                                <?php if ($shortLeaveCount > 0 && $adjustedLateDays != $lateDays): ?>
+                                    <span class="rate-info">(<?php echo $adjustedLateDays; ?> after SH.L.)</span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php echo '₹' . number_format($lateDeduction, 2); ?>
@@ -1031,7 +1112,53 @@ Leave Deduction Rules:
                             <td>
                                 <div class="input-group">
                                     <span class="form-control" style="background: #f9fafb;">
-                                        ₹<?php echo number_format($leaveDeduction, 2); ?>
+                                        <?php 
+                                        // Calculate leave deductions excluding half day leaves
+                                        $leaveDeductionWithoutHalfDay = 0;
+                                        if (!empty($user['leaves_taken'])) {
+                                            $leaves = explode("\n", $user['leaves_taken']);
+                                            foreach ($leaves as $leave) {
+                                                if (preg_match('/^(.*?): (\d+)\/(\d+)/', $leave, $matches)) {
+                                                    $leaveType = $matches[1];
+                                                    $taken = (int)$matches[2];
+                                                    $allowed = (int)$matches[3];
+
+                                                    if ($leaveType === 'C.L.' && $taken > 1) {
+                                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - 1);
+                                                    } elseif ($leaveType === 'SH.L.' && $taken > 2) {
+                                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * 0.5) * ($taken - 2);
+                                                    } elseif ($leaveType === 'CO.L.' && $taken > $allowed) {
+                                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - $allowed);
+                                                    } elseif ($leaveType === 'U.L.') {
+                                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * $taken);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        echo '₹' . number_format($leaveDeductionWithoutHalfDay, 2); 
+                                        ?>
+                                    </span>
+                                    <div class="rate-info">Amount</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <span class="form-control" style="background: #f9fafb;">
+                                        <?php 
+                                        // Calculate half day deductions
+                                        $halfDayDeduction = 0;
+                                        if (!empty($user['leaves_taken'])) {
+                                            $leaves = explode("\n", $user['leaves_taken']);
+                                            foreach ($leaves as $leave) {
+                                                if (preg_match('/^H\.L\.: (\d+)\/(\d+)/', $leave, $matches)) {
+                                                    $taken = (int)$matches[1];
+                                                    $halfDayDeduction = $perDaySalary * 0.5 * $taken;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        echo '₹' . number_format($halfDayDeduction, 2); 
+                                        ?>
                                     </span>
                                     <div class="rate-info">Amount</div>
                                 </div>

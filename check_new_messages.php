@@ -1,39 +1,67 @@
 <?php
 session_start();
-require_once 'config/db_connect.php';
-
 header('Content-Type: application/json');
 
-$response = ['success' => false, 'hasNew' => false];
-
-if (!isset($_SESSION['user_id']) || !isset($_GET['user_id'])) {
-    echo json_encode($response);
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'error' => 'Not authenticated']);
     exit;
 }
 
-$current_user = $_SESSION['user_id'];
-$other_user = $_GET['user_id'];
-$last_check = isset($_GET['last_check']) ? $_GET['last_check'] : 0;
+require_once 'config/db_connect.php';
+
+$last_check = isset($_GET['last_check']) ? $_GET['last_check'] : null;
 
 try {
-    $stmt = $conn->prepare("
-        SELECT COUNT(*) as count
-        FROM chat_messages
-        WHERE ((sender_id = ? AND receiver_id = ?) 
-            OR (sender_id = ? AND receiver_id = ?))
-            AND UNIX_TIMESTAMP(created_at) > ?
-    ");
-
-    $stmt->bind_param("iiiii", $current_user, $other_user, $other_user, $current_user, $last_check);
+    // Get new messages
+    $query = "SELECT m.*, u.username as sender_name, u.profile_picture as sender_avatar 
+              FROM chat_messages m 
+              JOIN users u ON m.sender_id = u.id 
+              WHERE m.sent_at > ? 
+              AND m.receiver_id = ? 
+              AND m.deleted_at IS NULL 
+              ORDER BY m.sent_at ASC";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("si", $last_check, $_SESSION['user_id']);
     $stmt->execute();
     $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
+    
+    $new_messages = [];
+    while ($row = $result->fetch_assoc()) {
+        // Set default avatar if none exists
+        $row['sender_avatar'] = $row['sender_avatar'] ?: 'assets/default-avatar.png';
+        $new_messages[] = $row;
+    }
 
-    $response['success'] = true;
-    $response['hasNew'] = $row['count'] > 0;
+    // Get unread counts
+    $unread_query = "SELECT sender_id, COUNT(*) as count 
+                     FROM chat_messages 
+                     WHERE receiver_id = ? 
+                     AND read_at IS NULL 
+                     AND deleted_at IS NULL 
+                     GROUP BY sender_id";
+    
+    $unread_stmt = $conn->prepare($unread_query);
+    $unread_stmt->bind_param("i", $_SESSION['user_id']);
+    $unread_stmt->execute();
+    $unread_result = $unread_stmt->get_result();
+    
+    $unread_counts = [];
+    while ($row = $unread_result->fetch_assoc()) {
+        $unread_counts[$row['sender_id']] = $row['count'];
+    }
+
+    echo json_encode([
+        'success' => true,
+        'timestamp' => date('Y-m-d H:i:s'),
+        'new_messages' => $new_messages,
+        'unread_counts' => $unread_counts
+    ]);
 
 } catch (Exception $e) {
-    $response['error'] = $e->getMessage();
+    error_log("Error in check_new_messages.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Database error']);
 }
 
-echo json_encode($response); 
+$conn->close();
+?>

@@ -97,7 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($status === 'present' && !empty($punch_out)) {
                 $punch_out_parts = explode(':', date('H:i', strtotime($punch_out)));
                 $punch_out_minutes = ($punch_out_parts[0] * 60) + $punch_out_parts[1];
-                $shift_end_minutes = 18 * 60; // 18:00 = 1080 minutes
+                
+                // Get the shift end time from employee record instead of hardcoding
+                $shift_end_time = !empty($employee['shift_end_time']) ? $employee['shift_end_time'] : '18:00:00';
+                $shift_end_parts = explode(':', $shift_end_time);
+                $shift_end_minutes = ($shift_end_parts[0] * 60) + ($shift_end_parts[1] ?? 0);
                 
                 if ($punch_out_minutes > $shift_end_minutes) {
                     $overtime_minutes = $punch_out_minutes - $shift_end_minutes;
@@ -436,7 +440,13 @@ while ($row = $result->fetch_assoc()) {
                                 <td>
                                     <input type="time" class="form-control" 
                                            name="attendance[<?php echo $date_str; ?>][shift_time]"
-                                           value="<?php echo $record ? $record['shift_time'] : ($employee['shift_start_time'] ?? ''); ?>"
+                                           value="<?php 
+                                                if ($record && $record['shift_time']) {
+                                                    echo $record['shift_time']; 
+                                                } else {
+                                                    echo $employee['shift_start_time'] ?? '';
+                                                }
+                                           ?>"
                                            data-shift-start="<?php echo $employee['shift_start_time'] ?? ''; ?>"
                                            data-shift-end="<?php echo $employee['shift_end_time'] ?? ''; ?>"
                                            onchange="markAsModified(this)">
@@ -564,13 +574,15 @@ while ($row = $result->fetch_assoc()) {
             const overtimeInput = row.querySelector('.overtime');
             const status = row.querySelector('.status-select').value;
 
-            if (status === 'present' && punchOut && shiftTime && shiftTime.dataset.shiftEnd) {
+            if (status === 'present' && punchOut && shiftTime) {
                 // Convert punch out time to minutes since midnight
                 const [punchOutHours, punchOutMinutes] = punchOut.split(':').map(Number);
                 const punchOutInMinutes = (punchOutHours * 60) + punchOutMinutes;
                 
-                // Standard shift end (18:00) in minutes
-                const shiftEndInMinutes = 18 * 60; // 18:00 = 1080 minutes
+                // Get shift end time from data attribute instead of hardcoding
+                const shiftEndTime = shiftTime.dataset.shiftEnd || '18:00';
+                const [shiftEndHours, shiftEndMinutes] = shiftEndTime.split(':').map(Number);
+                const shiftEndInMinutes = (shiftEndHours * 60) + (shiftEndMinutes || 0);
                 
                 if (punchOutInMinutes > shiftEndInMinutes) {
                     // Calculate overtime in minutes

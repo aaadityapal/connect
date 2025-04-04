@@ -1,84 +1,73 @@
 <?php
 session_start();
-require_once 'config/db_connect.php';
-
 header('Content-Type: application/json');
 
-// Debug log
-error_log("Received POST request: " . print_r($_POST, true));
-error_log("Received FILES: " . print_r($_FILES, true));
-
-$response = ['success' => false, 'message' => ''];
-
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    $response['message'] = 'Not logged in';
-    echo json_encode($response);
+    echo json_encode(['success' => false, 'error' => 'Not authenticated']);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $response['message'] = 'Invalid request method';
-    echo json_encode($response);
+// Get the POST data
+$data = json_decode(file_get_contents('php://input'), true);
+
+// Validate required fields
+if (!isset($data['receiver_id']) || !isset($data['message'])) {
+    echo json_encode(['success' => false, 'error' => 'Missing required fields']);
     exit;
 }
 
-if (!isset($_POST['receiver_id'])) {
-    $response['message'] = 'No receiver specified';
-    echo json_encode($response);
-    exit;
-}
-
-$sender_id = $_SESSION['user_id'];
-$receiver_id = $_POST['receiver_id'];
-$message = $_POST['message'] ?? '';
-
-// Debug log
-error_log("Processing message from {$sender_id} to {$receiver_id}: {$message}");
-
-// Handle file uploads
-$file_paths = [];
-if (isset($_FILES['files'])) {
-    $upload_dir = 'uploads/chat/';
-    
-    // Create directory if it doesn't exist
-    if (!file_exists($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
-    
-    foreach ($_FILES['files']['tmp_name'] as $key => $tmp_name) {
-        if ($_FILES['files']['error'][$key] === UPLOAD_ERR_OK) {
-            $file_name = $_FILES['files']['name'][$key];
-            $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-            $new_name = uniqid() . '.' . $file_ext;
-            $upload_path = $upload_dir . $new_name;
-            
-            if (move_uploaded_file($tmp_name, $upload_path)) {
-                $file_paths[] = $upload_path;
-            }
-        }
-    }
-}
+// Database connection
+require_once 'config/db_connect.php';
 
 try {
-    $stmt = $conn->prepare("INSERT INTO chat_messages (sender_id, receiver_id, message, file_path) VALUES (?, ?, ?, ?)");
+    // Prepare the insert statement
+    $query = "INSERT INTO chat_messages (sender_id, receiver_id, message, sent_at) 
+              VALUES (?, ?, ?, NOW())";
     
-    if (!$stmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
-    }
-    
-    $file_path = !empty($file_paths) ? json_encode($file_paths) : null;
-    $stmt->bind_param("iiss", $sender_id, $receiver_id, $message, $file_path);
-    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("iis", 
+        $_SESSION['user_id'],
+        $data['receiver_id'],
+        $data['message']
+    );
+
+    // Execute the query
     if ($stmt->execute()) {
-        $response['success'] = true;
-        $response['message'] = 'Message sent successfully';
+        // Get the inserted message details
+        $message_id = $stmt->insert_id;
+        
+        // Fetch the complete message details including sender name
+        $select_query = "SELECT cm.*, u.username as sender_name 
+                        FROM chat_messages cm 
+                        JOIN users u ON cm.sender_id = u.id 
+                        WHERE cm.id = ?";
+        
+        $select_stmt = $conn->prepare($select_query);
+        $select_stmt->bind_param("i", $message_id);
+        $select_stmt->execute();
+        $result = $select_stmt->get_result();
+        $message = $result->fetch_assoc();
+
+        echo json_encode([
+            'success' => true,
+            'message' => [
+                'id' => $message['id'],
+                'sender_id' => $message['sender_id'],
+                'sender_name' => $message['sender_name'],
+                'receiver_id' => $message['receiver_id'],
+                'message' => $message['message'],
+                'sent_at' => $message['sent_at']
+            ]
+        ]);
     } else {
-        throw new Exception("Execute failed: " . $stmt->error);
+        echo json_encode(['success' => false, 'error' => 'Failed to send message']);
     }
-    
+
 } catch (Exception $e) {
-    $response['message'] = 'Database error: ' . $e->getMessage();
-    error_log("Database error: " . $e->getMessage());
+    error_log("Error in send_message.php: " . $e->getMessage());
+    echo json_encode(['success' => false, 'error' => 'Database error']);
 }
 
-echo json_encode($response); 
+$conn->close();
+?>

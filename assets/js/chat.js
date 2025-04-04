@@ -1659,8 +1659,8 @@ function startMessageChecking() {
     // Check immediately
     checkNewMessages();
     
-    // Then check every 5 seconds
-    messageCheckInterval = setInterval(checkNewMessages, 5000);
+    // Then check every 3 seconds
+    messageCheckInterval = setInterval(checkNewMessages, 3000);
 }
 
 // Function to stop checking for new messages
@@ -1682,12 +1682,12 @@ function checkNewMessages() {
                 // Update last check time
                 lastCheckTime = data.timestamp;
 
-                // Handle new messages
+                // If there are new messages and chat is open with the sender
                 if (data.new_messages && data.new_messages.length > 0) {
                     handleNewMessages(data.new_messages);
                 }
 
-                // Update unread counts if provided
+                // Update unread counts
                 if (data.unread_counts) {
                     updateUnreadCounts(data.unread_counts);
                     updateTotalUnreadCount();
@@ -1702,7 +1702,8 @@ function handleNewMessages(newMessages) {
     if (!newMessages || !newMessages.length) return;
 
     const chatMessages = document.querySelector('.chat-messages');
-    const isAtBottom = chatMessages && (chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight);
+    const isAtBottom = chatMessages && 
+        (chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight);
 
     newMessages.forEach(message => {
         // If chat is open with this sender, add message to chat
@@ -1710,13 +1711,17 @@ function handleNewMessages(newMessages) {
             const messageElement = createMessageElement(message, false);
             if (chatMessages) {
                 chatMessages.appendChild(messageElement);
+                
+                // Play notification sound
+                playMessageSound();
+                
+                // Mark message as read
+                markMessageAsRead(message.id);
             }
-            
-            // Mark message as read
-            markMessageAsRead(message.id);
         } else {
-            // Update unread count for the user
+            // Update unread count and show notification
             updateUserUnreadCount(message.sender_id);
+            showMessageNotification(message);
         }
     });
 
@@ -2565,8 +2570,6 @@ function createAttachmentModal() {
 }
 
 function openChat(user) {
-    console.log('Opening chat with user:', user); // Debug log
-    
     if (!user || !user.id) {
         console.error('Invalid user object provided to openChat:', user);
         return;
@@ -2574,21 +2577,12 @@ function openChat(user) {
 
     currentChatUser = user;
     
-    // Get required elements
+    // Update UI elements
     const chatUsersList = document.querySelector('.chat-users-list');
     const chatConversation = document.querySelector('.chat-conversation');
     const contactName = document.querySelector('.contact-name');
     const contactAvatar = document.querySelector('.contact-avatar img');
     const contactStatus = document.querySelector('.contact-status');
-    
-    // Log DOM elements availability
-    console.log('DOM elements found:', {
-        chatUsersList: !!chatUsersList,
-        chatConversation: !!chatConversation,
-        contactName: !!contactName,
-        contactAvatar: !!contactAvatar,
-        contactStatus: !!contactStatus
-    });
     
     // Update conversation header
     if (contactName) contactName.textContent = user.username;
@@ -2600,8 +2594,10 @@ function openChat(user) {
     if (chatConversation) chatConversation.style.display = 'flex';
     
     // Load messages
-    console.log('Fetching messages for user ID:', user.id);
     fetchMessages(user.id);
+
+    // Reset unread count for this user
+    resetUnreadCount(user.id);
 }
 
 // Function to update total unread count
@@ -2734,3 +2730,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300));
     }
 });
+
+// Add a function to play notification sound
+function playMessageSound() {
+    const audio = new Audio('assets/sounds/message.mp3'); // Add a message sound file
+    audio.play().catch(error => console.log('Error playing sound:', error));
+}
+
+// Add function to reset unread count
+function resetUnreadCount(userId) {
+    const userItem = document.querySelector(`.chat-user-item[data-user-id="${userId}"]`);
+    if (userItem) {
+        const unreadBadge = userItem.querySelector('.unread-count');
+        if (unreadBadge) {
+            unreadBadge.remove();
+        }
+    }
+}

@@ -1405,3 +1405,20 @@
 .message.received .message-content {
     margin-left: 8px;
 }
+
+.sound-toggle {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    transition: all 0.3s ease;
+}
+
+.sound-toggle:hover {
+    transform: scale(1.1);
+}
+
+.sound-toggle i {
+    font-size: 1.2em;
+}

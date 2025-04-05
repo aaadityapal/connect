@@ -554,20 +554,69 @@ class TaskOverviewManager {
     }
 
     attachCardClickHandlers() {
+        console.log('Attaching card click handlers'); // Debug log
         document.addEventListener('click', async (e) => {
-            const projectCard = e.target.closest('.project-card');
+            // Check for project cards in kanban view or task cards in task view
+            const projectCard = e.target.closest('.project-card, .kanban-card, .task-card');
             if (projectCard) {
+                console.log('Card clicked:', projectCard); // Debug log
                 const projectId = projectCard.dataset.projectId;
                 if (projectId) {
+                    console.log('Project ID found:', projectId); // Debug log
                     await this.showProjectDetails(projectId);
+                } else {
+                    console.log('No project ID found on card'); // Debug log
                 }
             }
         });
     }
 
     async showProjectDetails(projectId) {
+        console.log('Showing project details for ID:', projectId); // Debug log
         try {
-            const response = await fetch(`dashboard/handlers/get_project_details.php?project_id=${projectId}`, {
+            // Create a path that works both locally and on server
+            const baseUrl = window.location.pathname.includes('/index.php') 
+                ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) 
+                : window.location.pathname;
+                
+            let apiPath = `${baseUrl}/dashboard/handlers/get_project_details.php?project_id=${projectId}`;
+            
+            console.log('First attempt API path:', apiPath); // Debug log
+            
+            try {
+                // First attempt with calculated path
+                const response = await fetch(apiPath, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Project details data:', data); // Debug log
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to fetch project details');
+                    }
+                    
+                    // If we get here, the request was successful
+                    this.renderProjectDetails(data.project);
+                    return;
+                }
+                
+                console.warn('First API path attempt failed, trying alternative path');
+            } catch (firstAttemptError) {
+                console.warn('First attempt failed with error:', firstAttemptError);
+            }
+            
+            // Second attempt with direct path
+            apiPath = `dashboard/handlers/get_project_details.php?project_id=${projectId}`;
+            console.log('Second attempt API path:', apiPath); // Debug log
+            
+            const response = await fetch(apiPath, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -576,79 +625,19 @@ class TaskOverviewManager {
                 credentials: 'include'
             });
 
+            if (!response.ok) {
+                console.error('API response not OK:', response.status, response.statusText);
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+
             const data = await response.json();
+            console.log('Project details data:', data); // Debug log
             
             if (!data.success) {
                 throw new Error(data.message || 'Failed to fetch project details');
             }
-
-            const project = data.project;
-            const mainContent = document.querySelector('main');
-
-            // Safety check for mainContent
-            if (!mainContent) {
-                console.warn('Main content element not found');
-            }
-
-            const applyBlur = () => {
-                if (mainContent) {
-                    mainContent.classList.add('blurred');
-                    mainContent.style.filter = 'blur(10px)';
-                    mainContent.style.pointerEvents = 'none';
-                }
-            };
-
-            const removeBlur = () => {
-                if (mainContent) {
-                    mainContent.classList.remove('blurred');
-                    mainContent.style.filter = 'none';
-                    mainContent.style.pointerEvents = 'auto';
-                }
-            };
             
-            // Create and show dialog using SweetAlert2
-            await Swal.fire({
-                title: `<div class="dialog-header">
-                           
-                            <button type="button" class="custom-close-button" onclick="Swal.close()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>`,
-                html: this.generateProjectDetailsHTML(project),
-                width: '800px',
-                showCloseButton: false,
-                showConfirmButton: false,
-                allowOutsideClick: true,
-                allowEscapeKey: true,
-                customClass: {
-                    container: 'project-details-dialog',
-                    popup: 'project-details-popup',
-                    content: 'project-details-content',
-                    title: 'project-details-title',
-                    closeButton: 'custom-close-button',
-                    backdrop: 'project-details-backdrop'
-                },
-                backdrop: `
-                    rgba(0,0,0,0.4)
-                    url("")
-                    left top
-                    no-repeat
-                `,
-                didOpen: () => {
-                    applyBlur();
-                },
-                willClose: () => {
-                    removeBlur();
-                    // Ensure all event listeners are working
-                    if (this.attachCardClickHandlers) {
-                        this.attachCardClickHandlers();
-                    }
-                }
-            });
-
-            // Additional cleanup after dialog is fully closed
-            removeBlur();
-
+            this.renderProjectDetails(data.project);
         } catch (error) {
             console.error('Error fetching project details:', error);
             // Ensure main content is interactive even if there's an error
@@ -662,9 +651,74 @@ class TaskOverviewManager {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Failed to load project details. Please try again.',
+                text: 'Failed to load project details. Please try again. Error: ' + error.message,
             });
         }
+    }
+    
+    renderProjectDetails(project) {
+        const mainContent = document.querySelector('main');
+
+        // Safety check for mainContent
+        if (!mainContent) {
+            console.warn('Main content element not found');
+        }
+
+        const applyBlur = () => {
+            if (mainContent) {
+                mainContent.classList.add('blurred');
+                mainContent.style.filter = 'blur(10px)';
+                mainContent.style.pointerEvents = 'none';
+            }
+        };
+
+        const removeBlur = () => {
+            if (mainContent) {
+                mainContent.classList.remove('blurred');
+                mainContent.style.filter = 'none';
+                mainContent.style.pointerEvents = 'auto';
+            }
+        };
+        
+        // Create and show dialog using SweetAlert2
+        Swal.fire({
+            title: `<div class="dialog-header">
+                       <button type="button" class="custom-close-button" onclick="Swal.close()">
+                           <i class="fas fa-times"></i>
+                       </button>
+                    </div>`,
+            html: this.generateProjectDetailsHTML(project),
+            width: '800px',
+            showCloseButton: false,
+            showConfirmButton: false,
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+            customClass: {
+                container: 'project-details-dialog',
+                popup: 'project-details-popup',
+                content: 'project-details-content',
+                title: 'project-details-title',
+                closeButton: 'custom-close-button',
+                backdrop: 'project-details-backdrop'
+            },
+            backdrop: `rgba(0,0,0,0.4)`,
+            didOpen: () => {
+                applyBlur();
+            },
+            willClose: () => {
+                removeBlur();
+                // Ensure all event listeners are working
+                if (this.attachCardClickHandlers) {
+                    this.attachCardClickHandlers();
+                }
+            }
+        }).then(() => {
+            // Additional cleanup after dialog is fully closed
+            removeBlur();
+        }).catch(err => {
+            console.error('Error showing modal:', err);
+            removeBlur();
+        });
     }
 
     generateProjectDetailsHTML(project) {
@@ -2465,8 +2519,8 @@ function rejectFile(fileId) {
 }
 
 // Add CSS for disabled button styling and tooltip
-const style = document.createElement('style');
-style.textContent = `
+const actionButtonStyle = document.createElement('style');
+actionButtonStyle.textContent = `
     .action-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -2505,4 +2559,4 @@ style.textContent = `
         margin-bottom: -5px;
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(actionButtonStyle); 

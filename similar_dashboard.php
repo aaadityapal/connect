@@ -4040,13 +4040,21 @@ if ($user_data && isset($user_data['shift_id'])) {
    
     <!-- Update the initialization script -->
     <script>
+        // Make sure all scripts are loaded first
         document.addEventListener('DOMContentLoaded', function() {
-            try {
-                window.taskManager = new TaskOverviewManager();
-                console.log('TaskOverviewManager initialized successfully');
-            } catch (error) {
-                console.error('Error initializing TaskOverviewManager:', error);
-            }
+            // Wait a small amount of time to ensure scripts are fully loaded
+            setTimeout(function() {
+                try {
+                    if (typeof TaskOverviewManager === 'undefined') {
+                        console.error('TaskOverviewManager class is not defined. Check if task-overview-manager.js is loaded correctly.');
+                    } else {
+                        window.taskManager = new TaskOverviewManager();
+                        console.log('TaskOverviewManager initialized successfully');
+                    }
+                } catch (error) {
+                    console.error('Error initializing TaskOverviewManager:', error);
+                }
+            }, 500); // Small delay to ensure scripts are fully processed
         });
     </script>
     

@@ -76,9 +76,40 @@ $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $records = $stmt->fetchAll();
 
+// Add this new function to calculate overtime based on shift times
+function calculateOvertimeFromPunchTimes($punch_in, $punch_out, $shift_end) {
+    if (empty($punch_in) || empty($punch_out) || empty($shift_end)) {
+        return '00:00:00';
+    }
+
+    $punch_in_time = strtotime($punch_in);
+    $punch_out_time = strtotime($punch_out);
+    $shift_end_time = strtotime($shift_end);
+
+    // If punched in after shift end, all time is overtime
+    if ($punch_in_time > $shift_end_time) {
+        $overtime_seconds = $punch_out_time - $punch_in_time;
+    } else {
+        // Only count time after shift end as overtime
+        $overtime_seconds = max(0, $punch_out_time - $shift_end_time);
+    }
+
+    // Convert to hours:minutes:seconds format
+    $hours = floor($overtime_seconds / 3600);
+    $minutes = floor(($overtime_seconds % 3600) / 60);
+    $seconds = $overtime_seconds % 60;
+
+    return sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+}
+
 // Add this new function to calculate valid overtime
-function calculateValidOvertime($overtime_hours) {
+function calculateValidOvertime($overtime_hours, $punch_in = null, $punch_out = null, $shift_end = null) {
     if (empty($overtime_hours)) return '00:00:00';
+    
+    // If we have punch times and shift end, recalculate overtime
+    if ($punch_in && $punch_out && $shift_end) {
+        $overtime_hours = calculateOvertimeFromPunchTimes($punch_in, $punch_out, $shift_end);
+    }
     
     // Convert overtime to decimal if it's in HH:MM:SS format
     $overtime_decimal = is_numeric($overtime_hours) ? 
@@ -92,18 +123,180 @@ function calculateValidOvertime($overtime_hours) {
 // Update the monthly totals calculation
 $total_working_hours = 0;
 $total_overtime = 0;
+$present_days = [];
+$present_counts_by_user = [];
+$weekly_off_worked_count = 0;
+$employee_count = 0;
+$days_in_month = date('t', strtotime($month . '-01'));
+$attendance_by_day = [];
+$late_arrivals = 0;
+$early_departures = 0;
+$full_attendance_users = 0;
+$zero_attendance_users = 0;
+$weekend_hours = 0;
+$working_days = 0;
+$no_punch_out_count = 0;
+$max_hours_day = ['date' => '', 'hours' => 0];
+
+// Calculate working days (excluding weekends)
+$month_start = date('Y-m-01', strtotime($month));
+$month_end = date('Y-m-t', strtotime($month));
+$current_date = $month_start;
+$weekends = 0;
+
+while (strtotime($current_date) <= strtotime($month_end)) {
+    $day_of_week = date('N', strtotime($current_date));
+    if ($day_of_week >= 6) { // 6 and 7 are weekend days (Saturday and Sunday)
+        $weekends++;
+    }
+    $current_date = date('Y-m-d', strtotime($current_date . ' +1 day'));
+}
+
+$working_days = $days_in_month - $weekends;
+
+if ($user_id === 'all') {
+    // Unique users to check full/zero attendance
+    $unique_users = [];
+    foreach ($all_users as $user) {
+        $unique_users[$user['id']] = [
+            'present_days' => 0,
+            'username' => $user['username']
+        ];
+    }
+}
+
 foreach ($records as $record) {
     // Calculate working hours
-    $total_working_hours += is_numeric($record['working_hours']) ? 
+    $working_hours_decimal = is_numeric($record['working_hours']) ? 
         $record['working_hours'] : 
         convertTimeToDecimal($record['working_hours']);
     
-    // Calculate valid overtime (≥ 1.5 hours)
-    $valid_overtime = calculateValidOvertime($record['overtime_hours']);
+    $total_working_hours += $working_hours_decimal;
+    
+    // Calculate valid overtime using shift end time
+    $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+    $valid_overtime = calculateValidOvertime(
+        $record['overtime_hours'],
+        $record['punch_in'],
+        $record['punch_out'],
+        $shift_end_datetime
+    );
     $total_overtime += is_numeric($valid_overtime) ? 
         $valid_overtime : 
         convertTimeToDecimal($valid_overtime);
+    
+    // Check if day is a weekly off
+    $weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], $record['date']);
+    $is_weekly_off = isWeeklyOff($record['date'], $weekly_offs);
+    
+    // Count weekly offs that were worked
+    if ($is_weekly_off && $record['punch_in']) {
+        $weekly_off_worked_count++;
+        $weekend_hours += $working_hours_decimal;
+    }
+    
+    // Check for maximum hours in a day
+    if ($working_hours_decimal > $max_hours_day['hours']) {
+        $max_hours_day['hours'] = $working_hours_decimal;
+        $max_hours_day['date'] = $record['date'];
+    }
+    
+    // Count late arrivals
+    if ($record['punch_in'] && $record['shift_start']) {
+        $punch_in_time = strtotime($record['punch_in']);
+        $shift_start = strtotime($record['date'] . ' ' . $record['shift_start']);
+        $grace_period = 15 * 60; // 15 minutes in seconds
+        
+        if ($punch_in_time > ($shift_start + $grace_period)) {
+            $late_arrivals++;
+        }
+    }
+    
+    // Count early departures
+    if ($record['punch_in'] && $record['punch_out'] && $record['shift_end']) {
+        $punch_out_time = strtotime($record['punch_out']);
+        $shift_end = strtotime($record['date'] . ' ' . $record['shift_end']);
+        $early_threshold = 15 * 60; // 15 minutes in seconds
+        
+        if ($punch_out_time < ($shift_end - $early_threshold)) {
+            $early_departures++;
+        }
+    }
+    
+    // Count no punch out instances
+    if ($record['punch_in'] && !$record['punch_out']) {
+        $no_punch_out_count++;
+    }
+    
+    // Track attendance by day of week for heatmap
+    $day_of_week = date('l', strtotime($record['date']));
+    if (!isset($attendance_by_day[$day_of_week])) {
+        $attendance_by_day[$day_of_week] = 0;
+    }
+    $attendance_by_day[$day_of_week]++;
+    
+    // Only count days with status 'present'
+    if (strtolower($record['status']) === 'present') {
+        if ($user_id !== 'all') {
+            // Single user view - just count unique dates
+            $present_days[$record['date']] = true;
+        } else {
+            // All users view - count unique user-date combinations
+            $key = $record['user_id'] . '_' . $record['date'];
+            $present_days[$key] = true;
+            
+            // Track present days by user for average and full attendance calculation
+            $user_key = $record['user_id'];
+            $date_key = $record['date'];
+            if (!isset($present_counts_by_user[$user_key])) {
+                $present_counts_by_user[$user_key] = [];
+            }
+            $present_counts_by_user[$user_key][$date_key] = true;
+            
+            // Update present days count for this user
+            if (isset($unique_users[$user_key])) {
+                $unique_users[$user_key]['present_days']++;
+            }
+        }
+    }
 }
+
+// Get the count of present days
+if ($user_id !== 'all') {
+    // Single user - show total days present
+    $present_days_count = count($present_days);
+    $days_present_label = 'Days Present';
+    $employee_count = 1;
+    $attendance_rate = ($present_days_count / $working_days) * 100;
+} else {
+    // All users - calculate average days present per user
+    $total_present_days = 0;
+    $employee_count = count($present_counts_by_user);
+    
+    // Sum up unique days for each user
+    foreach ($present_counts_by_user as $user_days) {
+        $total_present_days += count($user_days);
+    }
+    
+    // Calculate average (handle division by zero)
+    $present_days_count = $employee_count > 0 ? round($total_present_days / $employee_count, 1) : 0;
+    $days_present_label = 'Avg. Days Present';
+    $attendance_rate = ($present_days_count / $working_days) * 100;
+    
+    // Count users with full or zero attendance
+    foreach ($unique_users as $uid => $user_data) {
+        if ($user_data['present_days'] >= $working_days) {
+            $full_attendance_users++;
+        }
+        if ($user_data['present_days'] == 0) {
+            $zero_attendance_users++;
+        }
+    }
+}
+
+// Find most active day
+$most_active_day = !empty($attendance_by_day) ? array_search(max($attendance_by_day), $attendance_by_day) : 'N/A';
+$avg_hours_per_day = $working_days > 0 ? round($total_working_hours / ($present_days_count > 0 ? $present_days_count : 1), 2) : 0;
 
 // Add this helper function
 function convertTimeToDecimal($timeString) {
@@ -207,234 +400,77 @@ function formatDecimalToTime($timeString) {
     <title>Attendance Report</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-hover: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: #f5f8fa;
+            padding: 0;
+            margin: 0;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
+            padding: 30px;
         }
 
-        .filters {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .attendance-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .attendance-table th,
-        .attendance-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .attendance-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-
-        .overtime {
-            color: #dc3545;
-            font-weight: bold;
-        }
-
-        .summary-card {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .summary-item {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        .summary-item h3 {
-            margin: 0;
-            color: #6c757d;
-        }
-
-        .summary-item p {
-            margin: 10px 0 0;
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        @media (max-width: 768px) {
-            .attendance-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .summary-table th,
-        .summary-table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        .summary-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-
-        .department-header {
-            background-color: #f8f9fa;
-            padding: 10px;
-            margin: 20px 0 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .attendance-table tr.user-row td {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-
-        .weekly-offs-display {
-            margin-left: 15px;
-            color: #666;
-            font-style: italic;
-        }
-
-        .weekly-off-badge {
-            background-color: #e9ecef;
-            color: #495057;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.85em;
-        }
-
-        .weekly-off-row {
-            background-color: #f8f9fa;
-        }
-
-        .status-weekly-off {
-            color: #6c757d;
-            font-style: italic;
-        }
-
-        .user-row td {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            border-top: 2px solid #dee2e6;
-        }
-
-        .user-row:first-child td {
-            border-top: none;
-        }
-
-        .attendance-table td small {
-            color: #6c757d;
-            display: block;
-            margin-top: 3px;
-        }
-
-        .user-header {
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
         }
 
-        .weekly-offs-info {
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            display: inline-block;
-            margin: 2px;
-        }
-
-        .badge.weekly-off {
-            background-color: #e9ecef;
-            color: #495057;
-        }
-
-        .badge.worked {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .badge.working-day {
-            background-color: #28a745;
-            color: #fff;
-        }
-
-        .weekly-off-row {
-            background-color: #f8f9fa;
-        }
-
-        .weekly-off-status {
-            white-space: nowrap;
-        }
-
-        .user-row td {
-            background-color: #f8f9fa;
-            padding: 15px;
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
         }
 
         .filters-container {
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
         }
 
         .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            gap: 25px;
             align-items: end;
         }
 
@@ -446,38 +482,43 @@ function formatDecimalToTime($timeString) {
 
         .filter-item label {
             font-weight: 500;
-            color: #333;
-            margin-bottom: 4px;
+            color: var(--dark);
+            font-size: 15px;
         }
 
         .form-control {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
+            background-color: var(--light);
         }
 
         .form-control:focus {
-            border-color: #007bff;
+            border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
         }
 
         .btn-primary {
-            background-color: #007bff;
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary:hover {
-            background-color: #0056b3;
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-hover);
         }
 
         .button-container {
@@ -485,52 +526,392 @@ function formatDecimalToTime($timeString) {
             align-items: flex-end;
         }
 
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            padding: 20px 25px;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 20px;
+            background: var(--primary-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: help;
+        }
+
+        .summary-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px var(--shadow);
+        }
+        
+        .summary-item .tooltip {
+            visibility: hidden;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 10px 15px;
+            border-radius: 6px;
+            width: 250px;
+            font-size: 13px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .summary-item .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        }
+        
+        .summary-item:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .summary-item h3 {
+            margin: 0 0 8px 0;
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .summary-item p {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .summary-item.overtime p {
+            color: var(--danger);
+        }
+
+        .summary-item .icon {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--primary);
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            height: 400px;
+            position: relative;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            margin-bottom: 30px;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        .attendance-table th {
+            background-color: var(--primary-light);
+            color: var(--dark);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .attendance-table tr {
+            transition: all 0.2s;
+        }
+
+        .attendance-table tr:hover {
+            background-color: var(--primary-light);
+        }
+
+        .attendance-table tbody tr:not(.user-row) {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .attendance-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .weekly-off-row {
+            background-color: #FFF9F7;
+        }
+
+        .user-row td {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            padding: 18px 15px;
+            color: var(--secondary);
+            border-top: 2px solid var(--border);
+        }
+
+        .badge {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        .badge.weekly-off {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        .badge.worked {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        .badge.working-day {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-badge {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.present {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-badge.absent {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        .status-badge.leave {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-name i {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .weekly-offs-info {
+            font-size: 13px;
+            color: var(--text-muted);
+            background-color: var(--light);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        .summary-table th {
+            background-color: var(--primary-light);
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .summary-table tr {
+            transition: all 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-table tr:hover {
+            background-color: var(--primary-light);
+        }
+
+        .summary-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            background-color: #cff4fc;
+            color: #055160;
+            border-left: 4px solid #0aa2c0;
+        }
+
+        .alert-info {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+
+        @media (max-width: 1024px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
             .filters-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
             }
 
-            .button-container {
-                margin-top: 10px;
+            .summary-grid {
+                grid-template-columns: 1fr;
             }
 
-            .btn-primary {
-                width: 100%;
+            .row {
+                gap: 15px;
+                margin-bottom: 15px;
             }
         }
 
-        canvas {
-            max-width: 100%;
-            height: auto;
+        @media (max-width: 1200px) {
+            .summary-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
-        .chart-container {
-            height: 400px;  /* Fixed height for both containers */
-            position: relative;
-            margin-bottom: 20px;
+        @media (max-width: 992px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
-        .chart-container canvas {
-            max-height: 350px;  /* Leave space for title */
+        @media (max-width: 576px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Attendance Report</h2>
+        <div class="page-header">
+            <h2><i class="fas fa-calendar-check"></i> Attendance Report</h2>
+        </div>
 
         <div class="filters-container">
             <form method="GET">
                 <div class="filters-grid">
                     <div class="filter-item">
-                        <label for="month">Select Month:</label>
+                        <label for="month">Select Month</label>
                         <input type="month" id="month" name="month" class="form-control" 
                                value="<?php echo htmlspecialchars($month); ?>">
                     </div>
                     
                     <div class="filter-item">
-                        <label for="user_filter">Select Employee:</label>
+                        <label for="user_filter">Select Employee</label>
                         <select name="user_id" id="user_filter" class="form-control">
                             <?php if ($is_hr): ?>
                                 <option value="all" <?php echo $user_id === 'all' ? 'selected' : ''; ?>>All Employees</option>
@@ -546,195 +927,379 @@ function formatDecimalToTime($timeString) {
                     </div>
 
                     <div class="filter-item button-container">
-                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="summary-card">
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <h3>Total Working Hours</h3>
-                    <p><?php echo number_format($total_working_hours, 2); ?></p>
-                </div>
-                <div class="summary-item">
-                    <h3>Total Overtime</h3>
-                    <p class="overtime"><?php echo formatDecimalToTime($total_overtime); ?></p>
-                </div>
-                <div class="summary-item">
-                    <h3>Days Present</h3>
-                    <p><?php echo count($records); ?></p>
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-line"></i> Attendance Summary</h3>
+            </div>
+            <div class="card-body">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Total hours worked by all employees during the selected period. This represents the overall work volume.
+                        </div>
+                        <div class="icon"><i class="fas fa-clock"></i></div>
+                        <h3>Total Working Hours</h3>
+                        <p><?php echo number_format($total_working_hours, 2); ?></p>
+                    </div>
+                    <div class="summary-item overtime">
+                        <div class="tooltip">
+                            Total overtime hours (>1.5h beyond shift end). Value: <?php echo formatDecimalToTime($total_overtime); ?><br>
+                            Percentage of total hours: <?php echo $total_working_hours > 0 ? number_format((convertTimeToDecimal($total_overtime) / $total_working_hours) * 100, 1) : 0; ?>%
+                        </div>
+                        <div class="icon"><i class="fas fa-hourglass-half"></i></div>
+                        <h3>Total Overtime</h3>
+                        <p class="overtime"><?php echo formatDecimalToTime($total_overtime); ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            <?php if ($user_id !== 'all'): ?>
+                                Total days marked as present out of <?php echo $working_days; ?> working days.<br>
+                                Percentage: <?php echo number_format($attendance_rate, 1); ?>%
+                            <?php else: ?>
+                                Average number of days each employee was present during the month.<br>
+                                Total present entries: <?php echo count($present_days); ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                        <h3><?php echo $days_present_label; ?></h3>
+                        <p><?php echo $present_days_count; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Attendance rate based on working days in the month.<br>
+                            Formula: (Days Present / <?php echo $working_days; ?> Working Days) × 100
+                        </div>
+                        <div class="icon"><i class="fas fa-percentage"></i></div>
+                        <h3>Attendance Rate</h3>
+                        <p><?php echo number_format($attendance_rate, 1); ?>%</p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of times employees arrived more than 15 minutes after their shift start time.<br>
+                            Rate: <?php echo count($records) > 0 ? number_format(($late_arrivals / count($records)) * 100, 1) : 0; ?>% of all punch-ins
+                        </div>
+                        <div class="icon"><i class="fas fa-user-clock"></i></div>
+                        <h3>Late Arrivals</h3>
+                        <p><?php echo $late_arrivals; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of times employees left more than 15 minutes before their shift end time.<br>
+                            Rate: <?php echo count($records) > 0 ? number_format(($early_departures / count($records)) * 100, 1) : 0; ?>% of all punch-outs
+                        </div>
+                        <div class="icon"><i class="fas fa-sign-out-alt"></i></div>
+                        <h3>Early Departures</h3>
+                        <p><?php echo $early_departures; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of weekly off days on which employees worked.<br>
+                            These are days worked outside of regular schedule.
+                        </div>
+                        <div class="icon"><i class="fas fa-moon"></i></div>
+                        <h3>Weekly Offs Worked</h3>
+                        <p><?php echo $weekly_off_worked_count; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Total hours worked during weekly offs or weekends.<br>
+                            Percentage of total: <?php echo $total_working_hours > 0 ? number_format(($weekend_hours / $total_working_hours) * 100, 1) : 0; ?>%
+                        </div>
+                        <div class="icon"><i class="fas fa-briefcase"></i></div>
+                        <h3>Weekend Hours</h3>
+                        <p><?php echo number_format($weekend_hours, 2); ?></p>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Total number of calendar days in the selected month.<br>
+                            Including working days and weekends.
+                        </div>
+                        <div class="icon"><i class="fas fa-calendar-day"></i></div>
+                        <h3>Days in Month</h3>
+                        <p><?php echo $days_in_month; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of business days in the month, excluding weekends.<br>
+                            Weekends count: <?php echo $weekends; ?> days
+                        </div>
+                        <div class="icon"><i class="fas fa-business-time"></i></div>
+                        <h3>Working Days</h3>
+                        <p><?php echo $working_days; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Average number of hours worked per day when present.<br>
+                            Formula: Total Hours / Days Present
+                        </div>
+                        <div class="icon"><i class="fas fa-calculator"></i></div>
+                        <h3>Avg. Hours/Day</h3>
+                        <p><?php echo number_format($avg_hours_per_day, 2); ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Maximum hours worked in a single day: <?php echo number_format($max_hours_day['hours'], 2); ?> hours<br>
+                            Date: <?php echo date('d M Y', strtotime($max_hours_day['date'])); ?>
+                        </div>
+                        <div class="icon"><i class="fas fa-award"></i></div>
+                        <h3>Max Hours Day</h3>
+                        <p><?php echo number_format($max_hours_day['hours'], 2); ?></p>
+                    </div>
+                    
+                    <?php if ($user_id === 'all'): ?>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Total number of employees with attendance records in the selected period.<br>
+                            Active employees in system: <?php echo count($all_users); ?>
+                        </div>
+                        <div class="icon"><i class="fas fa-users"></i></div>
+                        <h3>Total Employees</h3>
+                        <p><?php echo $employee_count; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of employees with 100% attendance during working days.<br>
+                            Percentage: <?php echo $employee_count > 0 ? number_format(($full_attendance_users / $employee_count) * 100, 1) : 0; ?>% of total employees
+                        </div>
+                        <div class="icon"><i class="fas fa-trophy"></i></div>
+                        <h3>100% Attendance</h3>
+                        <p><?php echo $full_attendance_users; ?></p>
+                    </div>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of employees with no attendance records this month.<br>
+                            Percentage: <?php echo $employee_count > 0 ? number_format(($zero_attendance_users / $employee_count) * 100, 1) : 0; ?>% of total employees
+                        </div>
+                        <div class="icon"><i class="fas fa-user-slash"></i></div>
+                        <h3>Zero Attendance</h3>
+                        <p><?php echo $zero_attendance_users; ?></p>
+                    </div>
+                    <?php else: ?>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Number of instances where an employee punched in but did not punch out.<br>
+                            These may need to be manually adjusted by HR.
+                        </div>
+                        <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h3>Missing Punch-Outs</h3>
+                        <p><?php echo $no_punch_out_count; ?></p>
+                    </div>
+                    <?php endif; ?>
+                    <div class="summary-item">
+                        <div class="tooltip">
+                            Day of the week with the highest attendance count.<br>
+                            Count for <?php echo $most_active_day; ?>: <?php echo isset($attendance_by_day[$most_active_day]) ? $attendance_by_day[$most_active_day] : 0; ?> entries
+                        </div>
+                        <div class="icon"><i class="fas fa-star"></i></div>
+                        <h3>Most Active Day</h3>
+                        <p><?php echo $most_active_day; ?></p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-md-6">
-                <div class="summary-card chart-container">
-                    <h3>Working Hours Trend</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-line"></i> Working Hours Trend</h3>
+                </div>
+                <div class="card-body chart-container">
                     <canvas id="workingHoursChart"></canvas>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="summary-card chart-container">
-                    <h3>Overtime Distribution</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-pie"></i> Overtime Distribution</h3>
+                </div>
+                <div class="card-body chart-container">
                     <canvas id="overtimePieChart"></canvas>
                 </div>
             </div>
         </div>
 
         <?php if ($show_all): ?>
-            <div class="summary-card">
-                <h3>Department-wise Summary</h3>
-                <table class="summary-table">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-building"></i> Department-wise Summary</h3>
+                </div>
+                <div class="card-body table-wrapper">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Total Employees</th>
+                                <th>Total Working Hours</th>
+                                <th>Total Overtime</th>
+                                <th>Average Working Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $dept_summary = [];
+                            foreach ($records as $record) {
+                                $dept = $record['department'] ?? 'Unassigned';
+                                if (!isset($dept_summary[$dept])) {
+                                    $dept_summary[$dept] = [
+                                        'employees' => [],
+                                        'working_hours' => 0,
+                                        'overtime' => 0
+                                    ];
+                                }
+                                $dept_summary[$dept]['employees'][$record['user_id']] = true;
+                                
+                                // Convert working hours if needed
+                                $working_hours = is_numeric($record['working_hours']) ? 
+                                    $record['working_hours'] : 
+                                    convertTimeToDecimal($record['working_hours']);
+                                
+                                // Calculate valid overtime
+                                $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+                                $valid_overtime = calculateValidOvertime(
+                                    $record['overtime_hours'],
+                                    $record['punch_in'],
+                                    $record['punch_out'],
+                                    $shift_end_datetime
+                                );
+                                $overtime = is_numeric($valid_overtime) ? 
+                                    $valid_overtime : 
+                                    convertTimeToDecimal($valid_overtime);
+                                
+                                $dept_summary[$dept]['working_hours'] += $working_hours;
+                                $dept_summary[$dept]['overtime'] += $overtime;
+                            }
+
+                            foreach ($dept_summary as $dept => $summary):
+                                $emp_count = count($summary['employees']);
+                                $avg_hours = $emp_count > 0 ? $summary['working_hours'] / $emp_count : 0;
+                            ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($dept); ?></td>
+                                    <td><?php echo $emp_count; ?></td>
+                                    <td><?php echo number_format($summary['working_hours'], 2); ?></td>
+                                    <td class="overtime"><?php echo number_format($summary['overtime'], 2); ?></td>
+                                    <td><?php echo number_format($avg_hours, 2); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Attendance Details</h3>
+            </div>
+            <div class="card-body table-wrapper">
+                <table class="attendance-table">
                     <thead>
                         <tr>
-                            <th>Department</th>
-                            <th>Total Employees</th>
-                            <th>Total Working Hours</th>
-                            <th>Total Overtime</th>
-                            <th>Average Working Hours</th>
+                            <th>Date</th>
+                            <th>Employee</th>
+                            <th>Shift</th>
+                            <th>Weekly Off Status</th>
+                            <th>Punch In</th>
+                            <th>Punch Out</th>
+                            <th>Working Hours</th>
+                            <th>Overtime</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $dept_summary = [];
-                        foreach ($records as $record) {
-                            $dept = $record['department'] ?? 'Unassigned';
-                            if (!isset($dept_summary[$dept])) {
-                                $dept_summary[$dept] = [
-                                    'employees' => [],
-                                    'working_hours' => 0,
-                                    'overtime' => 0
-                                ];
-                            }
-                            $dept_summary[$dept]['employees'][$record['user_id']] = true;
+                        <?php 
+                        $current_user = null;
+                        foreach ($records as $record):
+                            // Get weekly offs for this specific date
+                            $weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], $record['date']);
+                            $is_weekly_off = isWeeklyOff($record['date'], $weekly_offs);
                             
-                            // Convert working hours if needed
-                            $working_hours = is_numeric($record['working_hours']) ? 
-                                $record['working_hours'] : 
-                                convertTimeToDecimal($record['working_hours']);
-                            
-                            // Calculate valid overtime
-                            $valid_overtime = calculateValidOvertime($record['overtime_hours']);
-                            $overtime = is_numeric($valid_overtime) ? 
-                                $valid_overtime : 
-                                convertTimeToDecimal($valid_overtime);
-                            
-                            $dept_summary[$dept]['working_hours'] += $working_hours;
-                            $dept_summary[$dept]['overtime'] += $overtime;
-                        }
-
-                        foreach ($dept_summary as $dept => $summary):
-                            $emp_count = count($summary['employees']);
-                            $avg_hours = $emp_count > 0 ? $summary['working_hours'] / $emp_count : 0;
+                            if ($show_all && $current_user !== $record['username']):
+                                $current_user = $record['username'];
                         ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($dept); ?></td>
-                                <td><?php echo $emp_count; ?></td>
-                                <td><?php echo number_format($summary['working_hours'], 2); ?></td>
-                                <td class="overtime"><?php echo number_format($summary['overtime'], 2); ?></td>
-                                <td><?php echo number_format($avg_hours, 2); ?></td>
+                                <tr class="user-row">
+                                    <td colspan="9">
+                                        <div class="user-header">
+                                            <span class="user-name">
+                                                <i class="fas fa-user"></i>
+                                                <?php echo htmlspecialchars($record['username'] . ' (' . $record['unique_id'] . ')'); ?>
+                                            </span>
+                                            <span class="weekly-offs-info">
+                                                <i class="fas fa-calendar-minus"></i> Weekly Offs: 
+                                                <?php 
+                                                $current_weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], date('Y-m-d'));
+                                                echo !empty($current_weekly_offs) 
+                                                    ? htmlspecialchars(implode(', ', explode(',', $current_weekly_offs))) 
+                                                    : 'Not Set';
+                                                ?>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                            <tr class="<?php echo $is_weekly_off ? 'weekly-off-row' : ''; ?>">
+                                <td><?php echo date('d M Y (D)', strtotime($record['date'])); ?></td>
+                                <td><?php echo htmlspecialchars($record['username']); ?></td>
+                                <td>
+                                    <?php echo htmlspecialchars($record['shift_name']); ?>
+                                    <br>
+                                    <small>
+                                        <?php 
+                                        if ($record['shift_start'] && $record['shift_end']) {
+                                            echo date('h:i A', strtotime($record['shift_start'])) . ' - ' . 
+                                                 date('h:i A', strtotime($record['shift_end']));
+                                        } else {
+                                            echo 'No Shift';
+                                        }
+                                        ?>
+                                    </small>
+                                </td>
+                                <td class="weekly-off-status">
+                                    <?php if ($is_weekly_off): ?>
+                                        <span class="badge weekly-off"><i class="fas fa-moon"></i> Weekly Off</span>
+                                        <?php if ($record['punch_in']): ?>
+                                            <span class="badge worked"><i class="fas fa-briefcase"></i> Worked</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="badge working-day"><i class="fas fa-sun"></i> Working Day</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?></td>
+                                <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
+                                <td><?php echo formatHoursAndMinutes($record['working_hours']); ?></td>
+                                <td><?php 
+                                    // Get the shift end time for this record's date
+                                    $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+                                    $valid_overtime = calculateValidOvertime(
+                                        $record['overtime_hours'],
+                                        $record['punch_in'],
+                                        $record['punch_out'],
+                                        $shift_end_datetime
+                                    );
+                                    echo $valid_overtime !== '00:00:00' ? formatDecimalToTime($valid_overtime) : '-';
+                                ?></td>
+                                <td>
+                                    <span class="status-badge <?php echo strtolower($record['status']); ?>">
+                                        <?php echo htmlspecialchars($record['status']); ?>
+                                    </span>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-        <?php endif; ?>
-
-        <table class="attendance-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Employee</th>
-                    <th>Shift</th>
-                    <th>Weekly Off Status</th>
-                    <th>Punch In</th>
-                    <th>Punch Out</th>
-                    <th>Working Hours</th>
-                    <th>Overtime</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php 
-                $current_user = null;
-                foreach ($records as $record):
-                    // Get weekly offs for this specific date
-                    $weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], $record['date']);
-                    $is_weekly_off = isWeeklyOff($record['date'], $weekly_offs);
-                    
-                    if ($show_all && $current_user !== $record['username']):
-                        $current_user = $record['username'];
-                ?>
-                        <tr class="user-row">
-                            <td colspan="9">
-                                <div class="user-header">
-                                    <span class="user-name">
-                                        <i class="fas fa-user"></i>
-                                        <?php echo htmlspecialchars($record['username'] . ' (' . $record['unique_id'] . ')'); ?>
-                                    </span>
-                                    <span class="weekly-offs-info">
-                                        Current Weekly Offs: 
-                                        <?php 
-                                        $current_weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], date('Y-m-d'));
-                                        echo !empty($current_weekly_offs) 
-                                            ? htmlspecialchars(implode(', ', explode(',', $current_weekly_offs))) 
-                                            : 'Not Set';
-                                        ?>
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                    <tr class="<?php echo $is_weekly_off ? 'weekly-off-row' : ''; ?>">
-                        <td><?php echo date('d M Y (D)', strtotime($record['date'])); ?></td>
-                        <td><?php echo htmlspecialchars($record['username']); ?></td>
-                        <td>
-                            <?php echo htmlspecialchars($record['shift_name']); ?>
-                            <br>
-                            <small>
-                                <?php 
-                                if ($record['shift_start'] && $record['shift_end']) {
-                                    echo date('h:i A', strtotime($record['shift_start'])) . ' - ' . 
-                                         date('h:i A', strtotime($record['shift_end']));
-                                } else {
-                                    echo 'No Shift';
-                                }
-                                ?>
-                            </small>
-                        </td>
-                        <td class="weekly-off-status">
-                            <?php if ($is_weekly_off): ?>
-                                <span class="badge weekly-off">Weekly Off</span>
-                                <?php if ($record['punch_in']): ?>
-                                    <span class="badge worked">Worked</span>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <span class="badge working-day">Working Day</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?></td>
-                        <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
-                        <td><?php echo formatHoursAndMinutes($record['working_hours']); ?></td>
-                        <td><?php 
-                            $valid_overtime = calculateValidOvertime($record['overtime_hours']);
-                            echo $valid_overtime !== '00:00:00' ? formatDecimalToTime($valid_overtime) : '-';
-                        ?></td>
-                        <td>
-                            <span class="status-badge <?php echo strtolower($record['status']); ?>">
-                                <?php echo htmlspecialchars($record['status']); ?>
-                            </span>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        </div>
 
         <?php if (empty($records)): ?>
             <div class="alert alert-info">
-                No attendance records found for the selected period.
+                <i class="fas fa-info-circle"></i> No attendance records found for the selected period.
             </div>
         <?php endif; ?>
     </div>
@@ -769,7 +1334,14 @@ function formatDecimalToTime($timeString) {
                 $record['working_hours'] : 
                 convertTimeToDecimal($record['working_hours']);
             
-            $valid_overtime = calculateValidOvertime($record['overtime_hours']);
+            // Calculate overtime using shift end time
+            $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+            $valid_overtime = calculateValidOvertime(
+                $record['overtime_hours'],
+                $record['punch_in'],
+                $record['punch_out'],
+                $shift_end_datetime
+            );
             $overtimeHours[] = convertTimeToDecimal($valid_overtime);
         }
         
@@ -782,7 +1354,16 @@ function formatDecimalToTime($timeString) {
         ];
         
         foreach ($records as $record) {
-            $overtime = convertTimeToDecimal($record['overtime_hours']);
+            // Calculate overtime using shift end time
+            $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+            $valid_overtime = calculateValidOvertime(
+                $record['overtime_hours'],
+                $record['punch_in'],
+                $record['punch_out'],
+                $shift_end_datetime
+            );
+            $overtime = convertTimeToDecimal($valid_overtime);
+            
             if ($overtime < 1.5) {
                 $overtime_distribution['No Overtime']++;
             } elseif ($overtime <= 2) {

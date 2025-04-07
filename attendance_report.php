@@ -1218,7 +1218,7 @@ function formatDecimalToTime($timeString) {
             
             <ul class="sidebar-menu">
                 <li>
-                    <a href="profile.php">
+                    <a href="manager_profile.php">
                         <i class="fas fa-user"></i>
                         <span class="sidebar-text">Profile</span>
                     </a>

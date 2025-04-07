@@ -365,8 +365,202 @@ function calculateOvertimeRate($baseSalary, $totalWorkingDays, $shiftHours) {
 <head>
     <meta charset="UTF-8">
     <title>Salary Information</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        /* Root Variables */
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-hover: rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: #f5f8fa;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            background-color: #f5f8fa;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        /* Your existing styles */
         :root {
             --primary-color: #2563eb;
             --secondary-color: #1e40af;
@@ -831,414 +1025,478 @@ function calculateOvertimeRate($baseSalary, $totalWorkingDays, $shiftHours) {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="page-header">
-            <h1>
-                <i class="fas fa-money-bill-alt"></i>
-                Salary Information
-            </h1>
-            <button id="exportBtn" class="btn btn-outline-primary">
-                <i class="fas fa-file-excel"></i>
-                Export to Excel
-            </button>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
         </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link active">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
 
-        <div class="month-navigation">
-            <i class="fas fa-calendar-alt"></i>
-            <input type="month" 
-                   class="date-picker" 
-                   value="<?php echo $selected_month; ?>"
-                   name="month">
-        </div>
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-        <div class="export-range-container">
-            <button id="showExportRangeBtn" class="btn btn-outline-primary">
-                <i class="fas fa-calendar-range"></i>
-                Export Date Range
-            </button>
-            <div id="exportRangeModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h3>Select Date Range for Export</h3>
-                    <div class="date-range-inputs">
-                        <div class="input-group">
-                            <label for="startDate">From Date:</label>
-                            <input type="date" id="startDate" class="date-picker">
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="page-header">
+                <h1>
+                    <i class="fas fa-money-bill-alt"></i>
+                    Salary Information
+                </h1>
+                <button id="exportBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-file-excel"></i>
+                    Export to Excel
+                </button>
+            </div>
+
+            <div class="month-navigation">
+                <i class="fas fa-calendar-alt"></i>
+                <input type="month" 
+                       class="date-picker" 
+                       value="<?php echo $selected_month; ?>"
+                       name="month">
+            </div>
+
+            <div class="export-range-container">
+                <button id="showExportRangeBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar-range"></i>
+                    Export Date Range
+                </button>
+                <div id="exportRangeModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Select Date Range for Export</h3>
+                        <div class="date-range-inputs">
+                            <div class="input-group">
+                                <label for="startDate">From Date:</label>
+                                <input type="date" id="startDate" class="date-picker">
+                            </div>
+                            <div class="input-group">
+                                <label for="endDate">To Date:</label>
+                                <input type="date" id="endDate" class="date-picker">
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label for="endDate">To Date:</label>
-                            <input type="date" id="endDate" class="date-picker">
-                        </div>
+                        <button id="exportRangeBtn" class="btn btn-primary">
+                            <i class="fas fa-file-excel"></i>
+                            Export
+                        </button>
                     </div>
-                    <button id="exportRangeBtn" class="btn btn-primary">
-                        <i class="fas fa-file-excel"></i>
-                        Export
-                    </button>
                 </div>
             </div>
-        </div>
 
-        <?php if (isset($_GET['success'])): ?>
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i>
-                Salary information updated successfully!
-            </div>
-        <?php endif; ?>
+            <?php if (isset($_GET['success'])): ?>
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    Salary information updated successfully!
+                </div>
+            <?php endif; ?>
 
-        <form method="POST" class="salary-form">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee Name</th>
-                        <th>Base Salary</th>
-                        <th>Working Days</th>
-                        <th>Present Days</th>
-                        <th>
-                            Late Days
-                            <span class="info-tooltip" title="Days when punch-in was more than 15 minutes after shift start time">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Late Deduction
-                            <span class="info-tooltip" title="Half day salary deducted for each late day after 3 late days">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Leaves Taken
-                            <span class="info-tooltip" title="Leave Types:
-                            • C.L. - Casual Leave
-                            • SH.L. - Short Leave
-                            • CO.L. - Compensate Leave
-                            • U.L. - Unpaid Leave
-                            • S.L. - Sick Leave
-                            • E.L. - Emergency Leave
-                            • M.L. - Maternity Leave
-                            • P.L. - Paternity Leave
+            <form method="POST" class="salary-form">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Base Salary</th>
+                            <th>Working Days</th>
+                            <th>Present Days</th>
+                            <th>
+                                Late Days
+                                <span class="info-tooltip" title="Days when punch-in was more than 15 minutes after shift start time">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Late Deduction
+                                <span class="info-tooltip" title="Half day salary deducted for each late day after 3 late days">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Leaves Taken
+                                <span class="info-tooltip" title="Leave Types:
+                                • C.L. - Casual Leave
+                                • SH.L. - Short Leave
+                                • CO.L. - Compensate Leave
+                                • U.L. - Unpaid Leave
+                                • S.L. - Sick Leave
+                                • E.L. - Emergency Leave
+                                • M.L. - Maternity Leave
+                                • P.L. - Paternity Leave
 
 Leave Deduction Rules:
-                            • Casual Leave: Deducts 1 day salary if more than 1 leave per month
-                            • Short Leave: Deducts half day salary if more than 2 leaves
-                            • Compensate Leave: Deducts 1 day salary if exceeds allowed limit
-                            • Unpaid Leave: Deducts 1 day salary per leave">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Leave Deduction
-                            <span class="info-tooltip" title="Salary deductions for leaves">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Half Day Deduction
-                            <span class="info-tooltip" title="Salary deductions for half day leaves">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>Monthly Salary</th>
-                        <th>
-                            Overtime Hours
-                            <span class="info-tooltip" title="Total overtime hours for selected month">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Overtime Rate
-                            <span class="info-tooltip" title="Automatically calculated based on base salary, working days, and shift hours">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Overtime Amount
-                            <span class="info-tooltip" title="Calculated as Overtime Hours × Overtime Rate">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                        <th>
-                            Total Salary
-                            <span class="info-tooltip" title="Monthly Salary + Overtime Amount">
-                                <i class="fas fa-info-circle"></i>
-                            </span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($users as $user): 
-                        $workingDaysInfo = calculateWorkingDays($month_start, $month_end, $user['id']);
-                        // Calculate per day salary
-                        $perDaySalary = $workingDaysInfo['working_days'] > 0 ? 
-                            ($user['base_salary'] / $workingDaysInfo['working_days']) : 0;
-                        
-                        // Count casual leaves taken
-                        $casualLeaveCount = 0;
-                        if (!empty($user['leaves_taken'])) {
-                            $leaves = explode("\n", $user['leaves_taken']);
-                            foreach ($leaves as $leave) {
-                                if (preg_match('/^C\.L\.: (\d+)\//', $leave, $matches)) {
-                                    $casualLeaveCount = (int)$matches[1];
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        // Count short leaves taken
-                        $shortLeaveCount = 0;
-                        if (!empty($user['leaves_taken'])) {
-                            $leaves = explode("\n", $user['leaves_taken']);
-                            foreach ($leaves as $leave) {
-                                if (preg_match('/^SH\.L\.: (\d+)\//', $leave, $matches)) {
-                                    $shortLeaveCount = (int)$matches[1];
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        // Calculate adjusted present days (add casual leaves to present days)
-                        $presentDays = ($user['present_days'] ?? 0);
-                        $adjustedPresentDays = $presentDays + $casualLeaveCount;
-                        
-                        // Calculate adjusted late days (subtract short leaves up to 2)
-                        $lateDays = $user['late_days'] ?? 0;
-                        $adjustedLateDays = max(0, $lateDays - min(2, $shortLeaveCount));
-                        
-                        // Calculate late deduction based on adjusted late days
-                        $deductionDays = floor($adjustedLateDays / 3); // Get number of complete sets of 3 late days
-                        if ($workingDaysInfo['working_days'] > 0) {
-                            $perDaySalary = $user['base_salary'] / $workingDaysInfo['working_days'];
-                            $lateDeduction = $deductionDays * ($perDaySalary * 0.5); // Half day salary for each set of 3 late days
-                        } else {
-                            $lateDeduction = 0;
-                        }
-                        
-                        // Calculate leave deductions excluding half day leaves
-                        $leaveDeductionWithoutHalfDay = 0;
-                        if (!empty($user['leaves_taken'])) {
-                            $leaves = explode("\n", $user['leaves_taken']);
-                            foreach ($leaves as $leave) {
-                                if (preg_match('/^(.*?): (\d+)\/(\d+)/', $leave, $matches)) {
-                                    $leaveType = $matches[1];
-                                    $taken = (int)$matches[2];
-                                    $allowed = (int)$matches[3];
-
-                                    if ($leaveType === 'C.L.' && $taken > 1) {
-                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - 1);
-                                    } elseif ($leaveType === 'SH.L.' && $taken > 2) {
-                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * 0.5) * ($taken - 2);
-                                    } elseif ($leaveType === 'CO.L.' && $taken > $allowed) {
-                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - $allowed);
-                                    } elseif ($leaveType === 'U.L.') {
-                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * $taken);
+                                • Casual Leave: Deducts 1 day salary if more than 1 leave per month
+                                • Short Leave: Deducts half day salary if more than 2 leaves
+                                • Compensate Leave: Deducts 1 day salary if exceeds allowed limit
+                                • Unpaid Leave: Deducts 1 day salary per leave">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Leave Deduction
+                                <span class="info-tooltip" title="Salary deductions for leaves">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Half Day Deduction
+                                <span class="info-tooltip" title="Salary deductions for half day leaves">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>Monthly Salary</th>
+                            <th>
+                                Overtime Hours
+                                <span class="info-tooltip" title="Total overtime hours for selected month">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Overtime Rate
+                                <span class="info-tooltip" title="Automatically calculated based on base salary, working days, and shift hours">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Overtime Amount
+                                <span class="info-tooltip" title="Calculated as Overtime Hours × Overtime Rate">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Total Salary
+                                <span class="info-tooltip" title="Monthly Salary + Overtime Amount">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($users as $user): 
+                            $workingDaysInfo = calculateWorkingDays($month_start, $month_end, $user['id']);
+                            // Calculate per day salary
+                            $perDaySalary = $workingDaysInfo['working_days'] > 0 ? 
+                                ($user['base_salary'] / $workingDaysInfo['working_days']) : 0;
+                            
+                            // Count casual leaves taken
+                            $casualLeaveCount = 0;
+                            if (!empty($user['leaves_taken'])) {
+                                $leaves = explode("\n", $user['leaves_taken']);
+                                foreach ($leaves as $leave) {
+                                    if (preg_match('/^C\.L\.: (\d+)\//', $leave, $matches)) {
+                                        $casualLeaveCount = (int)$matches[1];
+                                        break;
                                     }
                                 }
                             }
-                        }
-                        
-                        // Calculate half day deductions
-                        $halfDayDeduction = 0;
-                        if (!empty($user['leaves_taken'])) {
-                            $leaves = explode("\n", $user['leaves_taken']);
-                            foreach ($leaves as $leave) {
-                                if (preg_match('/^H\.L\.: (\d+)\/(\d+)/', $leave, $matches)) {
-                                    $taken = (int)$matches[1];
-                                    $halfDayDeduction = $perDaySalary * 0.5 * $taken;
-                                    break;
+                            
+                            // Count short leaves taken
+                            $shortLeaveCount = 0;
+                            if (!empty($user['leaves_taken'])) {
+                                $leaves = explode("\n", $user['leaves_taken']);
+                                foreach ($leaves as $leave) {
+                                    if (preg_match('/^SH\.L\.: (\d+)\//', $leave, $matches)) {
+                                        $shortLeaveCount = (int)$matches[1];
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        
-                        // Update monthly salary calculation to use adjusted present days and include half day deduction
-                        $monthSalary = ($perDaySalary * $adjustedPresentDays) - $lateDeduction - $halfDayDeduction;
+                            
+                            // Calculate adjusted present days (add casual leaves to present days)
+                            $presentDays = ($user['present_days'] ?? 0);
+                            $adjustedPresentDays = $presentDays + $casualLeaveCount;
+                            
+                            // Calculate adjusted late days (subtract short leaves up to 2)
+                            $lateDays = $user['late_days'] ?? 0;
+                            $adjustedLateDays = max(0, $lateDays - min(2, $shortLeaveCount));
+                            
+                            // Calculate late deduction based on adjusted late days
+                            $deductionDays = floor($adjustedLateDays / 3); // Get number of complete sets of 3 late days
+                            if ($workingDaysInfo['working_days'] > 0) {
+                                $perDaySalary = $user['base_salary'] / $workingDaysInfo['working_days'];
+                                $lateDeduction = $deductionDays * ($perDaySalary * 0.5); // Half day salary for each set of 3 late days
+                            } else {
+                                $lateDeduction = 0;
+                            }
+                            
+                            // Calculate leave deductions excluding half day leaves
+                            $leaveDeductionWithoutHalfDay = 0;
+                            if (!empty($user['leaves_taken'])) {
+                                $leaves = explode("\n", $user['leaves_taken']);
+                                foreach ($leaves as $leave) {
+                                    if (preg_match('/^(.*?): (\d+)\/(\d+)/', $leave, $matches)) {
+                                        $leaveType = $matches[1];
+                                        $taken = (int)$matches[2];
+                                        $allowed = (int)$matches[3];
 
-                        // Calculate overtime amount
-                        $shiftHours = $user['shift_hours'] ?? 8;
-                        $suggestedRate = calculateOvertimeRate(
-                            $user['base_salary'], 
-                            $workingDaysInfo['working_days'],
-                            $shiftHours
-                        );
-                        $overtime_hours = $user['overtime_hours'] ?: '0:00';
-                        list($hours, $minutes) = explode(':', $overtime_hours);
-                        $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
-                        $overtime_amount = $decimal_hours * $suggestedRate;
-                        
-                        // Calculate leaves taken
-                        $leavesTaken = $user['leaves_taken'] ?? 0;
-                        
-                        // Calculate total salary - include monthly salary (which already has late deduction) and overtime only
-                        $totalSalary = $monthSalary + $overtime_amount;
-                    ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($user['username']); ?></td>
-                            <td>
-                                <input type="number" 
-                                       name="salary[<?php echo $user['id']; ?>][base_salary]" 
-                                       value="<?php echo $user['base_salary']; ?>" 
-                                       class="form-control base-salary"
-                                       data-user-id="<?php echo $user['id']; ?>"
-                                       onchange="updateOvertimeRate(this)">
-                            </td>
-                            <td>
-                                <?php echo $workingDaysInfo['working_days']; ?>
-                            </td>
-                            <td>
-                                <?php echo $presentDays; ?> 
-                                <?php if ($casualLeaveCount > 0): ?>
-                                    <span class="rate-info">(<?php echo $adjustedPresentDays; ?> with C.L.)</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php echo $user['late_days'] ?? 0; ?> 
-                                <?php if ($shortLeaveCount > 0 && $adjustedLateDays != $lateDays): ?>
-                                    <span class="rate-info">(<?php echo $adjustedLateDays; ?> after SH.L.)</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php echo '₹' . number_format($lateDeduction, 2); ?>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="form-control" style="background: #f9fafb; white-space: pre-line; height: auto; min-height: 38px; width: 150px; /* increased width */">
-                                        <?php 
-                                        echo $user['leaves_taken'] ? 
-                                            htmlspecialchars($user['leaves_taken']) : 
-                                            '0 days';
-                                        ?>
-                                    </span>
-                                    <div class="rate-info">Days</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="form-control" style="background: #f9fafb;">
-                                        <?php 
-                                        // Calculate leave deductions excluding half day leaves
-                                        $leaveDeductionWithoutHalfDay = 0;
-                                        if (!empty($user['leaves_taken'])) {
-                                            $leaves = explode("\n", $user['leaves_taken']);
-                                            foreach ($leaves as $leave) {
-                                                if (preg_match('/^(.*?): (\d+)\/(\d+)/', $leave, $matches)) {
-                                                    $leaveType = $matches[1];
-                                                    $taken = (int)$matches[2];
-                                                    $allowed = (int)$matches[3];
+                                        if ($leaveType === 'C.L.' && $taken > 1) {
+                                            $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - 1);
+                                        } elseif ($leaveType === 'SH.L.' && $taken > 2) {
+                                            $leaveDeductionWithoutHalfDay += ($perDaySalary * 0.5) * ($taken - 2);
+                                        } elseif ($leaveType === 'CO.L.' && $taken > $allowed) {
+                                            $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - $allowed);
+                                        } elseif ($leaveType === 'U.L.') {
+                                            $leaveDeductionWithoutHalfDay += ($perDaySalary * $taken);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Calculate half day deductions
+                            $halfDayDeduction = 0;
+                            if (!empty($user['leaves_taken'])) {
+                                $leaves = explode("\n", $user['leaves_taken']);
+                                foreach ($leaves as $leave) {
+                                    if (preg_match('/^H\.L\.: (\d+)\/(\d+)/', $leave, $matches)) {
+                                        $taken = (int)$matches[1];
+                                        $halfDayDeduction = $perDaySalary * 0.5 * $taken;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Update monthly salary calculation to use adjusted present days and include half day deduction
+                            $monthSalary = ($perDaySalary * $adjustedPresentDays) - $lateDeduction - $halfDayDeduction;
 
-                                                    if ($leaveType === 'C.L.' && $taken > 1) {
-                                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - 1);
-                                                    } elseif ($leaveType === 'SH.L.' && $taken > 2) {
-                                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * 0.5) * ($taken - 2);
-                                                    } elseif ($leaveType === 'CO.L.' && $taken > $allowed) {
-                                                        $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - $allowed);
-                                                    } elseif ($leaveType === 'U.L.') {
-                                                        $leaveDeductionWithoutHalfDay += ($perDaySalary * $taken);
+                            // Calculate overtime amount
+                            $shiftHours = $user['shift_hours'] ?? 8;
+                            $suggestedRate = calculateOvertimeRate(
+                                $user['base_salary'], 
+                                $workingDaysInfo['working_days'],
+                                $shiftHours
+                            );
+                            $overtime_hours = $user['overtime_hours'] ?: '0:00';
+                            list($hours, $minutes) = explode(':', $overtime_hours);
+                            $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
+                            $overtime_amount = $decimal_hours * $suggestedRate;
+                            
+                            // Calculate leaves taken
+                            $leavesTaken = $user['leaves_taken'] ?? 0;
+                            
+                            // Calculate total salary - include monthly salary (which already has late deduction) and overtime only
+                            $totalSalary = $monthSalary + $overtime_amount;
+                        ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                <td>
+                                    <input type="number" 
+                                           name="salary[<?php echo $user['id']; ?>][base_salary]" 
+                                           value="<?php echo $user['base_salary']; ?>" 
+                                           class="form-control base-salary"
+                                           data-user-id="<?php echo $user['id']; ?>"
+                                           onchange="updateOvertimeRate(this)">
+                                </td>
+                                <td>
+                                    <?php echo $workingDaysInfo['working_days']; ?>
+                                </td>
+                                <td>
+                                    <?php echo $presentDays; ?> 
+                                    <?php if ($casualLeaveCount > 0): ?>
+                                        <span class="rate-info">(<?php echo $adjustedPresentDays; ?> with C.L.)</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php echo $user['late_days'] ?? 0; ?> 
+                                    <?php if ($shortLeaveCount > 0 && $adjustedLateDays != $lateDays): ?>
+                                        <span class="rate-info">(<?php echo $adjustedLateDays; ?> after SH.L.)</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php echo '₹' . number_format($lateDeduction, 2); ?>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="form-control" style="background: #f9fafb; white-space: pre-line; height: auto; min-height: 38px; width: 150px; /* increased width */">
+                                            <?php 
+                                            echo $user['leaves_taken'] ? 
+                                                htmlspecialchars($user['leaves_taken']) : 
+                                                '0 days';
+                                            ?>
+                                        </span>
+                                        <div class="rate-info">Days</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="form-control" style="background: #f9fafb;">
+                                            <?php 
+                                            // Calculate leave deductions excluding half day leaves
+                                            $leaveDeductionWithoutHalfDay = 0;
+                                            if (!empty($user['leaves_taken'])) {
+                                                $leaves = explode("\n", $user['leaves_taken']);
+                                                foreach ($leaves as $leave) {
+                                                    if (preg_match('/^(.*?): (\d+)\/(\d+)/', $leave, $matches)) {
+                                                        $leaveType = $matches[1];
+                                                        $taken = (int)$matches[2];
+                                                        $allowed = (int)$matches[3];
+
+                                                        if ($leaveType === 'C.L.' && $taken > 1) {
+                                                            $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - 1);
+                                                        } elseif ($leaveType === 'SH.L.' && $taken > 2) {
+                                                            $leaveDeductionWithoutHalfDay += ($perDaySalary * 0.5) * ($taken - 2);
+                                                        } elseif ($leaveType === 'CO.L.' && $taken > $allowed) {
+                                                            $leaveDeductionWithoutHalfDay += $perDaySalary * ($taken - $allowed);
+                                                        } elseif ($leaveType === 'U.L.') {
+                                                            $leaveDeductionWithoutHalfDay += ($perDaySalary * $taken);
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
-                                        echo '₹' . number_format($leaveDeductionWithoutHalfDay, 2); 
-                                        ?>
-                                    </span>
-                                    <div class="rate-info">Amount</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="form-control" style="background: #f9fafb;">
-                                        <?php 
-                                        // Calculate half day deductions
-                                        $halfDayDeduction = 0;
-                                        if (!empty($user['leaves_taken'])) {
-                                            $leaves = explode("\n", $user['leaves_taken']);
-                                            foreach ($leaves as $leave) {
-                                                if (preg_match('/^H\.L\.: (\d+)\/(\d+)/', $leave, $matches)) {
-                                                    $taken = (int)$matches[1];
-                                                    $halfDayDeduction = $perDaySalary * 0.5 * $taken;
-                                                    break;
+                                            echo '₹' . number_format($leaveDeductionWithoutHalfDay, 2); 
+                                            ?>
+                                        </span>
+                                        <div class="rate-info">Amount</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="form-control" style="background: #f9fafb;">
+                                            <?php 
+                                            // Calculate half day deductions
+                                            $halfDayDeduction = 0;
+                                            if (!empty($user['leaves_taken'])) {
+                                                $leaves = explode("\n", $user['leaves_taken']);
+                                                foreach ($leaves as $leave) {
+                                                    if (preg_match('/^H\.L\.: (\d+)\/(\d+)/', $leave, $matches)) {
+                                                        $taken = (int)$matches[1];
+                                                        $halfDayDeduction = $perDaySalary * 0.5 * $taken;
+                                                        break;
+                                                    }
                                                 }
                                             }
-                                        }
-                                        echo '₹' . number_format($halfDayDeduction, 2); 
+                                            echo '₹' . number_format($halfDayDeduction, 2); 
+                                            ?>
+                                        </span>
+                                        <div class="rate-info">Amount</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    ₹<?php echo number_format($monthSalary, 2); ?>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="form-control" style="background: #f9fafb;">
+                                            <?php echo $user['overtime_hours'] ?: '0:00'; ?>
+                                        </span>
+                                        <div class="rate-info">Hours:Minutes</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <?php 
+                                        $suggestedRate = calculateOvertimeRate(
+                                            $user['base_salary'], 
+                                            $workingDaysInfo['working_days'],
+                                            $shiftHours
+                                        );
                                         ?>
-                                    </span>
-                                    <div class="rate-info">Amount</div>
-                                </div>
-                            </td>
-                            <td>
-                                ₹<?php echo number_format($monthSalary, 2); ?>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="form-control" style="background: #f9fafb;">
-                                        <?php echo $user['overtime_hours'] ?: '0:00'; ?>
-                                    </span>
-                                    <div class="rate-info">Hours:Minutes</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <?php 
-                                    $suggestedRate = calculateOvertimeRate(
-                                        $user['base_salary'], 
-                                        $workingDaysInfo['working_days'],
-                                        $shiftHours
-                                    );
-                                    ?>
-                                    <input type="number" 
-                                           name="salary[<?php echo $user['id']; ?>][overtime_rate]" 
-                                           value="<?php echo $suggestedRate; ?>" 
-                                           class="form-control overtime-rate"
-                                           data-user-id="<?php echo $user['id']; ?>"
-                                           step="0.01">
-                                    <span class="rate-info">
-                                        (Auto-calculated)
-                                    </span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="form-control" style="background: #f9fafb;">
-                                        <?php
-                                        $overtime_hours = $user['overtime_hours'] ?: '0:00';
-                                        list($hours, $minutes) = explode(':', $overtime_hours);
-                                        $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
-                                        
-                                        // Add debug output
-                                        error_log("Debug - User: {$user['username']}");
-                                        error_log("Overtime hours: $overtime_hours");
-                                        error_log("Decimal hours: $decimal_hours");
-                                        error_log("Suggested rate: $suggestedRate");
-                                        
-                                        $overtime_amount = $decimal_hours * $suggestedRate;
-                                        echo number_format($overtime_amount, 2);
-                                        ?>
-                                    </span>
-                                    <div class="rate-info">Amount</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="form-control" style="background: #f9fafb;">
-                                        ₹<?php echo number_format($totalSalary, 2); ?>
-                                    </span>
-                                    <div class="rate-info">Total</div>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                                        <input type="number" 
+                                               name="salary[<?php echo $user['id']; ?>][overtime_rate]" 
+                                               value="<?php echo $suggestedRate; ?>" 
+                                               class="form-control overtime-rate"
+                                               data-user-id="<?php echo $user['id']; ?>"
+                                               step="0.01">
+                                        <span class="rate-info">
+                                            (Auto-calculated)
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="form-control" style="background: #f9fafb;">
+                                            <?php
+                                            $overtime_hours = $user['overtime_hours'] ?: '0:00';
+                                            list($hours, $minutes) = explode(':', $overtime_hours);
+                                            $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
+                                            
+                                            // Add debug output
+                                            error_log("Debug - User: {$user['username']}");
+                                            error_log("Overtime hours: $overtime_hours");
+                                            error_log("Decimal hours: $decimal_hours");
+                                            error_log("Suggested rate: $suggestedRate");
+                                            
+                                            $overtime_amount = $decimal_hours * $suggestedRate;
+                                            echo number_format($overtime_amount, 2);
+                                            ?>
+                                        </span>
+                                        <div class="rate-info">Amount</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <span class="form-control" style="background: #f9fafb;">
+                                            ₹<?php echo number_format($totalSalary, 2); ?>
+                                        </span>
+                                        <div class="rate-info">Total</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
-            <div class="button-group">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i>
-                    Save Changes
-                </button>
-                <a href="salary_overview.php" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left"></i>
-                    Back to Overview
-                </a>
-            </div>
-        </form>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                    <a href="salary_overview.php" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Overview
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
@@ -1421,6 +1679,60 @@ Leave Deduction Rules:
                 exportRangeBtn.innerHTML = '<i class="fas fa-file-excel"></i> Export';
             }
         }
+    });
+
+    // Add Sidebar Toggle Script
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            sidebarToggle.classList.toggle('collapsed');
+            
+            // Change icon direction
+            const icon = this.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+        
+        // Handle responsive behavior
+        function checkWidth() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.classList.add('collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                sidebarToggle.classList.remove('collapsed');
+            }
+        }
+        
+        // Check on load
+        checkWidth();
+        
+        // Check on resize
+        window.addEventListener('resize', checkWidth);
+        
+        // Handle click outside on mobile
+        document.addEventListener('click', function(e) {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.classList.add('collapsed');
+            }
+        });
     });
     </script>
 </body>

@@ -115,105 +115,493 @@ $current_assignments = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Shift Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
-    <!-- Reuse the CSS from shift_management.php -->
     <style>
-        .main-content {
-            padding: 20px;
-            margin: 20px;
+        /* Root Variables */
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-hover: rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
         }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: #f5f8fa;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Preserved Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        /* Your existing styles */
         .shift-form {
-            background: #f5f5f5;
+            background: white;
             padding: 20px;
             margin-bottom: 20px;
-            border-radius: 5px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .form-group {
-            margin-bottom: 15px;
+
+        /* Update other styles to match the modern look */
+        .content-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
         }
+
         .form-control {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
         }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4361ee;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a4ee0;
+        }
+
+        /* Update Table Styles */
+        .shift-table-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .shift-table-container h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .shift-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
+        }
+
+        .shift-table th {
+            background: #F8FAFC;
+            padding: 0.875rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4B5563;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .shift-table td {
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: #1F2937;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .shift-table tr:hover td {
+            background: #F3F4FF;
+        }
+
+        .shift-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin: 0.125rem;
+        }
+
+        .badge-primary {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .badge-success {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        /* Action Buttons */
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .btn-edit:hover {
+            background: #E0E7FF;
+        }
+
+        .btn-delete {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .btn-delete:hover {
+            background: #FEE2E2;
+        }
+
+        /* Weekly Offs Display */
         .weekly-offs {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 0.25rem;
         }
-        .shift-table {
-            width: 100%;
-            border-collapse: collapse;
+
+        .weekly-off-tag {
+            background: #F3F4FF;
+            color: #4F46E5;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
-        .shift-table th, .shift-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
-        .badge {
-            background: #007bff;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            margin: 2px;
-            display: inline-block;
-        }
-        .btn-group {
+
+        /* Timing Display */
+        .timing-display {
+            color: #4B5563;
             display: flex;
-            gap: 5px;
+            align-items: center;
+            gap: 0.5rem;
         }
-        
-        .btn-sm {
-            padding: 4px 8px;
-            font-size: 12px;
+
+        .timing-display i {
+            color: #6B7280;
+            font-size: 0.875rem;
         }
-        
-        .btn-warning {
-            background-color: #ffc107;
-            color: #000;
+
+        /* Status Indicator */
+        .status-active {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
         }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .shift-table-container {
+
+        /* Form Styles Update */
+        .shift-form {
             background: white;
-            padding: 20px;
-            border-radius: 5px;
+            padding: 1.5rem;
+            border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
         }
+
+        .shift-form h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4B5563;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Update the HTML structure for the tables */
     </style>
 </head>
 <body>
-    <div class="main-content">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
+        </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link active">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
         <div class="dashboard-content">
             <div class="content-header">
                 <h2>User Shift Management</h2>
@@ -260,9 +648,12 @@ $current_assignments = $stmt->fetchAll();
                 </form>
             </div>
 
-            <!-- Add a section to display existing shifts -->
-            <div class="shift-table-container" style="margin-bottom: 30px;">
-                <h3>Available Shifts</h3>
+            <!-- Available Shifts Table -->
+            <div class="shift-table-container">
+                <h3>
+                    <i class="bi bi-clock"></i>
+                    Available Shifts
+                </h3>
                 <table class="shift-table">
                     <thead>
                         <tr>
@@ -275,18 +666,33 @@ $current_assignments = $stmt->fetchAll();
                     <tbody>
                         <?php foreach ($shifts as $shift): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($shift['shift_name']); ?></td>
-                                <td><?php echo date('h:i A', strtotime($shift['start_time'])); ?></td>
-                                <td><?php echo date('h:i A', strtotime($shift['end_time'])); ?></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-active"></span>
+                                        <?php echo htmlspecialchars($shift['shift_name']); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timing-display">
+                                        <i class="bi bi-sunrise"></i>
+                                        <?php echo date('h:i A', strtotime($shift['start_time'])); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="timing-display">
+                                        <i class="bi bi-sunset"></i>
+                                        <?php echo date('h:i A', strtotime($shift['end_time'])); ?>
+                                    </div>
+                                </td>
                                 <td>
                                     <div class="btn-group">
                                         <button onclick="editShift(<?php echo $shift['id']; ?>)" 
-                                                class="btn btn-sm btn-warning">
-                                            <i class="fas fa-edit"></i>
+                                                class="btn-icon btn-edit" title="Edit Shift">
+                                            <i class="bi bi-pencil"></i>
                                         </button>
                                         <button onclick="deleteShift(<?php echo $shift['id']; ?>)" 
-                                                class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i>
+                                                class="btn-icon btn-delete" title="Delete Shift">
+                                            <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -349,8 +755,12 @@ $current_assignments = $stmt->fetchAll();
                 </form>
             </div>
 
+            <!-- Current Shift Assignments Table -->
             <div class="shift-table-container">
-                <h3>Current Shift Assignments</h3>
+                <h3>
+                    <i class="bi bi-people"></i>
+                    Current Shift Assignments
+                </h3>
                 <table class="shift-table">
                     <thead>
                         <tr>
@@ -366,33 +776,51 @@ $current_assignments = $stmt->fetchAll();
                     <tbody>
                         <?php foreach ($current_assignments as $assignment): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($assignment['username']); ?></td>
-                                <td><?php echo htmlspecialchars($assignment['unique_id']); ?></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-active"></span>
+                                        <?php echo htmlspecialchars($assignment['username']); ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">
+                                        <?php echo htmlspecialchars($assignment['unique_id']); ?>
+                                    </span>
+                                </td>
                                 <td><?php echo htmlspecialchars($assignment['shift_name']); ?></td>
                                 <td>
-                                    <?php 
-                                    echo date('h:i A', strtotime($assignment['start_time'])) . ' - ' . 
-                                         date('h:i A', strtotime($assignment['end_time']));
-                                    ?>
+                                    <div class="timing-display">
+                                        <i class="bi bi-clock"></i>
+                                        <?php 
+                                        echo date('h:i A', strtotime($assignment['start_time'])) . ' - ' . 
+                                             date('h:i A', strtotime($assignment['end_time']));
+                                        ?>
+                                    </div>
                                 </td>
                                 <td>
-                                    <?php
-                                    $weekly_offs = explode(',', $assignment['weekly_offs']);
-                                    foreach ($weekly_offs as $day) {
-                                        echo "<span class='badge'>$day</span> ";
-                                    }
-                                    ?>
+                                    <div class="weekly-offs">
+                                        <?php
+                                        $weekly_offs = explode(',', $assignment['weekly_offs']);
+                                        foreach ($weekly_offs as $day) {
+                                            echo "<span class='weekly-off-tag'>$day</span>";
+                                        }
+                                        ?>
+                                    </div>
                                 </td>
-                                <td><?php echo date('Y-m-d', strtotime($assignment['effective_from'])); ?></td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        <?php echo date('d M Y', strtotime($assignment['effective_from'])); ?>
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="btn-group">
                                         <button onclick="editAssignment(<?php echo $assignment['id']; ?>)" 
-                                                class="btn btn-sm btn-warning">
-                                            <i class="fas fa-edit"></i>
+                                                class="btn-icon btn-edit" title="Edit Assignment">
+                                            <i class="bi bi-pencil"></i>
                                         </button>
                                         <button onclick="endAssignment(<?php echo $assignment['id']; ?>)" 
-                                                class="btn btn-sm btn-danger">
-                                            <i class="fas fa-times"></i>
+                                                class="btn-icon btn-delete" title="End Assignment">
+                                            <i class="bi bi-x-lg"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -405,6 +833,58 @@ $current_assignments = $stmt->fetchAll();
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+                
+                // Change icon direction
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                } else {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                }
+            });
+            
+            // Handle responsive behavior
+            function checkWidth() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
+                }
+            }
+            
+            // Check on load
+            checkWidth();
+            
+            // Check on resize
+            window.addEventListener('resize', checkWidth);
+            
+            // Handle click outside on mobile
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                }
+            });
+        });
+
         function editAssignment(id) {
             window.location.href = `edit_user_shift.php?id=${id}`;
         }

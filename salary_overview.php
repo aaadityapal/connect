@@ -270,9 +270,199 @@ function getWeeklyOffs($conn, $userId, $date) {
 <head>
     <meta charset="UTF-8">
     <title>Salary Overview</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
+        /* Root Variables */
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-hover: rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: #f5f8fa;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        /* Your existing styles */
         :root {
             --primary-color: #2563eb;
             --secondary-color: #1e40af;
@@ -746,160 +936,272 @@ function getWeeklyOffs($conn, $userId, $date) {
     </style>
 </head>
 <body>
-    <h1>
-        <i class="fas fa-money-bill-alt"></i> Salary Overview
-    </h1>
-
-    <div class="month-navigation">
-        <input type="month" class="date-picker" value="<?php echo $selected_month; ?>">
-        <div class="button-group">
-            <a href="edit_attendance.php?month=<?php echo $selected_month; ?>" class="btn btn-primary">
-                <i class="fas fa-edit"></i>
-                Edit Attendance
-            </a>
-            <a href="edit_leave.php?month=<?php echo $selected_month; ?>" class="btn btn-primary">
-                <i class="fas fa-calendar-alt"></i>
-                Edit Leave
-            </a>
-            <a href="salary_info.php" class="btn btn-primary">
-                <i class="fas fa-info-circle"></i>
-                Salary Info
-            </a>
-            <button class="export-btn">
-                <i class="fas fa-download"></i>
-                Export
-            </button>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
         </div>
-    </div>
-
-    <div id="loading-overlay" style="display: none;">
-        <div class="spinner"></div>
-        <p>Loading salary data...</p>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th class="text-right">Monthly Salary</th>
-                <th class="text-right">Total Working Days</th>
-                <th class="text-right">Present Days</th>
-                <th class="text-right">Leave Taken</th>
-                <th class="text-right">Short Leave</th>
-                <th class="text-right">Late</th>
-                <th class="text-right">Travelling Expenses</th>
-                <th class="text-right">Salary Amount</th>
-                <th class="text-right">Overtime Amount</th>
-                <th class="text-right">Travel Amount</th>
-                <th class="text-right">Misc. Amount</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($users)): ?>
-                <?php foreach ($users as $employee): ?>
-                    <tr data-user-id="<?php echo $employee['id']; ?>">
-                        <td><?php echo htmlspecialchars($employee['username']); ?></td>
-                        <td class="text-right">₹<?php echo number_format($employee['monthly_salary'] ?? 0, 2); ?></td>
-                        <td class="text-right working-days"><?php echo $employee['total_working_days'] ?? 0; ?></td>
-                        <td class="text-right present-days"><?php echo $employee['present_days'] ?? 0; ?></td>
-                        <td class="text-right"><?php echo $employee['leave_taken'] ?? 0; ?></td>
-                        <td class="text-right"><?php echo $employee['short_leave'] ?? 0; ?></td>
-                        <td class="text-right"><?php echo $employee['late'] ?? 0; ?></td>
-                        <td class="text-right">₹<?php echo number_format($employee['travel_amount'] ?? 0, 2); ?></td>
-                        <td class="text-right">₹<?php echo number_format($employee['salary_amount'] ?? 0, 2); ?></td>
-                        <td class="text-right">₹<?php echo number_format($employee['overtime_amount'] ?? 0, 2); ?></td>
-                        <td class="text-right">₹<?php echo number_format($employee['travel_amount'] ?? 0, 2); ?></td>
-                        <td class="text-right">₹<?php echo number_format($employee['misc_amount'] ?? 0, 2); ?></td>
-                        <td class="action-buttons">
-                            <button class="action-btn btn-edit" onclick="editSalary(<?php echo $employee['id']; ?>)">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="action-btn btn-view" onclick="viewSalary(<?php echo $employee['id']; ?>)">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="13" style="text-align: center;">No salary data available for the selected month</td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const datePicker = document.querySelector('.date-picker');
-        const loadingOverlay = document.getElementById('loading-overlay');
         
-        // Month picker change
-        datePicker.addEventListener('change', function() {
-            loadingOverlay.style.display = 'flex';
-            window.location.href = 'salary_overview.php?month=' + this.value;
-        });
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link active">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
 
-        // Calculate working days considering user's weekly offs
-        async function calculateWorkingDays(userId, year, month) {
-            // Fetch weekly offs and holidays for the user
-            const response = await fetch(`get_weekly_offs.php?user_id=${userId}&date=${year}-${month}-01`);
-            const weeklyOffs = await response.json();
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <h1>
+            <i class="fas fa-money-bill-alt"></i> Salary Overview
+        </h1>
+
+        <div class="month-navigation">
+            <input type="month" class="date-picker" value="<?php echo $selected_month; ?>">
+            <div class="button-group">
+                <a href="edit_attendance.php?month=<?php echo $selected_month; ?>" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Attendance
+                </a>
+                <a href="edit_leave.php?month=<?php echo $selected_month; ?>" class="btn btn-primary">
+                    <i class="fas fa-calendar-alt"></i>
+                    Edit Leave
+                </a>
+                <a href="salary_info.php" class="btn btn-primary">
+                    <i class="fas fa-info-circle"></i>
+                    Salary Info
+                </a>
+                <button class="export-btn">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <div id="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading salary data...</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="text-right">Monthly Salary</th>
+                    <th class="text-right">Total Working Days</th>
+                    <th class="text-right">Present Days</th>
+                    <th class="text-right">Leave Taken</th>
+                    <th class="text-right">Short Leave</th>
+                    <th class="text-right">Late</th>
+                    <th class="text-right">Travelling Expenses</th>
+                    <th class="text-right">Salary Amount</th>
+                    <th class="text-right">Overtime Amount</th>
+                    <th class="text-right">Travel Amount</th>
+                    <th class="text-right">Misc. Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($users)): ?>
+                    <?php foreach ($users as $employee): ?>
+                        <tr data-user-id="<?php echo $employee['id']; ?>">
+                            <td><?php echo htmlspecialchars($employee['username']); ?></td>
+                            <td class="text-right">₹<?php echo number_format($employee['monthly_salary'] ?? 0, 2); ?></td>
+                            <td class="text-right working-days"><?php echo $employee['total_working_days'] ?? 0; ?></td>
+                            <td class="text-right present-days"><?php echo $employee['present_days'] ?? 0; ?></td>
+                            <td class="text-right"><?php echo $employee['leave_taken'] ?? 0; ?></td>
+                            <td class="text-right"><?php echo $employee['short_leave'] ?? 0; ?></td>
+                            <td class="text-right"><?php echo $employee['late'] ?? 0; ?></td>
+                            <td class="text-right">₹<?php echo number_format($employee['travel_amount'] ?? 0, 2); ?></td>
+                            <td class="text-right">₹<?php echo number_format($employee['salary_amount'] ?? 0, 2); ?></td>
+                            <td class="text-right">₹<?php echo number_format($employee['overtime_amount'] ?? 0, 2); ?></td>
+                            <td class="text-right">₹<?php echo number_format($employee['travel_amount'] ?? 0, 2); ?></td>
+                            <td class="text-right">₹<?php echo number_format($employee['misc_amount'] ?? 0, 2); ?></td>
+                            <td class="action-buttons">
+                                <button class="action-btn btn-edit" onclick="editSalary(<?php echo $employee['id']; ?>)">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </button>
+                                <button class="action-btn btn-view" onclick="viewSalary(<?php echo $employee['id']; ?>)">
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="13" style="text-align: center;">No salary data available for the selected month</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Sidebar Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar functionality
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
             
-            // Fetch holidays for the month
-            const holidaysResponse = await fetch(`get_holidays.php?year=${year}&month=${month}`);
-            const holidays = await holidaysResponse.json();
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+                
+                // Change icon direction
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                } else {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                }
+            });
             
-            const startDate = new Date(year, month - 1, 1);
-            const endDate = new Date(year, month, 0);
-            let workingDays = 0;
-            
-            for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-                const dateString = date.toISOString().split('T')[0];
-                // Check if current day is not in weekly offs and not a holiday
-                if (!weeklyOffs.includes(date.getDay().toString()) && !holidays.includes(dateString)) {
-                    workingDays++;
+            // Handle responsive behavior
+            function checkWidth() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
                 }
             }
-            return workingDays;
-        }
-
-        // Update working days for each employee
-        async function updateWorkingDays() {
-            const [year, month] = datePicker.value.split('-');
-            const rows = document.querySelectorAll('tbody tr');
             
-            for (const row of rows) {
-                const userId = row.dataset.userId; // Add data-user-id attribute to your TR elements
-                if (userId) {
-                    const workingDays = await calculateWorkingDays(userId, parseInt(year), parseInt(month));
-                    const workingDaysCell = row.querySelector('.working-days');
-                    if (workingDaysCell) {
-                        workingDaysCell.textContent = workingDays;
+            // Check on load
+            checkWidth();
+            
+            // Check on resize
+            window.addEventListener('resize', checkWidth);
+            
+            // Handle click outside on mobile
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                }
+            });
+
+            // Existing salary overview functionality
+            const datePicker = document.querySelector('.date-picker');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            // Month picker change
+            datePicker.addEventListener('change', function() {
+                loadingOverlay.style.display = 'flex';
+                window.location.href = 'salary_overview.php?month=' + this.value;
+            });
+
+            // Calculate working days considering user's weekly offs
+            async function calculateWorkingDays(userId, year, month) {
+                // Fetch weekly offs and holidays for the user
+                const response = await fetch(`get_weekly_offs.php?user_id=${userId}&date=${year}-${month}-01`);
+                const weeklyOffs = await response.json();
+                
+                // Fetch holidays for the month
+                const holidaysResponse = await fetch(`get_holidays.php?year=${year}&month=${month}`);
+                const holidays = await holidaysResponse.json();
+                
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0);
+                let workingDays = 0;
+                
+                for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                    const dateString = date.toISOString().split('T')[0];
+                    // Check if current day is not in weekly offs and not a holiday
+                    if (!weeklyOffs.includes(date.getDay().toString()) && !holidays.includes(dateString)) {
+                        workingDays++;
+                    }
+                }
+                return workingDays;
+            }
+
+            // Update working days for each employee
+            async function updateWorkingDays() {
+                const [year, month] = datePicker.value.split('-');
+                const rows = document.querySelectorAll('tbody tr');
+                
+                for (const row of rows) {
+                    const userId = row.dataset.userId;
+                    if (userId) {
+                        const workingDays = await calculateWorkingDays(userId, parseInt(year), parseInt(month));
+                        const workingDaysCell = row.querySelector('.working-days');
+                        if (workingDaysCell) {
+                            workingDaysCell.textContent = workingDays;
+                        }
                     }
                 }
             }
+
+            // Initialize working days on page load
+            updateWorkingDays();
+        });
+
+        // Salary action functions
+        function editSalary(employeeId) {
+            window.location.href = `edit_salary.php?id=${employeeId}&month=${document.querySelector('.date-picker').value}`;
         }
 
-        // Initialize working days on page load
-        updateWorkingDays();
-
-        // Show loading state when changing month
-        datePicker.addEventListener('change', function() {
-            loadingOverlay.style.display = 'flex';
-        });
-    });
-
-    // Add these functions to your existing JavaScript
-    function editSalary(employeeId) {
-        window.location.href = `edit_salary.php?id=${employeeId}&month=${document.querySelector('.date-picker').value}`;
-    }
-
-    function viewSalary(employeeId) {
-        window.location.href = `view_salary.php?id=${employeeId}&month=${document.querySelector('.date-picker').value}`;
-    }
+        function viewSalary(employeeId) {
+            window.location.href = `view_salary.php?id=${employeeId}&month=${document.querySelector('.date-picker').value}`;
+        }
     </script>
 </body>
 </html>

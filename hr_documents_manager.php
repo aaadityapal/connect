@@ -16,51 +16,161 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Documents Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
+        /* Root Variables */
         :root {
-            --primary-color: #4F46E5;
-            --secondary-color: #4338CA;
-            --success-color: #10B981;
-            --danger-color: #EF4444;
-            --warning-color: #F59E0B;
-            --gray-100: #F3F4F6;
-            --gray-200: #E5E7EB;
-            --gray-300: #D1D5DB;
-            --gray-600: #4B5563;
-            --gray-800: #1F2937;
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-hover: rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
         }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
         body {
-            background-color: #F9FAFB;
-            color: var(--gray-800);
+            background-color: #f5f8fa;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
             background: white;
-            padding: 1.5rem;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            background-color: #f5f8fa;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .main-content .container {
+            max-width: none;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            width: 100%;
         }
 
         .header h1 {
@@ -94,170 +204,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             transform: translateY(-1px);
         }
 
-        .document-upload-form {
+        /* Section Styles */
+        .offer-letters-section {
             background: white;
-            padding: 1.5rem;
+            padding: 1.5rem 2rem;
             border-radius: 12px;
             margin-bottom: 2rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--gray-600);
-            font-weight: 500;
-        }
-
-        .form-control {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-size: 0.875rem;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .text-muted {
-            color: var(--gray-600);
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-        }
-
-        .documents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .document-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .document-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .document-icon {
-            font-size: 2rem;
-            color: var(--primary-color);
-        }
-
-        .document-info {
-            flex: 1;
-        }
-
-        .document-name {
-            font-size: 1rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: var(--gray-800);
-        }
-
-        .document-type {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-            margin-bottom: 0.5rem;
-        }
-
-        .document-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.75rem;
-            color: var(--gray-600);
-        }
-
-        .document-meta span {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .document-actions {
-            display: flex;
-            flex-direction: row;
-            gap: 0.5rem;
-            align-items: center;
-            justify-content: flex-start;
-        }
-
-        .btn-action {
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-action.view:hover {
-            background: var(--gray-100);
-            color: var(--primary-color);
-        }
-
-        .btn-action.download:hover {
-            background: var(--gray-100);
-            color: var(--success-color);
-        }
-
-        .btn-action.edit:hover {
-            background: var(--gray-100);
-            color: var(--warning-color);
-        }
-
-        .btn-action.delete:hover {
-            background: var(--gray-100);
-            color: var(--danger-color);
-        }
-
-        .no-documents {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 3rem;
-            background: white;
-            border-radius: 12px;
-            color: var(--gray-600);
-        }
-
-        .no-documents i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--gray-300);
-        }
-
-        .offer-letters-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-top: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .section-header {
@@ -269,14 +223,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
 
         .header-actions {
             display: flex;
-            align-items: center;
             gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            flex: 1;
+            min-width: 250px;
         }
 
         .filter-group label {
@@ -295,119 +249,135 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
             font-size: 0.875rem;
         }
 
+        /* Table Styles */
         .offer-letter-table {
             width: 100%;
-            border-collapse: collapse;
+            margin-top: 1rem;
         }
 
         .offer-letter-table th,
         .offer-letter-table td {
             padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--gray-200);
+            white-space: nowrap;
         }
 
-        .offer-letter-table th {
-            background-color: var(--gray-100);
-            font-weight: 500;
+        /* Form Styles */
+        .document-upload-form {
+            width: 100%;
+            padding: 2rem;
         }
 
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            display: inline-block;
+        .form-group {
+            margin-bottom: 1.5rem;
+            width: 100%;
         }
 
-        .status-pending {
-            background-color: var(--warning-color);
-            color: white;
+        .form-control {
+            width: 100%;
         }
 
-        .status-accepted {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .status-rejected {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .employee-info {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: var(--gray-100);
-            border-radius: 8px;
-        }
-
-        .employee-info h3 {
-            margin-bottom: 1rem;
-            color: var(--gray-800);
-            font-size: 1rem;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .info-item label {
-            font-size: 0.75rem;
-            color: var(--gray-600);
-            font-weight: 500;
-        }
-
-        .info-item span {
-            font-size: 0.875rem;
-            color: var(--gray-800);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .documents-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .section-header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
             .header-actions {
                 flex-direction: column;
-                width: 100%;
+                align-items: stretch;
             }
 
             .filter-group {
                 width: 100%;
             }
 
-            .filter-group select {
-                width: 100%;
-            }
-
             .btn-add-doc {
                 width: 100%;
-                justify-content: center;
             }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .header,
+            .offer-letters-section {
+                padding: 1rem;
+            }
+
+            .document-upload-form {
+                padding: 1rem;
+            }
+        }
+
+        /* Table Wrapper for Horizontal Scroll */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Your existing styles */
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #7C3AED;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --dark-color: #111827;
+            --light-color: #F3F4F6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #F9FAFB;
+            color: var(--gray-800);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
         }
 
         .no-data {
@@ -434,276 +404,391 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'HR') {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-file-alt"></i> HR Documents Manager</h1>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
         </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
 
-        <!-- Official Documents Section -->
-        <div class="offer-letters-section">
-            <div class="section-header">
-                <h2><i class="fas fa-file-contract"></i> Official Documents</h2>
-                <div class="header-actions">
-                    <div class="filter-group">
-                        <label for="userFilter">Filter by Employee:</label>
-                        <select id="userFilter" class="form-control" onchange="filterDocuments()">
-                            <option value="">All Employees</option>
-                            <!-- Users will be loaded dynamically -->
-                        </select>
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-file-alt"></i> HR Documents Manager</h1>
+            </div>
+
+            <!-- Official Documents Section -->
+            <div class="offer-letters-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-contract"></i> Official Documents</h2>
+                    <div class="header-actions">
+                        <div class="filter-group">
+                            <label for="userFilter">Filter by Employee:</label>
+                            <select id="userFilter" class="form-control" onchange="filterDocuments()">
+                                <option value="">All Employees</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <button class="btn-add-doc" onclick="toggleOfficialDocForm()">
+                            <i class="fas fa-plus"></i> Add Official Document
+                        </button>
                     </div>
-                    <button class="btn-add-doc" onclick="toggleOfficialDocForm()">
-                        <i class="fas fa-plus"></i> Add Official Document
-                    </button>
                 </div>
-            </div>
 
-            <!-- Official Document Upload Form -->
-            <div id="officialDocUploadForm" class="document-upload-form" style="display: none;">
-                <form id="officialUploadForm" onsubmit="handleOfficialDocUpload(event)">
-                    <div class="form-group">
-                        <label for="assignedUser">Assigned User</label>
-                        <select id="assignedUser" name="user_id" class="form-control" required>
-                            <option value="">Select User</option>
-                            <!-- Users will be loaded dynamically -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="officialDocType">Document Type</label>
-                        <select id="officialDocType" name="type" required>
-                            <option value="">Select Document Type</option>
-                            <option value="offer_letter">Offer Letter</option>
-                            <option value="training_letter">Training Letter</option>
-                            <option value="internship_letter">Internship Letter</option>
-                            <option value="completion_letter">Completion Letter</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="officialDocFile">Document File</label>
-                        <input type="file" id="officialDocFile" name="file" required>
-                        <small class="text-muted">Maximum file size: 50MB</small>
-                    </div>
-                    <button type="submit" class="btn-add-doc">Upload Official Document</button>
-                </form>
-            </div>
-
-            <!-- Official Documents Table -->
-            <table class="offer-letter-table">
-                <thead>
-                    <tr>
-                        <th>Document Name</th>
-                        <th>Type</th>
-                        <th>Upload Date</th>
-                        <th>Assigned To</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="officialDocumentsList">
-                    <tr class="no-data">
-                        <td colspan="6">
-                            <div class="no-data-message">
-                                <i class="fas fa-folder-open"></i>
-                                <p>No official documents available</p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Users Personal Documents Section -->
-        <div class="offer-letters-section">
-            <div class="section-header">
-                <h2><i class="fas fa-user-shield"></i> Users Personal Documents</h2>
-                <div class="header-actions">
-                    <div class="filter-group">
-                        <label for="personalDocUserFilter">Filter by Employee:</label>
-                        <select id="personalDocUserFilter" class="form-control" onchange="filterPersonalDocuments()">
-                            <option value="">All Employees</option>
-                            <!-- Users will be loaded dynamically -->
-                        </select>
-                    </div>
-                    <button class="btn-add-doc" onclick="togglePersonalDocForm()">
-                        <i class="fas fa-plus"></i> Add Personal Document
-                    </button>
-                </div>
-            </div>
-
-            <!-- Personal Document Upload Form -->
-            <div id="personalDocUploadForm" class="document-upload-form" style="display: none;">
-                <form id="personalUploadForm" onsubmit="handlePersonalDocUpload(event)">
-                    <div class="form-group">
-                        <label for="personalDocUser">Assigned User</label>
-                        <select id="personalDocUser" name="user_id" class="form-control" required>
-                            <option value="">Select User</option>
-                            <!-- Users will be loaded dynamically -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="personalDocType">Document Type</label>
-                        <select id="personalDocType" name="type" required>
-                            <option value="">Select Document Type</option>
-                            <!-- Identity Documents -->
-                            <option value="aadhar_card">Aadhar Card</option>
-                            <option value="pan_card">PAN Card</option>
-                            <option value="voter_id">Voter ID</option>
-                            <option value="passport">Passport</option>
-                            <option value="driving_license">Driving License</option>
-                            <option value="ration_card">Ration Card</option>
-
-                            <!-- Educational Documents -->
-                            <optgroup label="Educational Documents">
-                                <option value="tenth_certificate">10th Certificate (Secondary School)</option>
-                                <option value="twelfth_certificate">12th Certificate (Higher Secondary)</option>
-                                <option value="graduation_certificate">Graduation Certificate</option>
-                                <option value="post_graduation">Post Graduation Certificate</option>
-                                <option value="diploma_certificate">Diploma Certificate</option>
-                                <option value="other_education">Other Educational Certificate</option>
-                            </optgroup>
-
-                            <!-- Professional Documents -->
-                            <optgroup label="Professional Documents">
-                                <option value="resume">Resume/CV</option>
-                                <option value="experience_certificate">Experience Certificate</option>
-                                <option value="relieving_letter">Relieving Letter</option>
-                                <option value="salary_slips">Salary Slips</option>
-                            </optgroup>
-
-                            <!-- Financial Documents -->
-                            <optgroup label="Financial Documents">
-                                <option value="bank_passbook">Bank Passbook/Statement</option>
-                                <option value="cancelled_cheque">Cancelled Cheque</option>
-                                <option value="form_16">Form 16</option>
-                                <option value="pf_documents">PF Documents</option>
-                            </optgroup>
-
-                            <!-- Other Documents -->
-                            <optgroup label="Other Documents">
-                                <option value="marriage_certificate">Marriage Certificate</option>
-                                <option value="caste_certificate">Caste Certificate</option>
-                                <option value="disability_certificate">Disability Certificate</option>
+                <!-- Official Document Upload Form -->
+                <div id="officialDocUploadForm" class="document-upload-form" style="display: none;">
+                    <form id="officialUploadForm" onsubmit="handleOfficialDocUpload(event)">
+                        <div class="form-group">
+                            <label for="assignedUser">Assigned User</label>
+                            <select id="assignedUser" name="user_id" class="form-control" required>
+                                <option value="">Select User</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="officialDocType">Document Type</label>
+                            <select id="officialDocType" name="type" required>
+                                <option value="">Select Document Type</option>
+                                <option value="offer_letter">Offer Letter</option>
+                                <option value="training_letter">Training Letter</option>
+                                <option value="internship_letter">Internship Letter</option>
+                                <option value="completion_letter">Completion Letter</option>
                                 <option value="other">Other</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="personalDocFile">Document File</label>
-                        <input type="file" id="personalDocFile" name="file" required>
-                        <small class="text-muted">Maximum file size: 50MB</small>
-                    </div>
-                    <button type="submit" class="btn-add-doc">Upload Personal Document</button>
-                </form>
-            </div>
-
-            <!-- Personal Documents Table -->
-            <table class="offer-letter-table">
-                <thead>
-                    <tr>
-                        <th>Document Name</th>
-                        <th>Type</th>
-                        <th>Upload Date</th>
-                        <th>Assigned To</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="personalDocumentsList">
-                    <tr class="no-data">
-                        <td colspan="5">
-                            <div class="no-data-message">
-                                <i class="fas fa-folder-open"></i>
-                                <p>No personal documents available</p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Policy Documents Section -->
-        <div class="offer-letters-section">
-            <div class="section-header">
-                <h2><i class="fas fa-book"></i> Policy Documents & Staff Requirements Forms</h2>
-                <div class="header-actions">
-                    <div class="filter-group">
-                        <label for="policyDocTypeFilter">Filter by Type:</label>
-                        <select id="policyDocTypeFilter" class="form-control" onchange="filterPolicyDocuments()">
-                            <option value="">All Policies</option>
-                            <option value="company_policy">Company Policy</option>
-                            <option value="hr_policy">HR Policy</option>
-                            <option value="leave_policy">Leave Policy</option>
-                            <option value="travel_policy">Travel Policy</option>
-                            <option value="code_of_conduct">Code of Conduct</option>
-                            <option value="leave_application_form">Leave Application Form</option>
-                            <option value="travel_application_form">Travel Application Form</option>
-                            <option value="overtime_application_form">Overtime Application Form</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <button class="btn-add-doc" onclick="togglePolicyDocForm()">
-                        <i class="fas fa-plus"></i> Add Policy Document
-                    </button>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="officialDocFile">Document File</label>
+                            <input type="file" id="officialDocFile" name="file" required>
+                            <small class="text-muted">Maximum file size: 50MB</small>
+                        </div>
+                        <button type="submit" class="btn-add-doc">Upload Official Document</button>
+                    </form>
                 </div>
+
+                <!-- Official Documents Table -->
+                <table class="offer-letter-table">
+                    <thead>
+                        <tr>
+                            <th>Document Name</th>
+                            <th>Type</th>
+                            <th>Upload Date</th>
+                            <th>Assigned To</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="officialDocumentsList">
+                        <tr class="no-data">
+                            <td colspan="6">
+                                <div class="no-data-message">
+                                    <i class="fas fa-folder-open"></i>
+                                    <p>No official documents available</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Policy Document Upload Form -->
-            <div id="policyDocUploadForm" class="document-upload-form" style="display: none;">
-                <form id="policyUploadForm" onsubmit="handlePolicyDocUpload(event)">
-                    <div class="form-group">
-                        <label for="policyDocType">Policy Type</label>
-                        <select id="policyDocType" name="type" required>
-                            <option value="">Select Policy Type</option>
-                            <option value="company_policy">Company Policy</option>
-                            <option value="hr_policy">HR Policy</option>
-                            <option value="leave_policy">Leave Policy</option>
-                            <option value="travel_policy">Travel Policy</option>
-                            <option value="code_of_conduct">Code of Conduct</option>
-                            <option value="leave_application_form">Leave Application Form</option>
-                            <option value="travel_application_form">Travel Application Form</option>
-                            <option value="overtime_application_form">Overtime Application Form</option>
-                            <option value="other">Other</option>
-                        </select>
+            <!-- Users Personal Documents Section -->
+            <div class="offer-letters-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-user-shield"></i> Users Personal Documents</h2>
+                    <div class="header-actions">
+                        <div class="filter-group">
+                            <label for="personalDocUserFilter">Filter by Employee:</label>
+                            <select id="personalDocUserFilter" class="form-control" onchange="filterPersonalDocuments()">
+                                <option value="">All Employees</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <button class="btn-add-doc" onclick="togglePersonalDocForm()">
+                            <i class="fas fa-plus"></i> Add Personal Document
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="policyDocName">Policy Name</label>
-                        <input type="text" id="policyDocName" name="policy_name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="policyDocFile">Document File</label>
-                        <input type="file" id="policyDocFile" name="file" required>
-                        <small class="text-muted">Maximum file size: 50MB</small>
-                    </div>
-                    <button type="submit" class="btn-add-doc">Upload Policy Document</button>
-                </form>
+                </div>
+
+                <!-- Personal Document Upload Form -->
+                <div id="personalDocUploadForm" class="document-upload-form" style="display: none;">
+                    <form id="personalUploadForm" onsubmit="handlePersonalDocUpload(event)">
+                        <div class="form-group">
+                            <label for="personalDocUser">Assigned User</label>
+                            <select id="personalDocUser" name="user_id" class="form-control" required>
+                                <option value="">Select User</option>
+                                <!-- Users will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="personalDocType">Document Type</label>
+                            <select id="personalDocType" name="type" required>
+                                <option value="">Select Document Type</option>
+                                <!-- Identity Documents -->
+                                <option value="aadhar_card">Aadhar Card</option>
+                                <option value="pan_card">PAN Card</option>
+                                <option value="voter_id">Voter ID</option>
+                                <option value="passport">Passport</option>
+                                <option value="driving_license">Driving License</option>
+                                <option value="ration_card">Ration Card</option>
+
+                                <!-- Educational Documents -->
+                                <optgroup label="Educational Documents">
+                                    <option value="tenth_certificate">10th Certificate (Secondary School)</option>
+                                    <option value="twelfth_certificate">12th Certificate (Higher Secondary)</option>
+                                    <option value="graduation_certificate">Graduation Certificate</option>
+                                    <option value="post_graduation">Post Graduation Certificate</option>
+                                    <option value="diploma_certificate">Diploma Certificate</option>
+                                    <option value="other_education">Other Educational Certificate</option>
+                                </optgroup>
+
+                                <!-- Professional Documents -->
+                                <optgroup label="Professional Documents">
+                                    <option value="resume">Resume/CV</option>
+                                    <option value="experience_certificate">Experience Certificate</option>
+                                    <option value="relieving_letter">Relieving Letter</option>
+                                    <option value="salary_slips">Salary Slips</option>
+                                </optgroup>
+
+                                <!-- Financial Documents -->
+                                <optgroup label="Financial Documents">
+                                    <option value="bank_passbook">Bank Passbook/Statement</option>
+                                    <option value="cancelled_cheque">Cancelled Cheque</option>
+                                    <option value="form_16">Form 16</option>
+                                    <option value="pf_documents">PF Documents</option>
+                                </optgroup>
+
+                                <!-- Other Documents -->
+                                <optgroup label="Other Documents">
+                                    <option value="marriage_certificate">Marriage Certificate</option>
+                                    <option value="caste_certificate">Caste Certificate</option>
+                                    <option value="disability_certificate">Disability Certificate</option>
+                                    <option value="other">Other</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="personalDocFile">Document File</label>
+                            <input type="file" id="personalDocFile" name="file" required>
+                            <small class="text-muted">Maximum file size: 50MB</small>
+                        </div>
+                        <button type="submit" class="btn-add-doc">Upload Personal Document</button>
+                    </form>
+                </div>
+
+                <!-- Personal Documents Table -->
+                <table class="offer-letter-table">
+                    <thead>
+                        <tr>
+                            <th>Document Name</th>
+                            <th>Type</th>
+                            <th>Upload Date</th>
+                            <th>Assigned To</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personalDocumentsList">
+                        <tr class="no-data">
+                            <td colspan="5">
+                                <div class="no-data-message">
+                                    <i class="fas fa-folder-open"></i>
+                                    <p>No personal documents available</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Policy Documents Table -->
-            <table class="offer-letter-table">
-                <thead>
-                    <tr>
-                        <th>Policy Name</th>
-                        <th>Type</th>
-                        <th>Upload Date</th>
-                        <th>Last Updated</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="policyDocumentsList">
-                    <tr class="no-data">
-                        <td colspan="6">
-                            <div class="no-data-message">
-                                <i class="fas fa-folder-open"></i>
-                                <p>No policy documents available</p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Policy Documents Section -->
+            <div class="offer-letters-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-book"></i> Policy Documents & Staff Requirements Forms</h2>
+                    <div class="header-actions">
+                        <div class="filter-group">
+                            <label for="policyDocTypeFilter">Filter by Type:</label>
+                            <select id="policyDocTypeFilter" class="form-control" onchange="filterPolicyDocuments()">
+                                <option value="">All Policies</option>
+                                <option value="company_policy">Company Policy</option>
+                                <option value="hr_policy">HR Policy</option>
+                                <option value="leave_policy">Leave Policy</option>
+                                <option value="travel_policy">Travel Policy</option>
+                                <option value="code_of_conduct">Code of Conduct</option>
+                                <option value="leave_application_form">Leave Application Form</option>
+                                <option value="travel_application_form">Travel Application Form</option>
+                                <option value="overtime_application_form">Overtime Application Form</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <button class="btn-add-doc" onclick="togglePolicyDocForm()">
+                            <i class="fas fa-plus"></i> Add Policy Document
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Policy Document Upload Form -->
+                <div id="policyDocUploadForm" class="document-upload-form" style="display: none;">
+                    <form id="policyUploadForm" onsubmit="handlePolicyDocUpload(event)">
+                        <div class="form-group">
+                            <label for="policyDocType">Policy Type</label>
+                            <select id="policyDocType" name="type" required>
+                                <option value="">Select Policy Type</option>
+                                <option value="company_policy">Company Policy</option>
+                                <option value="hr_policy">HR Policy</option>
+                                <option value="leave_policy">Leave Policy</option>
+                                <option value="travel_policy">Travel Policy</option>
+                                <option value="code_of_conduct">Code of Conduct</option>
+                                <option value="leave_application_form">Leave Application Form</option>
+                                <option value="travel_application_form">Travel Application Form</option>
+                                <option value="overtime_application_form">Overtime Application Form</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="policyDocName">Policy Name</label>
+                            <input type="text" id="policyDocName" name="policy_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="policyDocFile">Document File</label>
+                            <input type="file" id="policyDocFile" name="file" required>
+                            <small class="text-muted">Maximum file size: 50MB</small>
+                        </div>
+                        <button type="submit" class="btn-add-doc">Upload Policy Document</button>
+                    </form>
+                </div>
+
+                <!-- Policy Documents Table -->
+                <table class="offer-letter-table">
+                    <thead>
+                        <tr>
+                            <th>Policy Name</th>
+                            <th>Type</th>
+                            <th>Upload Date</th>
+                            <th>Last Updated</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policyDocumentsList">
+                        <tr class="no-data">
+                            <td colspan="6">
+                                <div class="no-data-message">
+                                    <i class="fas fa-folder-open"></i>
+                                    <p>No policy documents available</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
+        // Add sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            sidebarToggle.classList.toggle('collapsed');
+            
+            // Change icon direction
+            const icon = this.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+        
+        // Handle responsive behavior
+        function checkWidth() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.classList.add('collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                sidebarToggle.classList.remove('collapsed');
+            }
+        }
+        
+        // Check on load
+        checkWidth();
+        
+        // Check on resize
+        window.addEventListener('resize', checkWidth);
+        
+        // Handle click outside on mobile
+        document.addEventListener('click', function(e) {
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.classList.add('collapsed');
+            }
+        });
+
         function toggleUploadForm() {
             const form = document.getElementById('documentUploadForm');
             form.style.display = form.style.display === 'none' ? 'block' : 'none';

@@ -254,16 +254,205 @@ while ($row = $result->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <title>Edit Attendance</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
+        /* Root Variables */
+        :root {
+            --primary: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-hover: rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: #f5f8fa;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        /* Your existing styles */
         .attendance-form {
             background: white;
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            max-width: 1000px;
-            margin: 20px auto;
+            margin: 20px 0;
         }
 
         .attendance-table {
@@ -331,317 +520,487 @@ while ($row = $result->fetch_assoc()) {
         .apply-filters {
             height: 38px;
             padding: 0 20px;
-            background-color: #007bff;
+            background-color: var(--primary);
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
 
         .apply-filters:hover {
-            background-color: #0056b3;
+            background-color: var(--secondary);
         }
 
-        /* Add styles for the overtime input */
         .overtime {
             background-color: #f8f9fa;
             cursor: not-allowed;
         }
+
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #212529;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="salary_overview.php" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back to Overview
-        </a>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
+        </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link active">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
 
-        <?php if (isset($error)): ?>
-            <div class="alert alert-danger">
-                <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-        <div class="attendance-form">
-            <!-- Add filters at the top -->
-            <form id="filters-form" method="GET" class="filters-container">
-                <div class="filter-group">
-                    <label for="employee">Select Employee:</label>
-                    <select name="id" id="employee" required>
-                        <?php foreach ($users as $user): ?>
-                            <option value="<?php echo htmlspecialchars($user['unique_id']); ?>"
-                                <?php echo $user['unique_id'] === $unique_id ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($user['username']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <a href="salary_overview.php" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Overview
+            </a>
+
+            <?php if (isset($error)): ?>
+                <div class="alert alert-danger">
+                    <?php echo htmlspecialchars($error); ?>
                 </div>
+            <?php endif; ?>
 
-                <div class="filter-group">
-                    <label for="month">Select Month:</label>
-                    <input type="month" 
-                           id="month" 
-                           name="month" 
-                           value="<?php echo htmlspecialchars($selected_month); ?>" 
-                           required>
-                </div>
+            <div class="attendance-form">
+                <!-- Add filters at the top -->
+                <form id="filters-form" method="GET" class="filters-container">
+                    <div class="filter-group">
+                        <label for="employee">Select Employee:</label>
+                        <select name="id" id="employee" required>
+                            <?php foreach ($users as $user): ?>
+                                <option value="<?php echo htmlspecialchars($user['unique_id']); ?>"
+                                    <?php echo $user['unique_id'] === $unique_id ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($user['username']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                <button type="submit" class="apply-filters">Apply Filters</button>
-            </form>
+                    <div class="filter-group">
+                        <label for="month">Select Month:</label>
+                        <input type="month" 
+                               id="month" 
+                               name="month" 
+                               value="<?php echo htmlspecialchars($selected_month); ?>" 
+                               required>
+                    </div>
 
-            <h2 class="section-title">
-                Edit Attendance - <?php echo htmlspecialchars($employee['username'] ?? 'Unknown Employee'); ?> 
-                (<?php echo date('F Y', strtotime($month_start)); ?>)
-            </h2>
+                    <button type="submit" class="apply-filters">Apply Filters</button>
+                </form>
 
-            <form method="POST">
-                <table class="attendance-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Shift Time</th>
-                            <th>Punch In</th>
-                            <th>Punch Out</th>
-                            <th>Overtime (hrs)</th>
-                            <th>Weekly Off</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $current_date = new DateTime($month_start);
-                        
-                        while ($current_date <= $end_date) {
-                            $date_str = $current_date->format('Y-m-d');
-                            $is_weekend = in_array($current_date->format('N'), [6, 7]); // Saturday or Sunday
-                            $is_today = $date_str === date('Y-m-d');
-                            $record = $attendance_records[$date_str] ?? null;
-                            
-                            $row_class = $is_weekend ? 'weekend' : '';
-                            $row_class .= $is_today ? ' today' : '';
-                        ?>
-                            <tr class="<?php echo $row_class; ?>">
-                                <td>
-                                    <?php echo $current_date->format('d M (D)'); ?>
-                                    <input type="checkbox" 
-                                           name="attendance[<?php echo $date_str; ?>][is_weekly_off]" 
-                                           value="1" 
-                                           <?php echo (isset($record['is_weekly_off']) && $record['is_weekly_off'] == 1) ? 'checked' : ''; ?>
-                                           onchange="markAsModified(this)">
-                                </td>
-                                <td>
-                                    <input type="hidden" name="attendance[<?php echo $date_str; ?>][modified]" class="modified-flag" value="false">
-                                    <select name="attendance[<?php echo $date_str; ?>][status]" class="form-control status-select" onchange="markAsModified(this)">
-                                        <option value="present" <?php echo ($record && $record['status'] === 'present') ? 'selected' : ''; ?>>Present</option>
-                                        <option value="absent" <?php echo ($record && $record['status'] === 'absent') ? 'selected' : ''; ?>>Absent</option>
-                                        <option value="leave" <?php echo ($record && $record['status'] === 'leave') ? 'selected' : ''; ?>>Leave</option>
-                                        <option value="holiday" <?php echo ($record && $record['status'] === 'holiday') ? 'selected' : ''; ?>>Holiday</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" class="form-control" 
-                                           name="attendance[<?php echo $date_str; ?>][shift_time]"
-                                           value="<?php 
-                                                if ($record && $record['shift_time']) {
-                                                    echo $record['shift_time']; 
-                                                } else {
-                                                    echo $employee['shift_start_time'] ?? '';
-                                                }
-                                           ?>"
-                                           data-shift-start="<?php echo $employee['shift_start_time'] ?? ''; ?>"
-                                           data-shift-end="<?php echo $employee['shift_end_time'] ?? ''; ?>"
-                                           onchange="markAsModified(this)">
-                                </td>
-                                <td>
-                                    <input type="time" class="form-control punch-in" 
-                                           name="attendance[<?php echo $date_str; ?>][punch_in]"
-                                           value="<?php 
-                                                if ($record && $record['punch_in']) {
-                                                    $punch_in_time = new DateTime($record['punch_in']);
-                                                    echo $punch_in_time->format('H:i');
-                                                }
-                                           ?>"
-                                           onchange="markAsModified(this)">
-                                </td>
-                                <td>
-                                    <input type="time" class="form-control punch-out" 
-                                           name="attendance[<?php echo $date_str; ?>][punch_out]"
-                                           value="<?php 
-                                                if ($record && $record['punch_out']) {
-                                                    // Convert the datetime format to time only
-                                                    $punch_out_time = new DateTime($record['punch_out']);
-                                                    echo $punch_out_time->format('H:i');
-                                                }
-                                           ?>"
-                                           <?php echo ($record && $record['status'] !== 'present') ? 'disabled' : ''; ?>
-                                           onchange="markAsModified(this)">
-                                </td>
-                                <td>
-                                    <input type="time" class="form-control overtime" 
-                                           name="attendance[<?php echo $date_str; ?>][overtime]"
-                                           value="<?php 
-                                                if (isset($attendance_records[$date_str]['overtime_hours']) && 
-                                                    $attendance_records[$date_str]['overtime_hours'] !== '00:00:00' && 
-                                                    $attendance_records[$date_str]['overtime_hours'] !== null) {
-                                                    echo $attendance_records[$date_str]['overtime_hours'];
-                                                } else {
-                                                    echo '00:00:00';
-                                                }
-                                           ?>"
-                                           step="1"
-                                           <?php echo ($record && $record['status'] !== 'present') ? 'disabled' : ''; ?>
-                                           onchange="markAsModified(this)">
-                                </td>
+                <h2 class="section-title">
+                    Edit Attendance - <?php echo htmlspecialchars($employee['username'] ?? 'Unknown Employee'); ?> 
+                    (<?php echo date('F Y', strtotime($month_start)); ?>)
+                </h2>
+
+                <form method="POST">
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Shift Time</th>
+                                <th>Punch In</th>
+                                <th>Punch Out</th>
+                                <th>Overtime (hrs)</th>
+                                <th>Weekly Off</th>
                             </tr>
-                        <?php
-                            $current_date->modify('+1 day');
-                        }
-                        ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $current_date = new DateTime($month_start);
+                            
+                            while ($current_date <= $end_date) {
+                                $date_str = $current_date->format('Y-m-d');
+                                $is_weekend = in_array($current_date->format('N'), [6, 7]); // Saturday or Sunday
+                                $is_today = $date_str === date('Y-m-d');
+                                $record = $attendance_records[$date_str] ?? null;
+                                
+                                $row_class = $is_weekend ? 'weekend' : '';
+                                $row_class .= $is_today ? ' today' : '';
+                            ?>
+                                <tr class="<?php echo $row_class; ?>">
+                                    <td>
+                                        <?php echo $current_date->format('d M (D)'); ?>
+                                        <input type="checkbox" 
+                                               name="attendance[<?php echo $date_str; ?>][is_weekly_off]" 
+                                               value="1" 
+                                               <?php echo (isset($record['is_weekly_off']) && $record['is_weekly_off'] == 1) ? 'checked' : ''; ?>
+                                               onchange="markAsModified(this)">
+                                    </td>
+                                    <td>
+                                        <input type="hidden" name="attendance[<?php echo $date_str; ?>][modified]" class="modified-flag" value="false">
+                                        <select name="attendance[<?php echo $date_str; ?>][status]" class="form-control status-select" onchange="markAsModified(this)">
+                                            <option value="present" <?php echo ($record && $record['status'] === 'present') ? 'selected' : ''; ?>>Present</option>
+                                            <option value="absent" <?php echo ($record && $record['status'] === 'absent') ? 'selected' : ''; ?>>Absent</option>
+                                            <option value="leave" <?php echo ($record && $record['status'] === 'leave') ? 'selected' : ''; ?>>Leave</option>
+                                            <option value="holiday" <?php echo ($record && $record['status'] === 'holiday') ? 'selected' : ''; ?>>Holiday</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control" 
+                                               name="attendance[<?php echo $date_str; ?>][shift_time]"
+                                               value="<?php 
+                                                    if ($record && $record['shift_time']) {
+                                                        echo $record['shift_time']; 
+                                                    } else {
+                                                        echo $employee['shift_start_time'] ?? '';
+                                                    }
+                                               ?>"
+                                               data-shift-start="<?php echo $employee['shift_start_time'] ?? ''; ?>"
+                                               data-shift-end="<?php echo $employee['shift_end_time'] ?? ''; ?>"
+                                               onchange="markAsModified(this)">
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control punch-in" 
+                                               name="attendance[<?php echo $date_str; ?>][punch_in]"
+                                               value="<?php 
+                                                    if ($record && $record['punch_in']) {
+                                                        $punch_in_time = new DateTime($record['punch_in']);
+                                                        echo $punch_in_time->format('H:i');
+                                                    }
+                                               ?>"
+                                               onchange="markAsModified(this)">
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control punch-out" 
+                                               name="attendance[<?php echo $date_str; ?>][punch_out]"
+                                               value="<?php 
+                                                    if ($record && $record['punch_out']) {
+                                                        // Convert the datetime format to time only
+                                                        $punch_out_time = new DateTime($record['punch_out']);
+                                                        echo $punch_out_time->format('H:i');
+                                                    }
+                                               ?>"
+                                               <?php echo ($record && $record['status'] !== 'present') ? 'disabled' : ''; ?>
+                                               onchange="markAsModified(this)">
+                                    </td>
+                                    <td>
+                                        <input type="time" class="form-control overtime" 
+                                               name="attendance[<?php echo $date_str; ?>][overtime]"
+                                               value="<?php 
+                                                    if (isset($attendance_records[$date_str]['overtime_hours']) && 
+                                                        $attendance_records[$date_str]['overtime_hours'] !== '00:00:00' && 
+                                                        $attendance_records[$date_str]['overtime_hours'] !== null) {
+                                                        echo $attendance_records[$date_str]['overtime_hours'];
+                                                    } else {
+                                                        echo '00:00:00';
+                                                    }
+                                               ?>"
+                                               step="1"
+                                               <?php echo ($record && $record['status'] !== 'present') ? 'disabled' : ''; ?>
+                                               onchange="markAsModified(this)">
+                                    </td>
+                                </tr>
+                            <?php
+                                $current_date->modify('+1 day');
+                            }
+                            ?>
+                        </tbody>
+                    </table>
 
-                <div class="btn-group">
-                    <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
+    <!-- Add Sidebar Toggle Script -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to mark rows as modified
-        function markAsModified(element) {
-            const row = element.closest('tr');
-            const modifiedFlag = row.querySelector('.modified-flag');
-            if (modifiedFlag) {
-                modifiedFlag.value = 'true';
-            }
-        }
-
-        // Handle status change
-        document.querySelectorAll('.status-select').forEach(select => {
-            select.addEventListener('change', function() {
-                const row = this.closest('tr');
-                const inputs = row.querySelectorAll('input[type="time"]');
-                const overtimeInput = row.querySelector('.overtime');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar functionality
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
                 
-                if (this.value === 'absent' || this.value === 'holiday' || this.value === 'leave') {
-                    inputs.forEach(input => {
-                        input.value = '';
-                        input.disabled = true;
-                        input.required = false;
-                    });
-                    if (overtimeInput) {
+                // Change icon direction
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                } else {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                }
+            });
+            
+            // Handle responsive behavior
+            function checkWidth() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
+                }
+            }
+            
+            // Check on load
+            checkWidth();
+            
+            // Check on resize
+            window.addEventListener('resize', checkWidth);
+            
+            // Handle click outside on mobile
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                }
+            });
+
+            // Attendance functionality
+            // Function to mark rows as modified
+            function markAsModified(element) {
+                const row = element.closest('tr');
+                const modifiedFlag = row.querySelector('.modified-flag');
+                if (modifiedFlag) {
+                    modifiedFlag.value = 'true';
+                }
+            }
+
+            // Handle status change
+            document.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const row = this.closest('tr');
+                    const inputs = row.querySelectorAll('input[type="time"]');
+                    const overtimeInput = row.querySelector('.overtime');
+                    
+                    if (this.value === 'absent' || this.value === 'holiday' || this.value === 'leave') {
+                        inputs.forEach(input => {
+                            input.value = '';
+                            input.disabled = true;
+                            input.required = false;
+                        });
+                        if (overtimeInput) {
+                            overtimeInput.value = '00:00:00';
+                        }
+                    } else if (this.value === 'present') {
+                        inputs.forEach(input => {
+                            input.disabled = false;
+                            input.required = false;
+                        });
+                        
+                        const shiftTimeInput = row.querySelector('input[name$="[shift_time]"]');
+                        if (shiftTimeInput && !shiftTimeInput.value && shiftTimeInput.dataset.shiftStart) {
+                            shiftTimeInput.value = shiftTimeInput.dataset.shiftStart;
+                        }
+                        
+                        calculateOvertime(row);
+                    }
+                    markAsModified(this);
+                });
+            });
+
+            function roundOvertime(hours, minutes) {
+                // Convert to total minutes
+                const totalMinutes = (hours * 60) + minutes;
+                
+                // Get base hours and remaining minutes
+                const baseHours = Math.floor(totalMinutes / 60);
+                const remainingMinutes = totalMinutes % 60;
+                
+                // Round to nearest 30 minutes
+                const roundedMinutes = remainingMinutes < 30 ? 0 : 30;
+                
+                return {
+                    hours: baseHours,
+                    minutes: roundedMinutes
+                };
+            }
+
+            function calculateOvertime(row) {
+                const punchOut = row.querySelector('.punch-out').value;
+                const shiftTime = row.querySelector('input[name$="[shift_time]"]');
+                const overtimeInput = row.querySelector('.overtime');
+                const status = row.querySelector('.status-select').value;
+
+                if (status === 'present' && punchOut && shiftTime) {
+                    // Convert punch out time to minutes since midnight
+                    const [punchOutHours, punchOutMinutes] = punchOut.split(':').map(Number);
+                    const punchOutInMinutes = (punchOutHours * 60) + punchOutMinutes;
+                    
+                    // Get shift end time from data attribute instead of hardcoding
+                    const shiftEndTime = shiftTime.dataset.shiftEnd || '18:00';
+                    const [shiftEndHours, shiftEndMinutes] = shiftEndTime.split(':').map(Number);
+                    const shiftEndInMinutes = (shiftEndHours * 60) + (shiftEndMinutes || 0);
+                    
+                    if (punchOutInMinutes > shiftEndInMinutes) {
+                        // Calculate overtime in minutes
+                        const overtimeMinutes = punchOutInMinutes - shiftEndInMinutes;
+                        
+                        // Convert to hours and minutes
+                        const rawHours = Math.floor(overtimeMinutes / 60);
+                        const rawMinutes = overtimeMinutes % 60;
+                        
+                        // Round the overtime
+                        const rounded = roundOvertime(rawHours, rawMinutes);
+                        
+                        // Format as HH:MM:00
+                        overtimeInput.value = 
+                            String(rounded.hours).padStart(2, '0') + ':' +
+                            String(rounded.minutes).padStart(2, '0') + ':00';
+                    } else {
                         overtimeInput.value = '00:00:00';
                     }
-                } else if (this.value === 'present') {
-                    inputs.forEach(input => {
-                        input.disabled = false;
-                        input.required = false;
-                    });
-                    
-                    const shiftTimeInput = row.querySelector('input[name$="[shift_time]"]');
-                    if (shiftTimeInput && !shiftTimeInput.value && shiftTimeInput.dataset.shiftStart) {
-                        shiftTimeInput.value = shiftTimeInput.dataset.shiftStart;
-                    }
-                    
-                    calculateOvertime(row);
-                }
-                markAsModified(this);
-            });
-        });
-
-        function roundOvertime(hours, minutes) {
-            // Convert to total minutes
-            const totalMinutes = (hours * 60) + minutes;
-            
-            // Get base hours and remaining minutes
-            const baseHours = Math.floor(totalMinutes / 60);
-            const remainingMinutes = totalMinutes % 60;
-            
-            // Round to nearest 30 minutes
-            const roundedMinutes = remainingMinutes < 30 ? 0 : 30;
-            
-            return {
-                hours: baseHours,
-                minutes: roundedMinutes
-            };
-        }
-
-        function calculateOvertime(row) {
-            const punchOut = row.querySelector('.punch-out').value;
-            const shiftTime = row.querySelector('input[name$="[shift_time]"]');
-            const overtimeInput = row.querySelector('.overtime');
-            const status = row.querySelector('.status-select').value;
-
-            if (status === 'present' && punchOut && shiftTime) {
-                // Convert punch out time to minutes since midnight
-                const [punchOutHours, punchOutMinutes] = punchOut.split(':').map(Number);
-                const punchOutInMinutes = (punchOutHours * 60) + punchOutMinutes;
-                
-                // Get shift end time from data attribute instead of hardcoding
-                const shiftEndTime = shiftTime.dataset.shiftEnd || '18:00';
-                const [shiftEndHours, shiftEndMinutes] = shiftEndTime.split(':').map(Number);
-                const shiftEndInMinutes = (shiftEndHours * 60) + (shiftEndMinutes || 0);
-                
-                if (punchOutInMinutes > shiftEndInMinutes) {
-                    // Calculate overtime in minutes
-                    const overtimeMinutes = punchOutInMinutes - shiftEndInMinutes;
-                    
-                    // Convert to hours and minutes
-                    const rawHours = Math.floor(overtimeMinutes / 60);
-                    const rawMinutes = overtimeMinutes % 60;
-                    
-                    // Round the overtime
-                    const rounded = roundOvertime(rawHours, rawMinutes);
-                    
-                    // Format as HH:MM:00
-                    overtimeInput.value = 
-                        String(rounded.hours).padStart(2, '0') + ':' +
-                        String(rounded.minutes).padStart(2, '0') + ':00';
-                    
-                    console.log('Raw overtime:', `${rawHours}:${rawMinutes}:00`);
-                    console.log('Rounded overtime:', overtimeInput.value);
-                } else {
-                    overtimeInput.value = '00:00:00';
                 }
             }
-        }
 
-        // Add event listeners for overtime changes
-        document.querySelectorAll('.overtime').forEach(input => {
-            input.addEventListener('change', function() {
-                markAsModified(this);
+            // Add event listeners for overtime changes
+            document.querySelectorAll('.overtime').forEach(input => {
+                input.addEventListener('change', function() {
+                    markAsModified(this);
+                });
+            });
+
+            // Add event listeners for punch out changes
+            document.querySelectorAll('.punch-out').forEach(input => {
+                input.addEventListener('change', function() {
+                    calculateOvertime(this.closest('tr'));
+                    markAsModified(this);
+                });
+            });
+
+            // Add event listeners for punch in changes
+            document.querySelectorAll('.punch-in').forEach(input => {
+                input.addEventListener('change', function() {
+                    markAsModified(this);
+                });
+            });
+
+            // Add event listeners for shift time changes
+            document.querySelectorAll('input[name$="[shift_time]"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    markAsModified(this);
+                });
+            });
+
+            // Initialize all rows
+            document.querySelectorAll('.status-select').forEach(select => {
+                select.dispatchEvent(new Event('change'));
             });
         });
-
-        // Add event listeners for punch out changes
-        document.querySelectorAll('.punch-out').forEach(input => {
-            input.addEventListener('change', function() {
-                calculateOvertime(this.closest('tr'));
-                markAsModified(this);
-            });
-        });
-
-        // Add event listeners for punch in changes
-        document.querySelectorAll('.punch-in').forEach(input => {
-            input.addEventListener('change', function() {
-                markAsModified(this);
-            });
-        });
-
-        // Add event listeners for shift time changes
-        document.querySelectorAll('input[name$="[shift_time]"]').forEach(input => {
-            input.addEventListener('change', function() {
-                markAsModified(this);
-            });
-        });
-
-        // Initialize all rows
-        document.querySelectorAll('.status-select').forEach(select => {
-            select.dispatchEvent(new Event('change'));
-        });
-    });
     </script>
 </body>
 </html> 

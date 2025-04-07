@@ -403,6 +403,230 @@ function formatDecimalToTime($timeString) {
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Add sidebar styles first */
+        .dashboard {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            max-height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            height: 100vh;
+            overflow: visible !important;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: -15px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 999;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e0e0e0;
+        }
+
+        .sidebar.collapsed .toggle-btn {
+            display: flex !important;
+            opacity: 1 !important;
+            right: -15px !important;
+        }
+
+        .sidebar-header {
+            padding: 20px 15px 10px;
+            color: #888;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 20px 0 10px;
+            text-align: center;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #444;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-menu li a:hover {
+            background-color: #f5f5f5;
+        }
+
+        .sidebar-menu li.active a {
+            background-color: #f9f9f9;
+            color: #ff3e3e;
+            border-left: 3px solid #ff3e3e;
+        }
+
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            font-size: 18px;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .sidebar-menu li a {
+            padding: 12px 0;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-menu li a i {
+            margin-right: 0;
+            font-size: 20px;
+        }
+
+        /* Logout button styling */
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 10px 0;
+            flex-shrink: 0;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            color: #ff3e3e !important;
+            padding: 12px 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #ffefef;
+        }
+
+        .logout-btn i {
+            margin-right: 10px;
+            font-size: 18px;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .logout-btn {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        .sidebar.collapsed .logout-btn i {
+            margin-right: 0;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar .sidebar-text {
+                display: none;
+            }
+
+            .sidebar .sidebar-menu li a {
+                padding: 12px 0;
+                justify-content: center;
+            }
+
+            .sidebar .sidebar-menu li a i {
+                margin-right: 0;
+                font-size: 20px;
+            }
+
+            .toggle-btn {
+                display: none;
+            }
+
+            .sidebar.expanded {
+                width: 250px;
+                z-index: 1000;
+            }
+
+            .sidebar.expanded .sidebar-text {
+                display: inline;
+            }
+
+            .sidebar.expanded .sidebar-menu li a {
+                padding: 12px 15px;
+                justify-content: flex-start;
+            }
+
+            .sidebar.expanded .sidebar-menu li a i {
+                margin-right: 10px;
+                font-size: 18px;
+            }
+        }
+
+        /* Adjust main content container for sidebar */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            background-color: #f5f8fa;
+            width: calc(100% - 250px); /* Adjust based on sidebar width */
+        }
+
+        /* Add this style for when sidebar is collapsed */
+        .sidebar.collapsed + .main-content {
+            width: calc(100% - 70px); /* Adjust based on collapsed sidebar width */
+        }
+
+        /* Update responsive styles */
+        @media (max-width: 768px) {
+            .main-content {
+                width: calc(100% - 70px);
+            }
+            
+            .sidebar.expanded + .main-content {
+                width: calc(100% - 250px);
+            }
+        }
+
+        /* Keep your existing styles below */
         :root {
             --primary: #4361ee;
             --primary-light: #eef2ff;
@@ -433,38 +657,52 @@ function formatDecimalToTime($timeString) {
             background-color: #f5f8fa;
             padding: 0;
             margin: 0;
+            overflow: hidden;
         }
 
         .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 30px;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 20px;
         }
 
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 15px;
+            margin: 20px 0 30px 0;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--primary-light);
         }
 
         .page-header h2 {
             font-size: 28px;
             font-weight: 600;
-            color: var(--dark);
+            color: var(--primary);
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-header h2 i {
+            color: var(--primary);
         }
 
         .filters-container {
-            background: white;
+            background: linear-gradient(to right, #eef2ff, #f8faff);
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px var(--shadow);
-            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.1);
+            margin: 40px 0 30px 0;
             transition: all 0.3s ease;
-            border: 1px solid var(--border);
+            border: 1px solid #e5e9ff;
+        }
+
+        .filters-container:hover {
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.15);
+            transform: translateY(-2px);
         }
 
         .filters-grid {
@@ -477,23 +715,26 @@ function formatDecimalToTime($timeString) {
         .filter-item {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
 
         .filter-item label {
             font-weight: 500;
-            color: var(--dark);
-            font-size: 15px;
+            color: var(--primary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .form-control {
             width: 100%;
             padding: 12px 15px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            border: 1px solid #e5e9ff;
+            border-radius: 8px;
             font-size: 14px;
             transition: all 0.2s;
-            background-color: var(--light);
+            background-color: white;
+            color: #333;
         }
 
         .form-control:focus {
@@ -502,23 +743,35 @@ function formatDecimalToTime($timeString) {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
         }
 
+        .form-control:hover {
+            border-color: var(--primary);
+        }
+
         .btn-primary {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, #4361ee, #3a4ee0);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s;
             font-size: 14px;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
         }
 
         .btn-primary:hover {
-            background-color: var(--secondary);
+            background: linear-gradient(135deg, #3a4ee0, #2f44d9);
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px var(--shadow-hover);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary i {
+            font-size: 16px;
         }
 
         .button-container {
@@ -527,13 +780,8 @@ function formatDecimalToTime($timeString) {
         }
 
         .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px var(--shadow);
-            margin-bottom: 30px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
         }
 
         .card:hover {
@@ -563,8 +811,9 @@ function formatDecimalToTime($timeString) {
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
+            width: 100%;
         }
 
         .summary-item {
@@ -657,8 +906,9 @@ function formatDecimalToTime($timeString) {
         .row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 20px;
+            margin: 0 0 20px 0;
+            width: 100%;
         }
 
         .chart-container {
@@ -797,10 +1047,8 @@ function formatDecimalToTime($timeString) {
         }
 
         .table-wrapper {
+            width: 100%;
             overflow-x: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px var(--shadow);
-            margin-bottom: 30px;
         }
 
         .summary-table {
@@ -893,426 +1141,574 @@ function formatDecimalToTime($timeString) {
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Ensure smooth transition when sidebar toggles */
+        .main-content {
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="page-header">
-            <h2><i class="fas fa-calendar-check"></i> Attendance Report</h2>
+    <div class="dashboard">
+        <!-- Add Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="toggle-btn" id="toggle-btn">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-text">MAIN</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="real.php">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="sidebar-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="leave.php">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="sidebar-text">Leaves</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="employee.php">
+                        <i class="fas fa-users"></i>
+                        <span class="sidebar-text">Employees</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-box"></i>
+                        <span class="sidebar-text">Projects</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-text">ANALYTICS</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="#">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="sidebar-text"> Employee Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="work_report.php">
+                        <i class="fas fa-file-invoice"></i>
+                        <span class="sidebar-text"> Work Reports</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="attendance_report.php">
+                        <i class="fas fa-clock"></i>
+                        <span class="sidebar-text"> Attendance Reports</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-text">SETTINGS</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="profile.php">
+                        <i class="fas fa-user"></i>
+                        <span class="sidebar-text">Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-bell"></i>
+                        <span class="sidebar-text">Notifications</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="manager_settings.php">
+                        <i class="fas fa-cog"></i>
+                        <span class="sidebar-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Add logout at the end of sidebar -->
+            <div class="sidebar-footer">
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="logout.php" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="sidebar-text">Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
 
-        <div class="filters-container">
-            <form method="GET">
-                <div class="filters-grid">
-                    <div class="filter-item">
-                        <label for="month">Select Month</label>
-                        <input type="month" id="month" name="month" class="form-control" 
-                               value="<?php echo htmlspecialchars($month); ?>">
-                    </div>
-                    
-                    <div class="filter-item">
-                        <label for="user_filter">Select Employee</label>
-                        <select name="user_id" id="user_filter" class="form-control">
-                            <?php if ($is_hr): ?>
-                                <option value="all" <?php echo $user_id === 'all' ? 'selected' : ''; ?>>All Employees</option>
-                            <?php endif; ?>
+        <!-- Wrap your existing content in main-content div -->
+        <div class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <h2><i class="fas fa-calendar-check"></i> Attendance Report</h2>
+                </div>
+
+                <div class="filters-container">
+                    <form method="GET">
+                        <div class="filters-grid">
+                            <div class="filter-item">
+                                <label for="month">Select Month</label>
+                                <input type="month" id="month" name="month" class="form-control" 
+                                       value="<?php echo htmlspecialchars($month); ?>">
+                            </div>
                             
-                            <?php foreach ($all_users as $user): ?>
-                                <option value="<?php echo $user['id']; ?>" 
-                                    <?php echo $user_id == $user['id'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($user['username'] . ' (' . $user['unique_id'] . ')'); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="filter-item button-container">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fas fa-chart-line"></i> Attendance Summary</h3>
-            </div>
-            <div class="card-body">
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Total hours worked by all employees during the selected period. This represents the overall work volume.
-                        </div>
-                        <div class="icon"><i class="fas fa-clock"></i></div>
-                        <h3>Total Working Hours</h3>
-                        <p><?php echo number_format($total_working_hours, 2); ?></p>
-                    </div>
-                    <div class="summary-item overtime">
-                        <div class="tooltip">
-                            Total overtime hours (>1.5h beyond shift end). Value: <?php echo formatDecimalToTime($total_overtime); ?><br>
-                            Percentage of total hours: <?php echo $total_working_hours > 0 ? number_format((convertTimeToDecimal($total_overtime) / $total_working_hours) * 100, 1) : 0; ?>%
-                        </div>
-                        <div class="icon"><i class="fas fa-hourglass-half"></i></div>
-                        <h3>Total Overtime</h3>
-                        <p class="overtime"><?php echo formatDecimalToTime($total_overtime); ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            <?php if ($user_id !== 'all'): ?>
-                                Total days marked as present out of <?php echo $working_days; ?> working days.<br>
-                                Percentage: <?php echo number_format($attendance_rate, 1); ?>%
-                            <?php else: ?>
-                                Average number of days each employee was present during the month.<br>
-                                Total present entries: <?php echo count($present_days); ?>
-                            <?php endif; ?>
-                        </div>
-                        <div class="icon"><i class="fas fa-calendar-check"></i></div>
-                        <h3><?php echo $days_present_label; ?></h3>
-                        <p><?php echo $present_days_count; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Attendance rate based on working days in the month.<br>
-                            Formula: (Days Present / <?php echo $working_days; ?> Working Days) × 100
-                        </div>
-                        <div class="icon"><i class="fas fa-percentage"></i></div>
-                        <h3>Attendance Rate</h3>
-                        <p><?php echo number_format($attendance_rate, 1); ?>%</p>
-                    </div>
-                    
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of times employees arrived more than 15 minutes after their shift start time.<br>
-                            Rate: <?php echo count($records) > 0 ? number_format(($late_arrivals / count($records)) * 100, 1) : 0; ?>% of all punch-ins
-                        </div>
-                        <div class="icon"><i class="fas fa-user-clock"></i></div>
-                        <h3>Late Arrivals</h3>
-                        <p><?php echo $late_arrivals; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of times employees left more than 15 minutes before their shift end time.<br>
-                            Rate: <?php echo count($records) > 0 ? number_format(($early_departures / count($records)) * 100, 1) : 0; ?>% of all punch-outs
-                        </div>
-                        <div class="icon"><i class="fas fa-sign-out-alt"></i></div>
-                        <h3>Early Departures</h3>
-                        <p><?php echo $early_departures; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of weekly off days on which employees worked.<br>
-                            These are days worked outside of regular schedule.
-                        </div>
-                        <div class="icon"><i class="fas fa-moon"></i></div>
-                        <h3>Weekly Offs Worked</h3>
-                        <p><?php echo $weekly_off_worked_count; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Total hours worked during weekly offs or weekends.<br>
-                            Percentage of total: <?php echo $total_working_hours > 0 ? number_format(($weekend_hours / $total_working_hours) * 100, 1) : 0; ?>%
-                        </div>
-                        <div class="icon"><i class="fas fa-briefcase"></i></div>
-                        <h3>Weekend Hours</h3>
-                        <p><?php echo number_format($weekend_hours, 2); ?></p>
-                    </div>
-                    
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Total number of calendar days in the selected month.<br>
-                            Including working days and weekends.
-                        </div>
-                        <div class="icon"><i class="fas fa-calendar-day"></i></div>
-                        <h3>Days in Month</h3>
-                        <p><?php echo $days_in_month; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of business days in the month, excluding weekends.<br>
-                            Weekends count: <?php echo $weekends; ?> days
-                        </div>
-                        <div class="icon"><i class="fas fa-business-time"></i></div>
-                        <h3>Working Days</h3>
-                        <p><?php echo $working_days; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Average number of hours worked per day when present.<br>
-                            Formula: Total Hours / Days Present
-                        </div>
-                        <div class="icon"><i class="fas fa-calculator"></i></div>
-                        <h3>Avg. Hours/Day</h3>
-                        <p><?php echo number_format($avg_hours_per_day, 2); ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Maximum hours worked in a single day: <?php echo number_format($max_hours_day['hours'], 2); ?> hours<br>
-                            Date: <?php echo date('d M Y', strtotime($max_hours_day['date'])); ?>
-                        </div>
-                        <div class="icon"><i class="fas fa-award"></i></div>
-                        <h3>Max Hours Day</h3>
-                        <p><?php echo number_format($max_hours_day['hours'], 2); ?></p>
-                    </div>
-                    
-                    <?php if ($user_id === 'all'): ?>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Total number of employees with attendance records in the selected period.<br>
-                            Active employees in system: <?php echo count($all_users); ?>
-                        </div>
-                        <div class="icon"><i class="fas fa-users"></i></div>
-                        <h3>Total Employees</h3>
-                        <p><?php echo $employee_count; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of employees with 100% attendance during working days.<br>
-                            Percentage: <?php echo $employee_count > 0 ? number_format(($full_attendance_users / $employee_count) * 100, 1) : 0; ?>% of total employees
-                        </div>
-                        <div class="icon"><i class="fas fa-trophy"></i></div>
-                        <h3>100% Attendance</h3>
-                        <p><?php echo $full_attendance_users; ?></p>
-                    </div>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of employees with no attendance records this month.<br>
-                            Percentage: <?php echo $employee_count > 0 ? number_format(($zero_attendance_users / $employee_count) * 100, 1) : 0; ?>% of total employees
-                        </div>
-                        <div class="icon"><i class="fas fa-user-slash"></i></div>
-                        <h3>Zero Attendance</h3>
-                        <p><?php echo $zero_attendance_users; ?></p>
-                    </div>
-                    <?php else: ?>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Number of instances where an employee punched in but did not punch out.<br>
-                            These may need to be manually adjusted by HR.
-                        </div>
-                        <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
-                        <h3>Missing Punch-Outs</h3>
-                        <p><?php echo $no_punch_out_count; ?></p>
-                    </div>
-                    <?php endif; ?>
-                    <div class="summary-item">
-                        <div class="tooltip">
-                            Day of the week with the highest attendance count.<br>
-                            Count for <?php echo $most_active_day; ?>: <?php echo isset($attendance_by_day[$most_active_day]) ? $attendance_by_day[$most_active_day] : 0; ?> entries
-                        </div>
-                        <div class="icon"><i class="fas fa-star"></i></div>
-                        <h3>Most Active Day</h3>
-                        <p><?php echo $most_active_day; ?></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-chart-line"></i> Working Hours Trend</h3>
-                </div>
-                <div class="card-body chart-container">
-                    <canvas id="workingHoursChart"></canvas>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-chart-pie"></i> Overtime Distribution</h3>
-                </div>
-                <div class="card-body chart-container">
-                    <canvas id="overtimePieChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <?php if ($show_all): ?>
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-building"></i> Department-wise Summary</h3>
-                </div>
-                <div class="card-body table-wrapper">
-                    <table class="summary-table">
-                        <thead>
-                            <tr>
-                                <th>Department</th>
-                                <th>Total Employees</th>
-                                <th>Total Working Hours</th>
-                                <th>Total Overtime</th>
-                                <th>Average Working Hours</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $dept_summary = [];
-                            foreach ($records as $record) {
-                                $dept = $record['department'] ?? 'Unassigned';
-                                if (!isset($dept_summary[$dept])) {
-                                    $dept_summary[$dept] = [
-                                        'employees' => [],
-                                        'working_hours' => 0,
-                                        'overtime' => 0
-                                    ];
-                                }
-                                $dept_summary[$dept]['employees'][$record['user_id']] = true;
-                                
-                                // Convert working hours if needed
-                                $working_hours = is_numeric($record['working_hours']) ? 
-                                    $record['working_hours'] : 
-                                    convertTimeToDecimal($record['working_hours']);
-                                
-                                // Calculate valid overtime
-                                $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
-                                $valid_overtime = calculateValidOvertime(
-                                    $record['overtime_hours'],
-                                    $record['punch_in'],
-                                    $record['punch_out'],
-                                    $shift_end_datetime
-                                );
-                                $overtime = is_numeric($valid_overtime) ? 
-                                    $valid_overtime : 
-                                    convertTimeToDecimal($valid_overtime);
-                                
-                                $dept_summary[$dept]['working_hours'] += $working_hours;
-                                $dept_summary[$dept]['overtime'] += $overtime;
-                            }
-
-                            foreach ($dept_summary as $dept => $summary):
-                                $emp_count = count($summary['employees']);
-                                $avg_hours = $emp_count > 0 ? $summary['working_hours'] / $emp_count : 0;
-                            ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($dept); ?></td>
-                                    <td><?php echo $emp_count; ?></td>
-                                    <td><?php echo number_format($summary['working_hours'], 2); ?></td>
-                                    <td class="overtime"><?php echo number_format($summary['overtime'], 2); ?></td>
-                                    <td><?php echo number_format($avg_hours, 2); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        <?php endif; ?>
-
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fas fa-list"></i> Attendance Details</h3>
-            </div>
-            <div class="card-body table-wrapper">
-                <table class="attendance-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Employee</th>
-                            <th>Shift</th>
-                            <th>Weekly Off Status</th>
-                            <th>Punch In</th>
-                            <th>Punch Out</th>
-                            <th>Working Hours</th>
-                            <th>Overtime</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        $current_user = null;
-                        foreach ($records as $record):
-                            // Get weekly offs for this specific date
-                            $weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], $record['date']);
-                            $is_weekly_off = isWeeklyOff($record['date'], $weekly_offs);
-                            
-                            if ($show_all && $current_user !== $record['username']):
-                                $current_user = $record['username'];
-                        ?>
-                                <tr class="user-row">
-                                    <td colspan="9">
-                                        <div class="user-header">
-                                            <span class="user-name">
-                                                <i class="fas fa-user"></i>
-                                                <?php echo htmlspecialchars($record['username'] . ' (' . $record['unique_id'] . ')'); ?>
-                                            </span>
-                                            <span class="weekly-offs-info">
-                                                <i class="fas fa-calendar-minus"></i> Weekly Offs: 
-                                                <?php 
-                                                $current_weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], date('Y-m-d'));
-                                                echo !empty($current_weekly_offs) 
-                                                    ? htmlspecialchars(implode(', ', explode(',', $current_weekly_offs))) 
-                                                    : 'Not Set';
-                                                ?>
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                            <tr class="<?php echo $is_weekly_off ? 'weekly-off-row' : ''; ?>">
-                                <td><?php echo date('d M Y (D)', strtotime($record['date'])); ?></td>
-                                <td><?php echo htmlspecialchars($record['username']); ?></td>
-                                <td>
-                                    <?php echo htmlspecialchars($record['shift_name']); ?>
-                                    <br>
-                                    <small>
-                                        <?php 
-                                        if ($record['shift_start'] && $record['shift_end']) {
-                                            echo date('h:i A', strtotime($record['shift_start'])) . ' - ' . 
-                                                 date('h:i A', strtotime($record['shift_end']));
-                                        } else {
-                                            echo 'No Shift';
-                                        }
-                                        ?>
-                                    </small>
-                                </td>
-                                <td class="weekly-off-status">
-                                    <?php if ($is_weekly_off): ?>
-                                        <span class="badge weekly-off"><i class="fas fa-moon"></i> Weekly Off</span>
-                                        <?php if ($record['punch_in']): ?>
-                                            <span class="badge worked"><i class="fas fa-briefcase"></i> Worked</span>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <span class="badge working-day"><i class="fas fa-sun"></i> Working Day</span>
+                            <div class="filter-item">
+                                <label for="user_filter">Select Employee</label>
+                                <select name="user_id" id="user_filter" class="form-control">
+                                    <?php if ($is_hr): ?>
+                                        <option value="all" <?php echo $user_id === 'all' ? 'selected' : ''; ?>>All Employees</option>
                                     <?php endif; ?>
-                                </td>
-                                <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?></td>
-                                <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
-                                <td><?php echo formatHoursAndMinutes($record['working_hours']); ?></td>
-                                <td><?php 
-                                    // Get the shift end time for this record's date
-                                    $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
-                                    $valid_overtime = calculateValidOvertime(
-                                        $record['overtime_hours'],
-                                        $record['punch_in'],
-                                        $record['punch_out'],
-                                        $shift_end_datetime
-                                    );
-                                    echo $valid_overtime !== '00:00:00' ? formatDecimalToTime($valid_overtime) : '-';
-                                ?></td>
-                                <td>
-                                    <span class="status-badge <?php echo strtolower($record['status']); ?>">
-                                        <?php echo htmlspecialchars($record['status']); ?>
-                                    </span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                                    
+                                    <?php foreach ($all_users as $user): ?>
+                                        <option value="<?php echo $user['id']; ?>" 
+                                            <?php echo $user_id == $user['id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($user['username'] . ' (' . $user['unique_id'] . ')'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="filter-item button-container">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply Filters</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Attendance Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-grid">
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Total hours worked by all employees during the selected period. This represents the overall work volume.
+                                </div>
+                                <div class="icon"><i class="fas fa-clock"></i></div>
+                                <h3>Total Working Hours</h3>
+                                <p><?php echo number_format($total_working_hours, 2); ?></p>
+                            </div>
+                            <div class="summary-item overtime">
+                                <div class="tooltip">
+                                    Total overtime hours (>1.5h beyond shift end). Value: <?php echo formatDecimalToTime($total_overtime); ?><br>
+                                    Percentage of total hours: <?php echo $total_working_hours > 0 ? number_format((convertTimeToDecimal($total_overtime) / $total_working_hours) * 100, 1) : 0; ?>%
+                                </div>
+                                <div class="icon"><i class="fas fa-hourglass-half"></i></div>
+                                <h3>Total Overtime</h3>
+                                <p class="overtime"><?php echo formatDecimalToTime($total_overtime); ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    <?php if ($user_id !== 'all'): ?>
+                                        Total days marked as present out of <?php echo $working_days; ?> working days.<br>
+                                        Percentage: <?php echo number_format($attendance_rate, 1); ?>%
+                                    <?php else: ?>
+                                        Average number of days each employee was present during the month.<br>
+                                        Total present entries: <?php echo count($present_days); ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                                <h3><?php echo $days_present_label; ?></h3>
+                                <p><?php echo $present_days_count; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Attendance rate based on working days in the month.<br>
+                                    Formula: (Days Present / <?php echo $working_days; ?> Working Days) × 100
+                                </div>
+                                <div class="icon"><i class="fas fa-percentage"></i></div>
+                                <h3>Attendance Rate</h3>
+                                <p><?php echo number_format($attendance_rate, 1); ?>%</p>
+                            </div>
+                            
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of times employees arrived more than 15 minutes after their shift start time.<br>
+                                    Rate: <?php echo count($records) > 0 ? number_format(($late_arrivals / count($records)) * 100, 1) : 0; ?>% of all punch-ins
+                                </div>
+                                <div class="icon"><i class="fas fa-user-clock"></i></div>
+                                <h3>Late Arrivals</h3>
+                                <p><?php echo $late_arrivals; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of times employees left more than 15 minutes before their shift end time.<br>
+                                    Rate: <?php echo count($records) > 0 ? number_format(($early_departures / count($records)) * 100, 1) : 0; ?>% of all punch-outs
+                                </div>
+                                <div class="icon"><i class="fas fa-sign-out-alt"></i></div>
+                                <h3>Early Departures</h3>
+                                <p><?php echo $early_departures; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of weekly off days on which employees worked.<br>
+                                    These are days worked outside of regular schedule.
+                                </div>
+                                <div class="icon"><i class="fas fa-moon"></i></div>
+                                <h3>Weekly Offs Worked</h3>
+                                <p><?php echo $weekly_off_worked_count; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Total hours worked during weekly offs or weekends.<br>
+                                    Percentage of total: <?php echo $total_working_hours > 0 ? number_format(($weekend_hours / $total_working_hours) * 100, 1) : 0; ?>%
+                                </div>
+                                <div class="icon"><i class="fas fa-briefcase"></i></div>
+                                <h3>Weekend Hours</h3>
+                                <p><?php echo number_format($weekend_hours, 2); ?></p>
+                            </div>
+                            
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Total number of calendar days in the selected month.<br>
+                                    Including working days and weekends.
+                                </div>
+                                <div class="icon"><i class="fas fa-calendar-day"></i></div>
+                                <h3>Days in Month</h3>
+                                <p><?php echo $days_in_month; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of business days in the month, excluding weekends.<br>
+                                    Weekends count: <?php echo $weekends; ?> days
+                                </div>
+                                <div class="icon"><i class="fas fa-business-time"></i></div>
+                                <h3>Working Days</h3>
+                                <p><?php echo $working_days; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Average number of hours worked per day when present.<br>
+                                    Formula: Total Hours / Days Present
+                                </div>
+                                <div class="icon"><i class="fas fa-calculator"></i></div>
+                                <h3>Avg. Hours/Day</h3>
+                                <p><?php echo number_format($avg_hours_per_day, 2); ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Maximum hours worked in a single day: <?php echo number_format($max_hours_day['hours'], 2); ?> hours<br>
+                                    Date: <?php echo date('d M Y', strtotime($max_hours_day['date'])); ?>
+                                </div>
+                                <div class="icon"><i class="fas fa-award"></i></div>
+                                <h3>Max Hours Day</h3>
+                                <p><?php echo number_format($max_hours_day['hours'], 2); ?></p>
+                            </div>
+                            
+                            <?php if ($user_id === 'all'): ?>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Total number of employees with attendance records in the selected period.<br>
+                                    Active employees in system: <?php echo count($all_users); ?>
+                                </div>
+                                <div class="icon"><i class="fas fa-users"></i></div>
+                                <h3>Total Employees</h3>
+                                <p><?php echo $employee_count; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of employees with 100% attendance during working days.<br>
+                                    Percentage: <?php echo $employee_count > 0 ? number_format(($full_attendance_users / $employee_count) * 100, 1) : 0; ?>% of total employees
+                                </div>
+                                <div class="icon"><i class="fas fa-trophy"></i></div>
+                                <h3>100% Attendance</h3>
+                                <p><?php echo $full_attendance_users; ?></p>
+                            </div>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of employees with no attendance records this month.<br>
+                                    Percentage: <?php echo $employee_count > 0 ? number_format(($zero_attendance_users / $employee_count) * 100, 1) : 0; ?>% of total employees
+                                </div>
+                                <div class="icon"><i class="fas fa-user-slash"></i></div>
+                                <h3>Zero Attendance</h3>
+                                <p><?php echo $zero_attendance_users; ?></p>
+                            </div>
+                            <?php else: ?>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Number of instances where an employee punched in but did not punch out.<br>
+                                    These may need to be manually adjusted by HR.
+                                </div>
+                                <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <h3>Missing Punch-Outs</h3>
+                                <p><?php echo $no_punch_out_count; ?></p>
+                            </div>
+                            <?php endif; ?>
+                            <div class="summary-item">
+                                <div class="tooltip">
+                                    Day of the week with the highest attendance count.<br>
+                                    Count for <?php echo $most_active_day; ?>: <?php echo isset($attendance_by_day[$most_active_day]) ? $attendance_by_day[$most_active_day] : 0; ?> entries
+                                </div>
+                                <div class="icon"><i class="fas fa-star"></i></div>
+                                <h3>Most Active Day</h3>
+                                <p><?php echo $most_active_day; ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Working Hours Trend</h3>
+                        </div>
+                        <div class="card-body chart-container">
+                            <canvas id="workingHoursChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Overtime Distribution</h3>
+                        </div>
+                        <div class="card-body chart-container">
+                            <canvas id="overtimePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ($show_all): ?>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-building"></i> Department-wise Summary</h3>
+                        </div>
+                        <div class="card-body table-wrapper">
+                            <table class="summary-table">
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th>Total Employees</th>
+                                        <th>Total Working Hours</th>
+                                        <th>Total Overtime</th>
+                                        <th>Average Working Hours</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $dept_summary = [];
+                                    foreach ($records as $record) {
+                                        $dept = $record['department'] ?? 'Unassigned';
+                                        if (!isset($dept_summary[$dept])) {
+                                            $dept_summary[$dept] = [
+                                                'employees' => [],
+                                                'working_hours' => 0,
+                                                'overtime' => 0
+                                            ];
+                                        }
+                                        $dept_summary[$dept]['employees'][$record['user_id']] = true;
+                                        
+                                        // Convert working hours if needed
+                                        $working_hours = is_numeric($record['working_hours']) ? 
+                                            $record['working_hours'] : 
+                                            convertTimeToDecimal($record['working_hours']);
+                                        
+                                        // Calculate valid overtime
+                                        $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+                                        $valid_overtime = calculateValidOvertime(
+                                            $record['overtime_hours'],
+                                            $record['punch_in'],
+                                            $record['punch_out'],
+                                            $shift_end_datetime
+                                        );
+                                        $overtime = is_numeric($valid_overtime) ? 
+                                            $valid_overtime : 
+                                            convertTimeToDecimal($valid_overtime);
+                                        
+                                        $dept_summary[$dept]['working_hours'] += $working_hours;
+                                        $dept_summary[$dept]['overtime'] += $overtime;
+                                    }
+
+                                    foreach ($dept_summary as $dept => $summary):
+                                        $emp_count = count($summary['employees']);
+                                        $avg_hours = $emp_count > 0 ? $summary['working_hours'] / $emp_count : 0;
+                                    ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($dept); ?></td>
+                                            <td><?php echo $emp_count; ?></td>
+                                            <td><?php echo number_format($summary['working_hours'], 2); ?></td>
+                                            <td class="overtime"><?php echo number_format($summary['overtime'], 2); ?></td>
+                                            <td><?php echo number_format($avg_hours, 2); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-list"></i> Attendance Details</h3>
+                    </div>
+                    <div class="card-body table-wrapper">
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Employee</th>
+                                    <th>Shift</th>
+                                    <th>Weekly Off Status</th>
+                                    <th>Punch In</th>
+                                    <th>Punch Out</th>
+                                    <th>Working Hours</th>
+                                    <th>Overtime</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $current_user = null;
+                                foreach ($records as $record):
+                                    // Get weekly offs for this specific date
+                                    $weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], $record['date']);
+                                    $is_weekly_off = isWeeklyOff($record['date'], $weekly_offs);
+                                    
+                                    if ($show_all && $current_user !== $record['username']):
+                                        $current_user = $record['username'];
+                                ?>
+                                        <tr class="user-row">
+                                            <td colspan="9">
+                                                <div class="user-header">
+                                                    <span class="user-name">
+                                                        <i class="fas fa-user"></i>
+                                                        <?php echo htmlspecialchars($record['username'] . ' (' . $record['unique_id'] . ')'); ?>
+                                                    </span>
+                                                    <span class="weekly-offs-info">
+                                                        <i class="fas fa-calendar-minus"></i> Weekly Offs: 
+                                                        <?php 
+                                                        $current_weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], date('Y-m-d'));
+                                                        echo !empty($current_weekly_offs) 
+                                                            ? htmlspecialchars(implode(', ', explode(',', $current_weekly_offs))) 
+                                                            : 'Not Set';
+                                                        ?>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                    <tr class="<?php echo $is_weekly_off ? 'weekly-off-row' : ''; ?>">
+                                        <td><?php echo date('d M Y (D)', strtotime($record['date'])); ?></td>
+                                        <td><?php echo htmlspecialchars($record['username']); ?></td>
+                                        <td>
+                                            <?php echo htmlspecialchars($record['shift_name']); ?>
+                                            <br>
+                                            <small>
+                                                <?php 
+                                                if ($record['shift_start'] && $record['shift_end']) {
+                                                    echo date('h:i A', strtotime($record['shift_start'])) . ' - ' . 
+                                                         date('h:i A', strtotime($record['shift_end']));
+                                                } else {
+                                                    echo 'No Shift';
+                                                }
+                                                ?>
+                                            </small>
+                                        </td>
+                                        <td class="weekly-off-status">
+                                            <?php if ($is_weekly_off): ?>
+                                                <span class="badge weekly-off"><i class="fas fa-moon"></i> Weekly Off</span>
+                                                <?php if ($record['punch_in']): ?>
+                                                    <span class="badge worked"><i class="fas fa-briefcase"></i> Worked</span>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="badge working-day"><i class="fas fa-sun"></i> Working Day</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?></td>
+                                        <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
+                                        <td><?php echo formatHoursAndMinutes($record['working_hours']); ?></td>
+                                        <td><?php 
+                                            // Get the shift end time for this record's date
+                                            $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
+                                            $valid_overtime = calculateValidOvertime(
+                                                $record['overtime_hours'],
+                                                $record['punch_in'],
+                                                $record['punch_out'],
+                                                $shift_end_datetime
+                                            );
+                                            echo $valid_overtime !== '00:00:00' ? formatDecimalToTime($valid_overtime) : '-';
+                                        ?></td>
+                                        <td>
+                                            <span class="status-badge <?php echo strtolower($record['status']); ?>">
+                                                <?php echo htmlspecialchars($record['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <?php if (empty($records)): ?>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No attendance records found for the selected period.
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
-
-        <?php if (empty($records)): ?>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No attendance records found for the selected period.
-            </div>
-        <?php endif; ?>
     </div>
 
+    <!-- Add sidebar JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const filterForm = document.querySelector('.filters-container form');
-            const filterInputs = filterForm.querySelectorAll('select, input');
-
-            filterInputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    filterForm.submit();
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggle-btn');
+            
+            // Toggle sidebar collapse/expand
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                
+                // Change icon direction based on sidebar state
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
+            });
+            
+            // For mobile: click outside to close expanded sidebar
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !sidebar.contains(e.target) && sidebar.classList.contains('expanded')) {
+                    sidebar.classList.remove('expanded');
+                }
+            });
+            
+            // For mobile: toggle expanded class
+            if (window.innerWidth <= 768) {
+                sidebar.addEventListener('click', function(e) {
+                    if (e.target.closest('a')) return; // Allow clicking links
+                    
+                    if (!sidebar.classList.contains('expanded')) {
+                        e.stopPropagation();
+                        sidebar.classList.add('expanded');
+                    }
                 });
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('expanded');
+                }
             });
         });
     </script>

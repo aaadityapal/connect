@@ -226,16 +226,169 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Sign Up | ArchitectsHive</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-dark: #4338CA;
+            --text-dark: #1F2937;
+            --text-light: #6B7280;
+            --bg-light: #F3F4F6;
+            --bg-white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --border-radius: 16px;
+            --spacing-sm: 12px;
+            --spacing-md: 18px;
+            --spacing-lg: 24px;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
             min-height: 100vh;
-            padding: 40px 0;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--text-dark);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: var(--primary-color);
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: var(--primary-color);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .login-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            width: calc(100% - var(--sidebar-width));
+            padding: 40px;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
         }
 
         .signup-container {
-            max-width: 800px;
+            width: 100%;
             margin: 0 auto;
+            max-width: none;
         }
 
         .card {
@@ -243,19 +396,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 15px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .card-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-align: center;
-            padding: 25px;
+            padding: 30px;
             border-bottom: none;
         }
 
         .card-header h3 {
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 600;
         }
 
@@ -264,9 +419,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background: white;
         }
 
+        /* Form Layout Improvements */
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
         .form-group {
             margin-bottom: 25px;
             position: relative;
+        }
+
+        /* Make the password field and submit button span full width */
+        .form-group:nth-last-child(1),
+        .btn-submit {
+            grid-column: 1 / -1;
         }
 
         .form-group label {
@@ -344,13 +512,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .signup-container {
+                max-width: 100%;
+            }
+            
+            .card {
+                max-width: 100%;
+            }
+        }
+
         @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
             .card-body {
                 padding: 20px;
             }
             
             .signup-container {
-                margin: 0 15px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            form {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-header {
+                padding: 20px;
+            }
+            
+            .card-header h3 {
+                font-size: 24px;
             }
         }
 
@@ -376,126 +585,190 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </style>
 </head>
 <body>
-    <div class="container signup-container">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fas fa-user-plus mr-2"></i>Create Account</h3>
-            </div>
-            <div class="card-body">
-                <?php if(isset($_SESSION['error'])): ?>
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <?php 
-                            echo $_SESSION['error'];
-                            unset($_SESSION['error']);
-                        ?>
-                    </div>
-                <?php endif; ?>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
+        </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-x-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="hr_documents_manager.php" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Documents
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Login Button (Instead of Logout) -->
+            <a href="login.php" class="nav-link login-link">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Login
+            </a>
+        </nav>
+    </div>
 
-                <form action="signup.php" method="POST">
-                    <div class="form-group">
-                        <label for="username">Full Name</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                            </div>
-                            <input type="text" class="form-control" id="username" name="username" required>
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="signup-container">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-plus mr-2"></i>Create Account</h3>
+                </div>
+                <div class="card-body">
+                    <?php if(isset($_SESSION['error'])): ?>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <?php 
+                                echo $_SESSION['error'];
+                                unset($_SESSION['error']);
+                            ?>
                         </div>
-                    </div>
+                    <?php endif; ?>
 
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-envelope"></i>
-                                </span>
+                    <form action="signup.php" method="POST">
+                        <div class="form-group">
+                            <label for="username">Full Name</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                </div>
+                                <input type="text" class="form-control" id="username" name="username" required>
                             </div>
-                            <input type="email" class="form-control" id="email" name="email" required>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="role">Select Role</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user-tag"></i>
-                                </span>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                </div>
+                                <input type="email" class="form-control" id="email" name="email" required>
                             </div>
-                            <select class="form-control" id="role" name="role" required>
-                                <option value="">Choose role...</option>
-                                <option value="admin">Admin</option>
-                                <option value="HR">HR</option>
-                                <option value="Senior Manager (Studio)">Senior Manager (Studio)</option>
-                                <option value="Senior Manager (Site)">Senior Manager (Site)</option>
-                                <option value="Senior Manager (Marketing)">Senior Manager (Marketing)</option>
-                                <option value="Senior Manager (Sales)">Senior Manager (Sales)</option>
-                                <option value="Design Team">Design Team</option>
-                                <option value="Working Team">Working Team</option>
-                                <option value="Draughtsman">Draughtsman</option>
-                                <option value="3D Designing Team">3D Designing Team</option>
-                                <option value="Studio Trainees">Studio Trainees</option>
-                                <option value="Business Developer">Business Developer</option>
-                                <option value="Social Media Manager">Social Media Manager</option>
-                                <option value="Site Manager">Site Manager</option>
-                                <option value="Site Supervisor">Site Supervisor</option>
-                                <option value="Site Trainee">Site Trainee</option>
-                                <option value="Relationship Manager">Relationship Manager</option>
-                                <option value="Sales Manager">Sales Manager</option>
-                                <option value="Sales Consultant">Sales Consultant</option>
-                                <option value="Field Sales Representative">Field Sales Representative</option>
-                            </select>
                         </div>
-                    </div>
 
-                    <div class="form-group" id="reportingManagerDiv" style="display: none;">
-                        <label for="reporting_manager">Reporting Manager</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user-tie"></i>
-                                </span>
+                        <div class="form-group">
+                            <label for="role">Select Role</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user-tag"></i>
+                                    </span>
+                                </div>
+                                <select class="form-control" id="role" name="role" required>
+                                    <option value="">Choose role...</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="HR">HR</option>
+                                    <option value="Senior Manager (Studio)">Senior Manager (Studio)</option>
+                                    <option value="Senior Manager (Site)">Senior Manager (Site)</option>
+                                    <option value="Senior Manager (Marketing)">Senior Manager (Marketing)</option>
+                                    <option value="Senior Manager (Sales)">Senior Manager (Sales)</option>
+                                    <option value="Design Team">Design Team</option>
+                                    <option value="Working Team">Working Team</option>
+                                    <option value="Draughtsman">Draughtsman</option>
+                                    <option value="3D Designing Team">3D Designing Team</option>
+                                    <option value="Studio Trainees">Studio Trainees</option>
+                                    <option value="Business Developer">Business Developer</option>
+                                    <option value="Social Media Manager">Social Media Manager</option>
+                                    <option value="Site Manager">Site Manager</option>
+                                    <option value="Site Supervisor">Site Supervisor</option>
+                                    <option value="Site Trainee">Site Trainee</option>
+                                    <option value="Relationship Manager">Relationship Manager</option>
+                                    <option value="Sales Manager">Sales Manager</option>
+                                    <option value="Sales Consultant">Sales Consultant</option>
+                                    <option value="Field Sales Representative">Field Sales Representative</option>
+                                </select>
                             </div>
-                            <select class="form-control" id="reporting_manager" name="reporting_manager">
-                                <option value="">Select Manager...</option>
-                                <option value="Sr. Manager (Studio)">Sr. Manager (Studio)</option>
-                                <option value="Sr. Manager (Business Developer)">Sr. Manager (Business Developer)</option>
-                                <option value="Sr. Manager (Relationship Manager)">Sr. Manager (Relationship Manager)</option>
-                                <option value="Sr. Manager (Operations)">Sr. Manager (Operations)</option>
-                                <option value="Sr. Manager (HR)">Sr. Manager (HR)</option>
-                            </select>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="fas fa-lock"></i>
-                                </span>
+                        <div class="form-group" id="reportingManagerDiv" style="display: none;">
+                            <label for="reporting_manager">Reporting Manager</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user-tie"></i>
+                                    </span>
+                                </div>
+                                <select class="form-control" id="reporting_manager" name="reporting_manager">
+                                    <option value="">Select Manager...</option>
+                                    <option value="Sr. Manager (Studio)">Sr. Manager (Studio)</option>
+                                    <option value="Sr. Manager (Business Developer)">Sr. Manager (Business Developer)</option>
+                                    <option value="Sr. Manager (Relationship Manager)">Sr. Manager (Relationship Manager)</option>
+                                    <option value="Sr. Manager (Operations)">Sr. Manager (Operations)</option>
+                                    <option value="Sr. Manager (HR)">Sr. Manager (HR)</option>
+                                </select>
                             </div>
-                            <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Password must be at least 8 characters long and include numbers and special characters.
-                        </small>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                </div>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Password must be at least 8 characters long and include numbers and special characters.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-submit btn-block">
+                            <i class="fas fa-user-plus mr-2"></i>Create Account
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <a href="login.php" class="text-decoration-none">
+                            <i class="fas fa-sign-in-alt mr-1"></i>
+                            Already have an account? Login
+                        </a>
                     </div>
-
-                    <button type="submit" class="btn btn-submit btn-block">
-                        <i class="fas fa-user-plus mr-2"></i>Create Account
-                    </button>
-                </form>
-
-                <div class="text-center mt-4">
-                    <a href="login.php" class="text-decoration-none">
-                        <i class="fas fa-sign-in-alt mr-1"></i>
-                        Already have an account? Login
-                    </a>
                 </div>
             </div>
         </div>
@@ -503,6 +776,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            // Handle sidebar toggle click
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+                
+                // Store the state in localStorage
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+            
+            // Check if sidebar was collapsed previously
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.classList.add('collapsed');
+            }
+            
+            // Add mobile detection for sidebar
+            function checkMobile() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else if (!sidebarCollapsed) {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
+                }
+            }
+            
+            // Initial check
+            checkMobile();
+            
+            // Listen for window resize
+            window.addEventListener('resize', checkMobile);
+        });
+
         document.querySelector('form').addEventListener('submit', function(e) {
             const role = document.getElementById('role').value;
             if (!role) {

@@ -234,6 +234,63 @@ CREATE TABLE IF NOT EXISTS leaves (
     <title>Leave Application</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Dashboard container styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            background-color: #f9fafb;
+        }
+
+        .main-content.collapsed {
+            margin-left: 70px;
+        }
+
+        /* Enhanced Header Styles */
+        .page-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .user-info span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-info i {
+            color: #3b82f6;
+            font-size: 1.1rem;
+        }
+
         /* Add your CSS styles here */
         :root {
             --primary-color: #4f46e5;
@@ -268,19 +325,6 @@ CREATE TABLE IF NOT EXISTS leaves (
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .page-title {
-            font-size: 1.875rem;
-            font-weight: 600;
-            color: var(--gray-800);
         }
 
         .leave-grid {
@@ -693,222 +737,234 @@ CREATE TABLE IF NOT EXISTS leaves (
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="page-header">
-            <h1 class="page-title">Leave Application</h1>
-            <div class="user-info">
-                <span>Welcome, <?php echo htmlspecialchars($user_data['username']); ?></span>
-            </div>
-        </div>
+    <div class="dashboard-container">
+        <!-- Include Left Panel -->
+        <?php include 'left_panel.php'; ?>
 
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="alert alert-success">
-                <?php 
-                echo $_SESSION['success_message'];
-                unset($_SESSION['success_message']);
-                ?>
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-calendar-alt" style="color: #3b82f6; margin-right: 10px;"></i>
+                    Leave Application
+                </h1>
+                <div class="user-info">
+                    <span>
+                        <i class="fas fa-user-circle"></i>
+                        Welcome, <?php echo htmlspecialchars($user_data['username']); ?>
+                    </span>
+                </div>
             </div>
-        <?php endif; ?>
 
-        <?php if (isset($_SESSION['error_message'])): ?>
-            <div class="alert alert-error">
-                <?php 
-                echo $_SESSION['error_message'];
-                unset($_SESSION['error_message']);
-                ?>
+            <?php if (isset($_SESSION['success_message'])): ?>
+                <div class="alert alert-success">
+                    <?php 
+                    echo $_SESSION['success_message'];
+                    unset($_SESSION['success_message']);
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['error_message'])): ?>
+                <div class="alert alert-error">
+                    <?php 
+                    echo $_SESSION['error_message'];
+                    unset($_SESSION['error_message']);
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="leave-grid">
+                <?php foreach ($leave_balance as $balance): ?>
+                    <div class="leave-card" style="--card-color: <?php echo $balance['color_code']; ?>">
+                        <div class="leave-card-header">
+                            <span class="leave-type">
+                                <?php echo htmlspecialchars($balance['name']); ?>
+                            </span>
+                            <span class="leave-balance">
+                                <?php 
+                                if ($balance['name'] === 'Half Day Leave') {
+                                    $remaining = $balance['total_leaves'] - $balance['used_leaves'];
+                                    echo $remaining . '/' . $balance['total_leaves'];
+                                } else {
+                                    $remaining = $balance['total_leaves'] - $balance['used_leaves'];
+                                    echo $remaining . '/' . $balance['total_leaves'];
+                                }
+                                ?>
+                            </span>
+                        </div>
+                        <div class="leave-card-body">
+                            <div class="progress">
+                                <div class="progress-bar" 
+                                     style="width: <?php 
+                                     if ($balance['name'] === 'Half Day Leave') {
+                                         echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100;
+                                     } else {
+                                         echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100;
+                                     }
+                                     ?>%">
+                                </div>
+                            </div>
+                            <span class="days-label">days remaining</span>
+                            <p class="leave-description">
+                                <?php echo htmlspecialchars($balance['description']); ?>
+                            </p>
+                            <?php if ($balance['name'] === 'Casual Leave'): ?>
+                                <button class="restriction-btn" onclick="showRestrictions()">
+                                    Leave Restriction Rules
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        <?php endif; ?>
 
-        <div class="leave-grid">
-            <?php foreach ($leave_balance as $balance): ?>
-                <div class="leave-card" style="--card-color: <?php echo $balance['color_code']; ?>">
-                    <div class="leave-card-header">
-                        <span class="leave-type">
-                            <?php echo htmlspecialchars($balance['name']); ?>
-                        </span>
-                        <span class="leave-balance">
+            <div class="apply-leave-section">
+                <h2 class="section-title">Apply for Leave</h2>
+                <form action="" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="leave_type">Leave Type</label>
+                            <select class="form-control" name="leave_type" id="leave_type" required>
+                                <option value="">Select Leave Type</option>
+                                <?php foreach ($leave_types as $type): ?>
+                                    <option value="<?php echo $type['id']; ?>" 
+                                            data-max-days="<?php echo $type['max_days']; ?>"
+                                            data-is-half-day="<?php echo $type['name'] === 'Half Day Leave' ? '1' : '0'; ?>">
+                                        <?php echo htmlspecialchars($type['name']); ?> 
+                                        (Max: <?php echo $type['max_days']; ?> days)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="start_date">Date</label>
+                            <input type="date" class="form-control" name="start_date" id="start_date" required>
+                        </div>
+
+                        <div class="form-group" id="halfDaySection" style="display: none;">
+                            <label class="form-label" for="half_day_type">Time</label>
+                            <select class="form-control" name="half_day_type" id="half_day_type">
+                                <option value="first_half">First Half (Morning)</option>
+                                <option value="second_half">Second Half (Afternoon)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="endDateSection">
+                            <label class="form-label" for="end_date">End Date</label>
+                            <input type="date" class="form-control" name="end_date" id="end_date" required>
+                        </div>
+                    </div>
+
+                    <div class="days-display" id="daysDisplay" style="display: none;">
+                        You are requesting leave for <span class="days-count">0</span> day(s)
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="reason">Reason</label>
+                        <textarea class="form-control" name="reason" id="reason" rows="4" required></textarea>
+                    </div>
+
+                    <button type="submit" name="submit_leave" class="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        Submit Application
+                    </button>
+                </form>
+            </div>
+
+            <div class="leave-history">
+                <h2 class="section-title">Leave History</h2>
+                
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <label>Year:</label>
+                        <select class="filter-select" onchange="applyFilters()">
+                            <option value="all" <?php echo $filter_year == 'all' ? 'selected' : ''; ?>>All Years</option>
                             <?php 
-                            if ($balance['name'] === 'Half Day Leave') {
-                                $remaining = $balance['total_leaves'] - $balance['used_leaves'];
-                                echo $remaining . '/' . $balance['total_leaves'];
-                            } else {
-                                $remaining = $balance['total_leaves'] - $balance['used_leaves'];
-                                echo $remaining . '/' . $balance['total_leaves'];
+                            $current_year = date('Y');
+                            for($y = $current_year; $y >= $current_year - 5; $y--) {
+                                echo "<option value='$y' " . ($filter_year == $y ? 'selected' : '') . ">$y</option>";
                             }
                             ?>
-                        </span>
+                        </select>
                     </div>
-                    <div class="leave-card-body">
-                        <div class="progress">
-                            <div class="progress-bar" 
-                                 style="width: <?php 
-                                 if ($balance['name'] === 'Half Day Leave') {
-                                     echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100;
-                                 } else {
-                                     echo ($balance['used_leaves'] / ($balance['total_leaves'] ?: 1)) * 100;
-                                 }
-                                 ?>%">
-                            </div>
-                        </div>
-                        <span class="days-label">days remaining</span>
-                        <p class="leave-description">
-                            <?php echo htmlspecialchars($balance['description']); ?>
-                        </p>
-                        <?php if ($balance['name'] === 'Casual Leave'): ?>
-                            <button class="restriction-btn" onclick="showRestrictions()">
-                                Leave Restriction Rules
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
 
-        <div class="apply-leave-section">
-            <h2 class="section-title">Apply for Leave</h2>
-            <form action="" method="POST">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label" for="leave_type">Leave Type</label>
-                        <select class="form-control" name="leave_type" id="leave_type" required>
-                            <option value="">Select Leave Type</option>
+                    <div class="filter-group">
+                        <label>Status:</label>
+                        <select class="filter-select" onchange="applyFilters()">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Leave Type:</label>
+                        <select class="filter-select" onchange="applyFilters()">
+                            <option value="all">All Types</option>
                             <?php foreach ($leave_types as $type): ?>
-                                <option value="<?php echo $type['id']; ?>" 
-                                        data-max-days="<?php echo $type['max_days']; ?>"
-                                        data-is-half-day="<?php echo $type['name'] === 'Half Day Leave' ? '1' : '0'; ?>">
-                                    <?php echo htmlspecialchars($type['name']); ?> 
-                                    (Max: <?php echo $type['max_days']; ?> days)
+                                <option value="<?php echo $type['id']; ?>">
+                                    <?php echo htmlspecialchars($type['name']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="start_date">Date</label>
-                        <input type="date" class="form-control" name="start_date" id="start_date" required>
-                    </div>
-
-                    <div class="form-group" id="halfDaySection" style="display: none;">
-                        <label class="form-label" for="half_day_type">Time</label>
-                        <select class="form-control" name="half_day_type" id="half_day_type">
-                            <option value="first_half">First Half (Morning)</option>
-                            <option value="second_half">Second Half (Afternoon)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="endDateSection">
-                        <label class="form-label" for="end_date">End Date</label>
-                        <input type="date" class="form-control" name="end_date" id="end_date" required>
-                    </div>
                 </div>
 
-                <div class="days-display" id="daysDisplay" style="display: none;">
-                    You are requesting leave for <span class="days-count">0</span> day(s)
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="reason">Reason</label>
-                    <textarea class="form-control" name="reason" id="reason" rows="4" required></textarea>
-                </div>
-
-                <button type="submit" name="submit_leave" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Application
-                </button>
-            </form>
-        </div>
-
-        <div class="leave-history">
-            <h2 class="section-title">Leave History</h2>
-            
-            <div class="filters-section">
-                <div class="filter-group">
-                    <label>Year:</label>
-                    <select class="filter-select" onchange="applyFilters()">
-                        <option value="all" <?php echo $filter_year == 'all' ? 'selected' : ''; ?>>All Years</option>
-                        <?php 
-                        $current_year = date('Y');
-                        for($y = $current_year; $y >= $current_year - 5; $y--) {
-                            echo "<option value='$y' " . ($filter_year == $y ? 'selected' : '') . ">$y</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Status:</label>
-                    <select class="filter-select" onchange="applyFilters()">
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Leave Type:</label>
-                    <select class="filter-select" onchange="applyFilters()">
-                        <option value="all">All Types</option>
-                        <?php foreach ($leave_types as $type): ?>
-                            <option value="<?php echo $type['id']; ?>">
-                                <?php echo htmlspecialchars($type['name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Days</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th>Applied On</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($leave_history as $leave): ?>
+                <table class="history-table">
+                    <thead>
                         <tr>
-                            <td><?php echo htmlspecialchars($leave['leave_type_name']); ?></td>
-                            <td><?php echo date('M d, Y', strtotime($leave['start_date'])); ?></td>
-                            <td><?php echo date('M d, Y', strtotime($leave['end_date'])); ?></td>
-                            <td>
-                                <?php 
-                                // Format the duration to show 1 day for half day leaves
-                                if ($leave['leave_type_name'] === 'Half Day Leave') {
-                                    echo '1';
-                                } else {
-                                    echo number_format($leave['duration'], 1);
-                                }
-                                ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($leave['reason']); ?></td>
-                            <td>
-                                <div class="status-cell">
-                                    <span class="status-badge status-<?php echo $leave['status']; ?>">
-                                        <?php echo ucfirst($leave['status']); ?>
-                                    </span>
-                                    <?php if ($leave['action_comments']): ?>
-                                        <span class="status-comment">
-                                            "<?php echo htmlspecialchars($leave['action_comments']); ?>"
-                                        </span>
-                                    <?php endif; ?>
-                                    <?php if ($leave['action_at']): ?>
-                                        <span class="status-date">
-                                            <?php echo date('M d, Y', strtotime($leave['action_at'])); ?>
-                                        </span>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                            <td><?php echo date('M d, Y', strtotime($leave['created_at'])); ?></td>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Days</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Applied On</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($leave_history as $leave): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($leave['leave_type_name']); ?></td>
+                                <td><?php echo date('M d, Y', strtotime($leave['start_date'])); ?></td>
+                                <td><?php echo date('M d, Y', strtotime($leave['end_date'])); ?></td>
+                                <td>
+                                    <?php 
+                                    // Format the duration to show 1 day for half day leaves
+                                    if ($leave['leave_type_name'] === 'Half Day Leave') {
+                                        echo '1';
+                                    } else {
+                                        echo number_format($leave['duration'], 1);
+                                    }
+                                    ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($leave['reason']); ?></td>
+                                <td>
+                                    <div class="status-cell">
+                                        <span class="status-badge status-<?php echo $leave['status']; ?>">
+                                            <?php echo ucfirst($leave['status']); ?>
+                                        </span>
+                                        <?php if ($leave['action_comments']): ?>
+                                            <span class="status-comment">
+                                                "<?php echo htmlspecialchars($leave['action_comments']); ?>"
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if ($leave['action_at']): ?>
+                                            <span class="status-date">
+                                                <?php echo date('M d, Y', strtotime($leave['action_at'])); ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                                <td><?php echo date('M d, Y', strtotime($leave['created_at'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

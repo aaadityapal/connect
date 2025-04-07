@@ -39,13 +39,13 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </a>
                 </li>
                 <li>
-                    <a href="leave.php">
+                    <a href="#">
                         <i class="fas fa-calendar-check"></i>
                         <span class="sidebar-text">Leaves</span>
                     </a>
                 </li>
                 <li>
-                    <a href="employee.php">
+                    <a href="#">
                         <i class="fas fa-users"></i>
                         <span class="sidebar-text">Employees</span>
                     </a>
@@ -90,7 +90,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
             
             <ul class="sidebar-menu">
                 <li>
-                    <a href="profile.php">
+                    <a href="manager_profile.php">
                         <i class="fas fa-user"></i>
                         <span class="sidebar-text">Profile</span>
                     </a>
@@ -193,7 +193,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="dropdown-divider"></div>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a href="profile.php">
+                                        <a href="manager_profile.php">
                                             <i class="fas fa-user"></i>
                                             My Profile
                                         </a>

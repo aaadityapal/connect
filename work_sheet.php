@@ -256,6 +256,33 @@ $debug_info = [
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     
     <style>
+        /* Add dashboard container styles */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            background-color: #f9fafb;
+        }
+
+        .main-content.collapsed {
+            margin-left: 70px;
+        }
+
+        /* Update container styles to work with new layout */
+        .container {
+            max-width: none;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
         :root {
             --primary-color: #4361ee;
             --secondary-color: #3a0ca3;
@@ -285,14 +312,6 @@ $debug_info = [
             padding: 0;
             color: var(--text-primary);
             line-height: 1.5;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0;
-            background: transparent;
-            box-shadow: none;
         }
 
         .header {
@@ -809,219 +828,227 @@ $debug_info = [
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-calendar-alt" style="margin-right: 0.75rem; color: var(--primary-color);"></i>Work Sheet History</h1>
-            <div class="date-filter">
-                <div class="month-year-picker">
-                    <select id="monthSelect" class="date-select">
-                        <?php
-                        $months = [
-                            1 => 'January', 2 => 'February', 3 => 'March',
-                            4 => 'April', 5 => 'May', 6 => 'June',
-                            7 => 'July', 8 => 'August', 9 => 'September',
-                            10 => 'October', 11 => 'November', 12 => 'December'
-                        ];
-                        $currentMonth = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
-                        foreach ($months as $num => $name) {
-                            $selected = $currentMonth === $num ? 'selected' : '';
-                            echo "<option value=\"$num\" $selected>$name</option>";
-                        }
-                        ?>
-                    </select>
+    <div class="dashboard-container">
+        <!-- Include Left Panel -->
+        <?php include 'left_panel.php'; ?>
 
-                    <select id="yearSelect" class="date-select">
-                        <?php
-                        $currentYear = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
-                        $startYear = 2020; // You can adjust this start year
-                        $endYear = (int)date('Y');
-                        
-                        for ($year = $endYear; $year >= $startYear; $year--) {
-                            $selected = $currentYear === $year ? 'selected' : '';
-                            echo "<option value=\"$year\" $selected>$year</option>";
-                        }
-                        ?>
-                    </select>
-
-                    <button class="filter-btn" onclick="filterMonthYear()">
-                        <i class="fas fa-filter"></i> Filter
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="attendance-overview">
-            <div class="overview-header">
-                <h2><i class="fas fa-chart-pie" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Attendance Overview</h2>
-            </div>
-            
-            <div class="overview-grid">
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Present Days</h3>
-                        <p id="presentDays">0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #3a86ff, #0582ca);">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Total Hours</h3>
-                        <p id="totalHours">0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #7209b7, #560bad);">
-                        <i class="fas fa-hourglass-half"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Overtime Hours (≥1:30)</h3>
-                        <p id="overtimeHours">0</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Attendance Rate</h3>
-                        <p id="attendanceRate">0%</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
-                        <i class="fas fa-user-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Late Punches (15+ min)</h3>
-                        <p id="latePunches">0</p>
-                        <small style="display: block; font-size: 0.6875rem; color: var(--text-secondary);">Excludes short leaves</small>
-                        <small id="shortLeaveAdjustment" style="display: block; font-size: 0.6875rem; color: var(--text-secondary);"></small>
-                    </div>
-                </div>
-                
-                <div class="stat-card leaves-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Leaves Taken</h3>
-                        <p id="leavesTaken">0</p>
-                        <div id="leaveTypesList" class="leave-types-list"></div>
-                        <small class="leave-note">Shows only approved leaves</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="charts-container">
-                <div class="chart-wrapper">
-                    <canvas id="attendanceChart"></canvas>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="hoursChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="worksheet-table-container">
-            <table class="worksheet-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Shift</th>
-                        <th>Punch In</th>
-                        <th>Punch Out</th>
-                        <th>Working Hours</th>
-                        <th>Overtime</th>
-                        <th>Work Report</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($row = $result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?php echo $row['formatted_date']; ?></td>
-                            <td><?php echo $row['shift_name'] . ' (' . $row['shift_start'] . ' - ' . $row['shift_end'] . ')'; ?></td>
-                            <td class="time-cell"><?php echo $row['formatted_punch_in']; ?></td>
-                            <td class="time-cell"><?php echo $row['formatted_punch_out'] ?: '-'; ?></td>
-                            <td class="time-cell"><?php echo $row['working_hours'] ?: '-'; ?></td>
-                            <td class="time-cell <?php echo $row['calculated_overtime'] !== '00:00:00' ? 'overtime' : ''; ?>">
-                                <?php echo $row['calculated_overtime'] !== '00:00:00' ? $row['calculated_overtime'] : '-'; ?>
-                            </td>
-                            <td class="work-report-cell">
-                                <?php if ($row['work_report']): ?>
-                                    <div class="work-report-preview" onclick="showWorkReport('<?php echo htmlspecialchars($row['work_report'], ENT_QUOTES); ?>', '<?php echo $row['formatted_date']; ?>')">
-                                        <?php echo substr($row['work_report'], 0, 50) . '...'; ?>
-                                    </div>
-                                <?php else: ?>
-                                    -
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php 
-                                // Determine status badge styling and label
-                                $status = strtolower($row['status']);
-                                $status_class = 'status-' . $status;
-                                $status_label = ucfirst($row['status']);
-                                
-                                // Handle specific status types
-                                if ($status == 'leave' || $status == 'on leave') {
-                                    $status_class = 'status-leave';
-                                    // If there's a leave type available, use it instead of generic "Leave"
-                                    if (!empty($row['leave_type'])) {
-                                        $status_label = $row['leave_type'];
-                                    } else {
-                                        $status_label = 'Leave';
-                                    }
-                                } elseif ($status == 'on leave') {
-                                    $status_class = 'status-onleave';
-                                    $status_label = 'On Leave';
-                                } elseif ($status == 'half day' || $status == 'halfday') {
-                                    $status_class = 'status-halfday';
-                                    $status_label = 'Half Day';
-                                } elseif ($status == 'weekend' || $status == 'weekly off') {
-                                    $status_class = 'status-weekend';
-                                    $status_label = 'Weekend';
-                                } elseif ($status == 'sick' || $status == 'sick leave') {
-                                    $status_class = 'status-sickleave';
-                                    $status_label = 'Sick Leave';
-                                } elseif ($status == 'present' && isset($row['is_late']) && $row['is_late'] == 1) {
-                                    $status_class = 'status-late';
-                                    $status_label = 'Late';
-                                }
-                                
-                                // Add an icon based on status
-                                $status_icon = '';
-                                if ($status == 'present') {
-                                    $status_icon = '<i class="fas fa-check-circle" style="margin-right: 0.25rem;"></i>';
-                                } elseif ($status == 'absent') {
-                                    $status_icon = '<i class="fas fa-times-circle" style="margin-right: 0.25rem;"></i>';
-                                } elseif ($status == 'leave' || $status == 'on leave' || $status == 'sick leave') {
-                                    $status_icon = '<i class="fas fa-calendar-minus" style="margin-right: 0.25rem;"></i>';
-                                } elseif ($status == 'half day' || $status == 'halfday') {
-                                    $status_icon = '<i class="fas fa-adjust" style="margin-right: 0.25rem;"></i>';
-                                } elseif ($status == 'weekend' || $status == 'weekly off') {
-                                    $status_icon = '<i class="fas fa-calendar-day" style="margin-right: 0.25rem;"></i>';
-                                } elseif ($status == 'holiday') {
-                                    $status_icon = '<i class="fas fa-gifts" style="margin-right: 0.25rem;"></i>';
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="container">
+                <div class="header">
+                    <h1><i class="fas fa-calendar-alt" style="margin-right: 0.75rem; color: var(--primary-color);"></i>Work Sheet History</h1>
+                    <div class="date-filter">
+                        <div class="month-year-picker">
+                            <select id="monthSelect" class="date-select">
+                                <?php
+                                $months = [
+                                    1 => 'January', 2 => 'February', 3 => 'March',
+                                    4 => 'April', 5 => 'May', 6 => 'June',
+                                    7 => 'July', 8 => 'August', 9 => 'September',
+                                    10 => 'October', 11 => 'November', 12 => 'December'
+                                ];
+                                $currentMonth = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
+                                foreach ($months as $num => $name) {
+                                    $selected = $currentMonth === $num ? 'selected' : '';
+                                    echo "<option value=\"$num\" $selected>$name</option>";
                                 }
                                 ?>
-                                <span class="status-badge <?php echo $status_class; ?>">
-                                    <?php echo $status_icon . $status_label; ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+                            </select>
+
+                            <select id="yearSelect" class="date-select">
+                                <?php
+                                $currentYear = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+                                $startYear = 2020;
+                                $endYear = (int)date('Y');
+                                
+                                for ($year = $endYear; $year >= $startYear; $year--) {
+                                    $selected = $currentYear === $year ? 'selected' : '';
+                                    echo "<option value=\"$year\" $selected>$year</option>";
+                                }
+                                ?>
+                            </select>
+
+                            <button class="filter-btn" onclick="filterMonthYear()">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="attendance-overview">
+                    <div class="overview-header">
+                        <h2><i class="fas fa-chart-pie" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Attendance Overview</h2>
+                    </div>
+                    
+                    <div class="overview-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Present Days</h3>
+                                <p id="presentDays">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #3a86ff, #0582ca);">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Total Hours</h3>
+                                <p id="totalHours">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #7209b7, #560bad);">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Overtime Hours (≥1:30)</h3>
+                                <p id="overtimeHours">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Attendance Rate</h3>
+                                <p id="attendanceRate">0%</p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Late Punches (15+ min)</h3>
+                                <p id="latePunches">0</p>
+                                <small style="display: block; font-size: 0.6875rem; color: var(--text-secondary);">Excludes short leaves</small>
+                                <small id="shortLeaveAdjustment" style="display: block; font-size: 0.6875rem; color: var(--text-secondary);"></small>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card leaves-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Leaves Taken</h3>
+                                <p id="leavesTaken">0</p>
+                                <div id="leaveTypesList" class="leave-types-list"></div>
+                                <small class="leave-note">Shows only approved leaves</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-container">
+                        <div class="chart-wrapper">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="hoursChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="worksheet-table-container">
+                    <table class="worksheet-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Shift</th>
+                                <th>Punch In</th>
+                                <th>Punch Out</th>
+                                <th>Working Hours</th>
+                                <th>Overtime</th>
+                                <th>Work Report</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                                <tr>
+                                    <td><?php echo $row['formatted_date']; ?></td>
+                                    <td><?php echo $row['shift_name'] . ' (' . $row['shift_start'] . ' - ' . $row['shift_end'] . ')'; ?></td>
+                                    <td class="time-cell"><?php echo $row['formatted_punch_in']; ?></td>
+                                    <td class="time-cell"><?php echo $row['formatted_punch_out'] ?: '-'; ?></td>
+                                    <td class="time-cell"><?php echo $row['working_hours'] ?: '-'; ?></td>
+                                    <td class="time-cell <?php echo $row['calculated_overtime'] !== '00:00:00' ? 'overtime' : ''; ?>">
+                                        <?php echo $row['calculated_overtime'] !== '00:00:00' ? $row['calculated_overtime'] : '-'; ?>
+                                    </td>
+                                    <td class="work-report-cell">
+                                        <?php if ($row['work_report']): ?>
+                                            <div class="work-report-preview" onclick="showWorkReport('<?php echo htmlspecialchars($row['work_report'], ENT_QUOTES); ?>', '<?php echo $row['formatted_date']; ?>')">
+                                                <?php echo substr($row['work_report'], 0, 50) . '...'; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            -
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        // Determine status badge styling and label
+                                        $status = strtolower($row['status']);
+                                        $status_class = 'status-' . $status;
+                                        $status_label = ucfirst($row['status']);
+                                        
+                                        // Handle specific status types
+                                        if ($status == 'leave' || $status == 'on leave') {
+                                            $status_class = 'status-leave';
+                                            // If there's a leave type available, use it instead of generic "Leave"
+                                            if (!empty($row['leave_type'])) {
+                                                $status_label = $row['leave_type'];
+                                            } else {
+                                                $status_label = 'Leave';
+                                            }
+                                        } elseif ($status == 'on leave') {
+                                            $status_class = 'status-onleave';
+                                            $status_label = 'On Leave';
+                                        } elseif ($status == 'half day' || $status == 'halfday') {
+                                            $status_class = 'status-halfday';
+                                            $status_label = 'Half Day';
+                                        } elseif ($status == 'weekend' || $status == 'weekly off') {
+                                            $status_class = 'status-weekend';
+                                            $status_label = 'Weekend';
+                                        } elseif ($status == 'sick' || $status == 'sick leave') {
+                                            $status_class = 'status-sickleave';
+                                            $status_label = 'Sick Leave';
+                                        } elseif ($status == 'present' && isset($row['is_late']) && $row['is_late'] == 1) {
+                                            $status_class = 'status-late';
+                                            $status_label = 'Late';
+                                        }
+                                        
+                                        // Add an icon based on status
+                                        $status_icon = '';
+                                        if ($status == 'present') {
+                                            $status_icon = '<i class="fas fa-check-circle" style="margin-right: 0.25rem;"></i>';
+                                        } elseif ($status == 'absent') {
+                                            $status_icon = '<i class="fas fa-times-circle" style="margin-right: 0.25rem;"></i>';
+                                        } elseif ($status == 'leave' || $status == 'on leave' || $status == 'sick leave') {
+                                            $status_icon = '<i class="fas fa-calendar-minus" style="margin-right: 0.25rem;"></i>';
+                                        } elseif ($status == 'half day' || $status == 'halfday') {
+                                            $status_icon = '<i class="fas fa-adjust" style="margin-right: 0.25rem;"></i>';
+                                        } elseif ($status == 'weekend' || $status == 'weekly off') {
+                                            $status_icon = '<i class="fas fa-calendar-day" style="margin-right: 0.25rem;"></i>';
+                                        } elseif ($status == 'holiday') {
+                                            $status_icon = '<i class="fas fa-gifts" style="margin-right: 0.25rem;"></i>';
+                                        }
+                                        ?>
+                                        <span class="status-badge <?php echo $status_class; ?>">
+                                            <?php echo $status_icon . $status_label; ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -33,17 +33,17 @@ $user_role = $_SESSION['role'] ?? 'employee';
             min-height: 100vh;
         }
 
-        .left-panel {
-            width: 250px;
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-        }
-
         .main-content {
             flex: 1;
             padding: 20px;
             background: #f5f7fa;
+            margin-left: 280px; /* Add this to account for left panel width */
+            transition: margin-left 0.3s ease; /* Add smooth transition */
+        }
+
+        /* Add style for when panel is collapsed */
+        .main-content.collapsed {
+            margin-left: 70px;
         }
 
         .breadcrumb {
@@ -480,10 +480,10 @@ $user_role = $_SESSION['role'] ?? 'employee';
 <body>
     <div class="dashboard-container">
         <!-- Left Panel -->
-        <?php include 'includes/sidebar.php'; ?>
+        <?php include 'left_panel.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content" id="mainContent">
             <!-- Breadcrumb -->
             <div class="breadcrumb">
                 <a href="similar_dashboard.php">Dashboard</a>
@@ -1250,6 +1250,17 @@ $user_role = $_SESSION['role'] ?? 'employee';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // Add this to handle main content margin when panel is toggled
+        function togglePanel() {
+            const panel = document.getElementById('leftPanel');
+            const mainContent = document.getElementById('mainContent');
+            const icon = document.getElementById('toggleIcon');
+            panel.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');
+            icon.classList.toggle('fa-chevron-left');
+            icon.classList.toggle('fa-chevron-right');
         }
     </script>
 </body>

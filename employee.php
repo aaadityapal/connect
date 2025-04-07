@@ -50,8 +50,197 @@ foreach ($managers as $manager) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
+        /* Root Variables */
+        :root {
+            --primary-color: #4F46E5;
+            --primary-dark: #4338CA;
+            --text-dark: #1F2937;
+            --text-light: #6B7280;
+            --bg-light: #F3F4F6;
+            --bg-white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --border-radius: 16px;
+            --spacing-sm: 12px;
+            --spacing-md: 18px;
+            --spacing-lg: 24px;
+            --sidebar-width: 280px;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        /* Update icon color on hover and active */
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout button styles */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Update nav container to allow for margin-top: auto on logout */
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
         /* Reset and Base Styles */
         * {
             margin: 0;
@@ -82,16 +271,16 @@ foreach ($managers as $manager) {
 
         /* Layout */
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: var(--spacing-lg);
+            max-width: 100%;
+            padding: 2rem;
+            transition: all 0.3s ease;
         }
 
         .employee-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 25px;
-            padding: var(--spacing-lg) 0;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
 
         /* Header Styles */
@@ -100,159 +289,123 @@ foreach ($managers as $manager) {
         }
 
         h2 {
-            font-size: 28px;
-            color: var(--text-dark);
-            margin: var(--spacing-lg) 0;
-            padding-bottom: var(--spacing-sm);
-            border-bottom: 2px solid var(--primary-color);
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         /* Search Bar */
         .search-bar {
-            margin: var(--spacing-lg) 0;
-            padding: var(--spacing-md);
-            background: var(--bg-white);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 12px;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .search-input {
             width: 100%;
-            padding: 14px 24px;
-            border: 2px solid #E5E7EB;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
         }
 
         .search-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #9CA3AF;
         }
 
         /* Employee Card */
         .employee-card {
-            background: var(--bg-white);
-            border-radius: var(--border-radius);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            padding: var(--spacing-lg);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .employee-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 35px rgba(79, 70, 229, 0.1);
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
         }
 
         /* Employee Header */
         .employee-header {
             display: flex;
             align-items: center;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-            padding-bottom: var(--spacing-md);
-            border-bottom: 1px solid #f0f0f0;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .profile-image {
-            width: 100px;
-            height: 100px;
-            border-radius: 20px;
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
             object-fit: cover;
-            border: 3px solid var(--primary-color);
-            padding: 3px;
-            background: linear-gradient(45deg, var(--primary-color), #818CF8);
-        }
-
-        .employee-details {
-            flex: 1;
+            background: #F3F4FF;
         }
 
         .employee-details h3 {
-            font-size: 1.2rem;
-            margin-bottom: 5px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 0.25rem;
+        }
+
+        .employee-details p {
+            color: #6B7280;
+            font-size: 0.875rem;
         }
 
         /* Detail Sections */
         .detail-section {
-            background: #ffffff;
-            border-radius: var(--border-radius);
-            padding: 24px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
         }
 
         .section-title {
-            color: var(--primary-color);
-            font-size: 18px;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid rgba(79, 70, 229, 0.1);
+            color: #4F46E5;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        .section-title i {
-            font-size: 16px;
+            gap: 0.5rem;
         }
 
         .info-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            display: grid;
+            gap: 1rem;
         }
 
         .info-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            align-items: start;
-        }
-
-        .info-group {
-            position: relative;
-        }
-
-        .info-group.full-width {
-            grid-column: 1 / -1;
+            gap: 1rem;
         }
 
         .info-group label {
             display: block;
-            font-size: 13px;
-            color: #64748b;
-            margin-bottom: 5px;
-            font-weight: 500;
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-bottom: 0.25rem;
         }
 
         .info-value {
             background: #F9FAFB;
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
-            min-height: 42px;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1a1a1a;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 10px;
-        }
-
-        .value-display:empty::before {
-            content: '';
-            display: inline-block;
-            min-height: 20px;
-        }
-
-        .info-value:hover {
-            background: #F3F4F6;
-            border-color: var(--primary-color);
+            align-items: center;
         }
 
         .edit-icon {
@@ -400,26 +553,17 @@ foreach ($managers as $manager) {
         /* Responsive Design */
         @media (max-width: 1200px) {
             .employee-grid {
-                grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             }
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: var(--spacing-sm);
+                padding: 1rem;
             }
-
+            
             .employee-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .detail-grid {
-                grid-template-columns: 100px 1fr 30px;
-            }
-
-            .modal-content {
-                width: 95%;
-                margin: 20px auto;
             }
         }
 
@@ -596,20 +740,19 @@ foreach ($managers as $manager) {
         /* Updated Button Styles */
         .btn-view-more {
             width: 100%;
-            padding: 12px 24px;
-            background: var(--primary-color);
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            background: #4F46E5;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
+            transition: all 0.2s;
         }
 
         .btn-view-more:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
+            background: #4338CA;
         }
 
         /* Updated Modal Styles */
@@ -653,8 +796,8 @@ foreach ($managers as $manager) {
         .status-container {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 5px;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
         }
 
         /* Toggle Switch */
@@ -719,25 +862,16 @@ foreach ($managers as $manager) {
         }
 
         .role-indicator {
-            margin-bottom: 20px;
-        }
-
-        .badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 500;
-            display: inline-block;
+            margin: 1rem 0;
         }
 
         .badge-hr {
-            background-color: var(--primary-color);
+            background-color: #4F46E5;
             color: white;
-        }
-
-        .badge-manager {
-            background-color: #2563eb;
-            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         /* Hide edit controls for unauthorized users */
@@ -759,228 +893,292 @@ foreach ($managers as $manager) {
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Employee Management</h2>
-        <?php if ($isHR): ?>
-        <div class="role-indicator">
-            <span class="badge badge-hr">HR Access</span>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
         </div>
-        <?php elseif ($isSeniorManager): ?>
-        <div class="role-indicator">
-            <span class="badge badge-manager">Studio Manager Access</span>
-            <p class="access-note">View-only access for most operations</p>
-        </div>
-        <?php endif; ?>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link active">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Added Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
 
-        <div class="search-bar">
-            <input type="text" id="searchInput" class="search-input" 
-                   placeholder="Search by name, employee ID, designation...">
-        </div>
+    <!-- Add this button after the sidebar div -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-        <div class="employee-grid">
-            <?php foreach ($employees as $employee): ?>
-                <div class="employee-card" data-employee-id="<?php echo $employee['id']; ?>">
-                    <div class="employee-header">
-                        <img src="<?php echo $employee['profile_picture'] ?? 'default-avatar.png'; ?>" 
-                             alt="Profile" class="profile-image">
-                        <div class="employee-details">
-                            <h3><?php echo htmlspecialchars($employee['username']); ?></h3>
-                            <p><?php echo htmlspecialchars($employee['designation']); ?></p>
-                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                            <div class="status-container">
-                                <label class="switch">
-                                    <input type="checkbox" 
-                                           class="status-toggle" 
-                                           data-employee-id="<?php echo $employee['id']; ?>"
-                                           <?php echo (strtolower($employee['status']) === 'active' || $employee['status'] == 1) ? 'checked' : ''; ?>>
-                                    <span class="slider round"></span>
-                                </label>
-                                <span class="status-text status-<?php echo strtolower($employee['status']); ?>">
-                                    <?php echo ucfirst(strtolower($employee['status'])); ?>
-                                </span>
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <h2>Employee Management</h2>
+            <?php if ($isHR): ?>
+            <div class="role-indicator">
+                <span class="badge badge-hr">HR Access</span>
+            </div>
+            <?php elseif ($isSeniorManager): ?>
+            <div class="role-indicator">
+                <span class="badge badge-manager">Studio Manager Access</span>
+                <p class="access-note">View-only access for most operations</p>
+            </div>
+            <?php endif; ?>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" class="search-input" 
+                       placeholder="Search by name, employee ID, designation...">
+            </div>
+
+            <div class="employee-grid">
+                <?php foreach ($employees as $employee): ?>
+                    <div class="employee-card" data-employee-id="<?php echo $employee['id']; ?>">
+                        <div class="employee-header">
+                            <img src="<?php echo $employee['profile_picture'] ?? 'default-avatar.png'; ?>" 
+                                 alt="Profile" class="profile-image">
+                            <div class="employee-details">
+                                <h3><?php echo htmlspecialchars($employee['username']); ?></h3>
+                                <p><?php echo htmlspecialchars($employee['designation']); ?></p>
+                                <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                <div class="status-container">
+                                    <label class="switch">
+                                        <input type="checkbox" 
+                                               class="status-toggle" 
+                                               data-employee-id="<?php echo $employee['id']; ?>"
+                                               <?php echo (strtolower($employee['status']) === 'active' || $employee['status'] == 1) ? 'checked' : ''; ?>>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span class="status-text status-<?php echo strtolower($employee['status']); ?>">
+                                        <?php echo ucfirst(strtolower($employee['status'])); ?>
+                                    </span>
+                                </div>
+                                <?php endif; ?>
                             </div>
-                            <?php endif; ?>
                         </div>
+
+                        <div class="detail-section">
+                            <div class="section-title">Basic Information</div>
+                            <div class="detail-grid">
+                                <span class="label">Employee ID:</span>
+                                <span class="value"><?php echo htmlspecialchars($employee['unique_id']); ?></span>
+                                <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                <i class="fas fa-pencil edit-icon" onclick="editField('unique_id', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['unique_id']); ?>')"></i>
+                                <?php endif; ?>
+                                
+                                <span class="label">Email:</span>
+                                <span class="value"><?php echo htmlspecialchars($employee['email']); ?></span>
+                                <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                <i class="fas fa-pencil edit-icon" onclick="editField('email', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['email']); ?>')"></i>
+                                <?php endif; ?>
+                                
+                                <span class="label">Phone:</span>
+                                <span class="value"><?php echo htmlspecialchars($employee['phone']); ?></span>
+                                <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                <i class="fas fa-pencil edit-icon" onclick="editField('phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['phone']); ?>')"></i>
+                                <?php endif; ?>
+                                
+                                <span class="label">DOB:</span>
+                                <span class="value"><?php echo $employee['dob'] ? date('d M Y', strtotime($employee['dob'])) : '-'; ?></span>
+                                <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                <i class="fas fa-pencil edit-icon" onclick="editField('dob', '<?php echo $employee['id']; ?>', '<?php echo $employee['dob']; ?>')"></i>
+                                <?php endif; ?>
+                                
+                                <span class="label">Gender:</span>
+                                <span class="value"><?php echo htmlspecialchars($employee['gender']); ?></span>
+                                <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                <i class="fas fa-pencil edit-icon" onclick="editField('gender', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['gender']); ?>')"></i>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="detail-section work-info">
+                            <div class="section-title">
+                                <i class="fas fa-briefcase"></i>
+                                Work Information
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-row">
+                                    <div class="info-group" data-field="position">
+                                        <label>Position</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['position']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('position', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['position']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="info-group" data-field="designation">
+                                        <label>Department</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['designation']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('designation', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['designation']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-group" data-field="joining_date">
+                                        <label>Joining Date</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo $employee['joining_date'] ? date('d M Y', strtotime($employee['joining_date'])) : 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('joining_date', '<?php echo $employee['id']; ?>', '<?php echo $employee['joining_date']; ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="info-group" data-field="reporting_manager">
+                                        <label>Reporting To</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['reporting_manager']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('reporting_manager', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['reporting_manager']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section contact-info">
+                            <div class="section-title">
+                                <i class="fas fa-address-card"></i>
+                                Contact Information
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-row">
+                                    <div class="info-group" data-field="address">
+                                        <label>Address</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo !empty($employee['address']) ? htmlspecialchars($employee['address']) : ''; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('address', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['address'] ?? ''); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-group" data-field="city">
+                                        <label>City</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['city']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('city', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['city']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="info-group" data-field="state">
+                                        <label>State</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['state']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('state', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['state']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-group" data-field="country">
+                                        <label>Country</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['country']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('country', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['country']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="info-group" data-field="postal_code">
+                                        <label>Postal Code</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['postal_code']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('postal_code', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['postal_code']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section emergency-contact">
+                            <div class="section-title">
+                                <i class="fas fa-phone-alt"></i>
+                                Emergency Contact
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-row">
+                                    <div class="info-group" data-field="emergency_contact_name">
+                                        <label>Name</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['emergency_contact_name']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                            <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_name', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_name']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="info-group" data-field="emergency_contact_phone">
+                                        <label>Phone</label>
+                                        <div class="info-value">
+                                            <span class="value-display"><?php echo htmlspecialchars($employee['emergency_contact_phone']) ?: 'Not Set'; ?></span>
+                                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
+                                                <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_phone']); ?>')"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="viewFullProfile(<?php echo $employee['id']; ?>)" class="btn-view-more">
+                            View Full Profile
+                        </button>
                     </div>
-
-                    <div class="detail-section">
-                        <div class="section-title">Basic Information</div>
-                        <div class="detail-grid">
-                            <span class="label">Employee ID:</span>
-                            <span class="value"><?php echo htmlspecialchars($employee['unique_id']); ?></span>
-                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                            <i class="fas fa-pencil edit-icon" onclick="editField('unique_id', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['unique_id']); ?>')"></i>
-                            <?php endif; ?>
-                            
-                            <span class="label">Email:</span>
-                            <span class="value"><?php echo htmlspecialchars($employee['email']); ?></span>
-                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                            <i class="fas fa-pencil edit-icon" onclick="editField('email', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['email']); ?>')"></i>
-                            <?php endif; ?>
-                            
-                            <span class="label">Phone:</span>
-                            <span class="value"><?php echo htmlspecialchars($employee['phone']); ?></span>
-                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                            <i class="fas fa-pencil edit-icon" onclick="editField('phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['phone']); ?>')"></i>
-                            <?php endif; ?>
-                            
-                            <span class="label">DOB:</span>
-                            <span class="value"><?php echo $employee['dob'] ? date('d M Y', strtotime($employee['dob'])) : '-'; ?></span>
-                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                            <i class="fas fa-pencil edit-icon" onclick="editField('dob', '<?php echo $employee['id']; ?>', '<?php echo $employee['dob']; ?>')"></i>
-                            <?php endif; ?>
-                            
-                            <span class="label">Gender:</span>
-                            <span class="value"><?php echo htmlspecialchars($employee['gender']); ?></span>
-                            <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                            <i class="fas fa-pencil edit-icon" onclick="editField('gender', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['gender']); ?>')"></i>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <div class="detail-section work-info">
-                        <div class="section-title">
-                            <i class="fas fa-briefcase"></i>
-                            Work Information
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-row">
-                                <div class="info-group" data-field="position">
-                                    <label>Position</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['position']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('position', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['position']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="info-group" data-field="designation">
-                                    <label>Department</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['designation']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('designation', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['designation']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group" data-field="joining_date">
-                                    <label>Joining Date</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo $employee['joining_date'] ? date('d M Y', strtotime($employee['joining_date'])) : 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('joining_date', '<?php echo $employee['id']; ?>', '<?php echo $employee['joining_date']; ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="info-group" data-field="reporting_manager">
-                                    <label>Reporting To</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['reporting_manager']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('reporting_manager', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['reporting_manager']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="detail-section contact-info">
-                        <div class="section-title">
-                            <i class="fas fa-address-card"></i>
-                            Contact Information
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-row">
-                                <div class="info-group" data-field="address">
-                                    <label>Address</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo !empty($employee['address']) ? htmlspecialchars($employee['address']) : ''; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('address', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['address'] ?? ''); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group" data-field="city">
-                                    <label>City</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['city']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('city', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['city']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="info-group" data-field="state">
-                                    <label>State</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['state']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('state', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['state']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group" data-field="country">
-                                    <label>Country</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['country']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('country', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['country']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="info-group" data-field="postal_code">
-                                    <label>Postal Code</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['postal_code']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('postal_code', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['postal_code']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="detail-section emergency-contact">
-                        <div class="section-title">
-                            <i class="fas fa-phone-alt"></i>
-                            Emergency Contact
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-row">
-                                <div class="info-group" data-field="emergency_contact_name">
-                                    <label>Name</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['emergency_contact_name']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                        <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_name', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_name']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="info-group" data-field="emergency_contact_phone">
-                                    <label>Phone</label>
-                                    <div class="info-value">
-                                        <span class="value-display"><?php echo htmlspecialchars($employee['emergency_contact_phone']) ?: 'Not Set'; ?></span>
-                                        <?php if ($isHR || ($isSeniorManager && $employee['id'] !== $_SESSION['user_id'])): ?>
-                                            <i class="fas fa-pencil edit-icon" onclick="editField('emergency_contact_phone', '<?php echo $employee['id']; ?>', '<?php echo htmlspecialchars($employee['emergency_contact_phone']); ?>')"></i>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button onclick="viewFullProfile(<?php echo $employee['id']; ?>)" class="btn-view-more">
-                        View Full Profile
-                    </button>
-                </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
     </div>
 
@@ -1340,6 +1538,58 @@ foreach ($managers as $manager) {
                     });
                 });
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+                
+                // Change icon direction
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                } else {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                }
+            });
+            
+            // Handle responsive behavior
+            function checkWidth() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
+                }
+            }
+            
+            // Check on load
+            checkWidth();
+            
+            // Check on resize
+            window.addEventListener('resize', checkWidth);
+            
+            // Handle click outside on mobile
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                }
+            });
         });
     </script>
 </body>

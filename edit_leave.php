@@ -92,8 +92,11 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
     <meta charset="UTF-8">
     <title>Edit Leave | HR Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
+        /* Root Variables */
         :root {
             --primary-color: #2563eb;
             --secondary-color: #1e40af;
@@ -102,6 +105,14 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             --background-color: #f1f5f9;
             --border-color: #e2e8f0;
             --text-color: #1e293b;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
         body {
@@ -109,13 +120,175 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             background-color: var(--background-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
             line-height: 1.5;
         }
 
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--text-color);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: #4361ee;
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: #4361ee;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            background-color: var(--background-color);
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            max-width: none;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .container {
+                padding: 1rem;
+            }
         }
 
         .header {
@@ -591,65 +764,87 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>
-                <i class="fas fa-calendar-alt"></i>
-                Manage Leave Requests
-            </h1>
-            <div class="header-controls">
-                <button class="btn btn-primary" onclick="window.location.href='manage_leave_balance_view.php'">
-                    <i class="fas fa-cogs"></i>
-                    Manage Leave Balance
-                </button>
-                <div class="form-group">
-                    <label for="leaveBalanceUser">
-                        <i class="fas fa-calculator"></i>
-                        Select Employee for Leave Balance
-                    </label>
-                    <select name="leaveBalanceUser" id="leaveBalanceUser" class="form-control">
-                        <option value="">Select Employee for Leave Balance</option>
-                        <?php foreach ($users as $user): ?>
-                            <option value="<?php echo htmlspecialchars($user['id']); ?>">
-                                <?php echo htmlspecialchars($user['username']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <input type="month" class="month-picker" value="<?php echo $selected_month; ?>">
-            </div>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
         </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link active">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Reports
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
 
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-            </div>
-        <?php endif; ?>
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-        <div id="leaveBalancePanel" class="leave-bank-panel" style="display: none;">
-            <div class="leave-bank-header">
-                <h3>
-                    <i class="fas fa-calendar-check"></i>
-                    Leave Balance
-                </h3>
-                <button class="btn-close" onclick="toggleLeaveBalance()">×</button>
-            </div>
-            <div id="leaveBalanceContent" class="leave-balance-grid">
-                <!-- Leave balance cards will be dynamically added here -->
-            </div>
-        </div>
-
-        <div class="leave-form">
-            <form id="addLeaveForm" method="POST" action="handle_leave_operations.php">
-                <div class="form-grid">
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="header">
+                <h1>
+                    <i class="fas fa-calendar-alt"></i>
+                    Manage Leave Requests
+                </h1>
+                <div class="header-controls">
+                    <button class="btn btn-primary" onclick="window.location.href='manage_leave_balance_view.php'">
+                        <i class="fas fa-cogs"></i>
+                        Manage Leave Balance
+                    </button>
                     <div class="form-group">
-                        <label for="employee">
-                            <i class="fas fa-user"></i>
-                            Employee
+                        <label for="leaveBalanceUser">
+                            <i class="fas fa-calculator"></i>
+                            Select Employee for Leave Balance
                         </label>
-                        <select name="employee" id="employee" class="form-control" required>
-                            <option value="">Select Employee</option>
+                        <select name="leaveBalanceUser" id="leaveBalanceUser" class="form-control">
+                            <option value="">Select Employee for Leave Balance</option>
                             <?php foreach ($users as $user): ?>
                                 <option value="<?php echo htmlspecialchars($user['id']); ?>">
                                     <?php echo htmlspecialchars($user['username']); ?>
@@ -657,142 +852,237 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="leave_type">
-                            <i class="fas fa-tag"></i>
-                            Leave Type
-                        </label>
-                        <select name="leave_type" class="form-control" required>
-                            <?php foreach ($leave_types as $type): ?>
-                                <option value="<?php echo $type['id']; ?>"><?php echo $type['name']; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="start_date">
-                            <i class="fas fa-calendar"></i>
-                            Start Date
-                        </label>
-                        <input type="date" name="start_date" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="end_date">
-                            <i class="fas fa-calendar"></i>
-                            End Date
-                        </label>
-                        <input type="date" name="end_date" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="duration">
-                            <i class="fas fa-clock"></i>
-                            Duration (Days)
-                        </label>
-                        <input type="number" name="duration" class="form-control" step="0.5" readonly>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label for="reason">
-                            <i class="fas fa-comment"></i>
-                            Reason
-                        </label>
-                        <textarea name="reason" class="form-control reason-textarea" required></textarea>
-                    </div>
+                    <input type="month" class="month-picker" value="<?php echo $selected_month; ?>">
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Add Leave Request
-                </button>
-            </form>
-        </div>
-
-        <!-- Add this filter section before the table -->
-        <div class="table-filters">
-            <div class="form-group">
-                <label for="filterMonth">
-                    <i class="fas fa-filter"></i>
-                    Filter by Month
-                </label>
-                <input type="month" id="filterMonth" class="form-control" value="<?php echo $selected_month; ?>">
             </div>
-        </div>
 
-        <table class="leave-table">
-            <thead>
-                <tr>
-                    <th>Employee</th>
-                    <th>Leave Type</th>
-                    <th>Duration</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Manager Approval</th>
-                    <th>HR Approval</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($leaves as $leave): ?>
-                    <?php if ($leave['leave_id']): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($leave['username']); ?></td>
-                            <td><?php echo htmlspecialchars($leave['leave_type_name']); ?></td>
-                            <td>
-                                <?php 
-                                echo number_format($leave['duration'], 1) . ' days';
-                                if ($leave['time_from'] && $leave['time_to']) {
-                                    echo '<br><small class="text-muted">(' . 
-                                         date('h:i A', strtotime($leave['time_from'])) . ' - ' . 
-                                         date('h:i A', strtotime($leave['time_to'])) . 
-                                         ')</small>';
-                                }
-                                ?>
-                            </td>
-                            <td><?php echo date('d M Y', strtotime($leave['start_date'])); ?></td>
-                            <td><?php echo date('d M Y', strtotime($leave['end_date'])); ?></td>
-                            <td>
-                                <span class="reason-text" title="<?php echo htmlspecialchars($leave['reason'] ?? ''); ?>">
-                                    <?php echo $leave['reason'] ? substr(htmlspecialchars($leave['reason']), 0, 30) . (strlen($leave['reason']) > 30 ? '...' : '') : ''; ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge status-<?php echo strtolower($leave['status'] ?? 'pending'); ?>">
-                                    <?php echo ucfirst($leave['status'] ?? 'pending'); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge status-<?php echo strtolower($leave['manager_approval'] ?? 'pending'); ?>">
-                                    <?php echo ucfirst($leave['manager_approval'] ?? 'pending'); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge status-<?php echo strtolower($leave['hr_approval'] ?? 'pending'); ?>">
-                                    <?php echo ucfirst($leave['hr_approval'] ?? 'pending'); ?>
-                                </span>
-                            </td>
-                            <td class="action-buttons">
-                                <button class="btn-edit" onclick="editLeave(<?php echo $leave['leave_id']; ?>)" 
-                                        title="Edit Leave">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-delete" onclick="deleteLeave(<?php echo $leave['leave_id']; ?>)"
-                                        title="Delete Leave">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                <?php if ($leave['status'] !== 'approved'): ?>
-                                    <button class="btn-approve" onclick="approveLeave(<?php echo $leave['leave_id']; ?>)"
-                                            title="Approve Leave">
-                                        <i class="fas fa-check"></i>
+            <?php if (isset($_SESSION['success'])): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                </div>
+            <?php endif; ?>
+
+            <div id="leaveBalancePanel" class="leave-bank-panel" style="display: none;">
+                <div class="leave-bank-header">
+                    <h3>
+                        <i class="fas fa-calendar-check"></i>
+                        Leave Balance
+                    </h3>
+                    <button class="btn-close" onclick="toggleLeaveBalance()">×</button>
+                </div>
+                <div id="leaveBalanceContent" class="leave-balance-grid">
+                    <!-- Leave balance cards will be dynamically added here -->
+                </div>
+            </div>
+
+            <div class="leave-form">
+                <form id="addLeaveForm" method="POST" action="handle_leave_operations.php">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="employee">
+                                <i class="fas fa-user"></i>
+                                Employee
+                            </label>
+                            <select name="employee" id="employee" class="form-control" required>
+                                <option value="">Select Employee</option>
+                                <?php foreach ($users as $user): ?>
+                                    <option value="<?php echo htmlspecialchars($user['id']); ?>">
+                                        <?php echo htmlspecialchars($user['username']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="leave_type">
+                                <i class="fas fa-tag"></i>
+                                Leave Type
+                            </label>
+                            <select name="leave_type" class="form-control" required>
+                                <?php foreach ($leave_types as $type): ?>
+                                    <option value="<?php echo $type['id']; ?>"><?php echo $type['name']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="start_date">
+                                <i class="fas fa-calendar"></i>
+                                Start Date
+                            </label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date">
+                                <i class="fas fa-calendar"></i>
+                                End Date
+                            </label>
+                            <input type="date" name="end_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">
+                                <i class="fas fa-clock"></i>
+                                Duration (Days)
+                            </label>
+                            <input type="number" name="duration" class="form-control" step="0.5" readonly>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="reason">
+                                <i class="fas fa-comment"></i>
+                                Reason
+                            </label>
+                            <textarea name="reason" class="form-control reason-textarea" required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Leave Request
+                    </button>
+                </form>
+            </div>
+
+            <!-- Add this filter section before the table -->
+            <div class="table-filters">
+                <div class="form-group">
+                    <label for="filterMonth">
+                        <i class="fas fa-filter"></i>
+                        Filter by Month
+                    </label>
+                    <input type="month" id="filterMonth" class="form-control" value="<?php echo $selected_month; ?>">
+                </div>
+            </div>
+
+            <table class="leave-table">
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Duration</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Manager Approval</th>
+                        <th>HR Approval</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($leaves as $leave): ?>
+                        <?php if ($leave['leave_id']): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($leave['username']); ?></td>
+                                <td><?php echo htmlspecialchars($leave['leave_type_name']); ?></td>
+                                <td>
+                                    <?php 
+                                    echo number_format($leave['duration'], 1) . ' days';
+                                    if ($leave['time_from'] && $leave['time_to']) {
+                                        echo '<br><small class="text-muted">(' . 
+                                             date('h:i A', strtotime($leave['time_from'])) . ' - ' . 
+                                             date('h:i A', strtotime($leave['time_to'])) . 
+                                             ')</small>';
+                                    }
+                                    ?>
+                                </td>
+                                <td><?php echo date('d M Y', strtotime($leave['start_date'])); ?></td>
+                                <td><?php echo date('d M Y', strtotime($leave['end_date'])); ?></td>
+                                <td>
+                                    <span class="reason-text" title="<?php echo htmlspecialchars($leave['reason'] ?? ''); ?>">
+                                        <?php echo $leave['reason'] ? substr(htmlspecialchars($leave['reason']), 0, 30) . (strlen($leave['reason']) > 30 ? '...' : '') : ''; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<?php echo strtolower($leave['status'] ?? 'pending'); ?>">
+                                        <?php echo ucfirst($leave['status'] ?? 'pending'); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<?php echo strtolower($leave['manager_approval'] ?? 'pending'); ?>">
+                                        <?php echo ucfirst($leave['manager_approval'] ?? 'pending'); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<?php echo strtolower($leave['hr_approval'] ?? 'pending'); ?>">
+                                        <?php echo ucfirst($leave['hr_approval'] ?? 'pending'); ?>
+                                    </span>
+                                </td>
+                                <td class="action-buttons">
+                                    <button class="btn-edit" onclick="editLeave(<?php echo $leave['leave_id']; ?>)" 
+                                            title="Edit Leave">
+                                        <i class="fas fa-edit"></i>
                                     </button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                                    <button class="btn-delete" onclick="deleteLeave(<?php echo $leave['leave_id']; ?>)"
+                                            title="Delete Leave">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <?php if ($leave['status'] !== 'approved'): ?>
+                                        <button class="btn-approve" onclick="approveLeave(<?php echo $leave['leave_id']; ?>)"
+                                                title="Approve Leave">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
+        // Add sidebar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+                
+                // Change icon direction
+                const icon = this.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                } else {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                }
+            });
+            
+            // Handle responsive behavior
+            function checkWidth() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
+                }
+            }
+            
+            // Check on load
+            checkWidth();
+            
+            // Check on resize
+            window.addEventListener('resize', checkWidth);
+            
+            // Handle click outside on mobile
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                }
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const leaveTypeSelect = document.querySelector('select[name="leave_type"]');
             const formGrid = document.querySelector('.form-grid');

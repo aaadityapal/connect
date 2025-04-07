@@ -267,3 +267,11 @@
 [31-Mar-2025 14:31:58 Asia/Kolkata] Attempting punch-in for user ID: 3
 [31-Mar-2025 14:31:58 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-03-31","2025-03-31 14:31:58","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/134.0.0.0 Safari\/537.36","present","2025-03-31 14:31:58","2025-03-31 14:31:58"]
 [31-Mar-2025 14:31:58 Asia/Kolkata] Successfully inserted attendance record with ID: 433
+[05-Apr-2025 13:36:59 Asia/Kolkata] Received input: {"action":"punch_in"}
+[05-Apr-2025 13:36:59 Asia/Kolkata] Attempting punch-in for user ID: 3
+[05-Apr-2025 13:36:59 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-05","2025-04-05 13:36:59","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36","present","2025-04-05 13:36:59","2025-04-05 13:36:59"]
+[05-Apr-2025 13:36:59 Asia/Kolkata] Successfully inserted attendance record with ID: 724
+[05-Apr-2025 15:35:09 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.6424888,"longitude":77.297967}}
+[05-Apr-2025 15:35:09 Asia/Kolkata] Attempting punch-in for user ID: 2
+[05-Apr-2025 15:35:09 Asia/Kolkata] Attempting to insert attendance with params: [2,"2025-04-05","2025-04-05 15:35:09","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36","present","2025-04-05 15:35:09","2025-04-05 15:35:09"]
+[05-Apr-2025 15:35:09 Asia/Kolkata] Successfully inserted attendance record with ID: 725

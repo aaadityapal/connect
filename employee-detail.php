@@ -172,8 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Details - <?php echo htmlspecialchars($employee['username']); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4F46E5;
@@ -187,13 +188,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             --spacing-sm: 12px;
             --spacing-md: 18px;
             --spacing-lg: 24px;
+            --sidebar-width: 280px;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
@@ -202,10 +204,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             line-height: 1.6;
         }
 
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: var(--text-dark);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link:hover, 
+        .nav-link.active {
+            color: var(--primary-color);
+            background-color: #F3F4FF;
+        }
+
+        .nav-link.active {
+            background-color: #F3F4FF;
+            font-weight: 500;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            color: var(--primary-color);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout Link */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Toggle Button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            width: 100%;
             padding: var(--spacing-lg);
+            margin: 0;
+            max-width: none;
         }
 
         .back-button {
@@ -228,6 +364,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .profile-header {
+            width: 100%;
             background: var(--bg-white);
             border-radius: var(--border-radius);
             padding: var(--spacing-lg);
@@ -261,11 +398,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .detail-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: var(--spacing-lg);
+            width: 100%;
         }
 
         .detail-section {
+            width: 100%;
             background: var(--bg-white);
             border-radius: var(--border-radius);
             padding: var(--spacing-lg);
@@ -320,14 +459,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: rgba(220, 38, 38, 0.1);
         }
 
+        @media (max-width: 1200px) {
+            .detail-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
             .profile-header {
                 flex-direction: column;
                 text-align: center;
+                padding: var(--spacing-md);
             }
 
             .detail-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .detail-section {
+                padding: var(--spacing-md);
             }
         }
 
@@ -772,6 +939,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
+        </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link active">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-x-fill"></i>
+                Leave Request
+            </a>
+            <a href="manage_leave_balance.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="hr_documents_manager.php" class="nav-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Documents
+            </a>
+            <a href="generate_agreement.php" class="nav-link">
+                <i class="bi bi-chevron-contract"></i>
+                Contracts
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
     <div class="container">
         <?php if (isset($success_message)): ?>
             <div class="message success-message"><?php echo $success_message; ?></div>
@@ -997,487 +1227,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- Documents Section with Upload Form -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-file-alt"></i>
-                        Documents
-                        <button type="button" class="btn btn-sm btn-add-doc" onclick="toggleDocumentForm()">
-                            <i class="fas fa-plus"></i> Add Document
-                        </button>
-                    </div>
-
-                    <!-- Document Upload Form (Hidden by default) -->
-                    <div id="documentUploadForm" class="document-upload-form" style="display: none;">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="document_type">Document Type</label>
-                                <select id="document_type" name="document[type]" class="form-control">
-                                    <option value="">Select Document Type</option>
-                                    <option value="aadhar">Aadhar Card</option>
-                                    <option value="pan">PAN Card</option>
-                                    <option value="passport">Passport</option>
-                                    <option value="driving_license">Driving License</option>
-                                    <option value="voter_id">Voter ID</option>
-                                    <option value="resume">Resume</option>
-                                    <option value="certificates">Certificates</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="document_file">Upload Document</label>
-                                <input type="file" id="document_file" name="document[file]" class="form-control" 
-                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                <small class="text-muted">
-                                    Supported formats: PDF, DOC, DOCX, JPG, PNG (Max size: 5MB)
-                                </small>
-                            </div>
-                            <div class="form-group">
-                                <button type="button" class="btn btn-primary" onclick="uploadDocument(<?php echo $employee['id']; ?>)">
-                                    Upload Document
-                                </button>
-                                <button type="button" class="btn btn-secondary" onclick="toggleDocumentForm()">
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Existing Documents List -->
-                    <div id="documentsList" class="document-list">
-                        <!-- Documents will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Modify the HR Documents section to remove the upload button -->
-                <div class="hr-documents-section">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            <i class="fas fa-file-alt"></i>
-                            HR Documents
-                        </h2>
-                    </div>
-                    <div id="hrDocumentsList" class="documents-list">
-                        <!-- Add this JavaScript to load and display HR documents with acknowledgment status -->
-                        <script>
-                        function loadHRDocuments() {
-                            fetch('get_hr_documents.php')
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        const container = document.getElementById('hrDocumentsList');
-                                        container.innerHTML = data.documents.map(doc => `
-                                            <div class="document-item">
-                                                <div class="document-info">
-                                                    <h4>${doc.original_name}</h4>
-                                                    <p>Uploaded: ${doc.upload_date}</p>
-                                                    <p>Size: ${doc.formatted_size}</p>
-                                                    ${doc.acknowledgment_status === 'acknowledged' ? 
-                                                        `<span class="badge badge-success">
-                                                            <i class="fas fa-check"></i> Acknowledged
-                                                        </span>` : 
-                                                        `<span class="badge badge-warning">
-                                                            <i class="fas fa-clock"></i> Pending
-                                                        </span>
-                                                        <button class="btn-acknowledge" onclick="acknowledgeDocument(${doc.id})">
-                                                            Read & Accept
-                                                        </button>`
-                                                    }
-                                                </div>
-                                                <div class="document-actions">
-                                                    <button class="btn-action view" onclick="viewDocument(${doc.id})">
-                                                        <i class="fas fa-eye"></i> View
-                                                    </button>
-                                                    <button class="btn-action download" onclick="downloadDocument(${doc.id})">
-                                                        <i class="fas fa-download"></i> Download
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        `).join('');
-                                    } else {
-                                        throw new Error(data.message || 'Failed to load documents');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error loading documents:', error);
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Error',
-                                        text: error.message
-                                    });
-                                });
-                        }
-
-                        // Add acknowledgment function
-                        function acknowledgeDocument(docId) {
-                            if (!docId) return;
-
-                            Swal.fire({
-                                title: 'Confirm Acknowledgment',
-                                text: 'By clicking "Confirm", you acknowledge that you have read and accepted this document.',
-                                icon: 'info',
-                                showCancelButton: true,
-                                confirmButtonText: 'Confirm',
-                                cancelButtonText: 'Cancel'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    fetch('acknowledge_document.php', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                            document_id: docId
-                                        })
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Success!',
-                                                text: 'Document has been acknowledged.'
-                                            });
-                                            loadHRDocuments(); // Reload the documents list
-                                        } else {
-                                            throw new Error(data.message || 'Failed to acknowledge document');
-                                        }
-                                    })
-                                    .catch(error => {
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: 'Error',
-                                            text: error.message
-                                        });
-                                    });
-                                }
-                            });
-                        }
-
-                        // Load documents when page loads
-                        document.addEventListener('DOMContentLoaded', loadHRDocuments);
-                        </script>
-                    </div>
-                </div>
-
-                <!-- Salary Information Section -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-money-bill-wave"></i>
-                        Salary Information
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Base Salary</div>
-                        <div class="info-value">
-                            <input type="number" name="base_salary" value="<?php echo htmlspecialchars($employee['base_salary'] ?? '0'); ?>">
-                        </div>
-                    </div>
-                    
-                    <!-- Allowances -->
-                    <div class="info-group">
-                        <div class="info-label">Allowances</div>
-                        <?php 
-                        $allowances = json_decode($employee['allowances'] ?? '{}', true) ?: [
-                            'hra' => 0,
-                            'da' => 0,
-                            'ta' => 0,
-                            'medical' => 0
-                        ];
-                        ?>
-                        <div class="salary-components">
-                            <div class="component-item">
-                                <label>HRA</label>
-                                <input type="number" name="allowances[hra]" value="<?php echo htmlspecialchars($allowances['hra']); ?>">
-                            </div>
-                            <div class="component-item">
-                                <label>DA</label>
-                                <input type="number" name="allowances[da]" value="<?php echo htmlspecialchars($allowances['da']); ?>">
-                            </div>
-                            <div class="component-item">
-                                <label>Travel</label>
-                                <input type="number" name="allowances[ta]" value="<?php echo htmlspecialchars($allowances['ta']); ?>">
-                            </div>
-                            <div class="component-item">
-                                <label>Medical</label>
-                                <input type="number" name="allowances[medical]" value="<?php echo htmlspecialchars($allowances['medical']); ?>">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Deductions -->
-                    <div class="info-group">
-                        <div class="info-label">Deductions</div>
-                        <?php 
-                        $deductions = json_decode($employee['deductions'] ?? '{}', true) ?: [
-                            'pf' => 0,
-                            'tax' => 0,
-                            'insurance' => 0
-                        ];
-                        ?>
-                        <div class="salary-components">
-                            <div class="component-item">
-                                <label>PF</label>
-                                <input type="number" name="deductions[pf]" value="<?php echo htmlspecialchars($deductions['pf']); ?>">
-                            </div>
-                            <div class="component-item">
-                                <label>Tax</label>
-                                <input type="number" name="deductions[tax]" value="<?php echo htmlspecialchars($deductions['tax']); ?>">
-                            </div>
-                            <div class="component-item">
-                                <label>Insurance</label>
-                                <input type="number" name="deductions[insurance]" value="<?php echo htmlspecialchars($deductions['insurance']); ?>">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Total Salary Calculation -->
-                    <div class="info-group total-salary">
-                        <div class="info-label">Total Salary</div>
-                        <div class="salary-summary">
-                            <div class="summary-item">
-                                <span>Gross Salary:</span>
-                                <span class="amount" id="grossSalary">0</span>
-                            </div>
-                            <div class="summary-item">
-                                <span>Total Deductions:</span>
-                                <span class="amount" id="totalDeductions">0</span>
-                            </div>
-                            <div class="summary-item total">
-                                <span>Net Salary:</span>
-                                <span class="amount" id="netSalary">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="edit-controls">
                     <button type="submit" class="btn-save">Save Changes</button>
                 </div>
             </div>
         </form>
+        </div>
     </div>
-
-    <!-- Add this JavaScript -->
-    <script>
-    function toggleDocumentForm() {
-        const form = document.getElementById('documentUploadForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function uploadDocument(employeeId) {
-        const docType = document.getElementById('document_type');
-        const docFile = document.getElementById('document_file');
-        
-        if (!docType.value || !docFile.files[0]) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Please select both document type and file'
-            });
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('type', docType.value);
-        formData.append('file', docFile.files[0]);
-        formData.append('employee_id', employeeId);
-        formData.append('action', 'add');
-
-        // Show loading indicator
-        Swal.fire({
-            title: 'Uploading...',
-            text: 'Please wait while we upload your document',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Debug log
-        console.log('Uploading document for employee:', employeeId);
-        console.log('Document type:', docType.value);
-        console.log('File name:', docFile.files[0].name);
-
-        fetch('update_employee_documents.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Upload response:', data); // Debug log
-            Swal.close();
-            if (data.success) {
-                // Refresh documents list
-                loadDocuments(employeeId);
-                // Reset form
-                docType.value = '';
-                docFile.value = '';
-                toggleDocumentForm();
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: data.message || 'Document uploaded successfully'
-                });
-            } else {
-                throw new Error(data.message || 'Failed to upload document');
-            }
-        })
-        .catch(error => {
-            console.error('Upload error:', error); // Debug log
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Failed to upload document'
-            });
-        });
-    }
-
-    function loadDocuments(employeeId) {
-        fetch(`get_employee_documents.php?employee_id=${employeeId}`)
-            .then(response => response.json())
-            .then(data => {
-                const documentsList = document.getElementById('documentsList');
-                if (data.length === 0) {
-                    documentsList.innerHTML = `
-                        <div class="no-documents">
-                            <i class="fas fa-folder-open"></i>
-                            <p>No documents uploaded yet</p>
-                        </div>`;
-                    return;
-                }
-
-                documentsList.innerHTML = data.map((doc, index) => `
-                    <div class="document-item">
-                        <i class="fas ${getFileIcon(doc.filename)}"></i>
-                        <div class="document-info">
-                            <div class="document-name">${doc.filename}</div>
-                            <div class="document-type">${doc.type}</div>
-                            <div class="document-date">Uploaded: ${doc.upload_date}</div>
-                        </div>
-                        <div class="document-actions">
-                            <button class="btn btn-sm btn-view" onclick="viewDocument('${doc.file_path}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-download" onclick="downloadDocument('${doc.file_path}')">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="btn btn-sm btn-delete" onclick="deleteDocument(${employeeId}, ${index})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            })
-            .catch(error => {
-                console.error('Error loading documents:', error);
-            });
-    }
-
-    function getFileIcon(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
-        switch(ext) {
-            case 'pdf': return 'fa-file-pdf';
-            case 'doc':
-            case 'docx': return 'fa-file-word';
-            case 'jpg':
-            case 'jpeg':
-            case 'png': return 'fa-file-image';
-            default: return 'fa-file';
-        }
-    }
-
-    function viewDocument(docId) {
-        if (!docId) return;
-        window.open(`view_document.php?id=${docId}`, '_blank');
-    }
-
-    function downloadDocument(docId) {
-        if (!docId) return;
-        window.location.href = `download_document.php?id=${docId}`;
-    }
-
-    function deleteDocument(employeeId, index) {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "This action cannot be undone",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const formData = new FormData();
-                formData.append('employee_id', employeeId);
-                formData.append('index', index);
-                formData.append('action', 'delete');
-
-                fetch('update_employee_documents.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        loadDocuments(employeeId);
-                        Swal.fire('Deleted!', 'Document has been deleted.', 'success');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire('Error', 'Failed to delete document', 'error');
-                });
-            }
-        });
-    }
-
-    // Load documents when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        loadDocuments(<?php echo $employee['id']; ?>);
-        loadHRDocuments();
-        calculateSalary();
-    });
-
-    function calculateSalary() {
-        const baseSalary = parseFloat(document.querySelector('input[name="base_salary"]').value) || 0;
-        
-        // Calculate total allowances
-        let totalAllowances = 0;
-        document.querySelectorAll('input[name^="allowances"]').forEach(input => {
-            totalAllowances += parseFloat(input.value) || 0;
-        });
-        
-        // Calculate total deductions
-        let totalDeductions = 0;
-        document.querySelectorAll('input[name^="deductions"]').forEach(input => {
-            totalDeductions += parseFloat(input.value) || 0;
-        });
-        
-        const grossSalary = baseSalary + totalAllowances;
-        const netSalary = grossSalary - totalDeductions;
-        
-        // Update summary
-        document.getElementById('grossSalary').textContent = grossSalary.toFixed(2);
-        document.getElementById('totalDeductions').textContent = totalDeductions.toFixed(2);
-        document.getElementById('netSalary').textContent = netSalary.toFixed(2);
-    }
-
-    // Add event listeners to all salary inputs
-    document.querySelectorAll('input[name="base_salary"], input[name^="allowances"], input[name^="deductions"]')
-        .forEach(input => {
-            input.addEventListener('input', calculateSalary);
-        });
-
-    // Calculate initial values
-    document.addEventListener('DOMContentLoaded', calculateSalary);
-    </script>
 
     <!-- Add SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Add JavaScript for Sidebar functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        
+        // Handle sidebar toggle click
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            sidebarToggle.classList.toggle('collapsed');
+            
+            // Store the state in localStorage
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        });
+        
+        // Check if sidebar was collapsed previously
+        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+            sidebarToggle.classList.add('collapsed');
+        }
+        
+        // Add mobile detection for sidebar
+        function checkMobile() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.classList.add('collapsed');
+            } else if (!sidebarCollapsed) {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                sidebarToggle.classList.remove('collapsed');
+            }
+        }
+        
+        // Initial check
+        checkMobile();
+        
+        // Listen for window resize
+        window.addEventListener('resize', checkMobile);
+    });
+    </script>
 </body>
 </html> 

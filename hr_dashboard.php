@@ -2677,7 +2677,7 @@ try {
         </div>
         
         <nav>
-            <a href="#" class="nav-link active">
+            <a href="hr_dashboard.php" class="nav-link active">
                 <i class="bi bi-grid-1x2-fill"></i>
                 Dashboard
             </a>
@@ -2685,7 +2685,7 @@ try {
                 <i class="bi bi-people-fill"></i>
                 Employees
             </a>
-            <a href="attendance_report.php" class="nav-link">
+            <a href="hr_attendance_report.php" class="nav-link">
                 <i class="bi bi-calendar-check-fill"></i>
                 Attendance
             </a>
@@ -2804,7 +2804,7 @@ try {
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="profile.php">
+                            <a class="dropdown-item" href="hr_profile.php">
                                 <i class="bi bi-person me-2"></i> My Profile
                             </a>
                         </li>

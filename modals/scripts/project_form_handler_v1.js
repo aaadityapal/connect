@@ -150,10 +150,9 @@ function createSubstage(stageNum, substageNum) {
                 </label>
                 <select id="substageAssignTo${stageNum}_${substageNum}" 
                         name="stages[${stageNum}][substages][${substageNum}][assignTo]" required>
+                    <option value="0" selected>Unassigned</option>
                     <option value="">Select Employee</option>
-                    <option value="1">John Smith</option>
-                    <option value="2">Sarah Johnson</option>
-                    <option value="3">Mike Anderson</option>
+                    <!-- Will be populated dynamically -->
                 </select>
             </div>
             <div class="form-dates">
@@ -679,7 +678,7 @@ function addSubstage(stageNum) {
             <select id="substageAssignTo${stageNum}_${substageCount}" 
                     name="stages[${stageNum}][substages][${substageCount}][assignTo]" 
                     onchange="handleSubstageAssignChange(this)" required>
-                <option value="">Select Team Member</option>
+                <option value="0" selected>Unassigned</option>
                 ${userOptionsHtml}
             </select>
             <div class="stage-assign-note" style="display: ${parentAssignTo ? 'block' : 'none'};">
@@ -1045,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         name="stages[${stageCount}][assignTo]" 
                         onchange="handleStageAssignChange(${stageCount})" 
                         required>
-                    <option value="">Select Team Member</option>
+                    <option value="0" selected>Unassigned</option>
                     ${userOptionsHtml}
                 </select>
             </div>
@@ -1664,8 +1663,8 @@ function populateUserDropdowns(users) {
     // Get all assign-to select elements
     const assignSelects = document.querySelectorAll('select[id^="assignTo"]');
     
-    // Create the default option
-    const defaultOption = '<option value="">Select Team Member</option>';
+    // Create the default option with only Unassigned
+    const defaultOption = '<option value="0" selected>Unassigned</option>';
     
     // Create options for each user
     const userOptions = users.map(user => 

@@ -18,6 +18,9 @@ try {
     $pdo->beginTransaction();
     
     foreach ($data['stages'] as $stageIndex => $stage) {
+        // Convert assignTo value 0 to NULL for database storage
+        $stageAssignedTo = (!empty($stage['assignTo']) && $stage['assignTo'] !== '0') ? $stage['assignTo'] : null;
+        
         // Insert stage
         $stageQuery = "INSERT INTO project_stages (
             project_id,
@@ -43,7 +46,7 @@ try {
         $stmt->execute([
             ':project_id' => $data['project_id'],
             ':stage_number' => $stageIndex + 1,
-            ':assigned_to' => $stage['assignTo'],
+            ':assigned_to' => $stageAssignedTo,
             ':start_date' => $stage['startDate'],
             ':end_date' => $stage['dueDate'],
             ':updated_by' => $_SESSION['user_id'] ?? 1
@@ -90,6 +93,9 @@ try {
         // Handle substages
         if (!empty($stage['substages'])) {
             foreach ($stage['substages'] as $substageIndex => $substage) {
+                // Convert assignTo value 0 to NULL for database storage
+                $substageAssignedTo = (!empty($substage['assignTo']) && $substage['assignTo'] !== '0') ? $substage['assignTo'] : null;
+                
                 $substageQuery = "INSERT INTO project_substages (
                     stage_id,
                     substage_number,
@@ -121,7 +127,7 @@ try {
                     ':stage_id' => $stageId,
                     ':substage_number' => $substageIndex + 1,
                     ':title' => $substage['title'],
-                    ':assigned_to' => $substage['assignTo'],
+                    ':assigned_to' => $substageAssignedTo,
                     ':start_date' => $substage['startDate'],
                     ':end_date' => $substage['dueDate'],
                     ':substage_identifier' => $substageIdentifier,

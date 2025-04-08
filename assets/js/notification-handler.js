@@ -184,20 +184,47 @@ class NotificationSystem {
                 </div>
             `;
             
-            // Get the active tab (all or unread)
+            // Get the active tab (all, unread, or assignments)
             const activeTab = document.querySelector('.tab-btn.active');
-            const filter = activeTab && activeTab.dataset.tab === 'unread' ? 'unread' : 'all';
+            let filter = 'all';
+            
+            if (activeTab) {
+                if (activeTab.dataset.tab === 'unread') {
+                    filter = 'unread';
+                } else if (activeTab.dataset.tab === 'assignments') {
+                    filter = 'assignments';
+                }
+            }
             
             // Fetch notifications with filter if needed
-            const url = `assets/api/combined-notifications.php${filter === 'unread' ? '?filter=unread' : ''}`;
+            let url = 'assets/api/combined-notifications.php';
+            if (filter !== 'all') {
+                url += `?filter=${filter}`;
+            }
+            
+            console.log('Fetching notifications with URL:', url);
             
             const response = await fetch(url);
-            const data = await response.json();
+            const responseText = await response.text();
+            
+            console.log('Raw API response:', responseText);
+            
+            let data;
+            try {
+                data = JSON.parse(responseText);
+                console.log('Parsed API response:', data);
+            } catch (parseError) {
+                console.error('Error parsing response:', parseError);
+                this.showErrorState('Invalid JSON response: ' + responseText.substring(0, 100) + '...');
+                return;
+            }
             
             if (data.status === 'success') {
                 this.notifications = data.notifications;
                 this.renderNotifications();
+                console.log('Loaded notifications:', this.notifications.length);
             } else {
+                console.log('No notifications found. Status:', data.status);
                 this.showEmptyState();
             }
         } catch (error) {
@@ -259,12 +286,34 @@ class NotificationSystem {
     }
     
     showEmptyState() {
-        this.notificationList.innerHTML = `
-            <div class="notification-empty">
-                <i class="far fa-bell-slash"></i>
-                <p>No notifications yet</p>
-            </div>
-        `;
+        // Get the active tab
+        const activeTab = document.querySelector('.tab-btn.active');
+        const tabType = activeTab ? activeTab.dataset.tab : 'all';
+        
+        // Show different empty state based on tab
+        if (tabType === 'assignments') {
+            this.notificationList.innerHTML = `
+                <div class="notification-empty assignments-empty">
+                    <i class="fas fa-tasks"></i>
+                    <p>No assignment notifications yet</p>
+                    <p class="empty-subtitle">When you're assigned to projects, stages, or tasks, they'll appear here</p>
+                </div>
+            `;
+        } else if (tabType === 'unread') {
+            this.notificationList.innerHTML = `
+                <div class="notification-empty">
+                    <i class="far fa-check-circle"></i>
+                    <p>No unread notifications</p>
+                </div>
+            `;
+        } else {
+            this.notificationList.innerHTML = `
+                <div class="notification-empty">
+                    <i class="far fa-bell-slash"></i>
+                    <p>No notifications yet</p>
+                </div>
+            `;
+        }
     }
     
     showErrorState(message = '') {
@@ -597,6 +646,12 @@ class NotificationSystem {
                 return '<span class="source-badge event">Event</span>';
             case 'holiday':
                 return '<span class="source-badge holiday">Holiday</span>';
+            case 'project':
+                return '<span class="source-badge project">Project</span>';
+            case 'stage':
+                return '<span class="source-badge stage">Stage</span>';
+            case 'substage':
+                return '<span class="source-badge substage">Task</span>';
             default:
                 return '';
         }
@@ -678,6 +733,18 @@ class NotificationSystem {
                 return 'fas fa-calendar-day';
             case 'holiday':
                 return 'fas fa-calendar-check';
+            case 'project':
+                return 'fas fa-project-diagram';
+            case 'stage':
+                return 'fas fa-layer-group';
+            case 'substage':
+                return 'fas fa-tasks';
+            case 'assignment_project':
+                return 'fas fa-user-plus';
+            case 'assignment_stage':
+                return 'fas fa-user-tag';
+            case 'assignment_substage':
+                return 'fas fa-user-check';
             default:
                 return 'fas fa-bell';
         }

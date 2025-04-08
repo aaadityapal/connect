@@ -62,6 +62,9 @@ try {
         NOW()
     )";
     
+    // Convert assignTo value 0 to NULL for database storage
+    $assignedTo = (!empty($data['assignTo']) && $data['assignTo'] !== '0') ? $data['assignTo'] : null;
+    
     $stmt = $pdo->prepare($projectQuery);
     $result = $stmt->execute([
         ':title' => $data['projectTitle'],
@@ -71,7 +74,7 @@ try {
         ':start_date' => $data['startDate'],
         ':end_date' => $data['dueDate'],
         ':created_by' => $_SESSION['user_id'] ?? 1,
-        ':assigned_to' => $data['assignTo']
+        ':assigned_to' => $assignedTo
     ]);
 
     if (!$result) {

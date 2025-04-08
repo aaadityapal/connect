@@ -7,6 +7,9 @@ header('Content-Type: application/json');
 session_start();
 require_once '../../config/db_connect.php';
 
+// Debug user ID
+error_log("Current user ID from session: " . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'not set'));
+
 // Check database connection
 if (!$conn) {
     echo json_encode([
@@ -171,120 +174,337 @@ function getCombinedNotifications($conn, $user_id, $limit = 20, $offset = 0, $fi
         // Add read status condition based on filter
         $read_condition = $filter === 'unread' ? 'AND nrs.id IS NULL' : '';
         
-        // Announcements
-        $sql = "SELECT 
-                'announcement' as source_type,
-                a.id as source_id,
-                a.title,
-                a.message,
-                a.created_at,
-                a.display_until as expiration_date,
-                'fas fa-bullhorn' as icon,
-                'info' as type,
-                CONCAT('view_announcement.php?id=', a.id) as action_url,
-                CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
-            FROM announcements a
-            LEFT JOIN notification_read_status nrs ON 
-                nrs.source_id = a.id AND 
-                nrs.notification_type = 'announcement' AND 
-                nrs.user_id = ?
-            WHERE (a.display_until IS NULL OR a.display_until >= ?)
-            $read_condition
-            ORDER BY a.created_at DESC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('is', $user_id, $current_date);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $notifications[] = $row;
-        }
+        // If assignments filter is selected, only get assignment notifications
+        if ($filter === 'assignments') {
+            error_log("DEBUG: Processing assignments filter for user ID: " . $user_id);
+            
+            // Project assignments
+            $sql = "SELECT 
+                    'project' as source_type,
+                    p.id as source_id,
+                    CONCAT('Project Assignment: ', p.title) as title,
+                    CONCAT('You have been assigned to project: ', p.title) as message,
+                    l.created_at as created_at,
+                    NULL as expiration_date,
+                    'fas fa-user-plus' as icon,
+                    'success' as type,
+                    CONCAT('view_project.php?id=', p.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM assignment_status_logs l
+                JOIN projects p ON p.id = l.entity_id AND l.entity_type = 'project'
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = p.id AND 
+                    nrs.notification_type = 'project' AND 
+                    nrs.user_id = ?
+                WHERE l.new_status = 'assigned'
+                AND l.entity_type = 'project'
+                AND l.assigned_to = ?
+                $read_condition
+                ORDER BY l.created_at DESC";
+            
+            error_log("DEBUG: Project assignments SQL: " . str_replace('?', $user_id, $sql));
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $user_id, $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $project_count = $result->num_rows;
+            error_log("DEBUG: Project assignments query found " . $project_count . " results for user " . $user_id);
+            
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+            
+            // Stage assignments
+            $sql = "SELECT 
+                    'stage' as source_type,
+                    s.id as source_id,
+                    CONCAT('Stage Assignment: Stage #', s.stage_number) as title,
+                    CONCAT('You have been assigned to stage #', s.stage_number, ' in project: ', p.title) as message,
+                    l.created_at as created_at,
+                    NULL as expiration_date,
+                    'fas fa-user-tag' as icon,
+                    'success' as type,
+                    CONCAT('view_project.php?id=', p.id, '&stage_id=', s.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM assignment_status_logs l
+                JOIN project_stages s ON s.id = l.entity_id AND l.entity_type = 'stage'
+                JOIN projects p ON p.id = s.project_id
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = s.id AND 
+                    nrs.notification_type = 'stage' AND 
+                    nrs.user_id = ?
+                WHERE l.new_status = 'assigned'
+                AND l.entity_type = 'stage'
+                AND l.assigned_to = ?
+                $read_condition
+                ORDER BY l.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $user_id, $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stage_count = $result->num_rows;
+            error_log("DEBUG: Stage assignments query found " . $stage_count . " results");
+            
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+            
+            // Substage assignments
+            $sql = "SELECT 
+                    'substage' as source_type,
+                    ss.id as source_id,
+                    CONCAT('Task Assignment: ', ss.title) as title,
+                    CONCAT('You have been assigned to task: ', ss.title, ' in stage #', s.stage_number, ' of project: ', p.title) as message,
+                    l.created_at as created_at,
+                    NULL as expiration_date,
+                    'fas fa-user-check' as icon,
+                    'success' as type,
+                    CONCAT('view_project.php?id=', p.id, '&stage_id=', s.id, '&substage_id=', ss.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM assignment_status_logs l
+                JOIN project_substages ss ON ss.id = l.entity_id AND l.entity_type = 'substage'
+                JOIN project_stages s ON s.id = ss.stage_id
+                JOIN projects p ON p.id = s.project_id
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = ss.id AND 
+                    nrs.notification_type = 'substage' AND 
+                    nrs.user_id = ?
+                WHERE l.new_status = 'assigned'
+                AND l.entity_type = 'substage'
+                AND l.assigned_to = ?
+                $read_condition
+                ORDER BY l.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $user_id, $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $substage_count = $result->num_rows;
+            error_log("DEBUG: Substage assignments query found " . $substage_count . " results");
+            
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+            
+            error_log("DEBUG: Total assignment notifications for user " . $user_id . ": " . count($notifications));
+        } else {
+            // Regular notifications if not filtering by assignments
+            // Announcements
+            $sql = "SELECT 
+                    'announcement' as source_type,
+                    a.id as source_id,
+                    a.title,
+                    a.message,
+                    a.created_at,
+                    a.display_until as expiration_date,
+                    'fas fa-bullhorn' as icon,
+                    'info' as type,
+                    CONCAT('view_announcement.php?id=', a.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM announcements a
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = a.id AND 
+                    nrs.notification_type = 'announcement' AND 
+                    nrs.user_id = ?
+                WHERE (a.display_until IS NULL OR a.display_until >= ?)
+                $read_condition
+                ORDER BY a.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('is', $user_id, $current_date);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+    
+            // Circulars
+            $sql = "SELECT 
+                    'circular' as source_type,
+                    c.id as source_id,
+                    c.title,
+                    c.description as message,
+                    c.created_at,
+                    c.valid_until as expiration_date,
+                    'fas fa-file' as icon,
+                    'info' as type,
+                    CONCAT('view_circular.php?id=', c.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM circulars c
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = c.id AND 
+                    nrs.notification_type = 'circular' AND 
+                    nrs.user_id = ?
+                WHERE (c.valid_until IS NULL OR c.valid_until >= ?)
+                $read_condition
+                ORDER BY c.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('is', $user_id, $current_date);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+    
+            // Events
+            $sql = "SELECT 
+                    'event' as source_type,
+                    e.id as source_id,
+                    e.title,
+                    e.description as message,
+                    e.created_at,
+                    e.end_date as expiration_date,
+                    'fas fa-calendar' as icon,
+                    'info' as type,
+                    CONCAT('view_event.php?id=', e.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM events e
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = e.id AND 
+                    nrs.notification_type = 'event' AND 
+                    nrs.user_id = ?
+                WHERE (e.end_date IS NULL OR e.end_date >= ?)
+                $read_condition
+                ORDER BY e.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('is', $user_id, $current_date);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+    
+            // Holidays
+            $sql = "SELECT 
+                    'holiday' as source_type,
+                    h.id as source_id,
+                    h.title,
+                    h.description as message,
+                    h.created_at,
+                    h.holiday_date as expiration_date,
+                    'fas fa-calendar' as icon,
+                    'info' as type,
+                    CONCAT('view_holiday.php?id=', h.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM holidays h
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = h.id AND 
+                    nrs.notification_type = 'holiday' AND 
+                    nrs.user_id = ?
+                WHERE (h.holiday_date IS NULL OR h.holiday_date >= ?)
+                $read_condition
+                ORDER BY h.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('is', $user_id, $current_day);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
 
-        // Circulars
-        $sql = "SELECT 
-                'circular' as source_type,
-                c.id as source_id,
-                c.title,
-                c.description as message,
-                c.created_at,
-                c.valid_until as expiration_date,
-                'fas fa-file' as icon,
-                'info' as type,
-                CONCAT('view_circular.php?id=', c.id) as action_url,
-                CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
-            FROM circulars c
-            LEFT JOIN notification_read_status nrs ON 
-                nrs.source_id = c.id AND 
-                nrs.notification_type = 'circular' AND 
-                nrs.user_id = ?
-            WHERE (c.valid_until IS NULL OR c.valid_until >= ?)
-            $read_condition
-            ORDER BY c.created_at DESC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('is', $user_id, $current_date);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $notifications[] = $row;
-        }
-
-        // Events
-        $sql = "SELECT 
-                'event' as source_type,
-                e.id as source_id,
-                e.title,
-                e.description as message,
-                e.created_at,
-                e.end_date as expiration_date,
-                'fas fa-calendar' as icon,
-                'info' as type,
-                CONCAT('view_event.php?id=', e.id) as action_url,
-                CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
-            FROM events e
-            LEFT JOIN notification_read_status nrs ON 
-                nrs.source_id = e.id AND 
-                nrs.notification_type = 'event' AND 
-                nrs.user_id = ?
-            WHERE (e.end_date IS NULL OR e.end_date >= ?)
-            $read_condition
-            ORDER BY e.created_at DESC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('is', $user_id, $current_date);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $notifications[] = $row;
-        }
-
-        // Holidays
-        $sql = "SELECT 
-                'holiday' as source_type,
-                h.id as source_id,
-                h.title,
-                h.description as message,
-                h.created_at,
-                h.holiday_date as expiration_date,
-                'fas fa-calendar' as icon,
-                'info' as type,
-                CONCAT('view_holiday.php?id=', h.id) as action_url,
-                CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
-            FROM holidays h
-            LEFT JOIN notification_read_status nrs ON 
-                nrs.source_id = h.id AND 
-                nrs.notification_type = 'holiday' AND 
-                nrs.user_id = ?
-            WHERE (h.holiday_date IS NULL OR h.holiday_date >= ?)
-            $read_condition
-            ORDER BY h.created_at DESC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('is', $user_id, $current_day);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $notifications[] = $row;
+            // Add assignment notifications in the ALL tab
+            // Project assignments
+            $sql = "SELECT 
+                    'project' as source_type,
+                    p.id as source_id,
+                    CONCAT('Project Assignment: ', p.title) as title,
+                    CONCAT('You have been assigned to project: ', p.title) as message,
+                    l.created_at as created_at,
+                    NULL as expiration_date,
+                    'fas fa-user-plus' as icon,
+                    'success' as type,
+                    CONCAT('view_project.php?id=', p.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM assignment_status_logs l
+                JOIN projects p ON p.id = l.entity_id AND l.entity_type = 'project'
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = p.id AND 
+                    nrs.notification_type = 'project' AND 
+                    nrs.user_id = ?
+                WHERE l.new_status = 'assigned'
+                AND l.entity_type = 'project'
+                AND l.assigned_to = ?
+                $read_condition
+                ORDER BY l.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $user_id, $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+            
+            // Stage assignments
+            $sql = "SELECT 
+                    'stage' as source_type,
+                    s.id as source_id,
+                    CONCAT('Stage Assignment: Stage #', s.stage_number) as title,
+                    CONCAT('You have been assigned to stage #', s.stage_number, ' in project: ', p.title) as message,
+                    l.created_at as created_at,
+                    NULL as expiration_date,
+                    'fas fa-user-tag' as icon,
+                    'success' as type,
+                    CONCAT('view_project.php?id=', p.id, '&stage_id=', s.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM assignment_status_logs l
+                JOIN project_stages s ON s.id = l.entity_id AND l.entity_type = 'stage'
+                JOIN projects p ON p.id = s.project_id
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = s.id AND 
+                    nrs.notification_type = 'stage' AND 
+                    nrs.user_id = ?
+                WHERE l.new_status = 'assigned'
+                AND l.entity_type = 'stage'
+                AND l.assigned_to = ?
+                $read_condition
+                ORDER BY l.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $user_id, $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
+            
+            // Substage assignments
+            $sql = "SELECT 
+                    'substage' as source_type,
+                    ss.id as source_id,
+                    CONCAT('Task Assignment: ', ss.title) as title,
+                    CONCAT('You have been assigned to task: ', ss.title, ' in stage #', s.stage_number, ' of project: ', p.title) as message,
+                    l.created_at as created_at,
+                    NULL as expiration_date,
+                    'fas fa-user-check' as icon,
+                    'success' as type,
+                    CONCAT('view_project.php?id=', p.id, '&stage_id=', s.id, '&substage_id=', ss.id) as action_url,
+                    CASE WHEN nrs.id IS NOT NULL THEN 1 ELSE 0 END as read_status
+                FROM assignment_status_logs l
+                JOIN project_substages ss ON ss.id = l.entity_id AND l.entity_type = 'substage'
+                JOIN project_stages s ON s.id = ss.stage_id
+                JOIN projects p ON p.id = s.project_id
+                LEFT JOIN notification_read_status nrs ON 
+                    nrs.source_id = ss.id AND 
+                    nrs.notification_type = 'substage' AND 
+                    nrs.user_id = ?
+                WHERE l.new_status = 'assigned'
+                AND l.entity_type = 'substage'
+                AND l.assigned_to = ?
+                $read_condition
+                ORDER BY l.created_at DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $user_id, $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $notifications[] = $row;
+            }
         }
 
         // Sort all notifications by created_at
@@ -728,3 +948,4 @@ function fetchHolidays($conn) {
     
     return $notifications;
 } 
+?> 

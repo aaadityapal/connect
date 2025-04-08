@@ -18,7 +18,7 @@ try {
     );
     
     // Set timezone
-    $pdo->query("SET time_zone = '+05:30'");
+    $pdo->query("SET time_zone = '+05:30'"); // IST
     
 } catch (PDOException $e) {
     error_log("Database Connection Error: " . $e->getMessage());
@@ -31,7 +31,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 $conn->set_charset("utf8mb4");
-$conn->query("SET time_zone = '+05:30'");
+$conn->query("SET time_zone = '+05:30'"); // IST
 
 // Leave application function using PDO instead of mysqli
 function applyLeave($pdo, $userId, $leaveTypeId, $startDate, $endDate, $reason, $halfDay) {

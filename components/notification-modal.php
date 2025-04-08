@@ -17,6 +17,7 @@
     <div class="notification-tabs">
         <button class="tab-btn active" data-tab="all">All</button>
         <button class="tab-btn" data-tab="unread">Unread</button>
+        <button class="tab-btn" data-tab="assignments">Assignments</button>
     </div>
     
     <div class="notification-list" id="notificationList">

@@ -109,7 +109,7 @@
                     Assign To
                 </label>
                 <select id="assignTo" name="assignTo" required>
-                    <option value="">Select Team Member</option>
+                    <option value="0" selected>Unassigned</option>
                     <!-- Users will be populated dynamically -->
                 </select>
             </div>
@@ -184,7 +184,8 @@
                     Assign To
                 </label>
                 <select id="backOfficeAssignTo" name="backOfficeAssignTo" required>
-                    <option value="">Select Team Member</option>
+                    <option value="0" selected>Unassigned</option>
+                    <!-- Users will be populated dynamically -->
                 </select>
             </div>
 

@@ -26,6 +26,7 @@ try {
         start_date = :start_date,
         end_date = :end_date,
         assigned_to = :assigned_to,
+        assignment_status = :assignment_status,
         updated_at = NOW(),
         updated_by = :updated_by
     WHERE id = :project_id";
@@ -39,6 +40,7 @@ try {
         ':start_date' => $data['startDate'],
         ':end_date' => $data['dueDate'],
         ':assigned_to' => $data['assignTo'],
+        ':assignment_status' => $data['projectStatus'] ?? 'unassigned',
         ':updated_by' => $_SESSION['user_id'],
         ':project_id' => $data['projectId']
     ]);
@@ -82,6 +84,7 @@ try {
                 assigned_to = :assigned_to,
                 start_date = :start_date,
                 end_date = :end_date,
+                assignment_status = :assignment_status,
                 updated_at = NOW(),
                 updated_by = :updated_by
             WHERE id = :stage_id";
@@ -91,6 +94,7 @@ try {
                 ':assigned_to' => $stage['assignTo'],
                 ':start_date' => $stage['startDate'],
                 ':end_date' => $stage['dueDate'],
+                ':assignment_status' => $stage['status'] ?? 'unassigned',
                 ':updated_by' => $_SESSION['user_id'],
                 ':stage_id' => $stage['id']
             ]);
@@ -108,6 +112,7 @@ try {
                     assigned_to = :assigned_to,
                     start_date = :start_date,
                     end_date = :end_date,
+                    assignment_status = :assignment_status,
                     updated_at = NOW(),
                     updated_by = :updated_by
                 WHERE id = :substage_id";
@@ -118,6 +123,7 @@ try {
                     ':assigned_to' => $substage['assignTo'],
                     ':start_date' => $substage['startDate'],
                     ':end_date' => $substage['dueDate'],
+                    ':assignment_status' => $substage['status'] ?? 'unassigned',
                     ':updated_by' => $_SESSION['user_id'],
                     ':substage_id' => $substage['id']
                 ]);

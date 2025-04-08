@@ -19,9 +19,11 @@ try {
         pc.parent_id as category_parent_id,
         p.start_date,
         p.end_date,
-        p.assigned_to
+        p.assigned_to,
+        CASE WHEN p.assigned_to IS NULL THEN 'Unassigned' ELSE u.username END as assigned_to_name
     FROM projects p
     LEFT JOIN project_categories pc ON p.category_id = pc.id
+    LEFT JOIN users u ON p.assigned_to = u.id
     WHERE p.deleted_at IS NULL
     ORDER BY p.created_at DESC
     LIMIT 10";
@@ -32,11 +34,18 @@ try {
     
     // For each project, get its stages and substages
     foreach ($projects as &$project) {
+        // Ensure assigned_to is properly formatted
+        if ($project['assigned_to'] === null) {
+            $project['assigned_to'] = '0';
+            $project['assigned_to_name'] = 'Unassigned';
+        }
+        
         // Get stages
         $stageQuery = "SELECT 
             id,
             stage_number,
             assigned_to,
+            CASE WHEN assigned_to IS NULL THEN 'Unassigned' ELSE (SELECT username FROM users WHERE id = assigned_to) END as assigned_to_name,
             start_date,
             end_date,
             status
@@ -51,12 +60,19 @@ try {
         
         // For each stage, get its substages and files
         foreach ($stages as &$stage) {
+            // Ensure assigned_to is properly formatted
+            if ($stage['assigned_to'] === null) {
+                $stage['assigned_to'] = '0';
+                $stage['assigned_to_name'] = 'Unassigned';
+            }
+            
             // Get substages
             $substageQuery = "SELECT 
                 id,
                 substage_number,
                 title,
                 assigned_to,
+                CASE WHEN assigned_to IS NULL THEN 'Unassigned' ELSE (SELECT username FROM users WHERE id = assigned_to) END as assigned_to_name,
                 start_date,
                 end_date,
                 status,
@@ -68,7 +84,18 @@ try {
             
             $substageStmt = $pdo->prepare($substageQuery);
             $substageStmt->execute([':stage_id' => $stage['id']]);
-            $stage['substages'] = $substageStmt->fetchAll(PDO::FETCH_ASSOC);
+            $substages = $substageStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Ensure substage assigned_to is properly formatted
+            foreach ($substages as &$substage) {
+                if ($substage['assigned_to'] === null) {
+                    $substage['assigned_to'] = '0';
+                    $substage['assigned_to_name'] = 'Unassigned';
+                }
+            }
+            unset($substage); // Clear reference
+            
+            $stage['substages'] = $substages;
             
             // Get stage files
             $stageFileQuery = "SELECT 

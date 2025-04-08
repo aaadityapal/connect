@@ -1,0 +1,127 @@
+/* Assignment Notification Styles */
+
+/* Source badge colors */
+.source-badge.project {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.source-badge.stage {
+    background-color: #0275d8;
+    color: white;
+}
+
+.source-badge.substage {
+    background-color: #5cb85c;
+    color: white;
+}
+
+/* Notification items with assignment icons */
+.notification-item[data-type="project"] .notification-icon {
+    background-color: rgba(111, 66, 193, 0.15);
+    color: #6f42c1;
+}
+
+.notification-item[data-type="stage"] .notification-icon {
+    background-color: rgba(2, 117, 216, 0.15);
+    color: #0275d8;
+}
+
+.notification-item[data-type="substage"] .notification-icon {
+    background-color: rgba(92, 184, 92, 0.15);
+    color: #5cb85c;
+}
+
+/* Notification detail styles */
+.notification-detail p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.notification-detail strong {
+    font-weight: 600;
+    margin-right: 5px;
+}
+
+.notification-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background-color: #4a6cf7;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #3c55c8;
+    text-decoration: none;
+}
+
+/* Unread indicator for assignment notifications */
+.notification-item[data-type="project"]:not(.read)::after,
+.notification-item[data-type="stage"]:not(.read)::after,
+.notification-item[data-type="substage"]:not(.read)::after {
+    background-color: #4a6cf7;
+}
+
+/* Tab indicator for active tab when viewing assignments */
+.tab-btn[data-tab="assignments"].active::after {
+    background-color: #4a6cf7;
+}
+
+/* Assignment tab styling */
+.tab-btn[data-tab="assignments"] {
+    color: #28a745;  /* green color for assignments */
+}
+
+.tab-btn[data-tab="assignments"].active {
+    border-bottom-color: #28a745;
+}
+
+/* Style for assignment notifications in list */
+.notification-item[data-type="project"] {
+    border-left: 3px solid #6f42c1;
+}
+
+.notification-item[data-type="stage"] {
+    border-left: 3px solid #0275d8;
+}
+
+.notification-item[data-type="substage"] {
+    border-left: 3px solid #5cb85c;
+}
+
+/* Assignment notification icons */
+.notification-icon.success {
+    background-color: #28a745;
+}
+
+/* Empty state for assignments tab */
+.tab-btn[data-tab="assignments"].active ~ .notification-list .notification-empty {
+    color: #28a745;
+}
+
+/* Specific styling for empty assignments tab */
+.assignments-empty i {
+    font-size: 2.5rem;
+    color: #28a745;
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+}
+
+.assignments-empty .empty-subtitle {
+    font-size: 0.8rem;
+    color: #6c757d;
+    max-width: 80%;
+    margin: 0.5rem auto;
+} 

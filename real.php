@@ -107,6 +107,12 @@ error_log("Session Data: " . print_r($_SESSION, true));
                         <span class="sidebar-text">Settings</span>
                     </a>
                 </li>
+                <li>
+                    <a href="reset_password.php">
+                        <i class="fas fa-lock"></i>
+                        <span class="sidebar-text">Reset Password</span>
+                    </a>
+                </li>
             </ul>
 
             <!-- Add logout at the end of sidebar -->

@@ -2713,6 +2713,10 @@ try {
                 <i class="bi bi-chevron-contract"></i>
                 Contracts
             </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
+            </a>
             <a href="hr_settings.php" class="nav-link">
                 <i class="bi bi-gear-fill"></i>
                 Settings

@@ -553,25 +553,25 @@
 .add-substage-btn {
     width: 100%;
     padding: 12px;
-    background: white;
-    border: 2px dashed #e9ecef;
+    background: #f8f9fa;
+    border: 2px dashed #adb5bd;
     border-radius: 8px;
-    color: #6c757d;
-    font-size: 13px;
+    color: #495057;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    display: flex;
+    display: flex !important; /* Force display with !important */
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.3s ease;
     margin-top: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .add-substage-btn:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-    color: #495057;
+    background: #e9ecef;
+    border-color: #ced4da;
 }
 
 .add-substage-btn i {

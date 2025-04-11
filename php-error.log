@@ -279,3 +279,7 @@
 [07-Apr-2025 17:33:45 Asia/Kolkata] Attempting punch-in for user ID: 3
 [07-Apr-2025 17:33:45 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-07","2025-04-07 17:33:45","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-07 17:33:45","2025-04-07 17:33:45"]
 [07-Apr-2025 17:33:45 Asia/Kolkata] Successfully inserted attendance record with ID: 727
+[11-Apr-2025 11:53:30 Asia/Kolkata] Received input: {"action":"punch_in"}
+[11-Apr-2025 11:53:30 Asia/Kolkata] Attempting punch-in for user ID: 3
+[11-Apr-2025 11:53:30 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-11","2025-04-11 11:53:30","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-11 11:53:30","2025-04-11 11:53:30"]
+[11-Apr-2025 11:53:30 Asia/Kolkata] Successfully inserted attendance record with ID: 733

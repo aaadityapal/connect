@@ -1167,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             <div class="form-substages-container" style="display: none;">
                 <!-- Substages will be added here -->
             </div>
-            <button type="button" class="add-substage-btn" onclick="addSubstage(${stageCount})" style="display: none;">
+            <button type="button" class="add-substage-btn" onclick="addSubstage(${stageCount})" style="display: flex;">
                 <i class="fas fa-plus"></i>
                 Add Substage
             </button>

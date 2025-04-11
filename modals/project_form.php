@@ -211,3 +211,8 @@
 
 <!-- Toast container should be outside the modal -->
 <div id="toastContainer" class="toast-container"></div>
+
+<!-- Add the stage fix script -->
+<script src="modals/scripts/stage_fix.js"></script>
+<!-- Add the direct assignment fix script -->
+<script src="modals/scripts/direct_assign_fix.js"></script>

@@ -26,11 +26,14 @@ try {
     LEFT JOIN users u ON p.assigned_to = u.id
     WHERE p.deleted_at IS NULL
     ORDER BY p.created_at DESC
-    LIMIT 10";
+    LIMIT 20";
     
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Debug log
+    error_log('Projects fetched: ' . json_encode($projects));
     
     // For each project, get its stages and substages
     foreach ($projects as &$project) {

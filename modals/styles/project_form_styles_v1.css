@@ -378,6 +378,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    padding-right: 10px;
 }
 
 .stage-header h3 {
@@ -463,10 +464,15 @@
 }
 
 /* Substage styles */
-.substages-container {
+.form-substages-container {
     margin-top: 20px;
     padding-left: 20px;
     border-left: 2px dashed #e9ecef;
+    max-height: 2000px;  /* Increased from 0 */
+    opacity: 1;           /* Changed from 0 */
+    transition: all 0.3s ease;
+    overflow: visible;    /* Changed from hidden */
+    margin-top: 15px;     /* Added margin-top by default */
 }
 
 .substage-block {
@@ -1179,4 +1185,66 @@
 .toggle-container label, 
 .toggle-container .slider {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Update toggle button styling to replace both previous buttons */
+.toggle-substages-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s ease;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    text-decoration: none;
+    appearance: none; /* This helps with browser-specific styling issues */
+    -webkit-appearance: none; /* For older Safari */
+    -moz-appearance: none; /* For older Firefox */
+}
+
+.toggle-substages-btn i {
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    font-size: 12px;
+}
+
+.toggle-substages-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #212529;
+}
+
+/* Theme-specific toggle button styling */
+[data-theme="architecture"] .toggle-substages-btn:hover {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--architecture-primary);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+[data-theme="interior"] .toggle-substages-btn:hover {
+    background: rgba(142, 68, 173, 0.1);
+    color: var(--interior-primary);
+    border-color: rgba(142, 68, 173, 0.3);
+}
+
+[data-theme="construction"] .toggle-substages-btn:hover {
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--construction-primary);
+    border-color: rgba(192, 57, 43, 0.3);
+}
+
+/* Animation for substages container */
+.form-substages-container[style*="display: block"] {
+    max-height: 2000px;
+    opacity: 1;
+    margin-top: 15px;
 }

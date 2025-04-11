@@ -568,9 +568,18 @@ function getUserNameById(userId) {
     return user ? `${user.username} - ${user.role}` : 'Unknown User';
 }
 
+// Update the addSubstage function to work in both create and edit modes
 function addSubstage(stageNum) {
     const stage = document.querySelector(`.stage-block[data-stage="${stageNum}"]`);
-    const substagesContainer = stage.querySelector('.substages-container');
+    const substagesContainer = stage.querySelector('.form-substages-container');
+    
+    // If we're in edit mode, don't force display of substages
+    // This fixes the issue where adding a substage makes all substages visible
+    if (!isEditMode) {
+        // Only in create mode, make sure substages container is visible
+        substagesContainer.style.display = 'block';
+    }
+    
     const substageCount = substagesContainer.children.length + 1;
     
     // Create user options HTML using global users
@@ -725,12 +734,53 @@ function addSubstage(stageNum) {
         assignSelect.value = parentAssignTo;
     }
     
+    // Make sure the Add Substage button is visible only in create mode or if substages are shown
+    const addSubstageBtn = stage.querySelector('.add-substage-btn');
+    if (addSubstageBtn) {
+        if (isEditMode) {
+            // In edit mode, only show if substages are visible
+            addSubstageBtn.style.display = substagesContainer.style.display === 'block' ? 'flex' : 'none';
+        } else {
+            // In create mode, always show
+            addSubstageBtn.style.display = 'flex';
+        }
+    }
+    
     setTimeout(() => {
         newSubstage.style.opacity = '1';
         newSubstage.style.transform = 'translateY(0)';
+        
+        // Fixed scrolling - scroll to the newly added substage instead of the entire stage
+        // Use setTimeout to ensure the element is fully rendered before scrolling
+        setTimeout(() => {
+            // Only scroll into view in create mode or if substages are visible in edit mode
+            if (!isEditMode || substagesContainer.style.display === 'block') {
+                newSubstage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }, 50);
     }, 10);
 
-    newSubstage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    // Remove the default scrolling behavior that was causing issues
+    // newSubstage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    // After adding the substage, update the toggle button text if it exists
+    const toggleBtn = stage.querySelector('.toggle-substages-btn');
+    if (toggleBtn) {
+        const isVisible = substagesContainer.style.display === 'block';
+        const newCount = substagesContainer.querySelectorAll('.substage-block').length;
+        
+        if (isVisible) {
+            toggleBtn.innerHTML = `
+                <i class="fas fa-chevron-up"></i>
+                <span>Hide Substages${newCount > 0 ? ` (${newCount})` : ''}</span>
+            `;
+        } else {
+            toggleBtn.innerHTML = `
+                <i class="fas fa-chevron-down"></i>
+                <span>View Substages${newCount > 0 ? ` (${newCount})` : ''}</span>
+            `;
+        }
+    }
 }
 
 // Add this function to handle stage assignment changes
@@ -795,6 +845,7 @@ function deleteSubstage(button) {
     const substage = button.closest('.substage-block');
     const substagesContainer = substage.parentElement;
     const stageBlock = substagesContainer.closest('.stage-block');
+    const stageNum = stageBlock.dataset.stage;
     
     // Store the substage ID if it exists
     const substageId = substage.dataset.substageId;
@@ -815,6 +866,25 @@ function deleteSubstage(button) {
             // Update input names and IDs
             updateSubstageElements(block, stageBlock.dataset.stage, substageNum);
         });
+        
+        // Update the toggle button text
+        const toggleBtn = stageBlock.querySelector('.toggle-substages-btn');
+        if (toggleBtn) {
+            const newCount = substagesContainer.querySelectorAll('.substage-block').length;
+            const isVisible = substagesContainer.style.display === 'block';
+            
+            if (isVisible) {
+                toggleBtn.innerHTML = `
+                    <i class="fas fa-chevron-up"></i>
+                    <span>Hide Substages${newCount > 0 ? ` (${newCount})` : ''}</span>
+                `;
+            } else {
+                toggleBtn.innerHTML = `
+                    <i class="fas fa-chevron-down"></i>
+                    <span>View Substages${newCount > 0 ? ` (${newCount})` : ''}</span>
+                `;
+            }
+        }
     }, 300);
 }
 
@@ -1028,6 +1098,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             `<option value="${user.id}">${user.username} - ${user.role}</option>`
         ).join('');
         
+        // Check if we're in edit mode - only add the view button in edit mode
+        const isInEditMode = isEditMode;
+        
         newStage.innerHTML = `
             <div class="stage-header">
                 <h3>Stage ${stageCount}</h3>
@@ -1087,10 +1160,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <div class="selected-files" id="stageSelectedFiles_${stageCount}"></div>
                 </div>
             </div>
-            <div class="substages-container">
+            ${isInEditMode ? `<button type="button" class="toggle-substages-btn" onclick="toggleStageSubstages(${stageCount})">
+                <i class="fas fa-chevron-down"></i>
+                <span>View Substages (0)</span>
+            </button>` : ''}
+            <div class="form-substages-container" style="display: none;">
                 <!-- Substages will be added here -->
             </div>
-            <button type="button" class="add-substage-btn" onclick="addSubstage(${stageCount})">
+            <button type="button" class="add-substage-btn" onclick="addSubstage(${stageCount})" style="display: none;">
                 <i class="fas fa-plus"></i>
                 Add Substage
             </button>
@@ -1121,6 +1198,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Functions
     function openModal() {
         console.log('Opening modal...');
+        
+        // Reset edit mode when opening modal fresh
+        isEditMode = false;
+        currentProjectId = null;
+        
         modal.style.display = 'flex';
         setTimeout(() => {
             modal.classList.add('active');
@@ -1682,6 +1764,9 @@ function handleProjectTitleInput(input) {
     const suggestionsContainer = document.getElementById('projectSuggestions');
     const value = input.value.trim().toLowerCase();
     
+    console.log('Input value:', value);
+    console.log('Global projects:', globalProjects);
+    
     // Clear suggestions if input is empty
     if (!value) {
         suggestionsContainer.innerHTML = '';
@@ -1690,9 +1775,14 @@ function handleProjectTitleInput(input) {
     }
     
     // Filter matching projects
-    const matches = globalProjects.filter(project => 
-        project.title.toLowerCase().includes(value)
-    );
+    const matches = globalProjects.filter(project => {
+        const title = project.title.toLowerCase();
+        const isMatch = title.includes(value);
+        console.log(`Checking project "${project.title}": ${isMatch}`);
+        return isMatch;
+    });
+    
+    console.log('Matches found:', matches);
     
     if (matches.length > 0) {
         // Debug log
@@ -1798,51 +1888,118 @@ async function selectProject(projectId) {
                     if (assignSelect) assignSelect.value = stageData.assigned_to;
                     if (startDateInput) startDateInput.value = formatDateForInput(stageData.start_date);
                     if (dueDateInput) dueDateInput.value = formatDateForInput(stageData.end_date);
+                    
+                    // Get the substages container for this stage
+                    const substagesContainer = stageBlock.querySelector('.form-substages-container');
+                    const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
+                    
+                    // Initially hide the substages container
+                        if (substagesContainer) {
+                            substagesContainer.style.display = 'none';
+                        }
 
-                    // Handle substages
+                    // Initially hide the add substage button
+                    if (addSubstageBtn) {
+                        addSubstageBtn.style.display = 'none';
+                    }
+                    
+                    // IMPORTANT: Make sure we don't add a duplicate toggle button
+                    // Look for an existing toggle button
+                    let toggleSubstagesBtn = stageBlock.querySelector('.toggle-substages-btn');
+                    
+                    // If no toggle button exists, create one
+                    if (!toggleSubstagesBtn) {
+                        // Add a single toggle button after the file upload section
+                        const fileUploadGroup = stageBlock.querySelector('.file-upload-group');
+                        if (fileUploadGroup) {
+                            toggleSubstagesBtn = document.createElement('button');
+                            toggleSubstagesBtn.type = 'button';
+                            toggleSubstagesBtn.className = 'toggle-substages-btn';
+                            toggleSubstagesBtn.dataset.stageNum = stageNum;
+                            
+                            // Set the button text with substage count
+                            const substageCount = stageData.substages ? stageData.substages.length : 0;
+                            toggleSubstagesBtn.innerHTML = `
+                                <i class="fas fa-chevron-down"></i>
+                                <span>View Substages${substageCount > 0 ? ` (${substageCount})` : ''}</span>
+                            `;
+                            
+                            toggleSubstagesBtn.onclick = function() {
+                                toggleStageSubstages(stageNum);
+                            };
+                            
+                            fileUploadGroup.after(toggleSubstagesBtn);
+                        }
+                    } else {
+                        // Update existing toggle button with correct count
+                        const substageCount = stageData.substages ? stageData.substages.length : 0;
+                        toggleSubstagesBtn.innerHTML = `
+                            <i class="fas fa-chevron-down"></i>
+                            <span>View Substages${substageCount > 0 ? ` (${substageCount})` : ''}</span>
+                        `;
+                    }
+                    
+                    // Handle substages - create them but they're hidden initially
                     if (stageData.substages && stageData.substages.length > 0) {
                         console.log(`Loading ${stageData.substages.length} substages for stage ${stageNum}`);
-                        
+
                         for (const substageData of stageData.substages) {
                             // Create new substage
                             const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
                             if (addSubstageBtn) {
                                 addSubstageBtn.click();
                                 
-                                const substagesContainer = stageBlock.querySelector('.substages-container');
-                                const substageBlock = substagesContainer.lastElementChild;
+                            const substagesContainer = stageBlock.querySelector('.form-substages-container');
+                            const substageBlock = substagesContainer.lastElementChild;
+                            
+                            if (substageBlock) {
+                                // Important: Store the substage ID
+                                substageBlock.dataset.substageId = substageData.id;
+                                console.log(`Set substage ID ${substageData.id} for substage in stage ${stageNum}`);
                                 
-                                if (substageBlock) {
-                                    // Important: Store the substage ID
-                                    substageBlock.dataset.substageId = substageData.id;
-                                    console.log(`Set substage ID ${substageData.id} for substage in stage ${stageNum}`);
-                                    
-                                    // Fill substage details
-                                    const substageNum = substageBlock.dataset.substage;
-                                    const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageNum}`);
-                                    const assignSelect = document.getElementById(`substageAssignTo${stageNum}_${substageNum}`);
-                                    const startDateInput = document.getElementById(`substageStartDate${stageNum}_${substageNum}`);
-                                    const dueDateInput = document.getElementById(`substageDueDate${stageNum}_${substageNum}`);
+                                // Fill substage details
+                                const substageNum = substageBlock.dataset.substage;
+                                const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageNum}`);
+                                const assignSelect = document.getElementById(`substageAssignTo${stageNum}_${substageNum}`);
+                                const startDateInput = document.getElementById(`substageStartDate${stageNum}_${substageNum}`);
+                                const dueDateInput = document.getElementById(`substageDueDate${stageNum}_${substageNum}`);
 
-                                    if (titleSelect) {
-                                        // Handle custom titles
-                                        const title = substageData.title;
-                                        if (!titleSelect.querySelector(`option[value="${title}"]`)) {
-                                            const customOption = document.createElement('option');
-                                            customOption.value = title;
-                                            customOption.textContent = title;
-                                            customOption.dataset.custom = 'true';
-                                            titleSelect.insertBefore(customOption, titleSelect.querySelector('option[value="custom"]'));
-                                        }
-                                        titleSelect.value = title;
+                                if (titleSelect) {
+                                    // Handle custom titles
+                                    const title = substageData.title;
+                                    if (!titleSelect.querySelector(`option[value="${title}"]`)) {
+                                        const customOption = document.createElement('option');
+                                        customOption.value = title;
+                                        customOption.textContent = title;
+                                        customOption.dataset.custom = 'true';
+                                        titleSelect.insertBefore(customOption, titleSelect.querySelector('option[value="custom"]'));
                                     }
-                                    
-                                    if (assignSelect) assignSelect.value = substageData.assigned_to;
-                                    if (startDateInput) startDateInput.value = formatDateForInput(substageData.start_date);
-                                    if (dueDateInput) dueDateInput.value = formatDateForInput(substageData.end_date);
+                                    titleSelect.value = title;
+                                }
+                                
+                                if (assignSelect) assignSelect.value = substageData.assigned_to;
+                                if (startDateInput) startDateInput.value = formatDateForInput(substageData.start_date);
+                                if (dueDateInput) dueDateInput.value = formatDateForInput(substageData.end_date);
                                 }
                             }
                         }
+                    }
+                    
+                    // After loading all substages, make sure they're hidden
+                    if (substagesContainer) {
+                        substagesContainer.style.display = 'none';
+                    }
+                    // Make sure the toggle button shows "View Substages"
+                    if (toggleSubstagesBtn) {
+                        const substageCount = stageData.substages ? stageData.substages.length : 0;
+                        toggleSubstagesBtn.innerHTML = `
+                            <i class="fas fa-chevron-down"></i>
+                            <span>View Substages${substageCount > 0 ? ` (${substageCount})` : ''}</span>
+                        `;
+                    }
+                    // Also make sure the Add Substage button is hidden
+                    if (addSubstageBtn) {
+                        addSubstageBtn.style.display = 'none';
                     }
                 }
             }
@@ -2092,4 +2249,47 @@ async function getStagesData() {
 // Update the updateSubstageElements function
 function updateSubstageElements(substageBlock, stageNum, substageNum) {
     // Implementation of updateSubstageElements function
+}
+
+// Add this new function to toggle substages visibility
+function toggleStageSubstages(stageNum) {
+    const stageBlock = document.querySelector(`.stage-block[data-stage="${stageNum}"]`);
+    if (!stageBlock) return;
+    
+    const substagesContainer = stageBlock.querySelector('.form-substages-container');
+    const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
+    const toggleBtn = stageBlock.querySelector('.toggle-substages-btn');
+    
+    if (substagesContainer && toggleBtn) {
+        // Toggle visibility
+        const isVisible = substagesContainer.style.display === 'block';
+        
+        if (isVisible) {
+            // Hide substages
+            substagesContainer.style.display = 'none';
+            if (addSubstageBtn) {
+                addSubstageBtn.style.display = 'none';
+            }
+            
+            // Update toggle button
+            const substageCount = substagesContainer.querySelectorAll('.substage-block').length;
+            toggleBtn.innerHTML = `
+                <i class="fas fa-chevron-down"></i>
+                <span>View Substages${substageCount > 0 ? ` (${substageCount})` : ''}</span>
+            `;
+    } else {
+            // Show substages
+            substagesContainer.style.display = 'block';
+            if (addSubstageBtn) {
+                addSubstageBtn.style.display = 'flex';
+            }
+            
+            // Update toggle button
+            const substageCount = substagesContainer.querySelectorAll('.substage-block').length;
+            toggleBtn.innerHTML = `
+                <i class="fas fa-chevron-up"></i>
+                <span>Hide Substages${substageCount > 0 ? ` (${substageCount})` : ''}</span>
+            `;
+        }
+    }
 }

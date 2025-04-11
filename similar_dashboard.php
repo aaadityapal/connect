@@ -145,7 +145,9 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/project-metrics-dashboard.css">
+    <link rel="stylesheet" href="assets/css/project-overview.css">
     <script src="assets/js/project-metrics-dashboard.js"></script>
+    <script src="assets/js/project-overview.js"></script>
     <link rel="stylesheet" href="assets/css/chat.css">
     <script src="assets/js/chat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -2448,6 +2450,48 @@ if ($user_data && isset($user_data['shift_id'])) {
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Scrollable upcoming dates styles -->
+    <style>
+        /* Add scrollable styles for upcoming dates list */
+        #upcomingDatesCard .card-content {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        #upcomingDatesCard .upcoming-dates-list {
+            margin-right: 5px;
+        }
+        
+        /* Custom scrollbar styling */
+        #upcomingDatesCard .card-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #upcomingDatesCard .card-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #upcomingDatesCard .card-content::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 10px;
+        }
+        
+        #upcomingDatesCard .card-content::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+    </style>
+    
+    <script>
+        // Function to show all upcoming dates in a modal
+        function showAllUpcomingDates() {
+            // This function will be implemented if needed to show all dates in a larger modal
+            console.log("View all upcoming dates clicked");
+            // You can implement a modal or redirect to a detailed view page
+        }
+    </script>
 </head>
 <body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>">
     <div class="dashboard-container">
@@ -2882,7 +2926,25 @@ if ($user_data && isset($user_data['shift_id'])) {
         <i class="fas fa-ellipsis-v"></i>
     </div>
     <div class="pmd-upcoming-stages-list" id="upcomingStagesList">
-        <?php while ($stage = $upcomingStages->fetch_object()): ?>
+        <?php 
+        // Updated query to only show stages assigned to current user
+        $upcomingStages = $db->query("
+            SELECT 
+                ps.*, 
+                p.title as project_title,
+                'Stage Owner' as role_type
+            FROM project_stages ps
+            JOIN projects p ON p.id = ps.project_id
+            WHERE ps.deleted_at IS NULL 
+            AND ps.assigned_to = '$user_id'
+            AND ps.status IN ('in_progress', 'not_started')
+            ORDER BY ps.end_date ASC
+            LIMIT 5"
+        );
+        
+        if ($upcomingStages->num_rows > 0) {
+            while ($stage = $upcomingStages->fetch_object()): 
+        ?>
             <div class="pmd-stage-item">
                 <div class="pmd-stage-markers">
                     <div class="pmd-marker-yellow"></div>
@@ -2898,21 +2960,25 @@ if ($user_data && isset($user_data['shift_id'])) {
                             <span class="status-badge <?php echo $stage->status; ?>">
                                 <?php echo ucfirst(str_replace('_', ' ', $stage->status)); ?>
                             </span>
-                            <?php if (isset($stage->role_type)): ?>
-                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $stage->role_type)); ?>">
-                                    <?php echo $stage->role_type; ?>
-                                </span>
-                            <?php endif; ?>
+                            <span class="role-badge stage-owner">
+                                <?php echo $stage->role_type; ?>
+                            </span>
                         </div>
                         <div class="stage-phase">Stage <?php echo $stage->stage_number; ?></div>
                     </div>
                 </div>
             </div>
-        <?php endwhile; ?>
-        
-        <?php if ($upcomingStages->num_rows == 0): ?>
-            <div class="no-stages">No upcoming stages found</div>
-        <?php endif; ?>
+        <?php 
+            endwhile; 
+        } else {
+        ?>
+            <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No upcoming stages assigned to you</p>
+            </div>
+        <?php 
+        }
+        ?>
     </div>
 </div>
         <div class="pmd-milestone-container">
@@ -2927,7 +2993,7 @@ if ($user_data && isset($user_data['shift_id'])) {
                     FROM project_substages 
                     WHERE (status = 'pending' OR status = 'not_started') 
                     AND deleted_at IS NULL 
-                    AND assigned_to = '$user_id'";  // Add filter for current user
+                    AND assigned_to = '$user_id'";
                 $pending_result = $db->query($pending_count_query);
                 $count_row = $pending_result->fetch_assoc();
                 echo $count_row['count'] . ' pending';
@@ -2939,9 +3005,6 @@ if ($user_data && isset($user_data['shift_id'])) {
     <!-- Substage Items -->
     <div class="pmd-milestone-list">
         <?php
-        // Get current user ID (assuming you have it in a session or similar)
-        $current_user_id = $_SESSION['user_id']; // Adjust this according to how you store user sessions
-
         // Updated query to show only substages assigned to current user
         $substages_query = "
             SELECT ps.*, u.username as assignee_name 
@@ -2949,27 +3012,18 @@ if ($user_data && isset($user_data['shift_id'])) {
             LEFT JOIN users u ON ps.assigned_to = u.id 
             WHERE ps.status IN ('pending', 'not_started') 
             AND ps.deleted_at IS NULL 
-            AND ps.assigned_to = $current_user_id  /* Added this line to filter by user */
+            AND ps.assigned_to = $user_id
             ORDER BY ps.end_date ASC
         ";
 
-        // Update the count query as well
-        $pending_count_query = "
-            SELECT COUNT(*) as count 
-            FROM project_substages 
-            WHERE (status = 'pending' OR status = 'not_started') 
-            AND deleted_at IS NULL 
-            AND assigned_to = $current_user_id  /* Added this line to filter by user */
-        ";
-
-        $pending_result = $db->query($pending_count_query);
         $substages_result = $db->query($substages_query);
 
-        while ($substage = $substages_result->fetch_assoc()):
-            $progress = 0;
-            if ($substage['status'] === 'pending') {
-                $progress = 30; // You can adjust this or fetch actual progress
-            }
+        if ($substages_result->num_rows > 0) {
+            while ($substage = $substages_result->fetch_assoc()):
+                $progress = 0;
+                if ($substage['status'] === 'pending') {
+                    $progress = 30; // You can adjust this or fetch actual progress
+                }
         ?>
         <div class="pmd-milestone-item">
             <div class="pmd-milestone-main">
@@ -2979,7 +3033,7 @@ if ($user_data && isset($user_data['shift_id'])) {
                     </h3>
                     <p class="pmd-milestone-item-subtitle">
                         <?php echo htmlspecialchars($substage['substage_identifier']); ?> - 
-                        Assigned to: <?php echo htmlspecialchars($substage['assignee_name']); ?>
+                        Assigned to you
                     </p>
                 </div>
                 
@@ -3003,12 +3057,465 @@ if ($user_data && isset($user_data['shift_id'])) {
                 <span class="pmd-progress-value"><?php echo $progress; ?>%</span>
             </div>
         </div>
-        <?php endwhile; ?>
+        <?php 
+            endwhile; 
+        } else {
+        ?>
+            <div class="empty-state">
+                <i class="fas fa-tasks"></i>
+                <p>No substages assigned to you</p>
+            </div>
+        <?php 
+        }
+        ?>
     </div>
 </div>
         
     </div>
 </div>
+</div>
+<div class="project-overview-section quick-view-active" id="projectOverviewSection">
+    <div class="project-overview-header">
+        <h2 class="project-overview-title">Project Overview</h2>
+        
+        <!-- Add View Toggle -->
+        <div class="view-toggle-container">
+            <div class="view-toggle-label active" data-view="quick">Quick View</div>
+            <div class="view-toggle-label" data-view="calendar">Calendar</div>
+        </div>
+        
+        <div class="overview-filters">
+            <!-- Year Filter -->
+            <div class="overview-filter-wrapper">
+                <div class="overview-filter" id="overviewYearFilter">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span><?php echo date('Y'); ?></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="overview-filter-dropdown" id="overviewYearDropdown">
+                    <?php
+                    $current_year = intval(date('Y'));
+                    for ($year = $current_year - 2; $year <= $current_year + 2; $year++) {
+                        $selected = ($year == $current_year) ? ' selected' : '';
+                        echo "<div class='overview-filter-option{$selected}' data-value='{$year}'>{$year}</div>";
+                    }
+                    ?>
+                </div>
+            </div>
+            
+            <!-- Month Filter -->
+            <div class="overview-filter-wrapper">
+                <div class="overview-filter" id="overviewMonthFilter">
+                    <i class="fas fa-filter"></i>
+                    <span><?php echo date('F'); ?></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="overview-filter-dropdown" id="overviewMonthDropdown">
+                    <?php
+                    $months = array(
+                        1 => "January", 2 => "February", 3 => "March",
+                        4 => "April", 5 => "May", 6 => "June",
+                        7 => "July", 8 => "August", 9 => "September",
+                        10 => "October", 11 => "November", 12 => "December"
+                    );
+                    $current_month = intval(date('n'));
+                    foreach ($months as $num => $name) {
+                        $selected = ($num == $current_month) ? ' selected' : '';
+                        echo "<div class='overview-filter-option{$selected}' data-value='{$num}'>{$name}</div>";
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick View Grid -->
+    <div class="project-overview-grid">
+        <!-- Projects Assigned Card -->
+        <div class="overview-card theme-primary" id="projectsCard">
+            <div class="card-header">
+                <h3 class="card-title">Projects Assigned</h3>
+                <div class="card-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <?php
+                // Get the count of projects assigned to the current user
+                $project_count_query = "SELECT COUNT(*) as total FROM projects WHERE assigned_to = ? AND deleted_at IS NULL";
+                $project_count_stmt = $conn->prepare($project_count_query);
+                $project_count_stmt->bind_param("i", $user_id);
+                $project_count_stmt->execute();
+                $project_count_result = $project_count_stmt->get_result();
+                $project_count = $project_count_result->fetch_assoc()['total'];
+                
+                // Get the count of new projects assigned this month
+                $current_month = date('m');
+                $current_year = date('Y');
+                $start_date = "$current_year-$current_month-01";
+                $new_projects_query = "SELECT COUNT(*) as total FROM projects 
+                                      WHERE assigned_to = ? 
+                                      AND deleted_at IS NULL 
+                                      AND created_at >= ?";
+                $new_projects_stmt = $conn->prepare($new_projects_query);
+                $new_projects_stmt->bind_param("is", $user_id, $start_date);
+                $new_projects_stmt->execute();
+                $new_projects_result = $new_projects_stmt->get_result();
+                $new_projects = $new_projects_result->fetch_assoc()['total'];
+                ?>
+                <div class="card-value"><?php echo $project_count; ?></div>
+                <div class="card-description">Total active projects</div>
+            </div>
+            <div class="card-footer">
+                <div class="trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span><?php echo $new_projects; ?> New</span>
+                </div>
+                <span>this month</span>
+            </div>
+        </div>
+
+        <!-- Stages Assigned Card -->
+        <div class="overview-card theme-info" id="stagesCard">
+            <div class="card-header">
+                <h3 class="card-title">Stages Assigned</h3>
+                <div class="card-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <?php
+                // Get the count of stages assigned to the current user with assignment_status = 'assigned'
+                $stages_count_query = "SELECT COUNT(*) as total FROM project_stages 
+                                      WHERE assigned_to = ? 
+                                      AND deleted_at IS NULL 
+                                      AND assignment_status = 'assigned'";
+                $stages_count_stmt = $conn->prepare($stages_count_query);
+                $stages_count_stmt->bind_param("i", $user_id);
+                $stages_count_stmt->execute();
+                $stages_count_result = $stages_count_stmt->get_result();
+                $stages_count = $stages_count_result->fetch_assoc()['total'];
+                
+                // Get the count of new stages assigned this month with assignment_status = 'assigned'
+                $new_stages_query = "SELECT COUNT(*) as total FROM project_stages 
+                            WHERE assigned_to = ? 
+                            AND deleted_at IS NULL 
+                            AND created_at >= ?
+                            AND assignment_status = 'assigned'";
+                $new_stages_stmt = $conn->prepare($new_stages_query);
+                $new_stages_stmt->bind_param("is", $user_id, $start_date);
+                $new_stages_stmt->execute();
+                $new_stages_result = $new_stages_stmt->get_result();
+                $new_stages = $new_stages_result->fetch_assoc()['total'];
+                ?>
+                <div class="card-value"><?php echo $stages_count; ?></div>
+                <div class="card-description">Assigned project stages</div>
+            </div>
+            <div class="card-footer">
+                <div class="trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span><?php echo $new_stages; ?> New</span>
+                </div>
+                <span>this month</span>
+            </div>
+        </div>
+
+        <!-- Substages Assigned Card -->
+        <div class="overview-card theme-success" id="substagesCard">
+            <div class="card-header">
+                <h3 class="card-title">Substages Assigned</h3>
+                <div class="card-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <?php
+                // Get the count of substages assigned to the current user with assignment_status = 'assigned'
+                $substages_count_query = "SELECT COUNT(*) as total FROM project_substages 
+                                 WHERE assigned_to = ? 
+                                 AND deleted_at IS NULL 
+                                 AND assignment_status = 'assigned'";
+                $substages_count_stmt = $conn->prepare($substages_count_query);
+                $substages_count_stmt->bind_param("i", $user_id);
+                $substages_count_stmt->execute();
+                $substages_count_result = $substages_count_stmt->get_result();
+                $substages_count = $substages_count_result->fetch_assoc()['total'];
+                
+                // Get the count of new substages assigned this month with assignment_status = 'assigned'
+                $new_substages_query = "SELECT COUNT(*) as total FROM project_substages 
+                                WHERE assigned_to = ? 
+                                AND deleted_at IS NULL 
+                                AND created_at >= ?
+                                AND assignment_status = 'assigned'";
+                $new_substages_stmt = $conn->prepare($new_substages_query);
+                $new_substages_stmt->bind_param("is", $user_id, $start_date);
+                $new_substages_stmt->execute();
+                $new_substages_result = $new_substages_stmt->get_result();
+                $new_substages = $new_substages_result->fetch_assoc()['total'];
+                ?>
+                <div class="card-value"><?php echo $substages_count; ?></div>
+                <div class="card-description">Assigned substages</div>
+            </div>
+            <div class="card-footer">
+                <div class="trend-indicator trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span><?php echo $new_substages; ?> New</span>
+                </div>
+                <span>this month</span>
+            </div>
+        </div>
+
+        <!-- Stages Due Card -->
+        <div class="overview-card theme-warning" id="stagesDueCard">
+            <div class="card-header">
+                <h3 class="card-title">Stages Due</h3>
+                <div class="card-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <?php
+                // Get the current date
+                $today = date('Y-m-d');
+                $week_later = date('Y-m-d', strtotime('+7 days'));
+                $two_days_later = date('Y-m-d', strtotime('+2 days'));
+                
+                // Get stages due within 7 days
+                $stages_due_query = "SELECT COUNT(*) as total FROM project_stages 
+                           WHERE assigned_to = ? 
+                           AND deleted_at IS NULL 
+                           AND assignment_status = 'assigned'
+                           AND end_date BETWEEN ? AND ?
+                           AND status != 'completed'";
+                $stages_due_stmt = $conn->prepare($stages_due_query);
+                $stages_due_stmt->bind_param("iss", $user_id, $today, $week_later);
+                $stages_due_stmt->execute();
+                $stages_due_result = $stages_due_stmt->get_result();
+                $stages_due = $stages_due_result->fetch_assoc()['total'];
+                
+                // Get critical stages (due within 2 days)
+                $critical_stages_query = "SELECT COUNT(*) as total FROM project_stages 
+                                WHERE assigned_to = ? 
+                                AND deleted_at IS NULL 
+                                AND assignment_status = 'assigned'
+                                AND end_date BETWEEN ? AND ?
+                                AND status != 'completed'";
+                $critical_stages_stmt = $conn->prepare($critical_stages_query);
+                $critical_stages_stmt->bind_param("iss", $user_id, $today, $two_days_later);
+                $critical_stages_stmt->execute();
+                $critical_stages_result = $critical_stages_stmt->get_result();
+                $critical_stages = $critical_stages_result->fetch_assoc()['total'];
+                ?>
+                <div class="card-value"><?php echo $stages_due; ?></div>
+                <div class="card-description">Due within 7 days</div>
+            </div>
+            <div class="card-footer">
+                <div class="trend-indicator trend-neutral">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span><?php echo $critical_stages; ?> Critical</span>
+                </div>
+                <span>need attention</span>
+            </div>
+        </div>
+
+        <!-- Substages Due Card -->
+        <div class="overview-card theme-danger" id="substagesDueCard">
+            <div class="card-header">
+                <h3 class="card-title">Substages Due</h3>
+                <div class="card-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <?php
+                // Get the current date
+                $today = date('Y-m-d');
+                $week_later = date('Y-m-d', strtotime('+7 days'));
+                
+                // Get substages due within 7 days
+                $substages_due_query = "SELECT COUNT(*) as total FROM project_substages 
+                              WHERE assigned_to = ? 
+                              AND deleted_at IS NULL 
+                              AND assignment_status = 'assigned'
+                              AND end_date BETWEEN ? AND ?
+                              AND status != 'completed'";
+                $substages_due_stmt = $conn->prepare($substages_due_query);
+                $substages_due_stmt->bind_param("iss", $user_id, $today, $week_later);
+                $substages_due_stmt->execute();
+                $substages_due_result = $substages_due_stmt->get_result();
+                $substages_due = $substages_due_result->fetch_assoc()['total'];
+                
+                // Get overdue substages
+                $overdue_substages_query = "SELECT COUNT(*) as total FROM project_substages 
+                                  WHERE assigned_to = ? 
+                                  AND deleted_at IS NULL 
+                                  AND assignment_status = 'assigned'
+                                  AND end_date < ?
+                                  AND status != 'completed'";
+                $overdue_substages_stmt = $conn->prepare($overdue_substages_query);
+                $overdue_substages_stmt->bind_param("is", $user_id, $today);
+                $overdue_substages_stmt->execute();
+                $overdue_substages_result = $overdue_substages_stmt->get_result();
+                $overdue_substages = $overdue_substages_result->fetch_assoc()['total'];
+                ?>
+                <div class="card-value"><?php echo $substages_due; ?></div>
+                <div class="card-description">Due within 7 days</div>
+            </div>
+            <div class="card-footer">
+                <div class="trend-indicator trend-down">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><?php echo $overdue_substages; ?> Overdue</span>
+                </div>
+                <span>need immediate action</span>
+            </div>
+        </div>
+
+        <!-- Upcoming Due Dates Card -->
+        <div class="overview-card theme-purple" id="upcomingDatesCard">
+            <div class="card-header">
+                <h3 class="card-title">Upcoming Due Dates</h3>
+                <div class="card-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="upcoming-dates-list">
+                    <?php
+                    // Get current date
+                    $today_date = date('Y-m-d');
+                    $tomorrow_date = date('Y-m-d', strtotime('+1 day'));
+                    $week_later = date('Y-m-d', strtotime('+7 days'));
+                    
+                    // Fetch substages due today
+                    $today_query = "SELECT title FROM project_substages 
+                                  WHERE assigned_to = ? 
+                                  AND deleted_at IS NULL 
+                                  AND assignment_status = 'assigned' 
+                                  AND end_date = ? 
+                                  AND status != 'completed'
+                                  ORDER BY end_date ASC
+                                  LIMIT 5";
+                    $today_stmt = $conn->prepare($today_query);
+                    $today_stmt->bind_param("is", $user_id, $today_date);
+                    $today_stmt->execute();
+                    $today_result = $today_stmt->get_result();
+                    
+                    // Fetch substages due tomorrow
+                    $tomorrow_query = "SELECT title FROM project_substages 
+                                     WHERE assigned_to = ? 
+                                     AND deleted_at IS NULL 
+                                     AND assignment_status = 'assigned' 
+                                     AND end_date = ? 
+                                     AND status != 'completed'
+                                     ORDER BY end_date ASC
+                                     LIMIT 5";
+                    $tomorrow_stmt = $conn->prepare($tomorrow_query);
+                    $tomorrow_stmt->bind_param("is", $user_id, $tomorrow_date);
+                    $tomorrow_stmt->execute();
+                    $tomorrow_result = $tomorrow_stmt->get_result();
+                    
+                    // Fetch upcoming substages (not today or tomorrow, but within 7 days)
+                    $upcoming_query = "SELECT title, end_date FROM project_substages 
+                                     WHERE assigned_to = ? 
+                                     AND deleted_at IS NULL 
+                                     AND assignment_status = 'assigned' 
+                                     AND end_date > ? 
+                                     AND end_date <= ? 
+                                     AND end_date != ?
+                                     AND status != 'completed'
+                                     ORDER BY end_date ASC
+                                     LIMIT 10";
+                    $upcoming_stmt = $conn->prepare($upcoming_query);
+                    $upcoming_stmt->bind_param("isss", $user_id, $tomorrow_date, $week_later, $tomorrow_date);
+                    $upcoming_stmt->execute();
+                    $upcoming_result = $upcoming_stmt->get_result();
+                    
+                    // Display today's substages
+                    if ($today_result->num_rows > 0) {
+                        while ($today_substage = $today_result->fetch_assoc()) {
+                            echo '<div class="upcoming-date-item">
+                        <span class="date-badge today">Today</span>
+                                    <span class="project-name">' . htmlspecialchars($today_substage['title']) . '</span>
+                                </div>';
+                        }
+                    } else {
+                        echo '<div class="upcoming-date-item">
+                                <span class="date-badge today">Today</span>
+                                <span class="project-name">No substages due today</span>
+                            </div>';
+                    }
+                    
+                    // Display tomorrow's substages
+                    if ($tomorrow_result->num_rows > 0) {
+                        while ($tomorrow_substage = $tomorrow_result->fetch_assoc()) {
+                            echo '<div class="upcoming-date-item">
+                        <span class="date-badge tomorrow">Tomorrow</span>
+                                    <span class="project-name">' . htmlspecialchars($tomorrow_substage['title']) . '</span>
+                                </div>';
+                        }
+                    } else {
+                        echo '<div class="upcoming-date-item">
+                                <span class="date-badge tomorrow">Tomorrow</span>
+                                <span class="project-name">No substages due tomorrow</span>
+                            </div>';
+                    }
+                    
+                    // Display upcoming substages
+                    if ($upcoming_result->num_rows > 0) {
+                        while ($upcoming_substage = $upcoming_result->fetch_assoc()) {
+                            $days_until = floor((strtotime($upcoming_substage['end_date']) - strtotime($today_date)) / (60 * 60 * 24));
+                            echo '<div class="upcoming-date-item">
+                                    <span class="date-badge upcoming">In ' . $days_until . ' days</span>
+                                    <span class="project-name">' . htmlspecialchars($upcoming_substage['title']) . '</span>
+                                </div>';
+                        }
+                    } else {
+                        echo '<div class="upcoming-date-item">
+                                <span class="date-badge upcoming">Upcoming</span>
+                                <span class="project-name">No upcoming substages due</span>
+                            </div>';
+                    }
+                    ?>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="trend-indicator trend-neutral" onclick="showAllUpcomingDates()">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>View All</span>
+                </div>
+                <span>upcoming deadlines</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calendar View -->
+    <div class="project-calendar-view">
+        <div class="calendar-header">
+            <div class="calendar-navigation">
+                <button class="calendar-nav-btn" id="prevMonth">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <h3 class="calendar-title" id="calendarTitle">September 2023</h3>
+                <button class="calendar-nav-btn" id="nextMonth">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="calendar-grid">
+            <!-- Weekday headers -->
+            <div class="calendar-weekday">Sun</div>
+            <div class="calendar-weekday">Mon</div>
+            <div class="calendar-weekday">Tue</div>
+            <div class="calendar-weekday">Wed</div>
+            <div class="calendar-weekday">Thu</div>
+            <div class="calendar-weekday">Fri</div>
+            <div class="calendar-weekday">Sat</div>
+            
+            <!-- Calendar days will be dynamically inserted here -->
+            <div class="calendar-days" id="calendarDays"></div>
+        </div>
+    </div>
 </div>
             
 

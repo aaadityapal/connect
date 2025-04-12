@@ -230,16 +230,32 @@ const projectSubstageTitles = {
             'Terrace Roof Slab Beam Layout Plan',
             
         ],
+        'Master Plan': [
+            'Site Plan Layout',
+            'Boundary Wall Layout Plan',
+            'Boundary Wall Details',
+            'Site Plan Details',
+            'Site Plan Section',
+            'Site Plan Electrical Layout',
+            'Site Plan Plumbing Layout',
+            'Site Plan External Lighting Layout',
+            'Site Plan Internal Lighting Layout',
+            'Site Plan Landscaping'
+
+        ],
+        'Landscape Drawings - All Floor': [
+            'Basement Landscape Layout Plan',
+            'Stilt Floor Landscape Layout Plan',
+            'Ground Floor Landscape Layout Plan',
+            'First Floor Landscape Layout Plan',
+            'Second Floor Landscape Layout Plan',
+            'Third Floor Landscape Layout Plan',
+            'Fourth Floor Ceiling Layout Plan',
+            'Fifth Floor Ceiling Layout Plan',
+            'Terrace Ceiling Layout Plan'
+        ],
+
         'Architecture Working Drawings - All Floor': [
-            'Basement Furniture Layout Plan',
-            'Stilt Floor Furniture Layout Plan',
-            'Ground Floor Furniture Layout Plan',
-            'First Floor Furniture Layout Plan',
-            'Second Floor Furniture Layout Plan',
-            'Third Floor Furniture Layout Plan',
-            'Fourth Floor Furniture Layout Plan',
-            'Fifth Floor Furniture Layout Plan',
-            'Terrace Furniture Layout Plan',
             'Basement Working Layout Plan',
             'Stilt Working Layout Plan',
             'Ground Floor Working Layout Plan',
@@ -265,7 +281,18 @@ const projectSubstageTitles = {
             'Section Elevations Y-Y',
             'Site Plans'
         ],
-        'Electrical Drawings - All Floor': [
+        'Architecture Furniture Drawings - All Floor': [
+            'Basement Furniture Layout Plan',
+            'Stilt Floor Furniture Layout Plan',
+            'Ground Floor Furniture Layout Plan',
+            'First Floor Furniture Layout Plan',
+            'Second Floor Furniture Layout Plan',
+            'Third Floor Furniture Layout Plan',
+            'Fourth Floor Furniture Layout Plan',
+            'Fifth Floor Furniture Layout Plan',
+            'Terrace Furniture Layout Plan'
+        ],
+        'Electrical Drawings Wall - All Floor': [
             'Basement Wall Electrical Layout',
             'Stilt Floor Wall Electrical Layout',
             'Ground Floor Wall Electrical Layout',
@@ -276,27 +303,16 @@ const projectSubstageTitles = {
             'Fifth Floor Wall Electrical Layout',
             'Terrace Wall Electrical Layout'
         ],
-        'Electrical Drawings - All Floor': [
-            'Basement Wall Electrical Layout',
-            'Stilt Floor Wall Electrical Layout',
-            'Ground Floor Wall Electrical Layout',
-            'First Floor Wall Electrical Layout',
-            'Second Floor Wall Electrical Layout',
-            'Third Floor Wall Electrical Layout',
-            'Fourth Floor Wall Electrical Layout',
-            'Fifth Floor Wall Electrical Layout',
-            'Terrace Wall Electrical Layout'
-        ],
-        'Ceiling Drawings - All Floor': [
-            'Basement Ceiling Layout Plan',
-            'Stilt Floor Ceiling Layout Plan',
-            'Ground Floor Ceiling Layout Plan',
-            'First Floor Ceiling Layout Plan',
-            'Second Floor Ceiling Layout Plan',
-            'Third Floor Ceiling Layout Plan',
-            'Fourth Floor Ceiling Layout Plan',
-            'Fifth Floor Ceiling Layout Plan',
-            'Terrace Ceiling Layout Plan'
+        'Electrical Drawings Ceiling - All Floor': [
+            'Basement Ceiling Electrical Layout',
+            'Stilt Floor Ceiling Electrical Layout',
+            'Ground Floor Ceiling Electrical Layout',
+            'First Floor Ceiling Electrical Layout',
+            'Second Floor Ceiling Electrical Layout',
+            'Third Floor Ceiling Electrical Layout',
+            'Fourth Floor Ceiling Electrical Layout',
+            'Fifth Floor Ceiling Electrical Layout',
+            'Terrace Ceiling Electrical Layout'
         ],
         'Plumbing Drawings - All Floor': [
             'Basement Plumbing Layout Plan',
@@ -347,7 +363,14 @@ const projectSubstageTitles = {
             'Roof Plan',
             'Floor Plan',
             'Ceiling Plan',
-            'Door & Window Schedule'
+            'Door & Window Schedule',
+            'Finishing Schedule',
+            'Landscape Plan',
+            'Slab Plan',
+            'Roof Details',
+            'Wall Details',
+            'Floor Details',
+            'Ceiling Details',
         ]
     },
     interior: {
@@ -602,6 +625,16 @@ function addSubstage(stageNum) {
         </optgroup>
     `).join('');
 
+    // Generate default drawing numbers
+    const defaultDrawingOptions = `
+        <option value="">Select Drawing Number</option>
+        <option value="DWG_1001">DWG_1001</option>
+        <option value="DWG_1002">DWG_1002</option>
+        <option value="DWG_1003">DWG_1003</option>
+        <option value="DWG_1004">DWG_1004</option>
+        <option value="DWG_1005">DWG_1005</option>
+    `;
+
     // Update the file attachment section in substage with unique IDs
     const substageFileSection = `
         <div class="form-group file-upload-group">
@@ -645,36 +678,74 @@ function addSubstage(stageNum) {
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="form-group">
-            <label for="substageTitle${stageNum}_${substageCount}">
-                <i class="fas fa-tasks"></i>
-                Substage Title
-            </label>
-            <div class="title-input-container">
-                <!-- Dropdown Select -->
-                <div class="title-dropdown-wrapper">
-                    <select id="substageTitle${stageNum}_${substageCount}" 
-                            name="stages[${stageNum}][substages][${substageCount}][title]" 
-                            class="title-dropdown"
-                            onchange="handleTitleOptionChange(this, ${stageNum}, ${substageCount})" required>
-                        <option value="">Select Title</option>
-                        ${titleOptionsHtml}
-                        <option value="custom">+ Add Custom Title</option>
-                    </select>
+        <div class="substage-title-container">
+            <div class="substage-title-field">
+                <div class="form-group">
+                    <label for="substageTitle${stageNum}_${substageCount}">
+                        <i class="fas fa-tasks"></i>
+                        Substage Title
+                    </label>
+                    <div class="title-input-container">
+                        <!-- Dropdown Select -->
+                        <div class="title-dropdown-wrapper">
+                            <select id="substageTitle${stageNum}_${substageCount}" 
+                                    name="stages[${stageNum}][substages][${substageCount}][title]" 
+                                    class="title-dropdown"
+                                    onchange="handleTitleOptionChange(this, ${stageNum}, ${substageCount})" required>
+                                <option value="">Select Title</option>
+                                ${titleOptionsHtml}
+                                <option value="custom">+ Add Custom Title</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Custom Title Input (Hidden by default) -->
+                        <div class="custom-title-wrapper" style="display: none;">
+                            <div class="custom-title-input-group">
+                                <button type="button" class="back-to-dropdown" 
+                                        onclick="switchToDropdown(${stageNum}, ${substageCount})">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <input type="text" 
+                                       id="customTitle${stageNum}_${substageCount}"
+                                       class="custom-title-input"
+                                       placeholder="Enter custom title"
+                                       onchange="updateTitleValue(${stageNum}, ${substageCount})">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Custom Title Input (Hidden by default) -->
-                <div class="custom-title-wrapper" style="display: none;">
-                    <div class="custom-title-input-group">
-                        <button type="button" class="back-to-dropdown" 
-                                onclick="switchToDropdown(${stageNum}, ${substageCount})">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <input type="text" 
-                               id="customTitle${stageNum}_${substageCount}"
-                               class="custom-title-input"
-                               placeholder="Enter custom title"
-                               onchange="updateTitleValue(${stageNum}, ${substageCount})">
+            </div>
+            <div class="drawing-number-field">
+                <label for="drawingNumber${stageNum}_${substageCount}">
+                    <i class="fas fa-drafting-compass"></i>
+                    Drawing Number
+                </label>
+                <div class="drawing-number-input-container">
+                    <!-- Dropdown Select -->
+                    <div class="drawing-dropdown-wrapper">
+                        <select id="drawingNumber${stageNum}_${substageCount}" 
+                                name="stages[${stageNum}][substages][${substageCount}][drawingNumber]"
+                                class="drawing-dropdown"
+                                onchange="handleDrawingNumberOptionChange(this, ${stageNum}, ${substageCount})">
+                            <option value="">Select Drawing Number</option>
+                            ${defaultDrawingOptions}
+                            <option value="custom">+ Add Custom Drawing Number</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Custom Drawing Number Input (Hidden by default) -->
+                    <div class="custom-drawing-wrapper" style="display: none;">
+                        <div class="custom-drawing-input-group">
+                            <button type="button" class="back-to-drawing-dropdown" 
+                                    onclick="switchToDrawingDropdown(${stageNum}, ${substageCount})">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <input type="text" 
+                                   id="customDrawingNumber${stageNum}_${substageCount}"
+                                   class="custom-drawing-input"
+                                   placeholder="Enter custom drawing number"
+                                   onchange="updateDrawingNumberValue(${stageNum}, ${substageCount})">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1399,6 +1470,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     assignTo: document.getElementById(`substageAssignTo${stageNum}_${substageNum}`).value,
                     startDate: document.getElementById(`substageStartDate${stageNum}_${substageNum}`).value,
                     dueDate: document.getElementById(`substageDueDate${stageNum}_${substageNum}`).value,
+                    drawingNumber: document.getElementById(`drawingNumber${stageNum}_${substageNum}`).value,
                     files: await getSubstageFiles(stageNum, substageNum)
                 };
                 stageData.substages.push(substageData);
@@ -1414,7 +1486,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             },
             body: JSON.stringify({
                 project_id: projectId,
-                stages: stages
+                stages: stages,
+                user_id: currentUser.id
             })
         });
         
@@ -1697,6 +1770,9 @@ function handleTitleOptionChange(select, stageNum, substageCount) {
     } else {
         // Hide custom input if not custom
         customTitleWrapper.style.display = 'none';
+        
+        // Update drawing number options based on the selected title's category
+        updateDrawingNumberOptions(stageNum, substageCount, select.value);
     }
 }
 
@@ -1948,6 +2024,7 @@ async function selectProject(projectId) {
                             const addSubstageBtn = stageBlock.querySelector('.add-substage-btn');
                             if (addSubstageBtn) {
                                 addSubstageBtn.click();
+                            }
                                 
                             const substagesContainer = stageBlock.querySelector('.form-substages-container');
                             const substageBlock = substagesContainer.lastElementChild;
@@ -1963,6 +2040,7 @@ async function selectProject(projectId) {
                                 const assignSelect = document.getElementById(`substageAssignTo${stageNum}_${substageNum}`);
                                 const startDateInput = document.getElementById(`substageStartDate${stageNum}_${substageNum}`);
                                 const dueDateInput = document.getElementById(`substageDueDate${stageNum}_${substageNum}`);
+                                const drawingNumberSelect = document.getElementById(`drawingNumber${stageNum}_${substageNum}`);
 
                                 if (titleSelect) {
                                     // Handle custom titles
@@ -1975,12 +2053,30 @@ async function selectProject(projectId) {
                                         titleSelect.insertBefore(customOption, titleSelect.querySelector('option[value="custom"]'));
                                     }
                                     titleSelect.value = title;
+                                    
+                                    // After setting the title, update drawing number options based on the selected title
+                                    updateDrawingNumberOptions(stageNum, substageNum, title);
+                                }
+                                
+                                // Set the drawing number if it exists in the substage data
+                                if (drawingNumberSelect && substageData.drawing_number) {
+                                    console.log(`Setting drawing number to ${substageData.drawing_number} for substage ${substageNum} in stage ${stageNum}`);
+                                    
+                                    // If the option doesn't exist yet (may happen with custom numbers), create it
+                                    if (!drawingNumberSelect.querySelector(`option[value="${substageData.drawing_number}"]`)) {
+                                        const customOption = document.createElement('option');
+                                        customOption.value = substageData.drawing_number;
+                                        customOption.textContent = substageData.drawing_number;
+                                        drawingNumberSelect.appendChild(customOption);
+                                    }
+                                    
+                                    // Set the value
+                                    drawingNumberSelect.value = substageData.drawing_number;
                                 }
                                 
                                 if (assignSelect) assignSelect.value = substageData.assigned_to;
                                 if (startDateInput) startDateInput.value = formatDateForInput(substageData.start_date);
                                 if (dueDateInput) dueDateInput.value = formatDateForInput(substageData.end_date);
-                                }
                             }
                         }
                     }
@@ -2216,13 +2312,15 @@ async function getStagesData() {
             const substageAssignElement = document.getElementById(`substageAssignTo${stageNum}_${substageNum}`);
             const substageStartElement = document.getElementById(`substageStartDate${stageNum}_${substageNum}`);
             const substageDueElement = document.getElementById(`substageDueDate${stageNum}_${substageNum}`);
+            const drawingNumberElement = document.getElementById(`drawingNumber${stageNum}_${substageNum}`);
             
             // Debug logs for substage elements
             console.log('Substage elements found:', {
                 title: titleElement,
                 assign: substageAssignElement,
                 start: substageStartElement,
-                due: substageDueElement
+                due: substageDueElement,
+                drawingNumber: drawingNumberElement
             });
             
             const substageData = {
@@ -2233,6 +2331,7 @@ async function getStagesData() {
                 assignTo: substageAssignElement ? substageAssignElement.value : null,
                 startDate: substageStartElement ? substageStartElement.value : null,
                 dueDate: substageDueElement ? substageDueElement.value : null,
+                drawingNumber: drawingNumberElement ? drawingNumberElement.value : null,
                 files: await getSubstageFiles(stageNum, substageNum)
             };
             
@@ -2292,4 +2391,177 @@ function toggleStageSubstages(stageNum) {
             `;
         }
     }
+}
+
+// Define drawing number prefixes for each category by project type
+const drawingNumberPrefixes = {
+    // Architecture project type
+    'architecture': {
+        'Concept Drawings': 'CD',
+        'Master Plan': 'MP',
+        'Landscape Drawings - All Floor': 'LD',
+        'Structure Drawings - All Floor': 'ST',
+        'Architecture Working Drawings - All Floor': 'WD',
+        'Architecture Furniture Drawings - All Floor': 'AR',
+        'Electrical Drawings Wall - All Floor': 'ELE',
+        'Electrical Drawings Ceiling - All Floor': 'ELE',
+        'Plumbing Drawings - All Floor': 'PL',
+        'Water Supply Drawings - All Floor': 'WS',
+        'Details Drawings': 'DT',
+        'Other Drawings': 'OD'
+    },
+    // Interior project type
+    'interior': {
+        'Electrical Drawings': 'ELE',
+        'Concept Design': 'CD',
+        'Layout Plans': 'LP',
+        'Detail Drawings': 'DD',
+        'Services': 'SRV',
+        'Final Deliverables': 'FD',
+        'Materials & Finishes': 'MF',
+        'Furniture & Fixtures': 'FF',
+        'Lighting Design': 'LD',
+        'Kitchen & Bath': 'KB'
+    },
+    // Construction project type
+    'construction': {
+        'Preparation Phase': 'CON-PP',
+        'Construction Phase': 'CON-CP',
+        'Finishing Phase': 'CON-FP',
+        'Site Planning': 'CON-SP',
+        'Structural Works': 'CON-SW',
+        'MEP Works': 'CON-MEP'
+    }
+};
+
+// Function to update drawing number options based on selected title category
+function updateDrawingNumberOptions(stageNum, substageNum, selectedOption) {
+    const drawingNumberSelect = document.getElementById(`drawingNumber${stageNum}_${substageNum}`);
+    if (!drawingNumberSelect) return;
+    
+    // Find the optgroup the selected option belongs to
+    const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageNum}`);
+    if (!titleSelect) return;
+    
+    // Get the current project type
+    const projectType = document.querySelector('.modal-container').dataset.theme || 'architecture';
+    
+    let selectedGroup = '';
+    const optgroups = titleSelect.querySelectorAll('optgroup');
+    for (const optgroup of optgroups) {
+        const options = optgroup.querySelectorAll('option');
+        for (const option of options) {
+            if (option.value === selectedOption) {
+                selectedGroup = optgroup.label;
+                break;
+            }
+        }
+        if (selectedGroup) break;
+    }
+    
+    // Get the prefix based on project type and selected group
+    let prefix = 'DWG';
+    if (drawingNumberPrefixes[projectType] && drawingNumberPrefixes[projectType][selectedGroup]) {
+        prefix = drawingNumberPrefixes[projectType][selectedGroup];
+    }
+    
+    // Generate drawing numbers with the appropriate prefix
+    let options = '<option value="">Select Drawing Number</option>';
+    
+    // Create multiple series of drawing numbers (1xxx, 2xxx, etc. up to 15xxx)
+    for (let series = 1; series <= 15; series++) {
+        // Create an optgroup for each series
+        options += `<optgroup label="Series ${series}000">`;
+        
+        // Generate 10 sequential numbers for each series
+        for (let i = 1; i <= 10; i++) {
+            const numberPart = (series * 1000) + i;
+            options += `<option value="${prefix}_${numberPart}">${prefix}_${numberPart}</option>`;
+        }
+        
+        // Add custom option at the end of each optgroup
+        options += `<option value="custom_${prefix}_${series}" class="custom-drawing-option">+ Add Custom ${prefix} Number</option>`;
+        options += '</optgroup>';
+    }
+    
+    // Update the select element
+    drawingNumberSelect.innerHTML = options;
+    
+    console.log(`Updated drawing numbers for ${selectedOption} with prefix ${prefix} (Project type: ${projectType})`);
+}
+
+// Update the handleDrawingNumberOptionChange function to handle optgroup-specific custom numbers
+function handleDrawingNumberOptionChange(select, stageNum, substageCount) {
+    const customDrawingWrapper = select.closest('.drawing-number-input-container').querySelector('.custom-drawing-wrapper');
+    const customDrawingInput = document.getElementById(`customDrawingNumber${stageNum}_${substageCount}`);
+    
+    if (select.value.startsWith('custom_')) {
+        // Extract prefix from the value (format: custom_PREFIX_SERIES)
+        const [, prefix, series] = select.value.split('_');
+        
+        // Show custom input
+        select.closest('.drawing-dropdown-wrapper').style.display = 'none';
+        customDrawingWrapper.style.display = 'block';
+        customDrawingInput.focus();
+        
+        // Store the prefix and series for later use
+        customDrawingInput.dataset.prefix = prefix;
+        customDrawingInput.dataset.series = series;
+        
+        // Set placeholder with the correct prefix
+        customDrawingInput.placeholder = `Enter custom ${prefix} number for Series ${series}000`;
+    }
+}
+
+// Update the updateDrawingNumberValue function to handle prefixed custom numbers
+function updateDrawingNumberValue(stageNum, substageCount) {
+    const customInput = document.getElementById(`customDrawingNumber${stageNum}_${substageCount}`);
+    const drawingSelect = document.getElementById(`drawingNumber${stageNum}_${substageCount}`);
+    const customValue = customInput.value.trim();
+    
+    if (customValue) {
+        const prefix = customInput.dataset.prefix || 'DWG';
+        const series = customInput.dataset.series || '1';
+        const fullValue = customValue.includes(prefix) ? customValue : `${prefix}_${customValue}`;
+        
+        // Find the correct optgroup based on the series
+        const optgroup = drawingSelect.querySelector(`optgroup[label="Series ${series}000"]`);
+        if (optgroup) {
+            // Create a new option for the custom value
+            const customOption = document.createElement('option');
+            customOption.value = fullValue;
+            customOption.textContent = fullValue;
+            customOption.dataset.custom = 'true';
+            
+            // Remove any previous custom option in this optgroup
+            optgroup.querySelectorAll('option[data-custom="true"]').forEach(opt => opt.remove());
+            
+            // Add the new custom option before the "Add Custom" option in this optgroup
+            const customDrawingOption = optgroup.querySelector('.custom-drawing-option');
+            optgroup.insertBefore(customOption, customDrawingOption);
+            
+            // Select the new option
+            drawingSelect.value = fullValue;
+        }
+    }
+    
+    // Switch back to dropdown view
+    switchToDrawingDropdown(stageNum, substageCount);
+}
+
+function switchToDrawingDropdown(stageNum, substageCount) {
+    const drawingContainer = document.querySelector(`#drawingNumber${stageNum}_${substageCount}`).closest('.drawing-number-input-container');
+    const dropdownWrapper = drawingContainer.querySelector('.drawing-dropdown-wrapper');
+    const customWrapper = drawingContainer.querySelector('.custom-drawing-wrapper');
+    const drawingSelect = document.getElementById(`drawingNumber${stageNum}_${substageCount}`);
+    const customInput = document.getElementById(`customDrawingNumber${stageNum}_${substageCount}`);
+    
+    customWrapper.style.display = 'none';
+    dropdownWrapper.style.display = 'block';
+    
+    // Reset the dropdown to default if no custom value was entered
+    if (!customInput.value.trim()) {
+        drawingSelect.value = '';
+    }
+    customInput.value = '';
 }

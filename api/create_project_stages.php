@@ -15,6 +15,9 @@ try {
         throw new Exception('Missing required data');
     }
 
+    // Get the user ID from the data, or use a default
+    $userId = isset($data['user_id']) ? $data['user_id'] : ($_SESSION['user_id'] ?? 1);
+
     $pdo->beginTransaction();
     
     foreach ($data['stages'] as $stageIndex => $stage) {
@@ -30,6 +33,7 @@ try {
             end_date,
             status,
             created_at,
+            created_by,
             updated_by
         ) VALUES (
             :project_id,
@@ -39,6 +43,7 @@ try {
             :end_date,
             'pending',
             NOW(),
+            :created_by,
             :updated_by
         )";
         
@@ -49,7 +54,8 @@ try {
             ':assigned_to' => $stageAssignedTo,
             ':start_date' => $stage['startDate'],
             ':end_date' => $stage['dueDate'],
-            ':updated_by' => $_SESSION['user_id'] ?? 1
+            ':created_by' => $userId,
+            ':updated_by' => $userId
         ]);
         
         $stageId = $pdo->lastInsertId();
@@ -85,7 +91,7 @@ try {
                     ':original_name' => $file['originalName'],
                     ':file_type' => $file['type'],
                     ':file_size' => $file['size'],
-                    ':uploaded_by' => $_SESSION['user_id'] ?? 1
+                    ':uploaded_by' => $userId
                 ]);
             }
         }
@@ -105,7 +111,9 @@ try {
                     end_date,
                     status,
                     created_at,
+                    created_by,
                     substage_identifier,
+                    drawing_number,
                     updated_by
                 ) VALUES (
                     :stage_id,
@@ -116,7 +124,9 @@ try {
                     :end_date,
                     'pending',
                     NOW(),
+                    :created_by,
                     :substage_identifier,
+                    :drawing_number,
                     :updated_by
                 )";
                 
@@ -130,8 +140,10 @@ try {
                     ':assigned_to' => $substageAssignedTo,
                     ':start_date' => $substage['startDate'],
                     ':end_date' => $substage['dueDate'],
+                    ':created_by' => $userId,
                     ':substage_identifier' => $substageIdentifier,
-                    ':updated_by' => $_SESSION['user_id'] ?? 1
+                    ':drawing_number' => $substage['drawingNumber'] ?? null,
+                    ':updated_by' => $userId
                 ]);
                 
                 $substageId = $pdo->lastInsertId();
@@ -165,7 +177,7 @@ try {
                             ':file_name' => $file['name'],
                             ':file_path' => $file['path'],
                             ':type' => $file['type'],
-                            ':uploaded_by' => $_SESSION['user_id'] ?? 1
+                            ':uploaded_by' => $userId
                         ]);
                     }
                 }

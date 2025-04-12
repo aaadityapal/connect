@@ -56,7 +56,8 @@ try {
     // Fetch substages for each stage
     foreach ($stages as &$stage) {
         $substagesQuery = "SELECT ss.*, 
-                          u.username as substage_assigned_to_name
+                          u.username as substage_assigned_to_name,
+                          ss.drawing_number
                           FROM project_substages ss
                           LEFT JOIN users u ON ss.assigned_to = u.id
                           WHERE ss.stage_id = :stage_id 

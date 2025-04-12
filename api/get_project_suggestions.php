@@ -79,7 +79,8 @@ try {
                 start_date,
                 end_date,
                 status,
-                substage_identifier
+                substage_identifier,
+                drawing_number
             FROM project_substages 
             WHERE stage_id = :stage_id 
             AND deleted_at IS NULL 

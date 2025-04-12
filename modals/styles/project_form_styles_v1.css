@@ -550,6 +550,61 @@
     background: rgba(220, 53, 69, 0.1);
 }
 
+/* New styles for substage title and drawing number */
+.substage-title-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+}
+
+.substage-title-field {
+    width: 60%;
+}
+
+.drawing-number-field {
+    width: 40%;
+}
+
+.drawing-number-field label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #444;
+}
+
+.drawing-number-field label i {
+    font-size: 14px;
+}
+
+.drawing-number-field select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+/* Theme-specific drawing number styles */
+[data-theme="architecture"] .drawing-number-field select:focus {
+    border-color: var(--architecture-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="interior"] .drawing-number-field select:focus {
+    border-color: var(--interior-accent);
+    box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="construction"] .drawing-number-field select:focus {
+    border-color: var(--construction-accent);
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
 .add-substage-btn {
     width: 100%;
     padding: 12px;
@@ -1247,4 +1302,125 @@
     max-height: 2000px;
     opacity: 1;
     margin-top: 15px;
+}
+
+/* Drawing number input container styles */
+.drawing-number-input-container {
+    position: relative;
+}
+
+.drawing-dropdown-wrapper,
+.custom-drawing-wrapper {
+    transition: all 0.3s ease;
+}
+
+.custom-drawing-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.back-to-drawing-dropdown {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.back-to-drawing-dropdown:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.custom-drawing-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.custom-drawing-input:focus {
+    outline: none;
+    border-color: var(--architecture-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Theme-specific styles */
+[data-theme="architecture"] .custom-drawing-input:focus {
+    border-color: var(--architecture-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="interior"] .custom-drawing-input:focus {
+    border-color: var(--interior-accent);
+    box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="construction"] .custom-drawing-input:focus {
+    border-color: var(--construction-accent);
+    box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+/* Add custom option styling */
+.drawing-dropdown option[value="custom"] {
+    font-style: italic;
+    color: #666;
+}
+
+/* Animation for switching */
+.drawing-dropdown-wrapper,
+.custom-drawing-wrapper {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.drawing-dropdown-wrapper[style*="display: none"],
+.custom-drawing-wrapper[style*="display: none"] {
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
+.custom-drawing-option {
+    font-style: italic;
+    color: #666;
+    border-top: 1px dashed #e0e0e0;
+    margin-top: 4px;
+    padding-top: 4px;
+}
+
+/* Theme-specific custom option styles */
+[data-theme="architecture"] .custom-drawing-option:hover {
+    color: var(--architecture-accent);
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+[data-theme="interior"] .custom-drawing-option:hover {
+    color: var(--interior-accent);
+    background-color: rgba(142, 68, 173, 0.1);
+}
+
+[data-theme="construction"] .custom-drawing-option:hover {
+    color: var(--construction-accent);
+    background-color: rgba(192, 57, 43, 0.1);
+}
+
+/* Update optgroup styles */
+.drawing-dropdown optgroup {
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.drawing-dropdown optgroup:last-child {
+    border-bottom: none;
+}
+
+/* Custom input placeholder styles */
+.custom-drawing-input::placeholder {
+    color: #999;
+    font-style: italic;
 }

@@ -198,17 +198,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 assignment_status = CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END,
                                 start_date = ?,
                                 end_date = ?,
+                                drawing_number = ?,
                                 updated_at = NOW(),
                                 updated_by = ?
                                 WHERE id = ?";
                             
                             $stmt = $conn->prepare($update_substage_sql);
-                            $stmt->bind_param("siissii",
+                            $stmt->bind_param("siissssi",
                                 $substage['title'],
                                 $substageAssignedTo,
                                 $substageAssignedTo,
                                 $substage['startDate'],
                                 $substage['dueDate'],
+                                $substage['drawingNumber'],
                                 $_SESSION['user_id'],
                                 $substage['id']
                             );
@@ -236,18 +238,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             // Insert new substage
                             $insert_substage_sql = "INSERT INTO project_substages 
-                                (stage_id, title, assigned_to, start_date, end_date, substage_number, created_by, created_at, assignment_status) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
+                                (stage_id, title, assigned_to, start_date, end_date, drawing_number, substage_number, created_by, created_at, assignment_status) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
                             
                             $stmt = $conn->prepare($insert_substage_sql);
-                            $stmt->bind_param('issssiii',
+                            $stmt->bind_param('isssssiiii',
                                 $stage_id,
                                 $substage['title'],
                                 $substageAssignedTo,
                                 $substage['startDate'],
                                 $substage['dueDate'],
+                                $substage['drawingNumber'],
                                 $substage['substage_number'],
                                 $_SESSION['user_id'],
+                                $substageAssignedTo,
                                 $substageAssignedTo
                             );
                             $stmt->execute();

@@ -4445,16 +4445,24 @@ box-sizing: border-box;
     gap: 8px;
 }
 
-.substage-number {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 500;
+.substage-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;  /* Space between title and drawing number */
+    flex-wrap: nowrap;  /* Prevent wrapping to new line */
 }
 
 .substage-title {
-    font-size: 0.875rem;
     color: #1e293b;
     font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.drawing-number {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-style: italic;
+    white-space: nowrap;  /* Keep drawing number on same line */
 }
 
 /* Rest of your existing substage styles */
@@ -5160,4 +5168,30 @@ box-sizing: border-box;
 
 .upload-btn i {
     font-size: 16px;
+}
+
+/* Add these styles to your existing CSS */
+.drawing-number {
+    font-size: 0.8em;
+    color: #64748b;
+    margin-left: 8px;
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Update existing substage-title-group styles if needed */
+.substage-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.substage-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    color: #1e293b;
+    font-weight: 500;
 }

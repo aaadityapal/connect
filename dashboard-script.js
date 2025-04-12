@@ -2171,7 +2171,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div class="substage-header">
                                             <div class="substage-title-group">
                                                 <span class="substage-number">${stage.stage_number}.${substage.substage_number}</span>
-                                                <span class="substage-title">${substage.title}</span>
+                                                <div class="substage-title-wrapper">
+                                                    <span class="substage-title">${substage.title}</span>
+                                                    ${substage.drawing_number ? 
+                                                        `<span class="drawing-number">(Drawing No: ${substage.drawing_number})</span>` 
+                                                        : ''}
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="substage-meta">

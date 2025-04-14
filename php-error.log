@@ -284,3 +284,7 @@
 [11-Apr-2025 11:53:30 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-11","2025-04-11 11:53:30","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-11 11:53:30","2025-04-11 11:53:30"]
 [11-Apr-2025 11:53:30 Asia/Kolkata] Successfully inserted attendance record with ID: 733
 [11-Apr-2025 18:50:49 Asia/Kolkata] Received input: {"action":"punch_out","work_report":"dvd"}
+[13-Apr-2025 12:02:34 Asia/Kolkata] Received input: {"action":"punch_in"}
+[13-Apr-2025 12:02:34 Asia/Kolkata] Attempting punch-in for user ID: 3
+[13-Apr-2025 12:02:34 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-13","2025-04-13 12:02:34","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-13 12:02:34","2025-04-13 12:02:34"]
+[13-Apr-2025 12:02:34 Asia/Kolkata] Successfully inserted attendance record with ID: 736

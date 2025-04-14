@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
                             
                             $stmt = $conn->prepare($insert_substage_sql);
-                            $stmt->bind_param('isssssiiii',
+                            $stmt->bind_param('isssssiis',
                                 $stage_id,
                                 $substage['title'],
                                 $substageAssignedTo,
@@ -251,7 +251,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $substage['drawingNumber'],
                                 $substage['substage_number'],
                                 $_SESSION['user_id'],
-                                $substageAssignedTo,
                                 $substageAssignedTo
                             );
                             $stmt->execute();

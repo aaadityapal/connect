@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CP Plus CCTV Live View</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .camera-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .camera-feed {
+            width: 100%;
+            max-width: 800px;
+            background-color: #000;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+        }
+        .video-wrapper video, .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CP Plus CCTV Live Feed</h1>
+        
+        <div class="camera-container">
+            <div class="camera-feed">
+                <div class="video-wrapper">
+                    <!-- Method 1: RTSP Stream (requires streaming server) -->
+                    <video id="cpPlusStream" controls autoplay muted>
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    <!-- Method 2: Iframe (if camera has web interface) -->
+                    <!-- <iframe src="http://[CAMERA_IP]/" frameborder="0" allowfullscreen></iframe> -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="playBtn">Play</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="fullscreenBtn">Fullscreen</button>
+            <div class="status" id="statusText">Ready to connect</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Replace with your camera details
+        const config = {
+            // RTSP URL format: rtsp://username:password@camera_ip:port/path
+            rtspUrl: 'rtsp://admin:password@192.168.1.100:554/cam/realmonitor?channel=1&subtype=0',
+            
+            // Alternative HTTP URL if using iframe
+            httpUrl: 'http://192.168.1.100',
+            
+            // For HLS proxy (if using a server to convert RTSP to HLS)
+            hlsProxyUrl: 'http://your-server/hls/stream.m3u8'
+        };
+
+        // DOM elements
+        const videoElement = document.getElementById('cpPlusStream');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const statusText = document.getElementById('statusText');
+
+        // Try to play the stream
+        function playStream() {
+            // Method 1: Direct RTSP (limited browser support)
+            // videoElement.src = config.rtspUrl;
+            
+            // Method 2: HLS proxy (recommended - needs server-side setup)
+            if (isHlsSupported()) {
+                videoElement.src = config.hlsProxyUrl;
+                statusText.textContent = "Connecting to HLS stream...";
+            } 
+            // Method 3: WebRTC proxy (advanced setup required)
+            
+            videoElement.play().then(() => {
+                statusText.textContent = "Stream connected";
+            }).catch(err => {
+                statusText.textContent = "Error: " + err.message;
+                console.error("Stream error:", err);
+            });
+        }
+
+        function isHlsSupported() {
+            return videoElement.canPlayType('application/vnd.apple.mpegurl') || 
+                   (Hls && Hls.isSupported());
+        }
+
+        // Event listeners
+        playBtn.addEventListener('click', playStream);
+        pauseBtn.addEventListener('click', () => {
+            videoElement.pause();
+            statusText.textContent = "Stream paused";
+        });
+        fullscreenBtn.addEventListener('click', () => {
+            if (videoElement.requestFullscreen) {
+                videoElement.requestFullscreen();
+            } else if (videoElement.webkitRequestFullscreen) {
+                videoElement.webkitRequestFullscreen();
+            }
+        });
+
+        // Initialize HLS.js if needed
+        if (isHlsSupported() && typeof Hls !== 'undefined') {
+            const hls = new Hls();
+            hls.loadSource(config.hlsProxyUrl);
+            hls.attachMedia(videoElement);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                videoElement.play();
+            });
+        }
+    </script>
+
+    <!-- Include HLS.js library for better stream compatibility -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</body>
+</html>

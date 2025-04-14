@@ -1592,7 +1592,7 @@ main.blurred {
 /* Additional positioning for the container */
 .swal2-container.swal2-center {
     align-items: flex-start !important;
-    padding-top: 40px !important; /* Reduced padding */
+    padding-top: 450px !important; /* Reduced padding */
 }
 
 /* Force the modal to be visible */

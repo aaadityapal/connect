@@ -30,6 +30,16 @@ try {
     $uploadedBy = $_SESSION['user_id'];
     $file = $_FILES['file'];
 
+    // Check if file has content (size > 0)
+    if ($file['size'] <= 0) {
+        throw new Exception('The uploaded file is empty (0 bytes)');
+    }
+
+    // Verify temp file exists and has content
+    if (!file_exists($file['tmp_name']) || filesize($file['tmp_name']) <= 0) {
+        throw new Exception('The uploaded file was not received properly');
+    }
+
     // Validate substage exists and get project_id
     $stmt = $pdo->prepare("SELECT ps.id, ps.stage_id, pst.project_id 
                           FROM project_substages ps 
@@ -82,6 +92,11 @@ try {
     // Move uploaded file
     if (!move_uploaded_file($file['tmp_name'], $filePath)) {
         throw new Exception('Failed to move uploaded file');
+    }
+    
+    // Verify the moved file exists and has content
+    if (!file_exists($filePath) || filesize($filePath) <= 0) {
+        throw new Exception('File was moved but is empty or missing');
     }
 
     // Begin transaction

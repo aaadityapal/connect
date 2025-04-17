@@ -7,11 +7,6 @@ class ProjectOverview {
         this.currentDate = new Date();
         this.userProjects = [];
         this.fetchUserProjects();
-        
-        // Add dummy data for testing - remove later
-        setTimeout(() => {
-            this.addDummyData();
-        }, 1000);
     }
 
     initializeOverview() {
@@ -258,13 +253,55 @@ class ProjectOverview {
             // Check for overdue projects
             const currentDate = new Date(year, month, day);
             const hasOverdue = currentDate < today && hasEvents;
+
+            // For today's date, check if there are piled up overdue items
+            let overdueCounter = '';
+            let hasOverdueItems = false;
+            
+            if (isToday) {
+                // Count overdue projects, stages and substages
+                let overdueCount = 0;
+                
+                this.userProjects.forEach(project => {
+                    // Check overdue projects
+                    const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
+                    if (projectEndDate && projectEndDate < today && 
+                        (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress')) {
+                        overdueCount++;
+                    }
+                    
+                    // Check overdue stages
+                    project.stages.forEach(stage => {
+                        const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
+                        if (stageEndDate && stageEndDate < today && 
+                            (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress')) {
+                            overdueCount++;
+                        }
+                        
+                        // Check overdue substages
+                        stage.substages.forEach(substage => {
+                            const substageEndDate = substage.end_date ? new Date(substage.end_date.split(' ')[0]) : null;
+                            if (substageEndDate && substageEndDate < today && 
+                                (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress')) {
+                                overdueCount++;
+                            }
+                        });
+                    });
+                });
+                
+                if (overdueCount > 0) {
+                    hasOverdueItems = true;
+                    overdueCounter = `<div class="overdue-pileup-counter"><i class="fas fa-exclamation-triangle"></i>${overdueCount} overdue</div>`;
+                }
+            }
             
             daysHtml += `
-                <div class="calendar-day${isToday ? ' today' : ''}${hasEvents ? ' has-events' : ''}${hasOverdue ? ' has-overdue' : ''}" 
+                <div class="calendar-day${isToday ? ' today' : ''}${hasEvents ? ' has-events' : ''}${hasOverdue ? ' has-overdue' : ''}${hasOverdueItems ? ' has-overdue-items' : ''}" 
                      data-date="${date}">
                     <div class="calendar-day-number">${day}</div>
                     ${this.getEventsSummary(year, month, day)}
                     ${this.generateCountTags(dayCounts)}
+                    ${overdueCounter}
                 </div>
             `;
         }
@@ -313,6 +350,10 @@ class ProjectOverview {
 
     getDayCounts(year, month, day) {
         const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentDate = new Date(year, month, day);
+        const isToday = this.isToday(year, month, day);
         
         let projectCount = 0;
         let stageCount = 0;
@@ -321,21 +362,51 @@ class ProjectOverview {
         // Count projects
         this.userProjects.forEach(project => {
             const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
-            if (projectEndDate === dateString) {
+            const projectDueDate = projectEndDate ? new Date(projectEndDate) : null;
+            const isPastDue = projectDueDate && projectDueDate < today;
+            
+            // Check if this project should be shown on this day
+            const showOnThisDay = 
+                // Original due date matches this day
+                (projectEndDate === dateString) ||
+                // OR it's today's date AND project is past due AND status is pending/not_started
+                (isToday && isPastDue && (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress'));
+            
+            if (showOnThisDay) {
                 projectCount++;
             }
             
             // Count stages
             project.stages.forEach(stage => {
                 const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
-                if (stageEndDate === dateString) {
+                const stageDueDate = stageEndDate ? new Date(stageEndDate) : null;
+                const isStagePastDue = stageDueDate && stageDueDate < today;
+                
+                // Check if this stage should be shown on this day
+                const showStageOnThisDay = 
+                    // Original due date matches this day
+                    (stageEndDate === dateString) ||
+                    // OR it's today's date AND stage is past due AND status is pending/not_started
+                    (isToday && isStagePastDue && (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress'));
+                
+                if (showStageOnThisDay) {
                     stageCount++;
                 }
                 
                 // Count substages
                 stage.substages.forEach(substage => {
                     const substageEndDate = substage.end_date ? substage.end_date.split(' ')[0] : null;
-                    if (substageEndDate === dateString) {
+                    const substageDueDate = substageEndDate ? new Date(substageEndDate) : null;
+                    const isSubstagePastDue = substageDueDate && substageDueDate < today;
+                    
+                    // Check if this substage should be shown on this day
+                    const showSubstageOnThisDay = 
+                        // Original due date matches this day
+                        (substageEndDate === dateString) ||
+                        // OR it's today's date AND substage is past due AND status is pending/not_started
+                        (isToday && isSubstagePastDue && (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress'));
+                    
+                    if (showSubstageOnThisDay) {
                         substageCount++;
                     }
                 });
@@ -359,11 +430,19 @@ class ProjectOverview {
     checkForEvents(year, month, day) {
         // Check if there are projects or stages due on this day
         const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentDate = new Date(year, month, day);
+        const isToday = this.isToday(year, month, day);
         
         // Check projects
         const hasProjectsDue = this.userProjects.some(project => {
             const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
-            return projectEndDate === dateString;
+            const projectDueDate = projectEndDate ? new Date(projectEndDate) : null;
+            const isPastDue = projectDueDate && projectDueDate < today;
+            
+            return (projectEndDate === dateString) || 
+                   (isToday && isPastDue && (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress'));
         });
         
         if (hasProjectsDue) return true;
@@ -372,7 +451,11 @@ class ProjectOverview {
         const hasStagesDue = this.userProjects.some(project => {
             return project.stages.some(stage => {
                 const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
-                return stageEndDate === dateString;
+                const stageDueDate = stageEndDate ? new Date(stageEndDate) : null;
+                const isStagePastDue = stageDueDate && stageDueDate < today;
+                
+                return (stageEndDate === dateString) || 
+                       (isToday && isStagePastDue && (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress'));
             });
         });
         
@@ -383,7 +466,11 @@ class ProjectOverview {
             return project.stages.some(stage => {
                 return stage.substages.some(substage => {
                     const substageEndDate = substage.end_date ? substage.end_date.split(' ')[0] : null;
-                    return substageEndDate === dateString;
+                    const substageDueDate = substageEndDate ? new Date(substageEndDate) : null;
+                    const isSubstagePastDue = substageDueDate && substageDueDate < today;
+                    
+                    return (substageEndDate === dateString) || 
+                           (isToday && isSubstagePastDue && (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress'));
                 });
             });
         });
@@ -393,6 +480,10 @@ class ProjectOverview {
 
     getEventsSummary(year, month, day) {
         const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentDate = new Date(year, month, day);
+        const isToday = this.isToday(year, month, day);
         
         // Find all projects, stages and substages due on this date
         const dueItems = {
@@ -401,27 +492,40 @@ class ProjectOverview {
             substages: []
         };
         
-        // Get projects due today
+        // Get projects due today - including past due projects shifted to today
         this.userProjects.forEach(project => {
             const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
-            if (projectEndDate === dateString) {
+            const projectDueDate = projectEndDate ? new Date(projectEndDate) : null;
+            const isPastDue = projectDueDate && projectDueDate < today;
+            
+            // Include if original due date OR if it's past due and today
+            if (projectEndDate === dateString || 
+                (isToday && isPastDue && (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress'))) {
                 dueItems.projects.push(project);
             }
             
-            // Get stages due today
+            // Get stages due today - including past due stages shifted to today
             project.stages.forEach(stage => {
                 const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
-                if (stageEndDate === dateString) {
+                const stageDueDate = stageEndDate ? new Date(stageEndDate) : null;
+                const isStagePastDue = stageDueDate && stageDueDate < today;
+                
+                if (stageEndDate === dateString || 
+                    (isToday && isStagePastDue && (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress'))) {
                     dueItems.stages.push({
                         stage: stage,
                         project: project
                     });
                 }
                 
-                // Get substages due today
+                // Get substages due today - including past due substages shifted to today
                 stage.substages.forEach(substage => {
                     const substageEndDate = substage.end_date ? substage.end_date.split(' ')[0] : null;
-                    if (substageEndDate === dateString) {
+                    const substageDueDate = substageEndDate ? new Date(substageEndDate) : null;
+                    const isSubstagePastDue = substageDueDate && substageDueDate < today;
+                    
+                    if (substageEndDate === dateString || 
+                        (isToday && isSubstagePastDue && (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress'))) {
                         dueItems.substages.push({
                             substage: substage,
                             stage: stage,
@@ -483,165 +587,317 @@ class ProjectOverview {
         return text.substring(0, maxLength) + '...';
     }
 
-    handleDayClick(dateString) {
-        // Find projects due on this date
-        const projectsDueToday = this.userProjects.filter(project => {
-            const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
-            return projectEndDate === dateString;
+    handleDayClick(info) {
+        const clickedDate = new Date(info);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Check if clicked date is today
+        const isToday = clickedDate.getTime() === today.getTime();
+        
+        // Get current user ID from the global context if available
+        const currentUserId = typeof USER_ID !== 'undefined' ? USER_ID : null;
+        
+        // Group all items by project for hierarchical display
+        const projectsWithItems = {};
+        
+        // Get all items due on this date
+        this.userProjects.forEach(project => {
+            const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
+            const isProjectDueToday = projectEndDate && projectEndDate.getTime() === clickedDate.getTime();
+            const isPastDueProject = projectEndDate && projectEndDate < today;
+            const shouldShowProject = isProjectDueToday || 
+                                     (isToday && isPastDueProject && 
+                                      (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress'));
+            
+            // Initialize project entry if needed
+            if (!projectsWithItems[project.id]) {
+                projectsWithItems[project.id] = {
+                    project: project,
+                    isDueToday: isProjectDueToday,
+                    isPastDue: isPastDueProject && (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress'),
+                    stages: []
+                };
+            }
+            
+            // Add stages and substages
+            project.stages.forEach(stage => {
+                // Only include stages assigned to the current user
+                const isStageAssignedToUser = stage.assigned_to && 
+                    (currentUserId === null || stage.assigned_to.toString() === currentUserId.toString());
+                
+                const stageEndDate = stage.end_date ? new Date(stage.end_date.split(' ')[0]) : null;
+                const isStageDueToday = stageEndDate && stageEndDate.getTime() === clickedDate.getTime();
+                const isPastDueStage = stageEndDate && stageEndDate < today;
+                const shouldShowStage = (isStageDueToday || 
+                                       (isToday && isPastDueStage && 
+                                        (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress'))) &&
+                                       isStageAssignedToUser;
+                
+                if (shouldShowStage || shouldShowProject) {
+                    const stageItem = {
+                        stage: stage,
+                        isDueToday: isStageDueToday,
+                        isPastDue: isPastDueStage && (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress'),
+                        isAssigned: isStageAssignedToUser,
+                        substages: []
+                    };
+                    
+                    // Add substages
+                    stage.substages.forEach(substage => {
+                        // Only include substages assigned to the current user
+                        const isSubstageAssignedToUser = substage.assigned_to && 
+                            (currentUserId === null || substage.assigned_to.toString() === currentUserId.toString());
+                            
+                        const substageEndDate = substage.end_date ? new Date(substage.end_date.split(' ')[0]) : null;
+                        const isSubstageDueToday = substageEndDate && substageEndDate.getTime() === clickedDate.getTime();
+                        const isPastDueSubstage = substageEndDate && substageEndDate < today;
+                        const shouldShowSubstage = (isSubstageDueToday || 
+                                                 (isToday && isPastDueSubstage && 
+                                                  (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress'))) &&
+                                                  isSubstageAssignedToUser;
+                        
+                        if (shouldShowSubstage) {
+                            stageItem.substages.push({
+                                substage: substage,
+                                isDueToday: isSubstageDueToday,
+                                isPastDue: isPastDueSubstage && (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress'),
+                                isAssigned: isSubstageAssignedToUser
+                            });
+                        }
+                    });
+                    
+                    if (stageItem.substages.length > 0 || shouldShowStage) {
+                        projectsWithItems[project.id].stages.push(stageItem);
+                    }
+                }
+            });
+            
+            // Remove project if it has no stages and is not directly due
+            if (!shouldShowProject && projectsWithItems[project.id].stages.length === 0) {
+                delete projectsWithItems[project.id];
+            }
         });
         
-        // Find stages and their substages due on this date
-        const stagesWithSubstagesDueToday = [];
-        this.userProjects.forEach(project => {
-            project.stages.forEach(stage => {
-                const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
-                const substagesDueToday = stage.substages.filter(substage => {
-                    const substageEndDate = substage.end_date ? substage.end_date.split(' ')[0] : null;
-                    return substageEndDate === dateString;
-                });
+        // Convert to array and filter out empty projects
+        const projectsList = Object.values(projectsWithItems).filter(item => 
+            item.isDueToday || item.isPastDue || item.stages.length > 0
+        );
+        
+        // Format the date for display
+        const formattedDate = clickedDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+        
+        // Create modal content with hierarchical structure
+        const modalContent = `
+            <div class="pr-calendar-modal">
+                <div class="pr-calendar-modal-header">
+                    <h3 class="pr-calendar-modal-title">Items Due on ${formattedDate}</h3>
+                    ${isToday ? '<div class="pr-calendar-modal-overdue-indicator">Includes overdue items</div>' : ''}
+                    <button class="pr-calendar-modal-close">&times;</button>
+                </div>
+                <div class="pr-calendar-modal-content">
+                    ${projectsList.length > 0 ? 
+                        `<div class="pr-calendar-hierarchical-list">
+                            ${projectsList.map(projectItem => {
+                                const project = projectItem.project;
+                                const isPastDue = projectItem.isPastDue;
+                                const overdueClass = isPastDue ? 'overdue' : '';
+                                const hasStages = projectItem.stages.length > 0;
+                                
+                                return `
+                                    <div class="pr-calendar-project-group">
+                                        <div class="pr-calendar-modal-item project-item ${overdueClass}" data-project-id="${project.id}">
+                                            <div class="pr-calendar-modal-item-header">
+                                                <div class="pr-calendar-modal-item-title">${project.title}</div>
+                                                ${hasStages ? 
+                                                    `<button class="pr-calendar-toggle-btn" data-toggle="stages-${project.id}">
+                                                        <i class="fas fa-chevron-down"></i>
+                                                    </button>` : ''
+                                                }
+                                            </div>
+                                            <div class="pr-calendar-modal-item-meta">
+                                                <span class="pr-calendar-modal-item-status ${project.status}">${project.status}</span>
+                                                <span class="pr-calendar-modal-item-date">Due: ${this.formatDate(project.end_date)} ${isPastDue ? '<span class="overdue">(Overdue)</span>' : ''}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        ${hasStages ? `
+                                            <div class="pr-calendar-stages-container" id="stages-${project.id}">
+                                                ${projectItem.stages.map(stageItem => {
+                                                    const stage = stageItem.stage;
+                                                    const isPastDueStage = stageItem.isPastDue;
+                                                    const isAssignedStage = stageItem.isAssigned;
+                                                    const overdueStageClass = isPastDueStage ? 'overdue' : '';
+                                                    const assignedStageClass = isAssignedStage ? 'assigned' : '';
+                                                    const hasSubstages = stageItem.substages.length > 0;
+                                                    
+                                                    return `
+                                                        <div class="pr-calendar-stage-group">
+                                                            <div class="pr-calendar-modal-item stage-item ${overdueStageClass} ${assignedStageClass}" data-project-id="${project.id}" data-stage-id="${stage.id}">
+                                                                <div class="pr-calendar-modal-item-header">
+                                                                    <div class="pr-calendar-modal-item-title">Stage ${stage.stage_number || ''}</div>
+                                                                    ${hasSubstages && isAssignedStage ? 
+                                                                        `<button class="pr-calendar-toggle-btn" data-toggle="substages-${stage.id}">
+                                                                            <i class="fas fa-chevron-down"></i>
+                                                                        </button>` : ''
+                                                                    }
+                                                                </div>
+                                                                <div class="pr-calendar-modal-item-meta">
+                                                                    <span class="pr-calendar-modal-item-status ${stage.status}">${stage.status}</span>
+                                                                    <span class="pr-calendar-modal-item-date">Due: ${this.formatDate(stage.end_date)} ${isPastDueStage ? '<span class="overdue">(Overdue)</span>' : ''}</span>
+                                                                    ${isAssignedStage ? '<span class="pr-calendar-modal-assigned-indicator"><i class="fas fa-user-check"></i> Assigned to you</span>' : ''}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            ${hasSubstages && isAssignedStage ? `
+                                                                <div class="pr-calendar-substages-container" id="substages-${stage.id}">
+                                                                    ${stageItem.substages.map(substageItem => {
+                                                                        const substage = substageItem.substage;
+                                                                        const isPastDueSubstage = substageItem.isPastDue;
+                                                                        const isAssignedSubstage = substageItem.isAssigned;
+                                                                        const overdueSubstageClass = isPastDueSubstage ? 'overdue' : '';
+                                                                        const assignedSubstageClass = isAssignedSubstage ? 'assigned' : '';
+                                                                        
+                                                                        return `
+                                                                            <div class="pr-calendar-modal-item substage-item ${overdueSubstageClass} ${assignedSubstageClass}" 
+                                                                                data-project-id="${project.id}" 
+                                                                                data-stage-id="${stage.id}" 
+                                                                                data-substage-id="${substage.id}">
+                                                                                <div class="pr-calendar-modal-item-title">${substage.title || `Substage ${substage.substage_number || ''}`}</div>
+                                                                                <div class="pr-calendar-modal-item-meta">
+                                                                                    <span class="pr-calendar-modal-item-status ${substage.status}">${substage.status}</span>
+                                                                                    <span class="pr-calendar-modal-item-date">Due: ${this.formatDate(substage.end_date)} ${isPastDueSubstage ? '<span class="overdue">(Overdue)</span>' : ''}</span>
+                                                                                    ${isAssignedSubstage ? '<span class="pr-calendar-modal-assigned-indicator"><i class="fas fa-user-check"></i> Assigned to you</span>' : ''}
+                                                                                </div>
+                                                                            </div>
+                                                                        `;
+                                                                    }).join('')}
+                                                                </div>
+                                                            ` : ''}
+                                                        </div>
+                                                    `;
+                                                }).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>`
+                    : '<div class="pr-calendar-modal-empty">No items due on this date</div>'}
+                </div>
+            </div>
+        `;
+
+        // Show modal
+        const modal = document.createElement('div');
+        modal.className = 'pr-calendar-modal-overlay';
+        modal.innerHTML = modalContent;
+        document.body.appendChild(modal);
+
+        // Add toggle functionality for hierarchical view
+        modal.querySelectorAll('.pr-calendar-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent item click event
+                const targetId = btn.dataset.toggle;
+                const targetContainer = document.getElementById(targetId);
                 
-                // Include stage if it's due today or has substages due today
-                if (stageEndDate === dateString || substagesDueToday.length > 0) {
-                    stagesWithSubstagesDueToday.push({
-                        project: project,
-                        stage: stage,
-                        stageDueToday: stageEndDate === dateString,
-                        substagesDueToday: substagesDueToday
-                    });
+                if (!targetContainer) {
+                    console.error('Container not found:', targetId);
+                    return;
+                }
+                
+                console.log('Toggling container:', targetId, targetContainer);
+                
+                // Toggle container visibility
+                if (targetContainer.classList.contains('open')) {
+                    targetContainer.classList.remove('open');
+                    btn.querySelector('i').classList.remove('fa-chevron-up');
+                    btn.querySelector('i').classList.add('fa-chevron-down');
+                } else {
+                    targetContainer.classList.add('open');
+                    btn.querySelector('i').classList.remove('fa-chevron-down');
+                    btn.querySelector('i').classList.add('fa-chevron-up');
                 }
             });
         });
         
-        if (projectsDueToday.length === 0 && stagesWithSubstagesDueToday.length === 0) return;
+        // Remove the auto-open first project functionality
+        // Let users click toggle buttons to open content themselves
         
-        // Create HTML for modal
-        let contentHtml = '';
-        
-        // Get the current date for comparing due dates
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const selectedDate = new Date(dateString);
-        const isOverdue = selectedDate < today;
-        
-        // Add projects section if there are any projects due
-        if (projectsDueToday.length > 0) {
-            contentHtml += `
-                <div class="proj_calendar_section">
-                    <h3 class="proj_calendar_section_title">Projects (${projectsDueToday.length})</h3>
-                    <div class="proj_calendar_items_list">
-            `;
-            
-            projectsDueToday.forEach(project => {
-                const statusClass = `proj_calendar_status_${project.status.replace(/\s+/g, '_')}`;
-                const overdueClass = isOverdue ? 'proj_calendar_item_overdue' : '';
-                
-                contentHtml += `
-                    <div class="proj_calendar_item ${overdueClass}" data-type="project" data-id="${project.id}">
-                        <div class="proj_calendar_item_title">${project.title}</div>
-                        <div class="proj_calendar_item_dates">
-                            <span class="proj_calendar_date_label">Start:</span>
-                            <span class="proj_calendar_date_value">${project.start_date ? this.formatDate(project.start_date) : 'Not set'}</span>
-                            <span class="proj_calendar_date_label">Due:</span>
-                            <span class="proj_calendar_date_value ${isOverdue ? 'proj_calendar_date_overdue' : ''}">${this.formatDate(project.end_date)}</span>
-                        </div>
-                        <div class="proj_calendar_item_details">
-                            <span class="proj_calendar_item_status ${statusClass}">${project.status}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            contentHtml += `
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Add stages with substages section
-        if (stagesWithSubstagesDueToday.length > 0) {
-            contentHtml += `
-                <div class="proj_calendar_section">
-                    <h3 class="proj_calendar_section_title">Stages & Substages</h3>
-                    <div class="proj_calendar_items_list">
-            `;
-            
-            stagesWithSubstagesDueToday.forEach(item => {
-                const stage = item.stage;
-                const project = item.project;
-                const stageStatusClass = `proj_calendar_status_${stage.status.replace(/\s+/g, '_')}`;
-                const stageOverdueClass = isOverdue && item.stageDueToday ? 'proj_calendar_item_overdue' : '';
-                
-                contentHtml += `
-                    <div class="proj_calendar_item ${stageOverdueClass}" 
-                         data-type="stage" data-id="${stage.id}" data-project-id="${project.id}">
-                        <div class="proj_calendar_item_title">Project: ${project.title}</div>
-                        <div class="proj_calendar_item_title">Stage ${stage.stage_number}</div>
-                        <div class="proj_calendar_item_dates">
-                            <span class="proj_calendar_date_label">Due:</span>
-                            <span class="proj_calendar_date_value ${isOverdue && item.stageDueToday ? 'proj_calendar_date_overdue' : ''}">${this.formatDate(stage.end_date)}</span>
-                        </div>
-                        <div class="proj_calendar_item_details">
-                            <span class="proj_calendar_item_status ${stageStatusClass}">${stage.status}</span>
-                        </div>
-                    </div>
-                `;
-                
-                // Add substages if any are due today
-                item.substagesDueToday.forEach(substage => {
-                    const substageStatusClass = `proj_calendar_status_${substage.status.replace(/\s+/g, '_')}`;
-                    const substageOverdueClass = isOverdue ? 'proj_calendar_item_overdue' : '';
-                    
-                    contentHtml += `
-                        <div class="proj_calendar_item ${substageOverdueClass}" 
-                             data-type="substage" data-id="${substage.id}" data-stage-id="${stage.id}" data-project-id="${project.id}">
-                            <div class="proj_calendar_item_title">${substage.title || `Substage ${substage.substage_number}`}</div>
-                            <div class="proj_calendar_item_dates">
-                                <span class="proj_calendar_date_label">Due:</span>
-                                <span class="proj_calendar_date_value ${isOverdue ? 'proj_calendar_date_overdue' : ''}">${this.formatDate(substage.end_date)}</span>
-                            </div>
-                            <div class="proj_calendar_item_details">
-                                <span class="proj_calendar_item_status ${substageStatusClass}">${substage.status}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-            
-            contentHtml += `
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Display modal with all items
-        Swal.fire({
-            title: `Due on ${this.formatDisplayDate(dateString)}`,
-            html: `<div class="proj_calendar_modal_content">${contentHtml}</div>`,
-            width: '600px',
-            showCloseButton: true,
-            showConfirmButton: false
+        // Add animation delay to each item for a staggered appearance
+        modal.querySelectorAll('.pr-calendar-modal-item').forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.05}s`;
+            item.style.animation = 'pr-fade-in 0.3s ease-out forwards';
         });
-        
-        // Add click handlers for items
-        setTimeout(() => {
-            // Click handlers for items
-            document.querySelectorAll('.proj_calendar_item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const itemType = item.dataset.type;
-                    const itemId = item.dataset.id;
+
+        // Add click handlers for modal items
+        modal.querySelectorAll('.pr-calendar-modal-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Only navigate if the click wasn't on a toggle button
+                if (!e.target.closest('.pr-calendar-toggle-btn')) {
                     const projectId = item.dataset.projectId;
+                    const stageId = item.dataset.stageId;
+                    const substageId = item.dataset.substageId;
                     
-                    if (itemType === 'project') {
-                        window.location.href = `project_details.php?id=${itemId}`;
-                    } else if (itemType === 'stage') {
-                        window.location.href = `project_details.php?id=${projectId}&stage_id=${itemId}`;
-                    } else if (itemType === 'substage') {
-                        const stageId = item.dataset.stageId;
-                        window.location.href = `project_details.php?id=${projectId}&stage_id=${stageId}&substage_id=${itemId}`;
+                    // Prevent the default link behavior
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Open the appropriate modal based on what was clicked
+                    if (substageId) {
+                        // Open substage modal
+                        if (window.stageDetailModal) {
+                            window.stageDetailModal.openSubstageModal(projectId, stageId, substageId);
+                        } else {
+                            // Initialize if not already done
+                            window.stageDetailModal = new StageDetailModal();
+                            window.stageDetailModal.openSubstageModal(projectId, stageId, substageId);
+                        }
+                    } else if (stageId) {
+                        // Open stage modal
+                        if (window.stageDetailModal) {
+                            window.stageDetailModal.openStageModal(projectId, stageId);
+                        } else {
+                            // Initialize if not already done
+                            window.stageDetailModal = new StageDetailModal();
+                            window.stageDetailModal.openStageModal(projectId, stageId);
+                        }
+                    } else {
+                        // Open project brief modal instead of navigating to project details page
+                        if (window.projectBriefModal) {
+                            window.projectBriefModal.openProjectModal(projectId);
+                        } else {
+                            // If ProjectBriefModal class is available but not initialized
+                            if (typeof ProjectBriefModal === 'function') {
+                                window.projectBriefModal = new ProjectBriefModal();
+                                window.projectBriefModal.openProjectModal(projectId);
+                            } else {
+                                // Fallback if ProjectBriefModal is not available - use direct navigation
+                                console.warn('ProjectBriefModal not available, falling back to direct navigation');
+                                window.location.href = `project-details.php?id=${projectId}`;
+                            }
+                        }
                     }
-                });
+                }
             });
-        }, 100);
+        });
+
+        // Close button handler
+        const closeButton = modal.querySelector('.pr-calendar-modal-close');
+        closeButton.addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
     }
 
     formatDate(dateString) {
@@ -650,7 +906,21 @@ class ProjectOverview {
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
-            day: 'numeric'
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    formatDateTime(dateString) {
+        if (!dateString) return 'Not set';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
     }
 
@@ -683,252 +953,9 @@ class ProjectOverview {
             console.error('Error fetching user projects:', error);
         }
     }
-
-    // Dummy data for testing - remove later
-    addDummyData() {
-        // Generate dates for this month and next month
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth();
-        const nextMonth = (currentMonth + 1) % 12;
-        const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
-        
-        // Get a few dates from this month
-        const date1 = new Date(currentYear, currentMonth, 10);
-        const date2 = new Date(currentYear, currentMonth, 15);
-        const date3 = new Date(currentYear, currentMonth, 15); // Same day as date2
-        const date4 = new Date(currentYear, currentMonth, 15); // Same day as date2
-        const date5 = new Date(currentYear, currentMonth, 20);
-        const date6 = new Date(currentYear, currentMonth, 25);
-        
-        // Get a few dates from next month
-        const nextDate1 = new Date(nextMonthYear, nextMonth, 5);
-        const nextDate2 = new Date(nextMonthYear, nextMonth, 12);
-        
-        // Format dates
-        const formatDate = (date) => {
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} 00:00:00`;
-        };
-        
-        // Create dummy projects
-        const dummyProjects = [
-            {
-                id: 1001,
-                title: "Modern Office Renovation",
-                description: "Complete renovation of a 3-floor office building with modern design elements",
-                project_type: "architecture",
-                category_id: 1,
-                start_date: formatDate(new Date(currentYear, currentMonth - 1, 15)),
-                end_date: formatDate(date1),
-                status: "in_progress",
-                created_by: 1,
-                assigned_to: 1,
-                stages: [
-                    {
-                        id: 2001,
-                        project_id: 1001,
-                        stage_number: 1,
-                        assigned_to: 1,
-                        start_date: formatDate(new Date(currentYear, currentMonth - 1, 15)),
-                        end_date: formatDate(date2),
-                        status: "in_progress",
-                        substages: [
-                            {
-                                id: 3001,
-                                stage_id: 2001,
-                                substage_number: 1,
-                                title: "Initial Concept Design",
-                                assigned_to: 1,
-                                start_date: formatDate(new Date(currentYear, currentMonth - 1, 15)),
-                                end_date: formatDate(date1),
-                                status: "completed",
-                                substage_identifier: "CD-001",
-                                drawing_number: "A-101"
-                            },
-                            {
-                                id: 3002,
-                                stage_id: 2001,
-                                substage_number: 2,
-                                title: "Detailed Floor Plans",
-                                assigned_to: 1,
-                                start_date: formatDate(new Date(currentYear, currentMonth - 1, 20)),
-                                end_date: formatDate(date2),
-                                status: "in_progress",
-                                substage_identifier: "CD-002",
-                                drawing_number: "A-102"
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 1002,
-                title: "Luxury Apartment Complex",
-                description: "Design and construction of a 12-unit luxury apartment complex",
-                project_type: "architecture",
-                category_id: 1,
-                start_date: formatDate(new Date(currentYear, currentMonth - 2, 1)),
-                end_date: formatDate(date3),
-                status: "in_progress",
-                created_by: 1,
-                assigned_to: 1,
-                stages: [
-                    {
-                        id: 2002,
-                        project_id: 1002,
-                        stage_number: 1,
-                        assigned_to: 1,
-                        start_date: formatDate(new Date(currentYear, currentMonth - 2, 1)),
-                        end_date: formatDate(date2),
-                        status: "in_progress",
-                        substages: []
-                    }
-                ]
-            },
-            {
-                id: 1003,
-                title: "Corporate Headquarters Interior",
-                description: "Interior design for new corporate headquarters",
-                project_type: "interior",
-                category_id: 2,
-                start_date: formatDate(new Date(currentYear, currentMonth - 1, 5)),
-                end_date: formatDate(date4),
-                status: "in_review",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1004,
-                title: "Retail Store Renovation",
-                description: "Complete renovation of flagship retail store",
-                project_type: "construction",
-                category_id: 3,
-                start_date: formatDate(new Date(currentYear, currentMonth, 1)),
-                end_date: formatDate(date5),
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1005,
-                title: "Residential Remodel",
-                description: "Complete remodel of a 4-bedroom residential home",
-                project_type: "construction",
-                category_id: 3,
-                start_date: formatDate(new Date(currentYear, currentMonth, 5)),
-                end_date: formatDate(date6),
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1006,
-                title: "Urban Park Design",
-                description: "Design of a 5-acre urban park with recreational facilities",
-                project_type: "architecture",
-                category_id: 1,
-                start_date: formatDate(new Date(currentYear, currentMonth, 15)),
-                end_date: formatDate(nextDate1),
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1007,
-                title: "Hotel Lobby Redesign",
-                description: "Redesign of the main lobby of a luxury hotel",
-                project_type: "interior",
-                category_id: 2,
-                start_date: formatDate(new Date(currentYear, currentMonth, 20)),
-                end_date: formatDate(nextDate2),
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            // Additional projects for the 15th to test scrolling
-            {
-                id: 1008,
-                title: "Community Center Expansion",
-                description: "Expansion of community center with new gym and recreational areas",
-                project_type: "architecture",
-                category_id: 1,
-                start_date: formatDate(new Date(currentYear, currentMonth, 1)),
-                end_date: formatDate(date2), // 15th
-                status: "in_progress",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1009,
-                title: "Restaurant Kitchen Remodel",
-                description: "Complete remodel of restaurant kitchen with modern equipment",
-                project_type: "construction",
-                category_id: 3,
-                start_date: formatDate(new Date(currentYear, currentMonth, 5)),
-                end_date: formatDate(date2), // 15th
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1010,
-                title: "Executive Office Suite",
-                description: "Design and construction of executive office suite",
-                project_type: "interior",
-                category_id: 2,
-                start_date: formatDate(new Date(currentYear, currentMonth, 8)),
-                end_date: formatDate(date2), // 15th
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1011,
-                title: "Museum Gallery Renovation",
-                description: "Renovation of main gallery space in city museum",
-                project_type: "architecture",
-                category_id: 1,
-                start_date: formatDate(new Date(currentYear, currentMonth, 10)),
-                end_date: formatDate(date2), // 15th
-                status: "not_started",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            },
-            {
-                id: 1012,
-                title: "Medical Office Building",
-                description: "New construction of a 3-story medical office building",
-                project_type: "construction",
-                category_id: 3,
-                start_date: formatDate(new Date(currentYear, currentMonth, 1)),
-                end_date: formatDate(date2), // 15th
-                status: "in_progress",
-                created_by: 1,
-                assigned_to: 1,
-                stages: []
-            }
-        ];
-        
-        // Add dummy projects to the user projects array
-        this.userProjects = [...this.userProjects, ...dummyProjects];
-        
-        // Re-render calendar with dummy data
-        this.renderCalendar();
-        
-        console.log("Dummy data added for testing multiple projects. Remove before production.");
-    }
 }
 
 // Initialize when document is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.projectOverview = new ProjectOverview();
-}); 
+});

@@ -1358,4 +1358,902 @@
         padding: 0px 1px;
         border-radius: 8px;
     }
+}
+
+/* Overdue Indicator for Shifted Projects */
+.proj_calendar_item_overdue.shifted-project {
+    border-left: 3px solid #ef4444;
+    position: relative;
+}
+
+.proj_calendar_item_overdue.shifted-project::before {
+    content: 'OVERDUE';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 9px;
+    background: rgba(239, 68, 68, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+/* Special styling for piled up projects in today's date */
+.calendar-day.today.has-overdue-items {
+    background: #fff5f5;
+    box-shadow: 0 0 0 2px #fee2e2, 0 0 0 5px rgba(239, 68, 68, 0.2);
+}
+
+.calendar-day.today.has-overdue-items::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 15px 15px 0;
+    border-color: transparent #ef4444 transparent transparent;
+}
+
+/* Counter for piled up projects */
+.overdue-pileup-counter {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.overdue-pileup-counter i {
+    font-size: 8px;
+}
+
+/* Style for title in modal showing it includes overdue items */
+.swal2-title .overdue-note {
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #ef4444;
+    display: block;
+    margin-top: 8px;
+}
+
+/* Project Calendar Modal Styles */
+.project-calendar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(3px);
+    padding: 20px;
+}
+
+.project-calendar-modal {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    width: 95%;
+    max-width: 850px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modal-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes modal-fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.project-calendar-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.project-calendar-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    flex: 1;
+}
+
+.project-calendar-modal-overdue-indicator {
+    font-size: 12px;
+    color: #e74c3c;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background-color: rgba(231, 76, 60, 0.1);
+    margin-right: 10px;
+}
+
+.project-calendar-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.project-calendar-modal-close:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.project-calendar-modal-content {
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(90vh - 70px);
+    flex-grow: 1;
+}
+
+.project-calendar-hierarchical-list {
+    padding: 10px 0;
+}
+
+.project-calendar-project-group {
+    margin-bottom: 5px;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.project-calendar-modal-item {
+    padding: 14px 20px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.project-calendar-modal-item:hover {
+    background-color: #f5f5f5;
+}
+
+/* Project (Parent) Item */
+.project-calendar-modal-item.project-item {
+    border-left-color: #3498db;
+    background-color: #f8fafc;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+}
+
+/* Stage Item */
+.project-calendar-modal-item.stage-item {
+    border-left-color: #2ecc71;
+    padding-left: 34px;
+    background-color: #f9f9f9;
+    position: relative;
+}
+
+.project-calendar-modal-item.stage-item::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background-color: #d1d5db;
+}
+
+/* Substage Item */
+.project-calendar-modal-item.substage-item {
+    border-left-color: #9b59b6;
+    padding-left: 50px;
+    background-color: #ffffff;
+    position: relative;
+}
+
+.project-calendar-modal-item.substage-item::before {
+    content: "";
+    position: absolute;
+    left: 45px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background-color: #d1d5db;
+}
+
+/* Overdue Styling */
+.project-calendar-modal-item.overdue {
+    background-color: rgba(254, 242, 242, 0.7);
+    border-left-color: #ef4444 !important;
+}
+
+.project-calendar-modal-item.overdue:hover {
+    background-color: rgba(254, 242, 242, 0.9);
+}
+
+/* Title and Meta */
+.project-calendar-modal-item-title {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+}
+
+.project-calendar-modal-item.project-item .project-calendar-modal-item-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+}
+
+.project-calendar-stage-group {
+    position: relative;
+}
+
+.project-calendar-stage-group::before {
+    content: "";
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #e4e4e4;
+}
+
+/* Status Badges */
+.project-calendar-modal-item-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.project-calendar-modal-item-status::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.project-calendar-modal-item-status.completed {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+}
+
+.project-calendar-modal-item-status.completed::before {
+    background-color: #27ae60;
+}
+
+.project-calendar-modal-item-status.pending {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+.project-calendar-modal-item-status.pending::before {
+    background-color: #f39c12;
+}
+
+.project-calendar-modal-item-status.not_started {
+    background-color: rgba(149, 165, 166, 0.1);
+    color: #7f8c8d;
+}
+
+.project-calendar-modal-item-status.not_started::before {
+    background-color: #7f8c8d;
+}
+
+.project-calendar-modal-item-status.in_progress {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #2980b9;
+}
+
+.project-calendar-modal-item-status.in_progress::before {
+    background-color: #2980b9;
+}
+
+/* Calendar day styling for displaying counts */
+.fc-daygrid-day-events {
+    min-height: 20px !important;
+}
+
+.day-content-container {
+    position: relative;
+    padding: 2px;
+}
+
+.day-content-container .event-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #555;
+}
+
+.day-content-container .project-titles {
+    font-size: 10px;
+    color: #777;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overdue-count {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Today with overdue items */
+.fc-day-today.has-overdue-items {
+    box-shadow: inset 0 0 0 2px #e74c3c !important;
+}
+
+.project-calendar-modal-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-calendar-modal-item-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #777;
+}
+
+.project-calendar-modal-item-date {
+    color: #888;
+}
+
+.project-calendar-modal-item-date .overdue {
+    color: #e74c3c;
+    font-weight: 500;
+}
+
+.project-calendar-toggle-btn {
+    background: none;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #999;
+    transition: all 0.2s;
+}
+
+.project-calendar-toggle-btn:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.project-calendar-stages-container,
+.project-calendar-substages-container {
+    display: none;
+    width: 100%;
+}
+
+.project-calendar-stages-container.open,
+.project-calendar-substages-container.open {
+    display: block;
+    width: 100%;
+}
+
+.project-calendar-substages-container {
+    background-color: #ffffff;
+    padding-top: 5px;
+    margin-top: 2px;
+}
+
+.project-calendar-modal-empty {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+}
+
+/* Minimalist Modal Design with Unique Class Names */
+.pr-calendar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.pr-calendar-modal {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 95%;
+    max-width: 850px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: pr-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pr-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pr-calendar-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+    background-color: #f9fafb;
+}
+
+.pr-calendar-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    flex: 1;
+    position: relative;
+    padding-left: 26px;
+}
+
+.pr-calendar-modal-title::before {
+    content: "\f073";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 0;
+    color: #3b82f6;
+    font-size: 16px;
+}
+
+.pr-calendar-modal-overdue-indicator {
+    font-size: 12px;
+    color: #ef4444;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background-color: rgba(239, 68, 68, 0.1);
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pr-calendar-modal-overdue-indicator::before {
+    content: "\f071";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+.pr-calendar-modal-close {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 22px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.pr-calendar-modal-close:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    transform: rotate(90deg);
+}
+
+.pr-calendar-modal-content {
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(90vh - 70px);
+    flex-grow: 1;
+}
+
+.pr-calendar-hierarchical-list {
+    padding: 8px 0;
+}
+
+/* Project Group */
+.pr-calendar-project-group {
+    margin-bottom: 4px;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Project Item */
+.pr-calendar-modal-item {
+    padding: 16px 24px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pr-calendar-modal-item:hover {
+    background-color: #f9fafb;
+}
+
+.pr-calendar-modal-item.project-item {
+    border-left-color: #3b82f6;
+    position: relative;
+}
+
+.pr-calendar-modal-item.stage-item {
+    border-left-color: #10b981;
+    padding-left: 45px;
+    background-color: #f9fafb;
+    position: relative;
+    margin-bottom: 3px;
+}
+
+.pr-calendar-modal-item.stage-item::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background-color: #d1d5db;
+}
+
+.pr-calendar-modal-item.substage-item {
+    border-left-color: #8b5cf6;
+    padding-left: 65px;
+    background-color: #ffffff;
+    position: relative;
+    margin-bottom: 3px;
+}
+
+.pr-calendar-modal-item.substage-item::before {
+    content: "";
+    position: absolute;
+    left: 45px;
+    top: 50%;
+    width: 12px;
+    height: 1px;
+    background-color: #d1d5db;
+}
+
+/* Item Header */
+.pr-calendar-modal-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pr-calendar-modal-item-title {
+    font-weight: 500;
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    position: relative;
+}
+
+.pr-calendar-modal-item.project-item .pr-calendar-modal-item-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    padding-left: 24px;
+}
+
+.pr-calendar-modal-item.project-item .pr-calendar-modal-item-title::before {
+    content: "\f0b1";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 0;
+    color: #3b82f6;
+}
+
+.pr-calendar-modal-item.stage-item .pr-calendar-modal-item-title {
+    padding-left: 22px;
+}
+
+.pr-calendar-modal-item.stage-item .pr-calendar-modal-item-title::before {
+    content: "\f00c";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 0;
+    color: #10b981;
+}
+
+.pr-calendar-modal-item.substage-item .pr-calendar-modal-item-title {
+    padding-left: 20px;
+}
+
+.pr-calendar-modal-item.substage-item .pr-calendar-modal-item-title::before {
+    content: "\f0ae";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 0;
+    color: #8b5cf6;
+}
+
+/* Meta Section */
+.pr-calendar-modal-item-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* Status Badges */
+.pr-calendar-modal-item-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pr-calendar-modal-item-status.pending {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.pr-calendar-modal-item-status.pending::before {
+    content: "\f017";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 4px;
+}
+
+.pr-calendar-modal-item-status.completed {
+    background-color: #ecfdf5;
+    color: #065f46;
+}
+
+.pr-calendar-modal-item-status.completed::before {
+    content: "\f058";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 4px;
+}
+
+.pr-calendar-modal-item-status.not_started {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.pr-calendar-modal-item-status.not_started::before {
+    content: "\f04d";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 4px;
+}
+
+.pr-calendar-modal-item-status.in_progress {
+    background-color: #eff6ff;
+    color: #1e40af;
+}
+
+.pr-calendar-modal-item-status.in_progress::before {
+    content: "\f110";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 4px;
+}
+
+/* Date Display */
+.pr-calendar-modal-item-date {
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+}
+
+.pr-calendar-modal-item-date::before {
+    content: "\f133";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 4px;
+    color: #9ca3af;
+}
+
+.pr-calendar-modal-item-date .overdue {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+/* Toggle Button */
+.pr-calendar-toggle-btn {
+    background: none;
+    border: none;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: all 0.2s;
+    background-color: transparent;
+}
+
+.pr-calendar-toggle-btn:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+/* Container for stages and substages */
+.pr-calendar-stages-container,
+.pr-calendar-substages-container {
+    display: none;
+    width: 100%;
+}
+
+.pr-calendar-stages-container.open,
+.pr-calendar-substages-container.open {
+    display: block;
+    width: 100%;
+    animation: pr-slide-down 0.2s ease-out forwards;
+}
+
+@keyframes pr-slide-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pr-calendar-stage-group {
+    position: relative;
+}
+
+.pr-calendar-stage-group::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #e5e7eb;
+}
+
+.pr-calendar-substages-container {
+    background-color: #ffffff;
+    padding-top: 5px;
+    margin-top: 2px;
+    padding-bottom: 5px;
+    border-top: 1px solid #f5f5f5;
+}
+
+.pr-calendar-modal-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    background-color: #f9fafb;
+    margin: 16px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.pr-calendar-modal-empty::before {
+    content: "\f53a";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    display: block;
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #d1d5db;
+}
+
+/* Assignment Indicator Styles */
+.pr-calendar-modal-assigned-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    background-color: #eef2ff;
+    color: #4f46e5;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    gap: 4px;
+}
+
+.pr-calendar-modal-assigned-indicator i {
+    font-size: 10px;
+}
+
+.pr-calendar-modal-item.assigned {
+    position: relative;
+}
+
+.pr-calendar-modal-item.stage-item.assigned {
+    border-left-color: #4f46e5;
+}
+
+.pr-calendar-modal-item.substage-item.assigned {
+    border-left-color: #8b5cf6;
+}
+
+/* Add subtle indicator for assigned items */
+.pr-calendar-modal-item.assigned::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #4f46e5;
 } 

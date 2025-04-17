@@ -1,0 +1,1312 @@
+/* Project Brief Modal CSS
+ * This file contains styles for the modal that appears when a user clicks
+ * on a project in the project calendar modal
+ */
+
+.project_brief_modal_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+.project_brief_modal_container {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 95%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: brief-modal-fade-in 0.3s ease forwards;
+}
+
+@keyframes brief-modal-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.project_brief_modal_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.project_brief_modal_title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project_brief_modal_title i {
+  color: #3b82f6;
+}
+
+.project_brief_modal_close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.project_brief_modal_close:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.project_brief_modal_content {
+  padding: 20px 25px;
+  overflow-y: auto;
+  max-height: calc(90vh - 80px);
+}
+
+.project_brief_status_badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  margin-bottom: 0;
+}
+
+.project_brief_status_badge.completed,
+.project_brief_status_badge.done {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.project_brief_status_badge.not_started,
+.project_brief_status_badge.pending {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.project_brief_status_badge.in_progress {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.project_brief_status_badge.on_hold {
+  background-color: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+}
+
+.project_brief_status_badge.cancelled,
+.project_brief_status_badge.blocked {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.project_brief_info {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.project_brief_info_item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.project_brief_info_label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.project_brief_info_value {
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.project_brief_overdue {
+  color: #ef4444;
+  font-weight: 500;
+  margin-left: 5px;
+}
+
+.project_brief_description {
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.project_brief_section {
+  margin-bottom: 25px;
+}
+
+.project_brief_section_title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project_brief_section_title.stages::before {
+  content: '\f0ae';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  color: #3b82f6;
+}
+
+.project_brief_section_title.team::before {
+  content: '\f0c0';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  color: #3b82f6;
+}
+
+.project_brief_empty_state {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Project Stages styles */
+.project_brief_stages_list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.project_brief_stage_item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.project_brief_stage_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.project_brief_stage_title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.substage_count_badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+}
+
+.project_brief_stage_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 12px 16px;
+    background-color: #fff;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.project_brief_stage_meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.project_brief_stage_meta .overdue {
+    color: #ef4444;
+    font-weight: 500;
+    margin-left: 5px;
+}
+
+.project_brief_stage_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #fff;
+    border-top: 1px solid #f1f5f9;
+}
+
+.project_brief_stage_view_btn {
+    background-color: #edf2f7;
+    color: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+.project_brief_stage_view_btn:hover {
+    background-color: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.project_brief_substage_toggle_btn {
+    background-color: #edf2f7;
+    color: #3b82f6;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.project_brief_substage_toggle_btn:hover {
+    background-color: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.project_brief_substage_toggle_btn.expanded {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.project_brief_substage_toggle_btn.expanded i {
+    transform: rotate(180deg);
+}
+
+.project_brief_substages_container {
+    display: none;
+    padding: 0 16px 16px;
+    background-color: #f8fafc;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.project_brief_substages_container.show {
+    display: block;
+}
+
+.project_brief_substages_list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.project_brief_substage_item {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project_brief_substage_title {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.project_brief_substage_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.project_brief_substage_date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.project_brief_substage_date i {
+    color: #3b82f6;
+}
+
+.project_brief_substage_date .overdue {
+    color: #ef4444;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+.project_brief_substage_footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.project_brief_substage_assignee {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.project_brief_substage_assignee i {
+    color: #3b82f6;
+}
+
+/* Project Team Styles */
+.project_brief_team_list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+.project_brief_team_member {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    gap: 12px;
+    transition: all 0.2s ease;
+}
+
+.project_brief_team_member:hover {
+    background-color: #f0f0f0;
+}
+
+.project_brief_team_member_avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.project_brief_team_member_avatar.project_role {
+    background-color: #10b981;
+}
+
+.project_brief_team_member_avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.project_brief_team_member_info {
+    flex: 1;
+    min-width: 0;
+}
+
+.project_brief_team_member_name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project_brief_team_member_role {
+    font-size: 12px;
+    color: #666;
+}
+
+.project_brief_team_member_stage {
+    font-size: 11px;
+    color: #3b82f6;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.substage_toggle_btn {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 5px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.substage_toggle_btn.expanded i {
+    transform: rotate(180deg);
+}
+
+.project_brief_team_member_substages {
+    display: none;
+    margin-top: 8px;
+    padding-top: 5px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.project_brief_team_member_substages.show {
+    display: block;
+}
+
+.substage_item {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.substage_stage {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+    color: #334155;
+}
+
+.substage_numbers {
+    color: #64748b;
+    padding-left: 10px;
+}
+
+.substage_line {
+    margin-bottom: 2px;
+    padding: 2px 0;
+}
+
+/* Actions */
+.project_brief_actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.project_brief_view_full_btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.project_brief_view_full_btn:hover {
+  background-color: #2563eb;
+  text-decoration: none;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .project_brief_team_list {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .project_brief_team_list {
+        grid-width: 1fr;
+    }
+}
+
+/* Project Card Styles */
+.project_brief_card {
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.project_brief_card_header {
+  background-color: #f8fafc;
+  padding: 12px 20px;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project_brief_card_header i {
+  color: #3b82f6;
+}
+
+.project_brief_card_content {
+  padding: 16px 20px;
+}
+
+.project_brief_info_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.project_brief_info_item {
+  position: relative;
+  padding-left: 28px;
+}
+
+.project_brief_info_icon {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  color: #3b82f6;
+  font-size: 0.95rem;
+  width: 20px;
+  text-align: center;
+}
+
+.project_brief_info_label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.project_brief_info_value {
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.project_brief_substage_actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.project_brief_substage_action_btn {
+    background-color: #edf2f7;
+    color: #64748b;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 3px;
+}
+
+.project_brief_substage_action_btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.project_brief_substage_action_btn.chat:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.project_brief_substage_action_btn.activity:hover {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.project_brief_substage_view_btn {
+    background-color: #edf2f7;
+    color: #3b82f6;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.project_brief_substage_view_btn:hover {
+    background-color: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.substage_number {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.substage_title {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 500;
+}
+
+.project_brief_substage_status {
+    display: flex;
+    align-items: center;
+}
+
+.project_brief_substage_status .project_brief_status_badge {
+    font-size: 11px;
+    padding: 3px 8px;
+}
+
+.project_brief_stage_action_btn {
+    background-color: #edf2f7;
+    color: #64748b;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.project_brief_stage_action_btn.chat:hover {
+    background-color: #0ea5e9;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.project_brief_stage_action_btn.activity:hover {
+    background-color: #8b5cf6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Substage files container styles */
+.project_brief_substage_files_container {
+    display: none; /* Hidden by default */
+    padding: 12px;
+    margin-top: 8px;
+    background-color: #f8fafc;
+    border-top: 1px dashed #e2e8f0;
+    font-size: 12px;
+    position: relative;
+    min-height: 50px;
+}
+
+.project_brief_substage_files_container.show {
+    display: block; /* Show when the class 'show' is added */
+}
+
+.project_brief_substage_files_container .files_loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #64748b;
+    padding: 15px;
+}
+
+.project_brief_substage_file_item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: 6px;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.project_brief_substage_file_item:hover {
+    background-color: #f0f7ff;
+    border-color: #bfdbfe;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.project_brief_substage_file_icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eef2ff;
+    color: #3b82f6;
+    border-radius: 6px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.project_brief_substage_file_details {
+    flex: 1;
+    min-width: 0;
+    padding-right: 10px;
+}
+
+.project_brief_substage_file_name {
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.project_brief_substage_file_meta {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.project_brief_substage_file_meta .file_status {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.project_brief_substage_file_meta .file_status.approved {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.project_brief_substage_file_meta .file_status.pending {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.project_brief_substage_file_meta .file_status.rejected {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.project_brief_substage_file_meta .file_status.sent_for_approval {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.project_brief_substage_file_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.project_brief_substage_file_btn, 
+.project_brief_substage_file_download {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.project_brief_substage_file_btn.send {
+    color: #3b82f6;
+}
+
+.project_brief_substage_file_btn.send:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.project_brief_substage_file_download {
+    background-color: #f1f5f9;
+    color: #3b82f6;
+}
+
+.project_brief_substage_file_download:hover {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Floating file upload button */
+.floating_upload_btn_container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 1;
+    z-index: 5;
+}
+
+.project_brief_substage_files_container:hover .floating_upload_btn_container {
+    opacity: 1;
+}
+
+.floating_upload_btn {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.floating_upload_btn:hover {
+    background-color: #4f46e5;
+    transform: scale(1.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Add styles to ensure the files container has correct positioning */
+.files_container {
+    position: relative;
+    min-height: 50px;
+}
+
+.substage_file_upload_form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Improved upload form styling */
+.upload_success {
+    text-align: center; 
+    padding: 20px;
+    background-color: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.substage_file_upload_form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #1e293b;
+    text-align: center;
+    font-weight: 600;
+}
+
+.project_brief_substage_file_empty {
+    text-align: center;
+    padding: 15px;
+    color: #64748b;
+    font-style: italic;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.substage_file_upload_btn {
+    background-color: #edf2f7;
+    color: #10b981;
+    border: none;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    margin-top: 5px;
+}
+
+.substage_file_upload_btn:hover {
+    background-color: #10b981;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file_upload_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 99999;
+    backdrop-filter: blur(4px);
+}
+
+.substage_file_upload_form_container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 100000;
+    width: 360px;
+    border: none;
+    animation: modal-fade-in 0.25s ease forwards;
+}
+
+@keyframes modal-fade-in {
+    from { opacity: 0; transform: translate(-50%, -48%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.substage_file_upload_form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.substage_file_upload_form h3 {
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    color: #1e293b;
+    text-align: center;
+    font-weight: 600;
+}
+
+.form_group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form_group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.form_group .form_control {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.form_group .form_control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.form_group input[type="file"] {
+    padding: 8px;
+    background-color: #f8fafc;
+}
+
+.form_group_buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.upload_cancel_btn {
+    background-color: transparent;
+    color: #64748b;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload_submit_btn {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.upload_cancel_btn:hover {
+    background-color: #f1f5f9;
+}
+
+.upload_submit_btn:hover {
+    background-color: #2563eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload_progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background-color: #f0f9ff;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #0284c7;
+    margin-top: 10px;
+}
+
+.upload_error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background-color: #fef2f2;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #ef4444;
+    text-align: center;
+}
+
+.try_again_btn {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 5px;
+}
+
+.try_again_btn:hover {
+    background-color: #dc2626;
+}
+
+.project_brief_substage_action_btn.files:hover {
+    background-color: #10b981;
+    color: white;
+}
+
+.project_brief_substage_action_btn.files.active {
+    background-color: #10b981;
+    color: white;
+}
+
+/* Floating upload button styling */
+.floating_upload_btn_container {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    opacity: 1;
+    z-index: 5;
+}
+
+.project_brief_substage_files_container:hover .floating_upload_btn_container {
+    opacity: 1;
+}
+
+.floating_upload_btn {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+}
+
+.floating_upload_btn:hover {
+    background-color: #059669;
+    transform: scale(1.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Improved upload form styling */
+.upload_success {
+    text-align: center; 
+    padding: 20px;
+    background-color: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.substage_file_upload_form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #1e293b;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Add More Files Button */
+.add_more_files_container {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.add_more_files_btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #6b7280;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.add_more_files_btn:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.add_more_files_btn i {
+    margin-right: 6px;
+    font-size: 11px;
+}
+
+/* Ensure the upload button styling is consistent */
+.substage_file_upload_btn,
+.floating_upload_btn,
+.add_more_files_btn {
+    font-weight: 500;
+}
+
+/* Manager select dropdown styling */
+#managerSelect {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #1e293b;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+#managerSelect:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+#managerSelect option {
+    padding: 10px;
+}
+
+/* Send for approval heading styling */
+.substage_file_upload_form_container h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #1e293b;
+}
+
+/* Disabled send button */
+.project_brief_substage_file_btn.send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+} 

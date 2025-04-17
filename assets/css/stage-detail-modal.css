@@ -1,0 +1,669 @@
+/* Stage Detail Modal CSS
+ * This file contains styles for the modal that appears when a user clicks
+ * on a stage or substage in the project calendar modal
+ */
+
+.stage_detail_modal_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+.stage_detail_modal_container {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 95%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modal-fade-in 0.3s ease forwards;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stage_detail_modal_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.stage_detail_modal_title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage_detail_modal_title i {
+  color: #3b82f6;
+}
+
+.stage_detail_modal_close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.stage_detail_modal_close:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.stage_detail_modal_content {
+  padding: 20px 25px;
+  overflow-y: auto;
+  max-height: calc(90vh - 80px);
+}
+
+.stage_detail_breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.stage_detail_breadcrumbs a {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.stage_detail_breadcrumbs a:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.stage_detail_breadcrumbs i {
+  font-size: 0.7rem;
+}
+
+.stage_detail_status_badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.stage_detail_status_badge.completed,
+.stage_detail_status_badge.done {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.stage_detail_status_badge.not_started,
+.stage_detail_status_badge.pending {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.stage_detail_status_badge.in_progress {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.stage_detail_status_badge.on_hold {
+  background-color: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+}
+
+.stage_detail_status_badge.cancelled,
+.stage_detail_status_badge.blocked {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.stage_detail_info {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stage_detail_info_item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stage_detail_info_label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stage_detail_info_value {
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.stage_detail_description {
+  padding: 15px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.stage_detail_section {
+  margin-bottom: 25px;
+}
+
+.stage_detail_section_title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage_detail_section_title.tasks::before {
+  content: '\f0ae';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  color: #3b82f6;
+}
+
+.stage_detail_section_title.files::before {
+  content: '\f15b';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  color: #3b82f6;
+}
+
+.stage_detail_section_title.comments::before {
+  content: '\f075';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  color: #3b82f6;
+}
+
+.stage_detail_empty_state {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Tasks List */
+.stage_detail_tasks_list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stage_detail_task_item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.stage_detail_task_item:hover {
+  background-color: #f1f5f9;
+}
+
+.stage_detail_task_checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.stage_detail_task_checkbox.completed {
+  background-color: #22c55e;
+  border-color: #22c55e;
+  color: white;
+}
+
+.stage_detail_task_checkbox i {
+  font-size: 0.7rem;
+}
+
+.stage_detail_task_content {
+  flex: 1;
+}
+
+.stage_detail_task_title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 5px;
+}
+
+.stage_detail_task_item.completed .stage_detail_task_title {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.stage_detail_task_meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.stage_detail_task_meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stage_detail_task_meta i {
+  font-size: 0.85rem;
+}
+
+/* Files List */
+.stage_detail_files_list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.stage_detail_file_item {
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.stage_detail_file_item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e1;
+}
+
+.stage_detail_file_icon {
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f1f5f9;
+  font-size: 2.5rem;
+  color: #64748b;
+}
+
+.stage_detail_file_icon.pdf {
+  color: #ef4444;
+}
+
+.stage_detail_file_icon.image {
+  color: #3b82f6;
+}
+
+.stage_detail_file_icon.doc {
+  color: #2563eb;
+}
+
+.stage_detail_file_icon.xls {
+  color: #22c55e;
+}
+
+.stage_detail_file_info {
+  padding: 12px;
+}
+
+.stage_detail_file_name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.stage_detail_file_meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.stage_detail_file_size {
+  background-color: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.stage_detail_file_actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stage_detail_file_action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stage_detail_file_action:hover {
+  background-color: #f8fafc;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+/* Comments List */
+.stage_detail_comments_list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stage_detail_comment_item {
+  display: flex;
+  gap: 15px;
+}
+
+.stage_detail_comment_avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.stage_detail_comment_content {
+  flex: 1;
+}
+
+.stage_detail_comment_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.stage_detail_comment_author {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.stage_detail_comment_date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.stage_detail_comment_text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #334155;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.stage_detail_new_comment {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.stage_detail_new_comment_avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.stage_detail_new_comment_content {
+  flex: 1;
+}
+
+.stage_detail_new_comment_input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background-color: #f8fafc;
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: 10px;
+  transition: all 0.2s ease;
+}
+
+.stage_detail_new_comment_input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: white;
+}
+
+.stage_detail_new_comment_actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.stage_detail_new_comment_button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stage_detail_new_comment_button.cancel {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.stage_detail_new_comment_button.cancel:hover {
+  background-color: #e2e8f0;
+}
+
+.stage_detail_new_comment_button.submit {
+  background-color: #3b82f6;
+  border: 1px solid #2563eb;
+  color: white;
+}
+
+.stage_detail_new_comment_button.submit:hover {
+  background-color: #2563eb;
+}
+
+/* Substages List */
+.stage_detail_substages_list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stage_detail_substage_item {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid #3b82f6;
+  transition: all 0.2s ease;
+}
+
+.stage_detail_substage_item:hover {
+  background-color: #f1f5f9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stage_detail_substage_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.stage_detail_substage_title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.stage_detail_substage_meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.stage_detail_substage_meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stage_detail_substage_meta span.overdue {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.stage_detail_substage_actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.stage_detail_substage_view_btn {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stage_detail_substage_view_btn:hover {
+  background-color: #2563eb;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .stage_detail_modal_container {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .stage_detail_info {
+    grid-template-columns: 1fr;
+  }
+  
+  .stage_detail_files_list {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .stage_detail_modal_header {
+    padding: 15px;
+  }
+  
+  .stage_detail_modal_content {
+    padding: 15px;
+  }
+  
+  .stage_detail_modal_title {
+    font-size: 1rem;
+  }
+  
+  .stage_detail_files_list {
+    grid-template-columns: 1fr;
+  }
+  
+  .stage_detail_comment_item,
+  .stage_detail_new_comment {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .stage_detail_comment_avatar,
+  .stage_detail_new_comment_avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+} 

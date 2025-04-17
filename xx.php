@@ -1,3 +1,46 @@
+ALTER TABLE projects
+ADD COLUMN client_name VARCHAR(255) DEFAULT NULL,
+ADD COLUMN client_address TEXT DEFAULT NULL,
+ADD COLUMN project_location VARCHAR(255) DEFAULT NULL,
+ADD COLUMN plot_area VARCHAR(100) DEFAULT NULL,
+ADD COLUMN contact_number VARCHAR(20) DEFAULT NULL;
+
+
+ALTER TABLE substage_files 
+                               ADD COLUMN sent_to INT DEFAULT NULL,
+                               ADD COLUMN sent_by INT DEFAULT NULL,
+                               ADD COLUMN sent_at DATETIME DEFAULT NULL,
+                               ADD INDEX (sent_to),
+                               ADD INDEX (sent_by)";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!DOCTYPE html>
 <html>

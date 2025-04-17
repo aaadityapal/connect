@@ -146,8 +146,12 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/project-metrics-dashboard.css">
     <link rel="stylesheet" href="assets/css/project-overview.css">
+    <link rel="stylesheet" href="assets/css/stage-detail-modal.css">
+    <link rel="stylesheet" href="assets/css/project-brief-modal.css">
+    <script src="assets/js/project-brief-modal.js"></script>
     <script src="assets/js/project-metrics-dashboard.js"></script>
     <script src="assets/js/project-overview.js"></script>
+    <script src="assets/js/stage-detail-modal.js"></script>
     <link rel="stylesheet" href="assets/css/chat.css">
     <script src="assets/js/chat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -2493,7 +2497,7 @@ if ($user_data && isset($user_data['shift_id'])) {
         }
     </script>
 </head>
-<body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>">
+<body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>" data-user-id="<?php echo htmlspecialchars($_SESSION['user_id'] ?? ''); ?>">
     <div class="dashboard-container">
         <div class="left-panel" id="leftPanel">
             <div class="brand-logo" style="padding: 20px 25px; margin-bottom: 20px;">

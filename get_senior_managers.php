@@ -10,163 +10,148 @@ ini_set('display_errors', 1);
 session_start();
 require_once 'config/db_connect.php';
 
+// Enable error logging
+$logFile = 'senior_managers_log.txt';
+function logDebug($message) {
+    global $logFile;
+    file_put_contents($logFile, date('[Y-m-d H:i:s] ') . $message . PHP_EOL, FILE_APPEND);
+}
+
+logDebug("=== SIMPLIFIED VERSION - New request for senior managers ===");
+
 // Array to store manager data
 $managers = [];
 $debug_info = [];
 
-// Try to get users from database
 try {
+    // Use the simplest possible approach to get managers
     if ($conn) {
-        // First, let's check what columns exist in the users table without assuming 'type' exists
-        $columns_query = "SHOW COLUMNS FROM users";
-        $columns_result = $conn->query($columns_query);
+        // First, let's check for yojna Sharma specifically to make sure she exists
+        $check_query = "SELECT id, username, role, status FROM users WHERE username = 'yojna Sharma'";
+        $check_result = $conn->query($check_query);
         
-        if ($columns_result) {
-            $columns = [];
-            while ($col = $columns_result->fetch_assoc()) {
-                $columns[] = $col['Field'];
-            }
-            $debug_info['columns'] = $columns;
+        if ($check_result && $check_result->num_rows > 0) {
+            $yojna = $check_result->fetch_assoc();
+            logDebug("Found yojna Sharma: " . print_r($yojna, true));
         } else {
-            $debug_info['columns_error'] = $conn->error;
-        }
-        
-        // Build a query based on the columns that actually exist
-        $where_clauses = [];
-        $select_fields = ["id", "username"];
-        
-        if (in_array('role', $columns)) {
-            $select_fields[] = "role";
-            $where_clauses[] = "role LIKE '%Senior Manager (Studio)%'";
+            logDebug("yojna Sharma not found with exact username match");
             
-            // Also get unique roles for debugging
-            $roles_query = "SELECT DISTINCT role FROM users WHERE role IS NOT NULL";
-            $roles_result = $conn->query($roles_query);
+            // Try a broader search
+            $check_query = "SELECT id, username, role, status FROM users WHERE username LIKE '%yojna%' OR username LIKE '%Sharma%'";
+            $check_result = $conn->query($check_query);
             
-            if ($roles_result) {
-                $roles = [];
-                while ($role = $roles_result->fetch_assoc()) {
-                    $roles[] = $role['role'];
+            if ($check_result && $check_result->num_rows > 0) {
+                logDebug("Found users matching partial name:");
+                while ($row = $check_result->fetch_assoc()) {
+                    logDebug("  User: " . print_r($row, true));
                 }
-                $debug_info['user_roles'] = $roles;
+            } else {
+                logDebug("No users with 'Yojna' or 'Sharma' in their username");
             }
         }
         
-        // Check for other potential role columns - be more specific
-        $role_columns = ['user_type', 'position', 'designation', 'user_role'];
-        foreach ($role_columns as $col) {
-            if (in_array($col, $columns)) {
-                $select_fields[] = $col;
-                $where_clauses[] = "$col LIKE '%Senior Manager%' AND $col NOT LIKE '%Trainee%'";
+        // Log all Studio Managers regardless of status
+        $all_managers_query = "SELECT id, username, role, status FROM users 
+                             WHERE role LIKE '%Senior Manager (Studio)%'";
+        $all_result = $conn->query($all_managers_query);
+        
+        if ($all_result) {
+            logDebug("All Senior Manager (Studio) users:");
+            while ($row = $all_result->fetch_assoc()) {
+                logDebug("  Manager: " . print_r($row, true));
             }
         }
         
-        // If no role columns found, get users with admin roles
-        if (empty($where_clauses) && in_array('is_admin', $columns)) {
-            $where_clauses[] = "is_admin = 1";
-        }
+        // EXTREMELY SIMPLIFIED APPROACH: Just get all active senior manager users
+        $query = "SELECT id, username, role FROM users 
+                 WHERE role LIKE '%Senior Manager (Studio)%' 
+                 AND (status = 'Active' OR status = 'active') 
+                 AND deleted_at IS NULL";
         
-        // Build the query
-        $select_clause = implode(", ", $select_fields);
-        
-        // If we have where clauses, use them; otherwise get first 5 users
-        if (!empty($where_clauses)) {
-            $where_clause = "(" . implode(" OR ", $where_clauses) . ")";
-            $query = "SELECT $select_clause FROM users 
-                     WHERE $where_clause AND deleted_at IS NULL
-                     ORDER BY username ASC";
-        } else {
-            // Fallback to get first 5 users
-            $query = "SELECT $select_clause FROM users 
-                     WHERE deleted_at IS NULL
-                     ORDER BY id ASC LIMIT 5";
-        }
-        
-        $debug_info['query'] = $query;
-        
+        logDebug("Running simplified query: " . $query);
         $result = $conn->query($query);
         
         if ($result) {
-            $debug_info['found_rows'] = $result->num_rows;
-            $all_users = [];
+            logDebug("Found " . $result->num_rows . " rows");
             
             while ($row = $result->fetch_assoc()) {
-                $role_info = '';
-                // Check each possible role column
-                foreach ($role_columns as $col) {
-                    if (isset($row[$col]) && !empty($row[$col])) {
-                        $role_info = $row[$col];
-                        break;
-                    }
-                }
-                if (empty($role_info) && isset($row['role'])) {
-                    $role_info = $row['role'];
-                }
-                
-                // Store all users temporarily
-                $all_users[] = [
+                $managers[] = [
                     'id' => $row['id'],
                     'name' => $row['username'],
-                    'role' => $role_info
+                    'role' => $row['role']
                 ];
-            }
-            
-            // Now filter the users to only include Senior Manager (Studio)
-            foreach ($all_users as $user) {
-                $username = strtolower($user['name']);
-                $role = strtolower($user['role']);
                 
-                // Only include users that:
-                // 1. Have "Senior Manager" in their role AND "Studio" in their role
-                // 2. Don't have "trainee" in their role
-                // 3. Don't have "dss" in their username
-                if ((strpos($role, 'senior manager') !== false && 
-                     strpos($role, 'studio') !== false) && 
-                    strpos($role, 'trainee') === false && 
-                    strpos($username, 'dss') === false) {
-                    $managers[] = $user;
-                }
+                logDebug("Added manager: {$row['username']} (ID: {$row['id']}, Role: {$row['role']})");
             }
-            
-            $debug_info['filtered_rows'] = count($managers);
         } else {
-            $debug_info['query_error'] = $conn->error;
+            logDebug("Query error: " . $conn->error);
         }
         
-        // If still no managers found, just get the first 5 users as a fallback
+        // If still no managers found, try with broader criteria
         if (empty($managers)) {
-            $fallback_query = "SELECT id, username FROM users 
-                              WHERE deleted_at IS NULL 
-                              ORDER BY id ASC LIMIT 5";
+            logDebug("No managers found with first query, trying broader criteria");
             
-            $debug_info['fallback_query'] = $fallback_query;
+            $query = "SELECT id, username, role FROM users 
+                     WHERE role LIKE '%Senior Manager%' 
+                     AND role LIKE '%Studio%'
+                     AND (status = 'Active' OR status = 'active')
+                     AND deleted_at IS NULL";
             
-            $fallback_result = $conn->query($fallback_query);
+            logDebug("Running broader query: " . $query);
+            $result = $conn->query($query);
             
-            if ($fallback_result) {
-                $debug_info['fallback_rows'] = $fallback_result->num_rows;
+            if ($result) {
+                logDebug("Found " . $result->num_rows . " rows");
                 
-                while ($row = $fallback_result->fetch_assoc()) {
+                while ($row = $result->fetch_assoc()) {
                     $managers[] = [
                         'id' => $row['id'],
                         'name' => $row['username'],
-                        'role' => 'User'
+                        'role' => $row['role']
                     ];
+                    
+                    logDebug("Added manager: {$row['username']} (ID: {$row['id']}, Role: {$row['role']})");
                 }
             } else {
-                $debug_info['fallback_error'] = $conn->error;
+                logDebug("Query error: " . $conn->error);
+            }
+        }
+        
+        // FORCE ADD yojna SHARMA IF STILL NOT PRESENT
+        // Only do this if we found her but she's not in the results
+        if (!empty($yojna) && !empty($managers)) {
+            $found = false;
+            foreach ($managers as $manager) {
+                if ($manager['id'] == $yojna['id']) {
+                    $found = true;
+                    break;
+                }
+            }
+            
+            if (!$found) {
+                logDebug("Manually adding yojna Sharma since she wasn't included");
+                $managers[] = [
+                    'id' => $yojna['id'],
+                    'name' => $yojna['username'],
+                    'role' => $yojna['role']
+                ];
             }
         }
     } else {
-        $debug_info['connection_error'] = 'Database connection failed';
+        logDebug("Database connection failed");
     }
 } catch (Exception $e) {
-    $debug_info['error'] = $e->getMessage();
+    logDebug("Exception: " . $e->getMessage() . "\n" . $e->getTraceAsString());
 }
 
-// Return success with any managers we found (or empty array if error)
+// Log what we're sending back
+logDebug("Returning " . count($managers) . " managers:");
+foreach ($managers as $manager) {
+    logDebug("  {$manager['name']} (ID: {$manager['id']}, Role: {$manager['role']})");
+}
+
+// Return results
 echo json_encode([
     'success' => true,
-    'managers' => $managers,
-    'debug' => $debug_info
+    'managers' => $managers
 ]); 

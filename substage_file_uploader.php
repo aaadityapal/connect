@@ -10,10 +10,17 @@ require_once 'config/db_connect.php';
 // Set content type to JSON
 header('Content-Type: application/json');
 
-// Enable error logging
+// Enable error reporting to catch all issues
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 $logFile = 'substage_upload_log.txt';
+
+// Added debug headers to help identify server environment
+header('X-Debug-PHP-Version: ' . PHP_VERSION);
+header('X-Debug-Server-Software: ' . $_SERVER['SERVER_SOFTWARE']);
+header('X-Debug-Max-Upload: ' . ini_get('upload_max_filesize'));
+header('X-Debug-Post-Max: ' . ini_get('post_max_size'));
+header('X-Debug-Memory-Limit: ' . ini_get('memory_limit'));
 
 function logDebug($message) {
     global $logFile;
@@ -21,32 +28,55 @@ function logDebug($message) {
 }
 
 logDebug("=== New upload attempt ===");
+logDebug("Server environment: " . PHP_OS . " / PHP " . PHP_VERSION);
 logDebug("POST data: " . print_r($_POST, true));
 logDebug("FILES data: " . print_r($_FILES, true));
+logDebug("Upload max filesize: " . ini_get('upload_max_filesize'));
+logDebug("Post max size: " . ini_get('post_max_size'));
+logDebug("Memory limit: " . ini_get('memory_limit'));
 
 try {
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
-        logDebug("User not authenticated");
+        logDebug("User not authenticated - session data: " . print_r($_SESSION, true));
         throw new Exception('User not authenticated');
     }
 
     // Validate substage_id
     if (!isset($_POST['substage_id'])) {
-        logDebug("Missing substage_id");
+        logDebug("Missing substage_id - complete POST data: " . print_r($_POST, true));
         throw new Exception('Substage ID is required');
     }
 
     // Validate file name
     if (!isset($_POST['file_name']) || empty($_POST['file_name'])) {
-        logDebug("Missing file_name");
+        logDebug("Missing file_name - complete POST data: " . print_r($_POST, true));
         throw new Exception('File name is required');
     }
 
     // Check if file was uploaded
-    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-        logDebug("File upload error: " . ($_FILES['file']['error'] ?? 'No file'));
-        throw new Exception('No file uploaded or upload error occurred');
+    if (!isset($_FILES['file'])) {
+        logDebug("No file in request - FILES array: " . print_r($_FILES, true));
+        throw new Exception('No file uploaded');
+    }
+    
+    // Check for specific upload errors
+    if (isset($_FILES['file']['error']) && $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        $uploadErrors = array(
+            UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+            UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form',
+            UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload'
+        );
+        $errorMessage = isset($uploadErrors[$_FILES['file']['error']]) ? 
+                        $uploadErrors[$_FILES['file']['error']] : 
+                        'Unknown upload error code: ' . $_FILES['file']['error'];
+        
+        logDebug("File upload error: " . $errorMessage);
+        throw new Exception($errorMessage);
     }
 
     $substageId = $_POST['substage_id'];
@@ -64,25 +94,36 @@ try {
     logDebug("File details - Name: {$file['name']}, Type: {$file['type']}, Size: {$file['size']} bytes, Temp path: {$file['tmp_name']}");
 
     // Verify temp file exists and has content
-    if (!file_exists($file['tmp_name']) || filesize($file['tmp_name']) <= 0) {
-        logDebug("Temp file doesn't exist or is empty: {$file['tmp_name']}");
-        throw new Exception('The uploaded file was not received properly');
+    if (!file_exists($file['tmp_name'])) {
+        logDebug("Temp file doesn't exist: {$file['tmp_name']}");
+        throw new Exception('The uploaded file was not received properly (temp file missing)');
+    }
+    
+    if (filesize($file['tmp_name']) <= 0) {
+        logDebug("Temp file is empty: {$file['tmp_name']}");
+        throw new Exception('The uploaded file has no content (temp file empty)');
     }
     
     logDebug("Temp file verified - exists and has size: " . filesize($file['tmp_name']) . " bytes");
 
     // Validate substage exists and get project_id and stage_id
-    $stmt = $pdo->prepare("SELECT ps.id, ps.stage_id, pst.project_id 
-                          FROM project_substages ps 
-                          JOIN project_stages pst ON ps.stage_id = pst.id 
-                          WHERE ps.id = ? AND ps.deleted_at IS NULL");
-    $stmt->execute([$substageId]);
-    $substageData = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    logDebug("Substage data: " . print_r($substageData, true));
+    try {
+        $stmt = $pdo->prepare("SELECT ps.id, ps.stage_id, pst.project_id 
+                              FROM project_substages ps 
+                              JOIN project_stages pst ON ps.stage_id = pst.id 
+                              WHERE ps.id = ? AND ps.deleted_at IS NULL");
+        $stmt->execute([$substageId]);
+        $substageData = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        logDebug("Substage query executed - data: " . print_r($substageData, true));
+    } catch (PDOException $e) {
+        logDebug("Database error getting substage data: " . $e->getMessage());
+        logDebug("SQL State: " . $e->getCode());
+        throw new Exception('Database error: ' . $e->getMessage());
+    }
     
     if (!$substageData) {
-        logDebug("Invalid substage ID: $substageId");
+        logDebug("Invalid substage ID: $substageId - no database record found");
         throw new Exception('Invalid substage');
     }
 
@@ -103,8 +144,33 @@ try {
     if (!file_exists($uploadDir)) {
         logDebug("Creating directory: $uploadDir");
         if (!mkdir($uploadDir, 0777, true)) {
-            logDebug("Failed to create directory: $uploadDir");
-            throw new Exception('Failed to create upload directory');
+            $error = error_get_last();
+            logDebug("Failed to create directory: $uploadDir - Error: " . print_r($error, true));
+            
+            // Check directory permissions
+            $parentDir = dirname($uploadDir);
+            if (file_exists($parentDir)) {
+                $perms = substr(sprintf('%o', fileperms($parentDir)), -4);
+                logDebug("Parent directory exists with permissions: $perms");
+            } else {
+                logDebug("Parent directory doesn't exist: $parentDir");
+            }
+            
+            throw new Exception('Failed to create upload directory. Please check server permissions.');
+        }
+        
+        // Set directory permissions explicitly
+        if (!chmod($uploadDir, 0777)) {
+            logDebug("Warning: Could not chmod directory $uploadDir to 0777");
+        }
+    } else {
+        $perms = substr(sprintf('%o', fileperms($uploadDir)), -4);
+        logDebug("Directory already exists with permissions: $perms");
+        
+        // Test directory is writable
+        if (!is_writable($uploadDir)) {
+            logDebug("Directory is not writable: $uploadDir");
+            throw new Exception('Upload directory is not writable. Please check server permissions.');
         }
     }
 
@@ -135,14 +201,30 @@ try {
 
     // Move uploaded file
     if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+        $moveError = error_get_last();
         logDebug("Failed to move uploaded file from {$file['tmp_name']} to $filePath");
-        throw new Exception('Failed to move uploaded file');
+        logDebug("Move error: " . print_r($moveError, true));
+        
+        // Try a fallback approach using copy then unlink
+        if (copy($file['tmp_name'], $filePath)) {
+            logDebug("Fallback: Successfully copied file using copy()");
+            unlink($file['tmp_name']);
+        } else {
+            $copyError = error_get_last();
+            logDebug("Fallback copy also failed: " . print_r($copyError, true));
+            throw new Exception('Failed to save uploaded file. Server permissions issue.');
+        }
     }
     
     // Verify the moved file exists and has content
-    if (!file_exists($filePath) || filesize($filePath) <= 0) {
-        logDebug("Moved file doesn't exist or is empty: $filePath");
-        throw new Exception('File was moved but is empty or missing');
+    if (!file_exists($filePath)) {
+        logDebug("Moved file doesn't exist: $filePath");
+        throw new Exception('File was moved but is missing');
+    }
+    
+    if (filesize($filePath) <= 0) {
+        logDebug("Moved file is empty: $filePath");
+        throw new Exception('File was moved but is empty');
     }
     
     logDebug("File moved successfully. File size: " . filesize($filePath) . " bytes");
@@ -153,10 +235,14 @@ try {
 
     try {
         // Log the database schema to debug
-        $tableInfoStmt = $pdo->prepare("DESCRIBE substage_files");
-        $tableInfoStmt->execute();
-        $tableColumns = $tableInfoStmt->fetchAll(PDO::FETCH_ASSOC);
-        logDebug("Table structure: " . print_r($tableColumns, true));
+        try {
+            $tableInfoStmt = $pdo->prepare("DESCRIBE substage_files");
+            $tableInfoStmt->execute();
+            $tableColumns = $tableInfoStmt->fetchAll(PDO::FETCH_ASSOC);
+            logDebug("Table structure: " . print_r($tableColumns, true));
+        } catch (PDOException $e) {
+            logDebug("Notice: Could not get table structure: " . $e->getMessage());
+        }
         
         // Insert file record into database
         $stmt = $pdo->prepare("
@@ -258,8 +344,12 @@ try {
         
         // Delete uploaded file if database insertion fails
         if (file_exists($filePath)) {
-            unlink($filePath);
-            logDebug("Deleted file: $filePath");
+            if (unlink($filePath)) {
+                logDebug("Deleted file: $filePath");
+            } else {
+                $unlinkError = error_get_last();
+                logDebug("Failed to delete file: $filePath - Error: " . print_r($unlinkError, true));
+            }
         }
         
         throw $e;
@@ -273,7 +363,15 @@ try {
     http_response_code(400);
     $errorResponse = [
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'debug_info' => [
+            'php_version' => PHP_VERSION,
+            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
+            'max_upload' => ini_get('upload_max_filesize'),
+            'post_max' => ini_get('post_max_size'),
+            'memory_limit' => ini_get('memory_limit'),
+            'time' => date('Y-m-d H:i:s')
+        ]
     ];
     logDebug("Sending error response: " . json_encode($errorResponse));
     echo json_encode($errorResponse);

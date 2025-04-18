@@ -836,6 +836,29 @@ class ProjectBriefModal {
             this.modalOverlay = null;
             this.modalContainer = null;
             this.isOpen = false;
+            
+            // Remove any loading indicators that might be present on the page
+            const loadingIndicators = document.querySelectorAll('.loading-indicator, .loading-overlay, .file_upload_overlay');
+            loadingIndicators.forEach(indicator => indicator.remove());
+            
+            // Also clean up any file upload form containers
+            const fileUploadForms = document.querySelectorAll('.substage_file_upload_form_container');
+            fileUploadForms.forEach(form => form.remove());
+            
+            // Check if there's any calendar modal open and make sure it's visible
+            const calendarModal = document.querySelector('.pr-calendar-modal-overlay');
+            if (calendarModal) {
+                calendarModal.style.display = 'flex';
+            }
+            
+            // Ensure body scroll is enabled
+            document.body.style.overflow = '';
+            
+            // Dispatch an event that the modal was closed
+            // This allows other components to respond appropriately
+            document.dispatchEvent(new CustomEvent('projectBriefModalClosed'));
+            
+            console.log('Project brief modal closed and cleanup completed');
         }
     }
 
@@ -916,7 +939,7 @@ class ProjectBriefModal {
     showLoadingIndicator() {
         // Create modal overlay with loading spinner
         this.modalOverlay = document.createElement('div');
-        this.modalOverlay.className = 'project_brief_modal_overlay';
+        this.modalOverlay.className = 'project_brief_modal_overlay loading-indicator';
         this.modalOverlay.innerHTML = `
             <div class="project_brief_modal_container" style="width: auto; padding: 30px;">
                 <div style="text-align: center;">
@@ -1122,9 +1145,11 @@ class ProjectBriefModal {
 
     // Helper method to open the file upload modal
     openFileUploadModal(projectId, stageId, substageId, container) {
+        console.log('DEBUG: Opening file upload modal', { projectId, stageId, substageId });
+        
         // Create overlay first to prevent interaction with other elements
         const overlay = document.createElement('div');
-        overlay.className = 'file_upload_overlay';
+        overlay.className = 'file_upload_overlay loading-indicator';
         document.body.appendChild(overlay);
         
         // Create form container
@@ -1181,6 +1206,23 @@ class ProjectBriefModal {
                 const submitBtn = uploadForm.querySelector('.upload_submit_btn');
                 const cancelBtn = uploadForm.querySelector('.upload_cancel_btn');
                 
+                // Detailed console logging for form data
+                console.log('DEBUG: Form submission started');
+                console.log('DEBUG: substage_id =', formData.get('substage_id'));
+                console.log('DEBUG: file_name =', formData.get('file_name'));
+                
+                const file = formData.get('file');
+                if (file) {
+                    console.log('DEBUG: file provided', {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        lastModified: file.lastModified
+                    });
+                } else {
+                    console.error('DEBUG: No file in form data');
+                }
+                
                 // Disable buttons while uploading
                 if (submitBtn) submitBtn.disabled = true;
                 if (cancelBtn) cancelBtn.disabled = true;
@@ -1192,15 +1234,38 @@ class ProjectBriefModal {
                     progressDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
                     uploadForm.appendChild(progressDiv);
                     
+                    console.log('DEBUG: Starting file upload to server');
                     // Upload the file
                     const response = await fetch('substage_file_uploader.php', {
                         method: 'POST',
                         body: formData
                     });
                     
-                    const result = await response.json();
+                    // Log response details before parsing JSON
+                    console.log('DEBUG: Server response status:', response.status);
+                    console.log('DEBUG: Server response headers:', 
+                        [...response.headers.entries()].reduce((obj, [key, val]) => {
+                            obj[key] = val;
+                            return obj;
+                        }, {})
+                    );
+                    
+                    // Get raw response text for debugging
+                    const responseText = await response.text();
+                    console.log('DEBUG: Raw server response:', responseText);
+                    
+                    // Try to parse the response as JSON
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                        console.log('DEBUG: Parsed JSON response:', result);
+                    } catch (jsonError) {
+                        console.error('DEBUG: Error parsing JSON response:', jsonError);
+                        throw new Error('Invalid JSON response from server: ' + responseText.substring(0, 200));
+                    }
                     
                     if (result.success) {
+                        console.log('DEBUG: File upload successful', result);
                         // Show success message briefly
                         formContainer.innerHTML = `
                             <div class="upload_success" style="text-align: center; padding: 20px;">
@@ -1219,6 +1284,7 @@ class ProjectBriefModal {
                         }, 1500);
                     } else {
                         // Show error message
+                        console.error('DEBUG: File upload failed with server error:', result.message);
                         const errorMsg = result.message || 'An error occurred during upload';
                         
                         formContainer.innerHTML = `
@@ -1241,7 +1307,8 @@ class ProjectBriefModal {
                         }
                     }
                 } catch (error) {
-                    console.error('Error uploading file:', error);
+                    console.error('DEBUG: Exception during file upload:', error);
+                    console.error('DEBUG: Error stack trace:', error.stack);
                     
                     formContainer.innerHTML = `
                         <div class="upload_error" style="text-align: center; padding: 20px;">

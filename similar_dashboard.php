@@ -149,6 +149,7 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link rel="stylesheet" href="assets/css/stage-detail-modal.css">
     <link rel="stylesheet" href="assets/css/project-brief-modal.css">
     <script src="assets/js/project-brief-modal.js"></script>
+    <script src="assets/js/stage-chat.js"></script>
     <script src="assets/js/project-metrics-dashboard.js"></script>
     <script src="assets/js/project-overview.js"></script>
     <script src="assets/js/stage-detail-modal.js"></script>

@@ -57,6 +57,66 @@
   color: #3b82f6;
 }
 
+/* Action buttons styling */
+.stage_detail_header_actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stage_detail_action_btn {
+  background: none;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Chat notification counter */
+.chat-notification-counter {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.chat-notification-counter.hidden {
+  display: none;
+}
+
+.stage_detail_action_btn:hover {
+  background-color: #e2e8f0;
+  color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.stage_detail_action_btn.chat-btn i {
+  color: #3b82f6;
+}
+
+.stage_detail_action_btn.activity-btn i {
+  color: #10b981;
+}
+
 .stage_detail_modal_close {
   background: none;
   border: none;

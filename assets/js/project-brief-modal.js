@@ -682,11 +682,11 @@ class ProjectBriefModal {
                     
                     // Open the stage detail modal with focus on the specific substage
                     if (window.stageDetailModal) {
-                        window.stageDetailModal.openStageModal(this.currentProjectId, stageId, substageId);
+                        window.stageDetailModal.openSubstageModal(this.currentProjectId, stageId, substageId);
                     } else {
                         // Initialize if not already done
                         window.stageDetailModal = new StageDetailModal();
-                        window.stageDetailModal.openStageModal(this.currentProjectId, stageId, substageId);
+                        window.stageDetailModal.openSubstageModal(this.currentProjectId, stageId, substageId);
                     }
                 }
             });
@@ -734,8 +734,19 @@ class ProjectBriefModal {
                     // Different action based on button class
                     if (button.classList.contains('chat')) {
                         console.log('Stage Chat clicked for stage ID:', stageId);
-                        // Implementation will be added later
-                        alert('Stage chat functionality will be implemented soon.');
+                        
+                        // Get the stage title
+                        const stageItem = button.closest('.project_brief_stage_item');
+                        const stageTitle = stageItem ? stageItem.querySelector('.project_brief_stage_title').textContent.trim() : 'Stage Chat';
+                        
+                        // Open the chat
+                        if (window.stageChat) {
+                            window.stageChat.openChat(this.currentProjectId, stageId, stageTitle, button);
+                        } else {
+                            // If stageChat is not initialized yet, do it now
+                            window.stageChat = new StageChat();
+                            window.stageChat.openChat(this.currentProjectId, stageId, stageTitle, button);
+                        }
                     } else if (button.classList.contains('activity')) {
                         console.log('Stage Activity Log clicked for stage ID:', stageId);
                         // Implementation will be added later
@@ -761,8 +772,19 @@ class ProjectBriefModal {
                 // Different action based on button class
                 if (button.classList.contains('chat')) {
                     console.log('Substage Chat clicked for stage ID:', stageId, 'substage ID:', substageId);
-                    // Implementation will be added later
-                    alert('Substage chat functionality will be implemented soon.');
+                    
+                    // Get the substage title
+                    const substageItem = button.closest('.project_brief_substage_item');
+                    const substageTitle = substageItem ? substageItem.querySelector('.substage_title').textContent.trim() : 'Substage Chat';
+                    
+                    // Open the substage chat
+                    if (window.stageChat) {
+                        window.stageChat.openSubstageChat(this.currentProjectId, stageId, substageId, substageTitle, button);
+                    } else {
+                        // If stageChat is not initialized yet, do it now
+                        window.stageChat = new StageChat();
+                        window.stageChat.openSubstageChat(this.currentProjectId, stageId, substageId, substageTitle, button);
+                    }
                 } else if (button.classList.contains('activity')) {
                     console.log('Substage Activity Log clicked for stage ID:', stageId, 'substage ID:', substageId);
                     // Implementation will be added later

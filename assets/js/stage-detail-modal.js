@@ -4,6 +4,20 @@
  * on a stage or substage in the project calendar modal
  */
 
+// Make sure StageChat is loaded
+if (typeof StageChat === 'undefined') {
+    // Create a script element to load stage-chat.js if not already loaded
+    const chatScript = document.createElement('script');
+    chatScript.src = 'assets/js/stage-chat.js';
+    chatScript.onload = function() {
+        console.log('StageChat script loaded');
+        if (!window.stageChat) {
+            window.stageChat = new StageChat();
+        }
+    };
+    document.head.appendChild(chatScript);
+}
+
 class StageDetailModal {
     constructor() {
         this.modalOverlay = null;
@@ -828,6 +842,11 @@ class StageDetailModal {
             }
         }
         
+        // Check for unread messages if data fetched successfully
+        if (data.success) {
+            this.updateChatNotificationCounter(stageId);
+        }
+        
         return data;
     }
 
@@ -861,6 +880,11 @@ class StageDetailModal {
             }
         }
         
+        // Check for unread messages if data fetched successfully
+        if (data.success) {
+            this.updateChatNotificationCounter(stageId, substageId);
+        }
+        
         return data;
     }
 
@@ -889,7 +913,16 @@ class StageDetailModal {
                         <i class="fas fa-tasks"></i>
                         Stage ${stage.stage_number || ''}
                     </div>
-                    <button class="stage_detail_modal_close">&times;</button>
+                    <div class="stage_detail_header_actions">
+                        <button class="stage_detail_action_btn chat-btn" title="Chat" data-stage-id="${stage.id}">
+                            <i class="fas fa-comments"></i>
+                            <span class="chat-notification-counter" id="chat-counter-stage-${stage.id}">0</span>
+                        </button>
+                        <button class="stage_detail_action_btn activity-btn" title="Activity Log">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="stage_detail_modal_close">&times;</button>
+                    </div>
                 </div>
                 <div class="stage_detail_modal_content">
                     <!-- Breadcrumbs -->
@@ -1071,7 +1104,16 @@ class StageDetailModal {
                         <i class="fas fa-tasks"></i>
                         ${this.escapeHtml(substage.title || `Substage ${substage.substage_number || ''}`)}
                     </div>
-                    <button class="stage_detail_modal_close">&times;</button>
+                    <div class="stage_detail_header_actions">
+                        <button class="stage_detail_action_btn chat-btn" title="Chat" data-substage-id="${substage.id}">
+                            <i class="fas fa-comments"></i>
+                            <span class="chat-notification-counter" id="chat-counter-substage-${substage.id}">0</span>
+                        </button>
+                        <button class="stage_detail_action_btn activity-btn" title="Activity Log">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="stage_detail_modal_close">&times;</button>
+                    </div>
                 </div>
                 <div class="stage_detail_modal_content">
                     <!-- Breadcrumbs -->
@@ -1410,6 +1452,66 @@ class StageDetailModal {
             }
         });
         
+        // Handle chat button click for stages and substages
+        const chatBtn = this.modalContainer.querySelector('.stage_detail_action_btn.chat-btn');
+        if (chatBtn) {
+            chatBtn.addEventListener('click', () => {
+                // Reset notification counter when opening chat
+                const chatCounter = chatBtn.querySelector('.chat-notification-counter');
+                if (chatCounter) {
+                    chatCounter.textContent = '0';
+                    chatCounter.classList.add('hidden');
+                }
+                
+                // Check if we're in a stage or substage modal
+                if (this.currentSubstageId) {
+                    // We're in a substage modal
+                    const projectId = this.modalContainer.querySelector('.project-link')?.dataset.projectId;
+                    const stageId = this.modalContainer.querySelector('.stage-link')?.dataset.stageId;
+                    const substageTitle = this.modalContainer.querySelector('.stage_detail_modal_title')?.textContent.trim();
+                    
+                    if (projectId && stageId && this.currentSubstageId) {
+                        // Initialize stage chat if needed
+                        if (!window.stageChat) {
+                            window.stageChat = new StageChat();
+                        }
+                        
+                        // Open substage chat
+                        window.stageChat.openSubstageChat(
+                            projectId, 
+                            stageId, 
+                            this.currentSubstageId, 
+                            substageTitle,
+                            chatBtn // Pass the button as the source element for positioning
+                        );
+                    }
+                } else {
+                    // We're in a stage modal
+                    const projectId = this.modalContainer.querySelector('.project-link')?.dataset.projectId;
+                    
+                    // Get the stage number/title from the modal title instead of using the ID
+                    const stageTitle = this.modalContainer.querySelector('.stage_detail_modal_title')?.textContent.trim();
+                    
+                    if (projectId && this.currentStageId) {
+                        // Initialize stage chat if needed
+                        if (!window.stageChat) {
+                            window.stageChat = new StageChat();
+                        }
+                        
+                        // Open stage chat with the proper title from the modal
+                        window.stageChat.openChat(
+                            projectId, 
+                            this.currentStageId, 
+                            stageTitle, // Use the actual stage title from the modal
+                            chatBtn, // Pass the button as the source element for positioning
+                            null,
+                            null
+                        );
+                    }
+                }
+            });
+        }
+        
         // Handle project title click to return to calendar overlay
         const projectLink = this.modalContainer.querySelector('.project-link');
         if (projectLink) {
@@ -1420,25 +1522,27 @@ class StageDetailModal {
                     // Close current modal
                     this.closeModal();
                     
-                    // Find if there's a calendar overlay open
-                    const calendarOverlay = document.querySelector('.pr-calendar-modal-overlay');
-                    
-                    // If calendar overlay exists, ensure it's visible, otherwise we'll let the default link behavior happen
-                    if (calendarOverlay) {
-                        // Instead of just setting display: block, make sure we preserve the overlay's original styling
-                        // This ensures it remains centered and properly positioned
-                        calendarOverlay.style.display = 'flex'; // Most modal overlays use flex to center content
-                        calendarOverlay.style.alignItems = 'center';
-                        calendarOverlay.style.justifyContent = 'center';
-                        calendarOverlay.style.position = 'fixed';
-                        calendarOverlay.style.top = '0';
-                        calendarOverlay.style.left = '0';
-                        calendarOverlay.style.right = '0';
-                        calendarOverlay.style.bottom = '0';
-                        calendarOverlay.style.zIndex = '1000'; // Ensure it's on top of other elements
+                    // Open the project brief modal instead of showing calendar overlay
+                    if (window.projectBriefModal) {
+                        // Use the existing instance of ProjectBriefModal
+                        window.projectBriefModal.openProjectModal(projectId);
                     } else {
-                        // If no calendar overlay exists, redirect to the project details page as fallback
-                        window.location.href = `project-details.php?id=${projectId}`;
+                        // If for some reason the global instance isn't available, try to create one
+                        try {
+                            // Check if ProjectBriefModal class exists
+                            if (typeof ProjectBriefModal === 'function') {
+                                const modal = new ProjectBriefModal();
+                                modal.openProjectModal(projectId);
+                            } else {
+                                console.error('ProjectBriefModal class not found');
+                                // Fallback to default behavior
+                                window.location.href = `project-details.php?id=${projectId}`;
+                            }
+                        } catch (error) {
+                            console.error('Error opening project brief modal:', error);
+                            // Fallback to default behavior
+                            window.location.href = `project-details.php?id=${projectId}`;
+                        }
                     }
                 }
             });
@@ -1610,6 +1714,52 @@ class StageDetailModal {
                 }
             });
         }
+
+        // Handle action buttons (chat, activities)
+        const actionBtns = this.modalContainer.querySelectorAll('.stage_detail_action_btn');
+        actionBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (btn.classList.contains('chat')) {
+                    // Open the stage chat
+                    if (window.stageChat) {
+                        const stageName = this.currentStage ? `Stage ${this.currentStage.stage_number}: ${this.currentStage.title}` : 'Stage Chat';
+                        window.stageChat.openChat(this.currentProjectId, this.currentStageId, stageName, btn);
+                    } else {
+                        // If stageChat is not initialized yet, do it now
+                        window.stageChat = new StageChat();
+                        const stageName = this.currentStage ? `Stage ${this.currentStage.stage_number}: ${this.currentStage.title}` : 'Stage Chat';
+                        window.stageChat.openChat(this.currentProjectId, this.currentStageId, stageName, btn);
+                    }
+                } else if (btn.classList.contains('activity')) {
+                    alert('Stage activity log functionality will be implemented soon.');
+                }
+            });
+        });
+
+        // Handle substage action buttons
+        const substageActionBtns = this.modalContainer.querySelectorAll('.substage_detail_action_btn');
+        substageActionBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const substageId = btn.closest('[data-substage-id]').dataset.substageId;
+                
+                if (btn.classList.contains('chat')) {
+                    // Find the substage data to get the title
+                    const substageElement = btn.closest('[data-substage-id]');
+                    const substageTitle = substageElement ? substageElement.querySelector('.substage_title')?.textContent.trim() : 'Substage Chat';
+                    
+                    // Open the substage chat
+                    if (window.stageChat) {
+                        window.stageChat.openSubstageChat(this.currentProjectId, this.currentStageId, substageId, substageTitle, btn);
+                    } else {
+                        // If stageChat is not initialized yet, do it now
+                        window.stageChat = new StageChat();
+                        window.stageChat.openSubstageChat(this.currentProjectId, this.currentStageId, substageId, substageTitle, btn);
+                    }
+                } else if (btn.classList.contains('activity')) {
+                    alert('Substage activity log functionality will be implemented soon.');
+                }
+            });
+        });
     }
 
     // New method to load stage content without closing the modal
@@ -2569,6 +2719,44 @@ class StageDetailModal {
         } catch (error) {
             console.error('Error fetching user profile picture:', error);
             return null;
+        }
+    }
+
+    // New method to check for unread messages and update the notification counter
+    async updateChatNotificationCounter(stageId, substageId = null) {
+        try {
+            // Build query parameters
+            const params = new URLSearchParams({
+                stage_id: stageId
+            });
+            
+            if (substageId) {
+                params.append('substage_id', substageId);
+            }
+            
+            // Fetch unread message count
+            const response = await fetch(`get_unread_messages_count.php?${params.toString()}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Determine the counter element ID based on whether this is a stage or substage
+                const counterId = substageId 
+                    ? `chat-counter-substage-${substageId}` 
+                    : `chat-counter-stage-${stageId}`;
+                
+                // Update the counter when the modal is opened
+                setTimeout(() => {
+                    const counterElement = document.getElementById(counterId);
+                    if (counterElement && data.unread_count > 0) {
+                        counterElement.textContent = data.unread_count;
+                        counterElement.classList.remove('hidden');
+                    } else if (counterElement) {
+                        counterElement.classList.add('hidden');
+                    }
+                }, 300); // Small delay to ensure modal is rendered
+            }
+        } catch (error) {
+            console.error('Error fetching unread message count:', error);
         }
     }
 }

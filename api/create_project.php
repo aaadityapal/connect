@@ -48,7 +48,12 @@ try {
         created_by, 
         assigned_to, 
         status,
-        created_at
+        created_at,
+        client_name,
+        client_address,
+        project_location,
+        plot_area,
+        contact_number
     ) VALUES (
         :title,
         :description,
@@ -59,7 +64,12 @@ try {
         :created_by,
         :assigned_to,
         'pending',
-        NOW()
+        NOW(),
+        :client_name,
+        :client_address,
+        :project_location,
+        :plot_area,
+        :contact_number
     )";
     
     // Convert assignTo value 0 to NULL for database storage
@@ -74,7 +84,12 @@ try {
         ':start_date' => $data['startDate'],
         ':end_date' => $data['dueDate'],
         ':created_by' => $_SESSION['user_id'] ?? 1,
-        ':assigned_to' => $assignedTo
+        ':assigned_to' => $assignedTo,
+        ':client_name' => $data['client_name'] ?? null,
+        ':client_address' => $data['client_address'] ?? null,
+        ':project_location' => $data['project_location'] ?? null,
+        ':plot_area' => $data['plot_area'] ?? null,
+        ':contact_number' => $data['contact_number'] ?? null
     ]);
 
     if (!$result) {

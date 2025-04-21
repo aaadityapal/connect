@@ -51,11 +51,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             assigned_to = ?,
             assignment_status = CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END,
             updated_at = NOW(),
-            updated_by = ?
+            updated_by = ?,
+            client_name = ?,
+            client_address = ?,
+            project_location = ?,
+            plot_area = ?,
+            contact_number = ?
             WHERE id = ?";
         
         $stmt = $conn->prepare($update_project_sql);
-        $stmt->bind_param("sssissiiii",
+        $stmt->bind_param("sssissiissssssi",
             $data['projectTitle'],
             $data['projectDescription'],
             $data['projectType'],
@@ -65,6 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $assignedTo,
             $assignedTo,
             $_SESSION['user_id'],
+            $data['client_name'],
+            $data['client_address'],
+            $data['project_location'],
+            $data['plot_area'],
+            $data['contact_number'],
             $project_id
         );
         $stmt->execute();

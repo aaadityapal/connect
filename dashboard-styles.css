@@ -3594,26 +3594,40 @@ box-sizing: border-box;
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #e2e8f0;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #e2e8f0;
+    background-color: #e2e8f0;
+    border: 2px solid #cbd5e1;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
 }
 
 .timeline-dot.completed {
-    background: #16a34a;
-    box-shadow: 0 0 0 2px #dcfce7;
+    background-color: #10b981;
+    border-color: #d1fae5;
 }
 
 .timeline-dot.in-progress {
-    background: #2563eb;
-    box-shadow: 0 0 0 2px #dbeafe;
+    background-color: #3b82f6;
+    border-color: #dbeafe;
+}
+
+.stage-timeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 15px;
+    min-width: 20px;
+    position: relative;
+    flex-shrink: 0;
 }
 
 .timeline-line {
-    width: 2px;
+    width: 3px;
     height: 100%;
-    background: #e2e8f0;
-    margin: 8px 0;
+    background-color: #e2e8f0;
+    margin: 4px 0;
+    position: relative;
+    z-index: 1;
 }
 
 .stage-content {
@@ -4498,21 +4512,21 @@ box-sizing: border-box;
 .stage-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
-/* Task Icon Button Styling */
 .task-icon-btn {
     background: none;
     border: none;
-    padding: 8px;
-    cursor: pointer;
-    color: #64748b;
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
+    cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #64748b;
 }
 
 .task-icon-btn:hover {
@@ -4520,8 +4534,28 @@ box-sizing: border-box;
     color: #1e293b;
 }
 
-.task-icon-btn i {
-    font-size: 16px;
+/* Stage Substage Toggle Button */
+.stage-substage-toggle-btn {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+}
+
+.stage-substage-toggle-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.stage-substage-toggle-btn i {
+    transition: transform 0.3s ease;
 }
 
 /* Substage Actions Styling */
@@ -4654,7 +4688,7 @@ box-sizing: border-box;
     margin: 12px 0;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    width: 125%;
+    width: 145%;
     box-sizing: border-box;
 }
 
@@ -5194,4 +5228,51 @@ box-sizing: border-box;
     font-size: 0.875rem;
     color: #1e293b;
     font-weight: 500;
+}
+
+/* Add this to your dashboard-styles.css file */
+.stage-header-left h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+}
+
+/* Style for undefined stages */
+.stage-header-left h4 .undefined-placeholder {
+    font-style: italic;
+    color: #94a3b8;
+}
+
+.stage-actions button, .substage-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: all 0.2s;
+}
+
+.chat-icon-btn, .activity-log-icon-btn {
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+.chat-icon-btn {
+    color: #4a6fdc;
+}
+
+.chat-icon-btn:hover {
+    background-color: rgba(74, 111, 220, 0.1);
+}
+
+.activity-log-icon-btn {
+    color: #6c757d;
+}
+
+.activity-log-icon-btn:hover {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.stage-actions button:hover, .substage-actions button:hover {
+    color: #4a6cf7;
 }

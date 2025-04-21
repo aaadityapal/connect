@@ -53,6 +53,47 @@
                           placeholder="Enter project description"></textarea>
             </div>
 
+            <!-- Client Information Fields -->
+            <div class="form-group">
+                <label for="client_name">
+                    <i class="fas fa-user"></i>
+                    Client Name
+                </label>
+                <input type="text" id="client_name" name="client_name" required placeholder="Enter client name">
+            </div>
+
+            <div class="form-group">
+                <label for="client_address">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Client Address
+                </label>
+                <textarea id="client_address" name="client_address" required placeholder="Enter client address"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="project_location">
+                    <i class="fas fa-location-arrow"></i>
+                    Project Location
+                </label>
+                <input type="text" id="project_location" name="project_location" required placeholder="Enter project location">
+            </div>
+
+            <div class="form-group">
+                <label for="plot_area">
+                    <i class="fas fa-ruler-combined"></i>
+                    Plot Area
+                </label>
+                <input type="text" id="plot_area" name="plot_area" required placeholder="Enter plot area">
+            </div>
+
+            <div class="form-group">
+                <label for="contact_number">
+                    <i class="fas fa-phone"></i>
+                    Contact Number
+                </label>
+                <input type="text" id="contact_number" name="contact_number" required placeholder="Enter contact number">
+            </div>
+
             <div class="form-group project-type-group">
                 <label for="projectType">
                     <i class="fas fa-building"></i>

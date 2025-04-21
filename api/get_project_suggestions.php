@@ -20,6 +20,11 @@ try {
         p.start_date,
         p.end_date,
         p.assigned_to,
+        p.client_name,
+        p.client_address,
+        p.project_location,
+        p.plot_area,
+        p.contact_number,
         CASE WHEN p.assigned_to IS NULL THEN 'Unassigned' ELSE u.username END as assigned_to_name
     FROM projects p
     LEFT JOIN project_categories pc ON p.category_id = pc.id

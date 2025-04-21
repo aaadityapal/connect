@@ -2104,6 +2104,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (project.stages && project.stages.length > 0) {
             project.stages.forEach((stage, index) => {
+                // Check if stage title is undefined or null
+                if (!stage.title || stage.title === 'undefined') {
+                    // Set a default title based on stage number
+                    stage.title = `Project Stage ${stage.stage_number}`;
+                }
+                
+                // Create stage element with fixed title
                 const stageElement = document.createElement('div');
                 stageElement.className = 'stage-item';
                 
@@ -2145,8 +2152,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                             <div class="stage-actions">
-                                <button class="task-icon-btn" title="View Tasks">
-                                    <i class="fas fa-tasks"></i>
+                                <button class="chat-icon-btn" title="View Chat">
+                                    <i class="fas fa-comment-alt"></i>
+                                </button>
+                                <button class="activity-log-icon-btn" title="View Activity Log">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="stage-substage-toggle-btn" title="Toggle Substages">
+                                    <i class="fas fa-chevron-down"></i>
                                 </button>
                                 <div class="stage-status-dropdown">
                                     <select class="status-select" data-stage-id="${stage.id}">
@@ -2164,7 +2177,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         </div>
-                        <div class="substages-container">
+                        <div class="substages-container" style="display: none;">
                             ${stage.substages.map(substage => `
                                 <div class="substage-item ${substage.status}">
                                     <div class="substage-content">
@@ -2255,8 +2268,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                     </div>
                                     <div class="substage-actions">
-                                        <button class="task-icon-btn" title="View Tasks">
-                                            <i class="fas fa-tasks"></i>
+                                        <button class="chat-icon-btn" title="View Chat">
+                                            <i class="fas fa-comment-alt"></i>
+                                        </button>
+                                        <button class="activity-log-icon-btn" title="View Activity Log">
+                                            <i class="fas fa-history"></i>
                                         </button>
                                         <div class="substage-status-badge ${substage.status}">
                                             ${substage.status.charAt(0).toUpperCase() + substage.status.slice(1).replace('_', ' ')}
@@ -2285,6 +2301,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 });
+
+                // Add toggle functionality for stage substage toggle button
+                const stageToggleBtn = stageElement.querySelector('.stage-substage-toggle-btn');
+                if (stageToggleBtn) {
+                    stageToggleBtn.addEventListener('click', function() {
+                        const substagesContainer = stageElement.querySelector('.substages-container');
+                        if (substagesContainer) {
+                            const isVisible = substagesContainer.style.display !== 'none';
+                            substagesContainer.style.display = isVisible ? 'none' : 'block';
+                            // Rotate icon
+                            const icon = this.querySelector('i');
+                            icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                        }
+                    });
+                }
 
                 // Add event listener for status change
                 const statusSelect = stageElement.querySelector('.status-select');

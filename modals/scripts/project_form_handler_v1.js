@@ -1419,6 +1419,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         const projectData = {
             projectTitle: formData.get('projectTitle'),
             projectDescription: formData.get('projectDescription'),
+            client_name: formData.get('client_name'),
+            client_address: formData.get('client_address'),
+            project_location: formData.get('project_location'),
+            plot_area: formData.get('plot_area'),
+            contact_number: formData.get('contact_number'),
             projectType: formData.get('projectType'),
             projectCategory: categoryId, // Use the category ID directly
             startDate: formData.get('startDate'),
@@ -1912,6 +1917,13 @@ async function selectProject(projectId) {
         document.getElementById('projectDescription').value = project.description;
         document.getElementById('projectSuggestions').style.display = 'none';
         
+        // Fill client information fields
+        if (project.client_name) document.getElementById('client_name').value = project.client_name;
+        if (project.client_address) document.getElementById('client_address').value = project.client_address;
+        if (project.project_location) document.getElementById('project_location').value = project.project_location;
+        if (project.plot_area) document.getElementById('plot_area').value = project.plot_area;
+        if (project.contact_number) document.getElementById('contact_number').value = project.contact_number;
+        
         // Handle project type and category
         const typeOption = document.querySelector(`.type-option[data-type="${project.project_type}"]`);
         if (typeOption) {
@@ -2220,6 +2232,11 @@ async function updateProject(e, projectId) {
             projectId: projectId,
             projectTitle: form.querySelector('#projectTitle').value,
             projectDescription: form.querySelector('#projectDescription').value,
+            client_name: form.querySelector('#client_name').value,
+            client_address: form.querySelector('#client_address').value,
+            project_location: form.querySelector('#project_location').value,
+            plot_area: form.querySelector('#plot_area').value,
+            contact_number: form.querySelector('#contact_number').value,
             projectType: form.querySelector('#projectType').value,
             projectCategory: form.querySelector('#projectCategory').value,
             startDate: form.querySelector('#startDate').value,

@@ -1424,3 +1424,31 @@
     color: #999;
     font-style: italic;
 }
+
+/* Form row for two-column layout */
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.form-row .half-width {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .form-row .half-width {
+        margin-bottom: 12px;
+    }
+    
+    .form-row .half-width:last-child {
+        margin-bottom: 0;
+    }
+}

@@ -54,12 +54,23 @@
             </div>
 
             <!-- Client Information Fields -->
-            <div class="form-group">
-                <label for="client_name">
-                    <i class="fas fa-user"></i>
-                    Client Name
-                </label>
-                <input type="text" id="client_name" name="client_name" required placeholder="Enter client name">
+            <!-- Put Client Name and Project Location in one row -->
+            <div class="form-row">
+                <div class="form-group half-width">
+                    <label for="client_name">
+                        <i class="fas fa-user"></i>
+                        Client Name
+                    </label>
+                    <input type="text" id="client_name" name="client_name" required placeholder="Enter client name">
+                </div>
+
+                <div class="form-group half-width">
+                    <label for="project_location">
+                        <i class="fas fa-location-arrow"></i>
+                        Project Location
+                    </label>
+                    <input type="text" id="project_location" name="project_location" required placeholder="Enter project location">
+                </div>
             </div>
 
             <div class="form-group">
@@ -70,28 +81,23 @@
                 <textarea id="client_address" name="client_address" required placeholder="Enter client address"></textarea>
             </div>
 
-            <div class="form-group">
-                <label for="project_location">
-                    <i class="fas fa-location-arrow"></i>
-                    Project Location
-                </label>
-                <input type="text" id="project_location" name="project_location" required placeholder="Enter project location">
-            </div>
+            <!-- Put Plot Area and Contact Number in one row -->
+            <div class="form-row">
+                <div class="form-group half-width">
+                    <label for="plot_area">
+                        <i class="fas fa-ruler-combined"></i>
+                        Plot Area
+                    </label>
+                    <input type="text" id="plot_area" name="plot_area" required placeholder="Enter plot area">
+                </div>
 
-            <div class="form-group">
-                <label for="plot_area">
-                    <i class="fas fa-ruler-combined"></i>
-                    Plot Area
-                </label>
-                <input type="text" id="plot_area" name="plot_area" required placeholder="Enter plot area">
-            </div>
-
-            <div class="form-group">
-                <label for="contact_number">
-                    <i class="fas fa-phone"></i>
-                    Contact Number
-                </label>
-                <input type="text" id="contact_number" name="contact_number" required placeholder="Enter contact number">
+                <div class="form-group half-width">
+                    <label for="contact_number">
+                        <i class="fas fa-phone"></i>
+                        Contact Number
+                    </label>
+                    <input type="text" id="contact_number" name="contact_number" required placeholder="Enter contact number">
+                </div>
             </div>
 
             <div class="form-group project-type-group">

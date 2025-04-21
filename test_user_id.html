@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User ID Comparison Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+        h1, h2 { color: #333; }
+        .result { margin: 10px 0; padding: 5px; border: 1px solid #ddd; }
+        .pass { background-color: #e6ffe6; }
+        .fail { background-color: #ffe6e6; }
+        .code { font-family: monospace; background-color: #f5f5f5; padding: 2px 5px; }
+    </style>
+</head>
+<body>
+    <h1>User ID Comparison Test</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Reference to results container
+        const resultsDiv = document.getElementById('results');
+        
+        // Add meta tag for user ID (simulate what would be in the actual page)
+        const metaTag = document.createElement('meta');
+        metaTag.name = 'user-id';
+        metaTag.content = null; // Test with null user ID
+        document.head.appendChild(metaTag);
+        
+        // Log value from meta tag
+        addResult('Meta tag content', metaTag.content, 'info');
+        addResult('Meta tag content type', typeof metaTag.content, 'info');
+        
+        // Test values
+        const testValues = [
+            { label: 'null', value: null },
+            { label: 'undefined', value: undefined },
+            { label: 'empty string', value: '' },
+            { label: '0 (string)', value: '0' },
+            { label: '0 (number)', value: 0 },
+            { label: '21 (string)', value: '21' },
+            { label: '21 (number)', value: 21 },
+            { label: 'string with spaces', value: ' 21 ' }
+        ];
+        
+        // Test section for string conversion
+        addSection('String Conversion Tests');
+        testValues.forEach(item => {
+            addResult(`String(${item.label})`, String(item.value), 'info');
+        });
+        
+        // Test section for parseInt
+        addSection('parseInt Tests');
+        testValues.forEach(item => {
+            addResult(`parseInt(${item.label})`, parseInt(item.value) || 0, 'info');
+        });
+        
+        // Comparison tests
+        addSection('Comparison Tests');
+        
+        // Define comparison methods
+        const comparisonMethods = [
+            { 
+                name: 'String equality (===)',
+                compare: (a, b) => String(a) === String(b)
+            },
+            { 
+                name: 'Direct equality (==)',
+                compare: (a, b) => a == b
+            },
+            { 
+                name: 'Strict equality (===)',
+                compare: (a, b) => a === b
+            },
+            { 
+                name: 'parseInt equality',
+                compare: (a, b) => (parseInt(a) || 0) === (parseInt(b) || 0)
+            }
+        ];
+        
+        // Test each method with all value combinations
+        comparisonMethods.forEach(method => {
+            addSubSection(method.name);
+            
+            testValues.forEach(value1 => {
+                testValues.forEach(value2 => {
+                    const result = method.compare(value1.value, value2.value);
+                    addResult(
+                        `${value1.label} (${value1.value}) vs ${value2.label} (${value2.value})`,
+                        result ? 'true' : 'false',
+                        null
+                    );
+                });
+            });
+        });
+        
+        // Simulate the actual code from stage-chat.js
+        addSection('Simulated Code from stage-chat.js');
+        
+        function simulateComparison(currentUserId, messageUserId) {
+            // Original implementation - string comparison
+            const currentUserIdStr = String(currentUserId);
+            const messageUserIdStr = String(messageUserId);
+            const stringComparison = messageUserIdStr === currentUserIdStr;
+            
+            // New implementation - parseInt comparison
+            const currentUserIdInt = parseInt(currentUserId) || 0;
+            const messageUserIdInt = parseInt(messageUserId) || 0;
+            const intComparison = currentUserIdInt === messageUserIdInt;
+            
+            return {
+                stringComparison,
+                intComparison
+            };
+        }
+        
+        // Test with some realistic scenarios
+        const testScenarios = [
+            { currentUserId: null, messageUserId: '21', expected: false },
+            { currentUserId: '', messageUserId: '21', expected: false },
+            { currentUserId: '21', messageUserId: '21', expected: true },
+            { currentUserId: 21, messageUserId: '21', expected: true },
+            { currentUserId: '0', messageUserId: 0, expected: true }
+        ];
+        
+        testScenarios.forEach(scenario => {
+            const result = simulateComparison(scenario.currentUserId, scenario.messageUserId);
+            
+            addResult(
+                `currentUserId: ${scenario.currentUserId} (${typeof scenario.currentUserId}), messageUserId: ${scenario.messageUserId} (${typeof scenario.messageUserId})`,
+                `String comparison: ${result.stringComparison}, parseInt comparison: ${result.intComparison}`,
+                result.intComparison === scenario.expected ? 'pass' : 'fail'
+            );
+        });
+        
+        // Helper functions
+        function addSection(title) {
+            const section = document.createElement('h2');
+            section.textContent = title;
+            resultsDiv.appendChild(section);
+        }
+        
+        function addSubSection(title) {
+            const section = document.createElement('h3');
+            section.textContent = title;
+            resultsDiv.appendChild(section);
+        }
+        
+        function addResult(label, value, status) {
+            const result = document.createElement('div');
+            result.className = `result ${status || ''}`;
+            result.innerHTML = `<strong>${label}:</strong> <span class="code">${value}</span>`;
+            resultsDiv.appendChild(result);
+        }
+    </script>
+</body>
+</html> 

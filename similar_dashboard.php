@@ -151,6 +151,7 @@ if ($user_data && isset($user_data['shift_id'])) {
     <script src="assets/js/project-brief-modal.js"></script>
     <script src="assets/js/stage-chat.js"></script>
     <script src="assets/js/project-metrics-dashboard.js"></script>
+    <script src="assets/js/include-user-id.js"></script>
     <script src="assets/js/project-overview.js"></script>
     <script src="assets/js/stage-detail-modal.js"></script>
     <link rel="stylesheet" href="assets/css/chat.css">

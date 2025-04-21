@@ -51,9 +51,11 @@ try {
     $project = $projectResult->fetch_assoc();
     
     // Fetch stage details - match columns from the project_stages table
-    $stageQuery = "SELECT ps.*, u.username as assigned_to_name
+    $stageQuery = "SELECT ps.*, u.username as assigned_to_name, u.profile_picture as assigned_to_profile, 
+                  u2.username as created_by_name, u2.profile_picture as created_by_profile
                   FROM project_stages ps
                   LEFT JOIN users u ON ps.assigned_to = u.id
+                  LEFT JOIN users u2 ON ps.created_by = u2.id
                   WHERE ps.id = ? AND ps.project_id = ? AND ps.deleted_at IS NULL";
     
     $stageStmt = $conn->prepare($stageQuery);
@@ -68,9 +70,11 @@ try {
     $stage = $stageResult->fetch_assoc();
     
     // Fetch substages related to this stage
-    $substagesQuery = "SELECT ps.*, u.username as assigned_to_name
+    $substagesQuery = "SELECT ps.*, u.username as assigned_to_name, u.profile_picture as assigned_to_profile,
+                      u2.username as created_by_name, u2.profile_picture as created_by_profile
                       FROM project_substages ps
                       LEFT JOIN users u ON ps.assigned_to = u.id
+                      LEFT JOIN users u2 ON ps.created_by = u2.id
                       WHERE ps.stage_id = ? AND ps.deleted_at IS NULL
                       ORDER BY ps.substage_number ASC";
     

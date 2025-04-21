@@ -2502,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function updateFileStatus(fileId, status) {
         try {
-            const response = await fetch('update_fie_status.php', {
+            const response = await fetch('api/update_file_status.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2517,12 +2517,67 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Status update response:', data);
 
             if (data.success) {
+                // Show notification about the file status update
                 showNotification(
                     `File ${status === 'approved' ? 'approved' : 'rejected'} successfully`, 
                     'success'
                 );
+                
+                // If the API indicates a substage status change, update UI accordingly
+                if (data.substage_updated) {
+                    const substageId = data.substage_id;
+                    const newStatus = data.new_substage_status;
+                    
+                    if (newStatus) {
+                        // Show notification about substage status change
+                        const statusText = newStatus === 'completed' ? 'completed' : 'in progress';
+                        showNotification(
+                            `Substage status changed to ${statusText}`,
+                            'info'
+                        );
+                        
+                        // Find all elements that might need updating (status badges, etc.)
+                        document.querySelectorAll(`[data-substage-id="${substageId}"]`).forEach(
+                        element => {
+                            // Update status badge/indicator
+                            const statusBadge = element.querySelector('.substage-status-badge, .status-badge');
+                            if (statusBadge) {
+                                // Remove all status classes
+                                statusBadge.classList.remove('not_started', 'pending', 'in_progress', 'in_review', 'on_hold', 'cancelled', 'blocked', 'completed');
+                                // Add new status class
+                                statusBadge.classList.add(newStatus);
+                                statusBadge.textContent = newStatus === 'completed' ? 'Completed' : 'In Progress';
+                            }
+                            
+                            // Update the substage row styling if applicable
+                            const substageItem = element.closest('.substage-item');
+                            if (substageItem) {
+                                // Remove all status classes
+                                substageItem.classList.remove('not_started', 'pending', 'in_progress', 'in_review', 'on_hold', 'cancelled', 'blocked', 'completed');
+                                // Add new status class
+                                substageItem.classList.add(newStatus);
+                            }
+                        });
+                    }
+                }
+                
+                // Update the file status in the table
+                const fileRow = document.querySelector(`tr[data-file-id="${fileId}"]`);
+                if (fileRow) {
+                    const statusCell = fileRow.querySelector('.table-status');
+                    if (statusCell) {
+                        // Remove existing status classes
+                        statusCell.classList.remove('pending', 'approved', 'rejected', 'sent_for_approval');
+                        // Add new status class
+                        statusCell.classList.add(status);
+                        statusCell.textContent = status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+                    }
+                }
+                
                 // Refresh the project details to show updated status
-                openProjectDetailsModal(currentProjectId);
+                if (typeof currentProjectId !== 'undefined' && currentProjectId) {
+                    openProjectDetailsModal(currentProjectId);
+                }
             } else {
                 throw new Error(data.message || 'Failed to update file status');
             }
@@ -2763,37 +2818,47 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
     }
 
-    function updateFileStatus(fileId, status) {
-        fetch('update_fie_status.php', {
+    function handleStatusUpdate(fileId, status) {
+        fetch('api/update_file_status.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                fileId: fileId,  // Match the PHP file's expected parameter name
+                file_id: fileId,
                 status: status
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                // Refresh the table or update the UI as needed
-                location.reload(); // Or use a more elegant way to refresh the data
+                // Show success notification
+                showNotification('Success', `File ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
+                
+                // If the substage status was updated, show notification
+                if (data.substage_updated && data.new_substage_status) {
+                    const statusText = data.new_substage_status === 'completed' ? 'completed' : 'in progress';
+                    showNotification('Info', `Substage status changed to ${statusText}`);
+                }
+                
+                // Refresh the page after a short delay to show the notifications
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             } else {
-                alert('Error: ' + data.message);
+                showNotification('Error', data.error || 'Failed to update status');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while updating the status');
+            showNotification('Error', 'An error occurred while updating the status');
         });
     }
 
     // Update how you generate the table rows
     function generateFileRow(file, index) {
         return `
-            <tr>
+            <tr data-file-id="${file.id}">
                 <td>${index + 1}</td>
                 <td>${file.file_name}</td>
                 <td>${file.type || 'N/A'}</td>
@@ -2815,12 +2880,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                     <button class="table-action-btn action-accept" 
                         title="Accept" 
-                        onclick="updateFileStatus(${file.id}, 'approved')" type="button">
+                        onclick="handleStatusUpdate(${file.id}, 'approved')" type="button">
                         <i class="fas fa-check"></i>
                     </button>
                     <button class="table-action-btn action-reject" 
                         title="Reject" 
-                        onclick="updateFileStatus(${file.id}, 'rejected')" type="button">
+                        onclick="handleStatusUpdate(${file.id}, 'rejected')" type="button">
                         <i class="fas fa-times"></i>
                     </button>
                 </td>
@@ -2876,36 +2941,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
     }
 
-    function handleStatusUpdate(fileId, status) {
-        fetch('update_fie_status.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                file_id: fileId,
-                status: status
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload(); // Or implement a more elegant refresh
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while updating the status');
-        });
-    }
-
     // Update how you generate the table rows
     function generateFileRow(file, index) {
         return `
-            <tr>
+            <tr data-file-id="${file.id}">
                 <td>${index + 1}</td>
                 <td>${file.file_name}</td>
                 <td>${file.type || 'N/A'}</td>
@@ -2914,21 +2953,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${file.status}
                     </span>
                 </td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-info file-action-btn" 
-                        data-action="view" data-file-id="${file.id}">
+                <td class="table-actions">
+                    <button class="table-action-btn action-view" 
+                        title="View details" 
+                        onclick="viewFile('${file.id}')" type="button">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-primary file-action-btn" 
-                        data-action="download" data-file-id="${file.id}">
+                    <button class="table-action-btn action-download" 
+                        title="Download" 
+                        onclick="downloadFile('${file.id}')" type="button">
                         <i class="fas fa-download"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-success file-action-btn" 
-                        data-action="approve" data-file-id="${file.id}">
+                    <button class="table-action-btn action-accept" 
+                        title="Accept" 
+                        onclick="handleStatusUpdate(${file.id}, 'approved')" type="button">
                         <i class="fas fa-check"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-danger file-action-btn" 
-                        data-action="reject" data-file-id="${file.id}">
+                    <button class="table-action-btn action-reject" 
+                        title="Reject" 
+                        onclick="handleStatusUpdate(${file.id}, 'rejected')" type="button">
                         <i class="fas fa-times"></i>
                     </button>
                 </td>
@@ -2958,7 +3001,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.updateFileStatus = function(fileId, status) {
-        fetch('update_fie_status.php', {
+        fetch('api/update_file_status.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2973,6 +3016,26 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 // Show success notification
                 showNotification('Success', `File ${status === 'approved' ? 'approved' : 'rejected'} successfully`, 'success');
+                
+                // If the substage status was updated, show notification
+                if (data.substage_updated && data.new_substage_status) {
+                    const statusText = data.new_substage_status === 'completed' ? 'completed' : 'in progress';
+                    showNotification('Substage Updated', `Substage status changed to ${statusText}`, 'info');
+                    
+                    // Update any UI elements with the substage status
+                    const substageId = data.substage_id;
+                    document.querySelectorAll(`[data-substage-id="${substageId}"]`).forEach(element => {
+                        const statusElement = element.querySelector('.status-badge, .substage-status-badge');
+                        if (statusElement) {
+                            // Clear existing status classes
+                            statusElement.classList.remove('not_started', 'pending', 'in_progress', 'in_review', 'on_hold', 'cancelled', 'blocked', 'completed');
+                            // Add new status class
+                            statusElement.classList.add(data.new_substage_status);
+                            statusElement.textContent = data.new_substage_status === 'completed' ? 'Completed' : 'In Progress';
+                        }
+                    });
+                }
+                
                 // Refresh the project details
                 if (typeof currentProjectId !== 'undefined') {
                     openProjectDetailsModal(currentProjectId);

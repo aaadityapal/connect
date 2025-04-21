@@ -44,3 +44,49 @@
 [2025-04-18 09:16:19]   Yojna Sharma (ID: 3, Role: Senior Manager (Studio))
 [2025-04-18 09:16:19]   Rachana Pal (ID: 11, Role: Senior Manager (Studio))
 [2025-04-18 09:16:19]   Prabhat Arya (ID: 25, Role: Senior Manager (Studio))
+[2025-04-19 12:37:09] === SIMPLIFIED VERSION - New request for senior managers ===
+[2025-04-19 12:37:09] Found yojna Sharma: Array
+(
+    [id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [status] => Active
+)
+
+[2025-04-19 12:37:09] All Senior Manager (Studio) users:
+[2025-04-19 12:37:09]   Manager: Array
+(
+    [id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [status] => Active
+)
+
+[2025-04-19 12:37:09]   Manager: Array
+(
+    [id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Studio)
+    [status] => Active
+)
+
+[2025-04-19 12:37:09]   Manager: Array
+(
+    [id] => 25
+    [username] => Prabhat Arya
+    [role] => Senior Manager (Studio)
+    [status] => Active
+)
+
+[2025-04-19 12:37:09] Running simplified query: SELECT id, username, role FROM users 
+                 WHERE role LIKE '%Senior Manager (Studio)%' 
+                 AND (status = 'Active' OR status = 'active') 
+                 AND deleted_at IS NULL
+[2025-04-19 12:37:09] Found 3 rows
+[2025-04-19 12:37:09] Added manager: Yojna Sharma (ID: 3, Role: Senior Manager (Studio))
+[2025-04-19 12:37:09] Added manager: Rachana Pal (ID: 11, Role: Senior Manager (Studio))
+[2025-04-19 12:37:09] Added manager: Prabhat Arya (ID: 25, Role: Senior Manager (Studio))
+[2025-04-19 12:37:09] Returning 3 managers:
+[2025-04-19 12:37:09]   Yojna Sharma (ID: 3, Role: Senior Manager (Studio))
+[2025-04-19 12:37:09]   Rachana Pal (ID: 11, Role: Senior Manager (Studio))
+[2025-04-19 12:37:09]   Prabhat Arya (ID: 25, Role: Senior Manager (Studio))

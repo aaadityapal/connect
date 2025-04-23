@@ -3470,4 +3470,3 @@ main.blurred {
 .loading-spinner {
     z-index: calc(var(--z-modal) - 2);
 }
-

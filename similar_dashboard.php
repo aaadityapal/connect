@@ -2451,11 +2451,456 @@ if ($user_data && isset($user_data['shift_id'])) {
             font-size: 0.9rem;
             margin: 0;
         }
+        /* Task Manager Dashboard Styles */
+/* Task Manager Dashboard Styles */
+.tm-dashboard-overview-section {
+    padding: 20px;
+    margin: 0 0 25px 0;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.tm-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.tm-dashboard-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.tm-dashboard-filters {
+    display: flex;
+    gap: 10px;
+}
+
+.tm-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tm-filter-item:hover {
+    background: #f1f5f9;
+    color: #334155;
+    transform: translateY(-1px);
+}
+
+.tm-filter-item.active {
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.tm-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.tm-metrics-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border: 1px solid #f1f5f9;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.tm-metrics-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.tm-card-primary {
+    border-top: 3px solid #3b82f6;
+}
+
+.tm-card-warning {
+    border-top: 3px solid #f59e0b;
+}
+
+.tm-card-success {
+    border-top: 3px solid #10b981;
+}
+
+.tm-card-info {
+    border-top: 3px solid #06b6d4;
+}
+
+.tm-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.tm-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.tm-card-primary .tm-card-icon {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.tm-card-warning .tm-card-icon {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+.tm-card-success .tm-card-icon {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.tm-card-info .tm-card-icon {
+    background: #ecfeff;
+    color: #06b6d4;
+}
+
+.tm-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    padding-top: 4px;
+}
+
+.tm-card-content {
+    flex-grow: 1;
+    margin-bottom: 16px;
+}
+
+.tm-card-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 3px;
+}
+
+.tm-card-description {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.tm-card-stats {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.tm-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tm-stat-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-bottom: 3px;
+}
+
+.tm-stat-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.tm-deadline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tm-deadline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 3px solid #cbd5e1;
+}
+
+.tm-deadline-item.tm-urgent {
+    background: #fff1f2;
+    border-left: 3px solid #e11d48;
+}
+
+.tm-deadline-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.tm-deadline-title {
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: #334155;
+    margin-bottom: 2px;
+}
+
+.tm-deadline-project {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.tm-deadline-date {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.tm-deadline-item.tm-urgent .tm-deadline-date {
+    color: #e11d48;
+    font-weight: 600;
+}
+
+.tm-progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tm-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.tm-progress-bar {
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.tm-progress-fill {
+    height: 100%;
+    background: #10b981;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.tm-team-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tm-team-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.tm-team-item:hover {
+    background: #f8fafc;
+}
+
+.tm-team-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.tm-team-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.tm-team-name {
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: #334155;
+    margin-bottom: 2px;
+}
+
+.tm-team-count {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.tm-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.tm-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.tm-view-all {
+    color: #3b82f6;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.tm-view-all:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.tm-activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-left: 12px;
+    position: relative;
+}
+
+.tm-activity-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 18px;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.tm-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+}
+
+.tm-activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.9rem;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.tm-icon-update {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.tm-icon-comment {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.tm-icon-add {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+.tm-activity-content {
+    flex: 1;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+}
+
+.tm-activity-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.tm-activity-details {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+}
+
+.tm-activity-meta {
+    display: flex;
+    justify-content: space-between;
+    color: #94a3b8;
+    font-size: 0.7rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .tm-dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .tm-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tm-dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .tm-dashboard-filters {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+}
     </style>
     
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Include the Project Brief Modal -->
+    <?php include 'include_project_brief_modal.php'; ?>
 
     <!-- Scrollable upcoming dates styles -->
     <style>
@@ -2666,417 +3111,660 @@ if ($user_data && isset($user_data['shift_id'])) {
 
            <!-- Task Overview Section -->
             <div class="container">
-<div class="project-metrics-dashboard">
-    <div class="metrics-header">
-        <h2 class="metrics-title">Project Metrics</h2>
-        <div class="metrics-filters">
-            <div class="metrics-date-range">
-                <div class="metrics-date-input">
-                    <label>From:</label>
-                    <input type="date" id="metricsStartDate">
+                <div class="row">
+                <div class="col-md-12">
+                        <div class="tm-dashboard-overview-section">
+                            <div class="tm-dashboard-header">
+                                <h4 class="tm-dashboard-title">Task Dashboard</h4>
+                                <div class="tm-dashboard-filters">
+                                    <div class="tm-filter-item active">
+                                        <i class="fas fa-tasks"></i>
+                                        <span>All</span>
                 </div>
-                <div class="metrics-date-input">
-                    <label>To:</label>
-                    <input type="date" id="metricsEndDate">
+                                    <div class="tm-filter-item">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        <span>Pending</span>
                 </div>
-                <button class="metrics-apply-btn">Apply Filter</button>
-                <button class="metrics-reset-btn">Reset</button>
+                                    <div class="tm-filter-item">
+                                        <i class="fas fa-spinner"></i>
+                                        <span>In Progress</span>
+            </div>
+                                    <div class="tm-filter-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Completed</span>
             </div>
         </div>
     </div>
 
-    <div class="pmd-metrics-cards-wrapper">
-        <!-- Active Projects Overview Card -->
-        <div class="pmd-metrics-card active-projects">
-            <div class="metrics-card-header">
-                <h3>Active Projects Overview</h3>
-                <i class="fas fa-chart-pie"></i>
+                            <div class="tm-dashboard-grid">
+                                <!-- Task Summary Card -->
+                                <div class="tm-metrics-card tm-card-primary">
+                                    <div class="tm-card-header">
+                                        <h3 class="tm-card-title">Task Summary</h3>
+                                        <div class="tm-card-icon">
+                                            <i class="fas fa-clipboard-list"></i>
             </div>
-            <div class="metrics-data-grid">
+                                    </div>
+                                    <div class="tm-card-content">
                 <?php
-                // Database connection
-                $host = 'localhost';
-                $username = 'root';
-                $password = '';
-                $database = 'crm'; // replace with your database name
-
-                // Create connection
-                $db = new mysqli($host, $username, $password, $database);
-
-                // Check connection
-                if ($db->connect_error) {
-                    die("Connection failed: " . $db->connect_error);
-                }
-
-                // Update the Project Metrics queries
-                $totalProjects = $db->query("
-                    SELECT COUNT(DISTINCT p.id) as count 
-                    FROM projects p
-                    LEFT JOIN project_stages ps ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE p.deleted_at IS NULL 
-                    AND (
-                        p.assigned_to = '$user_id'
-                        OR ps.assigned_to = '$user_id'
-                        OR pss.assigned_to = '$user_id'
-                    )"
-                )->fetch_object()->count;
-
-                // Get in progress projects
-                $inProgress = $db->query("
-                    SELECT COUNT(DISTINCT p.id) as count 
-                    FROM projects p
-                    LEFT JOIN project_stages ps ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE p.deleted_at IS NULL 
-                    AND (
-                        (p.assigned_to = '$user_id' AND p.status = 'in_progress')
-                        OR (ps.assigned_to = '$user_id' AND ps.status = 'in_progress')
-                        OR (pss.assigned_to = '$user_id' AND pss.status = 'in_progress')
-                    )"
-                )->fetch_object()->count;
-
-                // Get due soon projects (next 7 days)
-                $due = $db->query("
-                    SELECT COUNT(DISTINCT p.id) as count 
-                    FROM projects p
-                    LEFT JOIN project_stages ps ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE p.deleted_at IS NULL 
-                    AND (
-                        (p.assigned_to = '$user_id' AND p.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY))
-                        OR (ps.assigned_to = '$user_id' AND ps.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY))
-                        OR (pss.assigned_to = '$user_id' AND pss.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY))
-                    )
-                    AND p.status != 'completed'"
-                )->fetch_object()->count;
-
-                // Get overdue projects
-                $overdue = $db->query("
-                    SELECT COUNT(DISTINCT p.id) as count 
-                    FROM projects p
-                    LEFT JOIN project_stages ps ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE p.deleted_at IS NULL 
-                    AND (
-                        (p.assigned_to = '$user_id' AND p.end_date < CURDATE())
-                        OR (ps.assigned_to = '$user_id' AND ps.end_date < CURDATE())
-                        OR (pss.assigned_to = '$user_id' AND pss.end_date < CURDATE())
-                    )
-                    AND p.status != 'completed'"
-                )->fetch_object()->count;
-
-                // Update the chart data query
-                $chartData = $db->query("
-                    SELECT 
-                        CASE 
-                            WHEN p.status = 'completed' THEN 'Completed'
-                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
-                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
-                            ELSE 'Pending'
-                        END as status,
-                        COUNT(DISTINCT p.id) as count
-                    FROM projects p
-                    LEFT JOIN project_stages ps ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE p.deleted_at IS NULL 
-                    AND (
-                        p.assigned_to = '$user_id'
-                        OR ps.assigned_to = '$user_id'
-                        OR pss.assigned_to = '$user_id'
-                    )
-                    GROUP BY 
-                        CASE 
-                            WHEN p.status = 'completed' THEN 'Completed'
-                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
-                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
-                            ELSE 'Pending'
-                        END"
-                )->fetch_all(MYSQLI_ASSOC);
-
-                // Update the upcoming stages query
-                $upcomingStages = $db->query("
-                    SELECT 
-                        ps.*, 
-                        p.title as project_title,
-                        CASE 
-                            WHEN p.assigned_to = '$user_id' THEN 'Project Owner'
-                            WHEN ps.assigned_to = '$user_id' THEN 'Stage Owner'
-                            WHEN pss.assigned_to = '$user_id' THEN 'Substage Owner'
-                        END as role_type
-                    FROM project_stages ps
-                    JOIN projects p ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE ps.deleted_at IS NULL 
-                    AND (
-                        p.assigned_to = '$user_id'
-                        OR ps.assigned_to = '$user_id'
-                        OR pss.assigned_to = '$user_id'
-                    )
-                    AND ps.status IN ('in_progress', 'not_started')
-                    ORDER BY ps.end_date ASC
-                    LIMIT 5"
-                );
-                ?>
-
-                <div class="metric-item small">
-                    <div class="metric-icon total-active">
-                        <i class="fas fa-project-diagram"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">Total Projects</span>
-                        <span class="metric-value" id="totalProjects"><?php echo $totalProjects; ?></span>
-                    </div>
-                </div>
-                <div class="metric-item small">
-                    <div class="metric-icon pending">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">In Progress</span>
-                        <span class="metric-value" id="inProgressProjects"><?php echo $inProgress; ?></span>
-                    </div>
-                </div>
-                <div class="metric-item small">
-                    <div class="metric-icon due">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">Due Soon</span>
-                        <span class="metric-value" id="dueProjects"><?php echo $due; ?></span>
-                    </div>
-                </div>
-                <div class="metric-item small">
-                    <div class="metric-icon overdue">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    <div class="metric-info">
-                        <span class="metric-label">Overdue</span>
-                        <span class="metric-value" id="overdueProjects"><?php echo $overdue; ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="metrics-chart-container">
-                <?php
-                // Get data for chart
-                $chartData = $db->query("
-                    SELECT 
-                        CASE 
-                            WHEN p.status = 'completed' THEN 'Completed'
-                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
-                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
-                            ELSE 'Pending'
-                        END as status,
-                        COUNT(DISTINCT p.id) as count
-                    FROM projects p
-                    LEFT JOIN project_stages ps ON p.id = ps.project_id
-                    LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                    WHERE p.deleted_at IS NULL 
-                    AND (
-                        p.assigned_to = '$user_id'
-                        OR ps.assigned_to = '$user_id'
-                        OR pss.assigned_to = '$user_id'
-                    )
-                    GROUP BY 
-                        CASE 
-                            WHEN p.status = 'completed' THEN 'Completed'
-                            WHEN p.status = 'in_progress' OR ps.status = 'in_progress' OR pss.status = 'in_progress' THEN 'In Progress'
-                            WHEN p.end_date < CURDATE() AND p.status != 'completed' THEN 'Overdue'
-                            ELSE 'Pending'
-                        END"
-                )->fetch_all(MYSQLI_ASSOC);
-                ?>
-                <canvas id="projectStatusChart"></canvas>
-                <script>
-                    // Initialize the chart
-                    const ctx = document.getElementById('projectStatusChart').getContext('2d');
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: <?php echo json_encode(array_column($chartData, 'status')); ?>,
-                            datasets: [{
-                                data: <?php echo json_encode(array_column($chartData, 'count')); ?>,
-                                backgroundColor: [
-                                    '#4CAF50', // Active
-                                    '#FFC107', // Pending
-                                    '#2196F3', // Due
-                                    '#DC3545'  // Overdue
-                                ],
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 20,
-                                        font: {
-                                            size: 12
+                                        // Get the current user ID
+                                        $userId = $_SESSION['user_id'];
+                                        
+                                        // Count stages by status
+                                        $stageStatusQuery = "SELECT 
+                                            status, 
+                                            COUNT(*) as count 
+                                        FROM 
+                                            project_stages 
+                                        WHERE 
+                                            assigned_to = $userId
+                                            AND deleted_at IS NULL
+                                        GROUP BY 
+                                            status";
+                                        
+                                        $stageResult = mysqli_query($conn, $stageStatusQuery);
+                                        
+                                        // Initialize counters for stages
+                                        $stageNotStarted = 0;
+                                        $stagePending = 0;
+                                        $stageInProgress = 0;
+                                        $stageCompleted = 0;
+                                        $totalStages = 0;
+                                        
+                                        // Process stage results
+                                        while ($stageRow = mysqli_fetch_assoc($stageResult)) {
+                                            if ($stageRow['status'] == 'not_started') {
+                                                $stageNotStarted += $stageRow['count'];
+                                            } else if ($stageRow['status'] == 'pending') {
+                                                $stagePending += $stageRow['count'];
+                                            } else if ($stageRow['status'] == 'in_progress' || $stageRow['status'] == 'in_review') {
+                                                $stageInProgress += $stageRow['count'];
+                                            } else if ($stageRow['status'] == 'completed') {
+                                                $stageCompleted += $stageRow['count'];
+                                            }
+                                            $totalStages += $stageRow['count'];
                                         }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                </script>
-            </div>
-        </div>
-
-        <!-- Upcoming Project Stages Card -->
-<div class="pmd-metrics-card upcoming-stages">
-    <div class="metrics-card-header">
-        <h3>Upcoming Project Stages</h3>
-        <i class="fas fa-ellipsis-v"></i>
-    </div>
-    <div class="pmd-upcoming-stages-list" id="upcomingStagesList">
-        <?php 
-        // Updated query to only show stages assigned to current user
-        $upcomingStages = $db->query("
-            SELECT 
-                ps.*, 
-                p.title as project_title,
-                'Stage Owner' as role_type
-            FROM project_stages ps
-            JOIN projects p ON p.id = ps.project_id
-            WHERE ps.deleted_at IS NULL 
-            AND ps.assigned_to = '$user_id'
-            AND ps.status IN ('in_progress', 'not_started')
-            ORDER BY ps.end_date ASC
-            LIMIT 5"
-        );
-        
-        if ($upcomingStages->num_rows > 0) {
-            while ($stage = $upcomingStages->fetch_object()): 
-        ?>
-            <div class="pmd-stage-item">
-                <div class="pmd-stage-markers">
-                    <div class="pmd-marker-yellow"></div>
+                                        
+                                        // Count substages by status
+                                        $substageStatusQuery = "SELECT 
+                                            status, 
+                                            COUNT(*) as count 
+                                        FROM 
+                                            project_substages 
+                                        WHERE 
+                                            assigned_to = $userId
+                                            AND deleted_at IS NULL
+                                        GROUP BY 
+                                            status";
+                                        
+                                        $substageResult = mysqli_query($conn, $substageStatusQuery);
+                                        
+                                        // Initialize counters for substages
+                                        $substageNotStarted = 0;
+                                        $substagePending = 0;
+                                        $substageInProgress = 0;
+                                        $substageCompleted = 0;
+                                        $totalSubstages = 0;
+                                        
+                                        // Process substage results
+                                        while ($substageRow = mysqli_fetch_assoc($substageResult)) {
+                                            if ($substageRow['status'] == 'not_started') {
+                                                $substageNotStarted += $substageRow['count'];
+                                            } else if ($substageRow['status'] == 'pending') {
+                                                $substagePending += $substageRow['count'];
+                                            } else if ($substageRow['status'] == 'in_progress' || $substageRow['status'] == 'in_review') {
+                                                $substageInProgress += $substageRow['count'];
+                                            } else if ($substageRow['status'] == 'completed') {
+                                                $substageCompleted += $substageRow['count'];
+                                            }
+                                            $totalSubstages += $substageRow['count'];
+                                        }
+                                        
+                                        // Calculate totals
+                                        $totalNotStarted = $stageNotStarted + $substageNotStarted;
+                                        $totalPending = $stagePending + $substagePending;
+                                        $totalInProgress = $stageInProgress + $substageInProgress;
+                                        $totalCompleted = $stageCompleted + $substageCompleted;
+                                        $totalTasks = $totalStages + $totalSubstages;
+                                        
+                                        // Calculate completion percentage
+                                        $completionPercentage = $totalTasks > 0 ? round(($totalCompleted / $totalTasks) * 100) : 0;
+                                        ?>
+                                        <div class="tm-card-value">
+                                            <?php echo $totalTasks; ?>
+                                            <span class="tm-completion-badge">
+                                                <i class="fas fa-check-circle"></i> <?php echo $completionPercentage; ?>% Complete
+                                            </span>
+                    </div>
+                                        <div class="tm-task-breakdown">
+                                            <div class="tm-breakdown-row">
+                                                <span class="tm-breakdown-label">Stages:</span>
+                                                <span class="tm-breakdown-value"><?php echo $totalStages; ?></span>
+                    </div>
+                                            <div class="tm-breakdown-row">
+                                                <span class="tm-breakdown-label">Substages:</span>
+                                                <span class="tm-breakdown-value"><?php echo $totalSubstages; ?></span>
                 </div>
-                <div class="stage-content">
-                    <div class="stage-main">
-                        <h4><?php echo htmlspecialchars($stage->project_title); ?></h4>
-                        <div class="stage-info">
-                            <div class="due-date">
-                                <i class="far fa-calendar-alt"></i>
-                                <span><?php echo date('M d, Y', strtotime($stage->end_date)); ?></span>
-                            </div>
-                            <span class="status-badge <?php echo $stage->status; ?>">
-                                <?php echo ucfirst(str_replace('_', ' ', $stage->status)); ?>
-                            </span>
-                            <span class="role-badge stage-owner">
-                                <?php echo $stage->role_type; ?>
-                            </span>
-                        </div>
-                        <div class="stage-phase">Stage <?php echo $stage->stage_number; ?></div>
+                    </div>
+                    </div>
+                                    <div class="tm-card-stats">
+                                        <div class="tm-stat-item">
+                                            <div class="tm-stat-header">
+                                                <i class="fas fa-hourglass-half tm-stat-icon tm-pending-icon"></i>
+                                                <span class="tm-stat-label">Pending</span>
+                </div>
+                                            <span class="tm-stat-value"><?php echo $totalPending; ?></span>
+                                            <div class="tm-stat-progress">
+                                                <div class="tm-progress-bar">
+                                                    <div class="tm-progress-fill" style="width: <?php echo $totalTasks > 0 ? ($totalPending / $totalTasks) * 100 : 0; ?>%; background-color: #f59e0b;"></div>
+                    </div>
+                    </div>
+                </div>
+                                        <div class="tm-stat-item">
+                                            <div class="tm-stat-header">
+                                                <i class="fas fa-clock tm-stat-icon tm-not-started-icon"></i>
+                                                <span class="tm-stat-label">Not Started</span>
+                    </div>
+                                            <span class="tm-stat-value"><?php echo $totalNotStarted; ?></span>
+                                            <div class="tm-stat-progress">
+                                                <div class="tm-progress-bar">
+                                                    <div class="tm-progress-fill" style="width: <?php echo $totalTasks > 0 ? ($totalNotStarted / $totalTasks) * 100 : 0; ?>%; background-color: #9333ea;"></div>
                     </div>
                 </div>
             </div>
+                                        <div class="tm-stat-item">
+                                            <div class="tm-stat-header">
+                                                <i class="fas fa-spinner tm-stat-icon tm-progress-icon"></i>
+                                                <span class="tm-stat-label">In Progress</span>
+                                            </div>
+                                            <span class="tm-stat-value"><?php echo $totalInProgress; ?></span>
+                                            <div class="tm-stat-progress">
+                                                <div class="tm-progress-bar">
+                                                    <div class="tm-progress-fill" style="width: <?php echo $totalTasks > 0 ? ($totalInProgress / $totalTasks) * 100 : 0; ?>%; background-color: #3b82f6;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tm-stat-item">
+                                            <div class="tm-stat-header">
+                                                <i class="fas fa-check-circle tm-stat-icon tm-completed-icon"></i>
+                                                <span class="tm-stat-label">Completed</span>
+                                            </div>
+                                            <span class="tm-stat-value"><?php echo $totalCompleted; ?></span>
+                                            <div class="tm-stat-progress">
+                                                <div class="tm-progress-bar">
+                                                    <div class="tm-progress-fill" style="width: <?php echo $totalTasks > 0 ? ($totalCompleted / $totalTasks) * 100 : 0; ?>%; background-color: #10b981;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <style>
+                                    .tm-completion-badge {
+                                        font-size: 0.75rem;
+                                        background-color: #ecfdf5;
+                                        color: #10b981;
+                                        padding: 3px 8px;
+                                        border-radius: 20px;
+                                        margin-left: 10px;
+                                        vertical-align: middle;
+                                        white-space: nowrap;
+                                    }
+                                    
+                                    .tm-task-breakdown {
+                                        display: flex;
+                                        flex-direction: column;
+                                        gap: 6px;
+                                        margin-top: 12px;
+                                        font-size: 0.75rem;
+                                        color: #64748b;
+                                    }
+                                    
+                                    .tm-breakdown-row {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    }
+                                    
+                                    .tm-breakdown-value {
+                                        font-weight: 600;
+                                        color: #334155;
+                                    }
+                                    
+                                    .tm-stat-header {
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 5px;
+                                        margin-bottom: 3px;
+                                    }
+                                    
+                                    .tm-stat-icon {
+                                        font-size: 0.9rem;
+                                    }
+                                    
+                                    .tm-pending-icon {
+                                        color: #f59e0b;
+                                    }
+                                    
+                                    .tm-not-started-icon {
+                                        color: #9333ea;
+                                    }
+                                    
+                                    .tm-progress-icon {
+                                        color: #3b82f6;
+                                    }
+                                    
+                                    .tm-completed-icon {
+                                        color: #10b981;
+                                    }
+                                    
+                                    .tm-stat-progress {
+                                        margin-top: 4px;
+                                    }
+                                    
+                                    .tm-progress-bar {
+                                        height: 4px;
+                                        background: #f1f5f9;
+                                        border-radius: 2px;
+                                        overflow: hidden;
+                                    }
+                                    
+                                    .tm-progress-fill {
+                                        height: 100%;
+                                        border-radius: 2px;
+                                        transition: width 0.5s ease;
+                                    }
+                                    
+                                    .tm-card-stats {
+                                        display: grid;
+                                        grid-template-columns: repeat(2, 1fr);
+                                        gap: 15px 10px;
+                                        padding-top: 12px;
+                                        border-top: 1px solid #f1f5f9;
+                                    }
+                                    </style>
+            </div>
+                                <!-- Deadline Card -->
+                                <div class="tm-metrics-card tm-card-warning">
+                                    <div class="tm-card-header">
+                                        <h3 class="tm-card-title">Upcoming Deadlines</h3>
+                                        <div class="tm-card-icon">
+                                            <i class="fas fa-calendar-alt"></i>
+        </div>
+    </div>
+                                    <div class="tm-card-content">
         <?php 
-            endwhile; 
+                                        // Fetch upcoming substages assigned to current user
+                                        $userId = $_SESSION['user_id'];
+                                        $currentDate = date('Y-m-d');
+                                        
+                                        $upcomingQuery = "SELECT 
+                                            ps.id as substage_id,
+                                            ps.title as substage_title,
+                                            ps.end_date,
+                p.title as project_title,
+                                            p.id as project_id
+                                        FROM 
+                                            project_substages ps
+                                            JOIN project_stages pst ON ps.stage_id = pst.id
+                                            JOIN projects p ON pst.project_id = p.id
+                                        WHERE 
+                                            ps.assigned_to = $userId
+                                            AND ps.end_date >= '$currentDate'
+                                            AND ps.deleted_at IS NULL
+                                            AND ps.status != 'completed'
+                                            AND ps.status != 'cancelled'
+            ORDER BY ps.end_date ASC
+                                        LIMIT 5";
+        
+                                        $upcomingResult = mysqli_query($conn, $upcomingQuery);
+                                        $upcomingCount = mysqli_num_rows($upcomingResult);
+        ?>
+                                        <div class="tm-card-value"><?php echo $upcomingCount; ?></div>
+                                        <div class="tm-card-description">Tasks due soon</div>
+                </div>
+                                    <div class="tm-deadline-list">
+        <?php 
+                                        if ($upcomingCount > 0) {
+                                            while ($substage = mysqli_fetch_assoc($upcomingResult)) {
+                                                // Calculate days until deadline
+                                                $endDate = new DateTime($substage['end_date']);
+                                                $today = new DateTime($currentDate);
+                                                $interval = $today->diff($endDate);
+                                                $daysRemaining = $interval->days;
+                                                
+                                                // Determine if urgent (3 days or less)
+                                                $isUrgent = $daysRemaining <= 3 ? 'tm-urgent' : '';
+                                                
+                                                // Format the date display
+                                                if ($daysRemaining == 0) {
+                                                    $dueText = "Today";
+                                                } elseif ($daysRemaining == 1) {
+                                                    $dueText = "Tomorrow";
+        } else {
+                                                    $dueText = "In $daysRemaining days";
+                                                }
+                                        ?>
+                                                <div class="tm-deadline-item <?php echo $isUrgent; ?>">
+                                                    <div class="tm-deadline-info">
+                                                        <span class="tm-deadline-title"><?php echo htmlspecialchars($substage['substage_title']); ?></span>
+                                                        <span class="tm-deadline-project"><?php echo htmlspecialchars($substage['project_title']); ?></span>
+                            </div>
+                                                    <div class="tm-deadline-date"><?php echo $dueText; ?></div>
+            </div>
+        <?php 
+                                            }
         } else {
         ?>
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>No upcoming stages assigned to you</p>
+                                            <div class="tm-deadline-item">
+                                                <div class="tm-deadline-info">
+                                                    <span class="tm-deadline-title">No upcoming deadlines</span>
+                                                    <span class="tm-deadline-project">You're all caught up!</span>
+        </div>
+                                                <div class="tm-deadline-date">-</div>
             </div>
         <?php 
         }
         ?>
     </div>
 </div>
-        <div class="pmd-milestone-container">
-    <!-- Header Section -->
-    <div class="pmd-milestone-header">
-        <div class="pmd-header-left">
-            <h2 class="pmd-milestone-title">Project Substages</h2>
-            <span class="pmd-milestone-count">
+                                <!-- Efficiency Card -->
+                                <div class="tm-metrics-card tm-card-success">
+                                    <div class="tm-card-header">
+                                        <h3 class="tm-card-title">Task Efficiency</h3>
+                                        <div class="tm-card-icon">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                    </div>
+                                    <div class="tm-card-content">
                 <?php 
-                // Get count of pending substages for current user only
-                $pending_count_query = "SELECT COUNT(*) as count 
-                    FROM project_substages 
-                    WHERE (status = 'pending' OR status = 'not_started') 
+                                        // Get the current user ID
+                                        $userId = $_SESSION['user_id'];
+                                        $currentDate = date('Y-m-d');
+                                        
+                                        // Calculate completed substages within deadline vs. total completed
+                                        $efficiencyQuery = "SELECT 
+                                            COUNT(*) as total_completed,
+                                            SUM(CASE WHEN updated_at <= end_date THEN 1 ELSE 0 END) as on_time_completed
+                                        FROM 
+                                            project_substages 
+                                        WHERE 
+                                            assigned_to = $userId
+                                            AND status = 'completed'
                     AND deleted_at IS NULL 
-                    AND assigned_to = '$user_id'";
-                $pending_result = $db->query($pending_count_query);
-                $count_row = $pending_result->fetch_assoc();
-                echo $count_row['count'] . ' pending';
-                ?>
-            </span>
+                                            AND updated_at IS NOT NULL";
+                                        
+                                        $efficiencyResult = mysqli_query($conn, $efficiencyQuery);
+                                        $efficiencyData = mysqli_fetch_assoc($efficiencyResult);
+                                        
+                                        $totalCompleted = $efficiencyData['total_completed'];
+                                        $onTimeCompleted = $efficiencyData['on_time_completed'];
+                                        
+                                        // Calculate efficiency percentage
+                                        $efficiencyPercentage = 0;
+                                        if ($totalCompleted > 0) {
+                                            $efficiencyPercentage = round(($onTimeCompleted / $totalCompleted) * 100);
+                                        }
+                                        
+                                        // Progress towards monthly goal (assumed 90%)
+                                        $monthlyGoal = 90;
+                                        $progressPercentage = min(($efficiencyPercentage / $monthlyGoal) * 100, 100);
+                                        
+                                        // Determine color based on efficiency
+                                        $efficiencyColor = "#10b981"; // Default green
+                                        if ($efficiencyPercentage < 70) {
+                                            $efficiencyColor = "#ef4444"; // Red for low efficiency
+                                        } else if ($efficiencyPercentage < 85) {
+                                            $efficiencyColor = "#f59e0b"; // Orange for medium efficiency
+                                        }
+                                        ?>
+                                        <div class="tm-card-value" style="color: <?php echo $efficiencyColor; ?>">
+                                            <?php echo $efficiencyPercentage; ?>%
         </div>
+                                        <div class="tm-card-description">On-time completion rate</div>
+                                        <div class="tm-efficiency-details">
+                                            <div class="tm-details-row">
+                                                <span class="tm-details-label">Total Completed:</span>
+                                                <span class="tm-details-value"><?php echo $totalCompleted; ?></span>
     </div>
-
-    <!-- Substage Items -->
-    <div class="pmd-milestone-list">
-        <?php
-        // Updated query to show only substages assigned to current user
-        $substages_query = "
-            SELECT ps.*, u.username as assignee_name 
-            FROM project_substages ps
-            LEFT JOIN users u ON ps.assigned_to = u.id 
-            WHERE ps.status IN ('pending', 'not_started') 
-            AND ps.deleted_at IS NULL 
-            AND ps.assigned_to = $user_id
-            ORDER BY ps.end_date ASC
-        ";
-
-        $substages_result = $db->query($substages_query);
-
-        if ($substages_result->num_rows > 0) {
-            while ($substage = $substages_result->fetch_assoc()):
-                $progress = 0;
-                if ($substage['status'] === 'pending') {
-                    $progress = 30; // You can adjust this or fetch actual progress
-                }
-        ?>
-        <div class="pmd-milestone-item">
-            <div class="pmd-milestone-main">
-                <div class="pmd-milestone-info">
-                    <h3 class="pmd-milestone-item-title">
-                        <?php echo htmlspecialchars($substage['title']); ?>
-                    </h3>
-                    <p class="pmd-milestone-item-subtitle">
-                        <?php echo htmlspecialchars($substage['substage_identifier']); ?> - 
-                        Assigned to you
-                    </p>
+                                            <div class="tm-details-row">
+                                                <span class="tm-details-label">On-time Completed:</span>
+                                                <span class="tm-details-value"><?php echo $onTimeCompleted; ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tm-progress-container">
+                                        <div class="tm-progress-label">
+                                            <span>Monthly Goal: <?php echo $monthlyGoal; ?>%</span>
+                                            <span><?php echo $efficiencyPercentage; ?>/<?php echo $monthlyGoal; ?></span>
+                                        </div>
+                                        <div class="tm-progress-bar">
+                                            <div class="tm-progress-fill" style="width: <?php echo $progressPercentage; ?>%; background-color: <?php echo $efficiencyColor; ?>;"></div>
+                                        </div>
+                                    </div>
+                                    <style>
+                                    .tm-efficiency-details {
+                                        margin-top: 12px;
+                                        font-size: 0.75rem;
+                                        color: #64748b;
+                                    }
+                                    
+                                    .tm-details-row {
+                                        display: flex;
+                                        justify-content: space-between;
+                                        margin-bottom: 4px;
+                                    }
+                                    
+                                    .tm-details-value {
+                                        font-weight: 600;
+                                        color: #334155;
+                                    }
+                                    </style>
                 </div>
                 
-                <div class="pmd-milestone-status-group">
-                    <div class="pmd-due-date">
-                        <i class="far fa-calendar-alt"></i>
-                        <span><?php echo date('M d, Y', strtotime($substage['end_date'])); ?></span>
-                    </div>
-                    <span class="pmd-status-badge <?php echo $substage['status']; ?>">
-                        <?php echo ucfirst($substage['status']); ?>
-                    </span>
-                </div>
-            </div>
-            
-            <div class="pmd-progress-wrapper">
-                <div class="pmd-progress-bar">
-                    <div class="pmd-progress-fill <?php echo $progress === 0 ? 'empty' : ''; ?>" 
-                         style="width: <?php echo $progress; ?>%">
+                                <!-- Team Collaboration Card -->
+                                <div class="tm-metrics-card tm-card-info">
+                                    <div class="tm-card-header">
+                                        <h3 class="tm-card-title">Team Collaboration</h3>
+                                        <div class="tm-card-icon">
+                                            <i class="fas fa-users"></i>
                     </div>
                 </div>
-                <span class="pmd-progress-value"><?php echo $progress; ?>%</span>
+                                    <div class="tm-card-content">
+                                        <?php
+                                        // Get projects where the user is collaborating with others
+                                        $userId = $_SESSION['user_id'];
+                                        
+                                        // Find projects that have multiple users assigned to its stages or substages
+                                        // including at least one stage/substage assigned to the current user
+                                        $collaborationQuery = "SELECT 
+                                            p.id as project_id,
+                                            p.title as project_title,
+                                            COUNT(DISTINCT CASE WHEN ps.assigned_to != $userId THEN ps.assigned_to END) +
+                                            COUNT(DISTINCT CASE WHEN pss.assigned_to != $userId THEN pss.assigned_to END) as collaborator_count
+                                        FROM 
+                                            projects p
+                                        LEFT JOIN 
+                                            project_stages ps ON p.id = ps.project_id AND ps.deleted_at IS NULL
+                                        LEFT JOIN 
+                                            project_substages pss ON ps.id = pss.stage_id AND pss.deleted_at IS NULL
+                                        WHERE 
+                                            p.deleted_at IS NULL AND
+                                            (
+                                                EXISTS (
+                                                    SELECT 1 FROM project_stages 
+                                                    WHERE project_id = p.id AND assigned_to = $userId AND deleted_at IS NULL
+                                                ) OR 
+                                                EXISTS (
+                                                    SELECT 1 FROM project_stages ps2
+                                                    JOIN project_substages pss2 ON ps2.id = pss2.stage_id
+                                                    WHERE ps2.project_id = p.id AND pss2.assigned_to = $userId AND pss2.deleted_at IS NULL
+                                                )
+                                            )
+                                        GROUP BY 
+                                            p.id
+                                        HAVING 
+                                            collaborator_count > 0
+                                        ORDER BY 
+                                            collaborator_count DESC
+                                        LIMIT 5";
+                                        
+                                        $collaborationResult = mysqli_query($conn, $collaborationQuery);
+                                        $collaborationCount = mysqli_num_rows($collaborationResult);
+                                        ?>
+                                        
+                                        <div class="tm-card-value"><?php echo $collaborationCount; ?></div>
+                                        <div class="tm-card-description">Projects with team collaboration</div>
             </div>
-        </div>
+                                    <div class="tm-team-list">
+                                        <?php
+                                        if ($collaborationCount > 0) {
+                                            while ($project = mysqli_fetch_assoc($collaborationResult)) {
+                                                // Get list of collaborators for this project
+                                                $collaboratorsQuery = "SELECT DISTINCT 
+                                                    u.id as user_id,
+                                                    u.username as user_name,
+                                                    u.profile_picture,
+                                                    (
+                                                        SELECT COUNT(*) FROM project_stages 
+                                                        WHERE project_id = {$project['project_id']} AND assigned_to = u.id AND deleted_at IS NULL
+                                                    ) +
+                                                    (
+                                                        SELECT COUNT(*) FROM project_substages pss
+                                                        JOIN project_stages ps ON pss.stage_id = ps.id
+                                                        WHERE ps.project_id = {$project['project_id']} AND pss.assigned_to = u.id AND pss.deleted_at IS NULL
+                                                    ) as task_count
+                                                FROM 
+                                                    users u
+                                                WHERE 
+                                                    u.id != $userId AND
+                                                    (
+                                                        EXISTS (
+                                                            SELECT 1 FROM project_stages 
+                                                            WHERE project_id = {$project['project_id']} AND assigned_to = u.id AND deleted_at IS NULL
+                                                        ) OR 
+                                                        EXISTS (
+                                                            SELECT 1 FROM project_stages ps2
+                                                            JOIN project_substages pss2 ON ps2.id = pss2.stage_id
+                                                            WHERE ps2.project_id = {$project['project_id']} AND pss2.assigned_to = u.id AND pss2.deleted_at IS NULL
+                                                        )
+                                                    )
+                                                ORDER BY
+                                                    task_count DESC
+                                                LIMIT 1";
+                                                
+                                                $collaboratorsResult = mysqli_query($conn, $collaboratorsQuery);
+                                                $collaborator = mysqli_fetch_assoc($collaboratorsResult);
+                                                
+                                                // Get total collaborator count
+                                                $totalCollaboratorsCount = $project['collaborator_count'];
+                                                
+                                                // Find the first stage in this project assigned to the current user
+                                                $userStageQuery = "SELECT id FROM project_stages 
+                                                                  WHERE project_id = {$project['project_id']} 
+                                                                  AND assigned_to = $userId 
+                                                                  AND deleted_at IS NULL 
+                                                                  LIMIT 1";
+                                                $userStageResult = mysqli_query($conn, $userStageQuery);
+                                                $userStage = mysqli_fetch_assoc($userStageResult);
+                                                $stageId = $userStage ? $userStage['id'] : null;
+                                        ?>
+                                                <div class="tm-team-item tm-clickable-project" 
+                                                     data-project-id="<?php echo $project['project_id']; ?>"
+                                                     data-stage-id="<?php echo $stageId; ?>">
+                                                    <div class="tm-team-avatar">
+                                                        <?php if (!empty($collaborator['profile_picture'])): ?>
+                                                            <img src="<?php echo htmlspecialchars($collaborator['profile_picture']); ?>" alt="<?php echo htmlspecialchars($collaborator['user_name']); ?>">
+                                                        <?php else: ?>
+                                                            <i class="fas fa-user-circle"></i>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div class="tm-team-info">
+                                                        <span class="tm-team-name"><?php echo htmlspecialchars($project['project_title']); ?></span>
+                                                        <span class="tm-team-count">
+                                                            <?php 
+                                                            echo "With " . htmlspecialchars($collaborator['user_name']);
+                                                            if ($totalCollaboratorsCount > 1) {
+                                                                echo " + " . ($totalCollaboratorsCount - 1) . " others";
+                                                            }
+                                                            ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
         <?php 
-            endwhile; 
+                                            }
         } else {
         ?>
-            <div class="empty-state">
-                <i class="fas fa-tasks"></i>
-                <p>No substages assigned to you</p>
+                                            <div class="tm-team-item tm-no-data">
+                                                <div class="tm-team-avatar tm-empty-avatar">
+                                                    <i class="fas fa-users-slash"></i>
+                                                </div>
+                                                <div class="tm-team-info">
+                                                    <span class="tm-team-name">No active collaborations</span>
+                                                    <span class="tm-team-count">You're not sharing projects yet</span>
+                                                </div>
             </div>
         <?php 
         }
         ?>
     </div>
-</div>
+                                    <style>
+                                    .tm-team-avatar img {
+                                        width: 100%;
+                                        height: 100%;
+                                        border-radius: 50%;
+                                        object-fit: cover;
+                                    }
+                                    
+                                    .tm-no-data {
+                                        opacity: 0.7;
+                                    }
+                                    
+                                    .tm-empty-avatar {
+                                        background: #f1f5f9;
+                                        color: #94a3b8;
+                                    }
+                                    
+                                    .tm-clickable-project {
+                                        cursor: pointer;
+                                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                                    }
+                                    
+                                    .tm-clickable-project:hover {
+                                        background-color: #f8fafc;
+                                        transform: translateY(-2px);
+                                        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+                                    }
+                                    </style>
+                                    
+                                    <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        // Add click handlers for project collaboration items
+                                        document.querySelectorAll('.tm-clickable-project').forEach(item => {
+                                            item.addEventListener('click', function() {
+                                                const projectId = this.dataset.projectId;
+                                                
+                                                if (projectId) {
+                                                    // First try to use ProjectBriefModal if available
+                                                    if (window.projectBriefModal) {
+                                                        window.projectBriefModal.openProjectModal(projectId);
+                                                    } else if (typeof ProjectBriefModal === 'function') {
+                                                        // Initialize if class is available but not initialized
+                                                        window.projectBriefModal = new ProjectBriefModal();
+                                                        window.projectBriefModal.openProjectModal(projectId);
+                                                    } else {
+                                                        // Fallback to redirecting to project details page
+                                                        window.location.href = `project-details.php?id=${projectId}`;
+                                                    }
+                                                }
+                                            });
+                                        });
+                                    });
+                                    </script>
+                                </div>
         
+            </div>
+
+
+    </div>    
     </div>
 </div>
 </div>

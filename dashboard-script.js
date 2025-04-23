@@ -2245,9 +2245,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                     <td>${file.type}</td>
                                                                     <td><span class="table-status ${file.status.toLowerCase()}">${file.status.replace('_', ' ')}</span></td>
                                                                     <td class="table-actions">
-                                                                        <button class="table-action-btn action-view" title="View details" onclick="viewFile('${file.file_path}')">
-                                                                            <i class="fas fa-eye"></i>
-                                                                        </button>
                                                                         <button class="table-action-btn action-download" title="Download" onclick="downloadFile('${file.file_path}')">
                                                                             <i class="fas fa-download"></i>
                                                                         </button>
@@ -2501,7 +2498,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Updated function to generate action buttons based on status
     function getActionButtons(status) {
         return `
-            <button class="table-action-btn action-view" title="View details"><i class="fas fa-eye"></i></button>
             <button class="table-action-btn action-download" title="Download"><i class="fas fa-download"></i></button>
             <button class="table-action-btn action-accept" title="Accept"><i class="fas fa-check"></i></button>
             <button class="table-action-btn action-reject" title="Reject"><i class="fas fa-times"></i></button>
@@ -2937,11 +2933,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                 </td>
                 <td class="table-actions">
-                    <button class="table-action-btn action-view" 
-                        title="View details" 
-                        onclick="viewFile('${file.id}')" type="button">
-                        <i class="fas fa-eye"></i>
-                    </button>
                     <button class="table-action-btn action-download" 
                         title="Download" 
                         onclick="downloadFile('${file.id}')" type="button">
@@ -2984,9 +2975,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const action = button.dataset.action;
 
                 switch(action) {
-                    case 'view':
-                        handleViewFile(fileId);
-                        break;
                     case 'download':
                         handleDownloadFile(fileId);
                         break;
@@ -3002,10 +2990,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handler functions
-    function handleViewFile(fileId) {
-        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
-    }
-
     function handleDownloadFile(fileId) {
         window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
     }
@@ -3023,11 +3007,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </span>
                 </td>
                 <td class="table-actions">
-                    <button class="table-action-btn action-view" 
-                        title="View details" 
-                        onclick="viewFile('${file.id}')" type="button">
-                        <i class="fas fa-eye"></i>
-                    </button>
                     <button class="table-action-btn action-download" 
                         title="Download" 
                         onclick="downloadFile('${file.id}')" type="button">
@@ -3060,8 +3039,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Make these functions globally available by attaching them to the window object
     window.viewFile = function(filePath) {
-        const fileId = filePath.split('/').pop().split('_')[0]; // Extract file ID from path
-        window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
+        // View functionality has been removed
+        showNotification('Info', 'View functionality has been removed. Please use download instead.', 'info');
     };
 
     window.downloadFile = function(filePath) {

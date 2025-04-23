@@ -2350,6 +2350,44 @@ document.addEventListener('DOMContentLoaded', function() {
                         showUploadModal(substageId);
                     });
                 });
+
+                // Add chat functionality to stage chat buttons
+                stageElement.querySelectorAll('.stage-actions .chat-icon-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent stage toggle from firing
+                        
+                        // Initialize StageChat if not already initialized
+                        if (!window.stageChat) {
+                            window.stageChat = new StageChat();
+                        }
+                        
+                        // Get stage info
+                        const stageName = `Stage ${stage.stage_number}: ${stage.title}`;
+                        
+                        // Open the chat
+                        window.stageChat.openChat(project.id, stage.id, stageName, btn);
+                    });
+                });
+
+                // Add chat functionality to substage chat buttons
+                stageElement.querySelectorAll('.substage-actions .chat-icon-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent propagation
+                        
+                        // Find the substage elements to get the data
+                        const substageItem = btn.closest('.substage-item');
+                        const substageId = substageItem.querySelector('.substage-toggle-btn')?.dataset.substageId;
+                        const substageTitle = substageItem.querySelector('.substage-title')?.textContent;
+                        
+                        // Initialize StageChat if not already initialized
+                        if (!window.stageChat) {
+                            window.stageChat = new StageChat();
+                        }
+                        
+                        // Open the substage chat
+                        window.stageChat.openSubstageChat(project.id, stage.id, substageId, substageTitle, btn);
+                    });
+                });
             });
         }
         

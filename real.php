@@ -778,5 +778,6 @@ error_log("Session Data: " . print_r($_SESSION, true));
             });
     });
     </script>
+    <script src="assets/js/stage-chat.js"></script>
 </body>
 </html>

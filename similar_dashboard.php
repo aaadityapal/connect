@@ -3395,14 +3395,45 @@ if ($user_data && isset($user_data['shift_id'])) {
                                     <div class="tm-card-content">
         <?php 
                                         // Fetch upcoming substages assigned to current user
-                                        $userId = $_SESSION['user_id'];
+                                        
+                                        // Ensure we have the current date defined
                                         $currentDate = date('Y-m-d');
                                         
+                                        // Get total count of upcoming deadlines for pagination
+                                        $totalDeadlinesQuery = "SELECT 
+                                            COUNT(*) as total_count
+                                        FROM 
+                                            project_substages ps
+                                            JOIN project_stages pst ON ps.stage_id = pst.id
+                                            JOIN projects p ON pst.project_id = p.id
+                                        WHERE 
+                                            ps.assigned_to = $userId
+                                            AND ps.end_date >= '$currentDate'
+                                            AND ps.deleted_at IS NULL
+                                            AND ps.status != 'completed'
+                                            AND ps.status != 'cancelled'";
+                                        
+                                        $totalResult = mysqli_query($conn, $totalDeadlinesQuery);
+                                        $totalRow = mysqli_fetch_assoc($totalResult);
+                                        $totalDeadlines = $totalRow['total_count'];
+                                        
+                                        // Set up pagination
+                                        $deadlinesPerPage = 5;
+                                        $totalPages = ceil($totalDeadlines / $deadlinesPerPage);
+                                        
+                                        // Get current page from query parameter or default to 1
+                                        $currentDeadlinePage = isset($_GET['deadline_page']) ? max(1, intval($_GET['deadline_page'])) : 1;
+                                        $currentDeadlinePage = min($currentDeadlinePage, max(1, $totalPages)); // Ensure page is within valid range
+                                        
+                                        // Calculate offset
+                                        $offset = ($currentDeadlinePage - 1) * $deadlinesPerPage;
+                                        
+                                        // Modify query to include pagination
                                         $upcomingQuery = "SELECT 
                                             ps.id as substage_id,
                                             ps.title as substage_title,
                                             ps.end_date,
-                p.title as project_title,
+                                            p.title as project_title,
                                             p.id as project_id
                                         FROM 
                                             project_substages ps
@@ -3414,13 +3445,13 @@ if ($user_data && isset($user_data['shift_id'])) {
                                             AND ps.deleted_at IS NULL
                                             AND ps.status != 'completed'
                                             AND ps.status != 'cancelled'
-            ORDER BY ps.end_date ASC
-                                        LIMIT 5";
+                                        ORDER BY ps.end_date ASC
+                                        LIMIT $offset, $deadlinesPerPage";
         
                                         $upcomingResult = mysqli_query($conn, $upcomingQuery);
                                         $upcomingCount = mysqli_num_rows($upcomingResult);
         ?>
-                                        <div class="tm-card-value"><?php echo $upcomingCount; ?></div>
+                                        <div class="tm-card-value"><?php echo $totalDeadlines; ?></div>
                                         <div class="tm-card-description">Tasks due soon</div>
                 </div>
                                     <div class="tm-deadline-list">
@@ -3454,6 +3485,31 @@ if ($user_data && isset($user_data['shift_id'])) {
             </div>
         <?php 
                                             }
+                                            
+                                            // Add pagination controls if there's more than one page
+                                            if ($totalPages > 1) {
+                                                echo '<div class="tm-pagination">';
+                                                
+                                                // Previous page link
+                                                if ($currentDeadlinePage > 1) {
+                                                    echo '<a href="?deadline_page=' . ($currentDeadlinePage - 1) . '" class="tm-pagination-btn prev"><i class="fas fa-chevron-left"></i></a>';
+                                                } else {
+                                                    echo '<span class="tm-pagination-btn disabled"><i class="fas fa-chevron-left"></i></span>';
+                                                }
+                                                
+                                                // Page indicator
+                                                echo '<span class="tm-pagination-info">' . $currentDeadlinePage . ' / ' . $totalPages . '</span>';
+                                                
+                                                // Next page link
+                                                if ($currentDeadlinePage < $totalPages) {
+                                                    echo '<a href="?deadline_page=' . ($currentDeadlinePage + 1) . '" class="tm-pagination-btn next"><i class="fas fa-chevron-right"></i></a>';
+                                                } else {
+                                                    echo '<span class="tm-pagination-btn disabled"><i class="fas fa-chevron-right"></i></span>';
+                                                }
+                                                
+                                                echo '</div>';
+                                            }
+                                            
         } else {
         ?>
                                             <div class="tm-deadline-item">
@@ -3467,6 +3523,50 @@ if ($user_data && isset($user_data['shift_id'])) {
         }
         ?>
     </div>
+    
+    <!-- Add CSS for the pagination -->
+    <style>
+        .tm-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 12px;
+            margin-top: 10px;
+            border-top: 1px solid #f1f5f9;
+            gap: 10px;
+        }
+        
+        .tm-pagination-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .tm-pagination-btn:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        
+        .tm-pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f8fafc;
+            color: #cbd5e1;
+        }
+        
+        .tm-pagination-info {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+    </style>
 </div>
                                 <!-- Efficiency Card -->
                                 <div class="tm-metrics-card tm-card-success">

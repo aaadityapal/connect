@@ -141,6 +141,8 @@ if ($user_data && isset($user_data['shift_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Dashboard</title>
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
@@ -2892,7 +2894,7 @@ if ($user_data && isset($user_data['shift_id'])) {
         overflow-x: auto;
         padding-bottom: 4px;
     }
-}
+        }
     </style>
     
     <!-- External Scripts -->
@@ -3569,7 +3571,7 @@ if ($user_data && isset($user_data['shift_id'])) {
                     </div>
                 </div>
                                     <div class="tm-card-content">
-                                        <?php
+        <?php
                                         // Get projects where the user is collaborating with others
                                         $userId = $_SESSION['user_id'];
                                         
@@ -3604,20 +3606,37 @@ if ($user_data && isset($user_data['shift_id'])) {
                                         HAVING 
                                             collaborator_count > 0
                                         ORDER BY 
-                                            collaborator_count DESC
-                                        LIMIT 5";
+                                            collaborator_count DESC";
                                         
                                         $collaborationResult = mysqli_query($conn, $collaborationQuery);
                                         $collaborationCount = mysqli_num_rows($collaborationResult);
+                                        
+                                        // Store all projects in an array for pagination
+                                        $allCollaborationProjects = [];
+                                        while ($project = mysqli_fetch_assoc($collaborationResult)) {
+                                            $allCollaborationProjects[] = $project;
+                                        }
+                                        
+                                        // Pagination settings
+                                        $projectsPerPage = 3;
+                                        $totalPages = ceil(count($allCollaborationProjects) / $projectsPerPage);
+                                        $currentPage = 1; // Start with page 1
                                         ?>
                                         
                                         <div class="tm-card-value"><?php echo $collaborationCount; ?></div>
                                         <div class="tm-card-description">Projects with team collaboration</div>
-            </div>
-                                    <div class="tm-team-list">
+                </div>
+                                    <div class="tm-team-list" id="collaborationProjectsList">
                                         <?php
                                         if ($collaborationCount > 0) {
-                                            while ($project = mysqli_fetch_assoc($collaborationResult)) {
+                                            // Calculate start and end index for current page
+                                            $startIdx = 0; // For first page, start at index 0
+                                            $endIdx = min($projectsPerPage - 1, count($allCollaborationProjects) - 1);
+                                            
+                                            // Display projects for the current page
+                                            for ($i = $startIdx; $i <= $endIdx; $i++) {
+                                                $project = $allCollaborationProjects[$i];
+                                                
                                                 // Get list of collaborators for this project
                                                 $collaboratorsQuery = "SELECT DISTINCT 
                                                     u.id as user_id,
@@ -3676,7 +3695,7 @@ if ($user_data && isset($user_data['shift_id'])) {
                                                         <?php else: ?>
                                                             <i class="fas fa-user-circle"></i>
                                                         <?php endif; ?>
-                                                    </div>
+                    </div>
                                                     <div class="tm-team-info">
                                                         <span class="tm-team-name"><?php echo htmlspecialchars($project['project_title']); ?></span>
                                                         <span class="tm-team-count">
@@ -3686,26 +3705,46 @@ if ($user_data && isset($user_data['shift_id'])) {
                                                                 echo " + " . ($totalCollaboratorsCount - 1) . " others";
                                                             }
                                                             ?>
-                                                        </span>
-                                                    </div>
-                                                </div>
-        <?php 
+                    </span>
+                </div>
+            </div>
+                                        <?php
                                             }
-        } else {
-        ?>
+                                            
+                                            // Add pagination controls if needed
+                                            if ($totalPages > 1) {
+                                                echo '<div class="tm-pagination">';
+                                                // Previous button - disabled on first page
+                                                echo '<button class="tm-pagination-btn tm-pagination-prev' . 
+                                                     ($currentPage == 1 ? ' tm-pagination-disabled' : '') . 
+                                                     '" ' . ($currentPage == 1 ? 'disabled' : '') . 
+                                                     ' data-page="prev"><i class="fas fa-chevron-left"></i></button>';
+                                                
+                                                // Page indicator
+                                                echo '<span class="tm-pagination-info">Page <span id="currentPageIndicator">1</span> of ' . $totalPages . '</span>';
+                                                
+                                                // Next button - disabled on last page
+                                                echo '<button class="tm-pagination-btn tm-pagination-next' . 
+                                                     ($currentPage == $totalPages ? ' tm-pagination-disabled' : '') . 
+                                                     '" ' . ($currentPage == $totalPages ? 'disabled' : '') . 
+                                                     ' data-page="next"><i class="fas fa-chevron-right"></i></button>';
+                                                echo '</div>';
+                                            }
+                                        } else {
+                                        ?>
                                             <div class="tm-team-item tm-no-data">
                                                 <div class="tm-team-avatar tm-empty-avatar">
                                                     <i class="fas fa-users-slash"></i>
-                                                </div>
+                    </div>
                                                 <div class="tm-team-info">
                                                     <span class="tm-team-name">No active collaborations</span>
                                                     <span class="tm-team-count">You're not sharing projects yet</span>
-                                                </div>
             </div>
+        </div>
         <?php 
-        }
+                                        }
         ?>
-    </div>
+            </div>
                                     <style>
                                     .tm-team-avatar img {
                                         width: 100%;
@@ -3733,10 +3772,235 @@ if ($user_data && isset($user_data['shift_id'])) {
                                         transform: translateY(-2px);
                                         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
                                     }
+                                    
+                                    /* Pagination styling */
+                                    .tm-pagination {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        margin-top: 12px;
+                                        padding-top: 10px;
+                                        border-top: 1px solid #f1f5f9;
+                                    }
+                                    
+                                    .tm-pagination-btn {
+                                        width: 28px;
+                                        height: 28px;
+                                        border-radius: 6px;
+                                        border: 1px solid #e2e8f0;
+                                        background-color: #f8fafc;
+                                        color: #64748b;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        cursor: pointer;
+                                        transition: all 0.2s ease;
+                                    }
+                                    
+                                    .tm-pagination-btn:hover:not(.tm-pagination-disabled) {
+                                        background-color: #e2e8f0;
+                                        color: #334155;
+                                    }
+                                    
+                                    .tm-pagination-info {
+                                        font-size: 0.75rem;
+                                        color: #64748b;
+                                        margin: 0 10px;
+                                    }
+                                    
+                                    .tm-pagination-disabled {
+                                        opacity: 0.5;
+                                        cursor: not-allowed;
+                                    }
                                     </style>
                                     
                                     <script>
                                     document.addEventListener('DOMContentLoaded', function() {
+                                        // Initialize project data for pagination
+                                        const allCollaborationProjects = <?php echo json_encode($allCollaborationProjects); ?>;
+                                        let currentPage = 1;
+                                        const projectsPerPage = <?php echo $projectsPerPage; ?>;
+                                        const totalPages = <?php echo $totalPages; ?>;
+                                        
+                                        // Function to load a specific page of projects
+                                        function loadProjectPage(page) {
+                                            // If page is out of range, do nothing
+                                            if (page < 1 || page > totalPages) return;
+                                            
+                                            currentPage = page;
+                                            
+                                            // Calculate start and end indices
+                                            const startIdx = (page - 1) * projectsPerPage;
+                                            const endIdx = Math.min(startIdx + projectsPerPage - 1, allCollaborationProjects.length - 1);
+                                            
+                                            // Get container element
+                                            const listContainer = document.getElementById('collaborationProjectsList');
+                                            
+                                            // Clear any existing content except pagination controls
+                                            const paginationControls = listContainer.querySelector('.tm-pagination');
+                                            listContainer.innerHTML = '';
+                                            
+                                            // Add back pagination controls if they existed
+                                            if (paginationControls) {
+                                                listContainer.appendChild(paginationControls);
+                                            }
+                                            
+                                            // Display projects for the current page
+                                            for (let i = startIdx; i <= endIdx; i++) {
+                                                const project = allCollaborationProjects[i];
+                                                
+                                                // Fetch collaborator details (this would be via AJAX in a real implementation)
+                                                // For demo purposes, we'll use placeholder data
+                                                fetchProjectCollaborators(project.project_id)
+                                                    .then(collaboratorData => {
+                                                        const projectElement = createProjectElement(project, collaboratorData);
+                                                        
+                                                        // Insert before pagination controls if they exist
+                                                        if (paginationControls) {
+                                                            listContainer.insertBefore(projectElement, paginationControls);
+                                                        } else {
+                                                            listContainer.appendChild(projectElement);
+                                                        }
+                                                    });
+                                            }
+                                            
+                                            // Update pagination state
+                                            updatePaginationState();
+                                        }
+                                        
+                                        // Function to create project element
+                                        function createProjectElement(project, collaboratorData) {
+                                            const projectElement = document.createElement('div');
+                                            projectElement.className = 'tm-team-item tm-clickable-project';
+                                            projectElement.dataset.projectId = project.project_id;
+                                            
+                                            // Set stage ID if available
+                                            if (collaboratorData.stageId) {
+                                                projectElement.dataset.stageId = collaboratorData.stageId;
+                                            }
+                                            
+                                            // Build project HTML
+                                            let avatarHTML = '';
+                                            if (collaboratorData.profilePicture) {
+                                                avatarHTML = `<img src="${collaboratorData.profilePicture}" alt="${collaboratorData.userName}">`;
+                                            } else {
+                                                avatarHTML = '<i class="fas fa-user-circle"></i>';
+                                            }
+                                            
+                                            let collaboratorText = `With ${collaboratorData.userName}`;
+                                            if (collaboratorData.totalCollaborators > 1) {
+                                                collaboratorText += ` + ${collaboratorData.totalCollaborators - 1} others`;
+                                            }
+                                            
+                                            projectElement.innerHTML = `
+                                                <div class="tm-team-avatar">
+                                                    ${avatarHTML}
+    </div>
+                                                <div class="tm-team-info">
+                                                    <span class="tm-team-name">${project.project_title}</span>
+                                                    <span class="tm-team-count">${collaboratorText}</span>
+</div>
+                                            `;
+                                            
+                                            // Add click event listener
+                                            projectElement.addEventListener('click', function() {
+                                                const projectId = this.dataset.projectId;
+                                                
+                                                if (projectId) {
+                                                    // First try to use ProjectBriefModal if available
+                                                    if (window.projectBriefModal) {
+                                                        window.projectBriefModal.openProjectModal(projectId);
+                                                    } else if (typeof ProjectBriefModal === 'function') {
+                                                        // Initialize if class is available but not initialized
+                                                        window.projectBriefModal = new ProjectBriefModal();
+                                                        window.projectBriefModal.openProjectModal(projectId);
+                                                    } else {
+                                                        // Fallback to redirecting to project details page
+                                                        window.location.href = `project-details.php?id=${projectId}`;
+                                                    }
+                                                }
+                                            });
+                                            
+                                            return projectElement;
+                                        }
+                                        
+                                        // Function to update pagination controls
+                                        function updatePaginationState() {
+                                            const paginationContainer = document.querySelector('.tm-pagination');
+                                            if (!paginationContainer) return;
+                                            
+                                            // Update page indicator
+                                            const pageIndicator = document.getElementById('currentPageIndicator');
+                                            if (pageIndicator) {
+                                                pageIndicator.textContent = currentPage;
+                                            }
+                                            
+                                            // Update previous button state
+                                            const prevButton = paginationContainer.querySelector('.tm-pagination-prev');
+                                            if (prevButton) {
+                                                if (currentPage === 1) {
+                                                    prevButton.classList.add('tm-pagination-disabled');
+                                                    prevButton.setAttribute('disabled', 'disabled');
+                                                } else {
+                                                    prevButton.classList.remove('tm-pagination-disabled');
+                                                    prevButton.removeAttribute('disabled');
+                                                }
+                                            }
+                                            
+                                            // Update next button state
+                                            const nextButton = paginationContainer.querySelector('.tm-pagination-next');
+                                            if (nextButton) {
+                                                if (currentPage === totalPages) {
+                                                    nextButton.classList.add('tm-pagination-disabled');
+                                                    nextButton.setAttribute('disabled', 'disabled');
+                                                } else {
+                                                    nextButton.classList.remove('tm-pagination-disabled');
+                                                    nextButton.removeAttribute('disabled');
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Simulated function to fetch collaborator data
+                                        // In a real implementation, this would be an AJAX call to the server
+                                        async function fetchProjectCollaborators(projectId) {
+                                            // In this demo, we'll just reuse the server-side rendered data
+                                            // Find the existing element with this project ID
+                                            const existingElement = document.querySelector(`.tm-clickable-project[data-project-id="${projectId}"]`);
+                                            
+                                            if (existingElement) {
+                                                const avatarImg = existingElement.querySelector('.tm-team-avatar img');
+                                                const userIcon = existingElement.querySelector('.tm-team-avatar i');
+                                                const teamCount = existingElement.querySelector('.tm-team-count').textContent;
+                                                
+                                                // Parse collaborator info
+                                                let userName = '';
+                                                let totalCollaborators = 1;
+                                                
+                                                const match = teamCount.match(/With\s+(.+?)(?:\s+\+\s+(\d+)\s+others)?$/);
+                                                if (match) {
+                                                    userName = match[1];
+                                                    if (match[2]) {
+                                                        totalCollaborators = parseInt(match[2]) + 1;
+                                                    }
+                                                }
+                                                
+                                                return {
+                                                    userName: userName,
+                                                    profilePicture: avatarImg ? avatarImg.src : null,
+                                                    totalCollaborators: totalCollaborators,
+                                                    stageId: existingElement.dataset.stageId
+                                                };
+                                            }
+                                            
+                                            // Fallback values if element not found
+                                            return {
+                                                userName: 'Team Member',
+                                                profilePicture: null,
+                                                totalCollaborators: 1,
+                                                stageId: null
+                                            };
+                                        }
+                                        
                                         // Add click handlers for project collaboration items
                                         document.querySelectorAll('.tm-clickable-project').forEach(item => {
                                             item.addEventListener('click', function() {
@@ -3757,9 +4021,28 @@ if ($user_data && isset($user_data['shift_id'])) {
                                                 }
                                             });
                                         });
+                                        
+                                        // Add pagination button handlers
+                                        const prevButton = document.querySelector('.tm-pagination-prev');
+                                        if (prevButton) {
+                                            prevButton.addEventListener('click', function() {
+                                                if (currentPage > 1) {
+                                                    loadProjectPage(currentPage - 1);
+                                                }
+                                            });
+                                        }
+                                        
+                                        const nextButton = document.querySelector('.tm-pagination-next');
+                                        if (nextButton) {
+                                            nextButton.addEventListener('click', function() {
+                                                if (currentPage < totalPages) {
+                                                    loadProjectPage(currentPage + 1);
+                                                }
+                                            });
+                                        }
                                     });
                                     </script>
-                                </div>
+    </div>
         
             </div>
 

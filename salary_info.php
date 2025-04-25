@@ -277,8 +277,10 @@ LEFT JOIN user_shifts us ON users.id = us.user_id
     AND us.effective_from <= ?
 LEFT JOIN shifts s ON us.shift_id = s.id
 LEFT JOIN attendance a ON users.id = a.user_id
-WHERE users.status = 'active' 
-AND users.deleted_at IS NULL 
+WHERE users.deleted_at IS NULL 
+AND (users.status = 'active' OR 
+    (users.status = 'inactive' AND 
+     DATE_FORMAT(users.status_changed_date, '%Y-%m') >= ?))
 GROUP BY users.id, users.username, users.base_salary
 ORDER BY users.username";
 
@@ -303,6 +305,7 @@ $params[] = $month_start;  // Overtime hours (2)
 $params[] = $month_end;
 $params[] = $month_end;    // Effective dates (2)
 $params[] = $month_start;
+$params[] = $selected_month;    // Add this new parameter for the status_changed_date condition
 
 // Build the type string based on actual parameter count
 $params[0] = str_repeat('s', count($params) - 1);

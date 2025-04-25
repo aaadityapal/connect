@@ -1,0 +1,59 @@
+/* Fingerprint Button Styles */
+.table-action-btn.action-fingerprint {
+    color: #8b5cf6; /* Purple color to make it distinct */
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 6px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-action-btn.action-fingerprint:hover {
+    background-color: rgba(139, 92, 246, 0.1);
+    transform: scale(1.1);
+}
+
+.table-action-btn.action-fingerprint i {
+    font-size: 14px;
+}
+
+/* Animation for download indication */
+@keyframes pulse-fingerprint {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.table-action-btn.action-fingerprint.active {
+    animation: pulse-fingerprint 1s infinite;
+}
+
+/* Tooltip for fingerprint button */
+.table-action-btn.action-fingerprint[data-tooltip]:hover:after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 5px;
+} 

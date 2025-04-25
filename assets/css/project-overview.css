@@ -3361,3 +3361,85 @@
     color: #b45309;
     font-weight: 500;
 }
+
+/* Past Due Work Section Styles */
+.past-due-section {
+    margin-top: 20px;
+    border-top: 1px dashed #ef4444;
+    padding-top: 10px;
+}
+
+.past-due-section h4 {
+    color: #ef4444;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.past-due-section h4::before {
+    content: "\f071";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.past-due-category {
+    margin-bottom: 15px;
+}
+
+.past-due-category h5 {
+    color: #4b5563;
+    font-size: 14px;
+    margin: 10px 0 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.past-due-category h5 i {
+    color: #6b7280;
+}
+
+.item-type-label {
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 0.85em;
+    background-color: #f3f4f6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+}
+
+.day-preview-project .item-type-label {
+    color: #1e40af;
+    background-color: #dbeafe;
+}
+
+.day-preview-stage .item-type-label {
+    color: #92400e;
+    background-color: #fef3c7;
+}
+
+.day-preview-substage .item-type-label {
+    color: #065f46;
+    background-color: #d1fae5;
+}
+
+.day-preview-item.overdue {
+    background-color: rgba(254, 242, 242, 0.5);
+    border-left: 3px solid #ef4444;
+}
+
+.day-preview-item.overdue:hover {
+    background-color: rgba(254, 242, 242, 0.8);
+}
+
+.day-preview-item-due.overdue {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+/* End of Past Due Work Section Styles */

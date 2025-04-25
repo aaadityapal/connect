@@ -119,4 +119,4 @@ function formatHoursValue($value) {
 // Close the output file handle
 fclose($output);
 exit();
-?> 
+?>

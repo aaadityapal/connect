@@ -1,0 +1,70 @@
+/* Styles for the notification system used by the fingerprint download feature */
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #333333;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s, transform 0.3s;
+    max-width: 350px;
+    font-family: 'Arial', sans-serif;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+}
+
+.notification-content i {
+    font-size: 20px;
+    margin-right: 12px;
+}
+
+/* Colors for different notification types */
+.notification.success {
+    background-color: #ecfdf5;
+    border-left: 4px solid #10b981;
+}
+
+.notification.success i {
+    color: #10b981;
+}
+
+.notification.error {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+
+.notification.error i {
+    color: #ef4444;
+}
+
+.notification.warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+}
+
+.notification.warning i {
+    color: #f59e0b;
+}
+
+.notification.info {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.notification.info i {
+    color: #3b82f6;
+} 

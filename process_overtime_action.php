@@ -87,4 +87,4 @@ if ($update_result) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . mysqli_error($conn)]);
     exit();
 }
-?> 
+?>

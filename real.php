@@ -21,6 +21,8 @@ error_log("Session Data: " . print_r($_SESSION, true));
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard-styles.css">
     <link rel="stylesheet" href="assets/css/notification-system.css">
+    <link rel="stylesheet" href="css/fingerprint_button.css">
+    <link rel="stylesheet" href="css/fingerprint_notification.css">
 </head>
 <body>
     <div class="dashboard">
@@ -787,5 +789,6 @@ error_log("Session Data: " . print_r($_SESSION, true));
     });
     </script>
     <script src="assets/js/stage-chat.js"></script>
+    <script src="js/fingerprint_download.js"></script>
 </body>
 </html>

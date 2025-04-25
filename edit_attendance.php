@@ -9,17 +9,27 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once 'config/db_connect.php';
 
-// Get all active users for dropdown
-$users_query = "SELECT id, unique_id, username FROM users WHERE deleted_at IS NULL ORDER BY username";
-$users_result = $conn->query($users_query);
+// Get selected month (define this first)
+$selected_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
+
+// Get all active users for dropdown, plus users who were active during the selected month
+// (includes users who became inactive in the selected month or later)
+$users_query = "SELECT id, unique_id, username FROM users WHERE deleted_at IS NULL 
+AND (status = 'active' OR 
+    (status = 'inactive' AND 
+     (DATE_FORMAT(status_changed_date, '%Y-%m') >= ?)))
+ORDER BY username";
+$users_stmt = $conn->prepare($users_query);
+$users_stmt->bind_param('s', $selected_month);
+$users_stmt->execute();
+$users_result = $users_stmt->get_result();
 $users = [];
 while ($row = $users_result->fetch_assoc()) {
     $users[] = $row;
 }
 
-// Get selected user and month
+// Get selected user (define this after users are loaded)
 $unique_id = isset($_GET['id']) ? $_GET['id'] : ($users[0]['unique_id'] ?? '');
-$selected_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
 $month_start = $selected_month . '-01';
 $month_end = date('Y-m-t', strtotime($month_start));
 
@@ -225,9 +235,13 @@ $stmt = $conn->prepare("
         AND (us.effective_to IS NULL OR CURRENT_DATE <= us.effective_to)
     )
     LEFT JOIN shifts s ON COALESCE(us.shift_id, u.shift_id) = s.id
-    WHERE u.unique_id = ? AND u.deleted_at IS NULL
+    WHERE u.unique_id = ? 
+    AND u.deleted_at IS NULL
+    AND (u.status = 'active' OR 
+         (u.status = 'inactive' AND 
+          (DATE_FORMAT(u.status_changed_date, '%Y-%m') >= ?)))
 ");
-$stmt->bind_param('s', $unique_id);
+$stmt->bind_param('ss', $unique_id, $selected_month);
 $stmt->execute();
 $employee = $stmt->get_result()->fetch_assoc();
 

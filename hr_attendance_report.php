@@ -32,13 +32,25 @@ $show_all = ($is_hr && $user_id === 'all');
 // Fetch users for HR view
 $users = [];
 if ($is_hr) {
-    $stmt = $pdo->query("SELECT id, username, unique_id FROM users WHERE deleted_at IS NULL ORDER BY username");
+    $stmt = $pdo->prepare("SELECT id, username, unique_id FROM users WHERE 
+        deleted_at IS NULL AND 
+        (status = 'active' OR 
+         (status = 'inactive' AND 
+          DATE_FORMAT(status_changed_date, '%Y-%m') >= :month))
+        ORDER BY username");
+    $stmt->execute(['month' => $month]);
     $users = $stmt->fetchAll();
 }
 
 // Fetch all active users for the dropdown
-$users_query = "SELECT id, username, unique_id FROM users WHERE deleted_at IS NULL ORDER BY username";
-$users_stmt = $pdo->query($users_query);
+$users_query = "SELECT id, username, unique_id FROM users WHERE 
+    deleted_at IS NULL AND 
+    (status = 'active' OR 
+     (status = 'inactive' AND 
+      DATE_FORMAT(status_changed_date, '%Y-%m') >= :month))
+    ORDER BY username";
+$users_stmt = $pdo->prepare($users_query);
+$users_stmt->execute(['month' => $month]);
 $all_users = $users_stmt->fetchAll();
 
 // Fetch attendance records

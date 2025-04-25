@@ -974,7 +974,7 @@ class ProjectOverview {
         const modalContent = `
             <div class="pr-calendar-modal">
                 <div class="pr-calendar-modal-header">
-                    <h3 class="pr-calendar-modal-title">Items Due on ${formattedDate}</h3>
+                    <h3 class="pr-calendar-modal-title">Work Due on ${formattedDate}</h3>
                     ${isToday ? '<div class="pr-calendar-modal-overdue-indicator">Includes overdue items</div>' : ''}
                     <button class="pr-calendar-modal-close">&times;</button>
                 </div>
@@ -1066,7 +1066,7 @@ class ProjectOverview {
                                 `;
                             }).join('')}
                         </div>`
-                    : '<div class="pr-calendar-modal-empty">No items due on this date</div>'}
+                    : '<div class="pr-calendar-modal-empty">No Work due on this date</div>'}
                 </div>
             </div>
         `;
@@ -1348,16 +1348,36 @@ class ProjectOverview {
             substages: []
         };
         
-        // Collect all items due on this date (similar to getEventsSummary)
+        // Create a separate collection for past due items
+        const pastDueItems = {
+            projects: [],
+            stages: [],
+            substages: []
+        };
+        
+        // Collect all items due on this date and past due items
         this.userProjects.forEach(project => {
             const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
             const projectDueDate = projectEndDate ? new Date(projectEndDate) : null;
             const isPastDue = projectDueDate && projectDueDate < today;
             
-            // Include if original due date OR if it's past due and today
-            if (projectEndDate === dateString || 
-                (isToday && isPastDue && (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress'))) {
+            // Check if the item is in pending status
+            const isPending = project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress';
+            
+            // Include if original due date
+            if (projectEndDate === dateString) {
                 dueItems.projects.push(project);
+            } 
+            // For past due items
+            else if (isPastDue && isPending) {
+                // If viewing today, add to regular sections
+                if (isToday) {
+                    dueItems.projects.push(project);
+                } 
+                // If viewing a future date, collect separately
+                else if (clickedDate > today) {
+                    pastDueItems.projects.push(project);
+                }
             }
             
             // Get stages due today - only if assigned to current user, regardless of project assignment
@@ -1370,13 +1390,30 @@ class ProjectOverview {
                     const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
                     const stageDueDate = stageEndDate ? new Date(stageEndDate) : null;
                     const isStagePastDue = stageDueDate && stageDueDate < today;
+                    const isStagePending = stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress';
                     
-                    if (stageEndDate === dateString || 
-                        (isToday && isStagePastDue && (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress'))) {
+                    if (stageEndDate === dateString) {
                         dueItems.stages.push({
                             stage: stage,
                             project: project
                         });
+                    } 
+                    // For past due stages
+                    else if (isStagePastDue && isStagePending) {
+                        // If viewing today, add to regular sections
+                        if (isToday) {
+                            dueItems.stages.push({
+                                stage: stage,
+                                project: project
+                            });
+                        } 
+                        // If viewing a future date, collect separately
+                        else if (clickedDate > today) {
+                            pastDueItems.stages.push({
+                                stage: stage,
+                                project: project
+                            });
+                        }
                     }
                 }
                 
@@ -1391,14 +1428,33 @@ class ProjectOverview {
                         const substageEndDateStr = substage.end_date ? substage.end_date.split(' ')[0] : null;
                         const substageEndDate = substageEndDateStr ? new Date(substageEndDateStr) : null;
                         const isSubstagePastDue = substageEndDate && substageEndDate < today;
+                        const isSubstagePending = substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress';
                         
-                        if (substageEndDateStr === dateString || 
-                            (isToday && isSubstagePastDue && (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress'))) {
+                        if (substageEndDateStr === dateString) {
                             dueItems.substages.push({
                                 substage: substage,
                                 stage: stage,
                                 project: project
                             });
+                        } 
+                        // For past due substages
+                        else if (isSubstagePastDue && isSubstagePending) {
+                            // If viewing today, add to regular sections
+                            if (isToday) {
+                                dueItems.substages.push({
+                                    substage: substage,
+                                    stage: stage,
+                                    project: project
+                                });
+                            } 
+                            // If viewing a future date, collect separately
+                            else if (clickedDate > today) {
+                                pastDueItems.substages.push({
+                                    substage: substage,
+                                    stage: stage,
+                                    project: project
+                                });
+                            }
                         }
                     }
                 });
@@ -1412,12 +1468,21 @@ class ProjectOverview {
         if (dueItems.projects.length > 0) {
             allItemsHtml += '<div class="day-preview-section"><h4>Projects</h4>';
             dueItems.projects.forEach(project => {
+                const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
+                const isPastDue = projectEndDate && projectEndDate < today;
+                const daysOverdue = isPastDue ? Math.floor((today - projectEndDate) / (1000 * 60 * 60 * 24)) : 0;
+                const dueDateHtml = isPastDue ? 
+                    `<span class="day-preview-item-due overdue">Overdue: ${daysOverdue} days</span>` : 
+                    `<span class="day-preview-item-due">Due: ${this.formatDate(project.end_date)}</span>`;
+                
                 allItemsHtml += `
-                    <div class="day-preview-item day-preview-project" data-project-id="${project.id}">
-                        <div class="day-preview-item-title">${project.title}</div>
+                    <div class="day-preview-item day-preview-project ${isPastDue ? 'overdue' : ''}" data-project-id="${project.id}">
+                        <div class="day-preview-item-title">
+                            <span class="item-type-label">Project:</span> ${project.title}
+                        </div>
                         <div class="day-preview-item-meta">
                             <span class="day-preview-item-status ${project.status}">${project.status}</span>
-                            <span class="day-preview-item-due">Due: ${this.formatDate(project.end_date)}</span>
+                            ${dueDateHtml}
                         </div>
                     </div>
                 `;
@@ -1429,12 +1494,23 @@ class ProjectOverview {
         if (dueItems.stages.length > 0) {
             allItemsHtml += '<div class="day-preview-section"><h4>Stages</h4>';
             dueItems.stages.forEach(item => {
+                const stageEndDate = item.stage.end_date ? new Date(item.stage.end_date.split(' ')[0]) : null;
+                const isPastDue = stageEndDate && stageEndDate < today;
+                const daysOverdue = isPastDue ? Math.floor((today - stageEndDate) / (1000 * 60 * 60 * 24)) : 0;
+                const dueDateHtml = isPastDue ? 
+                    `<span class="day-preview-item-due overdue">Overdue: ${daysOverdue} days</span>` : 
+                    `<span class="day-preview-item-due">Due: ${this.formatDate(item.stage.end_date)}</span>`;
+                
                 allItemsHtml += `
-                    <div class="day-preview-item day-preview-stage" data-project-id="${item.project.id}" data-stage-id="${item.stage.id}">
-                        <div class="day-preview-item-title">Stage ${item.stage.stage_number || ''} - ${item.project.title}</div>
+                    <div class="day-preview-item day-preview-stage ${isPastDue ? 'overdue' : ''}" 
+                         data-project-id="${item.project.id}" 
+                         data-stage-id="${item.stage.id}">
+                        <div class="day-preview-item-title">
+                            <span class="item-type-label">Stage:</span> ${item.stage.stage_number || ''} - ${item.project.title}
+                        </div>
                         <div class="day-preview-item-meta">
                             <span class="day-preview-item-status ${item.stage.status}">${item.stage.status}</span>
-                            <span class="day-preview-item-due">Due: ${this.formatDate(item.stage.end_date)}</span>
+                            ${dueDateHtml}
                         </div>
                     </div>
                 `;
@@ -1446,15 +1522,24 @@ class ProjectOverview {
         if (dueItems.substages.length > 0) {
             allItemsHtml += '<div class="day-preview-section"><h4>Substages</h4>';
             dueItems.substages.forEach(item => {
+                const substageEndDate = item.substage.end_date ? new Date(item.substage.end_date.split(' ')[0]) : null;
+                const isPastDue = substageEndDate && substageEndDate < today;
+                const daysOverdue = isPastDue ? Math.floor((today - substageEndDate) / (1000 * 60 * 60 * 24)) : 0;
+                const dueDateHtml = isPastDue ? 
+                    `<span class="day-preview-item-due overdue">Overdue: ${daysOverdue} days</span>` : 
+                    `<span class="day-preview-item-due">Due: ${this.formatDate(item.substage.end_date)}</span>`;
+                
                 allItemsHtml += `
-                    <div class="day-preview-item day-preview-substage" 
+                    <div class="day-preview-item day-preview-substage ${isPastDue ? 'overdue' : ''}" 
                          data-project-id="${item.project.id}" 
                          data-stage-id="${item.stage.id}" 
                          data-substage-id="${item.substage.id}">
-                        <div class="day-preview-item-title">${item.substage.title || 'Substage'} - ${item.project.title}</div>
+                        <div class="day-preview-item-title">
+                            <span class="item-type-label">Substage:</span> ${item.substage.title || 'Substage'} - ${item.project.title}
+                        </div>
                         <div class="day-preview-item-meta">
                             <span class="day-preview-item-status ${item.substage.status}">${item.substage.status}</span>
-                            <span class="day-preview-item-due">Due: ${this.formatDate(item.substage.end_date)}</span>
+                            ${dueDateHtml}
                         </div>
                     </div>
                 `;
@@ -1462,15 +1547,100 @@ class ProjectOverview {
             allItemsHtml += '</div>';
         }
         
+        // Add "Your Previous Due Work" section if we're viewing a future date and there are past due items
+        const hasPastDueItems = pastDueItems.projects.length > 0 || 
+                                pastDueItems.stages.length > 0 || 
+                                pastDueItems.substages.length > 0;
+                                
+        let pastDueHtml = '';
+        if (clickedDate > today && hasPastDueItems) {
+            pastDueHtml += '<div class="day-preview-section past-due-section"><h4>Your Previous Due Work</h4>';
+            
+            // Add past due projects
+            if (pastDueItems.projects.length > 0) {
+                pastDueHtml += '<div class="past-due-category"><h5><i class="fas fa-project-diagram"></i> Projects</h5>';
+                pastDueItems.projects.forEach(project => {
+                    const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
+                    const daysOverdue = Math.floor((today - projectEndDate) / (1000 * 60 * 60 * 24));
+                    
+                    pastDueHtml += `
+                        <div class="day-preview-item day-preview-project overdue" data-project-id="${project.id}">
+                            <div class="day-preview-item-title">
+                                <span class="item-type-label">Project:</span> ${project.title}
+                            </div>
+                            <div class="day-preview-item-meta">
+                                <span class="day-preview-item-status ${project.status}">${project.status}</span>
+                                <span class="day-preview-item-due overdue">Overdue: ${daysOverdue} days</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                pastDueHtml += '</div>';
+            }
+            
+            // Add past due stages
+            if (pastDueItems.stages.length > 0) {
+                pastDueHtml += '<div class="past-due-category"><h5><i class="fas fa-layer-group"></i> Stages</h5>';
+                pastDueItems.stages.forEach(item => {
+                    const stageEndDate = item.stage.end_date ? new Date(item.stage.end_date.split(' ')[0]) : null;
+                    const daysOverdue = Math.floor((today - stageEndDate) / (1000 * 60 * 60 * 24));
+                    
+                    pastDueHtml += `
+                        <div class="day-preview-item day-preview-stage overdue" 
+                             data-project-id="${item.project.id}" 
+                             data-stage-id="${item.stage.id}">
+                            <div class="day-preview-item-title">
+                                <span class="item-type-label">Stage:</span> ${item.stage.stage_number || ''} - ${item.project.title}
+                            </div>
+                            <div class="day-preview-item-meta">
+                                <span class="day-preview-item-status ${item.stage.status}">${item.stage.status}</span>
+                                <span class="day-preview-item-due overdue">Overdue: ${daysOverdue} days</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                pastDueHtml += '</div>';
+            }
+            
+            // Add past due substages
+            if (pastDueItems.substages.length > 0) {
+                pastDueHtml += '<div class="past-due-category"><h5><i class="fas fa-tasks"></i> Substages</h5>';
+                pastDueItems.substages.forEach(item => {
+                    const substageEndDate = item.substage.end_date ? new Date(item.substage.end_date.split(' ')[0]) : null;
+                    const daysOverdue = Math.floor((today - substageEndDate) / (1000 * 60 * 60 * 24));
+                    
+                    pastDueHtml += `
+                        <div class="day-preview-item day-preview-substage overdue" 
+                             data-project-id="${item.project.id}" 
+                             data-stage-id="${item.stage.id}" 
+                             data-substage-id="${item.substage.id}">
+                            <div class="day-preview-item-title">
+                                <span class="item-type-label">Substage:</span> ${item.substage.title || 'Substage'} - ${item.project.title}
+                            </div>
+                            <div class="day-preview-item-meta">
+                                <span class="day-preview-item-status ${item.substage.status}">${item.substage.status}</span>
+                                <span class="day-preview-item-due overdue">Overdue: ${daysOverdue} days</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                pastDueHtml += '</div>';
+            }
+            
+            pastDueHtml += '</div>';
+        }
+        
         // Create and show the preview modal
         const modalContent = `
             <div class="day-preview-modal">
                 <div class="day-preview-header">
-                    <h3>Items Due on ${formattedDate}</h3>
+                    <h3>Work Due on ${formattedDate}</h3>
                     <button class="day-preview-close">&times;</button>
                 </div>
                 <div class="day-preview-content">
-                    ${allItemsHtml || '<div class="day-preview-empty">No items due on this date</div>'}
+                    ${allItemsHtml}
+                    ${pastDueHtml}
+                    ${(!allItemsHtml && !pastDueHtml) ? '<div class="day-preview-empty">No Work due on this date</div>' : ''}
                 </div>
                 <div class="day-preview-footer">
                     <button class="day-preview-details-btn">View Detailed Hierarchy</button>
@@ -1531,19 +1701,14 @@ class ProjectOverview {
                         window.stageDetailModal = new StageDetailModal();
                         window.stageDetailModal.openStageModal(projectId, stageId);
                     }
-                } else {
+                } else if (projectId) {
                     // Open project brief modal
                     if (window.projectBriefModal) {
                         window.projectBriefModal.openProjectModal(projectId);
                     } else {
-                        // If ProjectBriefModal class is available but not initialized
-                        if (typeof ProjectBriefModal === 'function') {
-                            window.projectBriefModal = new ProjectBriefModal();
-                            window.projectBriefModal.openProjectModal(projectId);
-                        } else {
-                            // Fallback to direct navigation
-                            window.location.href = `project-details.php?id=${projectId}`;
-                        }
+                        // Initialize if not already done
+                        window.projectBriefModal = new ProjectBriefModal();
+                        window.projectBriefModal.openProjectModal(projectId);
                     }
                 }
             });

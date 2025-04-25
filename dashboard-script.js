@@ -2258,7 +2258,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                     <td>${file.type}</td>
                                                                     <td><span class="table-status ${file.status.toLowerCase()}">${file.status.replace('_', ' ')}</span></td>
                                                                     <td class="table-actions">
-                                                                        <button class="table-action-btn action-download" title="Download" onclick="downloadFile('${file.file_path}')">
+                                                                        
+                                                                        <button class="table-action-btn action-fingerprint" title="Secure Download" data-tooltip="Download with unique filename" onclick="fingerprintDownload(${file.id})">
                                                                             <i class="fas fa-download"></i>
                                                                         </button>
                                                                         <button class="table-action-btn action-accept" title="Accept" onclick="updateFileStatus(${file.id}, 'approved')">
@@ -2889,10 +2890,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // First, define the functions
     function viewFile(fileId) {
+        if (!fileId) return;
         window.open(`file_handler.php?action=view&file_id=${fileId}`, '_blank');
     }
 
     function downloadFile(fileId) {
+        if (!fileId) return;
         window.location.href = `file_handler.php?action=download&file_id=${fileId}`;
     }
 

@@ -146,7 +146,7 @@ function calculateLeaveDeductions($leavesTaken, $perDaySalary) {
     return $deduction;
 }
 
-// Modify the main query to include leaves count
+// Modify the main query to include leaves count and round overtime to nearest 30 min
 $query = "WITH user_leaves AS (
     SELECT 
         lr.user_id,
@@ -239,22 +239,28 @@ SELECT
         SELECT CONCAT(
             FLOOR(SUM(
                 CASE 
-                    -- Only count time after shift's end time as overtime
+                    -- Only count time after shift's end time as overtime, rounded to nearest 30 min
                     WHEN att.punch_out IS NOT NULL AND TIME(att.punch_out) > s2.end_time AND TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) >= (90 * 60)
-                    THEN TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time))
+                    THEN 
+                        -- Round to nearest 30 minute increment (0 or 30)
+                        FLOOR(TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) / 1800) * 1800
                     ELSE 0 
                 END
             )/3600),
             ':',
-            LPAD(FLOOR(MOD(
-                SUM(
-                    CASE 
-                        -- Only count time after shift's end time as overtime
-                        WHEN att.punch_out IS NOT NULL AND TIME(att.punch_out) > s2.end_time AND TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) >= (90 * 60)
-                        THEN TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time))
-                        ELSE 0 
-                    END
-                ), 3600)/60), 2, '0')
+            -- The minutes will now always be either 00 or 30
+            CASE 
+                WHEN FLOOR(MOD(
+                    SUM(
+                        CASE 
+                            WHEN att.punch_out IS NOT NULL AND TIME(att.punch_out) > s2.end_time AND TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) >= (90 * 60)
+                            THEN 
+                                FLOOR(TIME_TO_SEC(TIMEDIFF(TIME(att.punch_out), s2.end_time)) / 1800) * 1800
+                            ELSE 0 
+                        END
+                    ), 3600)/60) = 30 THEN '30'
+                ELSE '00'
+            END
         )
         FROM attendance att
         INNER JOIN user_shifts us2 ON us2.user_id = att.user_id
@@ -1317,7 +1323,8 @@ Leave Deduction Rules:
                             );
                             $overtime_hours = $user['overtime_hours'] ?: '0:00';
                             list($hours, $minutes) = explode(':', $overtime_hours);
-                            $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
+                            // Only consider full hours and half hours (30 min)
+                            $decimal_hours = floatval($hours) + ($minutes == '30' ? 0.5 : 0);
                             $overtime_amount = $decimal_hours * $suggestedRate;
                             
                             // Calculate leaves taken
@@ -1457,7 +1464,8 @@ Leave Deduction Rules:
                                             <?php
                                             $overtime_hours = $user['overtime_hours'] ?: '0:00';
                                             list($hours, $minutes) = explode(':', $overtime_hours);
-                                            $decimal_hours = floatval($hours) + (floatval($minutes) / 60);
+                                            // Only consider full hours and half hours (30 min)
+                                            $decimal_hours = floatval($hours) + ($minutes == '30' ? 0.5 : 0);
                                             
                                             // Add debug output
                                             error_log("Debug - User: {$user['username']}");
@@ -1734,6 +1742,18 @@ Leave Deduction Rules:
             }
         });
     });
+
+    // Add this function to handle overtime calculation with 30-minute rounding
+    function calculateOvertimeWithRounding(hoursMinutes) {
+        if (!hoursMinutes || hoursMinutes === '0:00') {
+            return 0;
+        }
+        
+        const [hours, minutes] = hoursMinutes.split(':');
+        // Minutes will only be 00 or 30 based on our SQL query changes
+        const decimalHours = parseInt(hours) + (minutes === '30' ? 0.5 : 0);
+        return decimalHours;
+    }
     </script>
 </body>
 </html> 

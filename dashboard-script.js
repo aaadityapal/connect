@@ -1016,10 +1016,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.punched_users.forEach(user => {
                     // Determine if user is late based on shift time (you can adjust this logic)
                     const punchInTime = new Date(user.punch_in);
-                    const isLate = punchInTime.getHours() >= 9 && punchInTime.getMinutes() > 30;
+                    const isLate = !isNaN(punchInTime.getTime()) && (punchInTime.getHours() >= 9 && punchInTime.getMinutes() > 30);
                     
                     if (isLate) lateCount++;
                     else ontimeCount++;
+                    
+                    // Format punch-in time with error handling
+                    let formattedTime = "";
+                    try {
+                        if (user.punch_in && !isNaN(new Date(user.punch_in).getTime())) {
+                            formattedTime = new Date(user.punch_in).toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                        } else {
+                            formattedTime = "No time";
+                        }
+                    } catch (err) {
+                        console.error('Error formatting punch time:', err);
+                        formattedTime = "Invalid time";
+                    }
                     
                     // Create employee list item
                     const listItem = document.createElement('div');
@@ -1035,13 +1051,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                         <div class="punch-time">
-                            ${new Date(user.punch_in).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                            })}
+                            ${formattedTime}
                         </div>
                         <span class="attendance-status ${isLate ? 'status-late' : 'status-ontime'}">
-                            ${isLate ? 'Late' : 'On Time'}
+                            ${isLate ? 'Late' : formattedTime}
                         </span>
                     `;
                     

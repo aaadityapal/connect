@@ -29,6 +29,19 @@ try {
     $stmt->execute(['today' => $today]);
     $punched_users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // Format dates for JSON encoding
+    foreach ($punched_users as &$user) {
+        // Make sure punch_in exists and is properly formatted
+        if (!empty($user['punch_in'])) {
+            // Create a DateTime object from the time string
+            $time = DateTime::createFromFormat('H:i:s', $user['punch_in']);
+            if ($time) {
+                // Format it as a full datetime for JavaScript to parse
+                $user['punch_in'] = date('Y-m-d') . ' ' . $user['punch_in'];
+            }
+        }
+    }
+    
     // Get total users count
     $total_query = "SELECT COUNT(*) as total FROM users WHERE status = 'active'";
     $total_stmt = $pdo->prepare($total_query);
@@ -44,7 +57,7 @@ try {
 } catch (PDOException $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Error fetching attendance details'
+        'message' => 'Error fetching attendance details: ' . $e->getMessage()
     ]);
 }
 ?>

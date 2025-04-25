@@ -49,6 +49,8 @@ foreach ($managers as $manager) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Management</title>
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -890,6 +892,84 @@ foreach ($managers as $manager) {
             background-color: #3b82f6;
             color: white;
         }
+
+        .status-date {
+            display: block;
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-top: 0.25rem;
+        }
+
+        /* Custom date picker in status modal */
+        #statusDateModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+            backdrop-filter: blur(4px);
+        }
+
+        .status-date-modal-content {
+            position: relative;
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-date-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .status-date-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-date-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-cancel, .btn-confirm {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-confirm {
+            background: #4F46E5;
+            color: white;
+            border: none;
+        }
+
+        .btn-confirm:hover {
+            background: #4338CA;
+        }
+
+        .btn-cancel:hover {
+            background: #e2e8f0;
+        }
     </style>
 </head>
 <body>
@@ -995,6 +1075,9 @@ foreach ($managers as $manager) {
                                     <span class="status-text status-<?php echo strtolower($employee['status']); ?>">
                                         <?php echo ucfirst(strtolower($employee['status'])); ?>
                                     </span>
+                                    <?php if (!empty($employee['status_changed_date'])): ?>
+                                    <small class="status-date">Changed: <?php echo date('d M Y', strtotime($employee['status_changed_date'])); ?></small>
+                                    <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -1192,6 +1275,17 @@ foreach ($managers as $manager) {
                 <div id="fieldInput"></div>
                 <button type="submit" class="save-btn">Save Changes</button>
             </form>
+        </div>
+    </div>
+
+    <div id="statusDateModal" class="modal">
+        <div class="status-date-modal-content">
+            <div class="status-date-modal-title">Set Status Change Date</div>
+            <input type="date" id="customStatusDate" class="status-date-input" max="<?php echo date('Y-m-d'); ?>">
+            <div class="status-date-buttons">
+                <button class="btn-cancel" onclick="cancelStatusChange()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmStatusChange()">Confirm</button>
+            </div>
         </div>
     </div>
 
@@ -1461,84 +1555,137 @@ foreach ($managers as $manager) {
             });
         });
 
-        // Add event listener for status toggles
+        // Variables to store temporary status change information
+        let tempStatusToggle = null;
+        let tempEmployeeId = null;
+        let tempNewStatus = null;
+
+        // Add event listener for status toggles - replace existing code
         document.querySelectorAll('.status-toggle').forEach(toggle => {
             toggle.addEventListener('change', function(e) {
+                // Prevent default toggle behavior
+                e.preventDefault();
+                
                 if (userRole !== 'HR') {
-                    e.preventDefault();
-                    this.checked = !this.checked;
+                    this.checked = !this.checked; // Revert toggle
                     showNotification('Access Denied', 'Only HR can change employee status.', 'error');
                     return;
                 }
-                const employeeId = this.dataset.employeeId;
-                const newStatus = this.checked ? 'active' : 'inactive';
-                const statusText = this.parentElement.nextElementSibling;
                 
-                // Show loading state
-                statusText.textContent = 'Updating...';
+                // Store temporarily
+                tempStatusToggle = this;
+                tempEmployeeId = this.dataset.employeeId;
+                tempNewStatus = !this.checked ? 'inactive' : 'active'; // reversed because we prevented the toggle
                 
-                // Create FormData
-                const formData = new FormData();
-                formData.append('employeeId', employeeId);
-                formData.append('fieldName', 'status');
-                formData.append('value', newStatus);
-
-                // Send update request
-                fetch('update_employee.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        // Update status text and class
-                        statusText.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                        statusText.className = `status-text status-${newStatus}`;
-                        showNotification('Success', 'Status updated successfully', 'success');
-                    } else {
-                        // Revert toggle if update failed
-                        this.checked = !this.checked;
-                        throw new Error(data.message || 'Error updating status');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // Revert toggle state
-                    this.checked = !this.checked;
-                    statusText.textContent = this.checked ? 'Active' : 'Inactive';
-                    showNotification('Error', error.message, 'error');
-                });
+                // Set default date to today
+                document.getElementById('customStatusDate').value = new Date().toISOString().split('T')[0];
+                
+                // Show date selection modal
+                document.getElementById('statusDateModal').style.display = 'block';
+                
+                // Don't toggle yet - we'll do it after date confirmation
+                this.checked = !this.checked; // Revert toggle until confirmed
             });
         });
-
-        // Add a function to check if an employee is a direct report
-        function isDirectReport(employeeId) {
-            const employeeCard = document.querySelector(`.employee-card[data-employee-id="${employeeId}"]`);
-            const reportingManager = employeeCard.querySelector('[data-field="reporting_manager"] .value-display').textContent;
-            return reportingManager === '<?php echo $_SESSION['username']; ?>';
+        
+        // Function to cancel status change
+        function cancelStatusChange() {
+            document.getElementById('statusDateModal').style.display = 'none';
+            tempStatusToggle = null;
+            tempEmployeeId = null;
+            tempNewStatus = null;
         }
-
-        // Update UI elements based on permissions
-        document.addEventListener('DOMContentLoaded', function() {
-            if (userRole === 'Senior Manager (Studio)') {
-                document.querySelectorAll('.employee-card').forEach(card => {
-                    const employeeId = card.dataset.employeeId;
-                    const isDirectReportEmployee = isDirectReport(employeeId);
+        
+        // Function to confirm status change with custom date
+        function confirmStatusChange() {
+            if (!tempStatusToggle || !tempEmployeeId || !tempNewStatus) {
+                showNotification('Error', 'Invalid status change request', 'error');
+                return;
+            }
+            
+            const customDate = document.getElementById('customStatusDate').value;
+            if (!customDate) {
+                showNotification('Error', 'Please select a date', 'error');
+                return;
+            }
+            
+            // Hide modal
+            document.getElementById('statusDateModal').style.display = 'none';
+            
+            // Apply the toggle visually
+            tempStatusToggle.checked = tempNewStatus === 'active';
+            
+            const statusText = tempStatusToggle.parentElement.nextElementSibling;
+            
+            // Show loading state
+            statusText.textContent = 'Updating...';
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('employeeId', tempEmployeeId);
+            formData.append('fieldName', 'status');
+            formData.append('value', tempNewStatus);
+            formData.append('updateStatusDate', 'true');
+            formData.append('customStatusDate', customDate);
+            
+            // Send update request
+            fetch('update_employee.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    // Update status text and class
+                    statusText.textContent = tempNewStatus.charAt(0).toUpperCase() + tempNewStatus.slice(1);
+                    statusText.className = `status-text status-${tempNewStatus}`;
                     
-                    // Hide edit icons for non-direct reports
-                    if (!isDirectReportEmployee) {
-                        card.querySelectorAll('.edit-icon').forEach(icon => {
-                            icon.style.display = 'none';
-                        });
+                    // Update the status change date if returned
+                    if (data.statusChangedDate) {
+                        let statusDateElem = tempStatusToggle.parentElement.querySelector('.status-date');
+                        if (!statusDateElem) {
+                            statusDateElem = document.createElement('small');
+                            statusDateElem.className = 'status-date';
+                            tempStatusToggle.parentElement.appendChild(statusDateElem);
+                        }
+                        statusDateElem.textContent = 'Changed: ' + data.statusChangedDate;
                     }
                     
-                    // Hide status toggles for all employees
-                    card.querySelectorAll('.status-toggle').forEach(toggle => {
-                        toggle.parentElement.style.display = 'none';
-                    });
-                });
+                    showNotification('Success', 'Status updated successfully', 'success');
+                } else {
+                    // Revert toggle if update failed
+                    tempStatusToggle.checked = tempNewStatus !== 'active';
+                    throw new Error(data.message || 'Error updating status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Revert toggle state
+                tempStatusToggle.checked = tempNewStatus !== 'active';
+                statusText.textContent = tempStatusToggle.checked ? 'Active' : 'Inactive';
+                showNotification('Error', error.message, 'error');
+            })
+            .finally(() => {
+                // Clear temp variables
+                tempStatusToggle = null;
+                tempEmployeeId = null;
+                tempNewStatus = null;
+            });
+        }
+
+        // Close status date modal when clicking outside
+        window.onclick = function(event) {
+            const statusModal = document.getElementById('statusDateModal');
+            const editModal = document.getElementById('editModal');
+            
+            if (event.target == statusModal) {
+                cancelStatusChange();
             }
-        });
+            
+            if (event.target == editModal) {
+                closeModal();
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');

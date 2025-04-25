@@ -16,6 +16,8 @@ error_log("Session Data: " . print_r($_SESSION, true));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Senior Manager Dashboard</title>
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="dashboard-styles.css">
     <link rel="stylesheet" href="assets/css/notification-system.css">
@@ -79,6 +81,12 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     <a href="attendance_report.php">
                         <i class="fas fa-clock"></i>
                         <span class="sidebar-text"> Attendance Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="overtime_report.php">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span class="sidebar-text"> Overtime Reports</span>
                     </a>
                 </li>
                 

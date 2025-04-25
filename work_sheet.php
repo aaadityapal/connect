@@ -112,12 +112,15 @@ $query = "SELECT
                 END
             ) >= 5400  -- 5400 seconds = 1 hour 30 minutes
         THEN 
+            -- Round down to nearest 30-minute increment (0 or 30 minutes)
             SEC_TO_TIME(
-                CASE
-                    WHEN TIME_TO_SEC(a.punch_out) >= TIME_TO_SEC(s.end_time)
-                    THEN TIME_TO_SEC(a.punch_out) - TIME_TO_SEC(s.end_time)
-                    ELSE (TIME_TO_SEC(a.punch_out) + 86400) - TIME_TO_SEC(s.end_time)
-                END
+                FLOOR(
+                    CASE
+                        WHEN TIME_TO_SEC(a.punch_out) >= TIME_TO_SEC(s.end_time)
+                        THEN (TIME_TO_SEC(a.punch_out) - TIME_TO_SEC(s.end_time))
+                        ELSE ((TIME_TO_SEC(a.punch_out) + 86400) - TIME_TO_SEC(s.end_time))
+                    END / 1800
+                ) * 1800
             )
         ELSE '00:00:00'
     END as calculated_overtime
@@ -1193,7 +1196,7 @@ $debug_info = [
                     totalWorkMinutes += workMinutes;
                     
                     // Get overtime from the calculated_overtime field
-                    const overtimeMinutes = convertTimeToMinutes(item.overtime);
+                    const overtimeMinutes = convertOvertimeToMinutes(item.overtime);
                     
                     // Only count overtime that's 90 minutes (1:30) or more
                     if (overtimeMinutes >= 90) {
@@ -1235,9 +1238,31 @@ $debug_info = [
             return (hours * 60) + minutes;
         }
         
+        // Add a specific function for overtime calculation respecting 30-min increments
+        function convertOvertimeToMinutes(overtimeString) {
+            if (!overtimeString || overtimeString === '-' || overtimeString === '00:00:00') return 0;
+            
+            const parts = overtimeString.split(':');
+            if (parts.length < 2) return 0;
+            
+            const hours = parseInt(parts[0], 10) || 0;
+            const minutes = parseInt(parts[1], 10) || 0;
+            
+            // Only count full hours and exact half hours
+            return (hours * 60) + (minutes === 30 ? 30 : 0);
+        }
+        
         function formatMinutesToTime(minutes) {
             const hours = Math.floor(minutes / 60);
             const mins = minutes % 60;
+            
+            // For overtime display, only show 00 or 30 for minutes
+            if (mins > 0 && mins < 30) {
+                return `${String(hours).padStart(2, '0')}:00`;
+            } else if (mins >= 30) {
+                return `${String(hours).padStart(2, '0')}:30`;
+            }
+            
             return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
         }
 

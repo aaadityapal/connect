@@ -116,8 +116,8 @@ function calculateValidOvertime($overtime_hours, $punch_in = null, $punch_out = 
         $overtime_hours : 
         convertTimeToDecimal($overtime_hours);
     
-    // Only count overtime if it's >= 1.5 hours (1 hour 30 minutes)
-    return $overtime_decimal >= 1.5 ? $overtime_hours : '00:00:00';
+    // Return all overtime regardless of duration
+    return $overtime_hours;
 }
 
 // Update the monthly totals calculation
@@ -137,6 +137,34 @@ $weekend_hours = 0;
 $working_days = 0;
 $no_punch_out_count = 0;
 $max_hours_day = ['date' => '', 'hours' => 0];
+
+// Add variables for Short Leaves adjustment
+$total_late_arrivals = 0;
+$adjusted_late_count = 0;
+$short_leaves_used = 0;
+$short_leaves_available = 2; // Default maximum short leaves per month
+
+// Fetch approved Short Leaves for the selected month (simplified version)
+if ($user_id !== 'all') {
+    $leave_query = "
+        SELECT COUNT(*) as leave_count
+        FROM leave_request lr
+        JOIN leave_types lt ON lr.leave_type = lt.id
+        WHERE lr.user_id = :user_id
+        AND lt.name = 'Short Leave'
+        AND lr.status = 'approved'
+        AND DATE_FORMAT(lr.start_date, '%Y-%m') = :month
+    ";
+    
+    $leave_stmt = $pdo->prepare($leave_query);
+    $leave_stmt->execute([
+        'user_id' => $user_id,
+        'month' => $month
+    ]);
+    $leave_result = $leave_stmt->fetch();
+    $short_leaves_used = $leave_result ? $leave_result['leave_count'] : 0;
+    $short_leaves_available = max(0, 2 - $short_leaves_used);
+}
 
 // Calculate working days (excluding weekends)
 $month_start = date('Y-m-01', strtotime($month));
@@ -166,24 +194,40 @@ if ($user_id === 'all') {
 }
 
 foreach ($records as $record) {
-    // Calculate working hours
-    $working_hours_decimal = is_numeric($record['working_hours']) ? 
-        $record['working_hours'] : 
-        convertTimeToDecimal($record['working_hours']);
-    
+    // Calculate working hours consistently
+    $working_hours_decimal = convertTimeToDecimal($record['working_hours']);
     $total_working_hours += $working_hours_decimal;
     
-    // Calculate valid overtime using shift end time
-    $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
-    $valid_overtime = calculateValidOvertime(
-        $record['overtime_hours'],
-        $record['punch_in'],
-        $record['punch_out'],
-        $shift_end_datetime
-    );
-    $total_overtime += is_numeric($valid_overtime) ? 
-        $valid_overtime : 
-        convertTimeToDecimal($valid_overtime);
+    // Calculate overtime consistently with the table display
+    $overtime_minutes = 0;
+    if ($record['punch_in'] && $record['punch_out'] && $record['shift_end']) {
+        // Extract just the time portions
+        $punch_out_time_parts = explode(':', date('H:i', strtotime($record['punch_out'])));
+        $shift_end_time_parts = explode(':', date('H:i', strtotime($record['shift_end'])));
+        
+        // Convert to minutes since start of day
+        $punch_out_minutes = (intval($punch_out_time_parts[0]) * 60) + intval($punch_out_time_parts[1]);
+        $shift_end_minutes = (intval($shift_end_time_parts[0]) * 60) + intval($shift_end_time_parts[1]);
+        
+        // Calculate overtime in minutes
+        $overtime_minutes = max(0, $punch_out_minutes - $shift_end_minutes);
+        
+        // Only count overtime if it's at least 90 minutes, and round to nearest half hour
+        if ($overtime_minutes >= 90) {
+            $hours = floor($overtime_minutes / 60);
+            $remaining_minutes = $overtime_minutes % 60;
+            
+            // Round minutes down to 0 or 30
+            if ($remaining_minutes < 30) {
+                $overtime_minutes = $hours * 60;
+            } else {
+                $overtime_minutes = ($hours * 60) + 30;
+            }
+            
+            // Add to total overtime (in hours)
+            $total_overtime += $overtime_minutes / 60;
+        }
+    }
     
     // Check if day is a weekly off
     $weekly_offs = getWeeklyOffsForDate($pdo, $record['user_id'], $record['date']);
@@ -208,7 +252,15 @@ foreach ($records as $record) {
         $grace_period = 15 * 60; // 15 minutes in seconds
         
         if ($punch_in_time > ($shift_start + $grace_period)) {
-            $late_arrivals++;
+            $total_late_arrivals++;
+            
+            // Only count this as a late arrival if we don't have available short leaves
+            // Short leave adjustment only applies when viewing a single user, not in the "all users" view
+            if ($user_id !== 'all' && $short_leaves_available > 0) {
+                // If short leaves are available, use one to cover this late arrival
+                $short_leaves_available--;
+                $adjusted_late_count++;
+            }
         }
     }
     
@@ -261,13 +313,17 @@ foreach ($records as $record) {
     }
 }
 
+// Calculate final late arrivals count (adjusted for short leaves)
+$late_arrivals = $total_late_arrivals - $adjusted_late_count;
+
 // Get the count of present days
 if ($user_id !== 'all') {
     // Single user - show total days present
     $present_days_count = count($present_days);
     $days_present_label = 'Days Present';
     $employee_count = 1;
-    $attendance_rate = ($present_days_count / $working_days) * 100;
+    // Cap at 100% to handle cases where present days could exceed working days
+    $attendance_rate = min(100, ($present_days_count / max(1, $working_days)) * 100);
 } else {
     // All users - calculate average days present per user
     $total_present_days = 0;
@@ -281,7 +337,8 @@ if ($user_id !== 'all') {
     // Calculate average (handle division by zero)
     $present_days_count = $employee_count > 0 ? round($total_present_days / $employee_count, 1) : 0;
     $days_present_label = 'Avg. Days Present';
-    $attendance_rate = ($present_days_count / $working_days) * 100;
+    // Cap at 100% to handle cases where present days could exceed working days
+    $attendance_rate = min(100, ($present_days_count / max(1, $working_days)) * 100);
     
     // Count users with full or zero attendance
     foreach ($unique_users as $uid => $user_data) {
@@ -1162,16 +1219,31 @@ function formatDecimalToTime($timeString) {
                             </div>
                             <div class="icon"><i class="fas fa-clock"></i></div>
                             <h3>Total Working Hours</h3>
-                            <p><?php echo number_format($total_working_hours, 2); ?></p>
+                            <p>
+                            <?php 
+                                // Format working hours in HH:MM format
+                                $working_hours = floor($total_working_hours);
+                                $working_minutes = round(($total_working_hours - $working_hours) * 60);
+                                echo sprintf("%02d:%02d", $working_hours, $working_minutes); 
+                            ?>
+                            </p>
                         </div>
                         <div class="summary-item overtime">
                             <div class="tooltip">
-                                Total overtime hours (>1.5h beyond shift end). Value: <?php echo formatDecimalToTime($total_overtime); ?><br>
-                                Percentage of total hours: <?php echo $total_working_hours > 0 ? number_format((convertTimeToDecimal($total_overtime) / $total_working_hours) * 100, 1) : 0; ?>%
+                                Total overtime hours (>1.5h beyond shift end).<br>
+                                Only counts overtime of 1.5+ hours, rounded to nearest half hour.<br>
+                                Percentage of total hours: <?php echo $total_working_hours > 0 ? number_format(($total_overtime / $total_working_hours) * 100, 1) : 0; ?>%
                             </div>
                             <div class="icon"><i class="fas fa-hourglass-half"></i></div>
                             <h3>Total Overtime</h3>
-                            <p class="overtime"><?php echo formatDecimalToTime($total_overtime); ?></p>
+                            <p class="overtime">
+                            <?php 
+                                // Format overtime hours in HH:MM format
+                                $overtime_hours = floor($total_overtime);
+                                $overtime_minutes = round(($total_overtime - $overtime_hours) * 60);
+                                echo sprintf("%02d:%02d", $overtime_hours, $overtime_minutes); 
+                            ?>
+                            </p>
                         </div>
                         <div class="summary-item">
                             <div class="tooltip">
@@ -1190,21 +1262,38 @@ function formatDecimalToTime($timeString) {
                         <div class="summary-item">
                             <div class="tooltip">
                                 Attendance rate based on working days in the month.<br>
-                                Formula: (Days Present / <?php echo $working_days; ?> Working Days) × 100
+                                Formula: (Days Present / <?php echo $working_days; ?> Working Days) × 100<br>
+                                Present days: <?php echo $present_days_count; ?><br>
+                                Working days: <?php echo $working_days; ?>
                             </div>
                             <div class="icon"><i class="fas fa-percentage"></i></div>
                             <h3>Attendance Rate</h3>
-                            <p><?php echo number_format($attendance_rate, 1); ?>%</p>
+                            <p><?php echo number_format($attendance_rate, 1) . '%'; ?></p>
                         </div>
                         
                         <div class="summary-item">
                             <div class="tooltip">
                                 Number of times employees arrived more than 15 minutes after their shift start time.<br>
+                                <?php if ($user_id !== 'all'): ?>
+                                    Total late arrivals: <?php echo $total_late_arrivals; ?><br>
+                                    Covered by short leaves: <?php echo $adjusted_late_count; ?><br>
+                                    Short leaves used: <?php echo $short_leaves_used; ?>/2<br>
+                                    Short leaves available: <?php echo $short_leaves_available; ?><br>
+                                <?php endif; ?>
                                 Rate: <?php echo count($records) > 0 ? number_format(($late_arrivals / count($records)) * 100, 1) : 0; ?>% of all punch-ins
                             </div>
                             <div class="icon"><i class="fas fa-user-clock"></i></div>
                             <h3>Late Arrivals</h3>
                             <p><?php echo $late_arrivals; ?></p>
+                            <?php if ($user_id !== 'all' && $adjusted_late_count > 0): ?>
+                                <small style="display: block; font-size: 0.6875rem; color: var(--text-muted);">
+                                    <?php echo $total_late_arrivals; ?> total - <?php echo $adjusted_late_count; ?> covered = <?php echo $late_arrivals; ?> counted
+                                </small>
+                            <?php elseif ($user_id !== 'all' && $short_leaves_available > 0): ?>
+                                <small style="display: block; font-size: 0.6875rem; color: var(--text-muted);">
+                                    <?php echo $short_leaves_available; ?> Short Leave<?php echo $short_leaves_available > 1 ? 's' : ''; ?> available
+                                </small>
+                            <?php endif; ?>
                         </div>
                         <div class="summary-item">
                             <div class="tooltip">
@@ -1259,16 +1348,34 @@ function formatDecimalToTime($timeString) {
                             </div>
                             <div class="icon"><i class="fas fa-calculator"></i></div>
                             <h3>Avg. Hours/Day</h3>
-                            <p><?php echo number_format($avg_hours_per_day, 2); ?></p>
+                            <p>
+                            <?php 
+                                // Format average hours in HH:MM format
+                                $avg_hours = floor($avg_hours_per_day);
+                                $avg_minutes = round(($avg_hours_per_day - $avg_hours) * 60);
+                                echo sprintf("%02d:%02d", $avg_hours, $avg_minutes); 
+                            ?>
+                            </p>
                         </div>
                         <div class="summary-item">
                             <div class="tooltip">
-                                Maximum hours worked in a single day: <?php echo number_format($max_hours_day['hours'], 2); ?> hours<br>
+                                Maximum hours worked in a single day: <?php 
+                                    $max_hours = floor($max_hours_day['hours']);
+                                    $max_minutes = round(($max_hours_day['hours'] - $max_hours) * 60);
+                                    echo sprintf("%02d:%02d", $max_hours, $max_minutes);
+                                ?> hours<br>
                                 Date: <?php echo date('d M Y', strtotime($max_hours_day['date'])); ?>
                             </div>
                             <div class="icon"><i class="fas fa-award"></i></div>
                             <h3>Max Hours Day</h3>
-                            <p><?php echo number_format($max_hours_day['hours'], 2); ?></p>
+                            <p>
+                            <?php 
+                                // Format max hours in HH:MM format
+                                $max_hours = floor($max_hours_day['hours']);
+                                $max_minutes = round(($max_hours_day['hours'] - $max_hours) * 60);
+                                echo sprintf("%02d:%02d", $max_hours, $max_minutes); 
+                            ?>
+                            </p>
                         </div>
                         
                         <?php if ($user_id === 'all'): ?>
@@ -1490,17 +1597,51 @@ function formatDecimalToTime($timeString) {
                                     </td>
                                     <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?></td>
                                     <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
-                                    <td><?php echo formatHoursAndMinutes($record['working_hours']); ?></td>
                                     <td><?php 
-                                        // Get the shift end time for this record's date
-                                        $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
-                                        $valid_overtime = calculateValidOvertime(
-                                            $record['overtime_hours'],
-                                            $record['punch_in'],
-                                            $record['punch_out'],
-                                            $shift_end_datetime
-                                        );
-                                        echo $valid_overtime !== '00:00:00' ? formatDecimalToTime($valid_overtime) : '-';
+                                        if (!empty($record['working_hours'])) {
+                                            // Convert decimal hours to hours and minutes
+                                            $decimal_hours = convertTimeToDecimal($record['working_hours']);
+                                            $hours = floor($decimal_hours);
+                                            $minutes = round(($decimal_hours - $hours) * 60);
+                                            echo sprintf("%02d:%02d", $hours, $minutes);
+                                        } else {
+                                            echo '-';
+                                        }
+                                    ?></td>
+                                    <td><?php 
+                                        // Calculate overtime directly from punch times and shift end
+                                        if ($record['punch_in'] && $record['punch_out'] && $record['shift_end']) {
+                                            // Extract just the time portions without the date
+                                            $punch_out_time_parts = explode(':', date('H:i', strtotime($record['punch_out'])));
+                                            $shift_end_time_parts = explode(':', date('H:i', strtotime($record['shift_end'])));
+                                            
+                                            // Convert to minutes since start of day
+                                            $punch_out_minutes = (intval($punch_out_time_parts[0]) * 60) + intval($punch_out_time_parts[1]);
+                                            $shift_end_minutes = (intval($shift_end_time_parts[0]) * 60) + intval($shift_end_time_parts[1]);
+                                            
+                                            // Calculate overtime in minutes
+                                            $overtime_minutes = max(0, $punch_out_minutes - $shift_end_minutes);
+                                            
+                                            // Only show if overtime is at least 1 hour and 30 minutes (90 minutes)
+                                            if ($overtime_minutes >= 90) {
+                                                // Round down to nearest half hour
+                                                $hours = floor($overtime_minutes / 60);
+                                                $remaining_minutes = $overtime_minutes % 60;
+                                                
+                                                // Round minutes down to 0 or 30
+                                                if ($remaining_minutes < 30) {
+                                                    $minutes = 0;
+                                                } else {
+                                                    $minutes = 30;
+                                                }
+                                                
+                                                echo sprintf("%02d:%02d", $hours, $minutes);
+                                            } else {
+                                                echo '-';
+                                            }
+                                        } else {
+                                            echo '-';
+                                        }
                                     ?></td>
                                     <td>
                                         <span class="status-badge <?php echo strtolower($record['status']); ?>">
@@ -1548,19 +1689,44 @@ function formatDecimalToTime($timeString) {
         
         foreach ($chronological_records as $record) {
             $dates[] = date('d M', strtotime($record['date']));
-            $workingHours[] = is_numeric($record['working_hours']) ? 
-                $record['working_hours'] : 
-                convertTimeToDecimal($record['working_hours']);
             
-            // Calculate overtime using shift end time
-            $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
-            $valid_overtime = calculateValidOvertime(
-                $record['overtime_hours'],
-                $record['punch_in'],
-                $record['punch_out'],
-                $shift_end_datetime
-            );
-            $overtimeHours[] = convertTimeToDecimal($valid_overtime);
+            // Convert working hours to hours and minutes format for consistency
+            $decimal_hours = convertTimeToDecimal($record['working_hours']);
+            $workingHours[] = $decimal_hours;
+            
+            // Calculate overtime using the same method as in the table display
+            $overtime_minutes = 0;
+            if ($record['punch_in'] && $record['punch_out'] && $record['shift_end']) {
+                // Extract just the time portions
+                $punch_out_time_parts = explode(':', date('H:i', strtotime($record['punch_out'])));
+                $shift_end_time_parts = explode(':', date('H:i', strtotime($record['shift_end'])));
+                
+                // Convert to minutes since start of day
+                $punch_out_minutes = (intval($punch_out_time_parts[0]) * 60) + intval($punch_out_time_parts[1]);
+                $shift_end_minutes = (intval($shift_end_time_parts[0]) * 60) + intval($shift_end_time_parts[1]);
+                
+                // Calculate overtime in minutes
+                $overtime_minutes = max(0, $punch_out_minutes - $shift_end_minutes);
+                
+                // Only count overtime if it's at least 90 minutes
+                if ($overtime_minutes < 90) {
+                    $overtime_minutes = 0;
+                } else {
+                    // Round down to nearest half hour
+                    $hours = floor($overtime_minutes / 60);
+                    $remaining_minutes = $overtime_minutes % 60;
+                    
+                    // Round minutes down to 0 or 30
+                    if ($remaining_minutes < 30) {
+                        $overtime_minutes = $hours * 60;
+                    } else {
+                        $overtime_minutes = ($hours * 60) + 30;
+                    }
+                }
+            }
+            
+            // Convert minutes to hours for the chart
+            $overtimeHours[] = $overtime_minutes / 60;
         }
         
         // Data for Overtime Pie Chart
@@ -1572,21 +1738,29 @@ function formatDecimalToTime($timeString) {
         ];
         
         foreach ($records as $record) {
-            // Calculate overtime using shift end time
-            $shift_end_datetime = $record['date'] . ' ' . $record['shift_end'];
-            $valid_overtime = calculateValidOvertime(
-                $record['overtime_hours'],
-                $record['punch_in'],
-                $record['punch_out'],
-                $shift_end_datetime
-            );
-            $overtime = convertTimeToDecimal($valid_overtime);
+            // Calculate overtime using the same method as in the table display
+            $overtime_minutes = 0;
+            if ($record['punch_in'] && $record['punch_out'] && $record['shift_end']) {
+                // Extract just the time portions
+                $punch_out_time_parts = explode(':', date('H:i', strtotime($record['punch_out'])));
+                $shift_end_time_parts = explode(':', date('H:i', strtotime($record['shift_end'])));
+                
+                // Convert to minutes since start of day
+                $punch_out_minutes = (intval($punch_out_time_parts[0]) * 60) + intval($punch_out_time_parts[1]);
+                $shift_end_minutes = (intval($shift_end_time_parts[0]) * 60) + intval($shift_end_time_parts[1]);
+                
+                // Calculate overtime in minutes
+                $overtime_minutes = max(0, $punch_out_minutes - $shift_end_minutes);
+            }
             
-            if ($overtime < 1.5) {
+            // Convert to hours for categorization
+            $overtime_hours = $overtime_minutes / 60;
+            
+            if ($overtime_hours < 1.5) {
                 $overtime_distribution['No Overtime']++;
-            } elseif ($overtime <= 2) {
+            } elseif ($overtime_hours <= 2) {
                 $overtime_distribution['1.5-2 Hours']++;
-            } elseif ($overtime <= 3) {
+            } elseif ($overtime_hours <= 3) {
                 $overtime_distribution['2-3 Hours']++;
             } else {
                 $overtime_distribution['3+ Hours']++;

@@ -51,14 +51,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Prepare and execute the update query
-        $query = "UPDATE users SET $fieldName = :value, updated_at = NOW() WHERE id = :id";
-        $stmt = $pdo->prepare($query);
+        // Prepare the update query
+        // For status updates, also update the status_changed_date
+        if ($fieldName === 'status' && isset($_POST['updateStatusDate'])) {
+            // Check if custom date is provided
+            if (isset($_POST['customStatusDate']) && !empty($_POST['customStatusDate'])) {
+                $customDate = filter_input(INPUT_POST, 'customStatusDate', FILTER_SANITIZE_STRING);
+                
+                // Validate date format
+                $dateObj = DateTime::createFromFormat('Y-m-d', $customDate);
+                if (!$dateObj || $dateObj->format('Y-m-d') !== $customDate) {
+                    throw new Exception('Invalid date format');
+                }
+                
+                // Make sure date is not in the future
+                $today = new DateTime();
+                if ($dateObj > $today) {
+                    throw new Exception('Status change date cannot be in the future');
+                }
+                
+                $query = "UPDATE users SET $fieldName = :value, status_changed_date = :custom_date, updated_at = NOW() WHERE id = :id";
+                $params = [
+                    ':value' => $value,
+                    ':custom_date' => $customDate,
+                    ':id' => $employeeId
+                ];
+            } else {
+                // Use current datetime if no custom date is provided
+                $query = "UPDATE users SET $fieldName = :value, status_changed_date = NOW(), updated_at = NOW() WHERE id = :id";
+                $params = [
+                    ':value' => $value,
+                    ':id' => $employeeId
+                ];
+            }
+        } else {
+            $query = "UPDATE users SET $fieldName = :value, updated_at = NOW() WHERE id = :id";
+            $params = [
+                ':value' => $value,
+                ':id' => $employeeId
+            ];
+        }
         
-        $result = $stmt->execute([
-            ':value' => $value,
-            ':id' => $employeeId
-        ]);
+        $stmt = $pdo->prepare($query);
+        $result = $stmt->execute($params);
 
         if ($result) {
             // For status updates, include additional response data
@@ -70,6 +105,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($fieldName === 'status') {
                 $response['status'] = $value;
+                
+                // If we updated the status_changed_date, include it in the response
+                if (isset($_POST['updateStatusDate'])) {
+                    if (isset($_POST['customStatusDate']) && !empty($_POST['customStatusDate'])) {
+                        // Format the custom date for display
+                        $dateObj = new DateTime($_POST['customStatusDate']);
+                        $response['statusChangedDate'] = $dateObj->format('d M Y');
+                    } else {
+                        $response['statusChangedDate'] = date('d M Y');
+                    }
+                }
             }
             
             echo json_encode($response);

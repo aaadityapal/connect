@@ -293,3 +293,7 @@
 [23-Apr-2025 19:56:53 Asia/Kolkata] Attempting to insert attendance with params: [2,"2025-04-23","2025-04-23 19:56:53","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-23 19:56:53","2025-04-23 19:56:53"]
 [23-Apr-2025 19:56:53 Asia/Kolkata] Successfully inserted attendance record with ID: 759
 [23-Apr-2025 19:56:57 Asia/Kolkata] Received input: {"action":"punch_out","location":{"latitude":28.63688239756393,"longitude":77.30269217589874}}
+[25-Apr-2025 10:34:47 Asia/Kolkata] Received input: {"action":"punch_in"}
+[25-Apr-2025 10:34:47 Asia/Kolkata] Attempting punch-in for user ID: 3
+[25-Apr-2025 10:34:47 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-25","2025-04-25 10:34:47","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-25 10:34:47","2025-04-25 10:34:47"]
+[25-Apr-2025 10:34:47 Asia/Kolkata] Successfully inserted attendance record with ID: 1107

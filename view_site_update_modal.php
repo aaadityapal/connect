@@ -138,6 +138,46 @@
     object-fit: contain !important;
 }
 
+/* Video styling in modal */
+.video-item {
+    position: relative;
+    background-color: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.video-thumbnail {
+    width: 100px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.video-thumbnail i {
+    font-size: 32px;
+    margin-bottom: 8px;
+    color: #ff0000;
+}
+
+.video-thumbnail span {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Style video controls in SweetAlert */
+.swal2-popup video {
+    display: block;
+    width: 100%;
+    max-width: 800px;
+    max-height: 80vh;
+    margin: 0 auto;
+}
+
 /* Make sure SweetAlert backdrop is above the modal */
 .swal2-backdrop-show {
     z-index: 9999 !important;

@@ -154,11 +154,27 @@ function updateWorkProgressSection(workProgressItems) {
                 
                 console.log('Using media path:', filePath);
                 
-                mediaHtml += `
-                    <div class="media-item" onclick="openMediaViewer('${filePath}')">
-                        <img src="${filePath}" alt="Work progress media" onerror="this.onerror=null; this.src='../images/image-not-found.svg'; console.error('Failed to load image: ${filePath}');">
-                    </div>
-                `;
+                // Check if this is a video file
+                const isVideo = filePath.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i);
+                
+                if (isVideo) {
+                    // For video files, show a thumbnail with play button overlay
+                    mediaHtml += `
+                        <div class="media-item video-item" onclick="openMediaViewer('${filePath}')">
+                            <div class="video-thumbnail">
+                                <i class="fas fa-play-circle"></i>
+                                <span>Video</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // For image files, show the image thumbnail
+                    mediaHtml += `
+                        <div class="media-item" onclick="openMediaViewer('${filePath}')">
+                            <img src="${filePath}" alt="Work progress media" onerror="this.onerror=null; this.src='../images/image-not-found.svg'; console.error('Failed to load image: ${filePath}');">
+                        </div>
+                    `;
+                }
             });
             mediaHtml += '</div>';
         }
@@ -248,11 +264,27 @@ function updateInventorySection(inventoryItems) {
                     
                     console.log('Using media path:', filePath);
                     
-                    mediaHtml += `
-                        <div class="media-item" onclick="openMediaViewer('${filePath}')">
-                            <img src="${filePath}" alt="Inventory media" onerror="this.onerror=null; this.src='../images/image-not-found.svg'; console.error('Failed to load image: ${filePath}');">
-                        </div>
-                    `;
+                    // Check if this is a video file
+                    const isVideo = filePath.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i);
+                    
+                    if (isVideo) {
+                        // For video files, show a thumbnail with play button overlay
+                        mediaHtml += `
+                            <div class="media-item video-item" onclick="openMediaViewer('${filePath}')">
+                                <div class="video-thumbnail">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>Video</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // For image files, show the image thumbnail
+                        mediaHtml += `
+                            <div class="media-item" onclick="openMediaViewer('${filePath}')">
+                                <img src="${filePath}" alt="Inventory media" onerror="this.onerror=null; this.src='../images/image-not-found.svg'; console.error('Failed to load image: ${filePath}');">
+                            </div>
+                        `;
+                    }
                 });
                 mediaHtml += '</div>';
             }
@@ -780,50 +812,73 @@ function showModalError(message) {
 }
 
 // Media viewer functionality
-function openMediaViewer(imagePath) {
-    console.log('Opening media viewer for:', imagePath);
+function openMediaViewer(mediaPath) {
+    console.log('Opening media viewer for:', mediaPath);
     
-    // Check if the image exists first before showing it with SweetAlert
-    const img = new Image();
-    img.onload = function() {
-        // Image loaded successfully, show it in SweetAlert
+    // Determine if the media is a video or image based on file extension
+    const isVideo = mediaPath.match(/\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv)$/i);
+    
+    if (isVideo) {
+        // Handle video files
         Swal.fire({
-            imageUrl: imagePath,
-            imageAlt: 'Media Image',
+            html: `
+                <video controls style="max-width: 100%; max-height: 80vh;">
+                    <source src="${mediaPath}" type="video/${isVideo[1]}">
+                    Your browser does not support the video tag.
+                </video>
+            `,
             showCloseButton: true,
             showConfirmButton: false,
             width: 'auto',
-            imageWidth: '700px', // Increased image width
-            imageHeight: 'auto',
             customClass: {
                 container: 'media-viewer-modal',
-                popup: 'media-viewer-popup',
-                image: 'media-viewer-image'
+                popup: 'media-viewer-popup'
             }
         });
-    };
-    
-    img.onerror = function() {
-        // Image failed to load, show fallback
-        console.error('Failed to load image in viewer:', imagePath);
-        Swal.fire({
-            imageUrl: '../images/image-not-found.svg',
-            imageAlt: 'Image Not Found',
-            showCloseButton: true,
-            showConfirmButton: false,
-            title: 'Image Not Found',
-            text: 'The image could not be loaded.',
-            width: 'auto',
-            imageWidth: '200px',
-            imageHeight: '200px',
-            customClass: {
-                container: 'media-viewer-modal'
-            }
-        });
-    };
-    
-    // Start loading the image
-    img.src = imagePath;
+    } else {
+        // Handle image files (existing functionality)
+        // Check if the image exists first before showing it with SweetAlert
+        const img = new Image();
+        img.onload = function() {
+            // Image loaded successfully, show it in SweetAlert
+            Swal.fire({
+                imageUrl: mediaPath,
+                imageAlt: 'Media Image',
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: 'auto',
+                imageWidth: '700px', // Increased image width
+                imageHeight: 'auto',
+                customClass: {
+                    container: 'media-viewer-modal',
+                    popup: 'media-viewer-popup',
+                    image: 'media-viewer-image'
+                }
+            });
+        };
+        
+        img.onerror = function() {
+            // Image failed to load, show fallback
+            console.error('Failed to load image in viewer:', mediaPath);
+            Swal.fire({
+                imageUrl: '../images/image-not-found.svg',
+                imageAlt: 'Image Not Found',
+                showCloseButton: true,
+                showConfirmButton: false,
+                title: 'Image Not Found',
+                text: 'The image could not be loaded.',
+                width: 'auto',
+                imageWidth: '200px',
+                imageHeight: '200px',
+                customClass: {
+                    container: 'media-viewer-modal'
+                }
+            });
+        };
+        
+        // Start loading the image
+        img.src = mediaPath;
+    }
 }
 
 // Close modal when clicking outside

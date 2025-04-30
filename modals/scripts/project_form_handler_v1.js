@@ -2582,3 +2582,34 @@ function switchToDrawingDropdown(stageNum, substageCount) {
     }
     customInput.value = '';
 }
+
+// In the document ready function
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+    
+    // Integrate with substage layout fix system
+    if (typeof window.emergencySubstageHeightFix === 'function') {
+        // Call the fix on any DOM update related to substages
+        document.addEventListener('DOMNodeInserted', function(e) {
+            if (e.target.classList && e.target.classList.contains('substage-block')) {
+                setTimeout(window.emergencySubstageHeightFix, 100);
+            }
+        });
+        
+        // Call the fix when the form is shown
+        document.addEventListener('shown.bs.modal', function(e) {
+            if (e.target.id === 'project-modal') {
+                setTimeout(window.emergencySubstageHeightFix, 300);
+            }
+        });
+        
+        // Apply fix after substage removal
+        document.addEventListener('click', function(e) {
+            if (e.target.classList && e.target.classList.contains('remove-substage-btn')) {
+                setTimeout(window.emergencySubstageHeightFix, 200);
+            }
+        });
+    }
+    
+    // ... existing code ...
+});

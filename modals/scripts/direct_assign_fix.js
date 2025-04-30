@@ -213,4 +213,458 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('ULTRA FIX: Ultra aggressive direct assignment fix initialized');
     }
+
+    // Function to fix substage rendering
+    function fixSubstageRendering() {
+        console.log('Running enhanced substage rendering fix');
+        
+        // Get all stage blocks
+        const stageBlocks = document.querySelectorAll('.stage-block');
+        
+        stageBlocks.forEach((stage, stageIndex) => {
+            const stageNum = stageIndex + 1;
+            
+            // Get substages container
+            const substagesContainer = stage.querySelector('.form-substages-container');
+            if (!substagesContainer) return;
+            
+            // Ensure container has proper styling for flexible content
+            substagesContainer.style.display = 'block';
+            substagesContainer.style.position = 'relative';
+            substagesContainer.style.width = '95%';
+            substagesContainer.style.marginLeft = 'auto';
+            substagesContainer.style.marginRight = 'auto';
+            substagesContainer.style.paddingBottom = '50px';
+            substagesContainer.style.maxHeight = 'none';
+            substagesContainer.style.height = 'auto';
+            substagesContainer.style.overflow = 'visible';
+            
+            // Get all substage blocks in this container
+            const substageBlocks = substagesContainer.querySelectorAll('.substage-block');
+            const substageCount = substageBlocks.length;
+            
+            // Set container height dynamically based on content
+            substagesContainer.style.minHeight = (300 + (substageCount * 70)) + 'px';
+            
+            // Assign unique IDs and fix positioning
+            substageBlocks.forEach((block, index) => {
+                const uniqueId = `substage-${stageNum}-${index+1}`;
+                block.id = uniqueId;
+                
+                // Add unique class for easy targeting
+                block.classList.add(`substage-num-${index+1}`);
+                
+                // Apply critical fixes
+                block.style.position = 'relative';
+                block.style.display = 'block';
+                block.style.width = '100%';
+                block.style.boxSizing = 'border-box';
+                block.style.clear = 'both';
+                block.style.marginBottom = '30px';
+                block.style.minHeight = '250px';
+                block.style.height = 'auto';
+                block.style.overflow = 'visible';
+                
+                // For better visual grouping, add dividers between groups of 3-4 substages
+                if (index > 0 && index % 3 === 0) {
+                    block.style.marginTop = '40px';
+                    block.style.paddingTop = '20px';
+                    block.style.borderTop = '1px dashed #e9ecef';
+                }
+            });
+            
+            // Fix the Add Substage button positioning
+            const addSubstageBtn = stage.querySelector('.add-substage-btn');
+            if (addSubstageBtn) {
+                // Move the button outside the substages container to ensure proper position
+                if (substagesContainer.parentNode) {
+                    substagesContainer.parentNode.appendChild(addSubstageBtn);
+                }
+                
+                // Apply aggressive styling fixes to ensure visibility and proper position
+                addSubstageBtn.style.display = 'flex';
+                addSubstageBtn.style.width = '95%';
+                addSubstageBtn.style.margin = '30px auto 20px auto';
+                addSubstageBtn.style.position = 'relative';
+                addSubstageBtn.style.clear = 'both';
+                addSubstageBtn.style.zIndex = '50';
+            }
+            
+            // Ensure stage has enough space based on substage count
+            stage.style.marginBottom = `${Math.max(60, 40 + (substageCount * 15))}px`;
+            stage.style.paddingBottom = '30px';
+        });
+    }
+    
+    // Watch for changes to the DOM that might affect substage rendering
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' && 
+                (mutation.target.classList.contains('form-substages-container') || 
+                 mutation.target.classList.contains('substage-block'))) {
+                fixSubstageRendering();
+            }
+        });
+    });
+    
+    // Configure and start the observer
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Run the fix when any substage is added or removed
+    document.addEventListener('DOMNodeInserted', function(e) {
+        if (e.target.classList && e.target.classList.contains('substage-block')) {
+            setTimeout(fixSubstageRendering, 100);
+        }
+    });
+    
+    // Also run the fix after page load
+    window.addEventListener('load', fixSubstageRendering);
+    
+    // Run the fix after any AJAX operation completes
+    var originalXHR = window.XMLHttpRequest;
+    window.XMLHttpRequest = function() {
+        var xhr = new originalXHR();
+        xhr.addEventListener('load', function() {
+            setTimeout(fixSubstageRendering, 200);
+        });
+        return xhr;
+    };
+
+    // Fix substage heights and button positioning
+    function emergencySubstageHeightFix() {
+        console.log('Running emergency substage height fix');
+        
+        // Get all stage blocks
+        const stageBlocks = document.querySelectorAll('.stage-block');
+        
+        stageBlocks.forEach((stage, stageIndex) => {
+            const stageNum = stageIndex + 1;
+            
+            // Fix the Add Substage button - move it outside any substage block
+            const addSubstageBtn = stage.querySelector('.add-substage-btn');
+            
+            // Fix the substages container
+            const substagesContainer = stage.querySelector('.form-substages-container');
+            if (substagesContainer) {
+                const substageBlocks = substagesContainer.querySelectorAll('.substage-block');
+                const substageCount = substageBlocks.length;
+                
+                // Set dynamic height based on number of substages
+                const baseHeight = 300;
+                const heightPerSubstage = 50;
+                const dynamicHeight = baseHeight + (substageCount * heightPerSubstage);
+                
+                // Fix container height and styling
+                substagesContainer.style.display = 'block';
+                substagesContainer.style.position = 'relative';
+                substagesContainer.style.minHeight = dynamicHeight + 'px';
+                substagesContainer.style.height = 'auto';
+                substagesContainer.style.overflow = 'visible';
+                substagesContainer.style.marginBottom = '60px';
+                substagesContainer.style.paddingBottom = (50 + (substageCount * 10)) + 'px';
+                
+                // Apply progressive spacing to substage blocks
+                substageBlocks.forEach((block, index) => {
+                    // Calculate progressive margin based on position
+                    const progressiveMargin = 25 + (Math.floor(index / 3) * 15);
+                    
+                    // Ensure each substage has proper height and spacing
+                    block.style.position = 'relative';
+                    block.style.display = 'block';
+                    block.style.width = '100%';
+                    block.style.boxSizing = 'border-box';
+                    block.style.marginBottom = progressiveMargin + 'px';
+                    block.style.minHeight = '250px';
+                    block.style.height = 'auto';
+                    block.style.overflow = 'visible';
+                    block.style.clear = 'both';
+                    
+                    // Apply additional styling for better spacing and visual hierarchy
+                    if (index > 0) {
+                        block.style.borderTop = '1px dashed #e9ecef';
+                        block.style.paddingTop = '15px';
+                    }
+                    
+                    // Special handling for every 4th substage - create visual grouping
+                    if (index % 4 === 0 && index > 0) {
+                        block.style.marginTop = '40px';
+                        block.style.paddingTop = '25px';
+                        block.style.borderTop = '2px dashed #ced4da';
+                    }
+                });
+                
+                // Ensure proper stage spacing based on substage count
+                stage.style.marginBottom = (60 + (substageCount * 10)) + 'px';
+                stage.style.paddingBottom = '30px';
+            }
+            
+            // Fix the Add Substage button - ensure it's outside and below the container
+            if (addSubstageBtn && substagesContainer) {
+                // Ensure the button is a direct child of the stage
+                if (addSubstageBtn.parentNode !== stage) {
+                    stage.appendChild(addSubstageBtn);
+                }
+                
+                // Calculate the position based on the substage container
+                const containerRect = substagesContainer.getBoundingClientRect();
+                const stageRect = stage.getBoundingClientRect();
+                
+                // Apply comprehensive styling to fix button position
+                addSubstageBtn.style.position = 'relative';
+                addSubstageBtn.style.display = 'flex';
+                addSubstageBtn.style.alignItems = 'center';
+                addSubstageBtn.style.justifyContent = 'center';
+                addSubstageBtn.style.clear = 'both';
+                addSubstageBtn.style.width = '95%';
+                addSubstageBtn.style.margin = '20px auto 30px auto';
+                addSubstageBtn.style.zIndex = '100';
+                
+                // Ensure the button is visually separated from the last substage
+                if (substagesContainer.querySelector('.substage-block')) {
+                    addSubstageBtn.style.marginTop = '40px';
+                    addSubstageBtn.style.boxShadow = '0 -2px 5px rgba(0,0,0,0.03)';
+                }
+            }
+        });
+    }
+    
+    // Run the fix on page load
+    emergencySubstageHeightFix();
+    
+    // Run the fix when DOM changes
+    const observer2 = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                emergencySubstageHeightFix();
+            }
+        });
+    });
+    
+    // Start observing
+    observer2.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Also run fix when a substage is added
+    document.addEventListener('click', function(e) {
+        if (e.target && 
+            (e.target.classList.contains('add-substage-btn') || 
+             e.target.closest('.add-substage-btn'))) {
+            // Wait for DOM to update
+            setTimeout(emergencySubstageHeightFix, 300);
+        }
+    });
+    
+    // Monkey patch the addSubstage function to ensure our fix runs
+    if (typeof window.addSubstage === 'function') {
+        const originalAddSubstage = window.addSubstage;
+        window.addSubstage = function(stageNum) {
+            const result = originalAddSubstage(stageNum);
+            
+            // Apply multiple fixes with increasing delays
+            [100, 300, 600, 1000].forEach(delay => {
+                setTimeout(() => {
+                    emergencySubstageHeightFix();
+                    fixSubstageRendering();
+                }, delay);
+            });
+            
+            return result;
+        };
+    }
+
+    // Add a new advanced rendering fix that runs on a timer
+    function setupAdvancedRenderingFix() {
+        // Run an aggressive fix every second for the first 10 seconds after page load
+        let fixCount = 0;
+        const maxFixes = 10;
+        
+        const fixInterval = setInterval(() => {
+            fixCount++;
+            emergencySubstageHeightFix();
+            fixSubstageRendering();
+            
+            if (fixCount >= maxFixes) {
+                clearInterval(fixInterval);
+                console.log('Completed timed substage rendering fixes');
+            }
+        }, 1000);
+        
+        // When adding new substages, apply fixes with increasing delays
+        const origAddSubstage = window.addSubstage;
+        if (typeof origAddSubstage === 'function') {
+            window.addSubstage = function(stageNum) {
+                const result = origAddSubstage(stageNum);
+                
+                // Apply multiple fixes with increasing delays
+                [100, 300, 600, 1000].forEach(delay => {
+                    setTimeout(() => {
+                        emergencySubstageHeightFix();
+                        fixSubstageRendering();
+                    }, delay);
+                });
+                
+                return result;
+            };
+        }
+    }
+
+    // Initialize the advanced fix system
+    window.addEventListener('load', setupAdvancedRenderingFix);
+
+    // Substage Height & Position Fix
+    // This function corrects the height and positioning of substages, particularly when there are 5 or more
+    function fixSubstageLayout() {
+        // Find all stage blocks
+        const stageBlocks = document.querySelectorAll('.stage-block');
+        
+        // Process each stage block
+        stageBlocks.forEach(stage => {
+            const substages = stage.querySelectorAll('.substage-block');
+            const substageContainer = stage.querySelector('.form-substages-container');
+            const addSubstageBtn = stage.querySelector('.add-substage-btn');
+            
+            if (!substageContainer || !addSubstageBtn) return;
+            
+            // Reset any previously applied styles
+            substageContainer.style.height = '';
+            substageContainer.style.minHeight = '';
+            addSubstageBtn.style.position = '';
+            addSubstageBtn.style.marginTop = '';
+            
+            // If we have 4 or more substages, apply enhanced layout
+            if (substages.length >= 4) {
+                // Calculate the total height needed
+                let totalHeight = 0;
+                substages.forEach(substage => {
+                    totalHeight += substage.offsetHeight + 30; // Adding margin
+                });
+                
+                // Set container min-height to ensure it contains all substages
+                substageContainer.style.minHeight = (totalHeight + 60) + 'px';
+                substageContainer.style.overflow = 'visible';
+                substageContainer.style.height = 'auto';
+                
+                // Position the Add Substage button properly
+                addSubstageBtn.style.position = 'relative';
+                addSubstageBtn.style.marginTop = '30px';
+                
+                // Apply special styling to the 5th substage and beyond
+                if (substages.length >= 5) {
+                    substages.forEach((substage, index) => {
+                        if (index >= 4) {
+                            substage.style.position = 'relative';
+                            substage.style.marginTop = '30px';
+                            substage.style.display = 'block';
+                            substage.style.clear = 'both';
+                        }
+                    });
+                    
+                    // Ensure the stage block is tall enough
+                    stage.style.paddingBottom = '40px';
+                    stage.style.marginBottom = '40px';
+                }
+            }
+        });
+    }
+
+    // Apply the fix after page load, after DOM updates, and when images load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial fix application
+        fixSubstageLayout();
+        
+        // Set up a MutationObserver to detect when substages are added or removed
+        const stagesContainer = document.querySelector('.stages-container');
+        if (stagesContainer) {
+            const observer = new MutationObserver(function(mutations) {
+                fixSubstageLayout();
+            });
+            
+            observer.observe(stagesContainer, { 
+                childList: true, 
+                subtree: true, 
+                attributes: true, 
+                attributeFilter: ['style', 'class'] 
+            });
+        }
+        
+        // Apply fix after any ajax completions (for dynamically loaded content)
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).ajaxComplete(function() {
+                setTimeout(fixSubstageLayout, 100);
+            });
+        }
+        
+        // Listen for window resize events
+        window.addEventListener('resize', function() {
+            fixSubstageLayout();
+        });
+        
+        // Apply fix when images load (which can affect layout)
+        window.addEventListener('load', function() {
+            fixSubstageLayout();
+        });
+        
+        // Handle click on the add substage button
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('.add-substage-btn') || e.target.closest('.add-substage-btn')) {
+                // Wait for the new substage to be added to the DOM
+                setTimeout(fixSubstageLayout, 100);
+            }
+        });
+    });
+
+    // Emergency fix function that can be called directly when needed
+    function emergencySubstageHeightFix() {
+        console.log("Applying emergency substage height fix");
+        fixSubstageLayout();
+        
+        // Force recalculation of all substage containers
+        const substageContainers = document.querySelectorAll('.form-substages-container');
+        substageContainers.forEach(container => {
+            const substages = container.querySelectorAll('.substage-block');
+            let maxHeight = 0;
+            
+            // Find the tallest substage
+            substages.forEach(substage => {
+                substage.style.height = 'auto';
+                const height = substage.offsetHeight;
+                if (height > maxHeight) maxHeight = height;
+            });
+            
+            // Apply progressive spacing based on the number of substages
+            const totalSubstages = substages.length;
+            if (totalSubstages >= 5) {
+                container.style.paddingBottom = (40 + (totalSubstages - 4) * 15) + 'px';
+                
+                // Apply progressive margins to substage blocks
+                substages.forEach((substage, index) => {
+                    if (index >= 4) {
+                        const progressiveMargin = 25 + (index - 4) * 5;
+                        substage.style.marginBottom = progressiveMargin + 'px';
+                    }
+                });
+            }
+            
+            // Ensure the Add Substage button is correctly positioned
+            const parentStage = container.closest('.stage-block');
+            if (parentStage) {
+                const addBtn = parentStage.querySelector('.add-substage-btn');
+                if (addBtn) {
+                    addBtn.style.position = 'relative';
+                    addBtn.style.zIndex = '10';
+                    addBtn.style.display = 'flex';
+                    addBtn.style.marginTop = '30px';
+                    addBtn.style.marginBottom = '20px';
+                }
+            }
+        });
+    }
+
+    // Expose the emergency fix to the global scope
+    window.emergencySubstageHeightFix = emergencySubstageHeightFix;
 }); 

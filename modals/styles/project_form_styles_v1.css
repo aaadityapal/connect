@@ -44,12 +44,25 @@
     overflow-y: auto;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: thin; /* Changed from none to thin for Firefox */
+    -ms-overflow-style: auto; /* Changed from none to auto for IE and Edge */
+    padding-bottom: 20px; /* Added padding to prevent content from touching the bottom edge */
+    overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
 .modal-container::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    width: 6px; /* Changed from display: none to a thin scrollbar */
+    background-color: #f1f1f1;
+    border-radius: 3px;
+}
+
+.modal-container::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 3px;
+}
+
+.modal-container::-webkit-scrollbar-thumb:hover {
+    background-color: #a8a8a8;
 }
 
 .modal-container {
@@ -181,6 +194,9 @@
 /* Form Styles */
 .modal-form {
     padding: 24px;
+    position: relative; /* Added for proper stacking context */
+    z-index: 1; /* Baseline z-index for form */
+    overflow: visible; /* Allow content overflow for proper rendering */
 }
 
 .form-group {
@@ -359,18 +375,23 @@
 
 /* Stage styles */
 .stages-container {
-    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 .stage-block {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #e9ecef;
-    transition: all 0.3s ease;
-    opacity: 1;
-    transform: translateY(0);
+    position: relative;
+    padding: 25px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    overflow: visible !important; /* Critical to prevent content truncation */
+    height: auto !important; /* Allow natural height */
+    min-height: 300px;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
 }
 
 .stage-header {
@@ -379,6 +400,8 @@
     align-items: center;
     margin-bottom: 20px;
     padding-right: 10px;
+    position: relative;
+    z-index: 5;
 }
 
 .stage-header h3 {
@@ -468,30 +491,95 @@
     margin-top: 20px;
     padding-left: 20px;
     border-left: 2px dashed #e9ecef;
-    max-height: 2000px;  /* Increased from 0 */
-    opacity: 1;           /* Changed from 0 */
-    transition: all 0.3s ease;
-    overflow: visible;    /* Changed from hidden */
-    margin-top: 15px;     /* Added margin-top by default */
-}
-
-.substage-block {
-    background: white;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    border: 1px solid #e9ecef;
-    transition: all 0.3s ease;
     position: relative;
+    width: 95%;
+    margin-left: 5px;
+    max-height: none !important; /* Remove height limits */
+    height: auto !important; /* Allow natural height */
+    overflow: visible !important; /* Prevent cutting off content */
+    padding-bottom: 40px !important; /* Add padding at bottom */
+    display: block !important; /* Force block display */
+    min-height: 100px !important; /* Ensure minimum height */
 }
 
+/* Critical fix for substage rendering issues */
+.substage-block {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    display: block !important;
+    margin-bottom: 25px !important;
+    min-height: 250px; /* Ensure minimum height for substage content */
+    height: auto !important; /* Allow height to expand */
+    overflow: visible !important; /* Ensure content doesn't get cut off */
+    contain: none !important; /* Prevent content from being constrained */
+    z-index: 1; /* Ensure proper stacking */
+}
+
+/* Specific fixes for 4th substage and beyond */
+.substage-block:nth-child(4),
+.substage-block:nth-child(n+5) {
+    margin-top: 30px !important;  /* Force extra margin for proper spacing */
+    position: relative !important; /* Ensure proper positioning */
+    display: block !important;     /* Force block display */
+    clear: both !important;        /* Clear any floating */
+    page-break-before: auto;       /* Allow natural breaks */
+    break-before: auto;            /* Modern break property */
+}
+
+/* Improved "Add Substage" button styling for reliability */
+.add-substage-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 95% !important;
+    margin: 30px auto 20px auto !important;
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px dashed #ced4da;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative !important;
+    z-index: 10 !important;
+    clear: both !important;
+    height: auto !important;
+    min-height: 48px !important;
+}
+
+/* Update the form-substages-container for proper height and overflow */
+.form-substages-container:after {
+    content: '';
+    display: block;
+    clear: both;
+    height: 30px;
+}
+
+/* Enhancement for stage blocks with many substages */
+.stage-block:has(.substage-block:nth-child(5)) {
+    padding-bottom: 50px;
+    margin-bottom: 40px;
+}
+
+/* Add visual separation between substages */
+.substage-block + .substage-block {
+    padding-top: 15px;
+    border-top: 1px dashed #f0f0f0;
+}
+
+/* Style connector lines properly */
 .substage-block::before {
     content: '';
     position: absolute;
     left: -21px;
     top: 0;
-    width: 2px;
+    bottom: 0;
     height: 100%;
+    width: 2px;
     background: #e9ecef;
 }
 
@@ -505,6 +593,19 @@
 }
 
 .substage-block.theme-construction::before {
+    background: var(--construction-accent);
+}
+
+/* Theme-specific connector cross lines */
+.substage-block.theme-architecture::after {
+    background: var(--architecture-accent);
+}
+
+.substage-block.theme-interior::after {
+    background: var(--interior-accent);
+}
+
+.substage-block.theme-construction::after {
     background: var(--construction-accent);
 }
 
@@ -603,227 +704,6 @@
 [data-theme="construction"] .drawing-number-field select:focus {
     border-color: var(--construction-accent);
     box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
-}
-
-.add-substage-btn {
-    width: 100%;
-    padding: 12px;
-    background: #f8f9fa;
-    border: 2px dashed #adb5bd;
-    border-radius: 8px;
-    color: #495057;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex !important; /* Force display with !important */
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    margin-top: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.add-substage-btn:hover {
-    background: #e9ecef;
-    border-color: #ced4da;
-}
-
-.add-substage-btn i {
-    font-size: 12px;
-}
-
-/* Theme-specific substage styles */
-[data-theme="architecture"] .substage-block {
-    border-left: 3px solid var(--architecture-accent);
-}
-
-[data-theme="interior"] .substage-block {
-    border-left: 3px solid var(--interior-accent);
-}
-
-[data-theme="construction"] .substage-block {
-    border-left: 3px solid var(--construction-accent);
-}
-
-/* Update assignment info styles */
-.assignment-info {
-    display: none;
-    font-size: 12px;
-    color: #6c757d;
-    margin-top: 4px;
-    padding: 4px 8px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border-left: 3px solid #6c757d;
-}
-
-/* Theme-specific assignment info styles */
-[data-theme="architecture"] .assignment-info {
-    border-left-color: var(--architecture-accent);
-}
-
-[data-theme="interior"] .assignment-info {
-    border-left-color: var(--interior-accent);
-}
-
-[data-theme="construction"] .assignment-info {
-    border-left-color: var(--construction-accent);
-}
-
-/* Update stage assignment note styles to look more informational */
-.stage-assign-note {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border-left: 2px solid #adb5bd;
-    font-style: italic;
-}
-
-.stage-assign-note i {
-    color: #6c757d;
-    font-size: 12px;
-}
-
-/* Theme-specific note styles - making them subtle */
-[data-theme="architecture"] .stage-assign-note {
-    background: rgba(52, 152, 219, 0.05);
-    border-left-color: var(--architecture-accent);
-}
-
-[data-theme="interior"] .stage-assign-note {
-    background: rgba(142, 68, 173, 0.05);
-    border-left-color: var(--interior-accent);
-}
-
-[data-theme="construction"] .stage-assign-note {
-    background: rgba(192, 57, 43, 0.05);
-    border-left-color: var(--construction-accent);
-}
-
-/* Smooth transition */
-.stage-assign-note {
-    transition: all 0.2s ease;
-    opacity: 0;
-    transform: translateY(-5px);
-}
-
-.stage-assign-note[style*="display: block"] {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.assign-to-group {
-    position: relative;
-}
-
-/* File upload container styles */
-.file-upload-container {
-    border: 2px dashed #e9ecef;
-    border-radius: 8px;
-    padding: 16px;
-    margin-top: 8px;
-    transition: all 0.3s ease;
-}
-
-.file-upload-container:hover {
-    border-color: #adb5bd;
-}
-
-.hidden-file-input {
-    display: none;
-}
-
-.add-file-btn {
-    width: 100%;
-    padding: 12px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    color: #495057;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-}
-
-.add-file-btn:hover {
-    background: #e9ecef;
-    border-color: #dee2e6;
-}
-
-/* Selected files display */
-.selected-files {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.file-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    background: white;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.file-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-}
-
-.file-details {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.file-name {
-    font-size: 13px;
-    color: #495057;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.file-size {
-    font-size: 11px;
-    color: #6c757d;
-}
-
-.remove-file-btn {
-    background: none;
-    border: none;
-    color: #dc3545;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    opacity: 0.6;
-    flex-shrink: 0;
-}
-
-.remove-file-btn:hover {
-    opacity: 1;
-    background: rgba(220, 53, 69, 0.1);
 }
 
 /* Theme-specific styles */
@@ -1264,6 +1144,8 @@
     appearance: none; /* This helps with browser-specific styling issues */
     -webkit-appearance: none; /* For older Safari */
     -moz-appearance: none; /* For older Firefox */
+    position: relative;
+    z-index: 15; /* Match stage-header z-index */
 }
 
 .toggle-substages-btn i {
@@ -1451,4 +1333,60 @@
     .form-row .half-width:last-child {
         margin-bottom: 0;
     }
+}
+
+/* Adjust spacing after substages to create better separation between stages */
+.form-substages-container:after {
+    content: '';
+    display: block;
+    height: 10px;
+    width: 100%;
+    clear: both;
+}
+
+/* Ensure proper substage spacing for any number of items */
+.substage-block:nth-child(3n+1) {
+    clear: both;
+    margin-top: 15px !important;
+}
+
+/* Visual indicators for substage groups */
+.substage-block:nth-child(4n):after {
+    content: '';
+    display: block;
+    height: 10px;
+    width: 100%;
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    border-bottom: 1px dashed #e9ecef;
+}
+
+/* Ensure the "Add Substage" button is always visible and properly positioned */
+.stage-block > .add-substage-btn {
+    position: relative !important;
+    display: flex !important;
+    width: 95% !important;
+    margin: 20px auto !important;
+    z-index: 100 !important;
+}
+
+/* Fix for any container issues */
+.form-substages-container:after {
+    content: '';
+    display: block;
+    clear: both;
+    height: 30px;
+}
+
+/* Enhancement for stage blocks with many substages */
+.stage-block:has(.substage-block:nth-child(5)) {
+    padding-bottom: 50px;
+    margin-bottom: 40px;
+}
+
+/* Add visual separation between substages */
+.substage-block + .substage-block {
+    padding-top: 15px;
+    border-top: 1px dashed #f0f0f0;
 }

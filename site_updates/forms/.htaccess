@@ -1,0 +1,6 @@
+# Increase PHP file upload limits
+php_value upload_max_filesize 20M
+php_value post_max_size 22M
+php_value memory_limit 128M
+php_value max_execution_time 300
+php_value max_input_time 300 

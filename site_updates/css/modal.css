@@ -1,0 +1,1040 @@
+/* Site Update Details Modal Styles - Minimalistic Professional Design */
+.update-details-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    overflow-y: auto;
+}
+
+.update-details-modal .modal-content {
+    position: relative;
+    margin: 30px auto;
+    width: 90%;
+    max-width: 900px;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.update-details-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    color: #212529;
+    border-radius: 6px 6px 0 0;
+}
+
+.update-details-modal .modal-title {
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    color: #495057;
+}
+
+.update-details-modal .modal-title i {
+    margin-right: 10px;
+    font-size: 1.2em;
+    color: #4a76a8;
+}
+
+.update-details-modal .modal-close {
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.update-details-modal .modal-close:hover {
+    background: #e9ecef;
+    color: #343a40;
+}
+
+.update-details-modal .modal-body {
+    padding: 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.update-details-modal .modal-footer {
+    padding: 15px 24px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background-color: #f8f9fa;
+    border-radius: 0 0 6px 6px;
+}
+
+.update-details-modal .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.update-details-modal .btn i {
+    margin-right: 5px;
+}
+
+.update-details-modal .btn-secondary {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.update-details-modal .btn-secondary:hover {
+    background-color: #dee2e6;
+}
+
+.update-details-modal .btn-primary {
+    background-color: #4a76a8;
+    color: white;
+    text-decoration: none;
+}
+
+.update-details-modal .btn-primary:hover {
+    background-color: #3d6593;
+}
+
+/* Modal content sections styling */
+.update-details-modal .update-info-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.update-details-modal .update-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 15px;
+    color: #6c757d;
+}
+
+.update-details-modal .meta-item {
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .meta-item i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+.update-details-modal .modal-section {
+    margin-bottom: 25px;
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid #4a76a8;
+}
+
+.update-details-modal .modal-section h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+.update-details-modal .modal-section h3 i {
+    margin-right: 10px;
+    color: #4a76a8;
+}
+
+/* Custom colors for section borders */
+.update-details-modal #vendors-section {
+    border-left-color: #4a76a8; /* Blue */
+}
+
+.update-details-modal #company-laborers-section {
+    border-left-color: #4a76a8; /* Blue */
+}
+
+.update-details-modal #expenses-section {
+    border-left-color: #4a76a8; /* Blue */
+}
+
+.update-details-modal #work-progress-section {
+    border-left-color: #4a76a8; /* Blue */
+}
+
+.update-details-modal #inventory-section {
+    border-left-color: #4a76a8; /* Blue */
+}
+
+/* Subsection Headers */
+.update-details-modal .expense-subsection {
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.update-details-modal .expense-subsection h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #495057;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+.update-details-modal .expense-subsection h4 i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+/* Work Progress Items */
+.update-details-modal .work-item {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 3px solid #4a76a8;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.update-details-modal .work-item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.update-details-modal .work-item-title {
+    font-weight: 500;
+    color: #495057;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .work-item-title i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+.update-details-modal .work-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 400;
+    font-size: 13px;
+}
+
+.update-details-modal .status-Yes {
+    background-color: #e8f4f8;
+    color: #4a76a8;
+}
+
+.update-details-modal .status-Yes i {
+    color: #4a76a8;
+    margin-right: 5px;
+}
+
+.update-details-modal .status-No {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.update-details-modal .status-No i {
+    color: #6c757d;
+    margin-right: 5px;
+}
+
+.update-details-modal .work-item-details {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.update-details-modal .work-remarks {
+    margin-top: 10px;
+    font-style: italic;
+    font-size: 14px;
+    color: #6c757d;
+    padding-top: 8px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    align-items: flex-start;
+}
+
+.update-details-modal .work-remarks i {
+    margin-right: 8px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* Inventory Categories */
+.update-details-modal .inventory-categories {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.update-details-modal .inventory-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.update-details-modal .inventory-category i {
+    margin-right: 5px;
+    color: #4a76a8;
+}
+
+/* Inventory Groups */
+.update-details-modal .inventory-group {
+    margin-bottom: 15px;
+}
+
+/* Inventory Items */
+.update-details-modal .inventory-item {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid #4a76a8;
+}
+
+.update-details-modal .inventory-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.update-details-modal .inventory-item-title {
+    font-weight: 500;
+    color: #495057;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.update-details-modal .inventory-item-title i {
+    color: #6c757d;
+}
+
+.update-details-modal .inventory-quantity {
+    background-color: #f8f9fa;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .inventory-quantity i {
+    margin-right: 5px;
+    color: #6c757d;
+}
+
+.update-details-modal .inventory-type {
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    color: #4a76a8;
+}
+
+.update-details-modal .inventory-type i {
+    margin-right: 5px;
+    color: #4a76a8;
+}
+
+.update-details-modal .inventory-notes {
+    margin-top: 10px;
+    font-style: italic;
+    font-size: 14px;
+    color: #6c757d;
+    padding-top: 8px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    align-items: flex-start;
+}
+
+.update-details-modal .inventory-notes i {
+    margin-right: 8px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* Vendors and Laborers */
+.update-details-modal .vendor-item {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid #4a76a8;
+}
+
+.update-details-modal .vendor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.update-details-modal .vendor-name {
+    font-weight: 500;
+    color: #495057;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .vendor-name i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+.update-details-modal .vendor-type {
+    background-color: #f8f9fa;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .vendor-type i {
+    margin-right: 5px;
+    color: #6c757d;
+}
+
+.update-details-modal .vendor-contact {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .vendor-contact i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+/* Laborers List */
+.update-details-modal .laborers-list {
+    border-top: 1px solid #e9ecef;
+    padding-top: 15px;
+}
+
+.update-details-modal .laborer-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 1.5fr 2fr 1fr;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 500;
+    color: #495057;
+    font-size: 13px;
+}
+
+.update-details-modal .laborer-header > div {
+    padding: 0 10px;
+}
+
+.update-details-modal .laborer-name-title {
+    text-align: left;
+}
+
+.update-details-modal .laborer-attendance-title {
+    text-align: center;
+}
+
+.update-details-modal .laborer-wages-title {
+    text-align: center;
+}
+
+.update-details-modal .laborer-overtime-title {
+    text-align: center;
+}
+
+.update-details-modal .laborer-amount-title {
+    text-align: right;
+}
+
+.update-details-modal .laborer-header i {
+    margin-right: 5px;
+    color: #4a76a8;
+}
+
+.update-details-modal .laborer-subheader {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 1.5fr 2fr 1fr;
+    padding: 5px 0;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.update-details-modal .laborer-subheader > div {
+    padding: 0 10px;
+}
+
+.update-details-modal .laborer-subheader .laborer-attendance-col,
+.update-details-modal .laborer-subheader .laborer-wages-col,
+.update-details-modal .laborer-subheader .laborer-overtime-col {
+    display: flex;
+    justify-content: space-around;
+}
+
+.update-details-modal .laborer-subheader span {
+    padding: 3px 5px;
+    text-align: center;
+}
+
+.update-details-modal .laborer-item {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 1.5fr 2fr 1fr;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f9fa;
+    align-items: center;
+}
+
+.update-details-modal .laborer-item > div {
+    padding: 0 10px;
+}
+
+.update-details-modal .laborer-name {
+    font-weight: 400;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+
+.update-details-modal .laborer-name i {
+    margin-right: 8px;
+    color: #6c757d;
+}
+
+.update-details-modal .laborer-attendance {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    justify-content: space-around;
+}
+
+.update-details-modal .attendance-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    width: 40px;
+    justify-content: center;
+}
+
+.update-details-modal .attendance-badge i {
+    margin-right: 5px;
+}
+
+.update-details-modal .attendance-P {
+    color: #4a76a8;
+}
+
+.update-details-modal .attendance-A {
+    color: #6c757d;
+}
+
+.update-details-modal .laborer-wages {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    color: #6c757d;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+}
+
+.update-details-modal .wages-per-day {
+    font-weight: 500;
+    width: 100%;
+}
+
+.update-details-modal .day-total {
+    width: 100%;
+}
+
+.update-details-modal .laborer-overtime {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    font-size: 13px;
+    color: #6c757d;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+}
+
+.update-details-modal .ot-hours {
+    font-weight: 500;
+    color: #4a76a8;
+}
+
+.update-details-modal .ot-rate {
+    font-size: 12px;
+}
+
+.update-details-modal .ot-amount {
+    font-weight: 500;
+}
+
+.update-details-modal .laborer-amount {
+    font-weight: 500;
+    color: #495057;
+    text-align: right;
+}
+
+/* Company Labor Container */
+.update-details-modal .company-labor-container {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border-left: 3px solid #4a76a8;
+}
+
+/* Total Sections */
+.update-details-modal .vendor-total,
+.update-details-modal .company-total,
+.update-details-modal .expense-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e9ecef;
+    font-weight: 500;
+    color: #495057;
+}
+
+.update-details-modal .vendor-total-amount,
+.update-details-modal .company-total-amount,
+.update-details-modal .expense-total-amount {
+    color: #4a76a8;
+}
+
+/* Expenses Items */
+.update-details-modal .expense-item {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid #4a76a8;
+}
+
+.update-details-modal .expense-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-details-modal .expense-type {
+    font-weight: 500;
+    color: #495057;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .expense-type i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+.update-details-modal .expense-description {
+    color: #6c757d;
+    font-size: 14px;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.update-details-modal .travel-route,
+.update-details-modal .travel-distance {
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .travel-route i,
+.update-details-modal .travel-distance i {
+    margin-right: 5px;
+    color: #6c757d;
+}
+
+.update-details-modal .expense-amount {
+    font-weight: 500;
+    font-size: 15px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .expense-amount i {
+    margin-right: 5px;
+    color: #4a76a8;
+}
+
+.update-details-modal .total-amount-wrapper {
+    margin-top: 20px;
+    border-top: 1px solid #e9ecef;
+    padding-top: 15px;
+}
+
+.update-details-modal .total-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.update-details-modal .total-value label {
+    font-weight: 500;
+    font-size: 16px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .total-value label i {
+    margin-right: 8px;
+    color: #4a76a8;
+}
+
+.update-details-modal .grand-total {
+    font-size: 16px;
+    font-weight: 500;
+    color: #4a76a8;
+}
+
+/* Loading state */
+.update-details-modal .loading {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Media viewer styling */
+.media-viewer-modal {
+    z-index: 10000 !important; /* Much higher z-index to ensure it appears above site update modal */
+}
+
+/* Ensure the media preview is properly sized */
+.swal2-popup img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+/* Thumbnail styling in the modal */
+.update-details-modal .media-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.update-details-modal .media-item {
+    width: 100px; /* Larger thumbnails */
+    height: 100px; /* Larger thumbnails */
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    position: relative;
+}
+
+.update-details-modal .media-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.update-details-modal .media-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Empty state messages */
+.update-details-modal .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+}
+
+.update-details-modal .empty-state i {
+    font-size: 20px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .update-details-modal .modal-content {
+        width: 95%;
+        margin: 15px auto;
+    }
+    
+    .update-details-modal .update-meta {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .update-details-modal .inventory-item-header,
+    .update-details-modal .work-item-header,
+    .update-details-modal .expense-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .update-details-modal .inventory-quantity,
+    .update-details-modal .work-status,
+    .update-details-modal .expense-amount {
+        margin-top: 8px;
+    }
+    
+    .update-details-modal .laborer-item,
+    .update-details-modal .laborer-header,
+    .update-details-modal .laborer-subheader {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .update-details-modal .laborer-attendance,
+    .update-details-modal .laborer-wages,
+    .update-details-modal .laborer-overtime,
+    .update-details-modal .laborer-amount {
+        margin-left: 25px;
+    }
+    
+    .update-details-modal .laborer-subheader {
+        display: none; /* Hide subheader on mobile */
+    }
+    
+    .update-details-modal .laborer-wages,
+    .update-details-modal .laborer-overtime {
+        margin-top: 8px;
+        align-items: flex-start;
+    }
+    
+    /* Add labels for mobile view */
+    .update-details-modal .laborer-attendance::before {
+        content: "Attendance:";
+        font-weight: 500;
+        margin-right: 10px;
+    }
+    
+    .update-details-modal .laborer-wages::before {
+        content: "Wages:";
+        font-weight: 500;
+        margin-right: 10px;
+    }
+    
+    .update-details-modal .laborer-overtime::before {
+        content: "Overtime:";
+        font-weight: 500;
+        margin-right: 10px;
+    }
+    
+    .update-details-modal .laborer-amount::before {
+        content: "Total:";
+        font-weight: 500;
+        margin-right: 10px;
+    }
+}
+
+/* Travel Expenses Table */
+.update-details-modal .travel-expenses-table {
+    width: 100%;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-left: 3px solid #4a76a8;
+}
+
+.update-details-modal .travel-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 1.5fr 1fr 1fr;
+    padding: 10px;
+    background-color: #f8f9fa;
+    font-weight: 500;
+    color: #495057;
+    font-size: 13px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.update-details-modal .travel-header div {
+    padding: 0 10px;
+}
+
+.update-details-modal .travel-header i {
+    margin-right: 5px;
+    color: #4a76a8;
+}
+
+.update-details-modal .travel-item {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 1.5fr 1fr 1fr;
+    padding: 12px 10px;
+    border-bottom: 1px solid #f8f9fa;
+    align-items: center;
+    font-size: 14px;
+    color: #495057;
+}
+
+.update-details-modal .travel-item div {
+    padding: 0 10px;
+}
+
+.update-details-modal .travel-mode {
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .travel-mode i {
+    margin-right: 8px;
+    color: #4a76a8;
+    font-size: 16px;
+}
+
+.update-details-modal .travel-from,
+.update-details-modal .travel-to {
+    color: #495057;
+}
+
+.update-details-modal .travel-distance {
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+}
+
+.update-details-modal .travel-amount {
+    font-weight: 500;
+    text-align: right;
+    color: #495057;
+}
+
+.update-details-modal .travel-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    font-weight: 500;
+    border-top: 1px solid #e9ecef;
+    color: #495057;
+}
+
+.update-details-modal .travel-total-amount {
+    color: #4a76a8;
+}
+
+/* Responsive styling for travel expenses */
+@media (max-width: 768px) {
+    .update-details-modal .travel-header,
+    .update-details-modal .travel-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .update-details-modal .travel-header div:not(:first-child) {
+        display: none;
+    }
+    
+    .update-details-modal .travel-item div:not(:first-child) {
+        padding-left: 28px;
+    }
+    
+    .update-details-modal .travel-from::before {
+        content: "From: ";
+        font-weight: 500;
+    }
+    
+    .update-details-modal .travel-to::before {
+        content: "To: ";
+        font-weight: 500;
+    }
+    
+    .update-details-modal .travel-distance::before {
+        content: "Distance: ";
+        font-weight: 500;
+    }
+    
+    .update-details-modal .travel-amount::before {
+        content: "Amount: ";
+        font-weight: 500;
+    }
+    
+    .update-details-modal .travel-amount {
+        text-align: left;
+    }
+} 

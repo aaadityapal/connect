@@ -174,9 +174,9 @@
     </div>
 
     <!-- Education Section -->
-    <div class="form-section">
-        <h2 class="section-title">Education Background</h2>
-        <div class="form-grid">
+    <div class="form-section education-section">
+        <h2>Education Background</h2>
+        <div class="education-form">
             <div class="form-group">
                 <label for="highest_degree">Degree Level*</label>
                 <select id="highest_degree" name="education[highest_degree]" class="form-control">
@@ -206,13 +206,15 @@
                        min="1950" max="<?php echo date('Y'); ?>">
             </div>
             <div class="form-group">
-                <button type="button" class="btn btn-primary" onclick="addEducation()">Add Education</button>
+                <button type="button" class="add-education-btn" onclick="addEducation()">
+                    <i class="fas fa-plus"></i> Add Education
+                </button>
             </div>
         </div>
 
         <!-- Education Table -->
-        <div class="education-table-container" style="margin-top: 20px;">
-            <table id="educationTable" class="table">
+        <div class="education-table-container">
+            <table id="educationTable" class="education-table">
                 <thead>
                     <tr>
                         <th>Sr. No.</th>
@@ -235,10 +237,10 @@
                             echo "<td>" . htmlspecialchars($edu['field_of_study']) . "</td>";
                             echo "<td>" . htmlspecialchars($edu['graduation_year']) . "</td>";
                             echo "<td>
-                                    <button type='button' class='btn btn-sm btn-edit' onclick='editEducation($index)'>
+                                    <button type='button' class='action-btn edit-btn' onclick='editEducation($index)'>
                                         <i class='fas fa-edit'></i>
                                     </button>
-                                    <button type='button' class='btn btn-sm btn-delete' onclick='deleteEducation($index)'>
+                                    <button type='button' class='action-btn delete-btn' onclick='deleteEducation($index)'>
                                         <i class='fas fa-trash'></i>
                                     </button>
                                 </td>";
@@ -999,10 +1001,10 @@ function addEducation() {
                     <td>${fieldOfStudy}</td>
                     <td>${graduationYear}</td>
                     <td>
-                        <button type='button' class='btn btn-sm btn-edit' onclick='editEducation(${data.index})'>
+                        <button type='button' class='action-btn edit-btn' onclick='editEducation(${data.index})'>
                             <i class='fas fa-edit'></i>
                         </button>
-                        <button type='button' class='btn btn-sm btn-delete' onclick='deleteEducation(${data.index})'>
+                        <button type='button' class='action-btn delete-btn' onclick='deleteEducation(${data.index})'>
                             <i class='fas fa-trash'></i>
                         </button>
                     </td>
@@ -1040,8 +1042,8 @@ function editEducation(index) {
     document.getElementById('field_of_study').value = cells[3].textContent;
     document.getElementById('graduation_year').value = cells[4].textContent;
 
-    const addButton = document.querySelector('.form-group button');
-    addButton.textContent = 'Update Education';
+    const addButton = document.querySelector('.add-education-btn');
+    addButton.innerHTML = '<i class="fas fa-check"></i> Update Education';
     addButton.setAttribute('data-editing-index', index);
     addButton.onclick = () => updateEducation(index);
 }
@@ -1089,8 +1091,8 @@ function updateEducation(index) {
             document.getElementById('field_of_study').value = '';
             document.getElementById('graduation_year').value = '';
 
-            const addButton = document.querySelector('.form-group button');
-            addButton.textContent = 'Add Education';
+            const addButton = document.querySelector('.add-education-btn');
+            addButton.innerHTML = '<i class="fas fa-plus"></i> Add Education';
             addButton.onclick = addEducation;
             addButton.removeAttribute('data-editing-index');
 

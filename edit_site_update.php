@@ -2,6 +2,7 @@
 // Include necessary files
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
+require_once 'includes/dashboard/dashboard_cards.php';
 
 // Check if user is logged in
 if (!isLoggedIn()) {
@@ -242,6 +243,14 @@ include 'includes/header.php';
         <i class="fas fa-edit"></i> Edit Site Update
         <span class="site-name"><?= htmlspecialchars($update['site_name']) ?></span>
     </h1>
+    
+    <!-- Dashboard Cards Section -->
+    <div class="dashboard-section mb-4">
+        <h2 class="section-title mb-3">
+            <i class="fas fa-tachometer-alt"></i> Dashboard Overview
+        </h2>
+        <?= renderDashboardCards($pdo, $_SESSION['user_id']) ?>
+    </div>
     
     <form id="editSiteUpdateForm" method="post" action="" class="mb-5">
         <div class="card mb-4">

@@ -29,24 +29,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['assign_shift'])) {
             $pdo->beginTransaction();
             
-            // First, check if user already has an active shift assignment
+            // First, get all current active assignments for this user
             $checkStmt = $pdo->prepare("SELECT id FROM user_shifts 
                                        WHERE user_id = ? 
-                                       AND (effective_to IS NULL OR effective_to >= CURRENT_DATE())");
+                                       AND (effective_to IS NULL OR effective_to >= CURRENT_DATE())
+                                       ORDER BY effective_from DESC");
             $checkStmt->execute([$_POST['user_id']]);
-            $existingShift = $checkStmt->fetch();
+            $existingShifts = $checkStmt->fetchAll(PDO::FETCH_COLUMN);
 
-            if ($existingShift) {
-                // Update the end date of the existing shift to one day before new shift
+            // End all existing active assignments one day before new assignment
+            if (count($existingShifts) > 0) {
+                $dayBeforeNewAssignment = date('Y-m-d', strtotime($_POST['effective_from'] . ' -1 day'));
+                
                 $updateStmt = $pdo->prepare("UPDATE user_shifts 
-                                           SET effective_to = DATE_SUB(?, INTERVAL 1 DAY)
-                                           WHERE user_id = ? 
-                                           AND (effective_to IS NULL OR effective_to >= ?)");
-                $updateStmt->execute([
-                    $_POST['effective_from'],
-                    $_POST['user_id'],
-                    $_POST['effective_from']
-                ]);
+                                          SET effective_to = ? 
+                                          WHERE id IN (" . implode(',', array_fill(0, count($existingShifts), '?')) . ")");
+                
+                $params = array_merge([$dayBeforeNewAssignment], $existingShifts);
+                $updateStmt->execute($params);
             }
 
             // Insert new shift assignment
@@ -62,6 +62,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
             $_SESSION['success_message'] = "Shift assigned successfully!";
+        }
+        
+        // Clean up duplicate shifts if requested
+        if (isset($_POST['cleanup_duplicates'])) {
+            $pdo->beginTransaction();
+            
+            // Get all users with active shifts
+            $usersStmt = $pdo->query("SELECT DISTINCT user_id FROM user_shifts 
+                                      WHERE effective_to IS NULL OR effective_to >= CURRENT_DATE()");
+            $users = $usersStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            $cleanedCount = 0;
+            
+            // For each user, keep only the most recent active shift
+            foreach ($users as $userId) {
+                // Get all active assignments for this user ordered by id desc (newest first)
+                $shiftsStmt = $pdo->prepare("SELECT id FROM user_shifts 
+                                           WHERE user_id = ? 
+                                           AND (effective_to IS NULL OR effective_to >= CURRENT_DATE())
+                                           ORDER BY id DESC");
+                $shiftsStmt->execute([$userId]);
+                $userShifts = $shiftsStmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                // If more than one active shift, keep only the newest one
+                if (count($userShifts) > 1) {
+                    // Get the newest shift ID
+                    $newestShift = $userShifts[0];
+                    
+                    // Remove the newest from the array
+                    array_shift($userShifts);
+                    
+                    // End all other shifts as of yesterday
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    $updateStmt = $pdo->prepare("UPDATE user_shifts 
+                                               SET effective_to = ? 
+                                               WHERE id IN (" . implode(',', array_fill(0, count($userShifts), '?')) . ")");
+                    
+                    $params = array_merge([$yesterday], $userShifts);
+                    $updateStmt->execute($params);
+                    
+                    $cleanedCount += count($userShifts);
+                }
+            }
+            
+            $pdo->commit();
+            $_SESSION['success_message'] = "Cleanup complete! Ended $cleanedCount duplicate shift assignments.";
+            header('Location: shifts.php');
+            exit();
         }
     } catch (PDOException $e) {
         $pdo->rollBack();
@@ -92,20 +140,91 @@ $shifts = $shifts->fetchAll();
 echo "<!-- Number of users: " . count($users) . " -->";
 echo "<!-- Number of shifts: " . count($shifts) . " -->";
 
-// Fetch current shift assignments
-$stmt = $pdo->query("SELECT us.*, u.username, u.unique_id, s.shift_name, s.start_time, s.end_time 
-                     FROM user_shifts us 
-                     JOIN users u ON us.user_id = u.id 
-                     JOIN shifts s ON us.shift_id = s.id 
-                     WHERE (us.effective_to IS NULL OR us.effective_to >= CURRENT_DATE())
-                     AND us.effective_from = (
-                         SELECT MAX(effective_from)
-                         FROM user_shifts us2
-                         WHERE us2.user_id = us.user_id
-                         AND (us2.effective_to IS NULL OR us2.effective_to >= CURRENT_DATE())
-                     )
-                     ORDER BY u.username");
-$current_assignments = $stmt->fetchAll();
+// Auto cleanup on page load - fix existing duplicates immediately
+try {
+    // Check if there are duplicates to clean up
+    $duplicateCheckStmt = $pdo->query("SELECT user_id, COUNT(*) as count 
+                                       FROM user_shifts 
+                                       WHERE (effective_to IS NULL OR effective_to >= CURRENT_DATE())
+                                       GROUP BY user_id 
+                                       HAVING count > 1");
+    $duplicateUsers = $duplicateCheckStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (count($duplicateUsers) > 0) {
+        $pdo->beginTransaction();
+        $cleanedCount = 0;
+        
+        foreach ($duplicateUsers as $dupUser) {
+            $userId = $dupUser['user_id'];
+            
+            // Get all active shifts for this user, ordered by newest first (highest ID)
+            $userShiftsStmt = $pdo->prepare("SELECT id 
+                                           FROM user_shifts 
+                                           WHERE user_id = ? 
+                                           AND (effective_to IS NULL OR effective_to >= CURRENT_DATE())
+                                           ORDER BY id DESC");
+            $userShiftsStmt->execute([$userId]);
+            $userShifts = $userShiftsStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Keep the newest, end all others
+            if (count($userShifts) > 1) {
+                $newestId = array_shift($userShifts); // Remove and get the first (newest) ID
+                
+                if (!empty($userShifts)) {
+                    $yesterday = date('Y-m-d', strtotime('-1 day'));
+                    
+                    // Build placeholders for the SQL query
+                    $placeholders = implode(',', array_fill(0, count($userShifts), '?'));
+                    
+                    // Update statement to end all old shifts
+                    $endShiftsStmt = $pdo->prepare("UPDATE user_shifts 
+                                                  SET effective_to = ? 
+                                                  WHERE id IN ($placeholders)");
+                    
+                    $params = array_merge([$yesterday], $userShifts);
+                    $endShiftsStmt->execute($params);
+                    
+                    $cleanedCount += count($userShifts);
+                }
+            }
+        }
+        
+        $pdo->commit();
+        // Only show message if we actually cleaned something
+        if ($cleanedCount > 0) {
+            $_SESSION['info_message'] = "Auto-cleaned $cleanedCount duplicate shift assignments.";
+        }
+    }
+} catch (PDOException $e) {
+    // Silent fail for auto-cleanup, don't disturb user
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+}
+
+// Fetch current shift assignments - using a simpler approach that works on older MySQL
+// First get the list of user IDs with their most recent assignment ID
+$latestAssignmentQuery = "SELECT user_id, MAX(id) as latest_id 
+                          FROM user_shifts 
+                          WHERE (effective_to IS NULL OR effective_to >= CURRENT_DATE()) 
+                          GROUP BY user_id";
+
+$latestAssignments = $pdo->query($latestAssignmentQuery)->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// If we have active assignments, fetch the details
+if (!empty($latestAssignments)) {
+    $ids = implode(',', $latestAssignments);
+    $assignmentQuery = "SELECT us.*, u.username, u.unique_id, s.shift_name, s.start_time, s.end_time 
+                      FROM user_shifts us 
+                      JOIN users u ON us.user_id = u.id 
+                      JOIN shifts s ON us.shift_id = s.id 
+                      WHERE us.id IN ($ids) 
+                      ORDER BY u.username";
+    
+    $current_assignments = $pdo->query($assignmentQuery)->fetchAll();
+} else {
+    $current_assignments = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -534,8 +653,41 @@ $current_assignments = $stmt->fetchAll();
             color: #4B5563;
             margin-bottom: 0.5rem;
         }
-
-        /* Update the HTML structure for the tables */
+        
+        /* Cleanup Button Styles */
+        .cleanup-container {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            text-align: right;
+        }
+        
+        .btn-warning {
+            background-color: #FFFBEB;
+            color: #D97706;
+            border: 1px solid #FDE68A;
+            padding: 0.625rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-warning i {
+            font-size: 0.875rem;
+        }
+        
+        .btn-warning:hover {
+            background-color: #FEF3C7;
+        }
+        
+        .alert-info {
+            background-color: #EFF6FF;
+            color: #3B82F6;
+            border: 1px solid #BFDBFE;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
     </style>
 </head>
 <body>
@@ -621,6 +773,15 @@ $current_assignments = $stmt->fetchAll();
                     <?php 
                     echo $_SESSION['error_message'];
                     unset($_SESSION['error_message']);
+                    ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($_SESSION['info_message'])): ?>
+                <div class="alert alert-info">
+                    <?php 
+                    echo $_SESSION['info_message'];
+                    unset($_SESSION['info_message']);
                     ?>
                 </div>
             <?php endif; ?>
@@ -761,6 +922,7 @@ $current_assignments = $stmt->fetchAll();
                     <i class="bi bi-people"></i>
                     Current Shift Assignments
                 </h3>
+                <?php if (isset($current_assignments) && count($current_assignments) > 0): ?>
                 <table class="shift-table">
                     <thead>
                         <tr>
@@ -828,6 +990,18 @@ $current_assignments = $stmt->fetchAll();
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <?php else: ?>
+                    <div class="alert alert-info">No active shift assignments found.</div>
+                <?php endif; ?>
+                
+                <!-- Cleanup Button -->
+                <div class="cleanup-container">
+                    <form method="POST" onsubmit="return confirm('This will clean up all duplicate shift assignments. Continue?');">
+                        <button type="submit" name="cleanup_duplicates" class="btn btn-warning">
+                            <i class="bi bi-wrench"></i> Fix Duplicate Assignments
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

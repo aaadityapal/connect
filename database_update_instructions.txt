@@ -1,0 +1,55 @@
+DATABASE AND FORM UPDATE INSTRUCTIONS
+=====================================
+
+We've made several changes to make the Work Progress and Inventory forms work properly:
+
+1. ADDED MISSING FIELDS:
+   - Added 'work_type' field to the event_work_progress table
+   - Renamed 'item_name' to 'material' in the event_inventory_items table
+
+2. UPDATED PHP PROCESSING CODE:
+   - Modified the work progress handler to use the new work_type field
+   - Updated the inventory handler to use 'material' instead of 'item_name'
+   - Added fallback logic to accept either field name during the transition
+
+3. CREATED MAINTENANCE SCRIPTS:
+   - install_tables.php: Creates all required tables if they don't exist
+   - update_form_fields.php: Adds/renames fields on existing tables
+
+NEXT STEPS TO IMPLEMENT THE CHANGES
+=====================================
+
+1. First, make sure your database connection is working by visiting:
+   http://localhost/hr/debug_form.php
+
+2. If you haven't already created the tables, run:
+   http://localhost/hr/install_tables.php
+
+3. If you already had the tables but needed field updates, run:
+   http://localhost/hr/update_form_fields.php
+
+4. Test your form with the debug tool to ensure it works correctly
+
+5. Update your form's HTML to match the field names:
+   - Make sure the work type field in your form has name="work_type[]"
+   - Make sure the material field has name="material[]" (instead of item_name)
+
+FORM FIELD MAPPINGS
+=====================================
+
+Work Progress Form:
+- Work Category → work_category[]
+- Type of Work → work_type[]
+- Work Done (status) → work_status[]
+- Remarks → work_remarks[]
+- Photos & Videos → work_media_file[]
+
+Inventory Form:
+- Inventory Type → inventory_type[]
+- Material → material[] (was item_name[])
+- Quantity → quantity[]
+- Units → units[]
+- Remaining Quantity → remaining_quantity[]
+- Remarks → inventory_remarks[]
+- Bill Picture → bill_picture[]
+- Photos & Videos → inventory_media_file[] 

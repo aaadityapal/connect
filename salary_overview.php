@@ -1010,6 +1010,10 @@ function getWeeklyOffs($conn, $userId, $date) {
                     <i class="fas fa-edit"></i>
                     Edit Attendance
                 </a>
+                <a href="export_attendance.php?month=<?php echo $selected_month; ?>" class="btn btn-primary">
+                    <i class="fas fa-file-export"></i>
+                    Export Attendance
+                </a>
                 <a href="edit_leave.php?month=<?php echo $selected_month; ?>" class="btn btn-primary">
                     <i class="fas fa-calendar-alt"></i>
                     Edit Leave

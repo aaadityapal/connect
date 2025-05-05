@@ -1,0 +1,132 @@
+/**
+ * Enhanced Calendar Plus Button Styling
+ */
+
+/* Add event plus button on hover */
+.calendar-day::after {
+    content: '+' !important;
+    position: absolute !important;
+    bottom: 5px !important;
+    right: 5px !important;
+    width: 24px !important;
+    height: 24px !important;
+    background: linear-gradient(135deg, #3498db, #1e6bb8) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    opacity: 0 !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    cursor: pointer !important;
+    z-index: 5 !important;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23) !important;
+    transform: scale(0.9) !important;
+    -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on mobile */
+}
+
+.calendar-day:hover::after {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+}
+
+.calendar-day:active::after {
+    transform: scale(0.95) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24) !important;
+}
+
+/* Add a pulsing effect on today's date plus button */
+.today::after {
+    animation: pulse 2s infinite !important;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(52, 152, 219, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+    }
+}
+
+/* Hide add button for previous and next month days */
+.prev-month::after, 
+.next-month::after {
+    display: none !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 992px) {
+    .calendar-day::after {
+        width: 22px !important;
+        height: 22px !important;
+        bottom: 3px !important;
+        right: 3px !important;
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* On mobile, always show the plus button for better tap targets */
+    .calendar-day::after {
+        opacity: 0.8 !important;
+        width: 20px !important;
+        height: 20px !important;
+        bottom: 2px !important;
+        right: 2px !important;
+        font-size: 14px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+    
+    /* Improve touch target size with a pseudo element that's larger than the button */
+    .calendar-day::before {
+        content: '' !important;
+        position: absolute !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        width: 30px !important;
+        height: 30px !important;
+        background: transparent !important;
+        z-index: 4 !important;
+    }
+    
+    /* On hover/tap increase opacity for visual feedback */
+    .calendar-day:hover::after {
+        opacity: 1 !important;
+        transform: scale(1.05) !important;
+    }
+    
+    /* Add touch feedback */
+    .calendar-day:active::after {
+        transform: scale(0.9) !important;
+        transition: transform 0.1s ease-in-out !important;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Even smaller for very small screens */
+    .calendar-day::after {
+        width: 18px !important;
+        height: 18px !important;
+        bottom: 1px !important;
+        right: 1px !important;
+        font-size: 12px !important;
+    }
+    
+    /* But still keep a good touch target */
+    .calendar-day::before {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    /* Simplify the animation for performance on mobile */
+    .today::after {
+        animation: none !important;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5) !important;
+    }
+} 

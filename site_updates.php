@@ -979,68 +979,6 @@ if (!empty($site_updates)) {
                     <?php if (isset($error_message)): ?>
                         <div class="alert alert-danger"><?php echo $error_message; ?></div>
                     <?php endif; ?>
-                    
-                    <!-- Add new expense form -->
-                    <form id="expense-form" class="expense-form" method="POST" action="">
-                        <div class="form-group">
-                            <label for="expense-date">Date</label>
-                            <input type="text" id="expense-date" name="expense_date" class="form-control datepicker" placeholder="Select date" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="expense-type">Expense Type</label>
-                            <select id="expense-type" name="expense_type" class="form-control" required>
-                                <option value="">Select expense type</option>
-                                <option value="Transport">Transport</option>
-                                <option value="Accommodation">Accommodation</option>
-                                <option value="Meals">Meals</option>
-                                <option value="Fuel">Fuel</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="expense-amount">Amount</label>
-                            <input type="number" id="expense-amount" name="amount" class="form-control" min="0" step="0.01" placeholder="Enter amount" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="expense-description">Description</label>
-                            <textarea id="expense-description" name="description" class="form-control" rows="3" placeholder="Provide details about the expense" required></textarea>
-                        </div>
-                        
-                        <button type="submit" name="submit_expense" class="btn btn-primary">Submit Expense</button>
-                    </form>
-                    
-                    <!-- Expenses Table -->
-                    <h3 style="margin-top: 30px;">Recent Expenses</h3>
-                    <table class="expense-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Amount</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($travel_expenses)): ?>
-                                <?php foreach ($travel_expenses as $expense): ?>
-                                    <tr>
-                                        <td><?php echo date('M d, Y', strtotime($expense['expense_date'])); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['expense_type']); ?></td>
-                                        <td>₹<?php echo number_format($expense['amount'], 2); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['description']); ?></td>
-                                        <td class="status-<?php echo strtolower($expense['status']); ?>"><?php echo $expense['status']; ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <!-- Sample data if no expenses from database -->
-                               
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>

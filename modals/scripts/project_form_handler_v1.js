@@ -2411,8 +2411,24 @@ function toggleStageSubstages(stageNum) {
 }
 
 // Define drawing number prefixes for each category by project type
-const drawingNumberPrefixes = {
-    // Architecture project type
+let drawingNumberPrefixes = {
+    'interior': {
+        'Flooring Drawings': { prefix: 'INT', series: 1 },
+        'False Ceiling Drawings': { prefix: 'INT', series: 2 },
+        'Water Supply Drawings': { prefix: 'INT', series: 3 },
+        'Plumbing Drawings': { prefix: 'INT', series: 4 },
+        'Electrical Drawings': { prefix: 'INT', series: 5 },
+        'Concept Design': { prefix: 'INT', series: 6 },
+        'Layout Plans': { prefix: 'INT', series: 7 },
+        'Detail Drawings': { prefix: 'INT', series: 8 },
+        'Services': { prefix: 'INT', series: 9 },
+        'Final Deliverables': { prefix: 'INT', series: 10 },
+        'Materials & Finishes': { prefix: 'INT', series: 11 },
+        'Furniture & Fixtures': { prefix: 'INT', series: 12 },
+        'Lighting Design': { prefix: 'INT', series: 13 },
+        'Kitchen & Bath': { prefix: 'INT', series: 14 }
+    },
+    // Keep other project types as they were
     'architecture': {
         'Concept Drawings': 'CD',
         'Master Plan': 'MP',
@@ -2426,19 +2442,6 @@ const drawingNumberPrefixes = {
         'Water Supply Drawings - All Floor': 'WS',
         'Details Drawings': 'DT',
         'Other Drawings': 'OD'
-    },
-    // Interior project type
-    'interior': {
-        'Electrical Drawings': 'ELE',
-        'Concept Design': 'CD',
-        'Layout Plans': 'LP',
-        'Detail Drawings': 'DD',
-        'Services': 'SRV',
-        'Final Deliverables': 'FD',
-        'Materials & Finishes': 'MF',
-        'Furniture & Fixtures': 'FF',
-        'Lighting Design': 'LD',
-        'Kitchen & Bath': 'KB'
     },
     // Construction project type
     'construction': {
@@ -2456,11 +2459,9 @@ function updateDrawingNumberOptions(stageNum, substageNum, selectedOption) {
     const drawingNumberSelect = document.getElementById(`drawingNumber${stageNum}_${substageNum}`);
     if (!drawingNumberSelect) return;
     
-    // Find the optgroup the selected option belongs to
     const titleSelect = document.getElementById(`substageTitle${stageNum}_${substageNum}`);
     if (!titleSelect) return;
     
-    // Get the current project type
     const projectType = document.querySelector('.modal-container').dataset.theme || 'architecture';
     
     let selectedGroup = '';
@@ -2476,33 +2477,60 @@ function updateDrawingNumberOptions(stageNum, substageNum, selectedOption) {
         if (selectedGroup) break;
     }
     
-    // Get the prefix based on project type and selected group
     let prefix = 'DWG';
-    if (drawingNumberPrefixes[projectType] && drawingNumberPrefixes[projectType][selectedGroup]) {
-        prefix = drawingNumberPrefixes[projectType][selectedGroup];
-    }
+    let startSeries = 1;
     
-    // Generate drawing numbers with the appropriate prefix
-    let options = '<option value="">Select Drawing Number</option>';
-    
-    // Create multiple series of drawing numbers (1xxx, 2xxx, etc. up to 15xxx)
-    for (let series = 1; series <= 15; series++) {
-        // Create an optgroup for each series
-        options += `<optgroup label="Series ${series}000">`;
-        
-        // Generate 10 sequential numbers for each series
-        for (let i = 1; i <= 10; i++) {
-            const numberPart = (series * 1000) + i;
-            options += `<option value="${prefix}_${numberPart}">${prefix}_${numberPart}</option>`;
+    if (projectType === 'interior') {
+        // For interior projects, use the predefined series for each drawing type
+        const drawingType = drawingNumberPrefixes[projectType][selectedGroup];
+        if (drawingType) {
+            prefix = drawingType.prefix;
+            startSeries = drawingType.series;
+            
+            // Generate drawing numbers for only this specific series
+            let options = '<option value="">Select Drawing Number</option>';
+            
+            // Create an optgroup for this series
+            options += `<optgroup label="Series ${startSeries}000">`;
+            
+            // Generate 10 sequential numbers for this series
+            for (let i = 1; i <= 10; i++) {
+                const numberPart = (startSeries * 1000) + i;
+                options += `<option value="${prefix}_${numberPart}">${prefix}_${numberPart}</option>`;
+            }
+            
+            // Add custom option at the end
+            options += `<option value="custom_${prefix}_${startSeries}" class="custom-drawing-option">+ Add Custom ${prefix} Number</option>`;
+            options += '</optgroup>';
+            
+            // Update the select element
+            drawingNumberSelect.innerHTML = options;
+            
+        } else {
+            // Fallback for unknown drawing types
+            drawingNumberSelect.innerHTML = '<option value="">Select Drawing Number</option>';
+        }
+    } else {
+        // For non-interior projects, keep the existing logic
+        if (drawingNumberPrefixes[projectType] && drawingNumberPrefixes[projectType][selectedGroup]) {
+            prefix = drawingNumberPrefixes[projectType][selectedGroup];
         }
         
-        // Add custom option at the end of each optgroup
-        options += `<option value="custom_${prefix}_${series}" class="custom-drawing-option">+ Add Custom ${prefix} Number</option>`;
-        options += '</optgroup>';
+        let options = '<option value="">Select Drawing Number</option>';
+        
+        // Create multiple series as before
+        for (let series = 1; series <= 15; series++) {
+            options += `<optgroup label="Series ${series}000">`;
+            for (let i = 1; i <= 10; i++) {
+                const numberPart = (series * 1000) + i;
+                options += `<option value="${prefix}_${numberPart}">${prefix}_${numberPart}</option>`;
+            }
+            options += `<option value="custom_${prefix}_${series}" class="custom-drawing-option">+ Add Custom ${prefix} Number</option>`;
+            options += '</optgroup>';
+        }
+        
+        drawingNumberSelect.innerHTML = options;
     }
-    
-    // Update the select element
-    drawingNumberSelect.innerHTML = options;
     
     console.log(`Updated drawing numbers for ${selectedOption} with prefix ${prefix} (Project type: ${projectType})`);
 }

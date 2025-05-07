@@ -106,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             phone = :phone,
             dob = :dob,
             gender = :gender,
+            role = :role,
             position = :position,
             designation = :designation,
             joining_date = :joining_date,
@@ -131,6 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'phone' => $_POST['phone'],
             'dob' => $_POST['dob'],
             'gender' => $_POST['gender'],
+            'role' => $_POST['role'],
             'position' => $_POST['position'],
             'designation' => $_POST['designation'],
             'joining_date' => $_POST['joining_date'],
@@ -1084,15 +1086,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Work Information
                     </div>
                     <div class="info-group">
+                        <div class="info-label">Role</div>
+                        <div class="info-value">
+                            <select name="role" class="form-control">
+                                <option value="">Select Role...</option>
+                                <option value="admin" <?php echo $employee['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
+                                <option value="HR" <?php echo $employee['role'] === 'HR' ? 'selected' : ''; ?>>HR</option>
+                                <option value="Senior Manager (Studio)" <?php echo $employee['role'] === 'Senior Manager (Studio)' ? 'selected' : ''; ?>>Senior Manager (Studio)</option>
+                                <option value="Senior Manager (Site)" <?php echo $employee['role'] === 'Senior Manager (Site)' ? 'selected' : ''; ?>>Senior Manager (Site)</option>
+                                <option value="Senior Manager (Marketing)" <?php echo $employee['role'] === 'Senior Manager (Marketing)' ? 'selected' : ''; ?>>Senior Manager (Marketing)</option>
+                                <option value="Senior Manager (Sales)" <?php echo $employee['role'] === 'Senior Manager (Sales)' ? 'selected' : ''; ?>>Senior Manager (Sales)</option>
+                                <option value="Design Team" <?php echo $employee['role'] === 'Design Team' ? 'selected' : ''; ?>>Design Team</option>
+                                <option value="Working Team" <?php echo $employee['role'] === 'Working Team' ? 'selected' : ''; ?>>Working Team</option>
+                                <option value="Draughtsman" <?php echo $employee['role'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
+                                <option value="3D Designing Team" <?php echo $employee['role'] === '3D Designing Team' ? 'selected' : ''; ?>>3D Designing Team</option>
+                                <option value="Studio Trainees" <?php echo $employee['role'] === 'Studio Trainees' ? 'selected' : ''; ?>>Studio Trainees</option>
+                                <option value="Business Developer" <?php echo $employee['role'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
+                                <option value="Social Media Manager" <?php echo $employee['role'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
+                                <option value="Site Manager" <?php echo $employee['role'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                <option value="Site Supervisor" <?php echo $employee['role'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
+                                <option value="Site Trainee" <?php echo $employee['role'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
+                                <option value="Relationship Manager" <?php echo $employee['role'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
+                                <option value="Sales Manager" <?php echo $employee['role'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
+                                <option value="Sales Consultant" <?php echo $employee['role'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
+                                <option value="Field Sales Representative" <?php echo $employee['role'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="info-group">
                         <div class="info-label">Position</div>
                         <div class="info-value">
-                            <input type="text" name="position" value="<?php echo htmlspecialchars($employee['position'] ?? ''); ?>">
+                            <select name="position" class="form-control">
+                                <option value="">Select Position...</option>
+                                <option value="Executive" <?php echo $employee['position'] === 'Executive' ? 'selected' : ''; ?>>Executive</option>
+                                <option value="Manager" <?php echo $employee['position'] === 'Manager' ? 'selected' : ''; ?>>Manager</option>
+                                <option value="Senior Manager" <?php echo $employee['position'] === 'Senior Manager' ? 'selected' : ''; ?>>Senior Manager</option>
+                                <option value="Team Lead" <?php echo $employee['position'] === 'Team Lead' ? 'selected' : ''; ?>>Team Lead</option>
+                                <option value="Supervisor" <?php echo $employee['position'] === 'Supervisor' ? 'selected' : ''; ?>>Supervisor</option>
+                                <option value="Trainee" <?php echo $employee['position'] === 'Trainee' ? 'selected' : ''; ?>>Trainee</option>
+                                <option value="Consultant" <?php echo $employee['position'] === 'Consultant' ? 'selected' : ''; ?>>Consultant</option>
+                                <option value="Representative" <?php echo $employee['position'] === 'Representative' ? 'selected' : ''; ?>>Representative</option>
+                                <option value="Developer" <?php echo $employee['position'] === 'Developer' ? 'selected' : ''; ?>>Developer</option>
+                                <option value="Designer" <?php echo $employee['position'] === 'Designer' ? 'selected' : ''; ?>>Designer</option>
+                                <option value="Administrator" <?php echo $employee['position'] === 'Administrator' ? 'selected' : ''; ?>>Administrator</option>
+                                <option value="Other" <?php echo $employee['position'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                            </select>
                         </div>
                     </div>
                     <div class="info-group">
                         <div class="info-label">Designation</div>
                         <div class="info-value">
-                            <input type="text" name="designation" value="<?php echo htmlspecialchars($employee['designation'] ?? ''); ?>">
+                            <select name="designation" class="form-control">
+                                <option value="">Select Designation...</option>
+                                <option value="Admin" <?php echo $employee['designation'] === 'Admin' ? 'selected' : ''; ?>>Admin</option>
+                                <option value="HR Manager" <?php echo $employee['designation'] === 'HR Manager' ? 'selected' : ''; ?>>HR Manager</option>
+                                <option value="Studio Manager" <?php echo $employee['designation'] === 'Studio Manager' ? 'selected' : ''; ?>>Studio Manager</option>
+                                <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                <option value="Marketing Manager" <?php echo $employee['designation'] === 'Marketing Manager' ? 'selected' : ''; ?>>Marketing Manager</option>
+                                <option value="Sales Manager" <?php echo $employee['designation'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
+                                <option value="Design Team Member" <?php echo $employee['designation'] === 'Design Team Member' ? 'selected' : ''; ?>>Design Team Member</option>
+                                <option value="Working Team Member" <?php echo $employee['designation'] === 'Working Team Member' ? 'selected' : ''; ?>>Working Team Member</option>
+                                <option value="Draughtsman" <?php echo $employee['designation'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
+                                <option value="3D Designer" <?php echo $employee['designation'] === '3D Designer' ? 'selected' : ''; ?>>3D Designer</option>
+                                <option value="Studio Trainee" <?php echo $employee['designation'] === 'Studio Trainee' ? 'selected' : ''; ?>>Studio Trainee</option>
+                                <option value="Business Developer" <?php echo $employee['designation'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
+                                <option value="Social Media Manager" <?php echo $employee['designation'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
+                                <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                <option value="Site Supervisor" <?php echo $employee['designation'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
+                                <option value="Site Trainee" <?php echo $employee['designation'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
+                                <option value="Relationship Manager" <?php echo $employee['designation'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
+                                <option value="Sales Consultant" <?php echo $employee['designation'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
+                                <option value="Field Sales Representative" <?php echo $employee['designation'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
+                                <option value="Other" <?php echo $employee['designation'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                            </select>
                         </div>
                     </div>
                     <div class="info-group">
@@ -1281,6 +1347,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Listen for window resize
         window.addEventListener('resize', checkMobile);
+        
+        // Role-Position-Designation Relationship
+        const roleSelect = document.querySelector('select[name="role"]');
+        const positionSelect = document.querySelector('select[name="position"]');
+        const designationSelect = document.querySelector('select[name="designation"]');
+        
+        if (roleSelect && positionSelect && designationSelect) {
+            // Map roles to appropriate positions and designations
+            const roleMapping = {
+                'admin': {
+                    position: 'Administrator',
+                    designation: 'Admin'
+                },
+                'HR': {
+                    position: 'Manager',
+                    designation: 'HR Manager'
+                },
+                'Senior Manager (Studio)': {
+                    position: 'Senior Manager',
+                    designation: 'Studio Manager'
+                },
+                'Senior Manager (Site)': {
+                    position: 'Senior Manager',
+                    designation: 'Site Manager'
+                },
+                'Senior Manager (Marketing)': {
+                    position: 'Senior Manager',
+                    designation: 'Marketing Manager'
+                },
+                'Senior Manager (Sales)': {
+                    position: 'Senior Manager',
+                    designation: 'Sales Manager'
+                },
+                'Design Team': {
+                    position: 'Designer',
+                    designation: 'Design Team Member'
+                },
+                'Working Team': {
+                    position: 'Executive',
+                    designation: 'Working Team Member'
+                },
+                'Draughtsman': {
+                    position: 'Designer',
+                    designation: 'Draughtsman'
+                },
+                '3D Designing Team': {
+                    position: 'Designer',
+                    designation: '3D Designer'
+                },
+                'Studio Trainees': {
+                    position: 'Trainee',
+                    designation: 'Studio Trainee'
+                },
+                'Business Developer': {
+                    position: 'Developer',
+                    designation: 'Business Developer'
+                },
+                'Social Media Manager': {
+                    position: 'Manager',
+                    designation: 'Social Media Manager'
+                },
+                'Site Manager': {
+                    position: 'Manager',
+                    designation: 'Site Manager'
+                },
+                'Site Supervisor': {
+                    position: 'Supervisor',
+                    designation: 'Site Supervisor'
+                },
+                'Site Trainee': {
+                    position: 'Trainee',
+                    designation: 'Site Trainee'
+                },
+                'Relationship Manager': {
+                    position: 'Manager',
+                    designation: 'Relationship Manager'
+                },
+                'Sales Manager': {
+                    position: 'Manager',
+                    designation: 'Sales Manager'
+                },
+                'Sales Consultant': {
+                    position: 'Consultant',
+                    designation: 'Sales Consultant'
+                },
+                'Field Sales Representative': {
+                    position: 'Representative',
+                    designation: 'Field Sales Representative'
+                }
+            };
+            
+            // Function to update position and designation based on role
+            function updatePositionAndDesignation() {
+                const selectedRole = roleSelect.value;
+                if (selectedRole && roleMapping[selectedRole]) {
+                    positionSelect.value = roleMapping[selectedRole].position;
+                    designationSelect.value = roleMapping[selectedRole].designation;
+                }
+            }
+            
+            // Add event listener to role select
+            roleSelect.addEventListener('change', updatePositionAndDesignation);
+            
+            // Initial update if role is already selected
+            if (roleSelect.value) {
+                updatePositionAndDesignation();
+            }
+        }
     });
     </script>
 </body>

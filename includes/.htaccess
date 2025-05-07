@@ -1,0 +1,16 @@
+# Force PHP execution
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Prevent direct access to JavaScript files
+<FilesMatch "\.js$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Allow specific PHP files to be accessed directly
+<Files "process_work_media.php">
+    Order allow,deny
+    Allow from all
+</Files> 

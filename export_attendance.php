@@ -128,7 +128,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
                 if ($record) {
                     if ($record['status'] === 'present') {
                         if ($record['punch_in_time'] && $record['punch_out_time']) {
-                            $attendance_info = $record['punch_in_time'] . ' - ' . $record['punch_out_time'];
+                            // Convert 24-hour format to 12-hour format
+                            $punch_in_12hr = date("h:i A", strtotime($record['punch_in_time']));
+                            $punch_out_12hr = date("h:i A", strtotime($record['punch_out_time']));
+                            $attendance_info = $punch_in_12hr . ' - ' . $punch_out_12hr;
                         } else {
                             $attendance_info = "Present";
                         }
@@ -257,8 +260,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
                     $current_date->format('d-m-Y'),
                     $day_name,
                     $record ? ucfirst($record['status']) : 'Not Recorded',
-                    $record ? ($record['punch_in_time'] ?? '') : '',
-                    $record ? ($record['punch_out_time'] ?? '') : '',
+                    $record ? ($record['punch_in_time'] ? date("h:i A", strtotime($record['punch_in_time'])) : '') : '',
+                    $record ? ($record['punch_out_time'] ? date("h:i A", strtotime($record['punch_out_time'])) : '') : '',
                     $record ? ($record['shift_time'] ?? '') : '',
                     $record ? ($record['overtime_hours'] ?? '') : '',
                     $record ? ($record['is_weekly_off'] ? 'Yes' : 'No') : 'No'

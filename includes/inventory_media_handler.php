@@ -1,23 +1,34 @@
 // includes/inventory_media_handler.php
 <?php
-require_once '../config/db_connect.php';
+// Fix the path to work from both direct inclusion and when included from another file
+$config_path = file_exists(__DIR__ . '/../config/db_connect.php') ? 
+    __DIR__ . '/../config/db_connect.php' : 'config/db_connect.php';
+require_once $config_path;
 
 class InventoryMediaHandler {
     private $pdo;
     private $uploadDir;
+    private $billsUploadDir;
     
     public function __construct($pdo) {
         $this->pdo = $pdo;
         // Define upload directory relative to the project root
         $this->uploadDir = dirname(dirname(__FILE__)) . '/uploads/inventory/';
         
-        // Create directory if it doesn't exist
+        // Define bills upload directory
+        $this->billsUploadDir = dirname(dirname(__FILE__)) . '/uploads/inventory_bills/';
+        
+        // Create directories if they don't exist
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
         }
+        
+        if (!is_dir($this->billsUploadDir)) {
+            mkdir($this->billsUploadDir, 0777, true);
+        }
     }
     
-    public function saveMedia($inventoryId, $file, $description = '') {
+    public function saveMedia($inventoryId, $file, $description = '', $isBill = false) {
         try {
             // Get file details
             $fileName = $file['name'];
@@ -31,24 +42,44 @@ class InventoryMediaHandler {
             }
             
             // Generate unique filename
-            $uniqueFileName = time() . '_' . uniqid() . '_' . $fileName;
+            $uniqueFileName = ($isBill ? 'file_' : '') . time() . '_' . uniqid() . '_' . $fileName;
+            
+            // Choose the appropriate upload directory based on whether this is a bill
+            $uploadDirectory = $isBill ? $this->billsUploadDir : $this->uploadDir;
             
             // Full path for the file
-            $uploadFilePath = $this->uploadDir . $uniqueFileName;
+            $uploadFilePath = $uploadDirectory . $uniqueFileName;
             
             // Move the file
             if (!move_uploaded_file($fileTmpPath, $uploadFilePath)) {
                 throw new Exception('Failed to upload file.');
             }
             
-            // Save to database
+            // Determine the relative file path for database storage
+            $filePath = $isBill ? 'uploads/inventory_bills/' . $uniqueFileName : 'uploads/inventory/' . $uniqueFileName;
+            
+            // If this is a bill, also update the bill_picture field in event_inventory_items
+            if ($isBill) {
+                try {
+                    $updateBillStmt = $this->pdo->prepare("
+                        UPDATE event_inventory_items 
+                        SET bill_picture = ? 
+                        WHERE id = ?
+                    ");
+                    $updateBillStmt->execute([$filePath, $inventoryId]);
+                } catch (Exception $e) {
+                    // Log this error but continue
+                    error_log('Failed to update bill_picture in event_inventory_items: ' . $e->getMessage());
+                }
+            }
+            
+            // Save to inventory_media table
             $stmt = $this->pdo->prepare("
                 INSERT INTO inventory_media 
                 (inventory_id, media_type, file_path, description) 
                 VALUES (?, ?, ?, ?)
             ");
             
-            $filePath = 'uploads/inventory/' . $uniqueFileName;
             $stmt->execute([$inventoryId, $mediaType, $filePath, $description]);
             
             return [
@@ -64,6 +95,11 @@ class InventoryMediaHandler {
                 'error' => $e->getMessage()
             ];
         }
+    }
+    
+    // Function specifically for saving bill images
+    public function saveBillImage($inventoryId, $file, $description = '') {
+        return $this->saveMedia($inventoryId, $file, $description, true);
     }
     
     private function getMediaType($fileType) {

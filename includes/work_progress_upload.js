@@ -1,7 +1,23 @@
 // Work Progress Media Upload Handler
 function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
     const files = fileInput.files;
-    if (!files.length) return;
+    if (!files.length) {
+        console.error('No files selected');
+        return;
+    }
+
+    // Find the media container early to show potential errors
+    const mediaContainer = fileInput.closest('.media-container');
+    if (!mediaContainer) {
+        console.error('Media container not found');
+        return;
+    }
+    
+    // Find the preview container early
+    const previewContainer = mediaContainer.querySelector('.media-preview');
+    if (previewContainer) {
+        previewContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Uploading...</div>';
+    }
 
     // Check if the selected files are valid
     for (let i = 0; i < files.length; i++) {
@@ -9,7 +25,7 @@ function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
         
         // Check file size - limit to 1GB
         if (file.size > 1024 * 1024 * 1024) {
-            alert(`File "${file.name}" exceeds the 1GB limit. Please select a smaller file.`);
+            showError(previewContainer, `File "${file.name}" exceeds the 1GB limit. Please select a smaller file.`);
             // Clear the file input
             fileInput.value = '';
             return;
@@ -18,7 +34,7 @@ function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
         // Validate file type
         const fileType = file.type;
         if (!fileType.startsWith('image/') && !fileType.startsWith('video/')) {
-            alert(`File "${file.name}" is not a valid image or video.`);
+            showError(previewContainer, `File "${file.name}" is not a valid image or video.`);
             // Clear the file input
             fileInput.value = '';
             return;
@@ -27,32 +43,36 @@ function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
 
     const formData = new FormData();
     formData.append('work_progress_id', workProgressId);
-    formData.append('description', description);
+    formData.append('description', description || ''); // Ensure we're not sending undefined
+    
+    // Log what's being sent
+    console.log(`Uploading files for work_progress_id: ${workProgressId}`);
+    console.log(`Description length: ${description ? description.length : 0} characters`);
     
     // Append each file
     for (let i = 0; i < files.length; i++) {
-        formData.append('work_media_file[]', files[i]);
+        // Use a direct name without array notation for single file upload
+        if (files.length === 1) {
+            formData.append('work_media_file', files[i]);
+        } else {
+            formData.append('work_media_file[]', files[i]);
+        }
+        console.log(`Adding file: ${files[i].name}, type: ${files[i].type}, size: ${files[i].size} bytes`);
     }
     
-    // Find the media container
-    const mediaContainer = fileInput.closest('.media-container');
-    if (!mediaContainer) {
-        console.error('Media container not found');
-        return;
-    }
-    
-    // Show loading state
-    const previewContainer = mediaContainer.querySelector('.media-preview');
-    if (previewContainer) {
-        previewContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Uploading...</div>';
-    }
+    // Use the proxy file in the same directory
+    const uploadUrl = 'work_progress_media_proxy.php';
     
     // Send AJAX request
-    fetch('includes/process_work_media.php', {
+    fetch(uploadUrl, {
         method: 'POST',
         body: formData
     })
     .then(response => {
+        // Log raw response for debugging
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
         // First check if the response is valid
         if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
@@ -60,16 +80,18 @@ function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
         
         // Try to parse the JSON
         return response.text().then(text => {
+            console.log('Raw response text:', text);
             try {
                 if (!text) throw new Error('Empty response from server');
                 return JSON.parse(text);
             } catch (e) {
                 console.error('Invalid JSON response:', text);
-                throw new Error('Invalid JSON response from server');
+                throw new Error(`Invalid JSON response from server: ${e.message}`);
             }
         });
     })
     .then(data => {
+        console.log('Parsed response data:', data);
         if (data.success) {
             // Handle successful upload
             if (previewContainer) {
@@ -90,6 +112,11 @@ function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
                                     <span class="badge bg-success">Video Uploaded</span>
                                 </div>`;
                             }
+                        } else if (result && !result.success) {
+                            // Show individual file error
+                            previewHTML += `<div class="alert alert-warning">
+                                File upload issue: ${result.error || 'Unknown error'}
+                            </div>`;
                         }
                     });
                 }
@@ -119,18 +146,32 @@ function handleWorkMediaUpload(workProgressId, fileInput, description = '') {
             
         } else {
             // Handle error
-            if (previewContainer) {
-                previewContainer.innerHTML = `<div class="alert alert-danger">${data.error || 'Upload failed'}</div>`;
-            }
+            showError(previewContainer, data.error || 'Upload failed');
             console.error('Upload error:', data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        if (previewContainer) {
-            previewContainer.innerHTML = `<div class="alert alert-danger">Upload failed: ${error.message}. Please try again.</div>`;
+        showError(previewContainer, `Upload failed: ${error.message}. Please try again.`);
+        
+        // Check if the server might be rejecting due to file size
+        let totalSize = 0;
+        for (let i = 0; i < files.length; i++) {
+            totalSize += files[i].size;
+        }
+        
+        if (totalSize > 50 * 1024 * 1024) {  // If total is over 50MB
+            showError(previewContainer, 'Total file size may be too large for server limits. Try uploading fewer or smaller files.');
         }
     });
+}
+
+// Helper function to show errors consistently
+function showError(container, message) {
+    if (container) {
+        container.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+    }
+    console.error(message);
 }
 
 // Add event listener for file input changes

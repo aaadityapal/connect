@@ -1,9 +1,34 @@
-# PHP Value Overrides
-php_value upload_max_filesize 1024M
-php_value post_max_size 1024M
-php_value max_execution_time 600
-php_value max_input_time 600
-php_value memory_limit 1024M
+# Main .htaccess file
+Options +FollowSymLinks
+
+# Enable rewriting
+RewriteEngine On
+
+# Make sure PHP files are handled as PHP scripts
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Prevent direct access to .htaccess and other sensitive files
+<Files ~ "^\.ht">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Handle PHP files within includes directory properly
+<IfModule mod_rewrite.c>
+    RewriteRule ^includes/(.+\.php)$ - [L,NC]
+</IfModule>
+
+# PHP settings
+<IfModule mod_php8.c>
+    php_flag display_errors off
+    php_value upload_max_filesize 1024M
+    php_value post_max_size 1024M
+    php_value max_execution_time 600
+    php_value max_input_time 600
+    php_value memory_limit 1024M
+</IfModule>
 
 # Enable HTTP/1.1 for file uploads
 SetEnv no-gzip 1

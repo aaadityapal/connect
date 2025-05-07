@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: sales_manager_dashboard.php');
                         break;
                     case 'Site Supervisor':
-                        header('Location: site_supervision.php');
+                        header('Location: site_supervisor_dashboard.php');
                         break;
                 }
             } else {

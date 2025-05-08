@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Numbering Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        .vendor-row {
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        }
+        .vendor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .vendor-delete-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .test-result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vendor Numbering Test</h1>
+    <p>This page tests the vendor numbering functionality to ensure it's working correctly.</p>
+    
+    <div>
+        <button id="addVendorBtn">Add Vendor</button>
+        <button id="clearBtn">Clear All</button>
+    </div>
+    
+    <div id="vendorList" class="vendor-list">
+        <!-- Vendors will be added here dynamically -->
+    </div>
+    
+    <div class="test-result">
+        <h3>Test Results:</h3>
+        <pre id="testResults"></pre>
+    </div>
+    
+    <script>
+        // Simplified version of the vendor functionality for testing
+        class VendorManager {
+            constructor() {
+                this.vendorCounter = 0;
+                this.vendorList = document.getElementById('vendorList');
+                this.testResults = document.getElementById('testResults');
+                
+                // Setup event listeners
+                document.getElementById('addVendorBtn').addEventListener('click', () => this.addVendorField());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearVendors());
+                
+                this.log('Vendor manager initialized');
+            }
+            
+            addVendorField() {
+                const vendorId = ++this.vendorCounter;
+                
+                const vendorRow = document.createElement('div');
+                vendorRow.className = 'vendor-row';
+                vendorRow.setAttribute('data-vendor-id', vendorId);
+                
+                vendorRow.innerHTML = `
+                    <div class="vendor-header">
+                        <h5><i class="📦"></i> Vendor #${vendorId}</h5>
+                        <button type="button" class="vendor-delete-btn" data-vendor-id="${vendorId}" title="Remove vendor">
+                            <i class="🗑️"></i> Delete
+                        </button>
+                    </div>
+                    <div>Vendor content goes here (ID: ${vendorId})</div>
+                `;
+                
+                this.vendorList.appendChild(vendorRow);
+                
+                // Add event listener for delete button
+                vendorRow.querySelector('.vendor-delete-btn').addEventListener('click', () => {
+                    vendorRow.remove();
+                    this.updateVendorNumbers();
+                    this.log(`Removed vendor ID: ${vendorId}`);
+                });
+                
+                // Update vendor numbers to ensure sequential numbering
+                this.updateVendorNumbers();
+                
+                this.log(`Added new vendor with ID: ${vendorId}`);
+            }
+            
+            updateVendorNumbers() {
+                const vendorRows = document.querySelectorAll('.vendor-row');
+                
+                // Loop through all vendor rows and update their display number
+                vendorRows.forEach((row, index) => {
+                    // Update the visual label (the heading that shows "Vendor #X")
+                    const vendorHeader = row.querySelector('.vendor-header h5');
+                    if (vendorHeader) {
+                        vendorHeader.innerHTML = `<i class="📦"></i> Vendor #${index + 1}`;
+                    }
+                    
+                    // Log to help with debugging
+                    this.log(`Updated vendor ID: ${row.getAttribute('data-vendor-id')} to display number: ${index + 1}`);
+                });
+                
+                this.log(`Total vendors after update: ${vendorRows.length}`);
+            }
+            
+            clearVendors() {
+                this.vendorList.innerHTML = '';
+                this.log('Cleared all vendors');
+            }
+            
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                this.testResults.textContent += `[${timestamp}] ${message}\n`;
+                // Scroll to bottom of results
+                this.testResults.scrollTop = this.testResults.scrollHeight;
+            }
+        }
+        
+        // Initialize the vendor manager
+        const vendorManager = new VendorManager();
+    </script>
+</body>
+</html> 

@@ -122,8 +122,14 @@ class CalendarEventModal {
             this.saveEvent();
         });
         
-        // Add vendor button
-        document.getElementById('addVendorBtn').addEventListener('click', () => this.addVendorField());
+        // Add vendor button - Only add a new vendor when explicitly clicked by the user
+        document.getElementById('addVendorBtn').addEventListener('click', (e) => {
+            // Check if this is a direct user action (not triggered by an image upload event)
+            // e.isTrusted will be true for real user clicks and false for programmatically triggered events
+            if (e.isTrusted) {
+                this.addVendorField();
+            }
+        });
     }
 
     showModal(day, month, year, monthName) {
@@ -156,7 +162,7 @@ class CalendarEventModal {
         
         // Clear vendor list
         document.getElementById('vendorList').innerHTML = '';
-        this.vendorCounter = 0;
+        this.vendorCounter = 0; // Reset vendor counter
     }
 
     validateForm() {
@@ -256,6 +262,9 @@ class CalendarEventModal {
             const materialPictureInput = document.getElementById(`materialPicture-${vendorId}`);
             const billPictureInput = document.getElementById(`billPicture-${vendorId}`);
             
+            // Get labour section
+            const labourSection = document.getElementById(`labourSection-${vendorId}`);
+            
             // Skip empty vendor rows
             if (!vendorType.value && !vendorName.value && !vendorContact.value) {
                 return;
@@ -277,17 +286,48 @@ class CalendarEventModal {
             
             if (materialPictureInput && materialPictureInput.files && materialPictureInput.files.length > 0) {
                 for (let i = 0; i < materialPictureInput.files.length; i++) {
-                    materialPictureNames.push(materialPictureInput.files[i].name);
+                    const file = materialPictureInput.files[i];
+                    // Create an object with the filename and location data
+                    const fileData = {
+                        name: file.name,
+                    };
+                    
+                    // Add location data if it exists on the file object
+                    if (file.location) {
+                        fileData.latitude = file.location.latitude;
+                        fileData.longitude = file.location.longitude;
+                        fileData.accuracy = file.location.accuracy;
+                        fileData.address = file.location.address;
+                        fileData.timestamp = file.location.timestamp || new Date().getTime();
+                    }
+                    
+                    materialPictureNames.push(fileData);
                 }
             }
             
             if (billPictureInput && billPictureInput.files && billPictureInput.files.length > 0) {
                 for (let i = 0; i < billPictureInput.files.length; i++) {
-                    billPictureNames.push(billPictureInput.files[i].name);
+                    const file = billPictureInput.files[i];
+                    // Create an object with the filename and location data
+                    const fileData = {
+                        name: file.name,
+                    };
+                    
+                    // Add location data if it exists on the file object
+                    if (file.location) {
+                        fileData.latitude = file.location.latitude;
+                        fileData.longitude = file.location.longitude;
+                        fileData.accuracy = file.location.accuracy;
+                        fileData.address = file.location.address;
+                        fileData.timestamp = file.location.timestamp || new Date().getTime();
+                    }
+                    
+                    billPictureNames.push(fileData);
                 }
             }
             
-            vendors.push({
+            // Prepare vendor data object
+            const vendorData = {
                 type: vendorTypeValue,
                 name: vendorName.value.trim(),
                 contact: vendorContact.value.trim(),
@@ -297,7 +337,63 @@ class CalendarEventModal {
                     materialPictures: materialPictureNames,
                     billPictures: billPictureNames
                 }
-            });
+            };
+            
+            // Add labour data if the section is visible and has data
+            if (labourSection && labourSection.style.display !== 'none') {
+                const labourItems = labourSection.querySelectorAll('.labour-item');
+                if (labourItems.length > 0) {
+                    const labourers = [];
+                    
+                    labourItems.forEach(item => {
+                        const labourId = item.getAttribute('data-labour-id');
+                        const labourName = document.getElementById(`labourName-${labourId}`);
+                        const labourContact = document.getElementById(`labourContact-${labourId}`);
+                        const morningAttendance = document.getElementById(`morningAttendance-${labourId}`);
+                        const eveningAttendance = document.getElementById(`eveningAttendance-${labourId}`);
+                        
+                        // Only include if name is provided
+                        if (labourName && labourName.value.trim()) {
+                            labourers.push({
+                                name: labourName.value.trim(),
+                                contact: labourContact ? labourContact.value.trim() : '',
+                                attendance: {
+                                    morning: morningAttendance ? morningAttendance.value : '',
+                                    evening: eveningAttendance ? eveningAttendance.value : ''
+                                },
+                                wages: {
+                                    perDay: document.getElementById(`wagesPerDay-${labourId}`) ? 
+                                           parseFloat(document.getElementById(`wagesPerDay-${labourId}`).value) || 0 : 0,
+                                    totalDay: document.getElementById(`totalDayWages-${labourId}`) ? 
+                                            parseFloat(document.getElementById(`totalDayWages-${labourId}`).value) || 0 : 0
+                                },
+                                overtime: {
+                                    hours: document.getElementById(`otHours-${labourId}`) ? 
+                                          parseFloat(document.getElementById(`otHours-${labourId}`).value) || 0 : 0,
+                                    minutes: document.getElementById(`otMinutes-${labourId}`) ? 
+                                           parseFloat(document.getElementById(`otMinutes-${labourId}`).value) || 0 : 0,
+                                    rate: document.getElementById(`otRate-${labourId}`) ? 
+                                         parseFloat(document.getElementById(`otRate-${labourId}`).value) || 0 : 0,
+                                    total: document.getElementById(`totalOT-${labourId}`) ? 
+                                          parseFloat(document.getElementById(`totalOT-${labourId}`).value) || 0 : 0
+                                },
+                                travel: {
+                                    mode: document.getElementById(`travelMode-${labourId}`) ? 
+                                         document.getElementById(`travelMode-${labourId}`).value : '',
+                                    amount: document.getElementById(`travelAmount-${labourId}`) ? 
+                                           parseFloat(document.getElementById(`travelAmount-${labourId}`).value) || 0 : 0
+                                }
+                            });
+                        }
+                    });
+                    
+                    if (labourers.length > 0) {
+                        vendorData.labourers = labourers;
+                    }
+                }
+            }
+            
+            vendors.push(vendorData);
         });
         
         // Get form values
@@ -309,36 +405,114 @@ class CalendarEventModal {
             vendors: vendors
         };
         
-        // In a real implementation, you would send this data to the server
-        // For now, we'll just log it and show a success message
-        console.log('Event data to save:', eventData);
+        // Show loading indicator
+        this.showLoading();
         
-        // For demo purposes, add this event to our temporary storage
-        if (!window.calendarEvents) {
-            window.calendarEvents = {};
-        }
-        
-        const dateKey = `${eventData.year}-${eventData.month}-${eventData.day}`;
-        if (!window.calendarEvents[dateKey]) {
-            window.calendarEvents[dateKey] = [];
-        }
-        
-        window.calendarEvents[dateKey].push({
-            id: Date.now(),  // Use timestamp as unique ID
-            siteName: eventData.siteName,
-            vendors: eventData.vendors
+        // Send data to the server
+        fetch('includes/calendar_data_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=save_calendar_data&data=${encodeURIComponent(JSON.stringify(eventData))}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            this.hideLoading();
+            
+            if (data.status === 'success') {
+                // Show success message
+                this.showSuccessMessage(data);
+                
+                // Hide modal
+                this.hideModal();
+                
+                // Refresh the calendar to show updated data
+                if (typeof refreshCalendar === 'function') {
+                    refreshCalendar();
+                }
+            } else {
+                // Show error message
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            // Hide loading indicator
+            this.hideLoading();
+            
+            // Log error and show user-friendly message
+            console.error('Error saving event data:', error);
+            alert('Failed to save data. Please try again.');
         });
+    }
+    
+    showLoading() {
+        // Create loading overlay if it doesn't exist
+        if (!document.getElementById('loadingOverlay')) {
+            const loadingHTML = `
+                <div id="loadingOverlay" class="loading-overlay">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Saving...</span>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', loadingHTML);
+            
+            // Add styles for loading overlay
+            const styleEl = document.createElement('style');
+            styleEl.id = 'loadingStyles';
+            styleEl.textContent = `
+                .loading-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                }
+                .loading-spinner {
+                    background-color: #fff;
+                    padding: 20px 40px;
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                }
+                .loading-spinner i {
+                    font-size: 2rem;
+                    color: #3498db;
+                    margin-bottom: 10px;
+                }
+                .loading-spinner span {
+                    font-size: 1rem;
+                    color: #333;
+                }
+            `;
+            document.head.appendChild(styleEl);
+        }
         
-        // Show success message
-        this.showSuccessMessage(eventData);
-        
-        // Hide modal
-        this.hideModal();
+        // Show the loading overlay
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+    
+    hideLoading() {
+        // Hide loading overlay if it exists
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
     }
 
-    showSuccessMessage(eventData) {
-        // In a real implementation, you might want to update the UI
-        // with the newly added event, or refresh the calendar
+    showSuccessMessage(data) {
+        // For now, let's just use a simple alert
+        // In a real implementation, you might want to show a prettier notification
         alert(`Site update added successfully for ${this.eventDateDisplay.textContent}`);
     }
 
@@ -369,6 +543,11 @@ class CalendarEventModal {
     }
     
     addVendorField() {
+        // Use the current count of vendor rows + 1 as the display ID
+        // This ensures the numbering is always sequential regardless of previous deletions
+        const vendorDisplayId = document.querySelectorAll('.vendor-row').length + 1;
+        
+        // Use vendorCounter for internal ID only
         const vendorId = ++this.vendorCounter;
         
         const vendorRow = document.createElement('div');
@@ -377,7 +556,7 @@ class CalendarEventModal {
         
         vendorRow.innerHTML = `
             <div class="vendor-header">
-                <h5><i class="fas fa-hard-hat"></i> Vendor #${vendorId}</h5>
+                <h5><i class="fas fa-hard-hat"></i> Vendor #${vendorDisplayId}</h5>
                 <button type="button" class="vendor-delete-btn" data-vendor-id="${vendorId}" title="Remove vendor">
                     <i class="fas fa-trash-alt"></i>
                 </button>
@@ -455,6 +634,28 @@ class CalendarEventModal {
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Add Labour Button -->
+            <div class="labour-button-container">
+                <button type="button" id="addLabourBtn-${vendorId}" class="event-btn event-btn-outline add-labour-btn">
+                    <i class="fas fa-user-plus"></i> Add Labour
+                </button>
+            </div>
+            
+            <!-- Labour Attendance Section (initially hidden) -->
+            <div class="labour-section" id="labourSection-${vendorId}" style="display: none;">
+                <h6 class="vendor-subsection-title"><i class="fas fa-users"></i> Labour Attendance</h6>
+                
+                <!-- List of laborers -->
+                <div id="labourList-${vendorId}" class="labour-list">
+                    <!-- Laborers will be added here dynamically -->
+                </div>
+                
+                <!-- Add Another Laborer button -->
+                <button type="button" id="addAnotherLabourBtn-${vendorId}" class="event-btn event-btn-sm event-btn-outline-secondary add-another-labour-btn">
+                    <i class="fas fa-plus"></i> Add Another Laborer
+                </button>
             </div>
         `;
         
@@ -553,7 +754,7 @@ class CalendarEventModal {
                         border-radius: 4px;
                         border: 1px solid #ced4da;
                     }
-                    .vendor-material-section {
+                    .vendor-material-section, .labour-section {
                         margin-top: 20px;
                         padding-top: 15px;
                         border-top: 1px dashed #dee2e6;
@@ -570,17 +771,17 @@ class CalendarEventModal {
                         margin-right: 8px;
                         color: #3498db;
                     }
-                    .vendor-material-fields {
+                    .vendor-material-fields, .labour-fields {
                         display: flex;
                         flex-direction: column;
                         gap: 15px;
                     }
-                    .vendor-material-row {
+                    .vendor-material-row, .labour-row {
                         display: flex;
                         gap: 15px;
                         flex-wrap: wrap;
                     }
-                    .vendor-material-row .vendor-field {
+                    .vendor-material-row .vendor-field, .labour-row .vendor-field {
                         flex: 1;
                         min-width: 220px;
                     }
@@ -623,6 +824,240 @@ class CalendarEventModal {
                         font-size: 0.85rem;
                         color: #666;
                     }
+                    .labour-button-container {
+                        margin-top: 15px;
+                        text-align: center;
+                    }
+                    .add-labour-btn {
+                        padding: 6px 14px;
+                        font-size: 0.9rem;
+                        background-color: #f0f8ff;
+                        border: 1px solid #b8daff;
+                        color: #0056b3;
+                    }
+                    .add-labour-btn:hover {
+                        background-color: #d8e9ff;
+                    }
+                    .attendance-container {
+                        background-color: #f5f5f5;
+                        padding: 12px;
+                        border-radius: 5px;
+                        margin-top: 10px;
+                    }
+                    .attendance-title {
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                        color: #333;
+                        font-weight: 500;
+                    }
+                    .attendance-row {
+                        display: flex;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                    }
+                    .attendance-field {
+                        flex: 1;
+                        min-width: 160px;
+                    }
+                    .labour-list {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 15px;
+                        margin-bottom: 15px;
+                    }
+                    .labour-item {
+                        background-color: #fff;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 5px;
+                        padding: 12px;
+                        position: relative;
+                    }
+                    .labour-item-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 10px;
+                        padding-bottom: 8px;
+                        border-bottom: 1px solid #f0f0f0;
+                    }
+                    .labour-item-header h6 {
+                        margin: 0;
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        color: #333;
+                    }
+                    .labour-delete-btn {
+                        background: none;
+                        border: none;
+                        color: #dc3545;
+                        cursor: pointer;
+                        padding: 3px 6px;
+                        border-radius: 3px;
+                        font-size: 0.8rem;
+                        transition: background-color 0.2s;
+                    }
+                    .labour-delete-btn:hover {
+                        background-color: rgba(220, 53, 69, 0.1);
+                    }
+                    .add-another-labour-btn {
+                        font-size: 0.85rem;
+                        padding: 5px 10px;
+                        margin-left: auto;
+                        display: block;
+                        margin-right: 0;
+                        background-color: #f8f9fa;
+                        border: 1px dashed #adb5bd;
+                        color: #495057;
+                    }
+                    .add-another-labour-btn:hover {
+                        background-color: #e2e6ea;
+                    }
+                    .event-btn-sm {
+                        font-size: 0.875rem;
+                        padding: 0.25rem 0.5rem;
+                    }
+                    .event-btn-outline-secondary {
+                        color: #6c757d;
+                        border-color: #6c757d;
+                    }
+
+                    /* Daily Wages section styling */
+                    .wages-container {
+                        background-color: #fff9f0;
+                        padding: 12px;
+                        border-radius: 5px;
+                        margin-top: 10px;
+                        border: 1px solid #ffe8cc;
+                    }
+                    .wages-title {
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                        color: #d35400;
+                        font-weight: 500;
+                    }
+                    .wages-row {
+                        display: flex;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                    }
+                    .wages-field {
+                        flex: 1;
+                        min-width: 160px;
+                    }
+                    
+                    /* Overtime section styling */
+                    .overtime-container {
+                        background-color: #f0f7ff;
+                        padding: 12px;
+                        border-radius: 5px;
+                        margin-top: 10px;
+                        border: 1px solid #b8d4f5;
+                    }
+                    .overtime-title {
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                        color: #2471a3;
+                        font-weight: 500;
+                    }
+                    .overtime-row {
+                        display: flex;
+                        gap: 12px;
+                        flex-wrap: wrap;
+                    }
+                    .overtime-field {
+                        flex: 1;
+                        min-width: 140px;
+                    }
+                    .overtime-time {
+                        min-width: 100px;
+                        max-width: 120px;
+                    }
+                    
+                    /* Travel Expenses section styling */
+                    .travel-container {
+                        background-color: #f5fff5;
+                        padding: 12px;
+                        border-radius: 5px;
+                        margin-top: 10px;
+                        border: 1px solid #c8e6c9;
+                    }
+                    .travel-title {
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                        color: #2e7d32;
+                        font-weight: 500;
+                    }
+                    .travel-row {
+                        display: flex;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                    }
+                    .travel-field {
+                        flex: 1;
+                        min-width: 160px;
+                    }
+                    
+                    /* Input group styling */
+                    .input-group {
+                        display: flex;
+                        align-items: stretch;
+                        width: 100%;
+                    }
+                    .input-group-prepend {
+                        display: flex;
+                        margin-right: -1px;
+                    }
+                    .input-group-text {
+                        display: flex;
+                        align-items: center;
+                        padding: 8px 12px;
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        color: #495057;
+                        text-align: center;
+                        white-space: nowrap;
+                        background-color: #f8f9fa;
+                        border: 1px solid #ced4da;
+                        border-radius: 4px 0 0 4px;
+                    }
+                    .input-group .vendor-input {
+                        border-top-left-radius: 0;
+                        border-bottom-left-radius: 0;
+                        position: relative;
+                        flex: 1 1 auto;
+                        width: 1%;
+                        margin-bottom: 0;
+                    }
+                    
+                    /* Grand Total styling */
+                    .grand-total-container {
+                        background-color: #f8f4ff;
+                        padding: 12px;
+                        border-radius: 5px;
+                        margin-top: 15px;
+                        border: 1px solid #d4c4f9;
+                    }
+                    .grand-total-title {
+                        font-size: 0.95rem;
+                        margin-bottom: 10px;
+                        color: #6a1b9a;
+                        font-weight: 600;
+                    }
+                    .grand-total-row {
+                        display: flex;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                    }
+                    .grand-total-field {
+                        flex: 1;
+                        min-width: 160px;
+                    }
+                    .grand-total-input {
+                        background-color: #f0e6ff !important;
+                        font-weight: 600;
+                        color: #4a148c;
+                        font-size: 1.1rem;
+                    }
                 }
             `;
             document.head.appendChild(styleEl);
@@ -630,6 +1065,289 @@ class CalendarEventModal {
         
         // Add file upload listeners
         this.setupFileUploadListeners(vendorId);
+        
+        // Initialize labour counter for this vendor
+        vendorRow.setAttribute('data-labour-counter', '0');
+        
+        // Add Labour button listener
+        document.getElementById(`addLabourBtn-${vendorId}`).addEventListener('click', () => {
+            const labourSection = document.getElementById(`labourSection-${vendorId}`);
+            if (labourSection.style.display === 'none') {
+                labourSection.style.display = 'block';
+                document.getElementById(`addLabourBtn-${vendorId}`).innerHTML = '<i class="fas fa-minus"></i> Hide Labour';
+                
+                // Add first laborer if list is empty
+                const labourList = document.getElementById(`labourList-${vendorId}`);
+                if (labourList.childElementCount === 0) {
+                    this.addLabourerToVendor(vendorId);
+                }
+            } else {
+                labourSection.style.display = 'none';
+                document.getElementById(`addLabourBtn-${vendorId}`).innerHTML = '<i class="fas fa-user-plus"></i> Add Labour';
+            }
+        });
+        
+        // Add "Add Another Laborer" button listener
+        document.getElementById(`addAnotherLabourBtn-${vendorId}`).addEventListener('click', () => {
+            this.addLabourerToVendor(vendorId);
+        });
+    }
+    
+    // Add a new laborer to a vendor
+    addLabourerToVendor(vendorId) {
+        const vendorRow = document.querySelector(`.vendor-row[data-vendor-id="${vendorId}"]`);
+        let labourCounter = parseInt(vendorRow.getAttribute('data-labour-counter') || '0');
+        
+        // Increment labour counter
+        labourCounter++;
+        vendorRow.setAttribute('data-labour-counter', labourCounter.toString());
+        
+        // Create unique ID for this laborer
+        const labourId = `${vendorId}-${labourCounter}`;
+        
+        // Create the laborer item
+        const labourItem = document.createElement('div');
+        labourItem.className = 'labour-item';
+        labourItem.setAttribute('data-labour-id', labourId);
+        
+        labourItem.innerHTML = `
+            <div class="labour-item-header">
+                <h6><i class="fas fa-hard-hat"></i> Laborer #${labourCounter}</h6>
+                <button type="button" class="labour-delete-btn" data-labour-id="${labourId}" title="Remove laborer">
+                    <i class="fas fa-trash-alt"></i> Remove
+                </button>
+            </div>
+            <div class="labour-fields">
+                <div class="labour-row">
+                    <div class="vendor-field">
+                        <label for="labourName-${labourId}"><i class="fas fa-user"></i> Labour Name</label>
+                        <input type="text" id="labourName-${labourId}" class="event-form-control vendor-input" placeholder="Enter labour name">
+                    </div>
+                    <div class="vendor-field">
+                        <label for="labourContact-${labourId}"><i class="fas fa-phone"></i> Contact Number</label>
+                        <input type="text" id="labourContact-${labourId}" class="event-form-control vendor-input" placeholder="Enter contact number">
+                    </div>
+                </div>
+                <div class="attendance-container">
+                    <h6 class="attendance-title"><i class="fas fa-clipboard-check"></i> Attendance</h6>
+                    <div class="attendance-row">
+                        <div class="vendor-field attendance-field">
+                            <label for="morningAttendance-${labourId}">Morning Attendance</label>
+                            <select id="morningAttendance-${labourId}" class="event-form-select vendor-input">
+                                <option value="">Select Status</option>
+                                <option value="present">Present</option>
+                                <option value="absent">Absent</option>
+                            </select>
+                        </div>
+                        <div class="vendor-field attendance-field">
+                            <label for="eveningAttendance-${labourId}">Evening Attendance</label>
+                            <select id="eveningAttendance-${labourId}" class="event-form-select vendor-input">
+                                <option value="">Select Status</option>
+                                <option value="present">Present</option>
+                                <option value="absent">Absent</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Daily Wages Section -->
+                <div class="wages-container">
+                    <h6 class="wages-title"><i class="fas fa-rupee-sign"></i> Daily Wages</h6>
+                    <div class="wages-row">
+                        <div class="vendor-field wages-field">
+                            <label for="wagesPerDay-${labourId}">Wages per day</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">₹</span>
+                                </div>
+                                <input type="number" id="wagesPerDay-${labourId}" class="event-form-control vendor-input" placeholder="Enter wages amount" min="0" step="10" onchange="calculateTotalWages('${labourId}')">
+                            </div>
+                        </div>
+                        <div class="vendor-field wages-field">
+                            <label for="totalDayWages-${labourId}">Total day wages</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">₹</span>
+                                </div>
+                                <input type="number" id="totalDayWages-${labourId}" class="event-form-control vendor-input" placeholder="Total wages" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Overtime Details Section -->
+                <div class="overtime-container">
+                    <h6 class="overtime-title"><i class="fas fa-clock"></i> Overtime Details</h6>
+                    <div class="overtime-row">
+                        <div class="vendor-field overtime-field overtime-time">
+                            <label for="otHours-${labourId}">OT Hours</label>
+                            <input type="number" id="otHours-${labourId}" class="event-form-control vendor-input" min="0" max="24" placeholder="Hours" onchange="calculateTotalOT('${labourId}')">
+                        </div>
+                        <div class="vendor-field overtime-field overtime-time">
+                            <label for="otMinutes-${labourId}">OT Minutes</label>
+                            <select id="otMinutes-${labourId}" class="event-form-select vendor-input" onchange="calculateTotalOT('${labourId}')">
+                                <option value="0">00</option>
+                                <option value="30">30</option>
+                            </select>
+                        </div>
+                        <div class="vendor-field overtime-field">
+                            <label for="otRate-${labourId}">OT Rate/Hour</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">₹</span>
+                                </div>
+                                <input type="number" id="otRate-${labourId}" class="event-form-control vendor-input" placeholder="Rate per hour" min="0" step="5" onchange="calculateTotalOT('${labourId}')">
+                            </div>
+                        </div>
+                        <div class="vendor-field overtime-field">
+                            <label for="totalOT-${labourId}">Total OT Amount</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">₹</span>
+                                </div>
+                                <input type="number" id="totalOT-${labourId}" class="event-form-control vendor-input" placeholder="Total OT amount" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Travel Expenses Section -->
+                <div class="travel-container">
+                    <h6 class="travel-title"><i class="fas fa-bus"></i> Travel Expenses of Labour</h6>
+                    <div class="travel-row">
+                        <div class="vendor-field travel-field">
+                            <label for="travelMode-${labourId}">Mode of Transport</label>
+                            <select id="travelMode-${labourId}" class="event-form-select vendor-input">
+                                <option value="">Select Mode</option>
+                                <option value="bus">Bus</option>
+                                <option value="train">Train</option>
+                                <option value="auto">Auto Rickshaw</option>
+                                <option value="taxi">Taxi/Cab</option>
+                                <option value="own">Own Vehicle</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="vendor-field travel-field">
+                            <label for="travelAmount-${labourId}">Travel Amount</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">₹</span>
+                                </div>
+                                <input type="number" id="travelAmount-${labourId}" class="event-form-control vendor-input" placeholder="Enter travel amount" min="0" step="5" onchange="calculateGrandTotal('${labourId}')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grand Total Section -->
+                <div class="grand-total-container">
+                    <h6 class="grand-total-title"><i class="fas fa-calculator"></i> Grand Total</h6>
+                    <div class="grand-total-row">
+                        <div class="vendor-field grand-total-field">
+                            <label for="grandTotal-${labourId}">Total Amount</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">₹</span>
+                                </div>
+                                <input type="number" id="grandTotal-${labourId}" class="event-form-control vendor-input grand-total-input" placeholder="Grand total" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to the list
+        const labourList = document.getElementById(`labourList-${vendorId}`);
+        labourList.appendChild(labourItem);
+        
+        // Add event listener for delete button
+        const deleteBtn = labourItem.querySelector(`.labour-delete-btn[data-labour-id="${labourId}"]`);
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                labourItem.remove();
+                
+                // Check if list is empty after removal
+                if (labourList.childElementCount === 0) {
+                    // Re-add a new empty laborer item
+                    this.addLabourerToVendor(vendorId);
+                } else {
+                    // Update the laborer numbers
+                    this.updateLabourerNumbers(vendorId);
+                }
+            });
+        }
+        
+        // Add wage calculation listeners
+        const wagesPerDay = document.getElementById(`wagesPerDay-${labourId}`);
+        const morningAttendance = document.getElementById(`morningAttendance-${labourId}`);
+        const eveningAttendance = document.getElementById(`eveningAttendance-${labourId}`);
+        
+        // Setup wage calculation when input values change
+        if (wagesPerDay) {
+            wagesPerDay.addEventListener('input', () => {
+                calculateTotalWages(labourId);
+            });
+        }
+        
+        if (morningAttendance) {
+            morningAttendance.addEventListener('change', () => {
+                calculateTotalWages(labourId);
+            });
+        }
+        
+        if (eveningAttendance) {
+            eveningAttendance.addEventListener('change', () => {
+                calculateTotalWages(labourId);
+            });
+        }
+        
+        // Setup overtime calculation listeners
+        const otHours = document.getElementById(`otHours-${labourId}`);
+        const otMinutes = document.getElementById(`otMinutes-${labourId}`);
+        const otRate = document.getElementById(`otRate-${labourId}`);
+        
+        if (otHours) {
+            otHours.addEventListener('input', () => calculateTotalOT(labourId));
+            otHours.addEventListener('change', () => calculateTotalOT(labourId));
+        }
+        
+        if (otMinutes) {
+            otMinutes.addEventListener('change', () => calculateTotalOT(labourId));
+        }
+        
+        if (otRate) {
+            otRate.addEventListener('input', () => calculateTotalOT(labourId));
+            otRate.addEventListener('change', () => calculateTotalOT(labourId));
+        }
+        
+        // Setup travel amount listener for grand total calculation
+        const travelAmount = document.getElementById(`travelAmount-${labourId}`);
+        if (travelAmount) {
+            travelAmount.addEventListener('input', () => calculateGrandTotal(labourId));
+            travelAmount.addEventListener('change', () => calculateGrandTotal(labourId));
+        }
+        
+        // Calculate initial grand total
+        calculateGrandTotal(labourId);
+        
+        // Focus the first input
+        setTimeout(() => {
+            const nameInput = document.getElementById(`labourName-${labourId}`);
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
+    
+    // Update laborer numbers after removal
+    updateLabourerNumbers(vendorId) {
+        const labourItems = document.querySelectorAll(`#labourList-${vendorId} .labour-item`);
+        
+        labourItems.forEach((item, index) => {
+            const headerTitle = item.querySelector('.labour-item-header h6');
+            if (headerTitle) {
+                headerTitle.innerHTML = `<i class="fas fa-hard-hat"></i> Laborer #${index + 1}`;
+            }
+        });
     }
     
     setupFileUploadListeners(vendorId) {
@@ -741,12 +1459,12 @@ class CalendarEventModal {
     updateVendorNumbers() {
         const vendorRows = document.querySelectorAll('.vendor-row');
         
-        // Loop through all vendor rows and update their display number
+        // Loop through all vendor rows and update their display number sequentially
         vendorRows.forEach((row, index) => {
             // Update the visual label (the heading that shows "Vendor #X")
             const vendorHeader = row.querySelector('.vendor-header h5');
             if (vendorHeader) {
-                vendorHeader.textContent = `Vendor #${index + 1}`;
+                vendorHeader.innerHTML = `<i class="fas fa-hard-hat"></i> Vendor #${index + 1}`;
             }
         });
     }
@@ -1127,8 +1845,12 @@ class CalendarEventModal {
             // Update the file input
             inputElement.files = dataTransfer.files;
             
-            // Trigger the change event manually
+            // Trigger the change event manually, but in a controlled way that doesn't create new vendors
             const event = new Event('change', { bubbles: true });
+            
+            // Set a flag that this is a file input change, not a user-initiated action
+            // This can be used to prevent unintended side effects
+            event.isFileInputChange = true;
             inputElement.dispatchEvent(event);
             
             // Update the location display immediately with precise location
@@ -1137,22 +1859,40 @@ class CalendarEventModal {
                 // Clear existing location info to prevent duplicates
                 locationElement.innerHTML = '';
                 
-                this.getAddressFromCoordinates(newFile.location.latitude, newFile.location.longitude)
-                    .then(address => {
-                        const locationHtml = `
-                            <div class="location-info">
-                                <i class="fas fa-map-marker-alt"></i> 
-                                <span>Latitude: ${newFile.location.latitude.toFixed(6)}</span>
-                                <span>Longitude: ${newFile.location.longitude.toFixed(6)}</span>
-                                <span>Accuracy: ${newFile.location.accuracy ? newFile.location.accuracy.toFixed(1) + 'm' : 'Unknown'}</span>
-                                ${address ? `<span>Address: ${address}</span>` : ''}
-                                <a href="https://maps.google.com/?q=${newFile.location.latitude},${newFile.location.longitude}" target="_blank" class="view-on-map">
-                                    <i class="fas fa-map"></i> View on Map
-                                </a>
-                            </div>
-                        `;
-                        locationElement.innerHTML = locationHtml;
-                    });
+                // Use the existing instance of this class, not a new one
+                if (newFile.location.address) {
+                    const locationHtml = `
+                        <div class="location-info">
+                            <i class="fas fa-map-marker-alt"></i> 
+                            <span>Latitude: ${newFile.location.latitude.toFixed(6)}</span>
+                            <span>Longitude: ${newFile.location.longitude.toFixed(6)}</span>
+                            <span>Accuracy: ${newFile.location.accuracy ? newFile.location.accuracy.toFixed(1) + 'm' : 'Unknown'}</span>
+                            ${newFile.location.address ? `<span>Address: ${newFile.location.address}</span>` : ''}
+                            <a href="https://maps.google.com/?q=${newFile.location.latitude},${newFile.location.longitude}" target="_blank" class="view-on-map">
+                                <i class="fas fa-map"></i> View on Map
+                            </a>
+                        </div>
+                    `;
+                    locationElement.innerHTML = locationHtml;
+                } else if (window.calendarEventModal) {
+                    // Use global instance if address isn't already set
+                    window.calendarEventModal.getAddressFromCoordinates(newFile.location.latitude, newFile.location.longitude)
+                        .then(address => {
+                            const locationHtml = `
+                                <div class="location-info">
+                                    <i class="fas fa-map-marker-alt"></i> 
+                                    <span>Latitude: ${newFile.location.latitude.toFixed(6)}</span>
+                                    <span>Longitude: ${newFile.location.longitude.toFixed(6)}</span>
+                                    <span>Accuracy: ${newFile.location.accuracy ? newFile.location.accuracy.toFixed(1) + 'm' : 'Unknown'}</span>
+                                    ${address ? `<span>Address: ${address}</span>` : ''}
+                                    <a href="https://maps.google.com/?q=${newFile.location.latitude},${newFile.location.longitude}" target="_blank" class="view-on-map">
+                                        <i class="fas fa-map"></i> View on Map
+                                    </a>
+                                </div>
+                            `;
+                            locationElement.innerHTML = locationHtml;
+                        });
+                }
             }
         } catch (error) {
             console.error("Error updating file input:", error);
@@ -1347,121 +2087,238 @@ class CalendarEventDetailModal {
     populateEvents(day, month, year) {
         const contentElement = document.getElementById('eventDetailContent');
         const dateKey = `${year}-${month}-${day}`;
+        const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         
-        // Get events for this date (if any)
-        const events = window.calendarEvents && window.calendarEvents[dateKey] ? 
-                       window.calendarEvents[dateKey] : [];
+        // Show loading indicator
+        contentElement.innerHTML = `
+            <div class="events-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading events...</p>
+            </div>
+        `;
         
-        // Clear previous content
-        contentElement.innerHTML = '';
-        
-        if (events.length === 0) {
-            // Show empty state
-            contentElement.innerHTML = `
-                <div class="event-empty-state">
-                    <div class="event-empty-icon">
-                        <i class="far fa-calendar-check"></i>
-                    </div>
-                    <p>No events scheduled for this day</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Create event list
-        const eventList = document.createElement('ul');
-        eventList.className = 'event-list';
-        
-        events.forEach(event => {
-            const listItem = document.createElement('li');
-            listItem.className = 'event-list-item';
+        // Fetch event data from the server
+        fetch('includes/calendar_data_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=get_event_details&date=${formattedDate}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Clear loading indicator
+            contentElement.innerHTML = '';
             
-            // Get site name display text
-            const siteNameMap = {
-                'building-a': 'Building A',
-                'building-b': 'Building B',
-                'sector-1': 'Sector 1',
-                'east-wing': 'East Wing',
-                'west-wing': 'West Wing'
-            };
-            
-            // Determine site name display (handle both dropdown options and custom entries)
-            let siteNameDisplay;
-            if (Object.keys(siteNameMap).includes(event.siteName)) {
-                // It's a predefined site from dropdown
-                siteNameDisplay = siteNameMap[event.siteName];
-            } else {
-                // It's a custom site name
-                siteNameDisplay = event.siteName;
-            }
-            
-            // Create vendors HTML if vendors exist
-            let vendorsHTML = '';
-            if (event.vendors && event.vendors.length > 0) {
-                vendorsHTML = `
-                    <div class="event-vendors">
-                        <h6><i class="fas fa-users"></i> Vendors (${event.vendors.length})</h6>
-                        <ul class="vendor-mini-list">
-                            ${event.vendors.map(vendor => {
-                                // Create material info if it exists
-                                let materialHTML = '';
-                                if (vendor.material) {
-                                    const hasMaterialData = vendor.material.remark || 
-                                                          vendor.material.amount || 
-                                                          vendor.material.materialPictures || 
-                                                          vendor.material.billPictures;
-                                    
-                                    if (hasMaterialData) {
-                                        materialHTML = `
-                                            <div class="vendor-material-info">
-                                                <div class="material-header">
-                                                    <i class="fas fa-boxes"></i> Material Details:
+            if (data.status === 'success' && data.events && data.events.length > 0) {
+                // Create event list
+                const eventList = document.createElement('ul');
+                eventList.className = 'event-list';
+                
+                data.events.forEach(event => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'event-list-item';
+                    
+                    // Get site name display text
+                    const siteNameMap = {
+                        'building-a': 'Building A',
+                        'building-b': 'Building B',
+                        'sector-1': 'Sector 1',
+                        'east-wing': 'East Wing',
+                        'west-wing': 'West Wing'
+                    };
+                    
+                    // Determine site name display (handle both dropdown options and custom entries)
+                    let siteNameDisplay = event.siteName;
+                    
+                    // Create vendors HTML if vendors exist
+                    let vendorsHTML = '';
+                    if (event.vendors && event.vendors.length > 0) {
+                        vendorsHTML = `
+                            <div class="event-vendors">
+                                <h6><i class="fas fa-users"></i> Vendors (${event.vendors.length})</h6>
+                                <ul class="vendor-mini-list">
+                                    ${event.vendors.map(vendor => {
+                                        // Create material info if it exists
+                                        let materialHTML = '';
+                                        if (vendor.material) {
+                                            const hasMaterialData = vendor.material.remark || 
+                                                                  vendor.material.amount || 
+                                                                  (vendor.material.materialPictures && vendor.material.materialPictures.length) || 
+                                                                  (vendor.material.billPictures && vendor.material.billPictures.length);
+                                            
+                                            if (hasMaterialData) {
+                                                materialHTML = `
+                                                    <div class="vendor-material-info">
+                                                        <div class="material-header">
+                                                            <i class="fas fa-boxes"></i> Material Details:
+                                                        </div>
+                                                        <div class="material-details">
+                                                            ${vendor.material.amount ? 
+                                                              `<span class="material-amount">Amount: ₹${vendor.material.amount}</span>` : ''}
+                                                            ${vendor.material.remark ? 
+                                                              `<span class="material-remark">Remark: ${vendor.material.remark}</span>` : ''}
+                                                            ${vendor.material.materialPictures && vendor.material.materialPictures.length > 0 ? 
+                                                              `<span class="material-image">Material Images: ${vendor.material.materialPictures.length} files</span>` : ''}
+                                                            ${vendor.material.billPictures && vendor.material.billPictures.length > 0 ? 
+                                                              `<span class="material-bill">Bill Images: ${vendor.material.billPictures.length} files</span>` : ''}
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }
+                                        }
+                                        
+                                        // For multiple laborers
+                                        let labourHTML = '';
+                                        if (vendor.labourers && vendor.labourers.length > 0) {
+                                            labourHTML = `
+                                                <div class="vendor-labour-info">
+                                                    <div class="labour-header">
+                                                        <i class="fas fa-hard-hat"></i> Labour Details (${vendor.labourers.length}):
+                                                    </div>
+                                                    <div class="labour-list-view">
+                                            `;
+                                            
+                                            // Add each laborer
+                                            vendor.labourers.forEach((labour, idx) => {
+                                                // Determine attendance status icons and colors
+                                                const morningStatus = labour.attendance?.morning === 'present' ? 
+                                                    '<span class="attendance-status present"><i class="fas fa-check-circle"></i> Present</span>' : 
+                                                    labour.attendance?.morning === 'absent' ? 
+                                                    '<span class="attendance-status absent"><i class="fas fa-times-circle"></i> Absent</span>' : 
+                                                    '<span class="attendance-status">Not recorded</span>';
+                                                    
+                                                const eveningStatus = labour.attendance?.evening === 'present' ? 
+                                                    '<span class="attendance-status present"><i class="fas fa-check-circle"></i> Present</span>' : 
+                                                    labour.attendance?.evening === 'absent' ? 
+                                                    '<span class="attendance-status absent"><i class="fas fa-times-circle"></i> Absent</span>' : 
+                                                    '<span class="attendance-status">Not recorded</span>';
+                                                    
+                                                labourHTML += `
+                                                    <div class="labour-item-view">
+                                                        <div class="labour-item-header-view">
+                                                            <strong>Laborer #${idx + 1} - ${labour.name}</strong>
+                                                            ${labour.contact ? `<a href="tel:${labour.contact}" class="labour-contact-link"><i class="fas fa-phone-alt"></i> ${labour.contact}</a>` : ''}
+                                                        </div>
+                                                        <div class="labour-attendance">
+                                                            <div class="attendance-detail">
+                                                                <strong>Morning:</strong> ${morningStatus}
+                                                            </div>
+                                                            <div class="attendance-detail">
+                                                                <strong>Evening:</strong> ${eveningStatus}
+                                                            </div>
+                                                        </div>
+                                                        ${labour.wages ? `
+                                                        <div class="labour-wages">
+                                                            <div class="wage-detail">
+                                                                <strong>Daily Wage:</strong> <span class="wage-amount">₹${parseFloat(labour.wages.perDay).toFixed(2)}</span>
+                                                            </div>
+                                                            <div class="wage-detail ${parseFloat(labour.wages.totalDay) > 0 ? 'wage-paid' : 'wage-unpaid'}">
+                                                                <strong>Total Paid:</strong> <span class="wage-amount">₹${parseFloat(labour.wages.totalDay).toFixed(2)}</span>
+                                                            </div>
+                                                        </div>
+                                                        ` : ''}
+                                                        
+                                                        ${labour.overtime && (parseFloat(labour.overtime.hours) > 0 || parseFloat(labour.overtime.minutes) > 0) ? `
+                                                        <div class="labour-overtime">
+                                                            <div class="overtime-header">
+                                                                <i class="fas fa-clock"></i> Overtime
+                                                            </div>
+                                                            <div class="overtime-details">
+                                                                <div class="overtime-time-info">
+                                                                    <span>${labour.overtime.hours} hrs ${labour.overtime.minutes} mins</span>
+                                                                    <span class="overtime-rate">at ₹${parseFloat(labour.overtime.rate).toFixed(2)}/hr</span>
+                                                                </div>
+                                                                <div class="overtime-amount ${parseFloat(labour.overtime.total) > 0 ? 'amount-paid' : ''}">
+                                                                    <strong>Total OT:</strong> ₹${parseFloat(labour.overtime.total).toFixed(2)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        ` : ''}
+                                                        
+                                                        ${labour.travel && (labour.travel.mode || parseFloat(labour.travel.amount) > 0) ? `
+                                                        <div class="labour-travel">
+                                                            <div class="travel-header">
+                                                                <i class="fas fa-bus"></i> Travel
+                                                            </div>
+                                                            <div class="travel-details">
+                                                                ${labour.travel.mode ? `
+                                                                <div class="travel-mode">
+                                                                    <strong>Mode:</strong> ${labour.travel.mode.charAt(0).toUpperCase() + labour.travel.mode.slice(1)}
+                                                                </div>
+                                                                ` : ''}
+                                                                ${parseFloat(labour.travel.amount) > 0 ? `
+                                                                <div class="travel-amount">
+                                                                    <strong>Amount:</strong> ₹${parseFloat(labour.travel.amount).toFixed(2)}
+                                                                </div>
+                                                                ` : ''}
+                                                            </div>
+                                                        </div>
+                                                        ` : ''}
+                                                    </div>
+                                                `;
+                                            });
+                                            
+                                            labourHTML += `
+                                                    </div>
                                                 </div>
-                                                <div class="material-details">
-                                                    ${vendor.material.amount ? 
-                                                      `<span class="material-amount">Amount: ₹${vendor.material.amount}</span>` : ''}
-                                                    ${vendor.material.remark ? 
-                                                      `<span class="material-remark">Remark: ${vendor.material.remark}</span>` : ''}
-                                                    ${vendor.material.materialPictures && vendor.material.materialPictures.length > 0 ? 
-                                                      `<span class="material-image">Material Images: ${vendor.material.materialPictures.length} files</span>` : ''}
-                                                    ${vendor.material.billPictures && vendor.material.billPictures.length > 0 ? 
-                                                      `<span class="material-bill">Bill Images: ${vendor.material.billPictures.length} files</span>` : ''}
-                                                    ${vendor.material.locations && vendor.material.locations.length > 0 ? 
-                                                      `<span class="material-location"><i class="fas fa-map-marker-alt"></i> Photos with location data</span>` : ''}
-                                                </div>
-                                            </div>
+                                            `;
+                                        }
+                                        
+                                        return `
+                                            <li>
+                                                <i class="fas fa-${vendor.type === 'supplier' ? 'truck-loading' : 
+                                                                 vendor.type === 'contractor' ? 'hammer' : 
+                                                                 vendor.type === 'consultant' ? 'briefcase' : 
+                                                                 vendor.type === 'laborer' ? 'hard-hat' : 'building'}"></i>
+                                                <strong>${vendor.name}</strong> (${vendor.type}) 
+                                                <a href="tel:${vendor.contact}" class="vendor-contact-link"><i class="fas fa-phone-alt"></i> ${vendor.contact}</a>
+                                                ${materialHTML}
+                                                ${labourHTML}
+                                            </li>
                                         `;
-                                    }
-                                }
-                                
-                                return `
-                                    <li>
-                                        <i class="fas fa-${vendor.type === 'supplier' ? 'truck-loading' : 
-                                                         vendor.type === 'contractor' ? 'hammer' : 
-                                                         vendor.type === 'consultant' ? 'briefcase' : 
-                                                         vendor.type === 'laborer' ? 'hard-hat' : 'building'}"></i>
-                                        <strong>${vendor.name}</strong> (${vendor.type}) 
-                                        <a href="tel:${vendor.contact}" class="vendor-contact-link"><i class="fas fa-phone-alt"></i> ${vendor.contact}</a>
-                                        ${materialHTML}
-                                    </li>
-                                `;
-                            }).join('')}
-                        </ul>
+                                    }).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    listItem.innerHTML = `
+                        <div class="event-content">
+                            <div class="event-site"><i class="fas fa-map-marker-alt"></i> ${event.siteName}</div>
+                            ${vendorsHTML}
+                        </div>
+                    `;
+                    
+                    eventList.appendChild(listItem);
+                });
+                
+                contentElement.appendChild(eventList);
+            } else {
+                // Show empty state
+                contentElement.innerHTML = `
+                    <div class="event-empty-state">
+                        <div class="event-empty-icon">
+                            <i class="far fa-calendar-check"></i>
+                        </div>
+                        <p>No events scheduled for this day</p>
                     </div>
                 `;
             }
+        })
+        .catch(error => {
+            console.error('Error fetching event data:', error);
             
-            listItem.innerHTML = `
-                <div class="event-content">
-                    <div class="event-site"><i class="fas fa-map-marker-alt"></i> ${siteNameDisplay}</div>
-                    ${vendorsHTML}
+            // Show error state
+            contentElement.innerHTML = `
+                <div class="event-error-state">
+                    <div class="event-error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <p>Could not load events. Please try again later.</p>
                 </div>
             `;
-            
-            eventList.appendChild(listItem);
         });
-        
-        contentElement.appendChild(eventList);
     }
 }
 
@@ -1613,30 +2470,35 @@ function extractImageLocation(file, callback) {
                             timestamp: position.timestamp
                         };
                         
-                        // Create instance to use geocoding
-                        const instance = new CalendarEventModal();
-                        instance.getAddressFromCoordinates(locationData.latitude, locationData.longitude)
-                            .then(address => {
-                                callback({
-                                    latitude: locationData.latitude,
-                                    longitude: locationData.longitude,
-                                    accuracy: locationData.accuracy,
-                                    address: address,
-                                    timestamp: locationData.timestamp,
-                                    note: "Location from current device position"
+                        // Use the existing calendar modal instance if available
+                        // Instead of creating a new one which could affect vendor numbering
+                        if (window.calendarEventModal) {
+                            window.calendarEventModal.getAddressFromCoordinates(locationData.latitude, locationData.longitude)
+                                .then(address => {
+                                    callback({
+                                        latitude: locationData.latitude,
+                                        longitude: locationData.longitude,
+                                        accuracy: locationData.accuracy,
+                                        address: address,
+                                        timestamp: locationData.timestamp,
+                                        note: "Location from current device position"
+                                    });
+                                })
+                                .catch(error => {
+                                    console.error("Error getting address:", error);
+                                    callback({
+                                        latitude: locationData.latitude,
+                                        longitude: locationData.longitude,
+                                        accuracy: locationData.accuracy,
+                                        address: 'Address unavailable',
+                                        timestamp: locationData.timestamp,
+                                        note: "Location from current device position"
+                                    });
                                 });
-                            })
-                            .catch(error => {
-                                console.error("Error getting address:", error);
-                                callback({
-                                    latitude: locationData.latitude,
-                                    longitude: locationData.longitude,
-                                    accuracy: locationData.accuracy,
-                                    address: 'Address unavailable',
-                                    timestamp: locationData.timestamp,
-                                    note: "Location from current device position"
-                                });
-                            });
+                        } else {
+                            // Fallback if global instance not available
+                            simulateFallbackLocation();
+                        }
                     },
                     function(error) {
                         console.error("Error getting current location:", error);
@@ -1665,32 +2527,124 @@ function extractImageLocation(file, callback) {
         const latitude = 28.6139 + (Math.random() - 0.5) * 0.05;
         const longitude = 77.2090 + (Math.random() - 0.5) * 0.05;
         
-        // Create a temporary instance to use geocoding method
-        const instance = new CalendarEventModal();
-        instance.getAddressFromCoordinates(latitude, longitude)
-            .then(address => {
-                callback({
-                    latitude: latitude,
-                    longitude: longitude,
-                    accuracy: 100 + Math.floor(Math.random() * 100),
-                    address: address,
-                    timestamp: new Date().getTime(),
-                    note: "Location estimated (simulated)"
+        // Use the existing calendar modal instance if available
+        if (window.calendarEventModal) {
+            window.calendarEventModal.getAddressFromCoordinates(latitude, longitude)
+                .then(address => {
+                    callback({
+                        latitude: latitude,
+                        longitude: longitude,
+                        accuracy: 100 + Math.floor(Math.random() * 100),
+                        address: address,
+                        timestamp: new Date().getTime(),
+                        note: "Location estimated (simulated)"
+                    });
+                })
+                .catch(error => {
+                    console.error("Error getting address:", error);
+                    callback({
+                        latitude: latitude,
+                        longitude: longitude,
+                        accuracy: 100 + Math.floor(Math.random() * 100),
+                        address: 'Address unavailable',
+                        timestamp: new Date().getTime(),
+                        note: "Location estimated (simulated)"
+                    });
                 });
-            })
-            .catch(error => {
-                console.error("Error getting address:", error);
-                callback({
-                    latitude: latitude,
-                    longitude: longitude,
-                    accuracy: 100 + Math.floor(Math.random() * 100),
-                    address: 'Address unavailable',
-                    timestamp: new Date().getTime(),
-                    note: "Location estimated (simulated)"
-                });
+        } else {
+            // Fallback without address if global instance not available
+            callback({
+                latitude: latitude,
+                longitude: longitude,
+                accuracy: 100 + Math.floor(Math.random() * 100),
+                address: 'Address unavailable (geocoding unavailable)',
+                timestamp: new Date().getTime(),
+                note: "Location estimated (simulated)"
             });
+        }
     }
     
     // Read the file as an array buffer
     reader.readAsArrayBuffer(file);
+}
+
+// Add a new calculateTotalWages function to calculate the total wages based on attendance and daily wage
+function calculateTotalWages(labourId) {
+    const wagesPerDay = document.getElementById(`wagesPerDay-${labourId}`);
+    const totalDayWages = document.getElementById(`totalDayWages-${labourId}`);
+    const morningAttendance = document.getElementById(`morningAttendance-${labourId}`);
+    const eveningAttendance = document.getElementById(`eveningAttendance-${labourId}`);
+    
+    if (!wagesPerDay || !totalDayWages) return;
+    
+    const dailyWage = parseFloat(wagesPerDay.value) || 0;
+    
+    // Calculate based on attendance
+    let totalWage = 0;
+    
+    if (morningAttendance && eveningAttendance) {
+        const isMorningPresent = morningAttendance.value === 'present';
+        const isEveningPresent = eveningAttendance.value === 'present';
+        
+        if (isMorningPresent && isEveningPresent) {
+            // Full day attendance
+            totalWage = dailyWage;
+        } else if (isMorningPresent || isEveningPresent) {
+            // Half day attendance
+            totalWage = dailyWage * 0.5;
+        }
+        // If both absent, totalWage remains 0
+    }
+    
+    // Update the total wages field
+    totalDayWages.value = totalWage.toFixed(2);
+    
+    // Calculate grand total after wages are updated
+    calculateGrandTotal(labourId);
+}
+
+// Calculate total overtime amount based on hours, minutes and rate
+function calculateTotalOT(labourId) {
+    const otHours = document.getElementById(`otHours-${labourId}`);
+    const otMinutes = document.getElementById(`otMinutes-${labourId}`);
+    const otRate = document.getElementById(`otRate-${labourId}`);
+    const totalOT = document.getElementById(`totalOT-${labourId}`);
+    
+    if (!otHours || !otMinutes || !otRate || !totalOT) return;
+    
+    const hours = parseFloat(otHours.value) || 0;
+    const minutes = parseFloat(otMinutes.value) || 0;
+    const rate = parseFloat(otRate.value) || 0;
+    
+    // Convert minutes to hours (as a decimal)
+    const totalHours = hours + (minutes / 60);
+    
+    // Calculate total overtime amount
+    const totalAmount = totalHours * rate;
+    
+    // Update the total OT field with the calculated amount
+    totalOT.value = totalAmount.toFixed(2);
+    
+    // Calculate grand total after OT is updated
+    calculateGrandTotal(labourId);
+}
+
+// Calculate grand total by summing wages, overtime, and travel expenses
+function calculateGrandTotal(labourId) {
+    const totalDayWages = document.getElementById(`totalDayWages-${labourId}`);
+    const totalOT = document.getElementById(`totalOT-${labourId}`);
+    const travelAmount = document.getElementById(`travelAmount-${labourId}`);
+    const grandTotal = document.getElementById(`grandTotal-${labourId}`);
+    
+    if (!grandTotal) return;
+    
+    const wages = parseFloat(totalDayWages?.value) || 0;
+    const overtime = parseFloat(totalOT?.value) || 0;
+    const travel = parseFloat(travelAmount?.value) || 0;
+    
+    // Sum all expenses
+    const total = wages + overtime + travel;
+    
+    // Update the grand total field
+    grandTotal.value = total.toFixed(2);
 } 

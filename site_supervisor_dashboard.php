@@ -47,10 +47,11 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Site Supervisor Dashboard</title>
     
-    <!-- Include CSS -->
+    <!-- Include CSS files -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/supervisor/dashboard.css">
+    <link rel="stylesheet" href="css/supervisor/calendar-modal.css">
     
     <!-- Include custom styles -->
     <style>
@@ -1078,6 +1079,7 @@ if (isset($_SESSION['user_id'])) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="js/supervisor/dashboard.js"></script>
+    <script src="js/supervisor/calendar-modal.js"></script>
     
     <!-- Live Time Script -->
     <script>
@@ -2157,27 +2159,20 @@ if (isset($_SESSION['user_id'])) {
                     }
                     
                     const dayNumber = this.getAttribute('data-day');
+                    const monthNumber = parseInt(this.getAttribute('data-month'));
+                    const yearNumber = parseInt(this.getAttribute('data-year'));
                     const isOtherMonth = this.classList.contains('other-month');
-                    const monthName = monthNames[month];
                     
                     if (isOtherMonth) {
                         // Handle clicking on days from other months if needed
                         return;
                     }
                     
-                    // Show events for this day
-                    const dayEvents = events[dayNumber] || [];
+                    // Get month name from the month number
+                    const monthName = monthNames[monthNumber - 1]; // Convert from 1-indexed to 0-indexed
                     
-                    if (dayEvents.length > 0) {
-                        let eventsText = `Events on ${monthName} ${dayNumber}, ${year}:\n\n`;
-                        dayEvents.forEach(event => {
-                            eventsText += `- ${event.time}: ${event.title}\n`;
-                        });
-                        
-                        alert(eventsText);
-                    } else {
-                        alert(`No events scheduled for ${monthName} ${dayNumber}, ${year}`);
-                    }
+                    // Show events for this day using the event detail modal
+                    window.calendarEventDetailModal.showModal(dayNumber, monthNumber, yearNumber, monthName);
                 });
             });
             
@@ -2188,6 +2183,8 @@ if (isset($_SESSION['user_id'])) {
                     
                     const dayCell = this.closest('.calendar-day');
                     const day = dayCell.getAttribute('data-day');
+                    const monthNumber = parseInt(dayCell.getAttribute('data-month'));
+                    const yearNumber = parseInt(dayCell.getAttribute('data-year'));
                     const isOtherMonth = dayCell.classList.contains('other-month');
                     
                     if (isOtherMonth) {
@@ -2195,20 +2192,11 @@ if (isset($_SESSION['user_id'])) {
                         return;
                     }
                     
-                    // Get the current month and year from the calendar
-                    const monthName = monthNames[month];
+                    // Get month name from the month number
+                    const monthName = monthNames[monthNumber - 1]; // Convert from 1-indexed to 0-indexed
                     
-                    // Show a simple form (in real implementation, this would be a modal with proper form)
-                    const eventType = prompt('Enter event type (inspection, delivery, meeting, report, issue):', 'meeting');
-                    if (!eventType) return;
-                    
-                    const eventTitle = prompt('Enter event title:', 'New Meeting');
-                    if (!eventTitle) return;
-                    
-                    const eventTime = prompt('Enter event time (e.g., 9:00 AM):', '10:00 AM');
-                    if (!eventTime) return;
-                    
-                    alert(`Event added: ${eventTitle} on ${monthName} ${day}, ${year} at ${eventTime}\n\nThis is a demonstration. In a real implementation, this would save to a database.`);
+                    // Open the event modal
+                    window.calendarEventModal.showModal(day, monthNumber, yearNumber, monthName);
                 });
             });
             
@@ -2217,10 +2205,16 @@ if (isset($_SESSION['user_id'])) {
                 eventEl.addEventListener('click', function(e) {
                     e.stopPropagation(); // Prevent the day cell click event
                     
-                    const title = this.textContent.trim();
-                    const details = this.getAttribute('title');
+                    const dayCell = this.closest('.calendar-day');
+                    const day = dayCell.getAttribute('data-day');
+                    const monthNumber = parseInt(dayCell.getAttribute('data-month'));
+                    const yearNumber = parseInt(dayCell.getAttribute('data-year'));
                     
-                    alert(`Event details: ${details}\n\nIn a real implementation, this would show a detailed view of the event.`);
+                    // Get month name from the month number
+                    const monthName = monthNames[monthNumber - 1]; // Convert from 1-indexed to 0-indexed
+                    
+                    // Open event detail modal
+                    window.calendarEventDetailModal.showModal(day, monthNumber, yearNumber, monthName);
                 });
             });
         }
@@ -2234,7 +2228,36 @@ if (isset($_SESSION['user_id'])) {
             if (isToday) cellClass += ' today';
             if (hasEvents) cellClass += ' has-events';
             
-            let cellHTML = `<div class="${cellClass}" data-day="${day}">
+            // Calculate the month value for this cell (for data attributes)
+            let cellMonth, cellYear;
+            
+            if (isOtherMonth) {
+                if (day > 20) {
+                    // Previous month
+                    cellMonth = currentDate.getMonth(); // 0-indexed
+                    if (cellMonth === 0) {
+                        cellMonth = 12; // December
+                        cellYear = currentDate.getFullYear() - 1;
+                    } else {
+                        cellYear = currentDate.getFullYear();
+                    }
+                } else {
+                    // Next month
+                    cellMonth = currentDate.getMonth() + 2; // +2 because we're already 0-indexed
+                    if (cellMonth === 13) {
+                        cellMonth = 1; // January
+                        cellYear = currentDate.getFullYear() + 1;
+                    } else {
+                        cellYear = currentDate.getFullYear();
+                    }
+                }
+            } else {
+                // Current month
+                cellMonth = currentDate.getMonth() + 1; // +1 to convert from 0-indexed to 1-indexed
+                cellYear = currentDate.getFullYear();
+            }
+            
+            let cellHTML = `<div class="${cellClass}" data-day="${day}" data-month="${cellMonth}" data-year="${cellYear}">
                 <div class="calendar-date-container">
                     <div class="calendar-date">${day}</div>
                     <button class="add-event-btn" title="Add Event">+</button>

@@ -1,0 +1,1322 @@
+/* Enhanced Calendar Event Modals - Professional Styles */
+
+/* Labour Section Styles */
+.supervisor-labour-section {
+    margin-top: 20px;
+    background-color: #f7fafc;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.supervisor-labour-header {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.supervisor-labour-header h6 {
+    margin: 0;
+    font-size: 16px;
+    color: #2d3748;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.supervisor-labour-header h6 i {
+    margin-right: 10px;
+    color: #4a5568;
+    width: 20px;
+    text-align: center;
+}
+
+.supervisor-labour-container {
+    margin-bottom: 15px;
+}
+
+.supervisor-labour-entry {
+    background-color: white;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #edf2f7;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.supervisor-labour-entry:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.supervisor-labour-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.supervisor-labour-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.supervisor-labour-remove-btn {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 5px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.supervisor-labour-remove-btn:hover {
+    opacity: 1;
+    background-color: #fff5f5;
+}
+
+.supervisor-labour-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px 15px;
+}
+
+.supervisor-labour-form-group {
+    flex: 1;
+    padding: 0 10px;
+    min-width: 200px;
+    margin-bottom: 15px;
+}
+
+.supervisor-labour-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.supervisor-labour-form-group label i {
+    color: #667eea;
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+.supervisor-labour-name,
+.supervisor-labour-number-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.supervisor-labour-name:focus,
+.supervisor-labour-number-input:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background-color: #fff;
+}
+
+.supervisor-attendance-group {
+    margin-bottom: 5px;
+}
+
+.supervisor-attendance-options {
+    display: flex;
+    gap: 15px;
+}
+
+.supervisor-attendance-option {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.supervisor-attendance-option input[type="radio"] {
+    margin-right: 8px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e0;
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.supervisor-attendance-option input[type="radio"]:checked {
+    border-color: #667eea;
+}
+
+.supervisor-attendance-option input[type="radio"]:checked:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #667eea;
+}
+
+.supervisor-attendance-option:hover input[type="radio"] {
+    border-color: #a0aec0;
+}
+
+.supervisor-attendance-option:hover input[type="radio"]:checked {
+    border-color: #5a67d8;
+}
+
+.supervisor-attendance-option span {
+    transition: all 0.2s ease;
+}
+
+.supervisor-attendance-option:hover span {
+    color: #2d3748;
+}
+
+.supervisor-add-labour-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 0 auto;
+}
+
+.supervisor-add-labour-btn i {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.supervisor-add-labour-btn:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.supervisor-add-labour-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Enhanced Vendor Material Section */
+.calendar-vendor-material-section {
+    margin-top: 20px;
+    background-color: #f8fafc;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.calendar-vendor-section-subheader {
+    margin-bottom: 15px;
+}
+
+.calendar-vendor-section-subheader h6 {
+    margin: 0;
+    font-size: 16px;
+    color: #2d3748;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-vendor-section-subheader h6 i {
+    margin-right: 10px;
+    color: #4a5568;
+}
+
+.calendar-vendor-file-upload {
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    background-color: #f8fafc;
+    overflow: hidden;
+}
+
+.calendar-vendor-file-upload:hover {
+    border-color: #667eea;
+    background-color: #f7fafc;
+}
+
+.calendar-vendor-file-upload input[type=file] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.calendar-vendor-file-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.calendar-vendor-file-label i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #667eea;
+}
+
+.calendar-vendor-file-label span {
+    font-weight: 500;
+}
+
+.calendar-vendor-remarks {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    resize: vertical;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.calendar-vendor-remarks:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background-color: #fff;
+}
+
+.calendar-vendor-amount {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.calendar-vendor-amount:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background-color: #fff;
+}
+
+/* Enhanced styling for the vendor item */
+.calendar-vendor-item {
+    background-color: white;
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.calendar-vendor-item:hover {
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.calendar-vendor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.calendar-vendor-header h5 {
+    margin: 0;
+    font-size: 18px;
+    color: #2d3748;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-vendor-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    color: white;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.calendar-vendor-remove-btn {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 6px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-vendor-remove-btn:hover {
+    opacity: 1;
+    background-color: #fff5f5;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.calendar-vendor-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -12px 20px;
+}
+
+.calendar-vendor-form-group {
+    flex: 1;
+    padding: 0 12px;
+    min-width: 200px;
+    margin-bottom: 20px;
+}
+
+.calendar-vendor-form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-vendor-form-group label i {
+    color: #3a7bd5;
+    margin-right: 8px;
+    width: 18px;
+    text-align: center;
+}
+
+.calendar-vendor-type-select,
+.calendar-vendor-name,
+.calendar-vendor-contact,
+.calendar-vendor-custom-type {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.calendar-vendor-type-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.calendar-vendor-type-select:focus,
+.calendar-vendor-name:focus,
+.calendar-vendor-contact:focus,
+.calendar-vendor-custom-type:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+/* Enhanced vendor add button */
+.calendar-add-vendor-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 0 auto;
+}
+
+.calendar-add-vendor-btn i {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.calendar-add-vendor-btn:hover {
+    background: linear-gradient(135deg, #2d62aa, #00b8e0);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.calendar-add-vendor-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* File upload status styles */
+.calendar-vendor-file-upload.has-files {
+    border-color: #68d391;
+    background-color: #f0fff4;
+}
+
+.calendar-vendor-file-upload.has-files .calendar-vendor-file-label {
+    color: #2f855a;
+}
+
+.calendar-vendor-file-upload.has-files .calendar-vendor-file-label i {
+    color: #38a169;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .calendar-vendor-form-row,
+    .supervisor-labour-form-row {
+        margin: 0 -8px 15px;
+    }
+    
+    .calendar-vendor-form-group,
+    .supervisor-labour-form-group {
+        flex: 100%;
+        padding: 0 8px;
+        margin-bottom: 15px;
+    }
+    
+    .supervisor-attendance-options {
+        gap: 10px;
+    }
+    
+    .calendar-vendor-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .calendar-vendor-header h5 {
+        margin-bottom: 10px;
+    }
+    
+    .calendar-vendor-remove-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .calendar-vendor-item {
+        padding: 20px 15px;
+        position: relative;
+    }
+    
+    .supervisor-labour-entry {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-add-vendor-btn,
+    .supervisor-add-labour-btn {
+        width: 100%;
+    }
+    
+    .supervisor-labour-section,
+    .calendar-vendor-material-section {
+        padding: 15px;
+    }
+    
+    .calendar-vendor-file-label i {
+        font-size: 20px;
+    }
+}
+
+/* Overall add event modal width enhancement */
+.add-event-modal {
+    max-width: 800px;
+}
+
+/* Make calendar button more prominent */
+.calendar-event-vendors-section {
+    margin-top: 30px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 25px;
+}
+
+.calendar-event-section-header {
+    margin-bottom: 20px;
+}
+
+.calendar-event-section-header h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #2d3748;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-event-section-header h4 i {
+    margin-right: 12px;
+    color: #3a7bd5;
+    font-size: 20px;
+}
+
+/* Labour Wages, Overtime, Travel and Total Styles (SLW prefix for Supervisor Labour Wages) */
+.slw-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+}
+
+.slw-section-title i {
+    margin-right: 10px;
+    color: #4a5568;
+    width: 20px;
+    text-align: center;
+}
+
+.slw-wages-section,
+.slw-overtime-section,
+.slw-travel-section,
+.slw-grand-total-section {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 15px;
+    border: 1px solid #edf2f7;
+}
+
+.slw-overtime-section {
+    background-color: #f8f9ff;
+    border-color: #e6e8ff;
+}
+
+.slw-travel-section {
+    background-color: #f8fbff;
+    border-color: #e6f0ff;
+}
+
+.slw-grand-total-section {
+    background-color: #f0f9ff;
+    border-color: #bae6fd;
+}
+
+.slw-wages-per-day,
+.slw-total-day-wages,
+.slw-ot-hours,
+.slw-ot-minutes,
+.slw-ot-rate,
+.slw-total-ot-amount,
+.slw-travel-amount {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.slw-wages-per-day:focus,
+.slw-ot-hours:focus,
+.slw-ot-minutes:focus,
+.slw-ot-rate:focus,
+.slw-travel-amount:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background-color: #fff;
+}
+
+.slw-total-day-wages,
+.slw-total-ot-amount {
+    background-color: #f0f4f8;
+    border-color: #cbd5e0;
+    font-weight: 500;
+    color: #2c5282;
+}
+
+.slw-transport-mode {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 35px;
+}
+
+.slw-transport-mode:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    background-color: #fff;
+}
+
+.slw-ot-hours-group {
+    flex: 0.5;
+}
+
+.slw-ot-minutes-group {
+    flex: 0.5;
+}
+
+.slw-grand-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.slw-grand-total-label {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.slw-grand-total-amount {
+    font-weight: 700;
+    font-size: 18px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.slw-calculated-grand-total {
+    min-width: 60px;
+    display: inline-block;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .slw-wages-section,
+    .slw-overtime-section,
+    .slw-travel-section,
+    .slw-grand-total-section {
+        padding: 12px;
+    }
+    
+    .slw-grand-total-row {
+        padding: 10px 12px;
+    }
+    
+    .slw-grand-total-label {
+        font-size: 15px;
+    }
+    
+    .slw-grand-total-amount {
+        font-size: 16px;
+    }
+}
+
+/* Company Labour Section Styles (SCL prefix for Supervisor Company Labour) */
+.calendar-event-company-section {
+    margin-top: 30px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 25px;
+}
+
+.calendar-company-container {
+    margin-bottom: 15px;
+}
+
+.calendar-company-item {
+    background-color: white;
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.calendar-company-item:hover {
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.calendar-company-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.calendar-company-header h5 {
+    margin: 0;
+    font-size: 18px;
+    color: #2d3748;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-company-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #4c51bf, #6b46c1);
+    color: white;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.calendar-company-remove-btn {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 6px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-company-remove-btn:hover {
+    opacity: 1;
+    background-color: #fff5f5;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.calendar-add-company-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4c51bf, #6b46c1);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 0 auto;
+}
+
+.calendar-add-company-btn i {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.calendar-add-company-btn:hover {
+    background: linear-gradient(135deg, #434190, #553c9a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.calendar-add-company-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Company Labour Styles */
+.scl-labour-container {
+    margin-bottom: 15px;
+}
+
+.scl-labour-entry {
+    background-color: white;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #edf2f7;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.scl-labour-entry:hover {
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.scl-labour-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.scl-labour-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: linear-gradient(135deg, #4c51bf, #6b46c1);
+    color: white;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.scl-labour-remove-btn {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 5px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.scl-labour-remove-btn:hover {
+    opacity: 1;
+    background-color: #fff5f5;
+}
+
+.scl-labour-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px 15px;
+}
+
+.scl-labour-form-group {
+    flex: 1;
+    padding: 0 10px;
+    min-width: 200px;
+    margin-bottom: 15px;
+}
+
+.scl-labour-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.scl-labour-form-group label i {
+    color: #6b46c1;
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+.scl-labour-name,
+.scl-labour-number-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.scl-labour-name:focus,
+.scl-labour-number-input:focus {
+    border-color: #6b46c1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(107, 70, 193, 0.15);
+    background-color: #fff;
+}
+
+.scl-attendance-group {
+    margin-bottom: 5px;
+}
+
+.scl-attendance-options {
+    display: flex;
+    gap: 15px;
+}
+
+.scl-attendance-option {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.scl-attendance-option input[type="radio"] {
+    margin-right: 8px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e0;
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.scl-attendance-option input[type="radio"]:checked {
+    border-color: #6b46c1;
+}
+
+.scl-attendance-option input[type="radio"]:checked:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #6b46c1;
+}
+
+.scl-attendance-option:hover input[type="radio"] {
+    border-color: #a0aec0;
+}
+
+.scl-attendance-option:hover input[type="radio"]:checked {
+    border-color: #553c9a;
+}
+
+.scl-attendance-option span {
+    transition: all 0.2s ease;
+}
+
+.scl-attendance-option:hover span {
+    color: #2d3748;
+}
+
+.scl-add-labour-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4c51bf, #6b46c1);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 0 auto;
+}
+
+.scl-add-labour-btn i {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.scl-add-labour-btn:hover {
+    background: linear-gradient(135deg, #434190, #553c9a);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.scl-add-labour-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Company Labour Section fields */
+.scl-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+}
+
+.scl-section-title i {
+    margin-right: 10px;
+    color: #4a5568;
+    width: 20px;
+    text-align: center;
+}
+
+.scl-wages-section,
+.scl-overtime-section,
+.scl-travel-section,
+.scl-grand-total-section {
+    background-color: #f8f9ff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 15px;
+    border: 1px solid #e6e8ff;
+}
+
+.scl-overtime-section {
+    background-color: #f5f0ff;
+    border-color: #e9d8fd;
+}
+
+.scl-travel-section {
+    background-color: #f8f0fc;
+    border-color: #fad1e8;
+}
+
+.scl-grand-total-section {
+    background-color: #f0e7ff;
+    border-color: #d6bcfa;
+}
+
+.scl-wages-per-day,
+.scl-total-day-wages,
+.scl-ot-hours,
+.scl-ot-minutes,
+.scl-ot-rate,
+.scl-total-ot-amount,
+.scl-travel-amount {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+}
+
+.scl-wages-per-day:focus,
+.scl-ot-hours:focus,
+.scl-ot-minutes:focus,
+.scl-ot-rate:focus,
+.scl-travel-amount:focus {
+    border-color: #6b46c1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(107, 70, 193, 0.15);
+    background-color: #fff;
+}
+
+.scl-total-day-wages,
+.scl-total-ot-amount {
+    background-color: #f0f4f8;
+    border-color: #cbd5e0;
+    font-weight: 500;
+    color: #44337a;
+}
+
+.scl-transport-mode {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 35px;
+}
+
+.scl-transport-mode:focus {
+    border-color: #6b46c1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(107, 70, 193, 0.15);
+    background-color: #fff;
+}
+
+.scl-ot-hours-group {
+    flex: 0.5;
+}
+
+.scl-ot-minutes-group {
+    flex: 0.5;
+}
+
+.scl-grand-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #6b46c1, #805ad5);
+    color: white;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(107, 70, 193, 0.2);
+}
+
+.scl-grand-total-label {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.scl-grand-total-amount {
+    font-weight: 700;
+    font-size: 18px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.scl-calculated-grand-total {
+    min-width: 60px;
+    display: inline-block;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .calendar-company-item {
+        padding: 20px 15px;
+        position: relative;
+    }
+    
+    .calendar-company-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .calendar-company-header h5 {
+        margin-bottom: 10px;
+    }
+    
+    .calendar-company-remove-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .scl-labour-entry {
+        padding: 15px;
+    }
+    
+    .scl-labour-form-row {
+        margin: 0 -8px 15px;
+    }
+    
+    .scl-labour-form-group {
+        flex: 100%;
+        padding: 0 8px;
+        margin-bottom: 15px;
+    }
+    
+    .scl-attendance-options {
+        gap: 10px;
+    }
+    
+    .scl-wages-section,
+    .scl-overtime-section,
+    .scl-travel-section,
+    .scl-grand-total-section {
+        padding: 12px;
+    }
+    
+    .scl-grand-total-row {
+        padding: 10px 12px;
+    }
+    
+    .scl-grand-total-label {
+        font-size: 15px;
+    }
+    
+    .scl-grand-total-amount {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-add-company-btn,
+    .scl-add-labour-btn {
+        width: 100%;
+    }
+    
+    .scl-wages-section,
+    .scl-overtime-section,
+    .scl-travel-section,
+    .scl-grand-total-section {
+        padding: 15px;
+    }
+} 

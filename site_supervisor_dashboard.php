@@ -52,6 +52,9 @@ if (isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/supervisor/dashboard.css">
     <link rel="stylesheet" href="css/supervisor/calendar-modal.css">
+    <link rel="stylesheet" href="css/supervisor/calendar-stats.css">
+    <link rel="stylesheet" href="css/supervisor/calendar-events-modal.css">
+    <link rel="stylesheet" href="css/supervisor/calendar-events-modal-enhanced.css">
     
     <!-- Include custom styles -->
     <style>
@@ -346,7 +349,7 @@ if (isset($_SESSION['user_id'])) {
         .add-event-btn {
             width: 20px;
             height: 20px;
-            border-radius: 50%;
+            border-radius: 18px;
             background-color: #3498db; /* Changed to a lighter blue to match image */
             color: white;
             display: flex;
@@ -363,7 +366,9 @@ if (isset($_SESSION['user_id'])) {
             line-height: 1;
             position: absolute; /* Changed to absolute for precise positioning */
             top: 0; /* Positioned at the top of the container */
-            right: 2px; /* Slight offset from right edge */
+            right: 10px; /* Slight offset from right edge */
+            border-radius: 18px;
+            padding: 10px 14px;
         }
         
         .add-event-btn:hover {
@@ -457,7 +462,9 @@ if (isset($_SESSION['user_id'])) {
                 height: 18px;
                 font-size: 12px;
                 top: 0;
-                right: 2px;
+                right: 10px;
+                border-radius: 18px;
+                padding: 10px 14px;
             }
         }
         
@@ -488,7 +495,9 @@ if (isset($_SESSION['user_id'])) {
                 height: 18px;
                 font-size: 12px;
                 top: 0;
-                right: 2px;
+                right: 10px;
+                border-radius: 18px;
+                padding: 10px 14px;
             }
         }
         
@@ -520,8 +529,10 @@ if (isset($_SESSION['user_id'])) {
                 height: 16px;
                 font-size: 10px;
                 top: 0;
-                right: 2px;
+                right: 10px;
                 box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+                border-radius: 18px;
+                padding: 10px 14px;
             }
             
             /* Allow up to two events on mobile now that we have more space */
@@ -562,13 +573,440 @@ if (isset($_SESSION['user_id'])) {
                 height: 14px;
                 font-size: 9px;
                 top: 0;
-                right: 2px;
+                right: 10px;
+                border-radius: 18px;
+                padding: 10px 14px;
             }
         }
         
         .today .calendar-date {
             background-color: #3182ce;
             color: white;
+        }
+        
+        /* Calendar Stats Section Styles */
+        .calendar-stats-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .supervisor-calendar-wrapper {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .supervisor-calendar-container {
+            width: 100%;
+            min-height: 350px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 15px;
+        }
+        
+        .calendar-stats-summary {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 15px;
+            height: 100%;
+        }
+        
+        .stats-summary-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .stats-summary-item {
+            margin-bottom: 15px;
+        }
+        
+        .stats-summary-item .badge {
+            font-size: 0.85rem;
+            padding: 5px 8px;
+        }
+        
+        .upcoming-events {
+            margin-top: 20px;
+        }
+        
+        .upcoming-event-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .upcoming-event-item:last-child {
+            border-bottom: none;
+        }
+        
+        .event-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            margin-top: 5px;
+        }
+        
+        .event-inspection {
+            background-color: #38a169;
+        }
+        
+        .event-delivery {
+            background-color: #e67e22;
+        }
+        
+        .event-meeting {
+            background-color: #805ad5;
+        }
+        
+        .event-report {
+            background-color: #ffb347;
+        }
+        
+        .event-issue {
+            background-color: #e53e3e;
+        }
+        
+        .event-details {
+            flex: 1;
+        }
+        
+        .event-title {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .event-time {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        /* Supervisor Calendar Styles */
+        .supervisor-calendar-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 3px;
+        }
+        
+        .supervisor-calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background-color: #f8f9fa;
+            border-radius: 6px 6px 0 0;
+            overflow: hidden;
+        }
+        
+        .supervisor-calendar-header-cell {
+            padding: 8px 5px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .supervisor-calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-gap: 4px;
+            padding: 4px;
+        }
+        
+        .supervisor-calendar-day {
+            height: 80px;
+            border-radius: 6px;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            padding: 8px;
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .supervisor-calendar-day:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .supervisor-calendar-day.today {
+            background-color: #e8f4ff;
+            border: 1px solid #4299e1;
+        }
+        
+        .supervisor-calendar-date {
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 2px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Add supervisor calendar date container to hold date and add button */
+        .supervisor-calendar-date-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+            position: relative;
+            width: 100%;
+        }
+        
+        @media (max-width: 576px) {
+            .supervisor-calendar-date-container {
+                justify-content: flex-start;
+                margin-bottom: 2px;
+            }
+        }
+        
+        /* Add button styles for supervisor calendar */
+        .supervisor-add-event-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.9;
+            border: none;
+            padding: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            line-height: 1;
+            position: relative;
+            z-index: 5;
+        }
+        
+        /* Add plus sign using ::before pseudo-element */
+        .supervisor-add-event-btn::before {
+            content: "+";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .supervisor-add-event-btn:hover {
+            background-color: #2980b9;
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .supervisor-calendar-day.other-month .supervisor-add-event-btn {
+            opacity: 0.4;
+            background-color: #cbd5e0;
+        }
+        
+        .supervisor-calendar-day:hover .supervisor-add-event-btn {
+            opacity: 1;
+        }
+        
+        .supervisor-calendar-events {
+            font-size: 0.7rem;
+            overflow: hidden;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 5px;
+        }
+        
+        .supervisor-calendar-event {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.65rem;
+            line-height: 1.2;
+        }
+        
+        .supervisor-calendar-day.other-month {
+            opacity: 0.4;
+        }
+        
+        .supervisor-event-more {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            font-size: 0.65rem;
+        }
+        
+        /* Responsive styles for calendar stats */
+        @media (max-width: 992px) {
+            .supervisor-calendar-container {
+                min-height: 300px;
+            }
+            
+            .supervisor-calendar-day {
+                height: 70px;
+            }
+            
+            .supervisor-calendar-date {
+                width: 22px;
+                height: 22px;
+                font-size: 0.85rem;
+            }
+            
+            .supervisor-add-event-btn {
+                width: 18px;
+                height: 18px;
+                font-size: 12px;
+            }
+            
+            .calendar-stats-summary {
+                margin-top: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .supervisor-calendar-container {
+                min-height: 250px;
+            }
+            
+            .supervisor-calendar-day {
+                height: 60px;
+            }
+            
+            .supervisor-calendar-events .supervisor-calendar-event:nth-child(n+2),
+            .supervisor-event-more {
+                display: none;
+            }
+            
+            .supervisor-add-event-btn {
+                width: 16px;
+                height: 16px;
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .supervisor-calendar-header-cell {
+                font-size: 0.8rem;
+                padding: 5px 2px;
+            }
+            
+            .supervisor-calendar-day {
+                height: 60px; /* Increased from 50px */
+                padding: 5px; /* Increased from 4px */
+            }
+            
+            .supervisor-calendar-date {
+                font-size: 0.8rem; /* Increased from 0.75rem */
+                width: 28px; /* Increased from 26px */
+                height: 28px; /* Increased from 26px */
+                font-weight: bold;
+            }
+            
+            .supervisor-calendar-date-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 4px; /* Increased from 2px */
+                position: relative;
+                padding-right: 20px; /* Make space for the button */
+            }
+            
+            .supervisor-calendar-event {
+                padding: 1px 3px;
+                font-size: 0.65rem; /* Increased from 0.6rem */
+                margin-bottom: 2px;
+            }
+            
+            .supervisor-add-event-btn {
+                width: 18px;
+                height: 18px;
+                position: absolute;
+                top: 50%;
+                right: 0;
+                transform: translateY(-50%);
+                opacity: 1;
+                background-color: #2196F3;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            }
+            
+            .supervisor-add-event-btn::before {
+                font-size: 12px;
+                font-weight: bold;
+            }
+            
+            .supervisor-calendar-day.other-month .supervisor-add-event-btn {
+                opacity: 0.6;
+            }
+            
+            .supervisor-calendar-body {
+                grid-gap: 3px;
+                padding: 3px;
+            }
+            
+            .supervisor-calendar-day.today .supervisor-calendar-date {
+                background-color: #3182ce;
+                color: white;
+            }
+            
+            .stats-summary-title {
+                font-size: 1rem;
+            }
+            
+            .event-title {
+                font-size: 0.85rem;
+            }
+            
+            .event-time {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Even smaller screens */
+        @media (max-width: 450px) {
+            .supervisor-calendar-container {
+                padding: 10px 5px;
+            }
+            
+            .supervisor-calendar-day {
+                height: 55px;
+                padding: 3px;
+            }
+            
+            .supervisor-calendar-date {
+                width: 24px;
+                height: 24px;
+                font-size: 0.75rem;
+            }
+            
+            .supervisor-calendar-date-container {
+                margin-bottom: 2px;
+            }
+            
+            .supervisor-calendar-body {
+                grid-gap: 2px;
+                padding: 2px;
+            }
         }
     </style>
 </head>
@@ -861,26 +1299,107 @@ if (isset($_SESSION['user_id'])) {
                 </div>
             </div>
             
-            <!-- Daily Site Updates with Calendar -->
+            <!-- Calendar Stats Section -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="dashboard-card">
+                    <div class="dashboard-card calendar-stats-section">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="card-title mb-0">Daily Site Updates</h4>
+                            <h4 class="card-title mb-0">Calendar Stats</h4>
                             <div class="calendar-nav">
-                                <button id="prevMonth" class="btn btn-sm btn-outline-secondary calendar-nav-btn">
-                                    <i class="fas fa-chevron-left"></i> Previous
+                                <button id="prevMonthCalStats" class="btn btn-sm btn-outline-secondary calendar-nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
                                 </button>
-                                <span id="currentMonthDisplay" class="current-month-display">June 2023</span>
-                                <button id="nextMonth" class="btn btn-sm btn-outline-secondary calendar-nav-btn">
-                                    Next <i class="fas fa-chevron-right"></i>
+                                <span id="currentMonthCalStats" class="current-month-display">May 2023</span>
+                                <button id="nextMonthCalStats" class="btn btn-sm btn-outline-secondary calendar-nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="site-calendar-container">
-                            <div id="siteCalendar" class="site-calendar">
-                                <!-- Calendar will be generated here by JavaScript -->
+                        <div class="calendar-stats-container">
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <div class="supervisor-calendar-wrapper">
+                                        <div id="supervisorCalendar" class="supervisor-calendar-container">
+                                            <!-- Calendar will be rendered here by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="calendar-stats-summary">
+                                        <h5 class="stats-summary-title">Monthly Overview</h5>
+                                        <div class="stats-summary-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Inspections</span>
+                                                <span class="badge badge-success">12</span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                        <div class="stats-summary-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Deliveries</span>
+                                                <span class="badge badge-warning">8</span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                        <div class="stats-summary-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Meetings</span>
+                                                <span class="badge badge-primary">15</span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                        <div class="stats-summary-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Reports</span>
+                                                <span class="badge badge-info">6</span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                        <div class="stats-summary-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Issues</span>
+                                                <span class="badge badge-danger">3</span>
+                                            </div>
+                                            <div class="progress mt-2" style="height: 6px;">
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="upcoming-events mt-4">
+                                            <h5 class="stats-summary-title">Upcoming Events</h5>
+                                            <div class="upcoming-event-item">
+                                                <div class="event-dot event-inspection"></div>
+                                                <div class="event-details">
+                                                    <div class="event-title">Safety Inspection</div>
+                                                    <div class="event-time">Today, 2:30 PM</div>
+                                                </div>
+                                            </div>
+                                            <div class="upcoming-event-item">
+                                                <div class="event-dot event-meeting"></div>
+                                                <div class="event-details">
+                                                    <div class="event-title">Team Meeting</div>
+                                                    <div class="event-time">Tomorrow, 10:00 AM</div>
+                                                </div>
+                                            </div>
+                                            <div class="upcoming-event-item">
+                                                <div class="event-dot event-delivery"></div>
+                                                <div class="event-details">
+                                                    <div class="event-title">Material Delivery</div>
+                                                    <div class="event-time">May 25, 9:00 AM</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1080,6 +1599,29 @@ if (isset($_SESSION['user_id'])) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="js/supervisor/dashboard.js"></script>
     <script src="js/supervisor/calendar-modal.js"></script>
+    <script src="js/supervisor/calendar-stats.js"></script>
+    <script src="js/supervisor/calendar-events-save.js"></script>
+    <script src="js/supervisor/calendar-events-modal.js"></script>
+    
+    <!-- Override native alerts for calendar messages -->
+    <script>
+        // Override the native alert for calendar-related messages
+        const originalAlert = window.alert;
+        window.alert = function(message) {
+            // Check if the message is a calendar event notification
+            if (message && message.includes && (
+                message.includes('No events on') || 
+                message.includes('Events on') || 
+                message.includes('Add new event on')
+            )) {
+                console.log('Suppressed alert:', message);
+                return; // Don't show the alert
+            }
+            
+            // For other alerts, use the original function
+            originalAlert(message);
+        };
+    </script>
     
     <!-- Live Time Script -->
     <script>
@@ -2050,11 +2592,11 @@ if (isset($_SESSION['user_id'])) {
     <!-- Add JavaScript for the calendar functionality -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Calendar functionality
-        const calendarContainer = document.getElementById('siteCalendar');
-        const currentMonthDisplay = document.getElementById('currentMonthDisplay');
-        const prevMonthBtn = document.getElementById('prevMonth');
-        const nextMonthBtn = document.getElementById('nextMonth');
+        // Calendar Stats functionality
+        const calendarContainer = document.getElementById('supervisorCalendar');
+        const currentMonthDisplay = document.getElementById('currentMonthCalStats');
+        const prevMonthBtn = document.getElementById('prevMonthCalStats');
+        const nextMonthBtn = document.getElementById('nextMonthCalStats');
         
         // Set initial date to current month/year
         let currentDate = new Date();
@@ -2062,16 +2604,16 @@ if (isset($_SESSION['user_id'])) {
         // Event listeners for navigation buttons
         prevMonthBtn.addEventListener('click', function() {
             currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar();
+            renderSupervisorCalendar();
         });
         
         nextMonthBtn.addEventListener('click', function() {
             currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar();
+            renderSupervisorCalendar();
         });
         
         // Function to render the calendar
-        function renderCalendar() {
+        function renderSupervisorCalendar() {
             // Get current month and year
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -2095,16 +2637,16 @@ if (isset($_SESSION['user_id'])) {
             
             // Create calendar HTML
             let calendarHTML = `
-                <div class="calendar-header">
-                    <div class="calendar-header-cell">Sun</div>
-                    <div class="calendar-header-cell">Mon</div>
-                    <div class="calendar-header-cell">Tue</div>
-                    <div class="calendar-header-cell">Wed</div>
-                    <div class="calendar-header-cell">Thu</div>
-                    <div class="calendar-header-cell">Fri</div>
-                    <div class="calendar-header-cell">Sat</div>
+                <div class="supervisor-calendar-header">
+                    <div class="supervisor-calendar-header-cell">Sun</div>
+                    <div class="supervisor-calendar-header-cell">Mon</div>
+                    <div class="supervisor-calendar-header-cell">Tue</div>
+                    <div class="supervisor-calendar-header-cell">Wed</div>
+                    <div class="supervisor-calendar-header-cell">Thu</div>
+                    <div class="supervisor-calendar-header-cell">Fri</div>
+                    <div class="supervisor-calendar-header-cell">Sat</div>
                 </div>
-                <div class="calendar-body">
+                <div class="supervisor-calendar-body">
             `;
             
             // Get today's date for highlighting
@@ -2115,16 +2657,16 @@ if (isset($_SESSION['user_id'])) {
             let dayCount = 1;
             for (let i = 0; i < startingDay; i++) {
                 const prevMonthDay = daysInPrevMonth - startingDay + i + 1;
-                calendarHTML += createDayCell(prevMonthDay, true, false, []);
+                calendarHTML += createSupervisorDayCell(prevMonthDay, true, false, []);
             }
             
             // Generate days for current month
-            const sampleEvents = generateSampleEvents(year, month, daysInMonth);
+            const sampleEvents = generateSampleCalendarEvents(year, month, daysInMonth);
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const isToday = isCurrentMonth && today.getDate() === day;
                 const dayEvents = sampleEvents[day] || [];
-                calendarHTML += createDayCell(day, false, isToday, dayEvents);
+                calendarHTML += createSupervisorDayCell(day, false, isToday, dayEvents);
                 dayCount++;
             }
             
@@ -2133,7 +2675,7 @@ if (isset($_SESSION['user_id'])) {
             const nextMonthDays = totalCells - (startingDay + daysInMonth);
             
             for (let day = 1; day <= nextMonthDays; day++) {
-                calendarHTML += createDayCell(day, true, false, []);
+                calendarHTML += createSupervisorDayCell(day, true, false, []);
             }
             
             calendarHTML += `</div>`;
@@ -2141,88 +2683,47 @@ if (isset($_SESSION['user_id'])) {
             // Update the calendar
             calendarContainer.innerHTML = calendarHTML;
             
-            // Add click events for day cells and add event buttons
-            setupCalendarInteractions(sampleEvents, month, year, monthNames);
+            // Add click events for day cells
+            setupSupervisorCalendarInteractions(sampleEvents, month, year);
         }
         
         // Function to set up calendar interactions
-        function setupCalendarInteractions(events, month, year, monthNames) {
-            // Add click event for day cells (view events)
-            document.querySelectorAll('.calendar-day').forEach(cell => {
-                cell.addEventListener('click', function(e) {
-                    // Don't trigger if the click was on the add button or an event
-                    if (e.target.classList.contains('add-event-btn') || 
-                        e.target.classList.contains('calendar-event') ||
-                        e.target.closest('.add-event-btn') ||
-                        e.target.closest('.calendar-event')) {
-                        return;
-                    }
-                    
+        function setupSupervisorCalendarInteractions(events, month, year) {
+            // Add click event for day cells
+            document.querySelectorAll('.supervisor-calendar-day').forEach(cell => {
+                cell.addEventListener('click', function() {
                     const dayNumber = this.getAttribute('data-day');
                     const monthNumber = parseInt(this.getAttribute('data-month'));
                     const yearNumber = parseInt(this.getAttribute('data-year'));
                     const isOtherMonth = this.classList.contains('other-month');
                     
                     if (isOtherMonth) {
-                        // Handle clicking on days from other months if needed
+                        // Navigate to the clicked month
+                        currentDate = new Date(yearNumber, monthNumber - 1, 1);
+                        renderSupervisorCalendar();
                         return;
                     }
                     
-                    // Get month name from the month number
-                    const monthName = monthNames[monthNumber - 1]; // Convert from 1-indexed to 0-indexed
-                    
-                    // Show events for this day using the event detail modal
-                    window.calendarEventDetailModal.showModal(dayNumber, monthNumber, yearNumber, monthName);
-                });
-            });
-            
-            // Add click event for add event buttons
-            document.querySelectorAll('.add-event-btn').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Prevent the day cell click event
-                    
-                    const dayCell = this.closest('.calendar-day');
-                    const day = dayCell.getAttribute('data-day');
-                    const monthNumber = parseInt(dayCell.getAttribute('data-month'));
-                    const yearNumber = parseInt(dayCell.getAttribute('data-year'));
-                    const isOtherMonth = dayCell.classList.contains('other-month');
-                    
-                    if (isOtherMonth) {
-                        alert('Cannot add events to days outside the current month');
-                        return;
+                    // Show events for this day (you can implement a modal or other UI)
+                    const dayEvents = events[dayNumber] || [];
+                    if (dayEvents.length > 0) {
+                        // For now, just show an alert with the events
+                        let eventsList = `Events on ${monthNumber}/${dayNumber}/${yearNumber}:\n`;
+                        dayEvents.forEach(event => {
+                            eventsList += `- ${event.time}: ${event.title} (${event.type})\n`;
+                        });
+                        alert(eventsList);
+                    } else {
+                        alert(`No events on ${monthNumber}/${dayNumber}/${yearNumber}`);
                     }
-                    
-                    // Get month name from the month number
-                    const monthName = monthNames[monthNumber - 1]; // Convert from 1-indexed to 0-indexed
-                    
-                    // Open the event modal
-                    window.calendarEventModal.showModal(day, monthNumber, yearNumber, monthName);
-                });
-            });
-            
-            // Add click event for event items
-            document.querySelectorAll('.calendar-event').forEach(eventEl => {
-                eventEl.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Prevent the day cell click event
-                    
-                    const dayCell = this.closest('.calendar-day');
-                    const day = dayCell.getAttribute('data-day');
-                    const monthNumber = parseInt(dayCell.getAttribute('data-month'));
-                    const yearNumber = parseInt(dayCell.getAttribute('data-year'));
-                    
-                    // Get month name from the month number
-                    const monthName = monthNames[monthNumber - 1]; // Convert from 1-indexed to 0-indexed
-                    
-                    // Open event detail modal
-                    window.calendarEventDetailModal.showModal(day, monthNumber, yearNumber, monthName);
                 });
             });
         }
         
         // Function to create a day cell
-        function createDayCell(day, isOtherMonth, isToday, events) {
+        function createSupervisorDayCell(day, isOtherMonth, isToday, events) {
             const hasEvents = events.length > 0;
-            let cellClass = 'calendar-day';
+            let cellClass = 'supervisor-calendar-day';
             
             if (isOtherMonth) cellClass += ' other-month';
             if (isToday) cellClass += ' today';
@@ -2258,25 +2759,25 @@ if (isset($_SESSION['user_id'])) {
             }
             
             let cellHTML = `<div class="${cellClass}" data-day="${day}" data-month="${cellMonth}" data-year="${cellYear}">
-                <div class="calendar-date-container">
-                    <div class="calendar-date">${day}</div>
-                    <button class="add-event-btn" title="Add Event">+</button>
+                <div class="supervisor-calendar-date-container">
+                    <div class="supervisor-calendar-date">${day}</div>
+                    <button class="supervisor-add-event-btn" data-day="${day}" data-month="${cellMonth}" data-year="${cellYear}"></button>
                 </div>`;
             
             if (hasEvents) {
-                cellHTML += `<div class="calendar-events">`;
+                cellHTML += `<div class="supervisor-calendar-events">`;
                 
-                // Show max 2 events, then "+ more" indicator
+                // Show max 1 event on mobile, 2 on larger screens
                 const displayCount = Math.min(2, events.length);
                 for (let i = 0; i < displayCount; i++) {
                     const event = events[i];
-                    cellHTML += `<div class="calendar-event event-${event.type}" title="${event.time}: ${event.title}">
+                    cellHTML += `<div class="supervisor-calendar-event event-${event.type}" title="${event.time}: ${event.title}">
                         ${event.title}
                     </div>`;
                 }
                 
                 if (events.length > 2) {
-                    cellHTML += `<div class="event-more">+${events.length - 2} more</div>`;
+                    cellHTML += `<div class="supervisor-event-more">+${events.length - 2} more</div>`;
                 }
                 
                 cellHTML += `</div>`;
@@ -2288,14 +2789,14 @@ if (isset($_SESSION['user_id'])) {
         }
         
         // Function to generate sample events (this would be replaced with real data)
-        function generateSampleEvents(year, month, daysInMonth) {
+        function generateSampleCalendarEvents(year, month, daysInMonth) {
             const events = {};
             const eventTypes = ['inspection', 'delivery', 'meeting', 'report', 'issue'];
             const eventTitles = {
                 'inspection': ['Safety Inspection', 'Quality Check', 'Equipment Inspection'],
                 'delivery': ['Material Delivery', 'Equipment Arrival', 'Supplies Delivery'],
                 'meeting': ['Team Meeting', 'Client Review', 'Planning Session'],
-                'report': ['Progress Report Due', 'Financial Report', 'Weekly Report'],
+                'report': ['Progress Report', 'Financial Report', 'Weekly Report'],
                 'issue': ['Plumbing Issue', 'Electrical Problem', 'Structural Concern']
             };
             
@@ -2331,10 +2832,27 @@ if (isset($_SESSION['user_id'])) {
             return events;
         }
         
-        // Initial render
-        renderCalendar();
+        // Update stats based on calendar data
+        function updateCalendarStats() {
+            // In a real implementation, this would fetch data from the server
+            // For now, we'll just show some static data
+            
+            // Update event counts
+            document.querySelectorAll('.stats-summary-item .badge').forEach((badge, index) => {
+                const counts = [12, 8, 15, 6, 3]; // Sample counts for each event type
+                badge.textContent = counts[index];
+                
+                // Update progress bars
+                const progressPercentages = [75, 60, 85, 45, 25]; // Sample percentages
+                const progressBar = badge.closest('.stats-summary-item').querySelector('.progress-bar');
+                progressBar.style.width = progressPercentages[index] + '%';
+                progressBar.setAttribute('aria-valuenow', progressPercentages[index]);
+            });
+        }
         
-        // Remove the duplicate event listener that conflicts with our setupCalendarInteractions handler
+        // Initial render
+        renderSupervisorCalendar();
+        updateCalendarStats();
     });
     </script>
 </body>

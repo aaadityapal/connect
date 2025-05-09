@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Event API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .test-section { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 15px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #45a049; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow: auto; }
+        #response { margin-top: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calendar Event API Test</h1>
+        
+        <div class="test-section">
+            <h2>API Endpoint Test</h2>
+            <p>This tool tests the calendar event API directly to help diagnose issues with event saving.</p>
+            
+            <form id="testForm">
+                <div>
+                    <label for="event_title">Event Title:</label>
+                    <input type="text" id="event_title" value="Test Event" required>
+                </div>
+                
+                <div>
+                    <label for="event_date">Event Date:</label>
+                    <input type="date" id="event_date" value="2025-05-09" required>
+                </div>
+                
+                <div>
+                    <label for="vendor_count">Vendor Count:</label>
+                    <input type="number" id="vendor_count" value="1" min="0" max="10">
+                </div>
+                
+                <div>
+                    <label for="vendor_type">Vendor Type:</label>
+                    <input type="text" id="vendor_type" value="Test Type">
+                </div>
+                
+                <div>
+                    <label for="vendor_name">Vendor Name:</label>
+                    <input type="text" id="vendor_name" value="Test Vendor">
+                </div>
+                
+                <div>
+                    <button type="button" id="btnTestAPI">Test API</button>
+                    <button type="button" id="btnTestJSFunction">Test JS Function</button>
+                </div>
+            </form>
+            
+            <div id="response">
+                <h3>Response:</h3>
+                <pre id="responseData">No response yet</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test the API directly
+            document.getElementById('btnTestAPI').addEventListener('click', function() {
+                const responseArea = document.getElementById('responseData');
+                responseArea.textContent = "Sending request...";
+                responseArea.className = "";
+                
+                // Get form values
+                const title = document.getElementById('event_title').value;
+                const date = document.getElementById('event_date').value;
+                const vendorCount = document.getElementById('vendor_count').value;
+                const vendorType = document.getElementById('vendor_type').value;
+                const vendorName = document.getElementById('vendor_name').value;
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('event_title', title);
+                formData.append('event_date', date);
+                formData.append('vendor_count', vendorCount);
+                formData.append('vendor_type_1', vendorType);
+                formData.append('vendor_name_1', vendorName);
+                formData.append('contact_number_1', '1234567890');
+                
+                // Send request
+                fetch('backend/save_calendar_event.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(data => {
+                            return {
+                                status: response.status,
+                                statusText: response.statusText,
+                                body: data
+                            };
+                        });
+                    } else {
+                        return response.text().then(text => {
+                            return {
+                                status: response.status,
+                                statusText: response.statusText,
+                                body: text
+                            };
+                        });
+                    }
+                })
+                .then(data => {
+                    console.log('Response:', data);
+                    
+                    responseArea.textContent = typeof data.body === 'object' 
+                        ? JSON.stringify(data.body, null, 2) 
+                        : data.body;
+                    
+                    if (data.status === 200) {
+                        responseArea.className = "success";
+                    } else {
+                        responseArea.className = "error";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    responseArea.textContent = 'Error: ' + error.message;
+                    responseArea.className = "error";
+                });
+            });
+            
+            // Test the JS function if available
+            document.getElementById('btnTestJSFunction').addEventListener('click', function() {
+                const responseArea = document.getElementById('responseData');
+                responseArea.textContent = "Testing JS function...";
+                responseArea.className = "";
+                
+                // Get form values
+                const title = document.getElementById('event_title').value;
+                const date = document.getElementById('event_date').value;
+                const vendorCount = document.getElementById('vendor_count').value;
+                const vendorType = document.getElementById('vendor_type').value;
+                const vendorName = document.getElementById('vendor_name').value;
+                
+                // Check if the saveCalendarEvent function exists
+                if (typeof window.saveCalendarEvent !== 'function') {
+                    // Load the JS file dynamically
+                    const script = document.createElement('script');
+                    script.src = 'js/supervisor/calendar-events-save.js';
+                    script.onload = function() {
+                        // Check again if the function is now available
+                        if (typeof window.saveCalendarEvent !== 'function') {
+                            responseArea.textContent = 'Error: saveCalendarEvent function not found even after loading the script';
+                            responseArea.className = "error";
+                            return;
+                        }
+                        
+                        // Call the function
+                        callSaveFunction();
+                    };
+                    script.onerror = function() {
+                        responseArea.textContent = 'Error: Failed to load calendar-events-save.js';
+                        responseArea.className = "error";
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    // Function already available, call it directly
+                    callSaveFunction();
+                }
+                
+                function callSaveFunction() {
+                    // Create event data object
+                    const eventData = {
+                        title: title,
+                        date: date,
+                        vendors: [{
+                            type: vendorType,
+                            name: vendorName,
+                            contact: '1234567890'
+                        }]
+                    };
+                    
+                    // Call the function
+                    window.saveCalendarEvent(
+                        eventData,
+                        // Success callback
+                        function(response) {
+                            console.log('Success:', response);
+                            responseArea.textContent = 'Success: ' + JSON.stringify(response, null, 2);
+                            responseArea.className = "success";
+                        },
+                        // Error callback
+                        function(error) {
+                            console.error('Error:', error);
+                            responseArea.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+                            responseArea.className = "error";
+                        }
+                    );
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

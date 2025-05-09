@@ -1,0 +1,150 @@
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Starting calendar event save process
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Database connection included
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Session started - {"user_id":21}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Started database transaction
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Processing event data - {"title":"Test Event 2025-05-09 15:18:41","date":"2025-05-09","user_id":21}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Event created successfully - {"event_id":4}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Processing vendors - {"count":1}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Processing vendor - {"index":1,"type":"Test Vendor Type","name":"Test Vendor Name"}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Vendor created successfully - {"vendor_id":4}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Processing materials - {"vendor_id":4,"count":1}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Material data - {"material_key":"material_1_1","remarks":"Test Material Remarks","amount":"1000.50"}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Material created successfully - {"material_id":4}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Transaction committed successfully
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Save process completed successfully - {"event_id":4}
+[09-May-2025 15:18:48 Europe/Berlin] 2025-05-09 15:18:48 - Database connection closed
+[09-May-2025 15:59:54 Europe/Berlin] 2025-05-09 15:59:54 - Starting calendar event save process
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Database connection included
+[09-May-2025 19:29:54 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Session started - {"user_id":21}
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Started database transaction
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Processing event data - {"title":"Test Event","date":"2025-05-09","user_id":21}
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Event created successfully - {"event_id":"8"}
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Processing vendors - {"count":1}
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Processing vendor - {"index":1,"type":"Test Type","name":"Test Vendor"}
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Vendor created successfully - {"vendor_id":"8"}
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Transaction committed successfully
+[09-May-2025 19:29:54 Asia/Kolkata] 2025-05-09 19:29:54 - Save process completed successfully - {"event_id":"8"}
+[09-May-2025 16:01:43 Europe/Berlin] 2025-05-09 16:01:43 - Starting calendar event save process
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Database connection included
+[09-May-2025 19:31:43 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Session started - {"user_id":21}
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Started database transaction
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Processing event data - {"title":"Test Event","date":"2025-05-09","user_id":21}
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Event created successfully - {"event_id":"9"}
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Processing vendors - {"count":1}
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Processing vendor - {"index":1,"type":"Test Type","name":"Test Vendor"}
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Vendor created successfully - {"vendor_id":"9"}
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Transaction committed successfully
+[09-May-2025 19:31:43 Asia/Kolkata] 2025-05-09 19:31:43 - Save process completed successfully - {"event_id":"9"}
+[09-May-2025 16:01:45 Europe/Berlin] 2025-05-09 16:01:45 - Starting calendar event save process
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Database connection included
+[09-May-2025 19:31:45 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Session started - {"user_id":21}
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Started database transaction
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Processing event data - {"title":"Test Event","date":"2025-05-09","user_id":21}
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Event created successfully - {"event_id":"10"}
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Processing vendors - {"count":1}
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Processing vendor - {"index":1,"type":"Test Type","name":"Test Vendor"}
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Vendor created successfully - {"vendor_id":"10"}
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Transaction committed successfully
+[09-May-2025 19:31:45 Asia/Kolkata] 2025-05-09 19:31:45 - Save process completed successfully - {"event_id":"10"}
+[09-May-2025 16:02:33 Europe/Berlin] 2025-05-09 16:02:33 - Starting calendar event save process
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Database connection included
+[09-May-2025 19:32:33 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Session started - {"user_id":21}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Started database transaction
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Processing event data - {"title":"gfds","date":"2025-05-06","user_id":21}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Event created successfully - {"event_id":"11"}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Processing vendors - {"count":1}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Processing vendor - {"index":1,"type":"material","name":"jhgfdsa"}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Vendor created successfully - {"vendor_id":"11"}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Processing materials - {"vendor_id":"11","count":1}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Material data - {"material_key":"material_1_1","remarks":"gfds","amount":"54"}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Material created successfully - {"material_id":"8"}
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Transaction committed successfully
+[09-May-2025 19:32:33 Asia/Kolkata] 2025-05-09 19:32:33 - Save process completed successfully - {"event_id":"11"}
+[09-May-2025 16:04:22 Europe/Berlin] 2025-05-09 16:04:22 - Starting calendar event save process
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Database connection included
+[09-May-2025 19:34:22 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Session started - {"user_id":21}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Started database transaction
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Processing event data - {"title":"gfds","date":"2025-05-06","user_id":21}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Event created successfully - {"event_id":"12"}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Processing vendors - {"count":1}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Processing vendor - {"index":1,"type":"material","name":"hgfd"}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Vendor created successfully - {"vendor_id":"12"}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Processing materials - {"vendor_id":"12","count":1}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Material data - {"material_key":"material_1_1","remarks":"gfd","amount":"54"}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Material created successfully - {"material_id":"9"}
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Transaction committed successfully
+[09-May-2025 19:34:22 Asia/Kolkata] 2025-05-09 19:34:22 - Save process completed successfully - {"event_id":"12"}
+[09-May-2025 16:10:34 Europe/Berlin] 2025-05-09 16:10:34 - Starting calendar event save process
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Database connection included
+[09-May-2025 19:40:34 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Session started - {"user_id":21}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Started database transaction
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing event data - {"title":"uytrew","date":"2025-05-07","user_id":21}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Event created successfully - {"event_id":"13"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing vendors - {"count":1}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing vendor - {"index":1,"type":"jhgfds","name":"jhgfd"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Vendor created successfully - {"vendor_id":"13"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing materials - {"vendor_id":"13","count":1}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Material data - {"material_key":"material_1_1","remarks":"hgfd","amount":"543"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Material created successfully - {"material_id":"10"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing material image - {"material_key":"material_1_1","file_name":"3501-4000SQFT.jpg","file_size":222283}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Material image uploaded - {"path":"uploads\/calendar_events\/material_images\/681e0cda91fda_1746799834.jpg"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Material image saved to database
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Processing bill image - {"material_key":"material_1_1","file_name":"WhatsApp Image 2025-04-23 at 3.35.12 PM.jpeg","file_size":3023357}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Bill image uploaded - {"path":"uploads\/calendar_events\/bill_images\/681e0cda925bb_1746799834.jpeg"}
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Bill image saved to database
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Transaction committed successfully
+[09-May-2025 19:40:34 Asia/Kolkata] 2025-05-09 19:40:34 - Save process completed successfully - {"event_id":"13"}
+[09-May-2025 16:40:07 Europe/Berlin] 2025-05-09 16:40:07 - Starting calendar event save process
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Database connection included
+[09-May-2025 20:10:07 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Session started - {"user_id":21}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Started database transaction
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing event data - {"title":"uytre","date":"2025-05-13","user_id":21}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Event created successfully - {"event_id":"14"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing vendors - {"count":1}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing vendor - {"index":1,"type":"labour","name":"gfds"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Vendor created successfully - {"vendor_id":"14"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing materials - {"vendor_id":"14","count":1}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Material data - {"material_key":"material_1_1","remarks":"gfds","amount":"655"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Material created successfully - {"material_id":"11"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing material image - {"material_key":"material_1_1","file_name":"search.png","file_size":338556}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Material image uploaded - {"path":"uploads\/calendar_events\/material_images\/681e13c73d0c4_1746801607.png"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Material image saved to database
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Processing bill image - {"material_key":"material_1_1","file_name":"search.png","file_size":338556}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Bill image uploaded - {"path":"uploads\/calendar_events\/bill_images\/681e13c73e061_1746801607.png"}
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Bill image saved to database
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Transaction committed successfully
+[09-May-2025 20:10:07 Asia/Kolkata] 2025-05-09 20:10:07 - Save process completed successfully - {"event_id":"14"}
+[09-May-2025 16:41:34 Europe/Berlin] 2025-05-09 16:41:34 - Starting calendar event save process
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Database connection included
+[09-May-2025 20:11:34 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Session started - {"user_id":21}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Started database transaction
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing event data - {"title":"jhgfds","date":"2025-05-21","user_id":21}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Event created successfully - {"event_id":"15"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing vendors - {"count":1}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing vendor - {"index":1,"type":"labour","name":"hgfds"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Vendor created successfully - {"vendor_id":"15"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing materials - {"vendor_id":"15","count":1}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Material data - {"material_key":"material_1_1","remarks":"hgfd","amount":"87654"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Material created successfully - {"material_id":"12"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing material image - {"material_key":"material_1_1","file_name":"IMG_3202.JPEG","file_size":5465328}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Material image uploaded - {"path":"uploads\/calendar_events\/material_images\/681e141e30b97_1746801694.JPEG"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Material image saved to database
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Processing bill image - {"material_key":"material_1_1","file_name":"IMG_3202.JPEG","file_size":5465328}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Bill image uploaded - {"path":"uploads\/calendar_events\/bill_images\/681e141e31264_1746801694.JPEG"}
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Bill image saved to database
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Transaction committed successfully
+[09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Save process completed successfully - {"event_id":"15"}

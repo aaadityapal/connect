@@ -497,6 +497,34 @@ function processMaterialPhotos($materialId, $photos, $type) {
     
     $success = true;
     
+    // First ensure the base upload directory exists
+    $uploads_base_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads';
+    if (!file_exists($uploads_base_dir)) {
+        if (!mkdir($uploads_base_dir, 0755, true)) {
+            error_log("Failed to create base uploads directory: $uploads_base_dir");
+        }
+    }
+    
+    // Create materials directory
+    $materials_dir = $uploads_base_dir . '/materials';
+    if (!file_exists($materials_dir)) {
+        if (!mkdir($materials_dir, 0755, true)) {
+            error_log("Failed to create materials directory: $materials_dir");
+        }
+    }
+    
+    // Create date-based directory structure
+    $date_path = date('Y/m/d');
+    $target_dir = $materials_dir . '/' . $date_path;
+    if (!file_exists($target_dir)) {
+        if (!mkdir($target_dir, 0755, true)) {
+            error_log("Failed to create date directory: $target_dir");
+            // Continue anyway and try to process photos
+        } else {
+            error_log("Created directory structure: $target_dir");
+        }
+    }
+    
     foreach ($photos as $photoData) {
         // Handle both string filenames and objects with location data
         if (is_string($photoData)) {
@@ -508,6 +536,17 @@ function processMaterialPhotos($materialId, $photos, $type) {
             $accuracy = null;
             $address = null;
             $timestamp = null;
+            
+            // Check if the source file exists in the temp directory
+            $temp_path = sys_get_temp_dir() . '/' . $photoFilename;
+            if (file_exists($temp_path)) {
+                $target_path = $target_dir . '/' . $photoFilename;
+                if (copy($temp_path, $target_path)) {
+                    error_log("Copied file from temp: $temp_path to $target_path");
+                } else {
+                    error_log("Failed to copy file from temp: $temp_path to $target_path");
+                }
+            }
         } else if (is_array($photoData) || is_object($photoData)) {
             // Object with location data
             if (is_object($photoData)) {
@@ -523,6 +562,62 @@ function processMaterialPhotos($materialId, $photos, $type) {
             }
             
             $photoPath = "uploads/materials/" . date('Y/m/d/') . $photoFilename;
+            $target_path = $target_dir . '/' . $photoFilename;
+            
+            // Handle file data if it exists
+            if (isset($photoData['data']) && !empty($photoData['data'])) {
+                // This might be a base64 encoded string
+                if (strpos($photoData['data'], 'data:image') === 0) {
+                    // Handle base64 image data
+                    $base64_data = explode(',', $photoData['data'])[1] ?? $photoData['data'];
+                    $image_data = base64_decode($base64_data);
+                    if ($image_data) {
+                        if (file_put_contents($target_path, $image_data)) {
+                            error_log("Saved base64 image data to: $target_path");
+                        } else {
+                            error_log("Failed to save base64 image data to: $target_path");
+                        }
+                    }
+                } else if (is_string($photoData['data'])) {
+                    // This might be a file path
+                    if (file_exists($photoData['data'])) {
+                        if (copy($photoData['data'], $target_path)) {
+                            error_log("Copied file from: " . $photoData['data'] . " to $target_path");
+                        } else {
+                            error_log("Failed to copy file from: " . $photoData['data'] . " to $target_path");
+                        }
+                    }
+                }
+            } else if (isset($photoData['tmp_name']) && file_exists($photoData['tmp_name'])) {
+                // This is likely from $_FILES
+                try {
+                    // Make sure target directory exists (create it again just to be sure)
+                    $dir_path = dirname($target_path);
+                    if (!file_exists($dir_path)) {
+                        mkdir($dir_path, 0755, true);
+                        error_log("Created directory: $dir_path");
+                    }
+                    
+                    // Use copy instead of move_uploaded_file for testing (move_uploaded_file only works for actual uploads)
+                    if (copy($photoData['tmp_name'], $target_path)) {
+                        error_log("Copied uploaded file from: " . $photoData['tmp_name'] . " to $target_path");
+                    } else {
+                        error_log("Failed to copy uploaded file from: " . $photoData['tmp_name'] . " to $target_path. Error: " . error_get_last()['message']);
+                    }
+                } catch (Exception $e) {
+                    error_log("Exception during file copy: " . $e->getMessage());
+                }
+            } else {
+                // Check if the file exists in the temp directory
+                $temp_path = sys_get_temp_dir() . '/' . $photoFilename;
+                if (file_exists($temp_path)) {
+                    if (copy($temp_path, $target_path)) {
+                        error_log("Copied file from temp: $temp_path to $target_path");
+                    } else {
+                        error_log("Failed to copy file from temp: $temp_path to $target_path. Error: " . error_get_last()['message']);
+                    }
+                }
+            }
             
             // Get location data
             $latitude = isset($photoData['latitude']) ? (float)$photoData['latitude'] : null;
@@ -1518,3 +1613,4 @@ function getActivityLog($dateFrom, $dateTo, $entityType = null, $actionType = nu
     
     return $response;
 }
+ 

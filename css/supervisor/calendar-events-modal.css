@@ -1,0 +1,919 @@
+/* Calendar Event Modals - Custom styles */
+
+/* Common styles for modal backgrounds */
+.calendar-event-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.calendar-event-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Add Event Modal */
+.add-event-modal {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.calendar-event-modal-overlay.active .add-event-modal {
+    transform: translateY(0);
+}
+
+.add-event-modal-header {
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.add-event-modal-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+}
+
+.add-event-modal-header h3 i {
+    margin-right: 12px;
+    opacity: 0.9;
+    font-size: 1.5rem;
+}
+
+.add-event-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-event-modal-close:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.add-event-modal-body {
+    padding: 28px;
+    max-height: 60vh;
+    overflow-y: auto;
+    flex: 1;
+    background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+}
+
+/* Added this class for flexbox layout of title and date */
+.event-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -12px;
+}
+
+.event-form-col {
+    flex: 1;
+    padding: 0 12px;
+    min-width: 200px;
+}
+
+.add-event-form-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.add-event-form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.add-event-form-group label i {
+    color: #3a7bd5;
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.add-event-form-control {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
+    background-color: #f9f9f9;
+}
+
+.add-event-form-control:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+.add-event-form-control:focus-visible {
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.25);
+}
+
+.add-event-form-select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
+}
+
+.add-event-form-select:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+.add-event-form-control::placeholder {
+    color: #aaa;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.add-event-form-control:focus::placeholder {
+    opacity: 0.7;
+}
+
+.add-event-form-control[readonly] {
+    background-color: #f0f4f8;
+    border-color: #d1d9e6;
+    cursor: default;
+    box-shadow: none;
+    font-weight: 500;
+    color: #3a7bd5;
+}
+
+textarea.add-event-form-control {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.add-event-modal-footer {
+    padding: 18px 24px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.add-event-btn {
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-event-btn i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+.add-event-btn-cancel {
+    background-color: #f2f2f2;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 12px 20px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.add-event-btn-cancel:hover {
+    background-color: #e6e6e6;
+    border-color: #ccc;
+}
+
+.event-submit-btn {
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-left: auto;
+    font-weight: 600;
+    padding: 12px 26px;
+    border-radius: 8px;
+    min-width: 150px;
+    border: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.event-submit-btn:hover {
+    background: linear-gradient(135deg, #3176c8, #00bce4);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.event-submit-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.event-submit-btn i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+/* View Event Modal */
+.view-event-modal {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-event-modal-overlay.active .view-event-modal {
+    transform: translateY(0);
+}
+
+.view-event-modal-header {
+    color: white;
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Different header colors based on event type */
+.view-event-modal-header.event-inspection {
+    background: linear-gradient(135deg, #38a169, #2f855a);
+}
+
+.view-event-modal-header.event-delivery {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+}
+
+.view-event-modal-header.event-meeting {
+    background: linear-gradient(135deg, #805ad5, #6b46c1);
+}
+
+.view-event-modal-header.event-report {
+    background: linear-gradient(135deg, #ffb347, #ffaa33);
+}
+
+.view-event-modal-header.event-issue {
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+}
+
+.view-event-modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.view-event-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.view-event-modal-close:hover {
+    opacity: 1;
+}
+
+.view-event-modal-body {
+    padding: 24px;
+    flex: 1;
+}
+
+.view-event-detail {
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    padding: 12px 15px;
+    border-radius: 6px;
+    border-left: 4px solid #e0e0e0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.view-event-detail:hover {
+    transform: translateX(3px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.view-event-detail-label {
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.view-event-detail-label i {
+    color: #3498db;
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+.view-event-detail-value {
+    color: #333;
+    line-height: 1.5;
+}
+
+.view-event-modal-footer {
+    padding: 18px 24px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.view-event-btn {
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.view-event-btn i {
+    margin-right: 8px;
+}
+
+.view-event-btn-close {
+    background-color: #f1f1f1;
+    color: #555;
+    border: 1px solid #ddd;
+}
+
+.view-event-btn-edit {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.view-event-btn-delete {
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.view-event-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    opacity: 0.9;
+}
+
+.view-event-btn-close:hover {
+    background-color: #e5e5e5;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .event-form-row {
+        flex-direction: column;
+    }
+    
+    .event-form-col {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+/* Responsive styles */
+@media (max-width: 576px) {
+    .add-event-modal, .view-event-modal {
+        width: 95%;
+    }
+    
+    .add-event-modal-header h3, .view-event-modal-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .add-event-modal-body, .view-event-modal-body {
+        padding: 18px;
+    }
+    
+    .add-event-modal-footer, .view-event-modal-footer {
+        padding: 16px 18px;
+    }
+    
+    .add-event-btn, .view-event-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .event-submit-btn {
+        padding: 10px 16px;
+        min-width: 120px;
+        font-size: 0.9rem;
+    }
+    
+    .add-event-btn-cancel {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Vendors and Labours Section Styles */
+.calendar-event-vendors-section {
+    margin-top: 16px;
+    border-top: 1px solid #e8edf3;
+    padding-top: 20px;
+}
+
+.calendar-event-section-header {
+    margin-bottom: 16px;
+}
+
+.calendar-event-section-header h4 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-event-section-header h4 i {
+    color: #3a7bd5;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.calendar-vendors-container {
+    margin-bottom: 12px;
+}
+
+.calendar-vendor-item {
+    background-color: #f8fafd;
+    border-radius: 10px;
+    border: 1px solid #e8edf3;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease;
+    position: relative;
+}
+
+.calendar-vendor-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-vendor-header {
+    background-color: #f0f4f8;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e8edf3;
+}
+
+.calendar-vendor-header h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #3a7bd5;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-vendor-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    color: white;
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-right: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-vendor-remove-btn {
+    background: none;
+    border: none;
+    color: #f76767;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-size: 1rem;
+}
+
+.calendar-vendor-remove-btn:hover {
+    background-color: rgba(247, 103, 103, 0.1);
+    color: #e53e3e;
+}
+
+.calendar-vendor-form-row {
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -8px;
+}
+
+.calendar-vendor-form-group {
+    flex: 1;
+    min-width: 200px;
+    padding: 0 8px;
+    margin-bottom: 10px;
+}
+
+.calendar-vendor-form-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.calendar-vendor-form-group label i {
+    color: #3a7bd5;
+    margin-right: 8px;
+    font-size: 0.95rem;
+    width: 16px;
+    text-align: center;
+}
+
+.calendar-vendor-type-select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
+}
+
+.calendar-vendor-type-select:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+.calendar-vendor-custom-type, 
+.calendar-vendor-name, 
+.calendar-vendor-contact {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f9f9f9;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
+}
+
+.calendar-vendor-custom-type:focus, 
+.calendar-vendor-name:focus, 
+.calendar-vendor-contact:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+.calendar-vendor-custom-type {
+    margin-top: 8px;
+}
+
+.calendar-add-vendor-btn {
+    background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-add-vendor-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+.calendar-add-vendor-btn:hover {
+    background: linear-gradient(135deg, #3176c8, #00bce4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.calendar-add-vendor-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .event-form-row {
+        flex-direction: column;
+    }
+    
+    .event-form-col {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .calendar-vendor-form-row {
+        flex-direction: column;
+    }
+    
+    .calendar-vendor-form-group {
+        width: 100%;
+    }
+}
+
+/* Vendor Material Section Styles */
+.calendar-vendor-material-section {
+    border-top: 1px dashed #e8edf3;
+    padding: 0 16px 16px 16px;
+    margin-top: 0;
+}
+
+.calendar-vendor-section-subheader {
+    margin: 10px 0 15px 0;
+}
+
+.calendar-vendor-section-subheader h6 {
+    font-size: 0.95rem;
+    color: #3a7bd5;
+    margin: 0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-vendor-section-subheader h6 i {
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+.calendar-vendor-file-upload {
+    position: relative;
+    overflow: hidden;
+    border: 2px dashed #d1d9e6;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-vendor-file-upload:hover {
+    background-color: #f0f4f8;
+    border-color: #b4c4d8;
+}
+
+.calendar-vendor-file-upload input[type=file] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.calendar-vendor-file-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #3a7bd5;
+    padding: 15px;
+    pointer-events: none;
+}
+
+.calendar-vendor-file-label i {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+}
+
+.calendar-vendor-file-label span {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.calendar-vendor-remarks {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f9f9f9;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.calendar-vendor-remarks:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+.calendar-vendor-amount {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f9f9f9;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) inset;
+}
+
+.calendar-vendor-amount:focus {
+    border-color: #3a7bd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+    background-color: #fff;
+}
+
+/* File preview styles for when files are selected */
+.calendar-vendor-file-preview {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    gap: 8px;
+}
+
+.calendar-vendor-file-preview-item {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-vendor-file-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.calendar-vendor-file-preview-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    color: #e53e3e;
+}
+
+.calendar-vendor-file-preview-remove:hover {
+    background-color: white;
+    color: #c53030;
+}
+
+/* Adjust for responsive design */
+@media (max-width: 768px) {
+    .calendar-vendor-material-section {
+        padding: 0 12px 12px 12px;
+    }
+    
+    .calendar-vendor-file-label i {
+        font-size: 1.2rem;
+    }
+}
+
+.calendar-vendor-file-upload.has-files {
+    border-color: #3a7bd5;
+    background-color: #f0f4f8;
+    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.1);
+}
+
+.calendar-vendor-file-upload.has-files .calendar-vendor-file-label {
+    color: #1e66be;
+}
+
+.calendar-vendor-file-upload.has-files .calendar-vendor-file-label i {
+    color: #38a169;
+} 

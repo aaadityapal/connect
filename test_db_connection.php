@@ -31,7 +31,7 @@ try {
         echo "<ul>";
         while ($row = $result->fetch_row()) {
             echo "<li>{$row[0]}</li>";
-        }
+                }
         echo "</ul>";
     } else {
         echo "<p style='color:red'>Error listing tables: " . $conn->error . "</p>";
@@ -78,5 +78,5 @@ try {
         background-color: #f8f8f8;
         padding: 10px 10px 10px 30px;
         border-radius: 3px;
-    }
+}
 </style> 

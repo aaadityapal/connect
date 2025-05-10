@@ -103,4 +103,42 @@ CREATE TABLE IF NOT EXISTS `sv_company_wages` (
   `travel_amount` DECIMAL(10,2) DEFAULT 0,
   `grand_total` DECIMAL(10,2) DEFAULT 0,
   FOREIGN KEY (`company_labour_id`) REFERENCES `sv_company_labours`(`company_labour_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table for beverages
+CREATE TABLE IF NOT EXISTS `sv_event_beverages` (
+  `beverage_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `event_id` INT NOT NULL,
+  `beverage_type` VARCHAR(100),
+  `beverage_name` VARCHAR(100),
+  `amount` DECIMAL(10,2),
+  `sequence_number` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table for work progress entries
+CREATE TABLE IF NOT EXISTS `sv_work_progress` (
+  `work_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `event_id` INT NOT NULL,
+  `work_category` VARCHAR(100) NOT NULL,
+  `work_type` VARCHAR(100) NOT NULL,
+  `work_done` ENUM('yes', 'no') DEFAULT 'yes',
+  `remarks` TEXT,
+  `sequence_number` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table for work progress media files
+CREATE TABLE IF NOT EXISTS `sv_work_progress_media` (
+  `media_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `work_id` INT NOT NULL,
+  `file_name` VARCHAR(255) NOT NULL,
+  `file_path` VARCHAR(255) NOT NULL,
+  `media_type` ENUM('image', 'video') DEFAULT 'image',
+  `file_size` INT,
+  `sequence_number` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`work_id`) REFERENCES `sv_work_progress`(`work_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 

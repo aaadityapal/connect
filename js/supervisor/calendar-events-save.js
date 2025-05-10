@@ -243,6 +243,17 @@ function saveCalendarEvent(eventData, successCallback, errorCallback) {
                 }
             });
         }
+        
+        // Add beverage data if present
+        if (eventData.beverages && eventData.beverages.length > 0) {
+            formData.append('beverage_count', eventData.beverages.length);
+            eventData.beverages.forEach((bev, idx) => {
+                const n = idx + 1;
+                formData.append(`beverage_type_${n}`, bev.type);
+                formData.append(`beverage_name_${n}`, bev.name);
+                formData.append(`beverage_amount_${n}`, bev.amount);
+            });
+        }
     }
     
     // Debug log

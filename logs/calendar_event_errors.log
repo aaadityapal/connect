@@ -170,3 +170,111 @@
 [09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Bill image saved to database
 [09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Transaction committed successfully
 [09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Save process completed successfully - {"event_id":"16"}
+[10-May-2025 08:09:18 Europe/Berlin] 2025-05-10 08:09:18 - Starting calendar event save process
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Database connection included
+[10-May-2025 11:39:18 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Session started - {"user_id":21}
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Started database transaction
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Processing event data - {"title":"hgfd","date":"2025-05-15","user_id":21}
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Event created successfully - {"event_id":"17"}
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Processing beverages - {"count":1}
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Processing beverage - {"number":1,"type":"fdsa","name":"gfd","amount":"30"}
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Beverage saved successfully - {"beverage_id":"2","number":1}
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Transaction committed successfully
+[10-May-2025 11:39:18 Asia/Kolkata] 2025-05-10 11:39:18 - Save process completed successfully - {"event_id":"17"}
+[10-May-2025 08:30:50 Europe/Berlin] 2025-05-10 08:30:50 - Starting calendar event save process
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Database connection included
+[10-May-2025 12:00:50 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Session started - {"user_id":21}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Started database transaction
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Processing event data - {"title":"bvcx","date":"2025-05-29","user_id":21}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Event created successfully - {"event_id":"18"}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Processing work progress entries - {"count":1}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Processing work progress entry - {"number":1,"category":"electrical","type":"gfds","done":"yes"}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Work progress entry saved successfully - {"work_id":"2","number":1}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Processing work media files - {"work_id":"2","count":2}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Processing work media file - {"work_id":"2","file_name":"IMG_3250.JPEG","file_type":"image\/jpeg","file_size":951576}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/681ef29a47844_1746858650.JPEG","filename":"681ef29a47844_1746858650.JPEG"}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Work media record saved to database - {"media_id":"2"}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Processing work media file - {"work_id":"2","file_name":"IMG_3284.MOV","file_type":"video\/quicktime","file_size":13850426}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Failed to upload work media file - {"error":"Invalid file type. Allowed types: image\/jpeg, image\/jpg, image\/png, image\/gif, application\/pdf"}
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Transaction committed successfully
+[10-May-2025 12:00:50 Asia/Kolkata] 2025-05-10 12:00:50 - Save process completed successfully - {"event_id":"18"}
+[10-May-2025 08:36:44 Europe/Berlin] 2025-05-10 08:36:44 - Starting calendar event save process
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Database connection included
+[10-May-2025 12:06:44 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Session started - {"user_id":21}
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Started database transaction
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Processing event data - {"title":"jhgf","date":"2025-05-14","user_id":21}
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Event created successfully - {"event_id":"19"}
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Processing work progress entries - {"count":1}
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Processing work progress entry - {"number":1,"category":"plumbing","type":"drainage_system","done":"yes"}
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Work progress entry saved successfully - {"work_id":"3","number":1}
+[10-May-2025 12:06:44 Asia/Kolkata] 2025-05-10 12:06:44 - Processing work media files - {"work_id":"3","count":1}
+[10-May-2025 12:06:44 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Call to undefined function processWorkMediaFile() in C:\xampp\htdocs\hr\backend\save_calendar_event.php:575
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 575
+[10-May-2025 08:43:25 Europe/Berlin] 2025-05-10 08:43:25 - Starting calendar event save process
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Database connection included
+[10-May-2025 12:13:25 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Session started - {"user_id":21}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Started database transaction
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Processing event data - {"title":"uytr","date":"2025-05-28","user_id":21}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Event created successfully - {"event_id":"20"}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Processing work progress entries - {"count":1}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Processing work progress entry - {"number":1,"category":"electrical","type":"conduit_installation","done":"yes"}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Work progress entry saved successfully - {"work_id":"4","number":1}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Processing work media files - {"work_id":"4","count":2}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_4\/"}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Processing work media file - {"work_id":"4","file_name":"IMG_3284.MOV","file_type":"video\/quicktime","file_size":13850426}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Failed to upload work media file - {"error":"Invalid file type. Allowed types: image\/jpeg, image\/jpg, image\/png, image\/gif, application\/pdf"}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Processing work media file - {"work_id":"4","file_name":"IMG_3250.JPEG","file_type":"image\/jpeg","file_size":951576}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_4\/681ef58da8798_1746859405.JPEG","filename":"IMG_3250_1746859405_4690.JPEG","original_name":"IMG_3250.JPEG"}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Work media record saved to database - {"media_id":"3"}
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Transaction committed successfully
+[10-May-2025 12:13:25 Asia/Kolkata] 2025-05-10 12:13:25 - Save process completed successfully - {"event_id":"20"}
+[10-May-2025 08:44:38 Europe/Berlin] 2025-05-10 08:44:38 - Starting calendar event save process
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Database connection included
+[10-May-2025 12:14:38 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Session started - {"user_id":21}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Started database transaction
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Processing event data - {"title":"hjk","date":"2025-05-26","user_id":21}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Event created successfully - {"event_id":"21"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Processing work progress entries - {"count":1}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Processing work progress entry - {"number":1,"category":"structural","type":"beams","done":"yes"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Work progress entry saved successfully - {"work_id":"5","number":1}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Processing work media files - {"work_id":"5","count":2}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_5\/"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Processing work media file - {"work_id":"5","file_name":"IMG_3250.JPEG","file_type":"image\/jpeg","file_size":951576}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_5\/681ef5d68639e_1746859478.JPEG","filename":"IMG_3250_1746859478_4603.JPEG","original_name":"IMG_3250.JPEG"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Work media record saved to database - {"media_id":"4"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Processing work media file - {"work_id":"5","file_name":"2001-2500SQFT.jpg","file_type":"image\/jpeg","file_size":224631}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_5\/681ef5d686e12_1746859478.jpg","filename":"2001-2500SQFT_1746859478_2704.jpg","original_name":"2001-2500SQFT.jpg"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Work media record saved to database - {"media_id":"5"}
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Transaction committed successfully
+[10-May-2025 12:14:38 Asia/Kolkata] 2025-05-10 12:14:38 - Save process completed successfully - {"event_id":"21"}
+[10-May-2025 08:47:56 Europe/Berlin] 2025-05-10 08:47:56 - Starting calendar event save process
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Database connection included
+[10-May-2025 12:17:56 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Session started - {"user_id":21}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Started database transaction
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Processing event data - {"title":"hgfd","date":"2025-05-29","user_id":21}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Event created successfully - {"event_id":"22"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Processing work progress entries - {"count":1}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Processing work progress entry - {"number":1,"category":"structural","type":"columns","done":"yes"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Work progress entry saved successfully - {"work_id":"6","number":1}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Processing work media files - {"work_id":"6","count":2}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_6\/"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Processing work media file - {"work_id":"6","file_name":"SampleVideo_1280x720_1mb.mp4","file_type":"video\/mp4","file_size":1055736}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb_1746859676_8028.mp4","saved_as":"681ef69cb4673_1746859676.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_6\/681ef69cb4673_1746859676.mp4"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_6\/681ef69cb4673_1746859676.mp4","filename":"SampleVideo_1280x720_1mb_1746859676_8028.mp4","original_name":"SampleVideo_1280x720_1mb.mp4"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Work media record saved to database - {"media_id":"6"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Processing work media file - {"work_id":"6","file_name":"wallpaperflare.com_wallpaper.jpg","file_type":"image\/jpeg","file_size":10953635}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - File uploaded successfully - {"original_name":"wallpaperflare.com_wallpaper_1746859676_4782.jpg","saved_as":"681ef69cb4f83_1746859676.jpg","file_type":"image\/jpeg","file_size":10953635,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_6\/681ef69cb4f83_1746859676.jpg"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_6\/681ef69cb4f83_1746859676.jpg","filename":"wallpaperflare.com_wallpaper_1746859676_4782.jpg","original_name":"wallpaperflare.com_wallpaper.jpg"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Work media record saved to database - {"media_id":"7"}
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Transaction committed successfully
+[10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Save process completed successfully - {"event_id":"22"}

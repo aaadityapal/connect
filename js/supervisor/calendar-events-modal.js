@@ -162,6 +162,34 @@ function createModalElements() {
                                     <i class="fas fa-plus-circle"></i> Add Company Labour
                                 </button>
                             </div>
+
+                            <!-- Beverages Section -->
+                            <div class="calendar-event-beverages-section">
+                                <div class="calendar-event-section-header">
+                                    <h4><i class="fas fa-coffee"></i> Beverages Section</h4>
+                                    <p class="section-description">Add beverages provided at the event</p>
+                                </div>
+                                <div id="calendar-beverages-container" class="calendar-beverages-container">
+                                    <!-- Beverage items will be added dynamically here -->
+                                </div>
+                                <button type="button" id="add-beverage-btn" class="calendar-add-beverage-btn">
+                                    <i class="fas fa-plus-circle"></i> Add Beverage
+                                </button>
+                            </div>
+
+                            <!-- Work Progress Section HTML -->
+                            <div class="ce-work-progress-section">
+                                <div class="calendar-event-section-header">
+                                    <h4><i class="fas fa-tasks"></i> Work Progress Section</h4>
+                                    <p class="section-description">Add details about work progress at the site</p>
+                                </div>
+                                <div id="ce-work-progress-container" class="ce-work-progress-container">
+                                    <!-- Work entries will be added dynamically here -->
+                                </div>
+                                <button type="button" id="ce-add-work-btn" class="ce-add-work-btn">
+                                    <i class="fas fa-plus-circle"></i> Add Work Progress
+                                </button>
+                            </div>
                         </form>
                     </div>
                     <div class="add-event-modal-footer">
@@ -598,6 +626,100 @@ function createModalElements() {
             </div>
         </div>
     `;
+
+    // Beverage template to use for creating new beverage entries
+    window.beverageTemplate = `
+        <div class="calendar-beverage-item">
+            <div class="calendar-beverage-header">
+                <h5><span class="calendar-beverage-number">1</span> Beverage Information</h5>
+                <button type="button" class="calendar-beverage-remove-btn" aria-label="Remove beverage">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="calendar-beverage-form-row">
+                <div class="calendar-beverage-form-group">
+                    <label><i class="fas fa-wine-glass-alt"></i> Beverage Type</label>
+                    <input type="text" class="calendar-beverage-type" placeholder="Enter beverage type">
+                </div>
+                <div class="calendar-beverage-form-group">
+                    <label><i class="fas fa-tag"></i> Beverage Name</label>
+                    <input type="text" class="calendar-beverage-name" placeholder="Enter beverage name">
+                </div>
+                <div class="calendar-beverage-form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Amount</label>
+                    <input type="number" class="calendar-beverage-amount" placeholder="Enter amount" min="0" step="0.01">
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add work progress template to window for reuse
+    window.workProgressTemplate = `
+        <div class="ce-work-entry">
+            <div class="ce-work-header">
+                <h5><span class="ce-work-number">1</span> Work Progress Information</h5>
+                <button type="button" class="ce-work-remove-btn" aria-label="Remove work entry">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="ce-work-form-row">
+                <div class="ce-work-form-group">
+                    <label><i class="fas fa-th-list"></i> Work Category</label>
+                    <select class="ce-work-category-select">
+                        <option value="">Select Work Category</option>
+                        <option value="structural">Structural Work</option>
+                        <option value="electrical">Electrical Work</option>
+                        <option value="plumbing">Plumbing Work</option>
+                        <option value="interior">Interior Work</option>
+                        <option value="exterior">Exterior Work</option>
+                        <option value="landscaping">Landscaping</option>
+                        <option value="custom">Custom Category</option>
+                    </select>
+                    <input type="text" class="ce-work-custom-category" placeholder="Enter custom work category" style="display: none; margin-top: 8px;">
+                </div>
+                <div class="ce-work-form-group">
+                    <label><i class="fas fa-tools"></i> Type of Work</label>
+                    <select class="ce-work-type-select" disabled>
+                        <option value="">Select Type of Work</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                    <input type="text" class="ce-work-custom-type" placeholder="Enter custom work type" style="display: none; margin-top: 8px;">
+                </div>
+            </div>
+            <div class="ce-work-form-row">
+                <div class="ce-work-form-group">
+                    <label><i class="fas fa-check-circle"></i> Work Done</label>
+                    <div class="ce-work-done-options">
+                        <label class="ce-work-done-option">
+                            <input type="radio" name="work-done-TIMESTAMP" value="yes" checked>
+                            <span>Yes</span>
+                        </label>
+                        <label class="ce-work-done-option">
+                            <input type="radio" name="work-done-TIMESTAMP" value="no">
+                            <span>No</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="ce-work-form-group">
+                    <label><i class="fas fa-comment-alt"></i> Remarks</label>
+                    <textarea class="ce-work-remarks" placeholder="Enter remarks about the work progress"></textarea>
+                </div>
+            </div>
+            <div class="ce-work-form-row">
+                <div class="ce-work-form-group">
+                    <label><i class="fas fa-images"></i> Photos & Videos</label>
+                    <div class="ce-work-media-container">
+                        <!-- Media previews will be added dynamically here -->
+                    </div>
+                    <label class="ce-work-upload-btn">
+                        <i class="fas fa-cloud-upload-alt"></i> Add Photos/Videos (One by One)
+                        <input type="file" class="ce-work-upload-input" accept="image/*,video/*">
+                    </label>
+                    <div class="ce-work-upload-hint">Click the button above to add multiple media files one at a time</div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -845,6 +967,54 @@ function initializeEventHandlers() {
             event.target.classList.contains('scl-ot-rate')) {
             // Any of these changes should trigger a grand total recalculation
             updateCompanyGrandTotal(event.target);
+        }
+    });
+
+    // Add beverage button
+    document.addEventListener('click', function(event) {
+        if (event.target.id === 'add-beverage-btn' || 
+            event.target.closest('#add-beverage-btn')) {
+            addNewBeverage();
+        }
+    });
+
+    // Remove beverage button
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('calendar-beverage-remove-btn') || 
+            event.target.closest('.calendar-beverage-remove-btn')) {
+            const button = event.target.classList.contains('calendar-beverage-remove-btn') ? 
+                           event.target : event.target.closest('.calendar-beverage-remove-btn');
+            const beverageItem = button.closest('.calendar-beverage-item');
+            if (beverageItem) beverageItem.remove();
+            updateBeverageNumbers();
+        }
+    });
+
+    // Work progress add button
+    document.addEventListener('click', function(event) {
+        if (event.target.id === 'ce-add-work-btn' || 
+            event.target.closest('#ce-add-work-btn')) {
+            addWorkProgressEntry();
+        }
+        
+        // Remove work entry
+        if (event.target.classList.contains('ce-work-remove-btn') || 
+            event.target.closest('.ce-work-remove-btn')) {
+            const removeBtn = event.target.classList.contains('ce-work-remove-btn') ? 
+                             event.target : event.target.closest('.ce-work-remove-btn');
+            const workEntry = removeBtn.closest('.ce-work-entry');
+            
+            if (workEntry) {
+                // Animate removal
+                workEntry.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                workEntry.style.opacity = '0';
+                workEntry.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    workEntry.remove();
+                    updateWorkEntryNumbers();
+                }, 300);
+            }
         }
     });
 }
@@ -1327,6 +1497,119 @@ function saveEvent() {
             });
         }
         
+        // Get beverage data
+        const beverageItems = document.querySelectorAll('.calendar-beverage-item');
+        const beverages = [];
+        
+        beverageItems.forEach(item => {
+            const type = item.querySelector('.calendar-beverage-type').value;
+            const name = item.querySelector('.calendar-beverage-name').value;
+            const amount = item.querySelector('.calendar-beverage-amount').value;
+            
+            if (type.trim() || name.trim()) {
+                beverages.push({
+                    type: type,
+                    name: name,
+                    amount: amount || 0
+                });
+            }
+        });
+        
+        // Add beverages to form data
+        if (beverages.length > 0) {
+            formData.append('beverage_count', beverages.length);
+            
+            beverages.forEach((beverage, index) => {
+                const n = index + 1;
+                formData.append(`beverage_type_${n}`, beverage.type);
+                formData.append(`beverage_name_${n}`, beverage.name);
+                formData.append(`beverage_amount_${n}`, beverage.amount);
+            });
+        }
+
+        // Get work progress data
+        const workEntries = document.querySelectorAll('.ce-work-entry');
+        const workProgressData = [];
+        
+        workEntries.forEach(entry => {
+            // Get selected work category
+            const categorySelect = entry.querySelector('.ce-work-category-select');
+            const categoryValue = categorySelect.value;
+            let workCategory = categoryValue;
+            
+            // Handle custom category
+            if (categoryValue === 'custom') {
+                const customCategoryInput = entry.querySelector('.ce-work-custom-category');
+                workCategory = customCategoryInput.value.trim() || 'Custom';
+            }
+            
+            // Get selected work type
+            const typeSelect = entry.querySelector('.ce-work-type-select');
+            const typeValue = typeSelect.value;
+            let workType = typeValue;
+            
+            // Handle custom type
+            if (typeValue === 'custom') {
+                const customTypeInput = entry.querySelector('.ce-work-custom-type');
+                workType = customTypeInput.value.trim() || 'Custom';
+            }
+            
+            // Get work done status
+            const workDoneRadios = entry.querySelectorAll('input[type="radio"][name^="work-done-"]');
+            let workDone = 'yes'; // Default value
+            
+            workDoneRadios.forEach(radio => {
+                if (radio.checked) {
+                    workDone = radio.value;
+                }
+            });
+            
+            // Get remarks
+            const remarks = entry.querySelector('.ce-work-remarks').value;
+            
+            // Get media files
+            const mediaPreviews = entry.querySelectorAll('.ce-work-media-preview');
+            const mediaFiles = [];
+            
+            mediaPreviews.forEach(preview => {
+                if (preview.file) {
+                    mediaFiles.push(preview.file);
+                }
+            });
+            
+            // Add to work progress data array if we have at least category or type
+            if (workCategory || workType || remarks || mediaFiles.length > 0) {
+                workProgressData.push({
+                    category: workCategory,
+                    type: workType,
+                    done: workDone,
+                    remarks: remarks,
+                    media: mediaFiles
+                });
+            }
+        });
+        
+        // Add work progress data to form data
+        if (workProgressData.length > 0) {
+            formData.append('work_progress_count', workProgressData.length);
+            
+            workProgressData.forEach((work, index) => {
+                const n = index + 1;
+                formData.append(`work_category_${n}`, work.category);
+                formData.append(`work_type_${n}`, work.type);
+                formData.append(`work_done_${n}`, work.done);
+                formData.append(`work_remarks_${n}`, work.remarks);
+                
+                // Append media files with proper index
+                work.media.forEach((file, fileIndex) => {
+                    formData.append(`work_media_${n}_${fileIndex + 1}`, file);
+                });
+                
+                // Store total media count for this work
+                formData.append(`work_media_count_${n}`, work.media.length);
+            });
+        }
+        
         saveCalendarEvent(formData, 
             // Success callback
             function(data) {
@@ -1605,7 +1888,7 @@ function showToast(title, message, type = 'success') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}
+} 
 
 /**
  * Add a new labour entry to a vendor
@@ -1950,4 +2233,318 @@ function updateCompanyGrandTotal(input) {
     
     // Update the grand total display
     labourEntry.querySelector('.scl-calculated-grand-total').textContent = grandTotal.toFixed(2);
-} 
+}
+
+// Add new beverage function
+function addNewBeverage() {
+    const beveragesContainer = document.getElementById('calendar-beverages-container');
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = window.beverageTemplate;
+    const beverageItem = tempContainer.firstElementChild;
+    
+    // Update number
+    const existing = beveragesContainer.querySelectorAll('.calendar-beverage-item');
+    const beverageNumber = existing.length + 1;
+    beverageItem.querySelector('.calendar-beverage-number').textContent = beverageNumber;
+    
+    // Add unique ID to this beverage item
+    beverageItem.id = `calendar-beverage-${beverageNumber}`;
+    
+    // Add to the beverages container with a slight animation delay
+    beverageItem.style.opacity = '0';
+    beverageItem.style.transform = 'translateY(20px)';
+    beveragesContainer.appendChild(beverageItem);
+    
+    // Animate the new beverage entry
+    setTimeout(() => {
+        beverageItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        beverageItem.style.opacity = '1';
+        beverageItem.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Focus the beverage type input
+    setTimeout(() => {
+        const typeInput = beverageItem.querySelector('.calendar-beverage-type');
+        typeInput.focus();
+    }, 300);
+}
+
+// Update beverage numbers after remove
+function updateBeverageNumbers() {
+    const beveragesContainer = document.getElementById('calendar-beverages-container');
+    const beverageItems = beveragesContainer.querySelectorAll('.calendar-beverage-item');
+    
+    beverageItems.forEach((item, index) => {
+        // Update the number in the span
+        item.querySelector('.calendar-beverage-number').textContent = index + 1;
+        
+        // Update the ID
+        item.id = `calendar-beverage-${index + 1}`;
+    });
+}
+
+/**
+ * Add a new work progress entry
+ */
+function addWorkProgressEntry() {
+    const container = document.getElementById('ce-work-progress-container');
+    const tempContainer = document.createElement('div');
+    
+    // Generate a unique timestamp for radio buttons
+    const timestamp = Date.now();
+    let template = window.workProgressTemplate.replace(/TIMESTAMP/g, timestamp);
+    
+    tempContainer.innerHTML = template;
+    const workEntry = tempContainer.firstElementChild;
+    
+    // Update the entry number
+    const existing = container.querySelectorAll('.ce-work-entry');
+    const entryNumber = existing.length + 1;
+    workEntry.querySelector('.ce-work-number').textContent = entryNumber;
+    
+    // Add unique ID to this entry
+    workEntry.id = `ce-work-entry-${entryNumber}`;
+    
+    // Add to the container with animation
+    workEntry.style.opacity = '0';
+    workEntry.style.transform = 'translateY(20px)';
+    container.appendChild(workEntry);
+    
+    // Animate the new entry
+    setTimeout(() => {
+        workEntry.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        workEntry.style.opacity = '1';
+        workEntry.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Set up event listeners
+    setupWorkCategoryListeners(workEntry);
+    setupMediaUploadListeners(workEntry);
+}
+
+/**
+ * Set up event listeners for work category and type selections
+ */
+function setupWorkCategoryListeners(workEntry) {
+    const categorySelect = workEntry.querySelector('.ce-work-category-select');
+    const typeSelect = workEntry.querySelector('.ce-work-type-select');
+    const customCategoryInput = workEntry.querySelector('.ce-work-custom-category');
+    const customTypeInput = workEntry.querySelector('.ce-work-custom-type');
+    
+    // Define work types for each category
+    const workTypes = {
+        'structural': ['Foundation', 'Columns', 'Beams', 'Slab Work', 'Walls', 'Roofing', 'Custom'],
+        'electrical': ['Wiring', 'Conduit Installation', 'Distribution Box', 'Lighting Fixtures', 'Outlets', 'Switches', 'Custom'],
+        'plumbing': ['Piping', 'Drainage System', 'Fixture Installation', 'Water Supply', 'Sewage Lines', 'Custom'],
+        'interior': ['Flooring', 'Wall Finishing', 'Ceiling Work', 'Painting', 'Door Installation', 'Window Installation', 'Custom'],
+        'exterior': ['Facade Work', 'Wall Cladding', 'Waterproofing', 'External Painting', 'Custom'],
+        'landscaping': ['Grading', 'Planting', 'Irrigation System', 'Hardscaping', 'Lawn Setup', 'Custom']
+    };
+    
+    // Category change handler
+    categorySelect.addEventListener('change', function() {
+        const selectedCategory = this.value;
+        
+        // Handle custom category
+        if (selectedCategory === 'custom') {
+            customCategoryInput.style.display = 'block';
+            customCategoryInput.focus();
+            
+            // Disable type select
+            typeSelect.disabled = true;
+            typeSelect.innerHTML = '<option value="">Select Type of Work</option>';
+        } else {
+            customCategoryInput.style.display = 'none';
+            
+            // Enable and populate type select
+            typeSelect.disabled = false;
+            typeSelect.innerHTML = '<option value="">Select Type of Work</option>';
+            
+            if (selectedCategory && workTypes[selectedCategory]) {
+                workTypes[selectedCategory].forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.toLowerCase().replace(' ', '_');
+                    option.textContent = type;
+                    typeSelect.appendChild(option);
+                });
+            }
+        }
+    });
+    
+    // Type change handler
+    typeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        
+        // Handle custom type
+        if (selectedType === 'custom') {
+            customTypeInput.style.display = 'block';
+            customTypeInput.focus();
+        } else {
+            customTypeInput.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * Set up listeners for media upload
+ */
+function setupMediaUploadListeners(workEntry) {
+    const uploadInput = workEntry.querySelector('.ce-work-upload-input');
+    const mediaContainer = workEntry.querySelector('.ce-work-media-container');
+    const uploadBtn = workEntry.querySelector('.ce-work-upload-btn');
+    
+    // Create media counter
+    const mediaCounter = document.createElement('div');
+    mediaCounter.className = 'ce-work-media-counter';
+    mediaCounter.innerHTML = '0 files added';
+    uploadBtn.parentNode.insertBefore(mediaCounter, uploadBtn.nextSibling);
+    
+    // Function to update the counter
+    function updateMediaCounter() {
+        const count = mediaContainer.querySelectorAll('.ce-work-media-preview').length;
+        mediaCounter.innerHTML = count + (count === 1 ? ' file added' : ' files added');
+        
+        // Add a class to the counter based on count
+        mediaCounter.classList.remove('has-files');
+        mediaContainer.classList.remove('has-files');
+        
+        if (count > 0) {
+            mediaCounter.classList.add('has-files');
+            mediaContainer.classList.add('has-files');
+        }
+    }
+    
+    // Handle file selection
+    uploadInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            const file = this.files[0];
+            const isVideo = file.type.startsWith('video/');
+            
+            // Create a preview element
+            const preview = document.createElement('div');
+            preview.className = 'ce-work-media-preview';
+            preview.dataset.filename = file.name;
+            
+            // Create a remove button
+            const removeBtn = document.createElement('div');
+            removeBtn.className = 'ce-work-media-remove';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            preview.appendChild(removeBtn);
+            
+            // Create a type label
+            const typeLabel = document.createElement('div');
+            typeLabel.className = 'ce-work-media-type';
+            typeLabel.textContent = isVideo ? 'Video' : 'Photo';
+            preview.appendChild(typeLabel);
+            
+            // Store the file in the DOM element
+            preview.file = file;
+            
+            if (isVideo) {
+                // For videos, use a video element
+                const video = document.createElement('video');
+                video.controls = false;
+                video.muted = true;
+                video.preload = 'metadata';
+                preview.appendChild(video);
+                
+                // Create a play button overlay
+                const playButton = document.createElement('div');
+                playButton.className = 'ce-work-media-play';
+                playButton.innerHTML = '<i class="fas fa-play"></i>';
+                preview.appendChild(playButton);
+                
+                // Create a URL for the video
+                const videoURL = URL.createObjectURL(file);
+                video.src = videoURL;
+                
+                // Add click to play/pause
+                preview.addEventListener('click', function(e) {
+                    // Don't trigger if clicking the remove button
+                    if (!e.target.closest('.ce-work-media-remove')) {
+                        if (video.paused) {
+                            // Play the video
+                            video.play();
+                            playButton.style.opacity = '0';
+                        } else {
+                            // Pause the video
+                            video.pause();
+                            playButton.style.opacity = '1';
+                        }
+                    }
+                });
+                
+                // When video ends, show play button again
+                video.addEventListener('ended', function() {
+                    playButton.style.opacity = '1';
+                });
+                
+                // When the preview is removed, revoke the URL
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent triggering the preview's click handler
+                    URL.revokeObjectURL(videoURL);
+                    preview.remove();
+                    updateMediaCounter();
+                });
+            } else {
+                // For images, use the FileReader API
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+                
+                // Add click handler for removal
+                removeBtn.addEventListener('click', function() {
+                    preview.remove();
+                    updateMediaCounter();
+                });
+            }
+            
+            // Add the preview to the container
+            mediaContainer.appendChild(preview);
+            
+            // Update counter
+            updateMediaCounter();
+            
+            // Reset the file input to allow selecting more files
+            this.value = '';
+        }
+    });
+    
+    // Remove functionality delegated via event bubbling
+    mediaContainer.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.ce-work-media-remove');
+        if (removeBtn) {
+            const preview = removeBtn.closest('.ce-work-media-preview');
+            
+            // If this is a video, revoke the URL
+            const video = preview.querySelector('video');
+            if (video && video.src) {
+                URL.revokeObjectURL(video.src);
+            }
+            
+            preview.remove();
+            updateMediaCounter();
+        }
+    });
+}
+
+/**
+ * Update work entry numbers
+ */
+function updateWorkEntryNumbers() {
+    const container = document.getElementById('ce-work-progress-container');
+    const entries = container.querySelectorAll('.ce-work-entry');
+    
+    entries.forEach((entry, index) => {
+        // Update number
+        entry.querySelector('.ce-work-number').textContent = index + 1;
+        
+        // Update ID
+        entry.id = `ce-work-entry-${index + 1}`;
+    });
+}
+  

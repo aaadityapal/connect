@@ -46,6 +46,7 @@ if (!isset($_SESSION['user_id'])) {
 $upload_dir = '../uploads/calendar_events/';
 $material_images_dir = $upload_dir . 'material_images/';
 $bill_images_dir = $upload_dir . 'bill_images/';
+$work_media_dir = $upload_dir . 'work_progress_media/';
 
 if (!file_exists($upload_dir)) {
     mkdir($upload_dir, 0777, true);
@@ -55,6 +56,9 @@ if (!file_exists($material_images_dir)) {
 }
 if (!file_exists($bill_images_dir)) {
     mkdir($bill_images_dir, 0777, true);
+}
+if (!file_exists($work_media_dir)) {
+    mkdir($work_media_dir, 0777, true);
 }
 
 // Debug mode
@@ -118,12 +122,26 @@ function handleFileUpload($file, $target_dir) {
         ];
     }
     
-    // Validate file type (allow only images)
-    $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+    // Validate file type (allow images, videos, and PDFs)
+    $allowed_types = [
+        // Images
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
+        // Documents
+        'application/pdf',
+        // Videos
+        'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-flv', 
+        'video/webm', 'video/mpeg', 'video/3gpp', 'video/ogg'
+    ];
+    
+    debug_log('File upload type check', [
+        'file_type' => $file['type'],
+        'allowed' => in_array($file['type'], $allowed_types)
+    ]);
+    
     if (!in_array($file['type'], $allowed_types)) {
         return [
             'success' => false,
-            'error' => "Invalid file type. Allowed types: " . implode(', ', $allowed_types)
+            'error' => "Invalid file type: {$file['type']}. Allowed types include images, videos, and PDFs."
         ];
     }
     
@@ -134,12 +152,29 @@ function handleFileUpload($file, $target_dir) {
     
     // Move uploaded file to target directory
     if (move_uploaded_file($file['tmp_name'], $target_path)) {
+        // Log successful upload
+        debug_log('File uploaded successfully', [
+            'original_name' => $file['name'],
+            'saved_as' => $filename,
+            'file_type' => $file['type'],
+            'file_size' => $file['size'],
+            'path' => $target_path
+        ]);
+        
         return [
             'success' => true,
             'filename' => $filename,
-            'path' => $target_path
+            'path' => $target_path,
+            'mime_type' => $file['type'],
+            'is_video' => strpos($file['type'], 'video/') === 0
         ];
     } else {
+        debug_log('File upload failed', [
+            'from' => $file['tmp_name'],
+            'to' => $target_path,
+            'error' => error_get_last()
+        ]);
+        
         return [
             'success' => false,
             'error' => "Failed to move uploaded file to {$target_path}"
@@ -426,6 +461,291 @@ try {
                     $labour_id, $daily_wage, $total_day_wage, $ot_hours, $ot_minutes, 
                     $ot_rate, $total_ot_amount, $transport_mode, $travel_amount, $grand_total
                 ]);
+            }
+        }
+    }
+
+    // Process beverages if any
+    if (isset($_POST['beverage_count']) && $_POST['beverage_count'] > 0) {
+        $beverage_count = intval($_POST['beverage_count']);
+        debug_log('Processing beverages', ['count' => $beverage_count]);
+        
+        for ($i = 1; $i <= $beverage_count; $i++) {
+            $beverage_type = $_POST["beverage_type_$i"] ?? '';
+            $beverage_name = $_POST["beverage_name_$i"] ?? '';
+            $beverage_amount = $_POST["beverage_amount_$i"] ?? 0;
+            
+            debug_log('Processing beverage', [
+                'number' => $i,
+                'type' => $beverage_type,
+                'name' => $beverage_name,
+                'amount' => $beverage_amount
+            ]);
+            
+            if (!empty($beverage_type) || !empty($beverage_name)) {
+                try {
+                    $stmt = $conn->prepare("INSERT INTO sv_event_beverages 
+                        (event_id, beverage_type, beverage_name, amount, sequence_number) 
+                        VALUES (:event_id, :beverage_type, :beverage_name, :amount, :sequence_number)");
+                    
+                    $stmt->execute([
+                        ':event_id' => $event_id,
+                        ':beverage_type' => $beverage_type,
+                        ':beverage_name' => $beverage_name,
+                        ':amount' => $beverage_amount,
+                        ':sequence_number' => $i
+                    ]);
+                    
+                    debug_log('Beverage saved successfully', [
+                        'beverage_id' => $conn->lastInsertId(),
+                        'number' => $i
+                    ]);
+                } catch (PDOException $e) {
+                    debug_log('Error saving beverage', [
+                        'number' => $i,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Check if table exists, if not, try to create it
+                    if (strpos($e->getMessage(), "sv_event_beverages' doesn't exist") !== false) {
+                        debug_log('Attempting to create sv_event_beverages table');
+                        try {
+                            $conn->exec("CREATE TABLE IF NOT EXISTS `sv_event_beverages` (
+                                `beverage_id` INT AUTO_INCREMENT PRIMARY KEY,
+                                `event_id` INT NOT NULL,
+                                `beverage_type` VARCHAR(100),
+                                `beverage_name` VARCHAR(100),
+                                `amount` DECIMAL(10,2),
+                                `sequence_number` INT,
+                                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                            
+                            // Retry insertion
+                            $stmt = $conn->prepare("INSERT INTO sv_event_beverages 
+                                (event_id, beverage_type, beverage_name, amount, sequence_number) 
+                                VALUES (:event_id, :beverage_type, :beverage_name, :amount, :sequence_number)");
+                            
+                            $stmt->execute([
+                                ':event_id' => $event_id,
+                                ':beverage_type' => $beverage_type,
+                                ':beverage_name' => $beverage_name,
+                                ':amount' => $beverage_amount,
+                                ':sequence_number' => $i
+                            ]);
+                            
+                            debug_log('Beverage saved after creating table', [
+                                'beverage_id' => $conn->lastInsertId(),
+                                'number' => $i
+                            ]);
+                        } catch (PDOException $innerEx) {
+                            debug_log('Failed to create table or retry insertion', [
+                                'error' => $innerEx->getMessage()
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Process work progress entries if any
+    if (isset($_POST['work_progress_count']) && $_POST['work_progress_count'] > 0) {
+        $work_progress_count = intval($_POST['work_progress_count']);
+        debug_log('Processing work progress entries', ['count' => $work_progress_count]);
+        
+        for ($i = 1; $i <= $work_progress_count; $i++) {
+            $work_category = $_POST["work_category_$i"] ?? '';
+            $work_type = $_POST["work_type_$i"] ?? '';
+            $work_done = $_POST["work_done_$i"] ?? 'yes';
+            $work_remarks = $_POST["work_remarks_$i"] ?? '';
+            
+            debug_log('Processing work progress entry', [
+                'number' => $i,
+                'category' => $work_category,
+                'type' => $work_type,
+                'done' => $work_done
+            ]);
+            
+            if (!empty($work_category) || !empty($work_type) || !empty($work_remarks)) {
+                try {
+                    // Insert work progress entry
+                    $stmt = $conn->prepare("INSERT INTO sv_work_progress 
+                        (event_id, work_category, work_type, work_done, remarks, sequence_number) 
+                        VALUES (:event_id, :work_category, :work_type, :work_done, :remarks, :sequence_number)");
+                    
+                    $stmt->execute([
+                        ':event_id' => $event_id,
+                        ':work_category' => $work_category,
+                        ':work_type' => $work_type,
+                        ':work_done' => $work_done,
+                        ':remarks' => $work_remarks,
+                        ':sequence_number' => $i
+                    ]);
+                    
+                    $work_id = $conn->lastInsertId();
+                    debug_log('Work progress entry saved successfully', [
+                        'work_id' => $work_id,
+                        'number' => $i
+                    ]);
+                    
+                    // Process media files for this work entry
+                    $media_count = isset($_POST["work_media_count_$i"]) ? intval($_POST["work_media_count_$i"]) : 0;
+                    
+                    if ($media_count > 0) {
+                        debug_log('Processing work media files', [
+                            'work_id' => $work_id,
+                            'count' => $media_count
+                        ]);
+                        
+                        // Create per-work directory to organize files better
+                        $work_specific_dir = $work_media_dir . 'work_' . $work_id . '/';
+                        if (!file_exists($work_specific_dir)) {
+                            mkdir($work_specific_dir, 0777, true);
+                            debug_log('Created work-specific media directory', [
+                                'directory' => $work_specific_dir
+                            ]);
+                        }
+                        
+                        for ($j = 1; $j <= $media_count; $j++) {
+                            $media_key = "work_media_{$i}_{$j}";
+                            
+                            if (isset($_FILES[$media_key]) && $_FILES[$media_key]['error'] === UPLOAD_ERR_OK) {
+                                $file = $_FILES[$media_key];
+                                debug_log('Processing work media file', [
+                                    'work_id' => $work_id,
+                                    'file_name' => $file['name'],
+                                    'file_type' => $file['type'],
+                                    'file_size' => $file['size']
+                                ]);
+                                
+                                // Determine if it's an image or video
+                                $media_type = 'image';
+                                if (strpos($file['type'], 'video/') === 0) {
+                                    $media_type = 'video';
+                                }
+                                
+                                // Add timestamp to filename to prevent conflicts with multiple uploads
+                                $file_name_parts = pathinfo($file['name']);
+                                $unique_name = $file_name_parts['filename'] . '_' . time() . '_' . mt_rand(1000, 9999);
+                                if (isset($file_name_parts['extension'])) {
+                                    $unique_name .= '.' . $file_name_parts['extension'];
+                                }
+                                
+                                // Use unique name in upload
+                                $file['name'] = $unique_name;
+                                
+                                // Upload the file to the work-specific directory
+                                $upload_result = handleFileUpload($file, $work_specific_dir);
+                                
+                                if ($upload_result['success']) {
+                                    $file_path = $upload_result['path'];
+                                    $orig_file_name = $_FILES[$media_key]['name']; // Store original filename
+                                    
+                                    debug_log('Work media file uploaded', [
+                                        'path' => $file_path,
+                                        'filename' => $unique_name,
+                                        'original_name' => $orig_file_name
+                                    ]);
+                                    
+                                    // Save the media record in the database
+                                    $stmt = $conn->prepare("INSERT INTO sv_work_progress_media 
+                                        (work_id, file_name, file_path, media_type, file_size, sequence_number) 
+                                        VALUES (:work_id, :file_name, :file_path, :media_type, :file_size, :sequence_number)");
+                                    
+                                    $stmt->execute([
+                                        ':work_id' => $work_id,
+                                        ':file_name' => $orig_file_name, // Original filename for display
+                                        ':file_path' => $file_path,
+                                        ':media_type' => $media_type,
+                                        ':file_size' => $file['size'],
+                                        ':sequence_number' => $j
+                                    ]);
+                                    
+                                    $media_id = $conn->lastInsertId();
+                                    debug_log('Work media record saved to database', [
+                                        'media_id' => $media_id
+                                    ]);
+                                } else {
+                                    debug_log('Failed to upload work media file', [
+                                        'error' => $upload_result['error']
+                                    ]);
+                                }
+                            } else if (isset($_FILES[$media_key])) {
+                                // Log upload errors other than 'no file'
+                                if ($_FILES[$media_key]['error'] !== UPLOAD_ERR_NO_FILE) {
+                                    debug_log('Work media file upload error', [
+                                        'error_code' => $_FILES[$media_key]['error'],
+                                        'error_message' => getUploadErrorMessage($_FILES[$media_key]['error'])
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                } catch (PDOException $e) {
+                    debug_log('Error saving work progress entry', [
+                        'number' => $i,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Check if table exists, if not, try to create it
+                    if (strpos($e->getMessage(), "sv_work_progress' doesn't exist") !== false) {
+                        debug_log('Attempting to create work progress tables');
+                        try {
+                            // Create work progress table
+                            $conn->exec("CREATE TABLE IF NOT EXISTS `sv_work_progress` (
+                                `work_id` INT AUTO_INCREMENT PRIMARY KEY,
+                                `event_id` INT NOT NULL,
+                                `work_category` VARCHAR(100) NOT NULL,
+                                `work_type` VARCHAR(100) NOT NULL,
+                                `work_done` ENUM('yes', 'no') DEFAULT 'yes',
+                                `remarks` TEXT,
+                                `sequence_number` INT,
+                                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                            
+                            // Create work media table
+                            $conn->exec("CREATE TABLE IF NOT EXISTS `sv_work_progress_media` (
+                                `media_id` INT AUTO_INCREMENT PRIMARY KEY,
+                                `work_id` INT NOT NULL,
+                                `file_name` VARCHAR(255) NOT NULL,
+                                `file_path` VARCHAR(255) NOT NULL,
+                                `media_type` ENUM('image', 'video') DEFAULT 'image',
+                                `file_size` INT,
+                                `sequence_number` INT,
+                                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                FOREIGN KEY (`work_id`) REFERENCES `sv_work_progress`(`work_id`) ON DELETE CASCADE
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                            
+                            debug_log('Work progress tables created successfully');
+                            
+                            // Retry insertion
+                            $stmt = $conn->prepare("INSERT INTO sv_work_progress 
+                                (event_id, work_category, work_type, work_done, remarks, sequence_number) 
+                                VALUES (:event_id, :work_category, :work_type, :work_done, :remarks, :sequence_number)");
+                            
+                            $stmt->execute([
+                                ':event_id' => $event_id,
+                                ':work_category' => $work_category,
+                                ':work_type' => $work_type,
+                                ':work_done' => $work_done,
+                                ':remarks' => $work_remarks,
+                                ':sequence_number' => $i
+                            ]);
+                            
+                            $work_id = $conn->lastInsertId();
+                            debug_log('Work progress entry saved after creating table', [
+                                'work_id' => $work_id,
+                                'number' => $i
+                            ]);
+                        } catch (PDOException $innerEx) {
+                            debug_log('Failed to create tables or retry insertion', [
+                                'error' => $innerEx->getMessage()
+                            ]);
+                        }
+                    }
+                }
             }
         }
     }

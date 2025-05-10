@@ -916,4 +916,657 @@ textarea.add-event-form-control {
 
 .calendar-vendor-file-upload.has-files .calendar-vendor-file-label i {
     color: #38a169;
+}
+
+/* Beverages Section Styles - Unique Class Names */
+.calendar-event-beverages-section {
+    margin-top: 20px;
+    border-top: 1px solid #e8edf3;
+    padding-top: 20px;
+    position: relative;
+}
+
+.calendar-event-beverages-section::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 3px;
+}
+
+.calendar-beverages-container {
+    margin-bottom: 16px;
+}
+
+.calendar-beverage-item {
+    background-color: #f5f9f5;
+    border-radius: 10px;
+    border: 1px solid #e0eae0;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.1);
+    transition: all 0.2s ease;
+}
+
+.calendar-beverage-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.15);
+}
+
+.calendar-beverage-header {
+    background: linear-gradient(to right, #f0f8f0, #e8f5e8);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0eae0;
+}
+
+.calendar-beverage-header h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2e7d32;
+    display: flex;
+    align-items: center;
+}
+
+.calendar-beverage-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4CAF50, #8BC34A);
+    color: white;
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-right: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-beverage-remove-btn {
+    background: none;
+    border: none;
+    color: #e57373;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-size: 1rem;
+}
+
+.calendar-beverage-remove-btn:hover {
+    background-color: rgba(229, 115, 115, 0.1);
+    color: #e53935;
+}
+
+.calendar-beverage-form-row {
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -8px;
+}
+
+.calendar-beverage-form-group {
+    flex: 1;
+    min-width: 180px;
+    padding: 0 8px;
+    margin-bottom: 12px;
+}
+
+.calendar-beverage-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #33691e;
+}
+
+.calendar-beverage-type,
+.calendar-beverage-name,
+.calendar-beverage-amount {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f9fff9;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03) inset;
+}
+
+.calendar-beverage-type:focus,
+.calendar-beverage-name:focus,
+.calendar-beverage-amount:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+    background-color: #fff;
+}
+
+.calendar-add-beverage-btn {
+    background: linear-gradient(135deg, #4CAF50, #8BC34A);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-add-beverage-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+.calendar-add-beverage-btn:hover {
+    background: linear-gradient(135deg, #43A047, #7CB342);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    transform: translateY(-2px);
+}
+
+.calendar-add-beverage-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive styles for beverages section */
+@media (max-width: 768px) {
+    .calendar-beverage-form-row {
+        flex-direction: column;
+    }
+    
+    .calendar-beverage-form-group {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-beverage-header h5 {
+        font-size: 0.9rem;
+    }
+    
+    .calendar-beverage-number {
+        width: 26px;
+        height: 26px;
+        font-size: 0.8rem;
+    }
+    
+    .calendar-add-beverage-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Work Progress Section Styles - Unique Class Names */
+.ce-work-progress-section {
+    margin-top: 24px;
+    border-top: 1px solid #e1e8ed;
+    padding-top: 22px;
+    position: relative;
+}
+
+.ce-work-progress-section::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 3px;
+}
+
+.ce-work-progress-container {
+    margin-bottom: 16px;
+}
+
+.ce-work-entry {
+    background-color: #f5f9fc;
+    border-radius: 10px;
+    border: 1px solid #d6e4f0;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(41, 128, 185, 0.1);
+    transition: all 0.25s ease;
+}
+
+.ce-work-entry:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(41, 128, 185, 0.15);
+}
+
+.ce-work-header {
+    background: linear-gradient(to right, #ebf5fb, #d6e9f7);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #d6e4f0;
+}
+
+.ce-work-header h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+}
+
+.ce-work-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-right: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ce-work-remove-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-size: 1rem;
+}
+
+.ce-work-remove-btn:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #c0392b;
+}
+
+.ce-work-form-row {
+    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -8px;
+}
+
+.ce-work-form-group {
+    flex: 1;
+    min-width: 200px;
+    padding: 0 8px;
+    margin-bottom: 14px;
+}
+
+.ce-work-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #34495e;
+}
+
+.ce-work-category-select,
+.ce-work-type-select,
+.ce-work-custom-category,
+.ce-work-custom-type,
+.ce-work-remarks {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d6e4f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: #f8fbfe;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03) inset;
+}
+
+.ce-work-category-select:focus,
+.ce-work-type-select:focus,
+.ce-work-custom-category:focus,
+.ce-work-custom-type:focus,
+.ce-work-remarks:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+    background-color: #fff;
+}
+
+.ce-work-remarks {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.ce-work-done-options {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.ce-work-done-option {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ce-work-done-option input[type="radio"] {
+    margin-right: 6px;
+}
+
+.ce-work-done-option span {
+    font-size: 0.95rem;
+    color: #34495e;
+}
+
+.ce-work-media-container {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 30px;
+    transition: all 0.3s ease;
+    padding: 5px;
+    border-radius: 6px;
+}
+
+.ce-work-media-container:empty::before {
+    content: 'No media files uploaded yet';
+    color: #95a5a6;
+    font-style: italic;
+    font-size: 0.85rem;
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 15px 0;
+    border: 1px dashed #d6e4f0;
+    border-radius: 6px;
+    background-color: #f8fbfe;
+}
+
+.ce-work-media-preview {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 2px solid #d6e4f0;
+    background-color: #f8fbfe;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ce-work-media-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ce-work-media-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ce-work-media-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #e74c3c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.ce-work-media-remove:hover {
+    background-color: white;
+    color: #c0392b;
+}
+
+.ce-work-media-type {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background-color: rgba(52, 152, 219, 0.8);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+.ce-work-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8fbfe;
+    border: 2px dashed #d6e4f0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: #3498db;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.ce-work-upload-btn:hover {
+    background-color: #ecf5fe;
+    border-color: #3498db;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+    transform: translateY(-1px);
+}
+
+.ce-work-upload-btn:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.ce-work-upload-btn i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+    color: #2980b9;
+}
+
+.ce-work-upload-input {
+    display: none;
+}
+
+.ce-work-upload-hint {
+    margin-top: 6px;
+    color: #7f8c8d;
+    font-size: 0.8rem;
+    text-align: center;
+    font-style: italic;
+}
+
+.ce-work-media-counter {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    text-align: right;
+    color: #7f8c8d;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.ce-work-media-counter.has-files {
+    color: #3498db;
+    font-weight: 500;
+    background-color: rgba(52, 152, 219, 0.1);
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.ce-add-work-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ce-add-work-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+.ce-add-work-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #1a5276);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    transform: translateY(-2px);
+}
+
+.ce-add-work-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive styles for Work Progress section */
+@media (max-width: 768px) {
+    .ce-work-form-row {
+        flex-direction: column;
+    }
+    
+    .ce-work-form-group {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .ce-work-media-preview {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 576px) {
+    .ce-work-header h5 {
+        font-size: 0.9rem;
+    }
+    
+    .ce-work-number {
+        width: 26px;
+        height: 26px;
+        font-size: 0.8rem;
+    }
+    
+    .ce-add-work-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .ce-work-media-preview {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+.ce-work-media-container.has-files {
+    background-color: rgba(52, 152, 219, 0.05);
+    border: 1px solid rgba(52, 152, 219, 0.1);
+    padding: 10px;
+}
+
+/* Video play button */
+.ce-work-media-play {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    color: white;
+    z-index: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ce-work-media-play i {
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    background-color: rgba(52, 152, 219, 0.7);
+    border-radius: 50%;
+    padding-left: 3px; /* Offset for the play icon */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.ce-work-media-play:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.ce-work-media-play:hover i {
+    background-color: rgba(52, 152, 219, 0.9);
+    transform: scale(1.1);
+}
+
+.ce-work-media-preview {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 2px solid #d6e4f0;
+    background-color: #f8fbfe;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ce-work-media-preview:hover {
+    border-color: #3498db;
+    box-shadow: 0 3px 8px rgba(52, 152, 219, 0.2);
+    transform: translateY(-2px);
 } 

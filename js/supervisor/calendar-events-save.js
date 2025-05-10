@@ -85,11 +85,14 @@ function saveCalendarEvent(eventData, successCallback, errorCallback) {
     // Show loading indicator or toast if needed
     console.log('Saving calendar event:', eventData);
     
+    // Add loading indicator to the page
+    showUploadLoader();
+    updateUploadProgress(0); // Reset progress bar
+    
     // Create FormData object to handle all data including files
     let formData;
     
     if (eventData instanceof FormData) {
-        // If eventData is already FormData, use it directly
         formData = eventData;
     } else {
         // Otherwise create new FormData and add eventData properties
@@ -245,62 +248,80 @@ function saveCalendarEvent(eventData, successCallback, errorCallback) {
     // Debug log
     console.log('Form data prepared for submission');
     
-    // Send AJAX request to save data
-    fetch('backend/save_calendar_event.php', {
-        method: 'POST',
-        body: formData,
-        // No need to set Content-Type header for FormData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            console.log('Calendar event saved successfully:', data);
-            
-            // Call success callback if provided
-            if (typeof successCallback === 'function') {
-                successCallback(data);
-            } else {
-                // Default success action
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: data.message,
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    });
+    // Use XMLHttpRequest to track upload progress
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'backend/save_calendar_event.php', true);
+    
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            updateUploadProgress(percent);
+        }
+    };
+    
+    xhr.onload = function() {
+        hideUploadLoader();
+        if (xhr.status === 200) {
+            let data;
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch (e) {
+                data = { status: 'error', message: 'Invalid server response' };
+            }
+            if (data.status === 'success') {
+                if (typeof successCallback === 'function') {
+                    successCallback(data);
                 } else {
-                    alert('Event saved successfully!');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        alert('Event saved successfully!');
+                    }
+                }
+            } else {
+                if (typeof errorCallback === 'function') {
+                    errorCallback(data);
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
                 }
             }
         } else {
-            console.error('Error saving calendar event:', data);
-            
-            // Call error callback if provided
             if (typeof errorCallback === 'function') {
-                errorCallback(data);
+                errorCallback({ status: 'error', message: 'Network or server error' });
             } else {
-                // Default error action
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         title: 'Error',
-                        text: data.message,
+                        text: 'An unexpected error occurred. Please try again.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('An unexpected error occurred. Please try again.');
                 }
             }
         }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        
-        // Call error callback if provided
+    };
+    
+    xhr.onerror = function() {
+        hideUploadLoader();
         if (typeof errorCallback === 'function') {
-            errorCallback({status: 'error', message: 'Network or server error'});
+            errorCallback({ status: 'error', message: 'Network or server error' });
         } else {
-            // Default error action
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: 'Error',
@@ -312,7 +333,9 @@ function saveCalendarEvent(eventData, successCallback, errorCallback) {
                 alert('An unexpected error occurred. Please try again.');
             }
         }
-    });
+    };
+    
+    xhr.send(formData);
 }
 
 /**
@@ -735,6 +758,9 @@ function handleFormSubmit(event) {
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
     
+    // Show loader for file uploads
+    showUploadLoader();
+    
     // Create FormData object to handle file uploads
     const formData = new FormData(event.target);
     
@@ -742,6 +768,9 @@ function handleFormSubmit(event) {
     saveCalendarEvent(formData, 
         // Success callback
         function(data) {
+            // Hide the loader
+            hideUploadLoader();
+            
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: 'Success!',
@@ -759,6 +788,9 @@ function handleFormSubmit(event) {
         },
         // Error callback
         function(data) {
+            // Hide the loader
+            hideUploadLoader();
+            
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     title: 'Error',
@@ -775,4 +807,131 @@ function handleFormSubmit(event) {
             submitButton.innerHTML = originalButtonText;
         }
     );
+}
+
+/**
+ * Show upload loader when files are being uploaded
+ */
+function showUploadLoader() {
+    // Check if loader already exists
+    if (document.getElementById('upload-loader')) {
+        document.getElementById('upload-loader').style.display = 'flex';
+        return;
+    }
+    
+    // Create the loader element
+    const loaderHTML = `
+        <div id="upload-loader" class="upload-loader-overlay">
+            <div class="upload-loader-content">
+                <div class="upload-loader-spinner"></div>
+                <h3>Uploading Files</h3>
+                <p id="upload-loader-message">Please wait while your files are being uploaded...</p>
+                <div class="upload-progress-bar-container">
+                    <div class="upload-progress-bar" id="upload-progress-bar"></div>
+                </div>
+                <div class="upload-progress-percent" id="upload-progress-percent">0%</div>
+            </div>
+        </div>
+    `;
+    
+    // Create loader container
+    const loaderContainer = document.createElement('div');
+    loaderContainer.innerHTML = loaderHTML;
+    document.body.appendChild(loaderContainer.firstElementChild);
+    
+    // Add loader styles if not already added
+    if (!document.getElementById('upload-loader-styles')) {
+        const loaderStyles = document.createElement('style');
+        loaderStyles.id = 'upload-loader-styles';
+        loaderStyles.textContent = `
+            .upload-loader-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+            
+            .upload-loader-content {
+                background-color: white;
+                border-radius: 8px;
+                padding: 30px;
+                text-align: center;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                max-width: 400px;
+            }
+            
+            .upload-loader-spinner {
+                border: 6px solid #f3f3f3;
+                border-top: 6px solid #3498db;
+                border-radius: 50%;
+                width: 60px;
+                height: 60px;
+                animation: upload-spin 1.5s linear infinite;
+                margin: 0 auto 20px auto;
+            }
+            
+            .upload-loader-content h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+            }
+            
+            .upload-loader-content p {
+                margin: 0 0 10px 0;
+                color: #666;
+            }
+            
+            .upload-progress-bar-container {
+                width: 100%;
+                background: #eee;
+                border-radius: 6px;
+                height: 18px;
+                margin: 15px 0 5px 0;
+                overflow: hidden;
+            }
+            
+            .upload-progress-bar {
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, #3498db, #4CAF50);
+                border-radius: 6px;
+                transition: width 0.2s;
+            }
+            
+            .upload-progress-percent {
+                font-weight: bold;
+                color: #3498db;
+                font-size: 1.1em;
+                margin-bottom: 5px;
+            }
+            
+            @keyframes upload-spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(loaderStyles);
+    }
+}
+
+function updateUploadProgress(percent) {
+    const bar = document.getElementById('upload-progress-bar');
+    const label = document.getElementById('upload-progress-percent');
+    if (bar) bar.style.width = percent + '%';
+    if (label) label.textContent = percent + '%';
+}
+
+/**
+ * Hide the upload loader
+ */
+function hideUploadLoader() {
+    const loader = document.getElementById('upload-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
 } 

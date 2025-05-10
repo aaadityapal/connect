@@ -57,22 +57,115 @@ if (!file_exists($bill_images_dir)) {
     mkdir($bill_images_dir, 0777, true);
 }
 
-// Function to handle file uploads
-function uploadFile($file, $target_dir) {
-    if ($file['error'] != 0) {
-        return false;
+// Debug mode
+$debug_mode = false;
+
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Log function for debugging
+function logDebug($message, $data = null) {
+    global $debug_mode;
+    if (!$debug_mode) return;
+    
+    $log_file = '../logs/calendar_events.log';
+    $log_dir = dirname($log_file);
+    
+    if (!file_exists($log_dir)) {
+        mkdir($log_dir, 0777, true);
     }
     
-    // Generate unique filename
+    $timestamp = date('Y-m-d H:i:s');
+    $log_message = "[{$timestamp}] {$message}";
+    
+    if ($data !== null) {
+        $log_message .= ": " . print_r($data, true);
+    }
+    
+    file_put_contents($log_file, $log_message . PHP_EOL, FILE_APPEND);
+}
+
+// Set content type to JSON
+header('Content-Type: application/json');
+
+// Function to create upload directory if it doesn't exist
+function createUploadDirectory($path) {
+    if (!file_exists($path)) {
+        mkdir($path, 0777, true);
+        return true;
+    }
+    return file_exists($path) && is_writable($path);
+}
+
+// Function to handle file uploads
+function handleFileUpload($file, $target_dir) {
+    // Check if file was uploaded successfully
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        $error_message = isset($file['error']) ? getUploadErrorMessage($file['error']) : 'Unknown error';
+        return [
+            'success' => false,
+            'error' => "File upload error: {$error_message}"
+        ];
+    }
+    
+    // Create upload directory if it doesn't exist
+    if (!createUploadDirectory($target_dir)) {
+        return [
+            'success' => false,
+            'error' => "Failed to create upload directory: {$target_dir}"
+        ];
+    }
+    
+    // Validate file type (allow only images)
+    $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+    if (!in_array($file['type'], $allowed_types)) {
+        return [
+            'success' => false,
+            'error' => "Invalid file type. Allowed types: " . implode(', ', $allowed_types)
+        ];
+    }
+    
+    // Generate unique filename to prevent overwrites
     $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = uniqid() . '_' . time() . '.' . $file_extension;
     $target_path = $target_dir . $filename;
     
-    // Move uploaded file
+    // Move uploaded file to target directory
     if (move_uploaded_file($file['tmp_name'], $target_path)) {
-        return $filename;
+        return [
+            'success' => true,
+            'filename' => $filename,
+            'path' => $target_path
+        ];
     } else {
-        return false;
+        return [
+            'success' => false,
+            'error' => "Failed to move uploaded file to {$target_path}"
+        ];
+    }
+}
+
+// Get upload error message
+function getUploadErrorMessage($error_code) {
+    switch ($error_code) {
+        case UPLOAD_ERR_INI_SIZE:
+            return 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form';
+        case UPLOAD_ERR_PARTIAL:
+            return 'The uploaded file was only partially uploaded';
+        case UPLOAD_ERR_NO_FILE:
+            return 'No file was uploaded';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Missing a temporary folder';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'Failed to write file to disk';
+        case UPLOAD_ERR_EXTENSION:
+            return 'A PHP extension stopped the file upload';
+        default:
+            return 'Unknown upload error';
     }
 }
 
@@ -191,10 +284,10 @@ try {
                             'file_size' => $file['size']
                         ]);
                         
-                        $filename = uploadFile($file, $material_images_dir);
+                        $upload_result = handleFileUpload($file, $material_images_dir);
                         
-                        if ($filename) {
-                            $image_path = 'uploads/calendar_events/material_images/' . $filename;
+                        if ($upload_result['success']) {
+                            $image_path = $upload_result['path'];
                             debug_log('Material image uploaded', ['path' => $image_path]);
                             
                             $sql = "INSERT INTO sv_material_images (material_id, image_path) VALUES (?, ?)";
@@ -209,7 +302,7 @@ try {
                         } else {
                             debug_log('Failed to upload material image', [
                                 'material_key' => $material_key,
-                                'error' => $file['error']
+                                'error' => $upload_result['error']
                             ]);
                         }
                     }
@@ -223,10 +316,10 @@ try {
                             'file_size' => $file['size']
                         ]);
                         
-                        $filename = uploadFile($file, $bill_images_dir);
+                        $upload_result = handleFileUpload($file, $bill_images_dir);
                         
-                        if ($filename) {
-                            $image_path = 'uploads/calendar_events/bill_images/' . $filename;
+                        if ($upload_result['success']) {
+                            $image_path = $upload_result['path'];
                             debug_log('Bill image uploaded', ['path' => $image_path]);
                             
                             $sql = "INSERT INTO sv_bill_images (material_id, image_path) VALUES (?, ?)";
@@ -241,7 +334,7 @@ try {
                         } else {
                             debug_log('Failed to upload bill image', [
                                 'material_key' => $material_key,
-                                'error' => $file['error']
+                                'error' => $upload_result['error']
                             ]);
                         }
                     }
@@ -341,12 +434,57 @@ try {
     $conn->commit();
     debug_log('Transaction committed successfully');
     
-    // Return success response
-    echo json_encode([
+    // Process file uploads (Material and Bill Images)
+    $material_images = [];
+    $bill_images = [];
+
+    // Handle material images
+    $material_image_count = isset($_POST['material_count']) ? intval($_POST['material_count']) : 0;
+    $upload_base_dir = '../uploads/calendar_events/';
+    $material_upload_dir = $upload_base_dir . 'material_images/';
+    $bill_upload_dir = $upload_base_dir . 'bill_images/';
+
+    // Create upload directories if they don't exist
+    createUploadDirectory($upload_base_dir);
+    createUploadDirectory($material_upload_dir);
+    createUploadDirectory($bill_upload_dir);
+
+    for ($i = 1; $i <= $material_image_count; $i++) {
+        $material_image_key = "material_image_{$i}";
+        if (isset($_FILES[$material_image_key]) && $_FILES[$material_image_key]['name']) {
+            $upload_result = handleFileUpload($_FILES[$material_image_key], $material_upload_dir);
+            if ($upload_result['success']) {
+                $material_images[$i] = $upload_result;
+            } else {
+                logDebug("Material image upload failed", $upload_result);
+            }
+        }
+    }
+
+    // Handle bill images
+    $vendor_count = isset($_POST['vendor_count']) ? intval($_POST['vendor_count']) : 0;
+    for ($i = 1; $i <= $vendor_count; $i++) {
+        $bill_image_key = "bill_image_{$i}";
+        if (isset($_FILES[$bill_image_key]) && $_FILES[$bill_image_key]['name']) {
+            $upload_result = handleFileUpload($_FILES[$bill_image_key], $bill_upload_dir);
+            if ($upload_result['success']) {
+                $bill_images[$i] = $upload_result;
+            } else {
+                logDebug("Bill image upload failed", $upload_result);
+            }
+        }
+    }
+
+    // Return response with file upload info
+    $response = [
         'status' => 'success',
         'message' => 'Calendar event saved successfully',
-        'event_id' => $event_id
-    ]);
+        'event_id' => $event_id,
+        'material_images' => $material_images,
+        'bill_images' => $bill_images
+    ];
+
+    echo json_encode($response);
     debug_log('Save process completed successfully', ['event_id' => $event_id]);
     
 } catch (Exception $e) {

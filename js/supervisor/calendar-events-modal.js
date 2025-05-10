@@ -1010,6 +1010,9 @@ function saveEvent() {
         return;
     }
     
+    // Show loading indicator for file uploads
+    showUploadLoader();
+    
     // Get vendor data (if any)
     const vendorItems = document.querySelectorAll('.supervisor-vendor-entry');
     const vendors = [];
@@ -1198,8 +1201,8 @@ function saveEvent() {
         companies: companies
     };
     
-    // Check if the saveCalendarEvent function from calendar-events-save.js is available
-    if (typeof window.saveCalendarEvent === 'function') {
+    // Use the saveCalendarEvent function from calendar-events-save.js
+    if (typeof saveCalendarEvent === 'function') {
         // For file uploads, we need to create a FormData object
         const formData = new FormData();
         formData.append('event_title', eventTitle);
@@ -1324,46 +1327,26 @@ function saveEvent() {
             });
         }
         
-        // Use the FormData object instead of the eventData object
-        window.saveCalendarEvent(formData, 
+        saveCalendarEvent(formData, 
             // Success callback
-            function(response) {
-                showToast('Success', 'Event has been created successfully');
-                
-                // Add to calendar
-                addEventToCalendar(response.event_id, eventDate, eventTitle, 'meeting', '9:00 AM');
-                
-                // Hide modal
-                hideAddEventModal();
+            function(data) {
+                hideUploadLoader();
+                hideAddEventModal(); // Changed from closeEventModal to hideAddEventModal
+                showToast('Success', 'Event saved successfully!', 'success');
+                if (typeof loadEvents === 'function') {
+                    loadEvents();
+                }
             },
             // Error callback
             function(error) {
+                hideUploadLoader();
                 showToast('Error', error.message || 'Failed to save event', 'error');
             }
         );
     } else {
-        // Fallback to original method (for compatibility)
-        console.warn('saveCalendarEvent function not found. Make sure calendar-events-save.js is loaded.');
-        
-        // Generate a unique ID (for demo purposes)
-        const eventId = 'event_' + new Date().getTime();
-        
-        // Default type for demonstration
-        const eventType = 'meeting';
-        
-        // Add to calendar
-        addEventToCalendar(eventId, eventDate, eventTitle, eventType, '9:00 AM');
-        
-        // Success message
-        showToast('Success', 'Event has been created successfully');
-        
-        // Hide modal
-        hideAddEventModal();
-        
-        // Log data for demonstration
-        if (vendors.length > 0 || companies.length > 0) {
-            console.log('Event data:', eventData);
-        }
+        hideUploadLoader();
+        console.error('saveCalendarEvent function not found!');
+        showToast('Error', 'Calendar save functionality not available', 'error');
     }
 }
 

@@ -148,3 +148,25 @@
 [09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Bill image saved to database
 [09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Transaction committed successfully
 [09-May-2025 20:11:34 Asia/Kolkata] 2025-05-09 20:11:34 - Save process completed successfully - {"event_id":"15"}
+[09-May-2025 16:52:25 Europe/Berlin] 2025-05-09 16:52:25 - Starting calendar event save process
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Database connection included
+[09-May-2025 20:22:25 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Session started - {"user_id":21}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Started database transaction
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing event data - {"title":"gfd","date":"2025-05-06","user_id":21}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Event created successfully - {"event_id":"16"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing vendors - {"count":1}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing vendor - {"index":1,"type":"material","name":"gfd"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Vendor created successfully - {"vendor_id":"16"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing materials - {"vendor_id":"16","count":1}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing material - {"material_key":"material_1_1"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Material data - {"material_key":"material_1_1","remarks":"ytre","amount":"32"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Material created successfully - {"material_id":"13"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing material image - {"material_key":"material_1_1","file_name":"wallpaperflare.com_wallpaper.jpg","file_size":10953635}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Material image uploaded - {"path":"..\/uploads\/calendar_events\/material_images\/681e16a9a505d_1746802345.jpg"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Material image saved to database
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Processing bill image - {"material_key":"material_1_1","file_name":"wallpaperflare.com_wallpaper.jpg","file_size":10953635}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Bill image uploaded - {"path":"..\/uploads\/calendar_events\/bill_images\/681e16a9a5e64_1746802345.jpg"}
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Bill image saved to database
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Transaction committed successfully
+[09-May-2025 20:22:25 Asia/Kolkata] 2025-05-09 20:22:25 - Save process completed successfully - {"event_id":"16"}

@@ -1569,4 +1569,155 @@ textarea.add-event-form-control {
     border-color: #3498db;
     box-shadow: 0 3px 8px rgba(52, 152, 219, 0.2);
     transform: translateY(-2px);
+}
+
+/* Wages Summary Section Styles */
+.calendar-wages-summary-section {
+    margin-top: 24px;
+    border-top: 1px solid #e1e8ed;
+    padding-top: 22px;
+    position: relative;
+}
+
+.calendar-wages-summary-section::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #6b46c1, #805ad5);
+    border-radius: 3px;
+}
+
+.calendar-wages-summary-container {
+    margin-bottom: 16px;
+}
+
+.wages-summary-card {
+    background: linear-gradient(to right, #f8f7ff, #f0f0ff);
+    border: 1px solid #e2dff7;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(107, 70, 193, 0.1);
+}
+
+.wages-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e2dff7;
+}
+
+.wages-summary-row:last-child {
+    border-bottom: none;
+}
+
+.wages-summary-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.wages-summary-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.wages-summary-total {
+    margin-top: 10px;
+    padding-top: 15px;
+    border-top: 2px solid #805ad5;
+    border-bottom: none;
+    background-color: rgba(128, 90, 213, 0.05);
+    border-radius: 6px;
+    padding: 15px 10px;
+}
+
+.wages-summary-total .wages-summary-label {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #4a5568;
+}
+
+.wages-summary-total .wages-summary-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #6b46c1;
+}
+
+/* Animation for highlighting changes */
+@keyframes highlight-pulse {
+    0% {
+        background-color: rgba(128, 90, 213, 0.05);
+    }
+    50% {
+        background-color: rgba(128, 90, 213, 0.2);
+    }
+    100% {
+        background-color: rgba(128, 90, 213, 0.05);
+    }
+}
+
+.highlight-animation {
+    animation: highlight-pulse 1s ease;
+}
+
+/* Responsive styles for Wages Summary section */
+@media (max-width: 768px) {
+    .wages-summary-card {
+        padding: 15px;
+    }
+    
+    .wages-summary-row {
+        padding: 8px 0;
+    }
+    
+    .wages-summary-label {
+        font-size: 0.9rem;
+    }
+    
+    .wages-summary-value {
+        font-size: 0.95rem;
+    }
+    
+    .wages-summary-total .wages-summary-label {
+        font-size: 1rem;
+    }
+    
+    .wages-summary-total .wages-summary-value {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .wages-summary-card {
+        padding: 12px;
+    }
+    
+    .wages-summary-row {
+        padding: 6px 0;
+    }
+    
+    .wages-summary-label {
+        font-size: 0.85rem;
+    }
+    
+    .wages-summary-value {
+        font-size: 0.9rem;
+    }
+    
+    .wages-summary-total {
+        padding: 10px 8px;
+    }
+    
+    .wages-summary-total .wages-summary-label {
+        font-size: 0.95rem;
+    }
+    
+    .wages-summary-total .wages-summary-value {
+        font-size: 1rem;
+    }
 } 

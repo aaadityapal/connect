@@ -141,4 +141,32 @@ CREATE TABLE IF NOT EXISTS `sv_work_progress_media` (
   `sequence_number` INT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`work_id`) REFERENCES `sv_work_progress`(`work_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table for inventory items
+CREATE TABLE IF NOT EXISTS `sv_inventory_items` (
+  `inventory_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `event_id` INT NOT NULL,
+  `inventory_type` ENUM('received', 'consumed', 'other') DEFAULT 'received',
+  `material_type` VARCHAR(100) NOT NULL,
+  `quantity` DECIMAL(10,2) DEFAULT 0,
+  `unit` VARCHAR(20),
+  `remarks` TEXT,
+  `sequence_number` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table for inventory media files (bill images, photos, videos)
+CREATE TABLE IF NOT EXISTS `sv_inventory_media` (
+  `media_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `inventory_id` INT NOT NULL,
+  `file_name` VARCHAR(255) NOT NULL,
+  `file_path` VARCHAR(255) NOT NULL,
+  `media_type` ENUM('bill', 'photo', 'video') DEFAULT 'photo',
+  `file_size` INT,
+  `sequence_number` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`inventory_id`) REFERENCES `sv_inventory_items`(`inventory_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
+

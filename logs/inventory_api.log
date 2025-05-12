@@ -1,0 +1,8 @@
+[2025-05-10 12:38:52] Received inventory request {"site":"Construction Site At Sector 80","material":"Bricks"}
+[2025-05-10 12:38:52] Error {"message":"SQLSTATE[HY000] [1045] Access denied for user ''@'localhost' (using password: NO)","trace":"#0 C:\\xampp\\htdocs\\hr\\backend\\get_material_inventory.php(48): PDO->__construct('mysql:host=;dbn...', NULL, Object(SensitiveParameterValue))\n#1 {main}"}
+[2025-05-10 12:40:00] Received inventory request {"site":"Construction Site At Sector 80","material":"Timber"}
+[2025-05-10 12:40:00] Error {"message":"SQLSTATE[HY000] [1045] Access denied for user ''@'localhost' (using password: NO)","trace":"#0 C:\\xampp\\htdocs\\hr\\backend\\get_material_inventory.php(48): PDO->__construct('mysql:host=;dbn...', NULL, Object(SensitiveParameterValue))\n#1 {main}"}
+[2025-05-10 10:42:50] Received inventory request {"site":"Construction Site At Sector 80","material":"Bricks"}
+[2025-05-10 10:42:50] Error {"message":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'site_name' in 'where clause'","trace":"#0 C:\\xampp\\htdocs\\hr\\backend\\get_material_inventory.php(70): PDOStatement->execute()\n#1 {main}"}
+[2025-05-10 12:44:58] Received inventory request {"site":"site at sector 80","material":"timber"}
+[2025-05-10 12:44:58] No event found for site {"site":"site at sector 80"}

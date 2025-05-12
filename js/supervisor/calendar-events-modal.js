@@ -121,14 +121,23 @@ function createModalElements() {
                                 <div class="event-form-col">
                             <div class="add-event-form-group">
                                         <label for="event-title"><i class="fas fa-bookmark"></i> Event Title</label>
-                                <input type="text" id="event-title" name="event-title" class="add-event-form-control" placeholder="Enter event title" required>
+                                <select id="event-title" name="event-title" class="add-event-form-control" required>
+                                    <option value="">Select Construction Site</option>
+                                    <option value="Construction Site At Sector 80">Construction Site At Sector 80</option>
+                                    <option value="Construction Site At Dilshad Garden">Construction Site At Dilshad Garden</option>
+                                    <option value="Construction Site At Jasola">Construction Site At Jasola</option>
+                                    <option value="Construction Site At Faridabad Sector 91">Construction Site At Faridabad Sector 91</option>
+                                    <option value="custom">Custom Title</option>
+                                </select>
+                                <input type="text" id="custom-event-title" name="custom-event-title" class="add-event-form-control" 
+                                       placeholder="Enter custom event title" style="display: none; margin-top: 10px;">
                             </div>
                                 </div>
                                 <div class="event-form-col">
                             <div class="add-event-form-group">
                                         <label for="event-date-display"><i class="fas fa-calendar-alt"></i> Event Date</label>
                                         <input type="text" id="event-date-display" class="add-event-form-control" readonly>
-                                        <input type="hidden" id="event-date" name="event-date">
+                            <input type="hidden" id="event-date" name="event-date">
                                     </div>
                                 </div>
                             </div>
@@ -156,13 +165,15 @@ function createModalElements() {
                             
                                 <div id="calendar-company-container" class="calendar-company-container">
                                     <!-- Company labour items will be added here dynamically -->
-                                </div>
-                                
+                            </div>
+                            
                                 <button type="button" id="calendar-add-company-btn" class="calendar-add-company-btn">
                                     <i class="fas fa-plus-circle"></i> Add Company Labour
                                 </button>
                             </div>
-
+                            
+                           
+                            
                             <!-- Beverages Section -->
                             <div class="calendar-event-beverages-section">
                                 <div class="calendar-event-section-header">
@@ -189,6 +200,68 @@ function createModalElements() {
                                 <button type="button" id="ce-add-work-btn" class="ce-add-work-btn">
                                     <i class="fas fa-plus-circle"></i> Add Work Progress
                                 </button>
+                            </div>
+
+                            <!-- Inventory Section HTML -->
+                            <div class="cei-inventory-section">
+                                <div class="calendar-event-section-header">
+                                    <h4><i class="fas fa-boxes"></i> Inventory Section</h4>
+                                    <p class="section-description">Add details about inventory items received or consumed</p>
+                                </div>
+                                <div id="ce-inventory-container" class="cei-inventory-container">
+                                    <!-- Inventory entries will be added dynamically here -->
+                                </div>
+                                <button type="button" id="ce-add-inventory-btn" class="cei-add-inventory-btn">
+                                    <i class="fas fa-plus-circle"></i> Add Inventory Item
+                                </button>
+                            </div>
+                             <!-- Wages Summary Section -->
+                            <div class="sv-wages-summary-section">
+                                <div class="sv-wages-summary-inner">
+                                    <div class="sv-wages-summary-decoration"></div>
+                                    <div class="sv-wages-summary-header">
+                                        <div class="sv-wages-summary-header-icon">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="sv-wages-summary-title">Wages Summary</h4>
+                                            <p class="sv-wages-summary-subtitle">Summary of all labour payments</p>
+                                        </div>
+                                    </div>
+                                    <div id="calendar-wages-summary-container" class="sv-wages-summary-content">
+                                        <div class="sv-wages-row">
+                                            <div class="sv-wages-label">
+                                                <i class="fas fa-users"></i> Vendor Labour Wages
+                                            </div>
+                                            <div class="sv-wages-value">₹ <span id="vendor-labour-wages">0.00</span></div>
+                                        </div>
+                                        <div class="sv-wages-row">
+                                            <div class="sv-wages-label">
+                                                <i class="fas fa-building"></i> Company Labour Wages
+                                            </div>
+                                            <div class="sv-wages-value">₹ <span id="company-labour-wages">0.00</span></div>
+                                        </div>
+                                        <div class="sv-wages-row">
+                                            <div class="sv-wages-label">
+                                                <i class="fas fa-business-time"></i> Overtime Payments
+                                            </div>
+                                            <div class="sv-wages-value">₹ <span id="overtime-payments">0.00</span></div>
+                                        </div>
+                                        <div class="sv-wages-row">
+                                            <div class="sv-wages-label">
+                                                <i class="fas fa-route"></i> Travel Expenses
+                                            </div>
+                                            <div class="sv-wages-value">₹ <span id="travel-expenses">0.00</span></div>
+                                        </div>
+                                        
+                                        <div class="sv-wages-total-row">
+                                            <div class="sv-wages-total-label">
+                                                <i class="fas fa-calculator"></i> Total Wages
+                                            </div>
+                                            <div class="sv-wages-total-value">₹ <span id="total-wages">0.00</span></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -720,12 +793,200 @@ function createModalElements() {
             </div>
         </div>
     `;
+
+    // Inventory template for adding new inventory entries
+    window.inventoryTemplate = `
+        <div class="cei-inventory-entry">
+            <div class="cei-inventory-header">
+                <h5><span class="cei-inventory-number">1</span> Inventory Information</h5>
+                <button type="button" class="cei-inventory-remove-btn" aria-label="Remove inventory entry">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cei-inventory-form-row">
+                <div class="cei-inventory-form-group">
+                    <label><i class="fas fa-boxes"></i> Inventory Type</label>
+                    <select class="cei-inventory-type-select">
+                        <option value="received">Received Item</option>
+                        <option value="consumed">Consumed Item</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="cei-inventory-form-group">
+                    <label><i class="fas fa-tools"></i> Material</label>
+                    <select class="cei-inventory-material-select">
+                        <option value="">Select Material</option>
+                        <option value="cement">Cement</option>
+                        <option value="sand">Sand</option>
+                        <option value="bricks">Bricks</option>
+                        <option value="steel">Steel</option>
+                        <option value="gravel">Gravel</option>
+                        <option value="concrete">Concrete Mix</option>
+                        <option value="stone">Stone Aggregates</option>
+                        <option value="timber">Timber</option>
+                        <option value="plywood">Plywood</option>
+                        <option value="glass">Glass</option>
+                        <option value="paint">Paint</option>
+                        <option value="pipes">Pipes</option>
+                        <option value="wires">Electrical Wires</option>
+                        <option value="tiles">Tiles</option>
+                        <option value="fixtures">Fixtures</option>
+                        <option value="custom">Custom Material</option>
+                    </select>
+                    <input type="text" class="cei-inventory-custom-material" placeholder="Enter custom material" style="display: none; margin-top: 8px;">
+                </div>
+            </div>
+            <div class="cei-inventory-form-row">
+                <div class="cei-inventory-form-group">
+                    <label><i class="fas fa-weight"></i> Quantity</label>
+                    <input type="number" class="cei-inventory-quantity" placeholder="Enter quantity" min="0" step="0.01">
+                </div>
+                <div class="cei-inventory-form-group">
+                    <label><i class="fas fa-ruler"></i> Unit</label>
+                    <select class="cei-inventory-unit">
+                        <option value="">Select Unit</option>
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="tons">Tons</option>
+                        <option value="pieces">Pieces</option>
+                        <option value="bags">Bags</option>
+                        <option value="boxes">Boxes</option>
+                        <option value="meters">Meters</option>
+                        <option value="sq_meters">Square Meters</option>
+                        <option value="cu_meters">Cubic Meters</option>
+                        <option value="liters">Liters</option>
+                        <option value="bundles">Bundles</option>
+                        <option value="rolls">Rolls</option>
+                        <option value="trucks">Trucks</option>
+                        <option value="loads">Loads</option>
+                    </select>
+                </div>
+            </div>
+            <div class="ceirm-remaining-material-section">
+                <div class="ceirm-section-header">
+                    <i class="fas fa-boxes"></i> Remaining Material On Site
+                </div>
+                <div class="ceirm-content-area">
+                    <div class="ceirm-loading">Loading material information...</div>
+                </div>
+            </div>
+            <div class="cei-inventory-form-row">
+                <div class="cei-inventory-form-group full-width">
+                    <label><i class="fas fa-comment-alt"></i> Remarks</label>
+                    <textarea class="cei-inventory-remarks" placeholder="Enter remarks about the inventory item"></textarea>
+                </div>
+            </div>
+            <div class="cei-inventory-form-row">
+                <div class="cei-inventory-form-group">
+                    <label><i class="fas fa-file-invoice"></i> Bill Image</label>
+                    <label class="cei-inventory-bill-upload">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload Bill Image
+                        <input type="file" class="cei-inventory-bill-input" accept="image/*,application/pdf">
+                    </label>
+                    <div class="cei-inventory-bill-preview"></div>
+                </div>
+            </div>
+            <div class="cei-inventory-form-row">
+                <div class="cei-inventory-form-group full-width">
+                    <label><i class="fas fa-images"></i> Photos & Videos</label>
+                    <div class="cei-inventory-media-container">
+                        <!-- Media previews will be added dynamically here -->
+                    </div>
+                    <label class="cei-inventory-upload-btn">
+                        <i class="fas fa-cloud-upload-alt"></i> Add Photos/Videos (One by One)
+                        <input type="file" class="cei-inventory-upload-input" accept="image/*,video/*">
+                    </label>
+                    <div class="cei-inventory-upload-hint">Click the button above to add multiple media files one at a time</div>
+                    <div class="cei-inventory-media-counter" style="display: none;">0 files added</div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 /**
  * Initialize all event handlers for modals and buttons
  */
 function initializeEventHandlers() {
+    // Add Event Modal handlers
+    const addEventModalContainer = document.getElementById('add-event-modal-container');
+    const addEventModal = addEventModalContainer.querySelector('.add-event-modal');
+    const closeBtn = addEventModal.querySelector('.add-event-modal-close');
+    const cancelBtn = addEventModal.querySelector('.add-event-btn-cancel');
+    const submitBtn = addEventModal.querySelector('.event-submit-btn');
+    
+    // Modal close buttons
+    closeBtn.addEventListener('click', hideAddEventModal);
+    cancelBtn.addEventListener('click', hideAddEventModal);
+    
+    // Event title dropdown change handler
+    const eventTitleSelect = document.getElementById('event-title');
+    const customEventTitleInput = document.getElementById('custom-event-title');
+    
+    eventTitleSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customEventTitleInput.style.display = 'block';
+            customEventTitleInput.required = true;
+            customEventTitleInput.focus();
+        } else {
+            customEventTitleInput.style.display = 'none';
+            customEventTitleInput.required = false;
+        }
+        
+        // Update all existing inventory material sections
+        updateAllRemainingMaterialSections();
+    });
+    
+    // Submit button
+    submitBtn.addEventListener('click', saveEvent);
+    
+    // Prevent form submission on enter
+    addEventModal.querySelector('form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        saveEvent();
+    });
+    
+    // Add vendor button
+    const addVendorBtn = document.getElementById('calendar-add-vendor-btn');
+    addVendorBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        // Prevent event bubbling to avoid duplicate calls
+        event.stopPropagation();
+        addNewVendor();
+    });
+    
+    // Add company button
+    const addCompanyBtn = document.getElementById('calendar-add-company-btn');
+    addCompanyBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        // Prevent event bubbling to avoid duplicate calls
+        event.stopPropagation();
+        addNewCompanyItem();
+    });
+    
+    // Add beverage button
+    document.getElementById('add-beverage-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        // Prevent event bubbling to avoid duplicate calls
+        event.stopPropagation();
+        addNewBeverage();
+    });
+    
+    // Add work progress button
+    document.getElementById('ce-add-work-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        // Prevent event bubbling to avoid duplicate calls
+        event.stopPropagation();
+        addWorkProgressEntry();
+    });
+    
+    // Add inventory button
+    document.getElementById('ce-add-inventory-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        // Prevent event bubbling to avoid duplicate calls
+        event.stopPropagation();
+        addInventoryEntry();
+    });
+    
     // Add click events for the add event buttons on calendar days
     document.addEventListener('click', function(event) {
         // Handle opening add event modal when + button is clicked
@@ -857,11 +1118,8 @@ function initializeEventHandlers() {
             }
         }
         
-        // Handle add company button
-        if (event.target.id === 'calendar-add-company-btn' || 
-            event.target.closest('#calendar-add-company-btn')) {
-            addNewCompanyItem();
-        }
+        // Handle add company button - REMOVED to prevent duplicate event handling
+        // Already handled by direct event listener on the button
         
         // Handle remove company button
         if (event.target.classList.contains('calendar-company-remove-btn') || 
@@ -875,14 +1133,6 @@ function initializeEventHandlers() {
                 // Update the numbering of remaining company items
                 updateCompanyNumbers();
             }
-        }
-    });
-    
-    // Add vendor button
-    document.addEventListener('click', function(event) {
-        if (event.target.id === 'calendar-add-vendor-btn' || 
-            event.target.closest('#calendar-add-vendor-btn')) {
-            addNewVendor();
         }
     });
     
@@ -945,6 +1195,9 @@ function initializeEventHandlers() {
             event.target.classList.contains('slw-ot-rate')) {
             // Any of these changes should trigger a grand total recalculation
             updateGrandTotal(event.target);
+            
+            // Update wages summary after any wage-related changes
+            updateWagesSummary();
         }
         
         // Handle wages calculation for company labour
@@ -967,14 +1220,9 @@ function initializeEventHandlers() {
             event.target.classList.contains('scl-ot-rate')) {
             // Any of these changes should trigger a grand total recalculation
             updateCompanyGrandTotal(event.target);
-        }
-    });
-
-    // Add beverage button
-    document.addEventListener('click', function(event) {
-        if (event.target.id === 'add-beverage-btn' || 
-            event.target.closest('#add-beverage-btn')) {
-            addNewBeverage();
+            
+            // Update wages summary after any wage-related changes
+            updateWagesSummary();
         }
     });
 
@@ -990,29 +1238,43 @@ function initializeEventHandlers() {
         }
     });
 
-    // Work progress add button
+    // Work Progress Remove button
     document.addEventListener('click', function(event) {
-        if (event.target.id === 'ce-add-work-btn' || 
-            event.target.closest('#ce-add-work-btn')) {
-            addWorkProgressEntry();
-        }
-        
-        // Remove work entry
         if (event.target.classList.contains('ce-work-remove-btn') || 
             event.target.closest('.ce-work-remove-btn')) {
-            const removeBtn = event.target.classList.contains('ce-work-remove-btn') ? 
-                             event.target : event.target.closest('.ce-work-remove-btn');
-            const workEntry = removeBtn.closest('.ce-work-entry');
+            const button = event.target.classList.contains('ce-work-remove-btn') ? 
+                        event.target : event.target.closest('.ce-work-remove-btn');
+            const workEntry = button.closest('.ce-work-entry');
             
             if (workEntry) {
                 // Animate removal
-                workEntry.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 workEntry.style.opacity = '0';
                 workEntry.style.transform = 'translateY(20px)';
                 
                 setTimeout(() => {
                     workEntry.remove();
                     updateWorkEntryNumbers();
+                }, 300);
+            }
+        }
+    });
+    
+    // Inventory Remove button
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('cei-inventory-remove-btn') || 
+            event.target.closest('.cei-inventory-remove-btn')) {
+            const button = event.target.classList.contains('cei-inventory-remove-btn') ? 
+                        event.target : event.target.closest('.cei-inventory-remove-btn');
+            const inventoryEntry = button.closest('.cei-inventory-entry');
+            
+            if (inventoryEntry) {
+                // Animate removal
+                inventoryEntry.style.opacity = '0';
+                inventoryEntry.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    inventoryEntry.remove();
+                    updateInventoryEntryNumbers();
                 }, 300);
             }
         }
@@ -1101,6 +1363,9 @@ function addNewVendor() {
     // Focus the vendor type select
     const vendorTypeSelect = vendorItem.querySelector('.calendar-vendor-type-select');
     vendorTypeSelect.focus();
+    
+    // Update wages summary when adding a new vendor
+    updateWagesSummary();
 }
 
 /**
@@ -1172,11 +1437,22 @@ function hideAddEventModal() {
 function saveEvent() {
     // Get form values
     const eventDate = document.getElementById('event-date').value;
-    const eventTitle = document.getElementById('event-title').value;
+    const eventTitleElement = document.getElementById('event-title');
+    let eventTitle = eventTitleElement.value;
+    
+    // Check if custom title is selected and get custom value
+    if (eventTitle === 'custom') {
+        const customTitle = document.getElementById('custom-event-title').value.trim();
+        if (!customTitle) {
+            showToast('Error', 'Please enter a custom event title', 'error');
+        return;
+        }
+        eventTitle = customTitle;
+    }
     
     // Basic validation
     if (!eventTitle.trim()) {
-        showToast('Error', 'Please enter an event title', 'error');
+        showToast('Error', 'Please select an event title', 'error');
         return;
     }
     
@@ -1610,6 +1886,77 @@ function saveEvent() {
             });
         }
         
+        // Get inventory data
+        const inventoryEntries = document.querySelectorAll('.cei-inventory-entry');
+        const inventoryData = [];
+        
+        inventoryEntries.forEach(entry => {
+            const inventoryType = entry.querySelector('.cei-inventory-type-select').value;
+            const materialType = entry.querySelector('.cei-inventory-material-select').value === 'custom' 
+                ? entry.querySelector('.cei-inventory-custom-material').value 
+                : entry.querySelector('.cei-inventory-material-select').value;
+            const quantity = entry.querySelector('.cei-inventory-quantity').value;
+            const unit = entry.querySelector('.cei-inventory-unit').value;
+            const remarks = entry.querySelector('.cei-inventory-remarks').value;
+            
+            // Collect bill image
+            const billFileInput = entry.querySelector('.cei-inventory-bill-input');
+            const billFile = billFileInput && billFileInput.files.length > 0 ? billFileInput.files[0] : null;
+            
+            // Collect media files
+            const mediaContainer = entry.querySelector('.cei-inventory-media-container');
+            const mediaFiles = [];
+            
+            if (mediaContainer) {
+                const mediaFileInputs = mediaContainer.querySelectorAll('.cei-inventory-media-file');
+                mediaFileInputs.forEach(mediaInput => {
+                    if (mediaInput && mediaInput.files && mediaInput.files.length > 0) {
+                        mediaFiles.push(mediaInput.files[0]);
+                    }
+                });
+            }
+            
+            // Add to inventory data array if we have at least material type
+            if (materialType) {
+                inventoryData.push({
+                    type: inventoryType,
+                    material: materialType,
+                    quantity: quantity,
+                    unit: unit,
+                    remarks: remarks,
+                    billFile: billFile,
+                    media: mediaFiles
+                });
+            }
+        });
+        
+        // Add inventory data to form data
+        if (inventoryData.length > 0) {
+            formData.append('inventory_count', inventoryData.length);
+            
+            inventoryData.forEach((inventory, index) => {
+                const n = index + 1;
+                formData.append(`inventory_type_${n}`, inventory.type);
+                formData.append(`material_type_${n}`, inventory.material);
+                formData.append(`quantity_${n}`, inventory.quantity || 0);
+                formData.append(`unit_${n}`, inventory.unit || '');
+                formData.append(`inventory_remarks_${n}`, inventory.remarks || '');
+                
+                // Append bill file if exists
+                if (inventory.billFile) {
+                    formData.append(`inventory_bill_${n}`, inventory.billFile);
+                }
+                
+                // Append media files with proper index
+                inventory.media.forEach((file, fileIndex) => {
+                    formData.append(`inventory_media_${n}_${fileIndex + 1}`, file);
+                });
+                
+                // Store total media count for this inventory item
+                formData.append(`inventory_media_count_${n}`, inventory.media.length);
+            });
+        }
+        
         saveCalendarEvent(formData, 
             // Success callback
             function(data) {
@@ -1945,6 +2292,12 @@ function addNewLabour(vendorItem) {
         // Update grand total
         updateGrandTotal(wagesPerDayInput);
     }, 0);
+    
+    // Update labour numbers
+    updateLabourNumbers(vendorItem);
+    
+    // Update wages summary when adding new labour
+    updateWagesSummary();
 }
 
 /**
@@ -2065,6 +2418,9 @@ function addNewCompanyItem() {
     
     // Add to the company container
     companyContainer.appendChild(companyItem);
+    
+    // Update wages summary when adding a new company
+    updateWagesSummary();
 }
 
 /**
@@ -2138,6 +2494,12 @@ function addNewCompanyLabour(companyItem) {
         // Update grand total
         updateCompanyGrandTotal(wagesPerDayInput);
     }, 0);
+    
+    // Update company labour numbers
+    updateCompanyLabourNumbers(companyItem);
+    
+    // Update wages summary when adding new company labour
+    updateWagesSummary();
 }
 
 /**
@@ -2267,6 +2629,9 @@ function addNewBeverage() {
         const typeInput = beverageItem.querySelector('.calendar-beverage-type');
         typeInput.focus();
     }, 300);
+    
+    // Update wages summary when adding a new beverage
+    updateWagesSummary();
 }
 
 // Update beverage numbers after remove
@@ -2546,5 +2911,504 @@ function updateWorkEntryNumbers() {
         // Update ID
         entry.id = `ce-work-entry-${index + 1}`;
     });
+}
+
+/**
+ * Add a new inventory entry
+ */
+function addInventoryEntry() {
+    const container = document.getElementById('ce-inventory-container');
+    const tempContainer = document.createElement('div');
+    
+    tempContainer.innerHTML = window.inventoryTemplate;
+    const inventoryEntry = tempContainer.firstElementChild;
+    
+    // Update the entry number
+    const existing = container.querySelectorAll('.cei-inventory-entry');
+    const entryNumber = existing.length + 1;
+    inventoryEntry.querySelector('.cei-inventory-number').textContent = entryNumber;
+    
+    // Add unique ID to this entry
+    inventoryEntry.id = `cei-inventory-entry-${entryNumber}`;
+    
+    // Add to the container with animation
+    inventoryEntry.style.opacity = '0';
+    inventoryEntry.style.transform = 'translateY(20px)';
+    container.appendChild(inventoryEntry);
+    
+    // Animate the new entry
+    setTimeout(() => {
+        inventoryEntry.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        inventoryEntry.style.opacity = '1';
+        inventoryEntry.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Set up event listeners
+    setupInventoryMaterialListeners(inventoryEntry);
+    setupInventoryBillUploadListeners(inventoryEntry);
+    setupInventoryMediaUploadListeners(inventoryEntry);
+    
+    // Focus the material select
+    setTimeout(() => {
+        inventoryEntry.querySelector('.cei-inventory-material-select').focus();
+    }, 300);
+}
+
+/**
+ * Set up material select dropdown listeners
+ */
+function setupInventoryMaterialListeners(inventoryEntry) {
+    const materialSelect = inventoryEntry.querySelector('.cei-inventory-material-select');
+    const customMaterialInput = inventoryEntry.querySelector('.cei-inventory-custom-material');
+    const inventoryTypeSelect = inventoryEntry.querySelector('.cei-inventory-type-select');
+    
+    // Show/hide custom material input
+    materialSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customMaterialInput.style.display = 'block';
+            customMaterialInput.focus();
+        } else {
+            customMaterialInput.style.display = 'none';
+            
+            // Fetch remaining material data when material is selected
+            fetchRemainingMaterial(inventoryEntry, this.value);
+        }
+    });
+    
+    // Update remaining material section when inventory type changes
+    inventoryTypeSelect.addEventListener('change', function() {
+        const materialValue = materialSelect.value;
+        if (materialValue && materialValue !== 'custom') {
+            fetchRemainingMaterial(inventoryEntry, materialValue);
+        }
+    });
+}
+
+/**
+ * Fetch remaining material data from the server
+ */
+function fetchRemainingMaterial(inventoryEntry, material) {
+    // Get the site from the event title dropdown
+    const eventTitleSelect = document.getElementById('event-title');
+    let site = eventTitleSelect.value;
+    
+    // If custom title is selected, do nothing
+    if (site === 'custom' || !site) {
+        updateRemainingMaterialSection(inventoryEntry, null, 'Please select a construction site first.');
+        return;
+    }
+    
+    // Skip for custom materials
+    if (material === 'custom' || !material) {
+        updateRemainingMaterialSection(inventoryEntry, null, 'Please select a material.');
+        return;
+    }
+    
+    // If site is from the dropdown, extract just the site name
+    if (site.startsWith('Construction Site At ')) {
+        site = site.replace('Construction Site At ', '');
+    }
+    
+    // Show loading state
+    const contentArea = inventoryEntry.querySelector('.ceirm-content-area');
+    contentArea.innerHTML = '<div class="ceirm-loading">Loading material information...</div>';
+    
+    // Prepare form data for AJAX request
+    const formData = new FormData();
+    formData.append('site', site);
+    formData.append('material', material);
+    
+    // Make the AJAX request
+    fetch('backend/get_material_inventory.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            updateRemainingMaterialSection(inventoryEntry, data.inventory, null);
+        } else {
+            updateRemainingMaterialSection(inventoryEntry, null, data.message || 'Error fetching material information.');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching material inventory:', error);
+        updateRemainingMaterialSection(inventoryEntry, null, 'Network error. Please try again.');
+    });
+}
+
+/**
+ * Update the remaining material section with fetched data
+ */
+function updateRemainingMaterialSection(inventoryEntry, inventory, errorMessage) {
+    const contentArea = inventoryEntry.querySelector('.ceirm-content-area');
+    
+    // Handle error case
+    if (errorMessage) {
+        contentArea.innerHTML = `<div class="ceirm-no-data">${errorMessage}</div>`;
+        return;
+    }
+    
+    // Handle empty inventory
+    if (!inventory || inventory.length === 0) {
+        contentArea.innerHTML = '<div class="ceirm-no-data">No inventory data found for this site and material.</div>';
+        return;
+    }
+    
+    // Find the specific material in the inventory array
+    const materialSelect = inventoryEntry.querySelector('.cei-inventory-material-select');
+    const selectedMaterial = materialSelect.value;
+    
+    let materialInfo = null;
+    for (let item of inventory) {
+        if (item.material.toLowerCase() === selectedMaterial.toLowerCase()) {
+            materialInfo = item;
+            break;
+        }
+    }
+    
+    if (!materialInfo) {
+        contentArea.innerHTML = `<div class="ceirm-no-data">No data found for ${selectedMaterial} at this site.</div>`;
+        return;
+    }
+    
+    // Check if low stock (remaining less than 20% of received)
+    const isLowStock = materialInfo.remaining <= (materialInfo.received * 0.2) && materialInfo.received > 0;
+    const lowStockClass = isLowStock ? 'ceirm-low-stock' : '';
+    
+    // Format the HTML
+    let html = `
+        <div class="ceirm-material-info ${lowStockClass}">
+            <div class="ceirm-material-name">${materialInfo.material}</div>
+            <div class="ceirm-material-quantity">
+                <span class="ceirm-material-value">${materialInfo.remaining.toFixed(2)}</span>
+                <span class="ceirm-material-unit">${materialInfo.unit}</span>
+            </div>
+        </div>
+        <div class="ceirm-material-details">
+            <div class="ceirm-detail-item">
+                <span class="ceirm-detail-label">Received:</span>
+                <span class="ceirm-received">${materialInfo.received.toFixed(2)} ${materialInfo.unit}</span>
+            </div>
+            <div class="ceirm-detail-item">
+                <span class="ceirm-detail-label">Consumed:</span>
+                <span class="ceirm-consumed">${materialInfo.consumed.toFixed(2)} ${materialInfo.unit}</span>
+            </div>
+        </div>
+    `;
+    
+    contentArea.innerHTML = html;
+    
+    // Update quantity suggestion based on remaining material
+    const quantityInput = inventoryEntry.querySelector('.cei-inventory-quantity');
+    const inventoryTypeSelect = inventoryEntry.querySelector('.cei-inventory-type-select');
+    const inventoryUnitSelect = inventoryEntry.querySelector('.cei-inventory-unit');
+    
+    // Set unit value to match the inventory unit
+    if (materialInfo.unit && inventoryUnitSelect.value === '') {
+        // Find the option that matches or is closest to the material unit
+        const options = inventoryUnitSelect.options;
+        let foundExactMatch = false;
+        
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === materialInfo.unit) {
+                inventoryUnitSelect.selectedIndex = i;
+                foundExactMatch = true;
+                break;
+            }
+        }
+        
+        // If no exact match found but we have a unit, select the first option
+        if (!foundExactMatch && materialInfo.unit && options.length > 1) {
+            inventoryUnitSelect.selectedIndex = 1; // Select first real option (not the empty one)
+        }
+    }
+    
+    // If this is a "consumed" inventory item and quantity is empty,
+    // suggest the remaining amount as the quantity
+    if (inventoryTypeSelect.value === 'consumed' && (!quantityInput.value || quantityInput.value === '0')) {
+        // Only suggest if there's something to consume
+        if (materialInfo.remaining > 0) {
+            quantityInput.value = materialInfo.remaining.toFixed(2);
+            
+            // Briefly highlight the field to draw attention
+            quantityInput.style.transition = 'background-color 0.5s ease';
+            quantityInput.style.backgroundColor = '#e6fffa';
+            setTimeout(() => {
+                quantityInput.style.backgroundColor = '';
+            }, 1500);
+        }
+    }
+}
+
+/**
+ * Set up bill image upload listeners
+ */
+function setupInventoryBillUploadListeners(inventoryEntry) {
+    const billInput = inventoryEntry.querySelector('.cei-inventory-bill-input');
+    const billPreview = inventoryEntry.querySelector('.cei-inventory-bill-preview');
+    
+    billInput.addEventListener('change', function() {
+        // Clear existing preview
+        billPreview.innerHTML = '';
+        
+        if (this.files && this.files.length > 0) {
+            const file = this.files[0];
+            const isImage = file.type.startsWith('image/');
+            const isPdf = file.type === 'application/pdf';
+            
+            // Create preview container
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'cei-inventory-bill-preview-item';
+            
+            // Create preview content based on file type
+            if (isImage) {
+                const img = document.createElement('img');
+                img.className = 'cei-inventory-bill-preview-image';
+                img.src = URL.createObjectURL(file);
+                img.onload = function() {
+                    URL.revokeObjectURL(this.src);
+                };
+                previewContainer.appendChild(img);
+            } else if (isPdf) {
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-file-pdf cei-inventory-bill-preview-pdf';
+                previewContainer.appendChild(icon);
+                
+                const fileName = document.createElement('span');
+                fileName.className = 'cei-inventory-bill-preview-filename';
+                fileName.textContent = file.name;
+                previewContainer.appendChild(fileName);
+            }
+            
+            // Create remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'cei-inventory-bill-preview-remove';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.addEventListener('click', function() {
+                billInput.value = '';
+                billPreview.innerHTML = '';
+            });
+            previewContainer.appendChild(removeBtn);
+            
+            // Add preview to container
+            billPreview.appendChild(previewContainer);
+        }
+    });
+}
+
+/**
+ * Set up media upload listeners for inventory
+ */
+function setupInventoryMediaUploadListeners(inventoryEntry) {
+    const uploadInput = inventoryEntry.querySelector('.cei-inventory-upload-input');
+    const mediaContainer = inventoryEntry.querySelector('.cei-inventory-media-container');
+    const mediaCounter = inventoryEntry.querySelector('.cei-inventory-media-counter');
+    
+    uploadInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            const file = this.files[0];
+            
+            // Create a unique ID for this media item
+            const mediaId = `inventory-media-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            
+            // Create media preview item
+            const mediaPreviewItem = document.createElement('div');
+            mediaPreviewItem.className = 'cei-inventory-media-preview-item';
+            mediaPreviewItem.dataset.id = mediaId;
+            
+            // Prepare a hidden input to store the file
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'file';
+            hiddenInput.className = 'cei-inventory-media-file';
+            hiddenInput.style.display = 'none';
+            hiddenInput.dataset.id = mediaId;
+            
+            // Use DataTransfer to transfer the File object to the new input
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            hiddenInput.files = dataTransfer.files;
+            
+            // Check if it's an image or video
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+            
+            if (isImage) {
+                // Create image preview
+                const img = document.createElement('img');
+                img.className = 'cei-inventory-media-preview-image';
+                img.src = URL.createObjectURL(file);
+                img.onload = function() {
+                    URL.revokeObjectURL(this.src);
+                };
+                mediaPreviewItem.appendChild(img);
+            } else if (isVideo) {
+                // Create video preview with play icon
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'cei-inventory-media-preview-video-container';
+                
+                const videoPreview = document.createElement('video');
+                videoPreview.className = 'cei-inventory-media-preview-video';
+                videoPreview.src = URL.createObjectURL(file);
+                videoPreview.onload = function() {
+                    URL.revokeObjectURL(this.src);
+                };
+                videoContainer.appendChild(videoPreview);
+                
+                // Add play icon overlay
+                const playIcon = document.createElement('div');
+                playIcon.className = 'cei-inventory-media-preview-play-icon';
+                playIcon.innerHTML = '<i class="fas fa-play"></i>';
+                videoContainer.appendChild(playIcon);
+                
+                mediaPreviewItem.appendChild(videoContainer);
+            }
+            
+            // Create filename display
+            const fileName = document.createElement('div');
+            fileName.className = 'cei-inventory-media-preview-filename';
+            fileName.textContent = file.name.slice(0, 15) + (file.name.length > 15 ? '...' : '');
+            fileName.title = file.name;
+            mediaPreviewItem.appendChild(fileName);
+            
+            // Create remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'cei-inventory-media-preview-remove';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.addEventListener('click', function() {
+                mediaPreviewItem.remove();
+                hiddenInput.remove();
+                updateInventoryMediaCounter(inventoryEntry);
+            });
+            mediaPreviewItem.appendChild(removeBtn);
+            
+            // Add to containers
+            mediaContainer.appendChild(mediaPreviewItem);
+            mediaContainer.appendChild(hiddenInput);
+            
+            // Reset the file input for the next upload
+            uploadInput.value = '';
+            
+            // Update media counter
+            updateInventoryMediaCounter(inventoryEntry);
+        }
+    });
+}
+
+/**
+ * Update the media counter for inventory
+ */
+function updateInventoryMediaCounter(inventoryEntry) {
+    const mediaContainer = inventoryEntry.querySelector('.cei-inventory-media-container');
+    const mediaCounter = inventoryEntry.querySelector('.cei-inventory-media-counter');
+    const fileCount = mediaContainer.querySelectorAll('.cei-inventory-media-preview-item').length;
+    
+    if (fileCount > 0) {
+        mediaCounter.textContent = `${fileCount} file${fileCount !== 1 ? 's' : ''} added`;
+        mediaCounter.style.display = 'block';
+    } else {
+        mediaCounter.style.display = 'none';
+    }
+}
+
+/**
+ * Update inventory entry numbers
+ */
+function updateInventoryEntryNumbers() {
+    const container = document.getElementById('ce-inventory-container');
+    const entries = container.querySelectorAll('.cei-inventory-entry');
+    
+    entries.forEach((entry, index) => {
+        // Update number
+        entry.querySelector('.cei-inventory-number').textContent = index + 1;
+        
+        // Update ID
+        entry.id = `cei-inventory-entry-${index + 1}`;
+    });
+}
+
+/**
+ * Update all remaining material sections in the modal
+ */
+function updateAllRemainingMaterialSections() {
+    const inventoryEntries = document.querySelectorAll('.cei-inventory-entry');
+    
+    inventoryEntries.forEach(entry => {
+        const materialSelect = entry.querySelector('.cei-inventory-material-select');
+        const materialValue = materialSelect.value;
+        
+        if (materialValue && materialValue !== 'custom') {
+            fetchRemainingMaterial(entry, materialValue);
+        } else {
+            // Show a message that material needs to be selected
+            const contentArea = entry.querySelector('.ceirm-content-area');
+            contentArea.innerHTML = '<div class="ceirm-no-data">Please select a material to see remaining inventory.</div>';
+        }
+    });
+}
+
+/**
+ * Updates the Wages Summary section with calculated totals
+ */
+function updateWagesSummary() {
+    // Initialize counters
+    let vendorLabourWages = 0;
+    let companyLabourWages = 0;
+    let overtimePayments = 0;
+    let travelExpenses = 0;
+    let totalWages = 0;
+    
+    // Calculate vendor labour wages
+    const vendorLabourEntries = document.querySelectorAll('.supervisor-labour-entry');
+    vendorLabourEntries.forEach(labour => {
+        // Get daily wages
+        const dailyWages = parseFloat(labour.querySelector('.slw-total-day-wages').value) || 0;
+        vendorLabourWages += dailyWages;
+        
+        // Get overtime amount
+        const overtimeAmount = parseFloat(labour.querySelector('.slw-total-ot-amount').value) || 0;
+        overtimePayments += overtimeAmount;
+        
+        // Get travel amount
+        const travelAmount = parseFloat(labour.querySelector('.slw-travel-amount').value) || 0;
+        travelExpenses += travelAmount;
+    });
+    
+    // Calculate company labour wages
+    const companyLabourEntries = document.querySelectorAll('.scl-labour-entry');
+    companyLabourEntries.forEach(labour => {
+        // Get daily wages
+        const dailyWages = parseFloat(labour.querySelector('.scl-total-day-wages').value) || 0;
+        companyLabourWages += dailyWages;
+        
+        // Get overtime amount
+        const overtimeAmount = parseFloat(labour.querySelector('.scl-total-ot-amount').value) || 0;
+        overtimePayments += overtimeAmount;
+        
+        // Get travel amount
+        const travelAmount = parseFloat(labour.querySelector('.scl-travel-amount').value) || 0;
+        travelExpenses += travelAmount;
+    });
+    
+    // Calculate total wages
+    totalWages = vendorLabourWages + companyLabourWages + overtimePayments + travelExpenses;
+    
+    // Update the summary display
+    document.getElementById('vendor-labour-wages').textContent = vendorLabourWages.toFixed(2);
+    document.getElementById('company-labour-wages').textContent = companyLabourWages.toFixed(2);
+    document.getElementById('overtime-payments').textContent = overtimePayments.toFixed(2);
+    document.getElementById('travel-expenses').textContent = travelExpenses.toFixed(2);
+    document.getElementById('total-wages').textContent = totalWages.toFixed(2);
+    
+    // Highlight the total wages section with animation
+    const totalWagesRow = document.querySelector('.sv-wages-total-row');
+    if (totalWagesRow) {
+        totalWagesRow.classList.add('sv-highlight-animation');
+        setTimeout(() => {
+            totalWagesRow.classList.remove('sv-highlight-animation');
+        }, 1500);
+    }
 }
   

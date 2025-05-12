@@ -47,6 +47,8 @@ $upload_dir = '../uploads/calendar_events/';
 $material_images_dir = $upload_dir . 'material_images/';
 $bill_images_dir = $upload_dir . 'bill_images/';
 $work_media_dir = $upload_dir . 'work_progress_media/';
+$inventory_media_dir = $upload_dir . 'inventory_media/';
+$inventory_bills_dir = $upload_dir . 'inventory_bills/';
 
 if (!file_exists($upload_dir)) {
     mkdir($upload_dir, 0777, true);
@@ -59,6 +61,12 @@ if (!file_exists($bill_images_dir)) {
 }
 if (!file_exists($work_media_dir)) {
     mkdir($work_media_dir, 0777, true);
+}
+if (!file_exists($inventory_media_dir)) {
+    mkdir($inventory_media_dir, 0777, true);
+}
+if (!file_exists($inventory_bills_dir)) {
+    mkdir($inventory_bills_dir, 0777, true);
 }
 
 // Debug mode
@@ -737,6 +745,236 @@ try {
                             $work_id = $conn->lastInsertId();
                             debug_log('Work progress entry saved after creating table', [
                                 'work_id' => $work_id,
+                                'number' => $i
+                            ]);
+                        } catch (PDOException $innerEx) {
+                            debug_log('Failed to create tables or retry insertion', [
+                                'error' => $innerEx->getMessage()
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Process inventory entries if any
+    if (isset($_POST['inventory_count']) && $_POST['inventory_count'] > 0) {
+        $inventory_count = intval($_POST['inventory_count']);
+        debug_log('Processing inventory entries', ['count' => $inventory_count]);
+        
+        for ($i = 1; $i <= $inventory_count; $i++) {
+            $inventory_type = $_POST["inventory_type_$i"] ?? 'received';
+            $material_type = $_POST["material_type_$i"] ?? '';
+            $quantity = $_POST["quantity_$i"] ?? 0;
+            $unit = $_POST["unit_$i"] ?? '';
+            $remarks = $_POST["inventory_remarks_$i"] ?? '';
+            
+            debug_log('Processing inventory entry', [
+                'number' => $i,
+                'type' => $inventory_type,
+                'material' => $material_type,
+                'quantity' => $quantity,
+                'unit' => $unit
+            ]);
+            
+            if (!empty($material_type)) {
+                try {
+                    // Insert inventory entry
+                    $stmt = $conn->prepare("INSERT INTO sv_inventory_items 
+                        (event_id, inventory_type, material_type, quantity, unit, remarks, sequence_number) 
+                        VALUES (:event_id, :inventory_type, :material_type, :quantity, :unit, :remarks, :sequence_number)");
+                    
+                    $stmt->execute([
+                        ':event_id' => $event_id,
+                        ':inventory_type' => $inventory_type,
+                        ':material_type' => $material_type,
+                        ':quantity' => $quantity,
+                        ':unit' => $unit,
+                        ':remarks' => $remarks,
+                        ':sequence_number' => $i
+                    ]);
+                    
+                    $inventory_id = $conn->lastInsertId();
+                    debug_log('Inventory entry saved successfully', [
+                        'inventory_id' => $inventory_id,
+                        'number' => $i
+                    ]);
+                    
+                    // Process bill image for this inventory item
+                    if (isset($_FILES["inventory_bill_$i"]) && $_FILES["inventory_bill_$i"]['error'] === UPLOAD_ERR_OK) {
+                        $file = $_FILES["inventory_bill_$i"];
+                        debug_log('Processing inventory bill image', [
+                            'inventory_id' => $inventory_id,
+                            'file_name' => $file['name'],
+                            'file_size' => $file['size']
+                        ]);
+                        
+                        // Create inventory-specific directory for bills
+                        $inventory_bill_specific_dir = $inventory_bills_dir . 'inventory_' . $inventory_id . '/';
+                        if (!file_exists($inventory_bill_specific_dir)) {
+                            mkdir($inventory_bill_specific_dir, 0777, true);
+                        }
+                        
+                        $upload_result = handleFileUpload($file, $inventory_bill_specific_dir);
+                        
+                        if ($upload_result['success']) {
+                            $file_path = $upload_result['path'];
+                            
+                            // Save bill image record
+                            $stmt = $conn->prepare("INSERT INTO sv_inventory_media 
+                                (inventory_id, file_name, file_path, media_type, file_size, sequence_number) 
+                                VALUES (:inventory_id, :file_name, :file_path, :media_type, :file_size, :sequence_number)");
+                            
+                            $stmt->execute([
+                                ':inventory_id' => $inventory_id,
+                                ':file_name' => $file['name'],
+                                ':file_path' => $file_path,
+                                ':media_type' => 'bill',
+                                ':file_size' => $file['size'],
+                                ':sequence_number' => 1
+                            ]);
+                            
+                            debug_log('Inventory bill image saved to database', [
+                                'media_id' => $conn->lastInsertId()
+                            ]);
+                        }
+                    }
+                    
+                    // Process media files for this inventory item
+                    $media_count = isset($_POST["inventory_media_count_$i"]) ? intval($_POST["inventory_media_count_$i"]) : 0;
+                    
+                    if ($media_count > 0) {
+                        debug_log('Processing inventory media files', [
+                            'inventory_id' => $inventory_id,
+                            'count' => $media_count
+                        ]);
+                        
+                        // Create inventory-specific media directory if not already created for bill
+                        $inventory_specific_dir = $inventory_media_dir . 'inventory_' . $inventory_id . '/';
+                        if (!file_exists($inventory_specific_dir)) {
+                            mkdir($inventory_specific_dir, 0777, true);
+                        }
+                        
+                        for ($j = 1; $j <= $media_count; $j++) {
+                            $media_key = "inventory_media_{$i}_{$j}";
+                            
+                            if (isset($_FILES[$media_key]) && $_FILES[$media_key]['error'] === UPLOAD_ERR_OK) {
+                                $file = $_FILES[$media_key];
+                                debug_log('Processing inventory media file', [
+                                    'inventory_id' => $inventory_id,
+                                    'file_name' => $file['name'],
+                                    'file_type' => $file['type'],
+                                    'file_size' => $file['size']
+                                ]);
+                                
+                                // Determine if it's an image or video
+                                $media_type = 'photo';
+                                if (strpos($file['type'], 'video/') === 0) {
+                                    $media_type = 'video';
+                                }
+                                
+                                // Add timestamp to filename to prevent conflicts
+                                $file_name_parts = pathinfo($file['name']);
+                                $unique_name = $file_name_parts['filename'] . '_' . time() . '_' . mt_rand(1000, 9999);
+                                if (isset($file_name_parts['extension'])) {
+                                    $unique_name .= '.' . $file_name_parts['extension'];
+                                }
+                                
+                                // Use unique name in upload
+                                $file['name'] = $unique_name;
+                                
+                                // Upload the file
+                                $upload_result = handleFileUpload($file, $inventory_specific_dir);
+                                
+                                if ($upload_result['success']) {
+                                    $file_path = $upload_result['path'];
+                                    $orig_file_name = $_FILES[$media_key]['name']; // Store original filename
+                                    
+                                    debug_log('Inventory media file uploaded', [
+                                        'path' => $file_path,
+                                        'filename' => $unique_name,
+                                        'original_name' => $orig_file_name
+                                    ]);
+                                    
+                                    // Save the media record
+                                    $stmt = $conn->prepare("INSERT INTO sv_inventory_media 
+                                        (inventory_id, file_name, file_path, media_type, file_size, sequence_number) 
+                                        VALUES (:inventory_id, :file_name, :file_path, :media_type, :file_size, :sequence_number)");
+                                    
+                                    $stmt->execute([
+                                        ':inventory_id' => $inventory_id,
+                                        ':file_name' => $orig_file_name,
+                                        ':file_path' => $file_path,
+                                        ':media_type' => $media_type,
+                                        ':file_size' => $file['size'],
+                                        ':sequence_number' => $j + 1 // +1 because bill is sequence 1
+                                    ]);
+                                    
+                                    debug_log('Inventory media record saved to database', [
+                                        'media_id' => $conn->lastInsertId()
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                } catch (PDOException $e) {
+                    debug_log('Error saving inventory entry', [
+                        'number' => $i,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Check if tables exist, if not, try to create them
+                    if (strpos($e->getMessage(), "sv_inventory_items' doesn't exist") !== false) {
+                        debug_log('Attempting to create inventory tables');
+                        try {
+                            // Create inventory items table
+                            $conn->exec("CREATE TABLE IF NOT EXISTS `sv_inventory_items` (
+                                `inventory_id` INT AUTO_INCREMENT PRIMARY KEY,
+                                `event_id` INT NOT NULL,
+                                `inventory_type` ENUM('received', 'consumed', 'other') DEFAULT 'received',
+                                `material_type` VARCHAR(100) NOT NULL,
+                                `quantity` DECIMAL(10,2) DEFAULT 0,
+                                `unit` VARCHAR(20),
+                                `remarks` TEXT,
+                                `sequence_number` INT,
+                                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                            
+                            // Create inventory media table
+                            $conn->exec("CREATE TABLE IF NOT EXISTS `sv_inventory_media` (
+                                `media_id` INT AUTO_INCREMENT PRIMARY KEY,
+                                `inventory_id` INT NOT NULL,
+                                `file_name` VARCHAR(255) NOT NULL,
+                                `file_path` VARCHAR(255) NOT NULL,
+                                `media_type` ENUM('bill', 'photo', 'video') DEFAULT 'photo',
+                                `file_size` INT,
+                                `sequence_number` INT,
+                                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                FOREIGN KEY (`inventory_id`) REFERENCES `sv_inventory_items`(`inventory_id`) ON DELETE CASCADE
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                            
+                            debug_log('Inventory tables created successfully');
+                            
+                            // Retry insertion
+                            $stmt = $conn->prepare("INSERT INTO sv_inventory_items 
+                                (event_id, inventory_type, material_type, quantity, unit, remarks, sequence_number) 
+                                VALUES (:event_id, :inventory_type, :material_type, :quantity, :unit, :remarks, :sequence_number)");
+                            
+                            $stmt->execute([
+                                ':event_id' => $event_id,
+                                ':inventory_type' => $inventory_type,
+                                ':material_type' => $material_type,
+                                ':quantity' => $quantity,
+                                ':unit' => $unit,
+                                ':remarks' => $remarks,
+                                ':sequence_number' => $i
+                            ]);
+                            
+                            $inventory_id = $conn->lastInsertId();
+                            debug_log('Inventory entry saved after creating table', [
+                                'inventory_id' => $inventory_id,
                                 'number' => $i
                             ]);
                         } catch (PDOException $innerEx) {

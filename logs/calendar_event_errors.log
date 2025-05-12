@@ -278,3 +278,99 @@ Stack trace:
 [10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Work media record saved to database - {"media_id":"7"}
 [10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Transaction committed successfully
 [10-May-2025 12:17:56 Asia/Kolkata] 2025-05-10 12:17:56 - Save process completed successfully - {"event_id":"22"}
+[10-May-2025 11:36:09 Europe/Berlin] 2025-05-10 11:36:09 - Starting calendar event save process
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Database connection included
+[10-May-2025 15:06:09 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Session started - {"user_id":21}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Started database transaction
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing event data - {"title":"gfds","date":"2025-05-06","user_id":21}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Event created successfully - {"event_id":"23"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing inventory entries - {"count":1}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing inventory entry - {"number":1,"type":"consumed","material":"timber","quantity":"22","unit":"tons"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Inventory entry saved successfully - {"inventory_id":"1","number":1}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing inventory bill image - {"inventory_id":"1","file_name":"download.pdf","file_size":157852}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - File upload type check - {"file_type":"application\/pdf","allowed":true}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - File uploaded successfully - {"original_name":"download.pdf","saved_as":"681f1e09ab1c1_1746869769.pdf","file_type":"application\/pdf","file_size":157852,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_1\/681f1e09ab1c1_1746869769.pdf"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Inventory bill image saved to database - {"media_id":"1"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing inventory media files - {"inventory_id":"1","count":2}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing inventory media file - {"inventory_id":"1","file_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM.jpeg","file_type":"image\/jpeg","file_size":3004346}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM_1746869769_5950.jpeg","saved_as":"681f1e09ac191_1746869769.jpeg","file_type":"image\/jpeg","file_size":3004346,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_1\/681f1e09ac191_1746869769.jpeg"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_1\/681f1e09ac191_1746869769.jpeg","filename":"WhatsApp Image 2025-04-23 at 5.56.55 PM_1746869769_5950.jpeg","original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM.jpeg"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Inventory media record saved to database - {"media_id":"2"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Processing inventory media file - {"inventory_id":"1","file_name":"SampleVideo_1280x720_1mb.mp4","file_type":"video\/mp4","file_size":1055736}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb_1746869769_5084.mp4","saved_as":"681f1e09acda5_1746869769.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_1\/681f1e09acda5_1746869769.mp4"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_1\/681f1e09acda5_1746869769.mp4","filename":"SampleVideo_1280x720_1mb_1746869769_5084.mp4","original_name":"SampleVideo_1280x720_1mb.mp4"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Inventory media record saved to database - {"media_id":"3"}
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Transaction committed successfully
+[10-May-2025 15:06:09 Asia/Kolkata] 2025-05-10 15:06:09 - Save process completed successfully - {"event_id":"23"}
+[10-May-2025 11:57:15 Europe/Berlin] 2025-05-10 11:57:15 - Starting calendar event save process
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Database connection included
+[10-May-2025 15:27:15 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Session started - {"user_id":21}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Started database transaction
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing event data - {"title":"fds","date":"2025-05-09","user_id":21}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Event created successfully - {"event_id":"24"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing inventory entries - {"count":1}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing inventory entry - {"number":1,"type":"received","material":"wires","quantity":"23","unit":"bundles"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Inventory entry saved successfully - {"inventory_id":"2","number":1}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing inventory bill image - {"inventory_id":"2","file_name":"Travel Expense Reimbursement Form.pdf","file_size":457325}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - File upload type check - {"file_type":"application\/pdf","allowed":true}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - File uploaded successfully - {"original_name":"Travel Expense Reimbursement Form.pdf","saved_as":"681f22fbc16a0_1746871035.pdf","file_type":"application\/pdf","file_size":457325,"path":"..\/uploads\/calendar_events\/inventory_bills\/inventory_2\/681f22fbc16a0_1746871035.pdf"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Inventory bill image saved to database - {"media_id":"4"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing inventory media files - {"inventory_id":"2","count":2}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing inventory media file - {"inventory_id":"2","file_name":"SampleVideo_1280x720_1mb.mp4","file_type":"video\/mp4","file_size":1055736}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb_1746871035_2555.mp4","saved_as":"681f22fbc2644_1746871035.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_2\/681f22fbc2644_1746871035.mp4"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_2\/681f22fbc2644_1746871035.mp4","filename":"SampleVideo_1280x720_1mb_1746871035_2555.mp4","original_name":"SampleVideo_1280x720_1mb.mp4"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Inventory media record saved to database - {"media_id":"5"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Processing inventory media file - {"inventory_id":"2","file_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM.jpeg","file_type":"image\/jpeg","file_size":3004346}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM_1746871035_6978.jpeg","saved_as":"681f22fbc2f25_1746871035.jpeg","file_type":"image\/jpeg","file_size":3004346,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_2\/681f22fbc2f25_1746871035.jpeg"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_2\/681f22fbc2f25_1746871035.jpeg","filename":"WhatsApp Image 2025-04-23 at 5.56.55 PM_1746871035_6978.jpeg","original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM.jpeg"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Inventory media record saved to database - {"media_id":"6"}
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Transaction committed successfully
+[10-May-2025 15:27:15 Asia/Kolkata] 2025-05-10 15:27:15 - Save process completed successfully - {"event_id":"24"}
+[10-May-2025 12:05:08 Europe/Berlin] 2025-05-10 12:05:08 - Starting calendar event save process
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Database connection included
+[10-May-2025 15:35:08 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Session started - {"user_id":21}
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Started database transaction
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Processing event data - {"title":"hello there","date":"2025-05-05","user_id":21}
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Event created successfully - {"event_id":"25"}
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Transaction committed successfully
+[10-May-2025 15:35:08 Asia/Kolkata] 2025-05-10 15:35:08 - Save process completed successfully - {"event_id":"25"}
+[10-May-2025 13:10:56 Europe/Berlin] 2025-05-10 13:10:56 - Starting calendar event save process
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Database connection included
+[10-May-2025 16:40:56 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Session started - {"user_id":21}
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Started database transaction
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-06","user_id":21}
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Event created successfully - {"event_id":"26"}
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Transaction committed successfully
+[10-May-2025 16:40:56 Asia/Kolkata] 2025-05-10 16:40:56 - Save process completed successfully - {"event_id":"26"}
+[10-May-2025 13:28:28 Europe/Berlin] 2025-05-10 13:28:28 - Starting calendar event save process
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Database connection included
+[10-May-2025 16:58:28 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Session started - {"user_id":21}
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Started database transaction
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-27","user_id":21}
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Event created successfully - {"event_id":"27"}
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Processing inventory entries - {"count":1}
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Processing inventory entry - {"number":1,"type":"received","material":"bricks","quantity":"2000","unit":"pieces"}
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Inventory entry saved successfully - {"inventory_id":"3","number":1}
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Transaction committed successfully
+[10-May-2025 16:58:28 Asia/Kolkata] 2025-05-10 16:58:28 - Save process completed successfully - {"event_id":"27"}
+[10-May-2025 13:29:05 Europe/Berlin] 2025-05-10 13:29:05 - Starting calendar event save process
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Database connection included
+[10-May-2025 16:59:05 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Session started - {"user_id":21}
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Started database transaction
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-27","user_id":21}
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Event created successfully - {"event_id":"28"}
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Processing inventory entries - {"count":1}
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Processing inventory entry - {"number":1,"type":"consumed","material":"bricks","quantity":"2000.00","unit":"pieces"}
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Inventory entry saved successfully - {"inventory_id":"4","number":1}
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Transaction committed successfully
+[10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Save process completed successfully - {"event_id":"28"}

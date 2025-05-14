@@ -4,6 +4,9 @@ require_once 'config/db_connect.php';
 // Validate and set selected month
 $selected_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
 
+// Get the selected role filter
+$selected_role = isset($_GET['role']) ? $_GET['role'] : 'all';
+
 // Validate the format of selected month (ensure it's YYYY-MM format)
 if (!preg_match('/^\d{4}-\d{2}$/', $selected_month)) {
     $selected_month = date('Y-m');
@@ -146,7 +149,7 @@ function calculateLeaveDeductions($leavesTaken, $perDaySalary) {
     return $deduction;
 }
 
-// Modify the main query to include leaves count and round overtime to nearest 30 min
+// Modify the main query to include role filtering
 $query = "WITH user_leaves AS (
     SELECT 
         lr.user_id,
@@ -208,7 +211,8 @@ $query = "WITH user_leaves AS (
 
 SELECT 
     users.id, 
-    users.username, 
+    users.username,
+    users.role,
     users.base_salary,
     COALESCE(users.overtime_rate, 0) as overtime_rate,
     us.weekly_offs,
@@ -280,8 +284,18 @@ LEFT JOIN attendance a ON users.id = a.user_id
 WHERE users.deleted_at IS NULL 
 AND (users.status = 'active' OR 
     (users.status = 'inactive' AND 
-     DATE_FORMAT(users.status_changed_date, '%Y-%m') >= ?))
-GROUP BY users.id, users.username, users.base_salary
+     DATE_FORMAT(users.status_changed_date, '%Y-%m') >= ?))";
+
+// Add role filter condition if a specific role is selected
+if ($selected_role !== 'all') {
+    if ($selected_role === 'site_supervisor') {
+        $query .= " AND users.role = 'Site Supervisor'";
+    } elseif ($selected_role === 'except_site_supervisor') {
+        $query .= " AND (users.role != 'Site Supervisor' OR users.role IS NULL)";
+    }
+}
+
+$query .= " GROUP BY users.id, users.username, users.base_salary
 ORDER BY users.username";
 
 $stmt = $conn->prepare($query);
@@ -327,11 +341,24 @@ call_user_func_array([$stmt, 'bind_param'], $refs);
 $stmt->execute();
 $users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+// After fetching users, get any existing penalty data for this month
+$penalties = [];
+$penaltyQuery = "SELECT user_id, penalty_days FROM salary_penalties WHERE penalty_month = ?";
+$penaltyStmt = $conn->prepare($penaltyQuery);
+$penaltyStmt->bind_param('s', $selected_month);
+$penaltyStmt->execute();
+$penaltyResult = $penaltyStmt->get_result();
+
+while ($row = $penaltyResult->fetch_assoc()) {
+    $penalties[$row['user_id']] = $row['penalty_days'];
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($_POST['salary'] as $userId => $data) {
         $baseSalary = $data['base_salary'] ?? 0;
         $overtimeRate = $data['overtime_rate'] ?? 0;
+        $penaltyDays = isset($data['penalty_days']) ? (float)$data['penalty_days'] : 0;
         
         // Update user's base salary and overtime rate
         $updateQuery = "UPDATE users 
@@ -341,9 +368,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare($updateQuery);
         $stmt->bind_param('ddi', $baseSalary, $overtimeRate, $userId);
         $stmt->execute();
+        
+        // If penalty days are set, record them in a separate table for reference
+        if ($penaltyDays > 0) {
+            // Check if we already have a penalty record for this month/user
+            $checkQuery = "SELECT id FROM salary_penalties 
+                          WHERE user_id = ? AND penalty_month = ?";
+            $checkStmt = $conn->prepare($checkQuery);
+            $checkStmt->bind_param('is', $userId, $selected_month);
+            $checkStmt->execute();
+            $result = $checkStmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                // Update existing record
+                $penaltyId = $result->fetch_assoc()['id'];
+                $updatePenaltyQuery = "UPDATE salary_penalties 
+                                      SET penalty_days = ? 
+                                      WHERE id = ?";
+                $updateStmt = $conn->prepare($updatePenaltyQuery);
+                $updateStmt->bind_param('di', $penaltyDays, $penaltyId);
+                $updateStmt->execute();
+            } else {
+                // Insert new record
+                $insertQuery = "INSERT INTO salary_penalties 
+                               (user_id, penalty_month, penalty_days) 
+                               VALUES (?, ?, ?)";
+                $insertStmt = $conn->prepare($insertQuery);
+                $insertStmt->bind_param('isd', $userId, $selected_month, $penaltyDays);
+                $insertStmt->execute();
+            }
+        }
     }
     
-    header('Location: salary_info.php?success=1');
+    header('Location: salary_info.php?success=1&month=' . urlencode($selected_month) . '&role=' . urlencode($selected_role));
     exit;
 }
 
@@ -1031,6 +1088,52 @@ function calculateOvertimeRate($baseSalary, $totalWorkingDays, $shiftHours) {
             min-width: 120px;
             width: auto;
         }
+
+        /* Add style for the role filter */
+        .role-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            padding-left: 1rem;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .role-select {
+            padding: 0.625rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-color);
+            background-color: var(--white);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .role-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .role-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* CSS for penalty amount display */
+        .penalty-amount {
+            font-size: 0.8125rem;
+            color: var(--danger, #f72585);
+            margin-top: 0.25rem;
+            text-align: right;
+            padding-right: 0.5rem;
+        }
+
+        /* Make sure total values are properly highlighted */
+        .monthly-salary, .total-salary {
+            font-weight: 500;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
@@ -1115,6 +1218,16 @@ function calculateOvertimeRate($baseSalary, $totalWorkingDays, $shiftHours) {
                        class="date-picker" 
                        value="<?php echo $selected_month; ?>"
                        name="month">
+                
+                <!-- Add role filter dropdown -->
+                <div class="role-filter">
+                    <i class="fas fa-users"></i>
+                    <select id="role-filter" class="role-select">
+                        <option value="all">All Users</option>
+                        <option value="site_supervisor">Site Supervisors</option>
+                        <option value="except_site_supervisor">All Except Site Supervisors</option>
+                    </select>
+                </div>
             </div>
 
             <div class="export-range-container">
@@ -1200,6 +1313,12 @@ Leave Deduction Rules:
                             <th>
                                 Half Day Deduction
                                 <span class="info-tooltip" title="Salary deductions for half day leaves">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
+                            <th>
+                                Penalty Deduction
+                                <span class="info-tooltip" title="Enter number of days to deduct as penalty for the month. Half-day values (0.5) are also supported.">
                                     <i class="fas fa-info-circle"></i>
                                 </span>
                             </th>
@@ -1335,6 +1454,12 @@ Leave Deduction Rules:
                             
                             // Calculate total salary - include monthly salary (which already has late deduction) and overtime only
                             $totalSalary = $monthSalary + $overtime_amount;
+
+                            // Calculate adjusted monthly salary
+                            $penaltyDays = isset($penalties[$user['id']]) ? (float)$penalties[$user['id']] : 0;
+                            $penaltyAmount = $penaltyDays * $perDaySalary;
+                            $adjustedMonthSalary = $monthSalary - $penaltyAmount;
+                            $adjustedTotalSalary = $adjustedMonthSalary + $overtime_amount;
                         ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($user['username']); ?></td>
@@ -1431,7 +1556,30 @@ Leave Deduction Rules:
                                     </div>
                                 </td>
                                 <td>
-                                    ₹<?php echo number_format($monthSalary, 2); ?>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               name="salary[<?php echo $user['id']; ?>][penalty_days]" 
+                                               value="<?php echo isset($penalties[$user['id']]) ? $penalties[$user['id']] : 0; ?>" 
+                                               min="0" 
+                                               max="31" 
+                                               step="0.5"
+                                               class="form-control penalty-days"
+                                               data-user-id="<?php echo $user['id']; ?>"
+                                               data-per-day-salary="<?php echo $perDaySalary; ?>"
+                                               onchange="calculatePenalty(this)">
+                                        <div class="rate-info">Days</div>
+                                    </div>
+                                    <?php 
+                                    $penaltyAmount = $penaltyDays * $perDaySalary;
+                                    ?>
+                                    <div class="penalty-amount" id="penalty-amount-<?php echo $user['id']; ?>">
+                                        <?php echo $penaltyDays > 0 ? '₹' . number_format($penaltyAmount, 2) : '₹0.00'; ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="monthly-salary" id="monthly-salary-<?php echo $user['id']; ?>" data-original="<?php echo $monthSalary; ?>">
+                                        ₹<?php echo number_format($adjustedMonthSalary, 2); ?>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="input-group">
@@ -1485,8 +1633,8 @@ Leave Deduction Rules:
                                 </td>
                                 <td>
                                     <div class="input-group">
-                                        <span class="form-control" style="background: #f9fafb;">
-                                            ₹<?php echo number_format($totalSalary, 2); ?>
+                                        <span class="form-control total-salary" style="background: #f9fafb;" id="total-salary-<?php echo $user['id']; ?>" data-overtime="<?php echo $overtime_amount; ?>">
+                                            ₹<?php echo number_format($adjustedTotalSalary, 2); ?>
                                         </span>
                                         <div class="rate-info">Total</div>
                                     </div>
@@ -1539,11 +1687,22 @@ Leave Deduction Rules:
     // Month picker change handler
     document.addEventListener('DOMContentLoaded', function() {
         const datePicker = document.querySelector('.date-picker');
+        const roleFilter = document.getElementById('role-filter');
+        
+        // Set the selected role from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const roleParam = urlParams.get('role');
+        if (roleParam) {
+            roleFilter.value = roleParam;
+        }
+        
         if (datePicker) {
             datePicker.addEventListener('change', function() {
                 const selectedMonth = this.value;
                 if (selectedMonth) {
-                    window.location.href = `salary_info.php?month=${encodeURIComponent(selectedMonth)}`;
+                    // Include the role parameter when redirecting
+                    const selectedRole = roleFilter.value;
+                    window.location.href = `salary_info.php?month=${encodeURIComponent(selectedMonth)}&role=${selectedRole}`;
                 }
             });
 
@@ -1557,6 +1716,15 @@ Leave Deduction Rules:
             const minYear = today.getFullYear() - 2; // Allow selection up to 2 years in past
             datePicker.setAttribute('min', `${minYear}-01`);
         }
+        
+        // Add event listener for role filter changes
+        if (roleFilter) {
+            roleFilter.addEventListener('change', function() {
+                const selectedRole = this.value;
+                const selectedMonth = datePicker.value;
+                window.location.href = `salary_info.php?month=${encodeURIComponent(selectedMonth)}&role=${selectedRole}`;
+            });
+        }
     });
 
     document.getElementById('exportBtn').addEventListener('click', function() {
@@ -1567,6 +1735,10 @@ Leave Deduction Rules:
         const monthPicker = document.querySelector('.date-picker');
         const selectedMonth = monthPicker.value;
         
+        // Get the selected role
+        const roleFilter = document.getElementById('role-filter');
+        const selectedRole = roleFilter.value;
+        
         // Convert table to worksheet
         const ws = XLSX.utils.table_to_sheet(table);
         
@@ -1574,8 +1746,12 @@ Leave Deduction Rules:
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Salary Info");
         
-        // Format the filename with the month
-        const filename = `Salary_Information_${selectedMonth}.xlsx`;
+        // Format the filename with the month and role
+        let filename = `Salary_Information_${selectedMonth}`;
+        if (selectedRole !== 'all') {
+            filename += `_${selectedRole}`;
+        }
+        filename += ".xlsx";
         
         // Export to Excel file
         XLSX.writeFile(wb, filename);
@@ -1619,6 +1795,8 @@ Leave Deduction Rules:
         exportRangeBtn.onclick = async function() {
             const start = startDate.value;
             const end = endDate.value;
+            const roleFilter = document.getElementById('role-filter');
+            const selectedRole = roleFilter.value;
 
             if (!start || !end) {
                 alert('Please select both start and end dates');
@@ -1638,7 +1816,8 @@ Leave Deduction Rules:
                 // Build URL with parameters
                 const params = new URLSearchParams({
                     start: start,
-                    end: end
+                    end: end,
+                    role: selectedRole
                 });
 
                 // Make the request
@@ -1672,8 +1851,12 @@ Leave Deduction Rules:
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Salary Info");
                 
-                // Generate filename with date range
-                const filename = `Salary_Information_${start}_to_${end}.xlsx`;
+                // Generate filename with date range and role
+                let filename = `Salary_Information_${start}_to_${end}`;
+                if (selectedRole !== 'all') {
+                    filename += `_${selectedRole}`;
+                }
+                filename += ".xlsx";
                 
                 // Export to Excel file
                 XLSX.writeFile(wb, filename);
@@ -1757,6 +1940,46 @@ Leave Deduction Rules:
         const decimalHours = parseInt(hours) + (minutes === '30' ? 0.5 : 0);
         return decimalHours;
     }
+
+    function calculatePenalty(penaltyInput) {
+        const userId = penaltyInput.dataset.userId;
+        const penaltyDays = parseFloat(penaltyInput.value) || 0;
+        const perDaySalary = parseFloat(penaltyInput.dataset.perDaySalary) || 0;
+        
+        const penaltyAmount = penaltyDays * perDaySalary;
+        
+        // Update penalty amount display
+        const penaltyAmountElement = document.getElementById(`penalty-amount-${userId}`);
+        if (penaltyAmountElement) {
+            penaltyAmountElement.textContent = `₹${penaltyAmount.toFixed(2)}`;
+        }
+        
+        // Update monthly salary
+        const monthlySalaryElement = document.getElementById(`monthly-salary-${userId}`);
+        if (monthlySalaryElement) {
+            const originalSalary = parseFloat(monthlySalaryElement.dataset.original) || 0;
+            const newSalary = originalSalary - penaltyAmount;
+            monthlySalaryElement.textContent = `₹${newSalary.toFixed(2)}`;
+            
+            // Also update total salary (monthly salary + overtime)
+            const totalSalaryElement = document.getElementById(`total-salary-${userId}`);
+            if (totalSalaryElement) {
+                const overtimeAmount = parseFloat(totalSalaryElement.dataset.overtime) || 0;
+                const newTotalSalary = newSalary + overtimeAmount;
+                totalSalaryElement.textContent = `₹${newTotalSalary.toFixed(2)}`;
+            }
+        }
+    }
+
+    // Initialize all penalty calculations on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const penaltyInputs = document.querySelectorAll('.penalty-days');
+        penaltyInputs.forEach(input => {
+            if (parseFloat(input.value) > 0) {
+                calculatePenalty(input);
+            }
+        });
+    });
     </script>
 </body>
 </html> 

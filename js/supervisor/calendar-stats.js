@@ -1,19 +1,21 @@
 /**
  * Calendar Stats JavaScript
- * This file contains the functionality for the calendar stats section in the site supervisor dashboard
+ * Handles the calendar display in the stats section
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Calendar Stats functionality
+    // Initialize calendar functionality
+    initSupervisorCalendar();
+});
+
+/**
+ * Initialize the supervisor calendar functionality
+ */
+function initSupervisorCalendar() {
     const calendarContainer = document.getElementById('supervisorCalendar');
     const currentMonthDisplay = document.getElementById('currentMonthCalStats');
     const prevMonthBtn = document.getElementById('prevMonthCalStats');
     const nextMonthBtn = document.getElementById('nextMonthCalStats');
-    
-    // Exit if elements don't exist (not on the right page)
-    if (!calendarContainer || !currentMonthDisplay || !prevMonthBtn || !nextMonthBtn) {
-        return;
-    }
     
     // Set initial date to current month/year
     let currentDate = new Date();
@@ -29,7 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
         renderSupervisorCalendar();
     });
     
-    // Function to render the calendar
+    // Initial render
+    renderSupervisorCalendar();
+    
+    /**
+     * Function to render the calendar
+     */
     function renderSupervisorCalendar() {
         // Get current month and year
         const year = currentDate.getFullYear();
@@ -51,9 +58,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevMonth = month === 0 ? 11 : month - 1;
         const prevYear = month === 0 ? year - 1 : year;
         const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
-        
-        // Debug log
-        console.log('Rendering calendar for:', `${monthNames[month]} ${year}`);
         
         // Create calendar HTML
         let calendarHTML = `
@@ -77,19 +81,48 @@ document.addEventListener('DOMContentLoaded', function() {
         let dayCount = 1;
         for (let i = 0; i < startingDay; i++) {
             const prevMonthDay = daysInPrevMonth - startingDay + i + 1;
-            const prevMonthFormatted = prevMonth + 1; // +1 because we need 1-indexed month
-            const yearForPrevMonth = prevYear;
-            calendarHTML += createSupervisorDayCell(prevMonthDay, true, false, [], prevMonthFormatted, yearForPrevMonth);
+            const prevMonthFormatted = prevMonth + 1; // Convert to 1-indexed for display
+            calendarHTML += createSupervisorDayCell(prevMonthDay, true, false, [], prevMonthFormatted, prevYear);
         }
         
-        // Generate days for current month
-        const sampleEvents = generateSampleCalendarEvents(year, month, daysInMonth);
+        // Fetch real events from backend for current month view
+        const monthFormatted = month + 1; // Convert to 1-indexed for display
         
+        // Show loading indicator while fetching events
+        calendarContainer.innerHTML = '<div class="calendar-loading"><i class="fas fa-spinner fa-spin"></i> Loading calendar events...</div>';
+        
+        // Fetch events from the backend
+        fetchCalendarEvents(year, monthFormatted)
+            .then(eventsData => {
+                // Process the events by day
+                const eventsByDay = {};
+                
+                if (eventsData && eventsData.status === 'success' && eventsData.events) {
+                    eventsData.events.forEach(event => {
+                        // Extract day from event date (format: YYYY-MM-DD)
+                        const eventDate = new Date(event.date);
+                        const eventDay = eventDate.getDate();
+                        
+                        // Initialize array for this day if not exists
+                        if (!eventsByDay[eventDay]) {
+                            eventsByDay[eventDay] = [];
+                        }
+                        
+                        // Add event to the day
+                        eventsByDay[eventDay].push({
+                            id: event.id,
+                            title: event.title,
+                            type: event.type,
+                            time: "All day" // Default time if not specified
+                        });
+                    });
+                }
+                
+                // Generate days for current month with real events
         for (let day = 1; day <= daysInMonth; day++) {
             const isToday = isCurrentMonth && today.getDate() === day;
-            const dayEvents = sampleEvents[day] || [];
-            const currentMonthFormatted = month + 1; // +1 because we need 1-indexed month
-            calendarHTML += createSupervisorDayCell(day, false, isToday, dayEvents, currentMonthFormatted, year);
+                    const dayEvents = eventsByDay[day] || [];
+                    calendarHTML += createSupervisorDayCell(day, false, isToday, dayEvents, monthFormatted, year);
             dayCount++;
         }
         
@@ -98,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const nextMonthDays = totalCells - (startingDay + daysInMonth);
         const nextMonth = month === 11 ? 0 : month + 1;
         const nextYear = month === 11 ? year + 1 : year;
-        const nextMonthFormatted = nextMonth + 1; // +1 because we need 1-indexed month
+                const nextMonthFormatted = nextMonth + 1; // Convert to 1-indexed for display
         
         for (let day = 1; day <= nextMonthDays; day++) {
             calendarHTML += createSupervisorDayCell(day, true, false, [], nextMonthFormatted, nextYear);
@@ -109,44 +142,50 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the calendar
         calendarContainer.innerHTML = calendarHTML;
         
-        // Add click events for day cells
-        setupSupervisorCalendarInteractions(sampleEvents, month, year);
-    }
-    
-    // Function to set up calendar interactions
-    function setupSupervisorCalendarInteractions(events, month, year) {
-        // Add click event for day cells
-        document.querySelectorAll('.supervisor-calendar-day').forEach(cell => {
-            cell.addEventListener('click', function(e) {
-                // Skip if the click was on the add button
-                if (e.target.classList.contains('supervisor-add-event-btn') || 
-                    e.target.closest('.supervisor-add-event-btn')) {
-                    return;
+                // Add click events for calendar interactions
+                setupSupervisorCalendarInteractions();
+                
+                // Dispatch event to notify other components that calendar has been refreshed
+                document.dispatchEvent(new CustomEvent('calendarRefreshed'));
+            })
+            .catch(error => {
+                console.error('Error fetching calendar events:', error);
+                // Fallback to sample events in case of error
+                const sampleEvents = generateSampleCalendarEvents(year, month, daysInMonth);
+                
+                // Generate days for current month with sample events
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const isToday = isCurrentMonth && today.getDate() === day;
+                    const dayEvents = sampleEvents[day] || [];
+                    calendarHTML += createSupervisorDayCell(day, false, isToday, dayEvents, monthFormatted, year);
+                    dayCount++;
                 }
                 
-                const dayNumber = this.getAttribute('data-day');
-                const monthNumber = parseInt(this.getAttribute('data-month'));
-                const yearNumber = parseInt(this.getAttribute('data-year'));
-                const isOtherMonth = this.classList.contains('other-month');
+                // Generate days for next month (if needed)
+                const totalCells = Math.ceil((startingDay + daysInMonth) / 7) * 7;
+                const nextMonthDays = totalCells - (startingDay + daysInMonth);
+                const nextMonth = month === 11 ? 0 : month + 1;
+                const nextYear = month === 11 ? year + 1 : year;
+                const nextMonthFormatted = nextMonth + 1; // Convert to 1-indexed for display
                 
-                if (isOtherMonth) {
-                    // Navigate to the clicked month
-                    currentDate = new Date(yearNumber, monthNumber - 1, 1);
-                    renderSupervisorCalendar();
-                    return;
+                for (let day = 1; day <= nextMonthDays; day++) {
+                    calendarHTML += createSupervisorDayCell(day, true, false, [], nextMonthFormatted, nextYear);
                 }
                 
-                // Calendar day clicks are now handled by calendar-events-modal.js
-                // This handler is just for month navigation
+                calendarHTML += `</div>`;
+                
+                // Update the calendar with sample data
+                calendarContainer.innerHTML = calendarHTML;
+                
+                // Add click events for calendar interactions
+                setupSupervisorCalendarInteractions();
             });
-        });
-        
-        // Note: We don't need to add click events for the + buttons anymore
-        // They are now handled by calendar-events-modal.js
     }
     
-    // Function to create a day cell
-    function createSupervisorDayCell(day, isOtherMonth, isToday, events, monthValue, yearValue) {
+    /**
+     * Create a day cell for the calendar
+     */
+    function createSupervisorDayCell(day, isOtherMonth, isToday, events, month, year) {
         const hasEvents = events.length > 0;
         let cellClass = 'supervisor-calendar-day';
         
@@ -154,20 +193,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isToday) cellClass += ' today';
         if (hasEvents) cellClass += ' has-events';
         
-        let cellHTML = `<div class="${cellClass}" data-day="${day}" data-month="${monthValue}" data-year="${yearValue}">
+        // Format day and month as two digits with leading zeros
+        const dayFormatted = day.toString().padStart(2, '0');
+        const monthFormatted = month.toString().padStart(2, '0');
+        
+        // Create the cell HTML
+        let cellHTML = `<div class="${cellClass}" data-day="${dayFormatted}" data-month="${monthFormatted}" data-year="${year}">
             <div class="supervisor-calendar-date-container">
                 <div class="supervisor-calendar-date">${day}</div>
-                <button class="supervisor-add-event-btn" data-day="${day}" data-month="${monthValue}" data-year="${yearValue}"></button>
+                <button class="supervisor-add-event-btn" data-day="${dayFormatted}" data-month="${monthFormatted}" data-year="${year}"></button>
             </div>`;
         
         if (hasEvents) {
             cellHTML += `<div class="supervisor-calendar-events">`;
             
-            // Show max 2 events on larger screens
+            // Show max 2 events, with the option to view more
             const displayCount = Math.min(2, events.length);
             for (let i = 0; i < displayCount; i++) {
                 const event = events[i];
-                cellHTML += `<div class="supervisor-calendar-event event-${event.type}" title="${event.time}: ${event.title}" data-event-id="${event.id}">
+                // Remove any href attributes and use JavaScript to handle click
+                cellHTML += `<div class="supervisor-calendar-event event-${event.type}" 
+                                  data-event-id="${event.id}" 
+                                  title="${event.time}: ${event.title}">
                     ${event.title}
                 </div>`;
             }
@@ -184,7 +231,148 @@ document.addEventListener('DOMContentLoaded', function() {
         return cellHTML;
     }
     
-    // Function to generate sample events (this would be replaced with real data)
+    /**
+     * Set up calendar interactions
+     */
+    function setupSupervisorCalendarInteractions() {
+        // Add event button click handler
+        document.querySelectorAll('.supervisor-add-event-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent triggering the day click
+                
+                const day = this.getAttribute('data-day');
+                const month = this.getAttribute('data-month');
+                const year = this.getAttribute('data-year');
+                
+                // Format date for display
+                const dateStr = `${year}-${month}-${day}`;
+                
+                // Show add event form (functionality would be in another file)
+                if (typeof openCalendarEventModal === 'function') {
+                    openCalendarEventModal(day, month, year);
+                } else if (typeof showAddEventModal === 'function') {
+                    showAddEventModal(day, month, year);
+                } else {
+                    alert(`Add new event on ${dateStr}`);
+                }
+            });
+        });
+        
+        // Day cell click handler for viewing events
+        document.querySelectorAll('.supervisor-calendar-day').forEach(day => {
+            day.addEventListener('click', function(e) {
+                // Don't trigger if clicking on the add event button or an event
+                if (e.target.closest('.supervisor-add-event-btn') || 
+                    e.target.classList.contains('supervisor-add-event-btn') ||
+                    e.target.closest('.supervisor-calendar-event') ||
+                    e.target.classList.contains('supervisor-calendar-event')) {
+                    return;
+                }
+                
+                // Get date information
+                const day = this.getAttribute('data-day');
+                const month = this.getAttribute('data-month');
+                const year = this.getAttribute('data-year');
+                
+                // Don't do anything special for other month days
+                if (this.classList.contains('other-month')) {
+                    return;
+                }
+                
+                // Format date for API call
+                const formattedDate = `${year}-${month}-${day}`;
+                
+                // Load and show events for this date
+                if (typeof openDateEventsModal === 'function') {
+                    // Open the date events modal
+                    openDateEventsModal(formattedDate);
+                } else if (typeof loadEventsForDate === 'function') {
+                    loadEventsForDate(formattedDate);
+                } else {
+                    // Fallback if function not available
+                    const events = this.querySelectorAll('.supervisor-calendar-event');
+                    if (events.length > 0) {
+                        alert(`Events on ${month}/${day}/${year}`);
+                    } else {
+                        alert(`No events on ${month}/${day}/${year}`);
+                    }
+                }
+            });
+        });
+        
+        // Individual event click handler - handle click on the event item itself
+        document.querySelectorAll('.supervisor-calendar-event').forEach(event => {
+            event.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default navigation
+                e.stopPropagation(); // Prevent triggering the day click
+                
+                const eventId = this.getAttribute('data-event-id');
+                if (eventId) {
+                    // Load event details if function is available
+                    if (typeof showEventViewModal === 'function') {
+                        // Use event type from class name
+                        const eventType = this.classList.contains('event-inspection') ? 'inspection' :
+                                         this.classList.contains('event-delivery') ? 'delivery' :
+                                         this.classList.contains('event-meeting') ? 'meeting' :
+                                         this.classList.contains('event-report') ? 'report' :
+                                         this.classList.contains('event-issue') ? 'issue' : 'default';
+                        showEventViewModal(eventId, eventType, this.textContent.trim());
+                    } else if (typeof showViewEventModal === 'function') {
+                        // Alternative function name
+                        showViewEventModal(eventId);
+                    } else if (window.eventViewModal && typeof window.eventViewModal.show === 'function') {
+                        // Show the event view modal directly
+                        window.eventViewModal.show(eventId);
+                    } else {
+                        // Fallback only if no modal function is available
+                        window.location.href = `view_site_event.php?id=${eventId}`;
+                    }
+                }
+            });
+        });
+
+        // Prevent default behavior for any links inside calendar events
+        document.querySelectorAll('.supervisor-calendar-event a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Use the parent event's data
+                const eventElement = this.closest('.supervisor-calendar-event');
+                const eventId = eventElement.getAttribute('data-event-id');
+                
+                if (eventId && typeof loadEventDetails === 'function') {
+                    loadEventDetails(eventId);
+                }
+            });
+        });
+    }
+}
+
+/**
+ * Fetch calendar events from the backend
+ * @param {number} year - The year to fetch events for
+ * @param {number} month - The month to fetch events for (1-12)
+ * @returns {Promise} - A promise that resolves to the events data
+ */
+function fetchCalendarEvents(year, month) {
+    // Format month to ensure it's two digits
+    const formattedMonth = month.toString().padStart(2, '0');
+    
+    // Make API request to get events
+    return fetch(`backend/get_calendar_events.php?year=${year}&month=${formattedMonth}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        });
+}
+
+/**
+ * Generate sample calendar events for testing
+ * Used as fallback if API call fails
+ */
     function generateSampleCalendarEvents(year, month, daysInMonth) {
         const events = {};
         const eventTypes = ['inspection', 'delivery', 'meeting', 'report', 'issue'];
@@ -211,11 +399,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!events[day]) events[day] = [];
             
-            // Generate a unique ID for each event
-            const eventId = `event_${month}_${day}_${i}_${new Date().getTime()}`;
-            
             events[day].push({
-                id: eventId,
+            id: Math.floor(Math.random() * 10000) + 1, // Simulated event ID
                 type: eventType,
                 title: eventTitle,
                 time: time
@@ -232,25 +417,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return events;
     }
     
-    // Update stats based on calendar data
-    function updateCalendarStats() {
-        // In a real implementation, this would fetch data from the server
-        // For now, we'll just show some static data
-        
-        // Update event counts
-        document.querySelectorAll('.stats-summary-item .badge').forEach((badge, index) => {
-            const counts = [12, 8, 15, 6, 3]; // Sample counts for each event type
-            badge.textContent = counts[index];
-            
-            // Update progress bars
-            const progressPercentages = [75, 60, 85, 45, 25]; // Sample percentages
-            const progressBar = badge.closest('.stats-summary-item').querySelector('.progress-bar');
-            progressBar.style.width = progressPercentages[index] + '%';
-            progressBar.setAttribute('aria-valuenow', progressPercentages[index]);
-        });
-    }
-    
-    // Initial render
-    renderSupervisorCalendar();
-    updateCalendarStats();
-}); 
+// Expose functions to global scope for other scripts to use
+window.generateSampleCalendarEvents = generateSampleCalendarEvents;
+window.fetchCalendarEvents = fetchCalendarEvents; 

@@ -374,3 +374,72 @@ Stack trace:
 [10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Inventory entry saved successfully - {"inventory_id":"4","number":1}
 [10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Transaction committed successfully
 [10-May-2025 16:59:05 Asia/Kolkata] 2025-05-10 16:59:05 - Save process completed successfully - {"event_id":"28"}
+[12-May-2025 08:51:28 Europe/Berlin] 2025-05-12 08:51:28 - Starting calendar event save process
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Database connection included
+[12-May-2025 12:21:28 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Session started - {"user_id":21}
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Started database transaction
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-06","user_id":21}
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Event created successfully - {"event_id":"29"}
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Processing vendors - {"count":1}
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Processing vendor - {"index":1,"type":"equipment","name":"hgf"}
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Vendor created successfully - {"vendor_id":"17"}
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Transaction committed successfully
+[12-May-2025 12:21:28 Asia/Kolkata] 2025-05-12 12:21:28 - Save process completed successfully - {"event_id":"29"}
+[12-May-2025 11:42:20 Europe/Berlin] 2025-05-12 11:42:20 - Starting calendar event save process
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Database connection included
+[12-May-2025 15:12:20 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Session started - {"user_id":30}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Started database transaction
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-22","user_id":30}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Event created successfully - {"event_id":"30"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing vendors - {"count":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing vendor - {"index":1,"type":"material","name":"ytre"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Vendor created successfully - {"vendor_id":"18"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing materials - {"vendor_id":"18","count":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing material - {"material_key":"material_1_1"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Material data - {"material_key":"material_1_1","remarks":"iuyt","amount":"100"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Material created successfully - {"material_id":"14"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing material image - {"material_key":"material_1_1","file_name":"placeholder-icon-design-free-vector.jpg","file_size":69666}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File uploaded successfully - {"original_name":"placeholder-icon-design-free-vector.jpg","saved_as":"6821c27c2d89f_1747042940.jpg","file_type":"image\/jpeg","file_size":69666,"path":"..\/uploads\/calendar_events\/material_images\/6821c27c2d89f_1747042940.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Material image uploaded - {"path":"..\/uploads\/calendar_events\/material_images\/6821c27c2d89f_1747042940.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Material image saved to database
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing bill image - {"material_key":"material_1_1","file_name":"wallpaperflare.com_wallpaper.jpg","file_size":10953635}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File uploaded successfully - {"original_name":"wallpaperflare.com_wallpaper.jpg","saved_as":"6821c27c2e2b5_1747042940.jpg","file_type":"image\/jpeg","file_size":10953635,"path":"..\/uploads\/calendar_events\/bill_images\/6821c27c2e2b5_1747042940.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Bill image uploaded - {"path":"..\/uploads\/calendar_events\/bill_images\/6821c27c2e2b5_1747042940.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Bill image saved to database
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing beverages - {"count":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing beverage - {"number":1,"type":"kjhgfd","name":"jhgfds","amount":"100"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Beverage saved successfully - {"beverage_id":"3","number":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing work progress entries - {"count":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing work progress entry - {"number":1,"category":"structural","type":"columns","done":"yes"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Work progress entry saved successfully - {"work_id":"7","number":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing work media files - {"work_id":"7","count":2}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_7\/"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing work media file - {"work_id":"7","file_name":"SampleVideo_1280x720_1mb.mp4","file_type":"video\/mp4","file_size":1055736}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb_1747042940_7686.mp4","saved_as":"6821c27c325af_1747042940.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_7\/6821c27c325af_1747042940.mp4"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_7\/6821c27c325af_1747042940.mp4","filename":"SampleVideo_1280x720_1mb_1747042940_7686.mp4","original_name":"SampleVideo_1280x720_1mb.mp4"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Work media record saved to database - {"media_id":"8"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing work media file - {"work_id":"7","file_name":"4001-4500SQFT.jpg","file_type":"image\/jpeg","file_size":239296}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File uploaded successfully - {"original_name":"4001-4500SQFT_1747042940_7963.jpg","saved_as":"6821c27c32e13_1747042940.jpg","file_type":"image\/jpeg","file_size":239296,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_7\/6821c27c32e13_1747042940.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_7\/6821c27c32e13_1747042940.jpg","filename":"4001-4500SQFT_1747042940_7963.jpg","original_name":"4001-4500SQFT.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Work media record saved to database - {"media_id":"9"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing inventory entries - {"count":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing inventory entry - {"number":1,"type":"received","material":"cement","quantity":"200","unit":"bags"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Inventory entry saved successfully - {"inventory_id":"5","number":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing inventory bill image - {"inventory_id":"5","file_name":"Travel Expense Reimbursement Form.pdf","file_size":457325}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File upload type check - {"file_type":"application\/pdf","allowed":true}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File uploaded successfully - {"original_name":"Travel Expense Reimbursement Form.pdf","saved_as":"6821c27c347fa_1747042940.pdf","file_type":"application\/pdf","file_size":457325,"path":"..\/uploads\/calendar_events\/inventory_bills\/inventory_5\/6821c27c347fa_1747042940.pdf"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Inventory bill image saved to database - {"media_id":"7"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing inventory media files - {"inventory_id":"5","count":1}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Processing inventory media file - {"inventory_id":"5","file_name":"1.jpg","file_type":"image\/jpeg","file_size":272210}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - File uploaded successfully - {"original_name":"1_1747042940_5395.jpg","saved_as":"6821c27c35a2b_1747042940.jpg","file_type":"image\/jpeg","file_size":272210,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_5\/6821c27c35a2b_1747042940.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_5\/6821c27c35a2b_1747042940.jpg","filename":"1_1747042940_5395.jpg","original_name":"1.jpg"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Inventory media record saved to database - {"media_id":"8"}
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Transaction committed successfully
+[12-May-2025 15:12:20 Asia/Kolkata] 2025-05-12 15:12:20 - Save process completed successfully - {"event_id":"30"}

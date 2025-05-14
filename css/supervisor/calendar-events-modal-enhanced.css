@@ -2004,6 +2004,27 @@
     border: 1px solid #e2e8f0;
 }
 
+.sv-wages-section-header {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 16px;
+    margin-bottom: 10px;
+    padding-left: 6px;
+    border-left: 3px solid #4f46e5;
+    display: flex;
+    align-items: center;
+}
+
+.sv-wages-section-header:first-child {
+    margin-top: 0;
+}
+
+.sv-wages-section-header i {
+    margin-right: 8px;
+    color: #4f46e5;
+}
+
 .sv-wages-row {
     display: flex;
     justify-content: space-between;
@@ -2117,6 +2138,12 @@
         font-size: 1.1rem;
     }
     
+    .sv-wages-section-header {
+        font-size: 0.9rem;
+        margin-top: 14px;
+        margin-bottom: 8px;
+    }
+    
     .sv-wages-label {
         font-size: 0.9rem;
     }
@@ -2152,38 +2179,71 @@
     }
     
     .sv-wages-summary-header-icon i {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
     
     .sv-wages-summary-title {
         font-size: 1rem;
     }
     
+    .sv-wages-section-header {
+        font-size: 0.85rem;
+        margin-top: 12px;
+        margin-bottom: 6px;
+    }
+    
     .sv-wages-row {
-        padding: 10px 8px;
+        padding: 8px 6px;
     }
     
     .sv-wages-label i {
-        display: none;
+        font-size: 0.9rem;
     }
     
     .sv-wages-value {
-        padding: 4px 8px;
-        min-width: 80px;
         font-size: 0.85rem;
+        padding: 4px 8px;
+        min-width: 85px;
     }
     
     .sv-wages-total-row {
-        padding: 12px 10px;
+        padding: 10px;
+        margin-top: 10px;
     }
     
     .sv-wages-total-label i {
-        display: none;
+        font-size: 1rem;
     }
     
     .sv-wages-total-value {
-        padding: 6px 12px;
         font-size: 1rem;
+        padding: 6px 10px;
         min-width: 90px;
     }
+}
+
+.slw-ot-minutes,
+.scl-ot-minutes {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    background-color: #fff;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 30px;
+}
+
+.slw-ot-minutes:focus,
+.scl-ot-minutes:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    outline: none;
 } 

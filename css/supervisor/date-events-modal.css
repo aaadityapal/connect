@@ -1,0 +1,542 @@
+/**
+ * Date Events Modal CSS
+ * Styles for the modal that displays all events for a specific date
+ */
+
+.date-events-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+}
+
+.date-events-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.date-events-container {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.date-events-modal.active .date-events-container {
+    transform: translateY(0);
+}
+
+.date-events-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f7ff;
+    color: #2c3e50;
+}
+
+.date-events-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.date-events-title:before {
+    content: "\f073";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 10px;
+    font-size: 1.3rem;
+    color: #3498db;
+}
+
+.date-events-close {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #2c3e50;
+    font-size: 18px;
+}
+
+.date-events-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: rotate(90deg);
+}
+
+.date-events-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 130px);
+    background-color: #fafbfc;
+}
+
+.date-events-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.date-event-item {
+    margin-bottom: 20px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #edf2f7;
+    position: relative;
+    overflow: hidden;
+}
+
+.date-event-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #e2e8f0;
+}
+
+.date-event-item:last-child {
+    margin-bottom: 0;
+}
+
+.date-event-item:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: #3498db;
+}
+
+.date-event-item.date-event-type-inspection:before {
+    background-color: #38a169;
+}
+
+.date-event-item.date-event-type-delivery:before {
+    background-color: #ed8936;
+}
+
+.date-event-item.date-event-type-meeting:before {
+    background-color: #9f7aea;
+}
+
+.date-event-item.date-event-type-report:before {
+    background-color: #4299e1;
+}
+
+.date-event-item.date-event-type-issue:before {
+    background-color: #e53e3e;
+}
+
+.date-event-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.date-event-type-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 15px;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    font-size: 1.1rem;
+}
+
+.date-event-info {
+    flex-grow: 1;
+}
+
+.date-event-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #2d3748;
+}
+
+.date-event-creator {
+    font-size: 0.9rem;
+    color: #718096;
+    display: flex;
+    align-items: center;
+}
+
+.date-event-creator i {
+    margin-right: 5px;
+    font-size: 0.85rem;
+}
+
+.date-event-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+}
+
+.date-event-detail {
+    margin-right: 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    background-color: #f7fafc;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    border: 1px solid #edf2f7;
+}
+
+.date-event-detail i {
+    margin-right: 5px;
+    width: 20px;
+    text-align: center;
+    color: #4a5568;
+}
+
+/* Event type colors */
+.date-event-type-inspection {
+    background-color: #9ae6b4;
+    color: #22543d;
+}
+
+.date-event-type-delivery {
+    background-color: #fbd38d;
+    color: #744210;
+}
+
+.date-event-type-meeting {
+    background-color: #d6bcfa;
+    color: #44337a;
+}
+
+.date-event-type-report {
+    background-color: #bee3f8;
+    color: #2c5282;
+}
+
+.date-event-type-issue {
+    background-color: #fed7d7;
+    color: #822727;
+}
+
+/* Action buttons styles */
+.date-event-actions {
+    display: flex;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #edf2f7;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.date-event-action-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    color: #4a5568;
+    transition: all 0.15s ease;
+    font-weight: 500;
+}
+
+.date-event-action-btn i {
+    margin-right: 6px;
+}
+
+.date-event-action-btn.view-btn {
+    background-color: #ebf8ff;
+    color: #3182ce;
+    border-color: #bee3f8;
+}
+
+.date-event-action-btn.edit-btn {
+    background-color: #fffaf0;
+    color: #dd6b20;
+    border-color: #feebc8;
+}
+
+.date-event-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.date-event-action-btn.view-btn:hover {
+    background-color: #bee3f8;
+}
+
+.date-event-action-btn.edit-btn:hover {
+    background-color: #feebc8;
+}
+
+.date-events-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #718096;
+}
+
+.date-events-empty i {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+    color: #cbd5e0;
+}
+
+.date-events-empty p {
+    font-size: 1.2rem;
+    margin: 0 0 20px 0;
+    font-weight: 500;
+}
+
+.date-events-empty .add-event-suggestion {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.date-events-empty-add-btn {
+    background-color: #ebfaf5;
+    color: #2f855a;
+    border: 1px solid #c6f6d5;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    margin-top: 10px;
+    font-weight: 500;
+}
+
+.date-events-empty-add-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+    color: #38a169;
+}
+
+.date-events-empty-add-btn:hover {
+    background-color: #c6f6d5;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(56, 161, 105, 0.1);
+}
+
+.date-events-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #718096;
+}
+
+.date-events-loading i {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #3182ce;
+}
+
+.date-events-loading p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.date-events-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #edf2f7;
+    text-align: right;
+    background-color: #f8fafc;
+}
+
+.date-events-add-btn {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+    border: 1px solid #bee3f8;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.date-events-add-btn i {
+    margin-right: 8px;
+    font-size: 1rem;
+    color: #3182ce;
+}
+
+.date-events-add-btn:hover {
+    background-color: #bee3f8;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(49, 130, 206, 0.1);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .date-events-container {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .date-events-header {
+        padding: 15px;
+    }
+    
+    .date-events-title {
+        font-size: 1.3rem;
+    }
+    
+    .date-events-title:before {
+        font-size: 1.1rem;
+        margin-right: 8px;
+    }
+    
+    .date-events-body {
+        padding: 15px;
+        max-height: calc(95vh - 110px);
+    }
+    
+    .date-event-type-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: 12px;
+        font-size: 0.95rem;
+    }
+    
+    .date-event-title {
+        font-size: 1.1rem;
+    }
+    
+    .date-event-item {
+        padding: 15px;
+    }
+    
+    .date-event-actions {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    
+    .date-event-action-btn {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .date-events-footer {
+        padding: 12px 15px;
+    }
+    
+    .date-events-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Notification styles */
+.date-events-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    min-width: 250px;
+    max-width: 350px;
+    z-index: 10001;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    border: 1px solid #edf2f7;
+}
+
+.date-events-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.date-events-notification i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.date-events-notification.success {
+    border-left: 4px solid #c6f6d5;
+}
+
+.date-events-notification.success i {
+    color: #38a169;
+}
+
+.date-events-notification.error {
+    border-left: 4px solid #fed7d7;
+}
+
+.date-events-notification.error i {
+    color: #e53e3e;
+}
+
+/* Responsive styles for notification */
+@media (max-width: 768px) {
+    .date-events-notification {
+        width: 90%;
+        left: 5%;
+        right: 5%;
+        transform: translateY(-100%);
+    }
+    
+    .date-events-notification.show {
+        transform: translateY(0);
+    }
+} 

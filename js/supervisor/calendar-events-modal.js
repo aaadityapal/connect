@@ -112,7 +112,7 @@ function createModalElements() {
             <div id="add-event-modal-container" class="calendar-event-modal-overlay">
                 <div class="add-event-modal">
                     <div class="add-event-modal-header">
-                        <h3><i class="fas fa-calendar-plus"></i> Add New Event</h3>
+                        <h3><i class="fas fa-calendar-plus"></i> Add Recent Site Updates</h3>
                         <button class="add-event-modal-close">&times;</button>
                     </div>
                     <div class="add-event-modal-body">
@@ -120,7 +120,7 @@ function createModalElements() {
                             <div class="event-form-row">
                                 <div class="event-form-col">
                             <div class="add-event-form-group">
-                                        <label for="event-title"><i class="fas fa-bookmark"></i> Event Title</label>
+                                        <label for="event-title"><i class="fas fa-bookmark"></i> Site Name</label>
                                 <select id="event-title" name="event-title" class="add-event-form-control" required>
                                     <option value="">Select Construction Site</option>
                                     <option value="Construction Site At Sector 80">Construction Site At Sector 80</option>
@@ -135,7 +135,7 @@ function createModalElements() {
                                 </div>
                                 <div class="event-form-col">
                             <div class="add-event-form-group">
-                                        <label for="event-date-display"><i class="fas fa-calendar-alt"></i> Event Date</label>
+                                        <label for="event-date-display"><i class="fas fa-calendar-alt"></i> Site Update Date</label>
                                         <input type="text" id="event-date-display" class="add-event-form-control" readonly>
                             <input type="hidden" id="event-date" name="event-date">
                                     </div>
@@ -229,29 +229,52 @@ function createModalElements() {
                                         </div>
                                     </div>
                                     <div id="calendar-wages-summary-container" class="sv-wages-summary-content">
+                                        <div class="sv-wages-section-header">
+                                            <i class="fas fa-users"></i> Vendor Labour
+                                        </div>
                                         <div class="sv-wages-row">
                                             <div class="sv-wages-label">
-                                                <i class="fas fa-users"></i> Vendor Labour Wages
+                                                <i class="fas fa-rupee-sign"></i> Base Wages
                                             </div>
                                             <div class="sv-wages-value">₹ <span id="vendor-labour-wages">0.00</span></div>
                                         </div>
                                         <div class="sv-wages-row">
                                             <div class="sv-wages-label">
-                                                <i class="fas fa-building"></i> Company Labour Wages
+                                                <i class="fas fa-business-time"></i> Overtime
+                                            </div>
+                                            <div class="sv-wages-value">₹ <span id="vendor-labour-ot">0.00</span></div>
+                                        </div>
+
+                                        <div class="sv-wages-section-header">
+                                            <i class="fas fa-building"></i> Company Labour
+                                        </div>
+                                        <div class="sv-wages-row">
+                                            <div class="sv-wages-label">
+                                                <i class="fas fa-rupee-sign"></i> Base Wages
                                             </div>
                                             <div class="sv-wages-value">₹ <span id="company-labour-wages">0.00</span></div>
                                         </div>
                                         <div class="sv-wages-row">
                                             <div class="sv-wages-label">
-                                                <i class="fas fa-business-time"></i> Overtime Payments
+                                                <i class="fas fa-business-time"></i> Overtime
                                             </div>
-                                            <div class="sv-wages-value">₹ <span id="overtime-payments">0.00</span></div>
+                                            <div class="sv-wages-value">₹ <span id="company-labour-ot">0.00</span></div>
+                                        </div>
+
+                                        <div class="sv-wages-section-header">
+                                            <i class="fas fa-receipt"></i> Miscellaneous
                                         </div>
                                         <div class="sv-wages-row">
                                             <div class="sv-wages-label">
                                                 <i class="fas fa-route"></i> Travel Expenses
                                             </div>
                                             <div class="sv-wages-value">₹ <span id="travel-expenses">0.00</span></div>
+                                        </div>
+                                        <div class="sv-wages-row">
+                                            <div class="sv-wages-label">
+                                                <i class="fas fa-coffee"></i> Beverages
+                                            </div>
+                                            <div class="sv-wages-value">₹ <span id="beverage-expenses">0.00</span></div>
                                         </div>
                                         
                                         <div class="sv-wages-total-row">
@@ -497,7 +520,10 @@ function createModalElements() {
                     </div>
                     <div class="supervisor-labour-form-group slw-ot-minutes-group">
                         <label><i class="fas fa-clock"></i> OT Minutes</label>
-                        <input type="number" class="slw-ot-minutes" placeholder="Minutes" min="0" max="59">
+                        <select class="slw-ot-minutes">
+                            <option value="0">00 Minutes</option>
+                            <option value="30">30 Minutes</option>
+                        </select>
                     </div>
                     <div class="supervisor-labour-form-group">
                         <label><i class="fas fa-rupee-sign"></i> OT Rate/Hour</label>
@@ -647,7 +673,10 @@ function createModalElements() {
                     </div>
                     <div class="scl-labour-form-group scl-ot-minutes-group">
                         <label><i class="fas fa-clock"></i> OT Minutes</label>
-                        <input type="number" class="scl-ot-minutes" placeholder="Minutes" min="0" max="59">
+                        <select class="scl-ot-minutes">
+                            <option value="0">00 Minutes</option>
+                            <option value="30">30 Minutes</option>
+                        </select>
                     </div>
                     <div class="scl-labour-form-group">
                         <label><i class="fas fa-rupee-sign"></i> OT Rate/Hour</label>
@@ -1000,42 +1029,9 @@ function initializeEventHandlers() {
             showAddEventModal(day, month, year);
         }
         
-        // Handle opening view event modal when an event is clicked
-        if (event.target.classList.contains('supervisor-calendar-event')) {
-            event.stopPropagation(); // Prevent calendar day click event
-            
-            const eventId = event.target.getAttribute('data-event-id');
-            const eventType = event.target.classList.contains('event-inspection') ? 'inspection' : 
-                              event.target.classList.contains('event-delivery') ? 'delivery' :
-                              event.target.classList.contains('event-meeting') ? 'meeting' :
-                              event.target.classList.contains('event-report') ? 'report' : 'issue';
-            
-            showViewEventModal(eventId, eventType, event.target.textContent.trim());
-        }
+        // Remove the view event modal handler for individual events
         
-        // Handle opening view event modal when calendar day is clicked (if it has events)
-        if (event.target.classList.contains('supervisor-calendar-day') || 
-            (event.target.closest('.supervisor-calendar-day') && !event.target.classList.contains('supervisor-add-event-btn'))) {
-            
-            const calendarDay = event.target.classList.contains('supervisor-calendar-day') ? 
-                               event.target : event.target.closest('.supervisor-calendar-day');
-            
-            // Only handle this if the day has events
-            if (calendarDay.classList.contains('has-events')) {
-                // Get all events in this day
-                const events = calendarDay.querySelectorAll('.supervisor-calendar-event');
-                if (events.length > 0) {
-                    // Get first event's details
-                        const eventId = events[0].getAttribute('data-event-id');
-                        const eventType = events[0].classList.contains('event-inspection') ? 'inspection' : 
-                                      events[0].classList.contains('event-delivery') ? 'delivery' :
-                                      events[0].classList.contains('event-meeting') ? 'meeting' :
-                                      events[0].classList.contains('event-report') ? 'report' : 'issue';
-                                      
-                        showViewEventModal(eventId, eventType, events[0].textContent.trim());
-                }
-            }
-        }
+        // Remove the calendar day click handler that was opening the view event modal
         
         // Handle vendor type selection change
         if (event.target.classList.contains('calendar-vendor-type-select')) {
@@ -1706,7 +1702,10 @@ function saveEvent() {
                         
                         if (labour.overtime) {
                             formData.append(`ot_hours_${labourKey}`, labour.overtime.hours || '0');
-                            formData.append(`ot_minutes_${labourKey}`, labour.overtime.minutes || '0');
+                            // Ensure minutes are only 0 or 30
+                            const otMinutes = labour.overtime.minutes;
+                            const validMinutes = (otMinutes == 0 || otMinutes == 30) ? otMinutes : 0;
+                            formData.append(`ot_minutes_${labourKey}`, validMinutes);
                             formData.append(`ot_rate_${labourKey}`, labour.overtime.rate || '0');
                             formData.append(`total_ot_amount_${labourKey}`, labour.overtime.totalAmount || '0');
                         }
@@ -1753,7 +1752,10 @@ function saveEvent() {
                         // Add overtime information if available
                         if (labour.overtime) {
                             formData.append(`company_ot_hours_${companyLabourIndex}`, labour.overtime.hours || '0');
-                            formData.append(`company_ot_minutes_${companyLabourIndex}`, labour.overtime.minutes || '0');
+                            // Ensure minutes are only 0 or 30
+                            const otMinutes = labour.overtime.minutes;
+                            const validMinutes = (otMinutes == 0 || otMinutes == 30) ? otMinutes : 0;
+                            formData.append(`company_ot_minutes_${companyLabourIndex}`, validMinutes);
                             formData.append(`company_ot_rate_${companyLabourIndex}`, labour.overtime.rate || '0');
                             formData.append(`company_total_ot_amount_${companyLabourIndex}`, labour.overtime.totalAmount || '0');
                         }
@@ -2355,28 +2357,26 @@ function calculateTotalDayWages(wagesInput) {
 }
 
 /**
- * Calculate the overtime amount based on hours, minutes, and rate
+ * Calculate overtime amount based on hours, minutes and rate
  */
 function calculateOvertimeAmount(input) {
+    // Get the containing labour entry
     const labourEntry = input.closest('.supervisor-labour-entry');
-    const hoursInput = labourEntry.querySelector('.slw-ot-hours');
-    const minutesInput = labourEntry.querySelector('.slw-ot-minutes');
-    const rateInput = labourEntry.querySelector('.slw-ot-rate');
-    const totalOTAmount = labourEntry.querySelector('.slw-total-ot-amount');
     
-    // Get values from inputs
-    const hours = parseFloat(hoursInput.value) || 0;
-    const minutes = parseFloat(minutesInput.value) || 0;
-    const rate = parseFloat(rateInput.value) || 0;
+    // Get values
+    const hours = parseFloat(labourEntry.querySelector('.slw-ot-hours').value) || 0;
+    const minutes = parseInt(labourEntry.querySelector('.slw-ot-minutes').value) || 0;
+    const rate = parseFloat(labourEntry.querySelector('.slw-ot-rate').value) || 0;
     
-    // Calculate total hours including minutes
-    const totalHours = hours + (minutes / 60);
+    // Calculate overtime amount (hours + minutes/60) * rate
+    const totalOTHours = hours + (minutes / 60);
+    const totalOTAmount = totalOTHours * rate;
     
-    // Calculate total overtime amount
-    const otAmount = totalHours * rate;
+    // Update the OT amount field
+    labourEntry.querySelector('.slw-total-ot-amount').value = totalOTAmount.toFixed(2);
     
-    // Update the total OT amount field
-    totalOTAmount.value = otAmount.toFixed(2);
+    // Update grand total
+    updateGrandTotal(input);
 }
 
 /**
@@ -2557,28 +2557,26 @@ function calculateCompanyTotalDayWages(wagesInput) {
 }
 
 /**
- * Calculate the overtime amount for company labour
+ * Calculate overtime amount for company labour
  */
 function calculateCompanyOvertimeAmount(input) {
+    // Get the containing labour entry
     const labourEntry = input.closest('.scl-labour-entry');
-    const hoursInput = labourEntry.querySelector('.scl-ot-hours');
-    const minutesInput = labourEntry.querySelector('.scl-ot-minutes');
-    const rateInput = labourEntry.querySelector('.scl-ot-rate');
-    const totalOTAmount = labourEntry.querySelector('.scl-total-ot-amount');
     
-    // Get values from inputs
-    const hours = parseFloat(hoursInput.value) || 0;
-    const minutes = parseFloat(minutesInput.value) || 0;
-    const rate = parseFloat(rateInput.value) || 0;
+    // Get values
+    const hours = parseFloat(labourEntry.querySelector('.scl-ot-hours').value) || 0;
+    const minutes = parseInt(labourEntry.querySelector('.scl-ot-minutes').value) || 0;
+    const rate = parseFloat(labourEntry.querySelector('.scl-ot-rate').value) || 0;
     
-    // Calculate total hours including minutes
-    const totalHours = hours + (minutes / 60);
+    // Calculate overtime amount (hours + minutes/60) * rate
+    const totalOTHours = hours + (minutes / 60);
+    const totalOTAmount = totalOTHours * rate;
     
-    // Calculate total overtime amount
-    const otAmount = totalHours * rate;
+    // Update the OT amount field
+    labourEntry.querySelector('.scl-total-ot-amount').value = totalOTAmount.toFixed(2);
     
-    // Update the total OT amount field
-    totalOTAmount.value = otAmount.toFixed(2);
+    // Update grand total
+    updateCompanyGrandTotal(input);
 }
 
 /**
@@ -3354,10 +3352,12 @@ function updateAllRemainingMaterialSections() {
  */
 function updateWagesSummary() {
     // Initialize counters
-    let vendorLabourWages = 0;
-    let companyLabourWages = 0;
-    let overtimePayments = 0;
+    let vendorLabourBaseWages = 0;
+    let vendorLabourOT = 0;
+    let companyLabourBaseWages = 0;
+    let companyLabourOT = 0;
     let travelExpenses = 0;
+    let beverageExpenses = 0;
     let totalWages = 0;
     
     // Calculate vendor labour wages
@@ -3365,11 +3365,11 @@ function updateWagesSummary() {
     vendorLabourEntries.forEach(labour => {
         // Get daily wages
         const dailyWages = parseFloat(labour.querySelector('.slw-total-day-wages').value) || 0;
-        vendorLabourWages += dailyWages;
+        vendorLabourBaseWages += dailyWages;
         
         // Get overtime amount
         const overtimeAmount = parseFloat(labour.querySelector('.slw-total-ot-amount').value) || 0;
-        overtimePayments += overtimeAmount;
+        vendorLabourOT += overtimeAmount;
         
         // Get travel amount
         const travelAmount = parseFloat(labour.querySelector('.slw-travel-amount').value) || 0;
@@ -3381,25 +3381,34 @@ function updateWagesSummary() {
     companyLabourEntries.forEach(labour => {
         // Get daily wages
         const dailyWages = parseFloat(labour.querySelector('.scl-total-day-wages').value) || 0;
-        companyLabourWages += dailyWages;
+        companyLabourBaseWages += dailyWages;
         
         // Get overtime amount
         const overtimeAmount = parseFloat(labour.querySelector('.scl-total-ot-amount').value) || 0;
-        overtimePayments += overtimeAmount;
+        companyLabourOT += overtimeAmount;
         
         // Get travel amount
         const travelAmount = parseFloat(labour.querySelector('.scl-travel-amount').value) || 0;
         travelExpenses += travelAmount;
     });
     
+    // Calculate beverage expenses
+    const beverageItems = document.querySelectorAll('.calendar-beverage-item');
+    beverageItems.forEach(item => {
+        const amount = parseFloat(item.querySelector('.calendar-beverage-amount').value) || 0;
+        beverageExpenses += amount;
+    });
+    
     // Calculate total wages
-    totalWages = vendorLabourWages + companyLabourWages + overtimePayments + travelExpenses;
+    totalWages = vendorLabourBaseWages + vendorLabourOT + companyLabourBaseWages + companyLabourOT + travelExpenses + beverageExpenses;
     
     // Update the summary display
-    document.getElementById('vendor-labour-wages').textContent = vendorLabourWages.toFixed(2);
-    document.getElementById('company-labour-wages').textContent = companyLabourWages.toFixed(2);
-    document.getElementById('overtime-payments').textContent = overtimePayments.toFixed(2);
+    document.getElementById('vendor-labour-wages').textContent = vendorLabourBaseWages.toFixed(2);
+    document.getElementById('vendor-labour-ot').textContent = vendorLabourOT.toFixed(2);
+    document.getElementById('company-labour-wages').textContent = companyLabourBaseWages.toFixed(2);
+    document.getElementById('company-labour-ot').textContent = companyLabourOT.toFixed(2);
     document.getElementById('travel-expenses').textContent = travelExpenses.toFixed(2);
+    document.getElementById('beverage-expenses').textContent = beverageExpenses.toFixed(2);
     document.getElementById('total-wages').textContent = totalWages.toFixed(2);
     
     // Highlight the total wages section with animation
@@ -3412,3 +3421,27 @@ function updateWagesSummary() {
     }
 }
   
+// Expose functions to global scope with debugging
+console.log('Exposing openCalendarEventModal function to global scope');
+window.openCalendarEventModal = function(day, month, year) {
+    console.log('Global openCalendarEventModal called with:', day, month, year);
+    showAddEventModal(day, month, year);
+};
+
+// Add a debug function
+window.debugCalendarEvents = function() {
+    console.log('Calendar Event Modal Debug:');
+    console.log('- showAddEventModal exists:', typeof showAddEventModal === 'function');
+    console.log('- openCalendarEventModal exists:', typeof window.openCalendarEventModal === 'function');
+    
+    if (typeof showAddEventModal === 'function') {
+        console.log('showAddEventModal is defined in this scope');
+    }
+    
+    return {
+        showAddEventModal: typeof showAddEventModal === 'function',
+        openCalendarEventModal: typeof window.openCalendarEventModal === 'function'
+    };
+};
+
+console.log('Calendar Events Modal JS loaded successfully');

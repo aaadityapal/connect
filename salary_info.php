@@ -343,14 +343,17 @@ $users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // After fetching users, get any existing penalty data for this month
 $penalties = [];
-$penaltyQuery = "SELECT user_id, penalty_days FROM salary_penalties WHERE penalty_month = ?";
+$penaltyQuery = "SELECT user_id, penalty_days, leave_penalty_days FROM salary_penalties WHERE penalty_month = ?";
 $penaltyStmt = $conn->prepare($penaltyQuery);
 $penaltyStmt->bind_param('s', $selected_month);
 $penaltyStmt->execute();
 $penaltyResult = $penaltyStmt->get_result();
 
 while ($row = $penaltyResult->fetch_assoc()) {
-    $penalties[$row['user_id']] = $row['penalty_days'];
+    $penalties[$row['user_id']] = [
+        'penalty_days' => $row['penalty_days'],
+        'leave_penalty_days' => $row['leave_penalty_days'] ?? 0
+    ];
 }
 
 // Handle form submission
@@ -359,6 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $baseSalary = $data['base_salary'] ?? 0;
         $overtimeRate = $data['overtime_rate'] ?? 0;
         $penaltyDays = isset($data['penalty_days']) ? (float)$data['penalty_days'] : 0;
+        $leavePenaltyDays = isset($data['leave_penalty_days']) ? (float)$data['leave_penalty_days'] : 0;
         
         // Update user's base salary and overtime rate
         $updateQuery = "UPDATE users 
@@ -370,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
         
         // If penalty days are set, record them in a separate table for reference
-        if ($penaltyDays > 0) {
+        if ($penaltyDays > 0 || $leavePenaltyDays > 0) {
             // Check if we already have a penalty record for this month/user
             $checkQuery = "SELECT id FROM salary_penalties 
                           WHERE user_id = ? AND penalty_month = ?";
@@ -383,18 +387,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update existing record
                 $penaltyId = $result->fetch_assoc()['id'];
                 $updatePenaltyQuery = "UPDATE salary_penalties 
-                                      SET penalty_days = ? 
+                                      SET penalty_days = ?,
+                                          leave_penalty_days = ?
                                       WHERE id = ?";
                 $updateStmt = $conn->prepare($updatePenaltyQuery);
-                $updateStmt->bind_param('di', $penaltyDays, $penaltyId);
+                $updateStmt->bind_param('ddi', $penaltyDays, $leavePenaltyDays, $penaltyId);
                 $updateStmt->execute();
             } else {
                 // Insert new record
                 $insertQuery = "INSERT INTO salary_penalties 
-                               (user_id, penalty_month, penalty_days) 
-                               VALUES (?, ?, ?)";
+                               (user_id, penalty_month, penalty_days, leave_penalty_days) 
+                               VALUES (?, ?, ?, ?)";
                 $insertStmt = $conn->prepare($insertQuery);
-                $insertStmt->bind_param('isd', $userId, $selected_month, $penaltyDays);
+                $insertStmt->bind_param('isdd', $userId, $selected_month, $penaltyDays, $leavePenaltyDays);
                 $insertStmt->execute();
             }
         }
@@ -1121,12 +1126,17 @@ function calculateOvertimeRate($baseSalary, $totalWorkingDays, $shiftHours) {
         }
 
         /* CSS for penalty amount display */
-        .penalty-amount {
+        .penalty-amount, .leave-penalty-amount {
             font-size: 0.8125rem;
             color: var(--danger, #f72585);
             margin-top: 0.25rem;
             text-align: right;
             padding-right: 0.5rem;
+        }
+
+        /* Make the leave penalty display slightly different */
+        .leave-penalty-amount {
+            color: #9c1458; /* darker shade for distinction */
         }
 
         /* Make sure total values are properly highlighted */
@@ -1322,6 +1332,12 @@ Leave Deduction Rules:
                                     <i class="fas fa-info-circle"></i>
                                 </span>
                             </th>
+                            <th>
+                                Leave Penalty
+                                <span class="info-tooltip" title="Enter number of days to deduct as leave penalty for the month. Half-day values (0.5) are also supported.">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </th>
                             <th>Monthly Salary</th>
                             <th>
                                 Overtime Hours
@@ -1456,7 +1472,7 @@ Leave Deduction Rules:
                             $totalSalary = $monthSalary + $overtime_amount;
 
                             // Calculate adjusted monthly salary
-                            $penaltyDays = isset($penalties[$user['id']]) ? (float)$penalties[$user['id']] : 0;
+                            $penaltyDays = isset($penalties[$user['id']]['penalty_days']) ? (float)$penalties[$user['id']]['penalty_days'] : 0;
                             $penaltyAmount = $penaltyDays * $perDaySalary;
                             $adjustedMonthSalary = $monthSalary - $penaltyAmount;
                             $adjustedTotalSalary = $adjustedMonthSalary + $overtime_amount;
@@ -1559,7 +1575,7 @@ Leave Deduction Rules:
                                     <div class="input-group">
                                         <input type="number" 
                                                name="salary[<?php echo $user['id']; ?>][penalty_days]" 
-                                               value="<?php echo isset($penalties[$user['id']]) ? $penalties[$user['id']] : 0; ?>" 
+                                               value="<?php echo isset($penalties[$user['id']]['penalty_days']) ? $penalties[$user['id']]['penalty_days'] : 0; ?>" 
                                                min="0" 
                                                max="31" 
                                                step="0.5"
@@ -1574,6 +1590,28 @@ Leave Deduction Rules:
                                     ?>
                                     <div class="penalty-amount" id="penalty-amount-<?php echo $user['id']; ?>">
                                         <?php echo $penaltyDays > 0 ? '₹' . number_format($penaltyAmount, 2) : '₹0.00'; ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               name="salary[<?php echo $user['id']; ?>][leave_penalty_days]" 
+                                               value="<?php echo isset($penalties[$user['id']]['leave_penalty_days']) ? $penalties[$user['id']]['leave_penalty_days'] : 0; ?>" 
+                                               min="0" 
+                                               max="31" 
+                                               step="0.5"
+                                               class="form-control leave-penalty-days"
+                                               data-user-id="<?php echo $user['id']; ?>"
+                                               data-per-day-salary="<?php echo $perDaySalary; ?>"
+                                               onchange="calculateLeavePenalty(this)">
+                                        <div class="rate-info">Days</div>
+                                    </div>
+                                    <?php 
+                                    $leavePenaltyDays = isset($penalties[$user['id']]['leave_penalty_days']) ? (float)$penalties[$user['id']]['leave_penalty_days'] : 0;
+                                    $leavePenaltyAmount = $leavePenaltyDays * $perDaySalary;
+                                    ?>
+                                    <div class="leave-penalty-amount" id="leave-penalty-amount-<?php echo $user['id']; ?>">
+                                        <?php echo $leavePenaltyDays > 0 ? '₹' . number_format($leavePenaltyAmount, 2) : '₹0.00'; ?>
                                     </div>
                                 </td>
                                 <td>
@@ -1660,6 +1698,86 @@ Leave Deduction Rules:
 
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
+    // Calculate penalty amount based on days
+    function calculatePenalty(penaltyInput) {
+        const userId = penaltyInput.dataset.userId;
+        const penaltyDays = parseFloat(penaltyInput.value) || 0;
+        const perDaySalary = parseFloat(penaltyInput.dataset.perDaySalary) || 0;
+        
+        const penaltyAmount = penaltyDays * perDaySalary;
+        
+        // Update penalty amount display
+        const penaltyAmountElement = document.getElementById(`penalty-amount-${userId}`);
+        if (penaltyAmountElement) {
+            penaltyAmountElement.textContent = `₹${penaltyAmount.toFixed(2)}`;
+        }
+        
+        // Get leave penalty amount (if any)
+        const leavePenaltyInput = document.querySelector(`.leave-penalty-days[data-user-id="${userId}"]`);
+        const leavePenaltyDays = parseFloat(leavePenaltyInput?.value) || 0;
+        const leavePenaltyAmount = leavePenaltyDays * perDaySalary;
+        
+        // Combined penalty amount
+        const totalPenaltyAmount = penaltyAmount + leavePenaltyAmount;
+        
+        // Update monthly salary
+        const monthlySalaryElement = document.getElementById(`monthly-salary-${userId}`);
+        if (monthlySalaryElement) {
+            const originalSalary = parseFloat(monthlySalaryElement.dataset.original) || 0;
+            const newSalary = originalSalary - totalPenaltyAmount;
+            monthlySalaryElement.textContent = `₹${newSalary.toFixed(2)}`;
+            
+            // Also update total salary (monthly salary + overtime)
+            const totalSalaryElement = document.getElementById(`total-salary-${userId}`);
+            if (totalSalaryElement) {
+                const overtimeAmount = parseFloat(totalSalaryElement.dataset.overtime) || 0;
+                const newTotalSalary = newSalary + overtimeAmount;
+                totalSalaryElement.textContent = `₹${newTotalSalary.toFixed(2)}`;
+            }
+        }
+    }
+
+    // Calculate leave penalty amount based on days
+    function calculateLeavePenalty(leavePenaltyInputElem) {
+        const userId = leavePenaltyInputElem.dataset.userId;
+        const leavePenaltyDays = parseFloat(leavePenaltyInputElem.value) || 0;
+        const perDaySalary = parseFloat(leavePenaltyInputElem.dataset.perDaySalary) || 0;
+        
+        const leavePenaltyAmount = leavePenaltyDays * perDaySalary;
+        
+        // Update leave penalty amount display
+        const leavePenaltyAmountElement = document.getElementById(`leave-penalty-amount-${userId}`);
+        if (leavePenaltyAmountElement) {
+            leavePenaltyAmountElement.textContent = `₹${leavePenaltyAmount.toFixed(2)}`;
+        }
+        
+        // Get regular penalty amount (if any)
+        const penaltyInputElem = document.querySelector(`.penalty-days[data-user-id="${userId}"]`);
+        const penaltyDays = parseFloat(penaltyInputElem?.value) || 0;
+        const penaltyAmount = penaltyDays * perDaySalary;
+        
+        // Combined penalty amount
+        const totalPenaltyAmount = penaltyAmount + leavePenaltyAmount;
+        
+        // Update monthly salary
+        const monthlySalaryElement = document.getElementById(`monthly-salary-${userId}`);
+        if (monthlySalaryElement) {
+            const originalSalary = parseFloat(monthlySalaryElement.dataset.original) || 0;
+            const newSalary = originalSalary - totalPenaltyAmount;
+            monthlySalaryElement.textContent = `₹${newSalary.toFixed(2)}`;
+            
+            // Also update total salary (monthly salary + overtime)
+            const totalSalaryElement = document.getElementById(`total-salary-${userId}`);
+            if (totalSalaryElement) {
+                const overtimeAmount = parseFloat(totalSalaryElement.dataset.overtime) || 0;
+                const newTotalSalary = newSalary + overtimeAmount;
+                totalSalaryElement.textContent = `₹${newTotalSalary.toFixed(2)}`;
+            }
+        }
+    }
+    
+    // Then keep the rest of your existing code here...
+
     function updateOvertimeRate(baseSalaryInput) {
         const userId = baseSalaryInput.dataset.userId;
         const baseSalary = parseFloat(baseSalaryInput.value) || 0;
@@ -1941,42 +2059,19 @@ Leave Deduction Rules:
         return decimalHours;
     }
 
-    function calculatePenalty(penaltyInput) {
-        const userId = penaltyInput.dataset.userId;
-        const penaltyDays = parseFloat(penaltyInput.value) || 0;
-        const perDaySalary = parseFloat(penaltyInput.dataset.perDaySalary) || 0;
-        
-        const penaltyAmount = penaltyDays * perDaySalary;
-        
-        // Update penalty amount display
-        const penaltyAmountElement = document.getElementById(`penalty-amount-${userId}`);
-        if (penaltyAmountElement) {
-            penaltyAmountElement.textContent = `₹${penaltyAmount.toFixed(2)}`;
-        }
-        
-        // Update monthly salary
-        const monthlySalaryElement = document.getElementById(`monthly-salary-${userId}`);
-        if (monthlySalaryElement) {
-            const originalSalary = parseFloat(monthlySalaryElement.dataset.original) || 0;
-            const newSalary = originalSalary - penaltyAmount;
-            monthlySalaryElement.textContent = `₹${newSalary.toFixed(2)}`;
-            
-            // Also update total salary (monthly salary + overtime)
-            const totalSalaryElement = document.getElementById(`total-salary-${userId}`);
-            if (totalSalaryElement) {
-                const overtimeAmount = parseFloat(totalSalaryElement.dataset.overtime) || 0;
-                const newTotalSalary = newSalary + overtimeAmount;
-                totalSalaryElement.textContent = `₹${newTotalSalary.toFixed(2)}`;
-            }
-        }
-    }
-
     // Initialize all penalty calculations on page load
     document.addEventListener('DOMContentLoaded', function() {
         const penaltyInputs = document.querySelectorAll('.penalty-days');
         penaltyInputs.forEach(input => {
             if (parseFloat(input.value) > 0) {
                 calculatePenalty(input);
+            }
+        });
+        
+        const leavePenaltyInputs = document.querySelectorAll('.leave-penalty-days');
+        leavePenaltyInputs.forEach(input => {
+            if (parseFloat(input.value) > 0) {
+                calculateLeavePenalty(input);
             }
         });
     });

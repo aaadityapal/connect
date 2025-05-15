@@ -1,18 +1,18 @@
 <?php
 /**
- * This file fetches all calendar events from the database for display on the calendar
- * Shows events to all users regardless of who created them
+ * Get Calendar Events API
+ * Fetches events from sv_calendar_events table for a specific month and year
  */
 
 // Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
 // Include database connection
-include_once('../includes/db_connect.php');
+require_once dirname(__FILE__) . '/../config/db_connect.php';
 
-// Set the content type to JSON
+// Set content type to JSON
 header('Content-Type: application/json');
 
 // Check if user is logged in
@@ -24,106 +24,102 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Get year and month if provided, otherwise use current
-$year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
-$month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
-
-// Validate month and year
-if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
+// Check for required parameters
+if (!isset($_GET['year']) || !isset($_GET['month'])) {
     echo json_encode([
         'status' => 'error',
-        'message' => 'Invalid month or year'
+        'message' => 'Missing required parameters (year, month)'
     ]);
     exit;
 }
 
-// Construct date range for the query
-$start_date = sprintf('%04d-%02d-01', $year, $month);
-$end_date = sprintf('%04d-%02d-%02d', $year, $month, date('t', strtotime($start_date)));
+$year = intval($_GET['year']);
+$month = intval($_GET['month']);
+
+// Validate input
+if ($year < 2000 || $year > 2100 || $month < 1 || $month > 12) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid date parameters'
+    ]);
+    exit;
+}
+
+// Format month to ensure it has leading zero if needed
+$monthFormatted = str_pad($month, 2, '0', STR_PAD_LEFT);
 
 try {
-    // Prepare the query to get all events within the date range
-    // No filtering by created_by to show all events to all users
-    $stmt = $conn->prepare("
-        SELECT 
-            e.event_id, 
-            e.title, 
-            e.event_date, 
-            e.created_by,
-            u.username as creator_name,
-            
-            /* Count related items to determine event type */
-            (SELECT COUNT(*) FROM sv_event_vendors WHERE event_id = e.event_id) AS vendor_count,
-            (SELECT COUNT(*) FROM sv_company_labours WHERE event_id = e.event_id) AS company_labour_count,
-            (SELECT COUNT(*) FROM sv_event_beverages WHERE event_id = e.event_id) AS beverage_count,
-            (SELECT COUNT(*) FROM sv_work_progress WHERE event_id = e.event_id) AS work_progress_count,
-            (SELECT COUNT(*) FROM sv_inventory_items WHERE event_id = e.event_id) AS inventory_count
-            
-        FROM sv_calendar_events e
-        LEFT JOIN users u ON e.created_by = u.id
-        WHERE e.event_date BETWEEN ? AND ?
-        ORDER BY e.event_date ASC
-    ");
+    // Prepare dates for SQL query
+    $startDate = "{$year}-{$monthFormatted}-01";
+    $endDate = date('Y-m-t', strtotime($startDate)); // Last day of month
     
-    $stmt->bind_param("ss", $start_date, $end_date);
+    // Prepare and execute the query to fetch events
+    $query = "SELECT e.event_id, e.title, e.event_date, e.created_by, u.username as created_by_name, e.created_at 
+              FROM sv_calendar_events e
+              LEFT JOIN users u ON e.created_by = u.id
+              WHERE e.event_date BETWEEN ? AND ?
+              ORDER BY e.event_date ASC";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ss", $startDate, $endDate);
     $stmt->execute();
     $result = $stmt->get_result();
     
     $events = [];
     
-    while ($row = $result->fetch_assoc()) {
-        // Determine the primary event type based on what items it contains
-        $event_type = 'meeting'; // Default type
-        
-        if ($row['inventory_count'] > 0) {
-            $event_type = 'delivery';
-        } elseif ($row['work_progress_count'] > 0) {
-            $event_type = 'inspection';
-        } elseif ($row['vendor_count'] > 0 || $row['company_labour_count'] > 0) {
-            $event_type = 'report';
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            // Determine event type based on any criteria (e.g., title keywords)
+            $eventType = determineEventType($row['title']);
+            
+            // Format event for output
+            $events[] = [
+                'id' => $row['event_id'],
+                'title' => $row['title'],
+                'date' => $row['event_date'],
+                'type' => $eventType,
+                'created_by' => [
+                    'id' => $row['created_by'],
+                    'name' => $row['created_by_name'] ?? 'Unknown'
+                ],
+                'created_at' => date('Y-m-d H:i:s', strtotime($row['created_at']))
+            ];
         }
-        
-        // Format date to standard format
-        $date_obj = new DateTime($row['event_date']);
-        $formatted_date = $date_obj->format('Y-m-d');
-        
-        // Add to events array
-        $events[] = [
-            'id' => $row['event_id'],
-            'title' => $row['title'],
-            'date' => $formatted_date,
-            'type' => $event_type,
-            'created_by' => [
-                'id' => $row['created_by'],
-                'name' => $row['creator_name']
-            ],
-            'counts' => [
-                'vendors' => $row['vendor_count'],
-                'company_labours' => $row['company_labour_count'],
-                'beverages' => $row['beverage_count'],
-                'work_progress' => $row['work_progress_count'],
-                'inventory' => $row['inventory_count']
-            ]
-        ];
     }
     
     // Return success response with events
     echo json_encode([
         'status' => 'success',
-        'events' => $events,
-        'date_range' => [
-            'start' => $start_date,
-            'end' => $end_date
-        ]
+        'message' => 'Events fetched successfully',
+        'events' => $events
     ]);
     
 } catch (Exception $e) {
-    // Log the error
-    error_log('Error in get_calendar_events.php: ' . $e->getMessage());
-    
-    // Return error response
     echo json_encode([
         'status' => 'error',
-        'message' => 'Database error: ' . $e->getMessage()
+        'message' => 'Failed to fetch events: ' . $e->getMessage()
     ]);
+}
+
+/**
+ * Determine the event type based on title keywords
+ * This is a simple implementation - enhance as needed
+ */
+function determineEventType($title) {
+    $title = strtolower($title);
+    
+    if (strpos($title, 'inspect') !== false || strpos($title, 'safety') !== false || strpos($title, 'check') !== false) {
+        return 'inspection';
+    } elseif (strpos($title, 'delivery') !== false || strpos($title, 'material') !== false || strpos($title, 'supply') !== false) {
+        return 'delivery';
+    } elseif (strpos($title, 'meeting') !== false || strpos($title, 'review') !== false || strpos($title, 'planning') !== false) {
+        return 'meeting';
+    } elseif (strpos($title, 'report') !== false || strpos($title, 'document') !== false) {
+        return 'report';
+    } elseif (strpos($title, 'issue') !== false || strpos($title, 'problem') !== false || strpos($title, 'fix') !== false) {
+        return 'issue';
+    }
+    
+    // Default to meeting if no other type matches
+    return 'meeting';
 } 

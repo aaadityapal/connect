@@ -395,6 +395,34 @@ function fetchWorkProgressMedia($conn, $work_id) {
     $result = $stmt->get_result();
     
     while ($file = $result->fetch_assoc()) {
+        // Make sure we have the correct file path for each media file
+        if (!empty($file['file_name'])) {
+            if (empty($file['file_path'])) {
+                // First check if the file exists in the calendar events folder
+                $calendarDir = 'uploads/calendar_events/work_progress_media/work_' . $work_id . '/';
+                $calendarPath = $calendarDir . $file['file_name'];
+                
+                if (file_exists($calendarPath)) {
+                    $file['file_path'] = $calendarPath;
+                } else {
+                    // If not in calendar folder, try the normal work_progress folder
+                    $baseDir = 'uploads/work_progress/';
+                    
+                    // Check if file is in a subdirectory
+                    if (!empty($file['work_id'])) {
+                        // If organized by work_id
+                        if (is_dir($baseDir . $file['work_id'])) {
+                            $file['file_path'] = $baseDir . $file['work_id'] . '/' . $file['file_name'];
+                        } else {
+                            $file['file_path'] = $baseDir . $file['file_name'];
+                        }
+                    } else {
+                        $file['file_path'] = $baseDir . $file['file_name'];
+                    }
+                }
+            }
+        }
+        
         $media[] = $file;
     }
     
@@ -447,6 +475,35 @@ function fetchInventoryMedia($conn, $inventory_id) {
     $result = $stmt->get_result();
     
     while ($file = $result->fetch_assoc()) {
+        // Make sure we have the correct file path for each media file
+        if (!empty($file['file_name'])) {
+            if (empty($file['file_path'])) {
+                // Construct the full path if it's not already stored
+                $baseDir = 'uploads/';
+                
+                // Choose the correct directory based on media type
+                if ($file['media_type'] === 'bill') {
+                    $baseDir .= 'inventory_bills/';
+                } elseif ($file['media_type'] === 'video') {
+                    $baseDir .= 'inventory_videos/';
+                } else {
+                    $baseDir .= 'inventory_images/';
+                }
+                
+                // Check if file is in a subdirectory
+                if (!empty($file['inventory_id'])) {
+                    // If organized by inventory_id
+                    if (is_dir($baseDir . $file['inventory_id'])) {
+                        $file['file_path'] = $baseDir . $file['inventory_id'] . '/' . $file['file_name'];
+                    } else {
+                        $file['file_path'] = $baseDir . $file['file_name'];
+                    }
+                } else {
+                    $file['file_path'] = $baseDir . $file['file_name'];
+                }
+            }
+        }
+        
         $media[] = $file;
     }
     

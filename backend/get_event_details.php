@@ -1,18 +1,18 @@
 <?php
 /**
- * This file fetches detailed information about a specific calendar event
- * Used for displaying event details in modals or detailed views
+ * Get Event Details API
+ * Fetches detailed information for a specific event
  */
 
 // Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
+if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
 // Include database connection
-include_once('../includes/db_connect.php');
+require_once dirname(__FILE__) . '/../config/db_connect.php';
 
-// Set the content type to JSON
+// Set content type to JSON
 header('Content-Type: application/json');
 
 // Check if user is logged in
@@ -24,459 +24,333 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Get parameters from request
-$event_id = isset($_GET['event_id']) ? intval($_GET['event_id']) : 0;
-$event_date = isset($_GET['event_date']) ? $_GET['event_date'] : '';
-
-// Validate parameters - we need either event_id or event_date
-if ($event_id <= 0 && empty($event_date)) {
+// Check for required parameters
+if (!isset($_GET['event_id'])) {
     echo json_encode([
         'status' => 'error',
-        'message' => 'Must provide either event_id or event_date parameter'
+        'message' => 'Missing required parameter (event_id)'
+    ]);
+    exit;
+}
+
+$eventId = intval($_GET['event_id']);
+
+// Check if event ID is valid
+if ($eventId <= 0) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid event ID'
     ]);
     exit;
 }
 
 try {
-    // Case 1: If event_date is provided, fetch all events for that date
-    if (!empty($event_date)) {
-        // Validate date format (YYYY-MM-DD)
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $event_date)) {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Invalid date format. Use YYYY-MM-DD'
-            ]);
-            exit;
-        }
-        
-        // Get all events for the specified date
-        $stmt = $conn->prepare("
-            SELECT 
-                e.event_id
-            FROM sv_calendar_events e
-            WHERE e.event_date = ?
-            ORDER BY e.created_at ASC
-        ");
-        
-        $stmt->bind_param("s", $event_date);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            echo json_encode([
-                'status' => 'success',
-                'data' => [
-                    'date' => $event_date,
-                    'events' => []
-                ]
-            ]);
-            exit;
-        }
-        
-        // Process all events for this date
-        $all_events = [];
-        while ($row = $result->fetch_assoc()) {
-            $event_id = $row['event_id'];
-            
-            // For each event_id, fetch its complete details (reuse existing code below)
-            // The event data structure will be built inside the individual event processing code
-            $event_data = getEventDetailsById($conn, $event_id);
-            $all_events[] = $event_data;
-        }
-        
-        // Return all events for this date
-        echo json_encode([
-            'status' => 'success',
-            'data' => [
-                'date' => $event_date,
-                'events' => $all_events
-            ]
-        ]);
-        exit;
-    }
-    
-    // Case 2: Fetch a specific event by ID
-    $event_data = getEventDetailsById($conn, $event_id);
-    
-    // Return success response with event data
-    echo json_encode([
-        'status' => 'success',
-        'data' => $event_data
-    ]);
-    
-} catch (Exception $e) {
-    // Log the error
-    error_log('Error in get_event_details.php: ' . $e->getMessage());
-    
-    // Return error response
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Database error: ' . $e->getMessage()
-    ]);
-}
-
-/**
- * Function to get complete event details by ID
- * Extracts the event data fetching logic for reuse
- */
-function getEventDetailsById($conn, $event_id) {
-    // 1. Get basic event information
-    $stmt = $conn->prepare("
-        SELECT 
-            e.event_id, 
-            e.title, 
-            e.event_date, 
-            e.created_by,
-            e.created_at,
-            e.updated_at,
-            u.username as creator_name
+    // Prepare and execute the query to fetch detailed event information
+    $query = "SELECT e.event_id, e.title, e.event_date, e.created_by, u.username as created_by_name, e.created_at,
+              (SELECT COUNT(*) FROM sv_event_vendors WHERE event_id = e.event_id) AS vendors_count,
+              (SELECT COUNT(*) FROM sv_company_labours WHERE event_id = e.event_id) AS company_labours_count,
+              (SELECT COUNT(*) FROM sv_event_beverages WHERE event_id = e.event_id) AS beverages_count,
+              (SELECT COUNT(*) FROM sv_work_progress WHERE event_id = e.event_id) AS work_progress_count,
+              (SELECT COUNT(*) FROM sv_inventory_items WHERE event_id = e.event_id) AS inventory_count
         FROM sv_calendar_events e
         LEFT JOIN users u ON e.created_by = u.id
-        WHERE e.event_id = ?
-    ");
+              WHERE e.event_id = ?";
     
-    $stmt->bind_param("i", $event_id);
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $eventId);
     $stmt->execute();
     $result = $stmt->get_result();
     
-    if ($result->num_rows === 0) {
-        // Handle the case where event ID is invalid
-        return null;
-    }
-    
-    $event = $result->fetch_assoc();
-    
-    // Format dates
-    $event['event_date_formatted'] = date('F j, Y', strtotime($event['event_date']));
-    $event['created_at_formatted'] = date('F j, Y h:i A', strtotime($event['created_at']));
-    $event['updated_at_formatted'] = date('F j, Y h:i A', strtotime($event['updated_at']));
-    
-    // 2. Get vendors information
-    $vendors = [];
-    $stmt = $conn->prepare("
-        SELECT 
-            v.vendor_id,
-            v.vendor_type,
-            v.vendor_name,
-            v.contact_number,
-            v.sequence_number
-        FROM sv_event_vendors v
-        WHERE v.event_id = ?
-        ORDER BY v.sequence_number ASC
-    ");
-    
-    $stmt->bind_param("i", $event_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $vendor_id = $row['vendor_id'];
-        $vendor = $row;
+    if ($result && $row = $result->fetch_assoc()) {
+        // Determine event type based on counts
+        $eventType = determineEventType($row);
         
-        // 2.1 Get vendor materials
-        $materials = [];
-        $stmt_materials = $conn->prepare("
-            SELECT 
-                m.material_id,
-                m.remarks,
-                m.amount
-            FROM sv_vendor_materials m
-            WHERE m.vendor_id = ?
-        ");
-        
-        $stmt_materials->bind_param("i", $vendor_id);
-        $stmt_materials->execute();
-        $result_materials = $stmt_materials->get_result();
-        
-        while ($material_row = $result_materials->fetch_assoc()) {
-            $material_id = $material_row['material_id'];
-            $material = $material_row;
-            
-            // Get material images
-            $material_images = [];
-            $stmt_images = $conn->prepare("
-                SELECT image_id, image_path, upload_date
-                FROM sv_material_images
-                WHERE material_id = ?
-            ");
-            
-            $stmt_images->bind_param("i", $material_id);
-            $stmt_images->execute();
-            $result_images = $stmt_images->get_result();
-            
-            while ($image_row = $result_images->fetch_assoc()) {
-                $material_images[] = $image_row;
+        // Get site name (if applicable)
+        $siteName = "Main Site"; // Default value
+        if (isset($row['site_id'])) {
+            $siteQuery = "SELECT site_name FROM sites WHERE site_id = ?";
+            $siteStmt = $conn->prepare($siteQuery);
+            $siteStmt->bind_param("i", $row['site_id']);
+            $siteStmt->execute();
+            $siteResult = $siteStmt->get_result();
+            if ($siteResult && $siteRow = $siteResult->fetch_assoc()) {
+                $siteName = $siteRow['site_name'];
             }
-            
-            // Get bill images
-            $bill_images = [];
-            $stmt_bills = $conn->prepare("
-                SELECT bill_id, image_path, upload_date
-                FROM sv_bill_images
-                WHERE material_id = ?
-            ");
-            
-            $stmt_bills->bind_param("i", $material_id);
-            $stmt_bills->execute();
-            $result_bills = $stmt_bills->get_result();
-            
-            while ($bill_row = $result_bills->fetch_assoc()) {
-                $bill_images[] = $bill_row;
-            }
-            
-            $material['material_images'] = $material_images;
-            $material['bill_images'] = $bill_images;
-            $materials[] = $material;
         }
         
-        // 2.2 Get vendor labours
-        $labours = [];
-        $stmt_labours = $conn->prepare("
-            SELECT 
-                l.labour_id,
-                l.labour_name,
-                l.contact_number,
-                l.sequence_number,
-                l.morning_attendance,
-                l.evening_attendance,
-                w.daily_wage,
-                w.total_day_wage,
-                w.ot_hours,
-                w.ot_minutes,
-                w.ot_rate,
-                w.total_ot_amount,
-                w.transport_mode,
-                w.travel_amount,
-                w.grand_total
-            FROM sv_vendor_labours l
-            LEFT JOIN sv_labour_wages w ON l.labour_id = w.labour_id
-            WHERE l.vendor_id = ?
-            ORDER BY l.sequence_number ASC
-        ");
+        // Fetch vendors if any
+        $vendors = [];
+        if ($row['vendors_count'] > 0) {
+            $vendorQuery = "SELECT v.vendor_id, v.vendor_name, v.vendor_type, v.contact_number, v.sequence_number
+                          FROM sv_event_vendors v
+                          WHERE v.event_id = ?";
+            $vendorStmt = $conn->prepare($vendorQuery);
+            $vendorStmt->bind_param("i", $eventId);
+            $vendorStmt->execute();
+            $vendorResult = $vendorStmt->get_result();
         
-        $stmt_labours->bind_param("i", $vendor_id);
-        $stmt_labours->execute();
-        $result_labours = $stmt_labours->get_result();
-        
-        while ($labour_row = $result_labours->fetch_assoc()) {
-            $labours[] = $labour_row;
-        }
-        
-        $vendor['materials'] = $materials;
-        $vendor['labours'] = $labours;
-        $vendors[] = $vendor;
+            while ($vendorResult && $vendorRow = $vendorResult->fetch_assoc()) {
+                // Fetch laborers for this vendor
+                $vendorId = $vendorRow['vendor_id'];
+                $labourers = [];
+                
+                $labourQuery = "SELECT labour_id, labour_name, contact_number, sequence_number, 
+                               morning_attendance, evening_attendance
+                        FROM sv_vendor_labours
+                        WHERE vendor_id = ?
+                        ORDER BY sequence_number";
+                
+                $labourStmt = $conn->prepare($labourQuery);
+                $labourStmt->bind_param("i", $vendorId);
+                $labourStmt->execute();
+                $labourResult = $labourStmt->get_result();
+                
+                while ($labourResult && $labourRow = $labourResult->fetch_assoc()) {
+                    // Get labor wages
+                    $labourId = $labourRow['labour_id'];
+                    $wagesQuery = "SELECT daily_wage as perDay, total_day_wage as totalDay, 
+                                  ot_hours, ot_minutes, ot_rate, total_ot_amount,
+                                  transport_mode, travel_amount, grand_total
+                            FROM sv_labour_wages
+                            WHERE labour_id = ?";
+                    
+                    $wagesStmt = $conn->prepare($wagesQuery);
+                    $wagesStmt->bind_param("i", $labourId);
+                    $wagesStmt->execute();
+                    $wagesResult = $wagesStmt->get_result();
+                    
+                    if ($wagesResult && $wagesRow = $wagesResult->fetch_assoc()) {
+                        $labourRow['wages'] = $wagesRow;
+                        
+                        // Add OT information
+                        $labourRow['overtime'] = [
+                            'hours' => $wagesRow['ot_hours'],
+                            'minutes' => $wagesRow['ot_minutes'],
+                            'rate' => $wagesRow['ot_rate'],
+                            'total' => $wagesRow['total_ot_amount']
+                        ];
+                        
+                        // Add travel information
+                        $labourRow['travel'] = [
+                            'mode' => $wagesRow['transport_mode'],
+                            'amount' => $wagesRow['travel_amount']
+                        ];
+                    }
+                    
+                    $labourers[] = $labourRow;
+                }
+                
+                // Add laborers to the vendor data
+                $vendorRow['labourers'] = $labourers;
+                
+                $vendors[] = $vendorRow;
+            }
     }
     
-    // 3. Get company labours
-    $company_labours = [];
-    $stmt = $conn->prepare("
-        SELECT 
-            cl.company_labour_id,
-            cl.labour_name,
-            cl.contact_number,
-            cl.sequence_number,
-            cl.morning_attendance,
-            cl.evening_attendance,
-            cw.daily_wage,
-            cw.total_day_wage,
-            cw.ot_hours,
-            cw.ot_minutes,
-            cw.ot_rate,
-            cw.total_ot_amount,
-            cw.transport_mode,
-            cw.travel_amount,
-            cw.grand_total
+        // Fetch company labours if any
+        $companyLabours = [];
+        if ($row['company_labours_count'] > 0) {
+            $labourQuery = "SELECT cl.company_labour_id, cl.labour_name, cl.contact_number, cl.sequence_number, 
+                            cl.morning_attendance, cl.evening_attendance
         FROM sv_company_labours cl
-        LEFT JOIN sv_company_wages cw ON cl.company_labour_id = cw.company_labour_id
-        WHERE cl.event_id = ?
-        ORDER BY cl.sequence_number ASC
-    ");
+                          WHERE cl.event_id = ?";
+            $labourStmt = $conn->prepare($labourQuery);
+            $labourStmt->bind_param("i", $eventId);
+            $labourStmt->execute();
+            $labourResult = $labourStmt->get_result();
     
-    $stmt->bind_param("i", $event_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $company_labours[] = $row;
+            while ($labourResult && $labourRow = $labourResult->fetch_assoc()) {
+                // Get wages for this company labor
+                $companyLabourId = $labourRow['company_labour_id'];
+                $wagesQuery = "SELECT daily_wage as perDay, total_day_wage as totalDay, 
+                              ot_hours, ot_minutes, ot_rate, total_ot_amount,
+                              transport_mode, travel_amount, grand_total
+                        FROM sv_company_wages
+                        WHERE company_labour_id = ?";
+                
+                $wagesStmt = $conn->prepare($wagesQuery);
+                $wagesStmt->bind_param("i", $companyLabourId);
+                $wagesStmt->execute();
+                $wagesResult = $wagesStmt->get_result();
+                
+                if ($wagesResult && $wagesRow = $wagesResult->fetch_assoc()) {
+                    $labourRow['wages'] = $wagesRow;
+                    
+                    // Add OT information
+                    $labourRow['overtime'] = [
+                        'hours' => $wagesRow['ot_hours'],
+                        'minutes' => $wagesRow['ot_minutes'],
+                        'rate' => $wagesRow['ot_rate'],
+                        'total' => $wagesRow['total_ot_amount']
+                    ];
+                    
+                    // Add travel information
+                    $labourRow['travel'] = [
+                        'mode' => $wagesRow['transport_mode'],
+                        'amount' => $wagesRow['travel_amount']
+                    ];
+                }
+                
+                $companyLabours[] = $labourRow;
+            }
     }
     
-    // 4. Get beverages
+        // Fetch beverages if any
     $beverages = [];
-    $stmt = $conn->prepare("
-        SELECT 
-            beverage_id,
-            beverage_type,
-            beverage_name,
-            amount,
-            sequence_number,
-            created_at
-        FROM sv_event_beverages
-        WHERE event_id = ?
-        ORDER BY sequence_number ASC
-    ");
+        if ($row['beverages_count'] > 0) {
+            $beverageQuery = "SELECT b.beverage_id, b.beverage_type, b.beverage_name, b.amount, b.sequence_number
+                            FROM sv_event_beverages b
+                            WHERE b.event_id = ?";
+            $beverageStmt = $conn->prepare($beverageQuery);
+            $beverageStmt->bind_param("i", $eventId);
+            $beverageStmt->execute();
+            $beverageResult = $beverageStmt->get_result();
     
-    $stmt->bind_param("i", $event_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $beverages[] = $row;
+            while ($beverageResult && $beverageRow = $beverageResult->fetch_assoc()) {
+                $beverages[] = $beverageRow;
+            }
     }
     
-    // 5. Get work progress
-    $work_progress = [];
-    $stmt = $conn->prepare("
-        SELECT 
-            wp.work_id,
-            wp.work_category,
-            wp.work_type,
-            wp.work_done,
-            wp.remarks,
-            wp.sequence_number,
-            wp.created_at
+        // Fetch work progress if any
+        $workProgress = [];
+        if ($row['work_progress_count'] > 0) {
+            $progressQuery = "SELECT wp.work_id, wp.work_category, wp.work_type, wp.work_done, wp.remarks, wp.sequence_number
         FROM sv_work_progress wp
-        WHERE wp.event_id = ?
-        ORDER BY wp.sequence_number ASC
-    ");
+                             WHERE wp.event_id = ?";
+            $progressStmt = $conn->prepare($progressQuery);
+            $progressStmt->bind_param("i", $eventId);
+            $progressStmt->execute();
+            $progressResult = $progressStmt->get_result();
     
-    $stmt->bind_param("i", $event_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $work_id = $row['work_id'];
-        $work = $row;
-        
-        // Get work media files
-        $media_files = [];
-        $stmt_media = $conn->prepare("
-            SELECT 
-                media_id,
-                file_name,
-                file_path,
-                media_type,
-                file_size,
-                sequence_number,
-                created_at
+            while ($progressResult && $progressRow = $progressResult->fetch_assoc()) {
+                // Get media files for this work progress item
+                $workId = $progressRow['work_id'];
+                $mediaQuery = "SELECT media_id, file_name, file_path, media_type 
             FROM sv_work_progress_media
-            WHERE work_id = ?
-            ORDER BY sequence_number ASC
-        ");
+                              WHERE work_id = ?";
+                $mediaStmt = $conn->prepare($mediaQuery);
+                $mediaStmt->bind_param("i", $workId);
+                $mediaStmt->execute();
+                $mediaResult = $mediaStmt->get_result();
         
-        $stmt_media->bind_param("i", $work_id);
-        $stmt_media->execute();
-        $result_media = $stmt_media->get_result();
-        
-        while ($media_row = $result_media->fetch_assoc()) {
-            $media_files[] = $media_row;
+                $mediaFiles = [];
+                while ($mediaResult && $mediaRow = $mediaResult->fetch_assoc()) {
+                    $mediaFiles[] = $mediaRow;
         }
         
-        $work['media_files'] = $media_files;
-        $work_progress[] = $work;
+                // Add media files to the work progress data
+                $progressRow['media'] = $mediaFiles;
+                
+                $workProgress[] = $progressRow;
+            }
     }
     
-    // 6. Get inventory items
-    $inventory_items = [];
-    $stmt = $conn->prepare("
-        SELECT 
-            ii.inventory_id,
-            ii.inventory_type,
-            ii.material_type,
-            ii.quantity,
-            ii.unit,
-            ii.remarks,
-            ii.sequence_number,
-            ii.created_at
+        // Fetch inventory items if any
+        $inventory = [];
+        if ($row['inventory_count'] > 0) {
+            $inventoryQuery = "SELECT ii.inventory_id, ii.inventory_type, ii.material_type, ii.quantity, ii.unit, ii.remarks, ii.sequence_number
         FROM sv_inventory_items ii
-        WHERE ii.event_id = ?
-        ORDER BY ii.sequence_number ASC
-    ");
+                             WHERE ii.event_id = ?";
+            $inventoryStmt = $conn->prepare($inventoryQuery);
+            $inventoryStmt->bind_param("i", $eventId);
+            $inventoryStmt->execute();
+            $inventoryResult = $inventoryStmt->get_result();
     
-    $stmt->bind_param("i", $event_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $inventory_id = $row['inventory_id'];
-        $inventory_item = $row;
-        
-        // Get inventory media files
-        $media_files = [];
-        $stmt_media = $conn->prepare("
-            SELECT 
-                media_id,
-                file_name,
-                file_path,
-                media_type,
-                file_size,
-                sequence_number,
-                created_at
+            while ($inventoryResult && $inventoryRow = $inventoryResult->fetch_assoc()) {
+                // Get media files for this inventory item
+                $inventoryId = $inventoryRow['inventory_id'];
+                $mediaQuery = "SELECT media_id, file_name, file_path, media_type 
             FROM sv_inventory_media
-            WHERE inventory_id = ?
-            ORDER BY sequence_number ASC
-        ");
+                              WHERE inventory_id = ?";
+                $mediaStmt = $conn->prepare($mediaQuery);
+                $mediaStmt->bind_param("i", $inventoryId);
+                $mediaStmt->execute();
+                $mediaResult = $mediaStmt->get_result();
         
-        $stmt_media->bind_param("i", $inventory_id);
-        $stmt_media->execute();
-        $result_media = $stmt_media->get_result();
-        
-        while ($media_row = $result_media->fetch_assoc()) {
-            $media_files[] = $media_row;
+                $mediaFiles = [];
+                while ($mediaResult && $mediaRow = $mediaResult->fetch_assoc()) {
+                    $mediaFiles[] = $mediaRow;
         }
         
-        $inventory_item['media_files'] = $media_files;
-        $inventory_items[] = $inventory_item;
+                // Add media files to the inventory data
+                $inventoryRow['media'] = $mediaFiles;
+                
+                $inventory[] = $inventoryRow;
+            }
     }
     
-    // 7. Calculate wages summary
-    $wages_summary = [
-        'vendor_labour_base_wages' => 0,
-        'vendor_labour_ot' => 0,
-        'company_labour_base_wages' => 0,
-        'company_labour_ot' => 0,
-        'travel_expenses' => 0,
-        'beverage_expenses' => 0,
-        'total_wages' => 0
-    ];
-    
-    // Calculate vendor labour wages
-    foreach ($vendors as $vendor) {
-        foreach ($vendor['labours'] as $labour) {
-            $wages_summary['vendor_labour_base_wages'] += floatval($labour['total_day_wage'] ?? 0);
-            $wages_summary['vendor_labour_ot'] += floatval($labour['total_ot_amount'] ?? 0);
-            $wages_summary['travel_expenses'] += floatval($labour['travel_amount'] ?? 0);
-        }
+        // Format event data for output
+        $event = [
+            'event_id' => $row['event_id'],
+            'title' => $row['title'],
+            'event_date' => $row['event_date'],
+            'event_type' => $eventType,
+            'site_name' => $siteName,
+            'created_by' => $row['created_by'],
+            'created_by_name' => $row['created_by_name'] ?? 'Unknown',
+            'created_at' => $row['created_at'],
+            'vendors' => $vendors,
+            'company_labours' => $companyLabours,
+            'beverages' => $beverages,
+            'work_progress' => $workProgress,
+            'inventory' => $inventory,
+            'counts' => [
+                'vendors' => (int)$row['vendors_count'],
+                'company_labours' => (int)$row['company_labours_count'],
+                'beverages' => (int)$row['beverages_count'],
+                'work_progress' => (int)$row['work_progress_count'],
+                'inventory' => (int)$row['inventory_count']
+            ]
+        ];
+        
+        // Return success response with event data
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Event details fetched successfully',
+            'event' => $event
+        ]);
+    } else {
+        // Event not found
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Event not found'
+        ]);
+    }
+} catch (Exception $e) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Failed to fetch event details: ' . $e->getMessage()
+    ]);
     }
     
-    // Calculate company labour wages
-    foreach ($company_labours as $labour) {
-        $wages_summary['company_labour_base_wages'] += floatval($labour['total_day_wage'] ?? 0);
-        $wages_summary['company_labour_ot'] += floatval($labour['total_ot_amount'] ?? 0);
-        $wages_summary['travel_expenses'] += floatval($labour['travel_amount'] ?? 0);
+/**
+ * Determine the event type based on associated data
+ */
+function determineEventType($row) {
+    // First check if counts suggest a specific type
+    if ((int)$row['inventory_count'] > 0) {
+        return 'delivery';
+    } elseif ((int)$row['work_progress_count'] > 0) {
+        return 'inspection';
+    } elseif ((int)$row['vendors_count'] > 0) {
+        return 'report';
     }
     
-    // Calculate beverage expenses
-    foreach ($beverages as $beverage) {
-        $wages_summary['beverage_expenses'] += floatval($beverage['amount'] ?? 0);
+    // If no counts suggest a type, check title keywords
+    $title = strtolower($row['title']);
+    
+    if (strpos($title, 'inspect') !== false || strpos($title, 'safety') !== false || strpos($title, 'check') !== false) {
+        return 'inspection';
+    } elseif (strpos($title, 'delivery') !== false || strpos($title, 'material') !== false || strpos($title, 'supply') !== false) {
+        return 'delivery';
+    } elseif (strpos($title, 'meeting') !== false || strpos($title, 'review') !== false || strpos($title, 'planning') !== false) {
+        return 'meeting';
+    } elseif (strpos($title, 'report') !== false || strpos($title, 'document') !== false) {
+        return 'report';
+    } elseif (strpos($title, 'issue') !== false || strpos($title, 'problem') !== false || strpos($title, 'fix') !== false) {
+        return 'issue';
     }
     
-    // Calculate total wages
-    $wages_summary['total_wages'] = 
-        $wages_summary['vendor_labour_base_wages'] + 
-        $wages_summary['vendor_labour_ot'] + 
-        $wages_summary['company_labour_base_wages'] + 
-        $wages_summary['company_labour_ot'] + 
-        $wages_summary['travel_expenses'] + 
-        $wages_summary['beverage_expenses'];
-    
-    // 8. Assemble the complete event data
-    return [
-        'event' => $event,
-        'vendors' => $vendors,
-        'company_labours' => $company_labours,
-        'beverages' => $beverages,
-        'work_progress' => $work_progress,
-        'inventory_items' => $inventory_items,
-        'wages_summary' => $wages_summary
-    ];
+    // Default to meeting if no other type matches
+    return 'meeting';
 } 

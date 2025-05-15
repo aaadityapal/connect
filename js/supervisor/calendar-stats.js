@@ -248,101 +248,113 @@ function initSupervisorCalendar() {
                 const dateStr = `${year}-${month}-${day}`;
                 
                 // Show add event form (functionality would be in another file)
-                if (typeof openCalendarEventModal === 'function') {
-                    openCalendarEventModal(day, month, year);
-                } else if (typeof showAddEventModal === 'function') {
-                    showAddEventModal(day, month, year);
+                if (typeof window.openCalendarEventModal === 'function') {
+                    window.openCalendarEventModal(parseInt(day), parseInt(month), parseInt(year));
                 } else {
                     alert(`Add new event on ${dateStr}`);
                 }
             });
         });
         
-        // Day cell click handler for viewing events
-        document.querySelectorAll('.supervisor-calendar-day').forEach(day => {
-            day.addEventListener('click', function(e) {
-                // Don't trigger if clicking on the add event button or an event
-                if (e.target.closest('.supervisor-add-event-btn') || 
-                    e.target.classList.contains('supervisor-add-event-btn') ||
-                    e.target.closest('.supervisor-calendar-event') ||
-                    e.target.classList.contains('supervisor-calendar-event')) {
-                    return;
-                }
+        // Add click handler for individual events in calendar days
+        document.querySelectorAll('.supervisor-calendar-event').forEach(eventElement => {
+            eventElement.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent triggering the day click
                 
-                // Get date information
-                const day = this.getAttribute('data-day');
-                const month = this.getAttribute('data-month');
-                const year = this.getAttribute('data-year');
+                // Get event ID from data attribute
+                const eventId = this.getAttribute('data-event-id');
+                if (!eventId) return;
                 
-                // Don't do anything special for other month days
-                if (this.classList.contains('other-month')) {
-                    return;
-                }
+                // Get date information from parent day cell
+                const dayCell = this.closest('.supervisor-calendar-day');
+                if (!dayCell) return;
                 
-                // Format date for API call
-                const formattedDate = `${year}-${month}-${day}`;
+                const day = dayCell.getAttribute('data-day');
+                const month = dayCell.getAttribute('data-month');
+                const year = dayCell.getAttribute('data-year');
                 
-                // Load and show events for this date
-                if (typeof openDateEventsModal === 'function') {
-                    // Open the date events modal
-                    openDateEventsModal(formattedDate);
-                } else if (typeof loadEventsForDate === 'function') {
-                    loadEventsForDate(formattedDate);
+                // Format date for display
+                const dateStr = `${year}-${month}-${day}`;
+                const formattedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+                    .toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                
+                // Open enhanced event view modal if available
+                if (typeof window.openEnhancedEventView === 'function') {
+                    window.openEnhancedEventView(eventId, formattedDate);
                 } else {
-                    // Fallback if function not available
-                    const events = this.querySelectorAll('.supervisor-calendar-event');
-                    if (events.length > 0) {
-                        alert(`Events on ${month}/${day}/${year}`);
-                    } else {
-                        alert(`No events on ${month}/${day}/${year}`);
-                    }
+                    // Fallback behavior
+                    alert(`View event ${eventId} on ${dateStr}`);
                 }
             });
         });
         
-        // Individual event click handler - handle click on the event item itself
-        document.querySelectorAll('.supervisor-calendar-event').forEach(event => {
-            event.addEventListener('click', function(e) {
-                e.preventDefault(); // Prevent default navigation
+        // Add click handler for "more events" indicators
+        document.querySelectorAll('.supervisor-event-more').forEach(moreElement => {
+            moreElement.addEventListener('click', function(e) {
                 e.stopPropagation(); // Prevent triggering the day click
                 
-                const eventId = this.getAttribute('data-event-id');
-                if (eventId) {
-                    // Load event details if function is available
-                    if (typeof showEventViewModal === 'function') {
-                        // Use event type from class name
-                        const eventType = this.classList.contains('event-inspection') ? 'inspection' :
-                                         this.classList.contains('event-delivery') ? 'delivery' :
-                                         this.classList.contains('event-meeting') ? 'meeting' :
-                                         this.classList.contains('event-report') ? 'report' :
-                                         this.classList.contains('event-issue') ? 'issue' : 'default';
-                        showEventViewModal(eventId, eventType, this.textContent.trim());
-                    } else if (typeof showViewEventModal === 'function') {
-                        // Alternative function name
-                        showViewEventModal(eventId);
-                    } else if (window.eventViewModal && typeof window.eventViewModal.show === 'function') {
-                        // Show the event view modal directly
-                        window.eventViewModal.show(eventId);
-                    } else {
-                        // Fallback only if no modal function is available
-                        window.location.href = `view_site_event.php?id=${eventId}`;
-                    }
+                // Get date information from parent day cell
+                const dayCell = this.closest('.supervisor-calendar-day');
+                if (!dayCell) return;
+                
+                const day = dayCell.getAttribute('data-day');
+                const month = dayCell.getAttribute('data-month');
+                const year = dayCell.getAttribute('data-year');
+                
+                // Format date string for the modal
+                const dateStr = `${year}-${month}-${day}`;
+                
+                // Open the date events modal if available
+                if (typeof window.openDateEventsModal === 'function') {
+                    window.openDateEventsModal(dateStr);
+                } else {
+                    // Fallback behavior
+                    alert(`Multiple events on ${dateStr}`);
                 }
             });
         });
-
-        // Prevent default behavior for any links inside calendar events
-        document.querySelectorAll('.supervisor-calendar-event a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        
+        // Add click event to calendar day cells to show all events for that day
+        document.querySelectorAll('.supervisor-calendar-day').forEach(cell => {
+            cell.addEventListener('click', function(e) {
+                // Don't handle if we clicked on a specific element that has its own handler
+                if (e.target.classList.contains('supervisor-add-event-btn') || 
+                    e.target.closest('.supervisor-add-event-btn') ||
+                    e.target.classList.contains('supervisor-calendar-event') || 
+                    e.target.closest('.supervisor-calendar-event') ||
+                    e.target.classList.contains('supervisor-event-more') ||
+                    e.target.closest('.supervisor-event-more')) {
+                    return;
+                }
                 
-                // Use the parent event's data
-                const eventElement = this.closest('.supervisor-calendar-event');
-                const eventId = eventElement.getAttribute('data-event-id');
+                const day = this.getAttribute('data-day');
+                const month = this.getAttribute('data-month');
+                const year = this.getAttribute('data-year');
                 
-                if (eventId && typeof loadEventDetails === 'function') {
-                    loadEventDetails(eventId);
+                // Skip other month days
+                if (this.classList.contains('other-month')) {
+                    return;
+                }
+                
+                // Format date for the date events modal
+                const dateStr = `${year}-${month}-${day}`;
+                
+                // Open the date events modal
+                if (typeof window.openDateEventsModal === 'function') {
+                    window.openDateEventsModal(dateStr);
+                } else {
+                    // Fallback behavior
+                    const hasEvents = this.querySelector('.supervisor-calendar-events');
+                    if (hasEvents && hasEvents.children.length > 0) {
+                        alert(`Events on ${dateStr}`);
+                    } else {
+                        alert(`No events on ${dateStr}`);
+                    }
                 }
             });
         });
@@ -363,9 +375,18 @@ function fetchCalendarEvents(year, month) {
     return fetch(`backend/get_calendar_events.php?year=${year}&month=${formattedMonth}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
             }
             return response.json();
+        })
+        .catch(error => {
+            console.error('Error fetching calendar events:', error);
+            // Return empty data structure on error
+            return {
+                status: 'error',
+                message: error.message,
+                events: []
+            };
         });
 }
 

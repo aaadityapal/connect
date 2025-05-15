@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #333; }
+        .video-container { margin: 20px 0; max-width: 800px; }
+        video { width: 100%; border: 1px solid #ddd; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 5px; }
+        h2 { color: #555; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow: auto; }
+        .path-option { margin-bottom: 10px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0069d9; }
+    </style>
+</head>
+<body>
+    <h1>Video Playback Debug Tool</h1>
+    
+    <div class="test-section">
+        <h2>Direct MP4 Test</h2>
+        <div class="video-container">
+            <video controls>
+                <source src="uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Path: <code>uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4</code></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>PHP Served Video Test</h2>
+        <div class="video-container">
+            <video controls>
+                <source src="test_video.php" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Path: <code>test_video.php</code> (serving the file via PHP)</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Alternative Path Tests</h2>
+        <div class="path-option">
+            <button onclick="testVideo('uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4')">
+                Test Path 1: uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4
+            </button>
+        </div>
+        <div class="path-option">
+            <button onclick="testVideo('/uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4')">
+                Test Path 2: /uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4
+            </button>
+        </div>
+        <div class="path-option">
+            <button onclick="testVideo('../uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4')">
+                Test Path 3: ../uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4
+            </button>
+        </div>
+        <div class="path-option">
+            <button onclick="testVideo('http://localhost:8000/uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4')">
+                Test Path 4: http://localhost:8000/uploads/calendar_events/work_progress_media/work_8/6825cb090f121_1747307273.mp4
+            </button>
+        </div>
+        <div id="testResults"></div>
+    </div>
+    
+    <script>
+        // Test if a video URL is valid
+        function testVideo(url) {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = `<p>Testing video URL: <code>${url}</code>...</p>`;
+            
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        const contentLength = response.headers.get('content-length');
+                        
+                        resultsDiv.innerHTML += `
+                            <p class="success">✓ Success! Video found.</p>
+                            <p>Content-Type: ${contentType || 'Not specified'}</p>
+                            <p>Content-Length: ${contentLength ? parseInt(contentLength).toLocaleString() + ' bytes' : 'Not specified'}</p>
+                            <div class="video-container">
+                                <video controls>
+                                    <source src="${url}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML += `
+                            <p class="error">✗ Error: HTTP ${response.status} ${response.statusText}</p>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML += `
+                        <p class="error">✗ Error: ${error.message}</p>
+                    `;
+                });
+        }
+        
+        // Log any video errors
+        document.querySelectorAll('video').forEach(video => {
+            video.addEventListener('error', function() {
+                console.error('Video error:', video.error);
+                const sourceElement = this.querySelector('source');
+                const errorDiv = document.createElement('p');
+                errorDiv.className = 'error';
+                errorDiv.textContent = `Error loading video: ${video.error ? video.error.message : 'Unknown error'} (Code: ${video.error ? video.error.code : 'N/A'})`;
+                errorDiv.style.marginTop = '10px';
+                
+                // Insert error message after the video
+                this.parentNode.insertBefore(errorDiv, this.nextSibling);
+            });
+        });
+    </script>
+</body>
+</html> 

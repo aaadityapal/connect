@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Image Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #333; }
+        .image-container { margin: 20px 0; max-width: 800px; }
+        img { max-width: 100%; border: 1px solid #ddd; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 5px; }
+        h2 { color: #555; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow: auto; }
+        .path-option { margin-bottom: 10px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0069d9; }
+        .image-result { display: flex; margin-top: 15px; }
+        .image-box { flex: 1; padding: 10px; border: 1px solid #ddd; margin-right: 10px; }
+        .image-info { flex: 1; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Inventory Image Debug Tool</h1>
+    
+    <div class="test-section">
+        <h2>Direct Image Test</h2>
+        <div class="image-container">
+            <h3>Standard Path</h3>
+            <div class="image-result">
+                <div class="image-box">
+                    <img src="uploads/inventory_images/6825cb09107df_1747307273.jpg" alt="Inventory Image" 
+                         onerror="this.onerror=null; this.src='images/image-not-found.png'; this.nextElementSibling.innerHTML='❌ Failed to load';"
+                         onload="this.nextElementSibling.innerHTML='✅ Successfully loaded';">
+                    <div class="load-status"></div>
+                </div>
+                <div class="image-info">
+                    <p>Path: <code>uploads/inventory_images/6825cb09107df_1747307273.jpg</code></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="image-container">
+            <h3>Calendar Events Path</h3>
+            <div class="image-result">
+                <div class="image-box">
+                    <img src="uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg" alt="Inventory Image"
+                         onerror="this.onerror=null; this.src='images/image-not-found.png'; this.nextElementSibling.innerHTML='❌ Failed to load';"
+                         onload="this.nextElementSibling.innerHTML='✅ Successfully loaded';">
+                    <div class="load-status"></div>
+                </div>
+                <div class="image-info">
+                    <p>Path: <code>uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg</code></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>PHP Served Image Test</h2>
+        <div class="image-container">
+            <div class="image-result">
+                <div class="image-box">
+                    <img src="test_inventory_image.php" alt="Inventory Image via PHP"
+                         onerror="this.onerror=null; this.src='images/image-not-found.png'; this.nextElementSibling.innerHTML='❌ Failed to load';"
+                         onload="this.nextElementSibling.innerHTML='✅ Successfully loaded';">
+                    <div class="load-status"></div>
+                </div>
+                <div class="image-info">
+                    <p>Path: <code>test_inventory_image.php</code> (serving the file via PHP)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Alternative Path Tests</h2>
+        <div id="pathTests">
+            <div class="path-option">
+                <button onclick="testImagePath('uploads/inventory_images/6825cb09107df_1747307273.jpg')">
+                    Test Path 1: uploads/inventory_images/6825cb09107df_1747307273.jpg
+                </button>
+            </div>
+            <div class="path-option">
+                <button onclick="testImagePath('uploads/inventory_bills/6825cb09107df_1747307273.jpg')">
+                    Test Path 2: uploads/inventory_bills/6825cb09107df_1747307273.jpg
+                </button>
+            </div>
+            <div class="path-option">
+                <button onclick="testImagePath('uploads/inventory/6825cb09107df_1747307273.jpg')">
+                    Test Path 3: uploads/inventory/6825cb09107df_1747307273.jpg
+                </button>
+            </div>
+            <div class="path-option">
+                <button onclick="testImagePath('uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg')">
+                    Test Path 4: uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg
+                </button>
+            </div>
+            <div class="path-option">
+                <button onclick="testImagePath('../uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg')">
+                    Test Path 5: ../uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg
+                </button>
+            </div>
+        </div>
+        <div id="testResults"></div>
+    </div>
+    
+    <script>
+        // Test if an image URL is valid
+        function testImagePath(url) {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = `<p>Testing image URL: <code>${url}</code>...</p>`;
+            
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        const contentLength = response.headers.get('content-length');
+                        
+                        resultsDiv.innerHTML += `
+                            <p class="success">✓ Success! Image found.</p>
+                            <p>Content-Type: ${contentType || 'Not specified'}</p>
+                            <p>Content-Length: ${contentLength ? parseInt(contentLength).toLocaleString() + ' bytes' : 'Not specified'}</p>
+                            <div class="image-container">
+                                <img src="${url}" alt="Test Image" style="max-width: 400px;">
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML += `
+                            <p class="error">✗ Error: HTTP ${response.status} ${response.statusText}</p>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML += `
+                        <p class="error">✗ Error: ${error.message}</p>
+                    `;
+                });
+        }
+        
+        // Simulate the openImageViewer function for local testing
+        function simulateOpenImageViewer(imageFile, folderType = 'inventory_images') {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = `<h3>Testing openImageViewer function with: ${imageFile}</h3>`;
+            
+            // Resolve the image path correctly
+            let imgSrc = '';
+            
+            // Special case for calendar event paths
+            if (imageFile.includes('calendar_events/inventory_media')) {
+                // Use the path as provided (it's already a complete path)
+                imgSrc = imageFile;
+                
+                // Remove any '../' prefix if present
+                if (imgSrc.startsWith('../')) {
+                    imgSrc = imgSrc.substring(3);
+                }
+                
+                resultsDiv.innerHTML += `<p>Using calendar events path directly: ${imgSrc}</p>`;
+            }
+            // Regular case - check if we received a complete URL/path or just a filename
+            else if (imageFile.includes('/') || imageFile.includes('\\')) {
+                // It's already a complete path, use it directly
+                imgSrc = imageFile;
+                resultsDiv.innerHTML += `<p>Using complete path: ${imgSrc}</p>`;
+            } else {
+                // It's just a filename, so we need to determine the folder path
+                let folderPath;
+                
+                switch (folderType) {
+                    case 'inventory_images':
+                        folderPath = 'uploads/inventory_images';
+                        break;
+                    case 'inventory_bills':
+                        folderPath = 'uploads/inventory_bills';
+                        break;
+                    case 'inventory':
+                        folderPath = 'uploads/inventory';
+                        break;
+                    default:
+                        folderPath = 'uploads/inventory_images';
+                        break;
+                }
+                
+                imgSrc = `${folderPath}/${imageFile}`;
+                resultsDiv.innerHTML += `<p>Generated path based on folder type (${folderType}): ${imgSrc}</p>`;
+            }
+            
+            // Display the image
+            resultsDiv.innerHTML += `
+                <div class="image-result">
+                    <div class="image-box">
+                        <img src="${imgSrc}" alt="Test Image" 
+                             onerror="handleImageError(this, '${imgSrc}', '${imageFile}', '${folderType}')"
+                             onload="this.nextElementSibling.innerHTML='✅ Successfully loaded on first try';">
+                        <div class="load-status"></div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Handle image loading errors (simulating the error handler in openImageViewer)
+        function handleImageError(imgElement, imgSrc, imageFile, folderType) {
+            const statusDiv = imgElement.nextElementSibling;
+            const resultsDiv = document.getElementById('testResults');
+            
+            resultsDiv.innerHTML += `<p class="error">Failed to load image: ${imgSrc}</p>`;
+            
+            // Check if this is potentially a calendar events image based on the filename pattern or path
+            if (imageFile.includes('1747307273') || folderType === 'inventory_bills' || folderType === 'inventory_images' || folderType === 'inventory') {
+                // Try alternative paths for inventory files
+                const inventoryIdMatch = imgSrc.match(/inventory\/(\d+)\//);
+                const inventoryId = inventoryIdMatch && inventoryIdMatch[1] ? inventoryIdMatch[1] : 
+                                   (imgSrc.match(/inventory_(\d+)/) ? imgSrc.match(/inventory_(\d+)/)[1] : '6');
+                const filename = imgSrc.split('/').pop();
+                
+                const alternativePath = `uploads/calendar_events/inventory_media/inventory_${inventoryId}/${filename}`;
+                resultsDiv.innerHTML += `<p>Trying alternative inventory path: ${alternativePath}</p>`;
+                
+                // Try the alternative path
+                imgElement.onerror = function() {
+                    statusDiv.innerHTML = '❌ Failed to load with alternative path';
+                    imgElement.src = 'images/image-not-found.png';
+                    resultsDiv.innerHTML += `<p class="error">Failed with alternative path: ${alternativePath}</p>`;
+                };
+                
+                imgElement.onload = function() {
+                    statusDiv.innerHTML = '✅ Successfully loaded with alternative path';
+                    resultsDiv.innerHTML += `<p class="success">Successfully loaded with alternative path: ${alternativePath}</p>`;
+                };
+                
+                imgElement.src = alternativePath;
+                return;
+            }
+            
+            // If we reach here, use the default fallback image
+            imgElement.src = 'images/image-not-found.png';
+            statusDiv.innerHTML = '❌ Failed to load with all paths';
+        }
+    </script>
+    
+    <div class="test-section">
+        <h2>Simulate openImageViewer Function</h2>
+        <div class="path-option">
+            <button onclick="simulateOpenImageViewer('6825cb09107df_1747307273.jpg', 'inventory_images')">
+                Test with filename only (inventory_images folder)
+            </button>
+        </div>
+        <div class="path-option">
+            <button onclick="simulateOpenImageViewer('uploads/inventory_images/6825cb09107df_1747307273.jpg')">
+                Test with full path
+            </button>
+        </div>
+        <div class="path-option">
+            <button onclick="simulateOpenImageViewer('../uploads/calendar_events/inventory_media/inventory_6/6825cb09107df_1747307273.jpg')">
+                Test with relative path (../uploads/...)
+            </button>
+        </div>
+    </div>
+</body>
+</html> 

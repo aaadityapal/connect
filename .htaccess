@@ -45,4 +45,31 @@ php_flag file_uploads On
 # Enable required modules
 <IfModule mod_rewrite.c>
     RewriteEngine On
-</IfModule> 
+</IfModule>
+
+# Enable video file streaming
+<IfModule mod_mime.c>
+    AddType video/mp4 .mp4
+    AddType video/webm .webm
+    AddType video/ogg .ogv
+</IfModule>
+
+# Enable CORS for video resources
+<IfModule mod_headers.c>
+    <FilesMatch "\.(mp4|webm|ogv)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Ensure PHP errors are logged but not displayed to users
+php_flag display_errors off
+php_value error_reporting E_ALL
+
+# Add proper MIME types for JFIF images
+AddType image/jpeg .jfif
+AddType image/jpeg .jpe
+AddType image/jpeg .jpg
+AddType image/jpeg .jpeg 

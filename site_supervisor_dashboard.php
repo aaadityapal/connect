@@ -56,6 +56,8 @@ if (isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="css/supervisor/calendar-events-modal.css">
     <link rel="stylesheet" href="css/supervisor/calendar-events-modal-enhanced.css">
     <link rel="stylesheet" href="css/supervisor/event-view-modal.css">
+    <link rel="stylesheet" href="css/supervisor/enhanced-event-view.css">
+
     
     <!-- Include custom styles -->
     <style>
@@ -1604,7 +1606,8 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/calendar-events-save.js"></script>
     <script src="js/supervisor/calendar-events-modal.js"></script>
     <script src="js/supervisor/date-events-modal.js"></script>
-    <script src="js/supervisor/event-view-modal.js"></script>
+    <script src="js/supervisor/enhanced-event-view-modal.js"></script>
+
     
     <!-- Override native alerts for calendar messages -->
     <script>

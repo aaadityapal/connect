@@ -282,4 +282,87 @@
 @keyframes modalFadeIn {
     from {opacity: 0; transform: translateY(-20px);}
     to {opacity: 1; transform: translateY(0);}
+}
+
+/* Action buttons container in event list items */
+.event-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Style for the view button */
+.event-view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #3498db;
+    border: 1px solid #3498db;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.event-view-btn:hover {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.event-view-btn i {
+    margin-right: 5px;
+}
+
+/* Add additional styling to the event list items to accommodate buttons */
+.event-list-item {
+    position: relative;
+    transition: box-shadow 0.2s ease;
+}
+
+.event-list-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .event-actions {
+        flex-wrap: wrap;
+    }
+    
+    .event-view-btn {
+        flex: 1;
+        min-width: 80px;
+    }
+}
+
+/* Make the event content more organized to accommodate action buttons */
+.event-content {
+    position: relative;
+}
+
+/* Style for event site name */
+.event-site {
+    margin-bottom: 8px;
+}
+
+/* Add space at the bottom of the event content for buttons */
+.event-vendors {
+    margin-bottom: 10px;
+}
+
+/* Make buttons more compact on small screens */
+@media (max-width: 480px) {
+    .event-view-btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .event-view-btn i {
+        margin-right: 3px;
+    }
 } 

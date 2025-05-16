@@ -55,9 +55,9 @@ try {
     
     // Prepare and execute the query to fetch events
     $query = "SELECT e.event_id, e.title, e.event_date, e.created_by, u.username as created_by_name, e.created_at 
-              FROM sv_calendar_events e
-              LEFT JOIN users u ON e.created_by = u.id
-              WHERE e.event_date BETWEEN ? AND ?
+        FROM sv_calendar_events e
+        LEFT JOIN users u ON e.created_by = u.id
+        WHERE e.event_date BETWEEN ? AND ?
               ORDER BY e.event_date ASC";
     
     $stmt = $conn->prepare($query);
@@ -68,20 +68,20 @@ try {
     $events = [];
     
     if ($result) {
-        while ($row = $result->fetch_assoc()) {
+    while ($row = $result->fetch_assoc()) {
             // Determine event type based on any criteria (e.g., title keywords)
             $eventType = determineEventType($row['title']);
             
             // Format event for output
-            $events[] = [
-                'id' => $row['event_id'],
-                'title' => $row['title'],
+        $events[] = [
+            'id' => $row['event_id'],
+            'title' => $row['title'],
                 'date' => $row['event_date'],
                 'type' => $eventType,
-                'created_by' => [
-                    'id' => $row['created_by'],
+            'created_by' => [
+                'id' => $row['created_by'],
                     'name' => $row['created_by_name'] ?? 'Unknown'
-                ],
+            ],
                 'created_at' => date('Y-m-d H:i:s', strtotime($row['created_at']))
             ];
         }

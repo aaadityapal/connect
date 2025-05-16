@@ -81,9 +81,11 @@ class EnhancedEventViewModal {
             const eventId = document.getElementById('enhancedViewContent').getAttribute('data-event-id');
             if (eventId) {
                 this.hideModal();
-                // Call the edit function if it exists globally
+                // Call the edit function - this will now use our new modal
                 if (typeof editEvent === 'function') {
                     editEvent(eventId);
+                } else if (typeof openEventEditModal === 'function') {
+                    openEventEditModal(eventId);
                 } else {
                     console.error('Edit function is not defined');
                 }

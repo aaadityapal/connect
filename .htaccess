@@ -45,7 +45,7 @@ php_flag file_uploads On
 # Enable required modules
 <IfModule mod_rewrite.c>
     RewriteEngine On
-</IfModule>
+</IfModule> 
 
 # Enable video file streaming
 <IfModule mod_mime.c>

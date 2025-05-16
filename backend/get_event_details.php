@@ -64,7 +64,7 @@ try {
     if ($result && $row = $result->fetch_assoc()) {
         // Determine event type based on counts
         $eventType = determineEventType($row);
-        
+    
         // Get site name (if applicable)
         $siteName = "Main Site"; // Default value
         if (isset($row['site_id'])) {
@@ -79,16 +79,16 @@ try {
         }
         
         // Fetch vendors if any
-        $vendors = [];
+    $vendors = [];
         if ($row['vendors_count'] > 0) {
             $vendorQuery = "SELECT v.vendor_id, v.vendor_name, v.vendor_type, v.contact_number, v.sequence_number
-                          FROM sv_event_vendors v
+        FROM sv_event_vendors v
                           WHERE v.event_id = ?";
             $vendorStmt = $conn->prepare($vendorQuery);
             $vendorStmt->bind_param("i", $eventId);
             $vendorStmt->execute();
             $vendorResult = $vendorStmt->get_result();
-        
+    
             while ($vendorResult && $vendorRow = $vendorResult->fetch_assoc()) {
                 // Fetch laborers for this vendor
                 $vendorId = $vendorRow['vendor_id'];
@@ -99,12 +99,12 @@ try {
                         FROM sv_vendor_labours
                         WHERE vendor_id = ?
                         ORDER BY sequence_number";
-                
+        
                 $labourStmt = $conn->prepare($labourQuery);
                 $labourStmt->bind_param("i", $vendorId);
                 $labourStmt->execute();
                 $labourResult = $labourStmt->get_result();
-                
+        
                 while ($labourResult && $labourRow = $labourResult->fetch_assoc()) {
                     // Get labor wages
                     $labourId = $labourRow['labour_id'];
@@ -118,7 +118,7 @@ try {
                     $wagesStmt->bind_param("i", $labourId);
                     $wagesStmt->execute();
                     $wagesResult = $wagesStmt->get_result();
-                    
+            
                     if ($wagesResult && $wagesRow = $wagesResult->fetch_assoc()) {
                         $labourRow['wages'] = $wagesRow;
                         
@@ -138,8 +138,8 @@ try {
                     }
                     
                     $labourers[] = $labourRow;
-                }
-                
+        }
+        
                 // Add laborers to the vendor data
                 $vendorRow['labourers'] = $labourers;
                 
@@ -167,12 +167,12 @@ try {
                               transport_mode, travel_amount, grand_total
                         FROM sv_company_wages
                         WHERE company_labour_id = ?";
-                
+    
                 $wagesStmt = $conn->prepare($wagesQuery);
                 $wagesStmt->bind_param("i", $companyLabourId);
                 $wagesStmt->execute();
                 $wagesResult = $wagesStmt->get_result();
-                
+    
                 if ($wagesResult && $wagesRow = $wagesResult->fetch_assoc()) {
                     $labourRow['wages'] = $wagesRow;
                     

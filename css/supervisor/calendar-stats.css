@@ -233,8 +233,8 @@
     opacity: 1;
     transform: scale(1.1);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
+    }
+    
 .supervisor-calendar-day.other-month .supervisor-add-event-btn {
     opacity: 0.4;
     background-color: #cbd5e0;

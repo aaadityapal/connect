@@ -248,7 +248,7 @@
                     if (typeof window.openEnhancedEventView === 'function') {
                         window.openEnhancedEventView(eventId, formattedDate);
                     } else {
-                        viewEventDetails(eventId);
+                    viewEventDetails(eventId);
                     }
                 });
             });
@@ -499,18 +499,18 @@
             window.openEnhancedEventView(eventId, dateText);
         } else {
             // Fallbacks in order of preference
-            if (typeof showEventViewModal === 'function') {
-                // Call the event view modal function with the event ID
-                showEventViewModal(eventId, 'default', ''); // Type and title will be fetched by the modal
-            } else if (typeof showViewEventModal === 'function') {
-                // Alternative function name
-                showViewEventModal(eventId);
-            } else if (window.eventViewModal && typeof window.eventViewModal.show === 'function') {
-                // Direct modal object method
-                window.eventViewModal.show(eventId);
-            } else {
-                // Fallback to old behavior only if no modal function is available
-                window.location.href = `view_site_event.php?id=${eventId}`;
+        if (typeof showEventViewModal === 'function') {
+            // Call the event view modal function with the event ID
+            showEventViewModal(eventId, 'default', ''); // Type and title will be fetched by the modal
+        } else if (typeof showViewEventModal === 'function') {
+            // Alternative function name
+            showViewEventModal(eventId);
+        } else if (window.eventViewModal && typeof window.eventViewModal.show === 'function') {
+            // Direct modal object method
+            window.eventViewModal.show(eventId);
+        } else {
+            // Fallback to old behavior only if no modal function is available
+            window.location.href = `view_site_event.php?id=${eventId}`;
             }
         }
     }

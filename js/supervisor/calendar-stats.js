@@ -344,7 +344,7 @@ function initSupervisorCalendar() {
                 // Format date for the date events modal
                 const dateStr = `${year}-${month}-${day}`;
                 
-                // Open the date events modal
+                    // Open the date events modal
                 if (typeof window.openDateEventsModal === 'function') {
                     window.openDateEventsModal(dateStr);
                 } else {

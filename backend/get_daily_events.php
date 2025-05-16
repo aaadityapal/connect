@@ -50,11 +50,11 @@ try {
               (SELECT COUNT(*) FROM sv_event_vendors WHERE event_id = e.event_id) AS vendors,
               (SELECT COUNT(*) FROM sv_company_labours WHERE event_id = e.event_id) AS company_labours,
               (SELECT COUNT(*) FROM sv_event_beverages WHERE event_id = e.event_id) AS beverages,
-              (SELECT COUNT(*) FROM sv_work_progress WHERE event_id = e.event_id) AS work_progress_count,
-              (SELECT COUNT(*) FROM sv_inventory_items WHERE event_id = e.event_id) AS inventory_count
-              FROM sv_calendar_events e
-              LEFT JOIN users u ON e.created_by = u.id
-              WHERE e.event_date = ?
+            (SELECT COUNT(*) FROM sv_work_progress WHERE event_id = e.event_id) AS work_progress_count,
+            (SELECT COUNT(*) FROM sv_inventory_items WHERE event_id = e.event_id) AS inventory_count
+        FROM sv_calendar_events e
+        LEFT JOIN users u ON e.created_by = u.id
+        WHERE e.event_date = ?
               ORDER BY e.created_at DESC";
     
     $stmt = $conn->prepare($query);
@@ -65,29 +65,29 @@ try {
     $events = [];
     
     if ($result) {
-        while ($row = $result->fetch_assoc()) {
+    while ($row = $result->fetch_assoc()) {
             // Determine event type based on counts
             $eventType = determineEventType($row);
             
             // Format event for output
-            $events[] = [
-                'id' => $row['event_id'],
-                'title' => $row['title'],
+        $events[] = [
+            'id' => $row['event_id'],
+            'title' => $row['title'],
                 'type' => $eventType,
-                'created_by' => [
-                    'id' => $row['created_by'],
+            'created_by' => [
+                'id' => $row['created_by'],
                     'name' => $row['created_by_name'] ?? 'Unknown'
-                ],
+            ],
                 'created_at' => date('M d, Y h:i A', strtotime($row['created_at'])),
-                'counts' => [
+            'counts' => [
                     'vendors' => (int)$row['vendors'],
                     'company_labours' => (int)$row['company_labours'],
                     'beverages' => (int)$row['beverages'],
                     'work_progress_count' => (int)$row['work_progress_count'],
                     'inventory_count' => (int)$row['inventory_count']
-                ]
-            ];
-        }
+            ]
+        ];
+    }
     }
     
     // Return success response with events

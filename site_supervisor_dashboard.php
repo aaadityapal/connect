@@ -1608,6 +1608,7 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/date-events-modal.js"></script>
     <script src="js/supervisor/enhanced-event-view-modal.js"></script>
 
+
     
     <!-- Override native alerts for calendar messages -->
     <script>

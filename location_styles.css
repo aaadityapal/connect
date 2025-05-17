@@ -1,0 +1,29 @@
+/* Location warning styles */
+.location-warning {
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #fff8f1;
+    border-left: 4px solid #f59e0b;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.warning-title {
+    color: #c2410c;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.warning-title i {
+    color: #f59e0b;
+}
+
+.warning-message {
+    color: #78350f;
+    font-size: 0.9rem;
+    margin: 0;
+} 

@@ -150,6 +150,7 @@ if ($user_data && isset($user_data['shift_id'])) {
     <link rel="stylesheet" href="assets/css/project-overview.css">
     <link rel="stylesheet" href="assets/css/stage-detail-modal.css">
     <link rel="stylesheet" href="assets/css/project-brief-modal.css">
+    <link rel="stylesheet" href="location_styles.css">
     <script src="assets/js/project-brief-modal.js"></script>
     <script src="assets/js/stage-chat.js"></script>
     <script src="assets/js/project-metrics-dashboard.js"></script>
@@ -197,6 +198,47 @@ if ($user_data && isset($user_data['shift_id'])) {
         
         .left-panel.collapsed {
             width: 70px;
+        }
+        
+        /* Add camera styles for punch-in */
+        .camera-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        #camera-stream {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            background-color: #f8f9fa;
+            margin-bottom: 15px;
+        }
+
+        .selfie-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        #capture-btn {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+            border: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+        }
+
+        #capture-btn:hover {
+            background: linear-gradient(135deg, #cc0000, #990000);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
         }
         
         .left-panel.collapsed + .main-content {
@@ -5354,6 +5396,185 @@ if ($user_data && isset($user_data['shift_id'])) {
         });
 
         function punchIn() {
+            // First get geolocation
+            if (!navigator.geolocation) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Geolocation is not supported by your browser. Please use a modern browser to punch in.'
+                });
+                return;
+            }
+
+            // Get user's location first
+            Swal.fire({
+                title: 'Getting Location...',
+                text: 'Please allow location access to proceed',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Location successfully obtained, now show camera
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    
+                    // Get address from coordinates using reverse geocoding
+                    const getAddressFromCoordinates = (lat, lng) => {
+                        return new Promise((resolve, reject) => {
+                            fetch(`https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data && data.display_name) {
+                                        resolve(data);
+                                    } else {
+                                        reject("No address found");
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error("Reverse geocoding error:", error);
+                                    reject(error);
+                                });
+                        });
+                    };
+                    
+                    // Now open camera for selfie with location information
+                    Swal.fire({
+                        title: 'Take a Selfie',
+                        html: `
+                            <div class="camera-container">
+                                <video id="camera-stream" width="100%" autoplay playsinline></video>
+                                <canvas id="canvas" style="display:none;"></canvas>
+                                <div class="location-details">
+                                    <h4><i class="fas fa-map-marker-alt"></i> Location Details</h4>
+                                    <div class="coordinates">
+                                        <div class="coordinate-item">
+                                            <span class="label">Latitude</span>
+                                            <span class="value">${latitude.toFixed(6)}</span>
+                                        </div>
+                                        <div class="coordinate-item">
+                                            <span class="label">Longitude</span>
+                                            <span class="value">${longitude.toFixed(6)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="accuracy">
+                                        <span class="label">Accuracy:</span>
+                                        <span class="value ${accuracy <= 20 ? 'accuracy-high' : accuracy <= 100 ? 'accuracy-medium' : 'accuracy-low'}">
+                                            ${accuracy.toFixed(1)} meters
+                                        </span>
+                                    </div>
+                                    <div class="address">
+                                        <span class="label">Address:</span>
+                                        <div class="address-text" id="address-text">
+                                            <div class="loading"><i class="fas fa-spinner"></i> Fetching address...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="selfie-controls">
+                                    <button id="capture-btn" class="swal2-styled swal2-confirm">Take Photo</button>
+                                </div>
+                            </div>
+                        `,
+                        showConfirmButton: false,
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            // Initialize camera
+                            const video = document.getElementById('camera-stream');
+                            const canvas = document.getElementById('canvas');
+                            const captureBtn = document.getElementById('capture-btn');
+                            const addressText = document.getElementById('address-text');
+                            
+                            // Access user's camera
+                            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                                .then((stream) => {
+                                    video.srcObject = stream;
+                                })
+                                .catch((error) => {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Camera Error',
+                                        text: 'Unable to access camera. Please ensure camera permissions are granted.'
+                                    });
+                                });
+                            
+                            // Get and display address
+                            getAddressFromCoordinates(latitude, longitude)
+                                .then(data => {
+                                    if (addressText) {
+                                        // Format the address components
+                                        let formattedAddress = data.display_name || 'Address not available';
+                                        
+                                        // Extract important address components if available
+                                        const addressComponents = [];
+                                        if (data.address) {
+                                            if (data.address.road) addressComponents.push(data.address.road);
+                                            if (data.address.house_number) addressComponents.push(data.address.house_number);
+                                            if (data.address.suburb) addressComponents.push(data.address.suburb);
+                                            if (data.address.city || data.address.town) addressComponents.push(data.address.city || data.address.town);
+                                            if (data.address.state) addressComponents.push(data.address.state);
+                                            if (data.address.postcode) addressComponents.push(data.address.postcode);
+                                            if (data.address.country) addressComponents.push(data.address.country);
+                                        }
+                                        
+                                        // Use formatted components if available, otherwise use display_name
+                                        const finalAddress = addressComponents.length > 0 ? addressComponents.join(', ') : formattedAddress;
+                                        
+                                        addressText.innerHTML = finalAddress;
+                                    }
+                                })
+                                .catch(error => {
+                                    if (addressText) {
+                                        addressText.innerHTML = 'Unable to retrieve address';
+                                    }
+                                    console.error("Error getting address:", error);
+                                });
+                            
+                            // Handle capture button click
+                            captureBtn.addEventListener('click', function() {
+                                // Draw video frame to canvas
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                                
+                                // Get the image data
+                                const imageData = canvas.toDataURL('image/jpeg');
+                                
+                                // Stop all video streams
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                                
+                                // Submit the punch in request with selfie and location
+                                submitPunchIn(imageData, latitude, longitude, position.coords.accuracy);
+                            });
+                        },
+                        willClose: () => {
+                            // Make sure to stop the camera stream when dialog closes
+                            const video = document.getElementById('camera-stream');
+                            if (video && video.srcObject) {
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                            }
+                        }
+                    });
+                },
+                (error) => {
+                    // Location error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Location Error',
+                        text: 'Unable to get your location. Please enable location services and try again.'
+                    });
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        function submitPunchIn(selfieImage, latitude, longitude, accuracy) {
             Swal.fire({
                 title: 'Punching In...',
                 text: 'Please wait while we process your request',
@@ -5364,13 +5585,22 @@ if ($user_data && isset($user_data['shift_id'])) {
                 }
             });
 
+            // Get the current device info and IP automatically from server
+            // The location string will be generated on the server from lat/long
             fetch('punch.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    action: 'punch_in'
+                    action: 'punch_in',
+                    punch_in_photo: selfieImage,    // Changed from image_data to punch_in_photo
+                    latitude: latitude,         // For the latitude column (decimal)
+                    longitude: longitude,       // For the longitude column (decimal)
+                    accuracy: accuracy,         // For the accuracy column (float)
+                    device_info: navigator.userAgent, // For the device_info column
+                    // ip_address will be captured server-side
+                    // location string will be generated server-side from coordinates
                 })
             })
             .then(response => response.json())
@@ -5403,6 +5633,209 @@ if ($user_data && isset($user_data['shift_id'])) {
         }
 
         function punchOut() {
+            // First get geolocation
+            if (!navigator.geolocation) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Geolocation is not supported by your browser. Please use a modern browser to punch out.'
+                });
+                return;
+            }
+
+            // Get user's location first
+            Swal.fire({
+                title: 'Getting Location...',
+                text: 'Please allow location access to proceed',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Location successfully obtained, now show camera
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    
+                    // Store location info for comparison
+                    console.log(`Punch out location: Lat ${latitude}, Long ${longitude}, Accuracy ${accuracy}m`);
+                    
+                    // Get address from coordinates using reverse geocoding
+                    const getAddressFromCoordinates = (lat, lng) => {
+                        return new Promise((resolve, reject) => {
+                            fetch(`https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data && data.display_name) {
+                                        resolve(data);
+                                    } else {
+                                        reject("No address found");
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error("Reverse geocoding error:", error);
+                                    reject(error);
+                                });
+                        });
+                    };
+                    
+                    // Now open camera for selfie
+                    Swal.fire({
+                        title: 'Take a Selfie for Punch Out',
+                        html: `
+                            <div class="camera-container">
+                                <video id="camera-stream" width="100%" autoplay playsinline></video>
+                                <canvas id="canvas" style="display:none;"></canvas>
+                                <div class="location-details">
+                                    <h4><i class="fas fa-map-marker-alt"></i> Location Details</h4>
+                                    <div class="coordinates">
+                                        <div class="coordinate-item">
+                                            <span class="label">Latitude</span>
+                                            <span class="value">${latitude.toFixed(6)}</span>
+                                        </div>
+                                        <div class="coordinate-item">
+                                            <span class="label">Longitude</span>
+                                            <span class="value">${longitude.toFixed(6)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="accuracy">
+                                        <span class="label">Accuracy:</span>
+                                        <span class="value ${accuracy <= 20 ? 'accuracy-high' : accuracy <= 100 ? 'accuracy-medium' : 'accuracy-low'}">
+                                            ${accuracy.toFixed(1)} meters
+                                        </span>
+                                    </div>
+                                    <div class="address">
+                                        <span class="label">Address:</span>
+                                        <div class="address-text" id="address-text">
+                                            <div class="loading"><i class="fas fa-spinner"></i> Fetching address...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="selfie-controls">
+                                    <button id="capture-btn" class="swal2-styled swal2-confirm">Take Photo</button>
+                                </div>
+                            </div>
+                        `,
+                        showConfirmButton: false,
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            // Initialize camera
+                            const video = document.getElementById('camera-stream');
+                            const canvas = document.getElementById('canvas');
+                            const captureBtn = document.getElementById('capture-btn');
+                            const addressText = document.getElementById('address-text');
+                            
+                            // Access user's camera
+                            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                                .then((stream) => {
+                                    video.srcObject = stream;
+                                })
+                                .catch((error) => {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Camera Error',
+                                        text: 'Unable to access camera. Please ensure camera permissions are granted.'
+                                    });
+                                });
+                            
+                            // Get and display address
+                            getAddressFromCoordinates(latitude, longitude)
+                                .then(data => {
+                                    if (addressText) {
+                                        // Format the address components
+                                        let formattedAddress = data.display_name || 'Address not available';
+                                        
+                                        // Extract important address components if available
+                                        const addressComponents = [];
+                                        if (data.address) {
+                                            if (data.address.road) addressComponents.push(data.address.road);
+                                            if (data.address.house_number) addressComponents.push(data.address.house_number);
+                                            if (data.address.suburb) addressComponents.push(data.address.suburb);
+                                            if (data.address.city || data.address.town) addressComponents.push(data.address.city || data.address.town);
+                                            if (data.address.state) addressComponents.push(data.address.state);
+                                            if (data.address.postcode) addressComponents.push(data.address.postcode);
+                                            if (data.address.country) addressComponents.push(data.address.country);
+                                        }
+                                        
+                                        // Use formatted components if available, otherwise use display_name
+                                        const finalAddress = addressComponents.length > 0 ? addressComponents.join(', ') : formattedAddress;
+                                        
+                                        addressText.innerHTML = finalAddress;
+                                    }
+                                })
+                                .catch(error => {
+                                    if (addressText) {
+                                        addressText.innerHTML = 'Unable to retrieve address';
+                                    }
+                                    console.error("Error getting address:", error);
+                                });
+                            
+                            // Handle capture button click
+                            captureBtn.addEventListener('click', function() {
+                                // Draw video frame to canvas
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                                
+                                // Get the image data
+                                const imageData = canvas.toDataURL('image/jpeg');
+                                
+                                // Stop all video streams
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                                
+                                // Continue with work report prompt after photo is taken
+                                promptForWorkReport(imageData, latitude, longitude, accuracy);
+                            });
+                        },
+                        willClose: () => {
+                            // Make sure to stop the camera stream when dialog closes
+                            const video = document.getElementById('camera-stream');
+                            if (video && video.srcObject) {
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                            }
+                        }
+                    });
+                },
+                (error) => {
+                    // Location error
+                    let errorMessage = 'Unable to get your location.';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += ' Location access was denied.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += ' Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += ' Location request timed out.';
+                            break;
+                        default:
+                            errorMessage += ' An unknown error occurred.';
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Location Error',
+                        text: errorMessage,
+                        footer: 'Please enable location services and try again.'
+                    });
+                },
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 15000, 
+                    maximumAge: 0 
+                }
+            );
+        }
+        
+        function promptForWorkReport(selfieImage, latitude, longitude, accuracy) {
             Swal.fire({
                 title: '<span style="color: #1e293b; font-size: 24px; font-weight: 600;">Daily Work Report</span>',
                 html: `
@@ -5451,31 +5884,46 @@ if ($user_data && isset($user_data['shift_id'])) {
                         },
                         body: JSON.stringify({
                             action: 'punch_out',
-                            work_report: result.value
+                            work_report: result.value,
+                            punch_out_photo: selfieImage,
+                            latitude: latitude,
+                            longitude: longitude,
+                            accuracy: accuracy
                         })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            let messageHtml = `
+                            // Create summary HTML with potential location change warning
+                            let summaryHtml = `
                                 <div class="punch-out-summary">
                                     <p class="punch-time">${data.message}</p>
                                     <div class="time-details">
                                         ${data.working_hours.split('\n').map(line => 
                                             `<p class="${line.toLowerCase().includes('overtime') ? 'overtime-hours' : 'regular-hours'}">${line}</p>`
                                         ).join('')}
-                                    </div>
+                                    </div>`;
+                                        
+                            // Add location warning if detected
+                            if (data.location_changed) {
+                                summaryHtml += `
+                                    <div class="location-warning">
+                                        <p class="warning-title"><i class="fas fa-map-marker-alt"></i> Location Change Detected</p>
+                                        <p class="warning-message">${data.location_message}</p>
+                                    </div>`;
+                            }
+                                    
+                            summaryHtml += `
                                     <div class="work-report-summary">
                                         <h4>Work Report:</h4>
                                         <p>${result.value}</p>
                                     </div>
-                                </div>
-                            `;
+                                </div>`;
 
                             Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                html: messageHtml,
+                                icon: data.location_changed ? 'warning' : 'success',
+                                title: data.location_changed ? 'Success with Warning' : 'Success!',
+                                html: summaryHtml,
                                 showConfirmButton: true,
                                 confirmButtonText: 'OK',
                                 customClass: {
@@ -5507,6 +5955,13 @@ if ($user_data && isset($user_data['shift_id'])) {
                                 text: data.message
                             });
                         }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while processing your request.'
+                        });
                     });
                 }
             });

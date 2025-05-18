@@ -1,156 +1,68 @@
-# PHP CRM Web Application
+# HR Management System - Attendance Module
 
-A comprehensive Customer Relationship Management (CRM) System built with PHP, designed to help businesses manage their customer interactions, sales processes, and administrative tasks efficiently.
+This repository contains the HR Management System with an integrated attendance tracking module.
 
-## 🌟 Features
+## Attendance System Features
 
-- **User Authentication & Authorization**
-  - Secure login system
-  - Role-based access control (Admin, Staff, & encryption.)
-  - Password encryption
+1. **Personalized Greeting**
+   - Displays greetings based on time of day (morning/afternoon/evening/night)
+   - Shows unique icons for different times of day
+   - Displays current date and time
 
-- **Customer Management**
-  - Add, edit, and delete customer profiles
-  - Customer contact information tracking
-  - Customer interaction history
-  - Document management for customer files
+2. **Punch In/Out System**
+   - Single button toggles between punch in and punch out
+   - Shows shift time remaining display
+   - Prevents multiple punch-ins on the same day
+   - Disables punch-in/out after completing attendance for the day
 
-- **Sales Management**
-  - Lead tracking
-  - Deal pipeline management
-  - Sales reporting and analytics
-  - Quote and invoice generation
+3. **Photo Verification**
+   - Takes selfie for attendance verification
+   - Saves photos to filesystem in `uploads/attendance/` directory
+   - Ensures accountability and prevents buddy punching
 
-- **Task Management**
-  - Create and assign tasks
-  - Task status tracking
-  - Due date notifications
-  - Task priority levels
+4. **Geolocation Tracking**
+   - Records coordinates at punch-in/out
+   - Reverse geocoding to get user's address
+   - Stores location data for attendance verification
 
-- **Reporting System**
-  - Generate detailed reports
-  - Export data in various formats
-  - Sales analytics dashboard
-  - Performance metrics
+5. **Data Persistence**
+   - Maintains punch status even after page refresh
+   - Checks server for current status when page loads
+   - Shows appropriate UI based on punch status
 
-## 🔧 Technologies Used
+## API Endpoints
 
-- PHP 7.4+
-- MySQL/MariaDB
-- HTML5
-- CSS3
-- JavaScript
-- Bootstrap 5
-- jQuery
+The attendance system uses the following API endpoints:
 
-## ⚙️ Installation
+- **GET /api/check_punch_status.php** - Checks current punch status
+- **POST /api/process_punch.php** - Process punch in/out data
 
-1. **Clone the repository**
+## Database Structure
 
-```bash
-git clone https://github.com/aaadityapal/connect.git
-cd php-crm-app
-```
+The system uses the `attendance` table in the database. The SQL structure is defined in `sql/attendance_table.sql`.
 
-2. **Database Setup**
-- Create a new MySQL database
-- Import the database schema from `database/crm_db.sql`
-- Configure database connection in `config/database.php`
+## Recent Changes
 
-3. **Configuration**
-- Copy `.env.example` to `.env`
-- Update the following in your `.env` file:
-  ```
-  DB_HOST=your_database_host
-  DB_USER=your_database_user
-  DB_PASS=your_database_password
-  DB_NAME=your_database_name
-  ```
+- Moved API endpoints to dedicated `/api` folder
+- Fixed issue with punch-out data not being stored correctly
+- Added validation to prevent punching in multiple times on the same day
+- Added feature to mark attendance as completed for the day after punch-out
+- Improved UI to show different states (punch in, punch out, completed)
+- Fixed parameter binding in database queries
+- Added comprehensive error handling
 
-4. **Web Server Configuration**
-- Configure your web server (Apache/Nginx) to point to the `public` directory
-- Ensure mod_rewrite is enabled for Apache
+## Setup
 
-5. **Install Dependencies**
+To set up the attendance system, follow these steps:
 
-```bash
-composer install
-npm install
-```
+1. Ensure the database table is created using the SQL in `sql/attendance_table.sql`
+2. Make sure the `uploads/attendance` directory is writable by the web server
+3. Configure the database connection in `config/db_connect.php`
 
-## 🚀 Usage
+## Development
 
-1. Access the application through your web browser
-2. Default admin credentials:
-   - Username: admin@admin.com
-   - Password: admin123
-   (Remember to change these credentials after first login)
+When extending this system, follow these guidelines:
 
-3. Start by:
-   - Setting up user roles and permissions
-   - Adding your team members
-   - Creating customer profiles
-   - Setting up your sales pipeline
-
-## 🔐 Security Features
-
-- Password Hashing
-- SQL Injection Prevention
-- XSS Protection
-- CSRF Protection
-- Session Management
-- Input Validation
-
-## 📁 Project Structure
-
-- `public/` - Web root directory
-- `src/` - PHP source code
-- `templates/` - HTML templates
-- `config/` - Configuration files
-- `assets/` - Static assets
-
-
-## 🔄 Database Schema
-
-The application uses the following main tables:
-- users
-- customers
-- sales
-- tasks
-- documents
-- roles
-- permissions
-
-## 👥 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-
-## 🤝 Support
-
-For support, email aaadityapal69@gmail.com or create an issue in the repository.
-
-## 🙏 Acknowledgments
-
-- Bootstrap for the UI components
-- PHP community for excellent documentation
-- All contributors who helped in building this CRM
-
-
-
-## 🔮 Future Enhancements
-
-- Email integration
-- Calendar management
-- Mobile application
-- API development
-- Advanced reporting features
-- Integration with third-party services
-
----
-
-Made with ❤️ by [Aditya Pal](https://github.com/aaadityapal)
+1. Keep API endpoints in the `/api` folder
+2. Maintain the existing data structure for compatibility
+3. Follow the established UI patterns for consistency 

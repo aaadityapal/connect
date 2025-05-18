@@ -1,0 +1,551 @@
+/* Greeting Section Styles */
+.greeting-section {
+    background: linear-gradient(to right, #ffffff, #f8f9fa);
+    border-left: 4px solid #3498db;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.greeting-section:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.greeting-text {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+#greeting-icon {
+    color: #f39c12;
+    margin-right: 8px;
+    transition: color 0.3s ease;
+}
+
+.greeting-name {
+    color: #3498db;
+}
+
+.greeting-small-time {
+    font-size: 0.85rem;
+    color: #95a5a6;
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.greeting-small-time i {
+    color: #3498db;
+    margin-right: 5px;
+}
+
+.greeting-small-time #small-current-time,
+.greeting-small-time #small-current-date {
+    font-weight: 500;
+}
+
+.greeting-small-separator {
+    margin: 0 10px;
+    color: #bdc3c7;
+}
+
+.greeting-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(52, 152, 219, 0.1);
+    position: relative;
+}
+
+.greeting-actions > div:last-child {
+    position: relative;
+    padding-bottom: 25px;
+}
+
+/* Shift time remaining styles */
+.shift-time-remaining {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+    padding-bottom: 25px;
+}
+
+.shift-time-remaining i {
+    color: #e74c3c;
+    margin-right: 6px;
+    font-size: 1rem;
+}
+
+.shift-time-remaining .time-display {
+    display: flex;
+    align-items: center;
+}
+
+#shift-remaining-time {
+    font-weight: 600;
+    color: #e74c3c;
+}
+
+/* Shift info moved under timer */
+.shift-info {
+    font-size: 0.75rem;
+    color: #2196F3;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-top: 8px;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    bottom: 0;
+}
+
+.shift-info::before {
+    content: '';
+    display: block;
+    width: 60%;
+    height: 1px;
+    background-color: rgba(33, 150, 243, 0.2);
+    margin: 4px auto 6px;
+}
+
+/* Overtime timer styles */
+.overtime-timer {
+    font-size: 0.85rem;
+    color: #e74c3c;
+    font-weight: 500;
+    margin-top: 10px;
+    text-align: center;
+    animation: pulse 2s infinite;
+}
+
+.overtime-timer i {
+    margin-right: 6px;
+    color: #e74c3c;
+}
+
+.overtime-timer span {
+    font-weight: 600;
+}
+
+.rounded-overtime {
+    font-size: 0.75rem;
+    color: #34495e;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.rounded-overtime span {
+    font-weight: 600;
+    color: #e74c3c;
+}
+
+/* Completed overtime styles for punched-out users */
+.completed-overtime {
+    font-size: 0.85rem;
+    color: #e67e22;
+    font-weight: 500;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.completed-overtime i {
+    margin-right: 6px;
+    color: #e67e22;
+}
+
+.completed-overtime span {
+    font-weight: 600;
+}
+
+.overtime-note {
+    font-size: 0.7rem;
+    color: #7f8c8d;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Responsive styles for overtime timer */
+@media (max-width: 768px) {
+    .overtime-timer, .completed-overtime {
+        font-size: 0.8rem;
+        margin-top: 8px;
+    }
+    
+    .rounded-overtime, .overtime-note {
+        font-size: 0.7rem;
+        margin-top: 3px;
+    }
+}
+
+@media (max-width: 576px) {
+    .overtime-timer, .completed-overtime {
+        font-size: 0.75rem;
+        margin-top: 6px;
+    }
+    
+    .rounded-overtime, .overtime-note {
+        font-size: 0.65rem;
+        margin-top: 2px;
+    }
+}
+
+.punch-button {
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 140px;
+}
+
+.punch-button i {
+    margin-right: 6px;
+}
+
+.punch-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Status indicator for punch button */
+.punch-button.btn-success {
+    background-color: #2ecc71;
+    border-color: #27ae60;
+}
+
+.punch-button.btn-danger {
+    background-color: #e74c3c;
+    border-color: #c0392b;
+}
+
+.punch-button.btn-secondary {
+    background-color: #7f8c8d;
+    border-color: #95a5a6;
+    cursor: default;
+}
+
+.punch-button.btn-secondary:hover {
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Punch button container to keep original arrangement */
+.punch-button-container {
+    position: relative;
+    text-align: center;
+}
+
+/* Punch time display styles */
+.punch-time {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    margin-top: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+    font-style: italic;
+}
+
+/* Camera Container Styles */
+.punch-camera-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.punch-camera-container.open {
+    background-color: rgba(0, 0, 0, 0.85);
+    opacity: 1;
+    visibility: visible;
+}
+
+.punch-camera-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.punch-camera-content {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    transform: translateY(30px);
+    transition: transform 0.3s ease;
+}
+
+.punch-camera-container.open .punch-camera-content {
+    transform: translateY(0);
+}
+
+.punch-camera-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #2c3e50;
+    color: white;
+}
+
+.punch-camera-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.punch-close-camera-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+    border-radius: 50%;
+}
+
+.punch-close-camera-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.punch-camera-body {
+    padding: 20px;
+}
+
+.punch-video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+    background-color: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.punch-video-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.punch-camera-capture-btn {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.punch-camera-capture-btn i {
+    font-size: 24px;
+    color: #2c3e50;
+}
+
+.punch-camera-capture-btn:hover {
+    transform: translateX(-50%) scale(1.1);
+    background-color: white;
+}
+
+.punch-captured-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+    background-color: #f0f0f0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.punch-captured-image-wrapper img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Punch location info styles */
+.punch-location-info {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+/* Work Report Section Styles */
+.punch-work-report {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 3px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.punch-work-report:focus-within {
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+    border-left-color: #2980b9;
+}
+
+.work-report-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    color: #3498db;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.work-report-header i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.punch-work-report .form-control {
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    transition: all 0.3s ease;
+}
+
+.punch-work-report .form-control:focus {
+    border-color: #3498db;
+    box-shadow: none;
+}
+
+.punch-work-report .form-text {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+}
+
+.punch-location-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.punch-location-item:last-child {
+    margin-bottom: 0;
+}
+
+.punch-location-item i {
+    margin-right: 10px;
+    min-width: 20px;
+    color: #3498db;
+}
+
+.punch-location-item span {
+    font-size: 0.9rem;
+    color: #34495e;
+    line-height: 1.4;
+}
+
+.punch-camera-footer {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.punch-retake-btn, .punch-confirm-btn {
+    min-width: 120px;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .greeting-section {
+        padding: 20px;
+    }
+    
+    .greeting-text {
+        font-size: 1.5rem;
+    }
+    
+    .greeting-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .shift-time-remaining {
+        margin-bottom: 12px;
+    }
+    
+    .punch-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .greeting-section {
+        padding: 15px;
+    }
+    
+    .greeting-text {
+        font-size: 1.3rem;
+    }
+    
+    .greeting-small-time {
+        font-size: 0.8rem;
+    }
+    
+    .greeting-small-separator {
+        margin: 0 8px;
+    }
+    
+    .shift-time-remaining {
+        font-size: 0.8rem;
+    }
+} 

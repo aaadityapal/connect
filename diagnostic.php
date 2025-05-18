@@ -1,141 +1,124 @@
 <?php
-// Diagnostic file to help troubleshoot server issues
+// Enable error reporting
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Set appropriate headers
-header('Content-Type: text/html; charset=utf-8');
+// Start session
+session_start();
 
-echo "<h1>Server Diagnostic</h1>";
+// Include database connection
+require_once 'config/db_connect.php';
 
-// PHP Version
-echo "<h2>PHP Version</h2>";
-echo "<p>PHP Version: " . phpversion() . "</p>";
+echo "<h1>Database Connection Test</h1>";
 
-// Check if mod_rewrite is enabled
-echo "<h2>Apache Modules</h2>";
-if (function_exists('apache_get_modules')) {
-    $modules = apache_get_modules();
-    echo "<p>mod_rewrite enabled: " . (in_array('mod_rewrite', $modules) ? 'Yes' : 'No') . "</p>";
+// Check database connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 } else {
-    echo "<p>Unable to check Apache modules - function apache_get_modules() not available</p>";
+    echo "<p>Database connection successful!</p>";
 }
 
-// Directory structure 
-echo "<h2>Directory Structure</h2>";
-echo "<pre>";
-function listDir($dir, $indent = 0) {
-    $files = scandir($dir);
-    foreach ($files as $file) {
-        if ($file != '.' && $file != '..') {
-            echo str_repeat(' ', $indent) . "- $file";
-            if (is_dir("$dir/$file")) {
-                echo " (directory)";
-                if ($indent < 4) { // Limit recursion depth
-                    echo "\n";
-                    listDir("$dir/$file", $indent + 2);
-                } else {
-                    echo " ...\n";
-                }
-            } else {
-                echo "\n";
-            }
-        }
+// Test database query
+$query = "SHOW TABLES";
+$result = $conn->query($query);
+if ($result) {
+    echo "<p>Query executed successfully</p>";
+    
+    echo "<h2>Tables in Database:</h2>";
+    echo "<ul>";
+    while ($row = $result->fetch_row()) {
+        echo "<li>{$row[0]}</li>";
     }
-}
-
-// List dashboard and handlers directories
-echo "Dashboard directory:\n";
-if (is_dir('dashboard')) {
-    listDir('dashboard', 2);
+    echo "</ul>";
 } else {
-    echo "  Dashboard directory not found!\n";
+    echo "<p>Query failed: " . $conn->error . "</p>";
 }
 
-echo "\nHandlers directory:\n";
-if (is_dir('dashboard/handlers')) {
-    listDir('dashboard/handlers', 2);
+// Check attendance table structure
+echo "<h2>Attendance Table Structure:</h2>";
+$tableQuery = "DESCRIBE attendance";
+$tableResult = $conn->query($tableQuery);
+if ($tableResult) {
+    echo "<table border='1'>";
+    echo "<tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
+    while ($row = $tableResult->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>{$row['Field']}</td>";
+        echo "<td>{$row['Type']}</td>";
+        echo "<td>{$row['Null']}</td>";
+        echo "<td>{$row['Key']}</td>";
+        echo "<td>{$row['Default']}</td>";
+        echo "<td>{$row['Extra']}</td>";
+        echo "</tr>";
+    }
+    echo "</table>";
 } else {
-    echo "  Handlers directory not found!\n";
+    echo "<p>Failed to get table structure: " . $conn->error . "</p>";
 }
-echo "</pre>";
 
-// File permissions
-echo "<h2>File Permissions</h2>";
-echo "<pre>";
-function checkFilePermissions($file) {
-    if (file_exists($file)) {
-        $perms = fileperms($file);
-        $perms_string = sprintf('%o', $perms);
-        echo "$file: $perms_string\n";
+// Test timestamp formats
+echo "<h2>Timestamp Format Tests:</h2>";
+echo "<p>Current time: " . date('Y-m-d H:i:s') . "</p>";
+echo "<p>Current Unix timestamp: " . time() . "</p>";
+
+$testTime = time();
+$timeQuery = "SELECT FROM_UNIXTIME($testTime) as formatted_time, UNIX_TIMESTAMP(FROM_UNIXTIME($testTime)) as back_to_unix";
+$timeResult = $conn->query($timeQuery);
+if ($timeResult) {
+    $row = $timeResult->fetch_assoc();
+    echo "<p>Test timestamp: $testTime</p>";
+    echo "<p>Formatted via MySQL: {$row['formatted_time']}</p>";
+    echo "<p>Back to Unix timestamp: {$row['back_to_unix']}</p>";
+    
+    if ($testTime != $row['back_to_unix']) {
+        echo "<p style='color:red'>Warning: Timestamp conversion is not consistent! Difference: " . 
+             ($row['back_to_unix'] - $testTime) . " seconds</p>";
     } else {
-        echo "$file: Not found\n";
+        echo "<p style='color:green'>Timestamp conversion is consistent</p>";
     }
+} else {
+    echo "<p>Timestamp test failed: " . $conn->error . "</p>";
 }
 
-// Check key files
-checkFilePermissions('dashboard/handlers/get_project_details.php');
-checkFilePermissions('assets/js/task-overview-manager.js');
-checkFilePermissions('similar_dashboard.php');
-echo "</pre>";
+// Set user for testing
+$_SESSION['user_id'] = 1; // Set to any valid user ID
 
-// Path info
-echo "<h2>Server Path Information</h2>";
-echo "<p>Document Root: " . $_SERVER['DOCUMENT_ROOT'] . "</p>";
-echo "<p>Script Name: " . $_SERVER['SCRIPT_NAME'] . "</p>";
-echo "<p>PHP Self: " . $_SERVER['PHP_SELF'] . "</p>";
-echo "<p>Request URI: " . $_SERVER['REQUEST_URI'] . "</p>";
+// Display test form
+echo "<h2>Test Punch Form</h2>";
+echo "<form method='POST' action='api/test_punch.php'>";
+echo "Punch Type: <select name='punch_type'><option value='in'>In</option><option value='out'>Out</option></select><br>";
+echo "Latitude: <input type='text' name='latitude' value='12.9716'><br>";
+echo "Longitude: <input type='text' name='longitude' value='77.5946'><br>";
+echo "Accuracy: <input type='text' name='accuracy' value='10'><br>";
+echo "Address: <input type='text' name='address' value='Test Address'><br>";
+echo "Work Report: <textarea name='work_report'>Test work report</textarea><br>";
+echo "<input type='submit' value='Test Punch'>";
+echo "</form>";
 
-// AJAX Test
-echo "<h2>API Test</h2>";
-echo "<div id='api-result'>Running API test...</div>";
-?>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const resultDiv = document.getElementById('api-result');
-    
-    // Test the API endpoint with a hard-coded project ID (you can modify this)
-    const testProjectId = 1;
-    
-    // Test both path options
-    const paths = [
-        `dashboard/handlers/get_project_details.php?project_id=${testProjectId}`,
-        `${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))}/dashboard/handlers/get_project_details.php?project_id=${testProjectId}`
-    ];
-    
-    resultDiv.innerHTML = '<p>Testing API paths:</p>';
-    
-    paths.forEach((path, index) => {
-        resultDiv.innerHTML += `<p>Testing path ${index + 1}: ${path}</p>`;
-        
-        fetch(path)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                resultDiv.innerHTML += `<p>Path ${index + 1} result: Success! Data: ${JSON.stringify(data).substring(0, 100)}...</p>`;
-            })
-            .catch(error => {
-                resultDiv.innerHTML += `<p>Path ${index + 1} result: Failed with error: ${error.message}</p>`;
-            });
-    });
-    
-    // Add diagnostic button for SweetAlert2
-    const sweetAlertButton = document.createElement('button');
-    sweetAlertButton.textContent = 'Test SweetAlert2';
-    sweetAlertButton.onclick = function() {
-        if (typeof Swal === 'undefined') {
-            alert('SweetAlert2 is not defined! Make sure the script is loaded correctly.');
-        } else {
-            Swal.fire({
-                title: 'SweetAlert2 Test',
-                text: 'If you can see this modal, SweetAlert2 is working correctly.',
-                icon: 'success'
-            });
+echo "<h2>Existing Records</h2>";
+$recordsQuery = "SELECT * FROM attendance ORDER BY id DESC LIMIT 5";
+$recordsResult = $conn->query($recordsQuery);
+if ($recordsResult) {
+    if ($recordsResult->num_rows > 0) {
+        echo "<table border='1'>";
+        echo "<tr><th>ID</th><th>User</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Working Hours</th><th>Overtime Hours</th></tr>";
+        while ($row = $recordsResult->fetch_assoc()) {
+            echo "<tr>";
+            echo "<td>{$row['id']}</td>";
+            echo "<td>{$row['user_id']}</td>";
+            echo "<td>{$row['date']}</td>";
+            echo "<td>{$row['punch_in']}</td>";
+            echo "<td>{$row['punch_out']}</td>";
+            echo "<td>{$row['working_hours']}</td>";
+            echo "<td>{$row['overtime_hours']}</td>";
+            echo "</tr>";
         }
-    };
-    document.body.appendChild(sweetAlertButton);
-});
-</script> 
+        echo "</table>";
+    } else {
+        echo "<p>No attendance records found</p>";
+    }
+} else {
+    echo "<p>Failed to get attendance records: " . $conn->error . "</p>";
+}
+?> 

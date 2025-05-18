@@ -1,153 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Containers with Descriptions</title>
-<style>
-    body {
-        font-family: Arial, sans-serif; /* Sets the font for the page */
-        margin: 0;
-        padding: 0;
-        background-color: #f4f4f4; /* Light grey background */
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Footer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap');
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Open Sans', sans-serif;
     }
-    .container-row {
-        display: flex; /* Enables flexbox */
-        justify-content: center; /* Centers flex items on the main axis */
-        flex-wrap: wrap; /* Allows containers to wrap as needed */
-        gap: 20px; /* Adds space between containers */
+    .footer {
+      background: #E8E6E6;
+      border-top: 1px solid white;
+      border-bottom: 1px solid white;
+      padding: 20px 0;
     }
-    .container {
-        width: 30%; /* Sets width of each container */
-        background: #fff; /* White background for the containers */
-        padding: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Adds a subtle shadow around each container */
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        min-height: 550px; /* Set minimum height for consistent sizing */
+    .footer .footer-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 20px;
     }
-    .container img {
-        width: 100%; /* Makes image take full width of the container */
-        height: 250px; /* Set fixed height for all images */
-        object-fit: cover; /* Maintains aspect ratio while filling the container */
-        object-position: center; /* Centers the image */
-        margin-bottom: 15px; /* Add space below images */
+    .footer .footer-col h2 {
+      color: red;
+      font-size: 24px;
+      font-weight: 600;
     }
-    .title {
-        font-weight: bold;
-        min-height: 60px; /* Ensures consistent height for titles */
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+    .footer .links {
+      margin-top: 20px;
     }
-    .description {
-        font-size: 14px;
-        text-align: justify;
-        min-height: 150px; /* Ensures consistent height for descriptions */
-        overflow: hidden;
-        margin-bottom: 50px; /* Add space for the button */
+    .footer .links li {
+      list-style: none;
+      margin-bottom: 10px;
     }
-    .author {
-        margin-bottom: 10px;
+    .footer .links li a {
+      text-decoration: none;
+      color: black;
     }
-    .date {
-        font-size: 14px;
-        color: #666;
+    .footer .links li a:hover {
+      color: red;
     }
-    .read-more {
-        display: block;
-        width: 100px;
-        padding: 10px;
-        text-align: center;
-        background-color: red;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        position: absolute;
-        bottom: 20px;
-        left: 10px;
+    .footer p {
+      margin: 20px 0;
+      color: black;
+      max-width: 300px;
+    }
+    .footer form {
+      display: flex;
+      gap: 5px;
+    }
+    .footer input {
+      height: 40px;
+      border-radius: 6px;
+      background: none;
+      width: 100%;
+      outline: none;
+      border: 1px solid #7489C6;
+      caret-color: #E8E6E6;
+      color: #E8E6E6;
+      padding-left: 10px;
+    }
+    .footer input::placeholder {
+      color: black;
+    }
+    .footer form button {
+      background: #fff;
+      outline: none;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s ease;
+    }
+    .footer form button:hover {
+      background: black;
+      color: white;
+    }
+    .footer .icons {
+      font-size: 22px;
+      display: flex;
+      margin-top: 30px;
+      gap: 30px;
+      cursor: pointer;
+    }
+    .footer .icons a {
+      color: black;
+    }
+    .footer .icons a:hover {
+      color: red;
+    }
+    
+    /* Adding brand colors for social media icons */
+    .footer .icons a.facebook {
+      color: #4267B2; /* Facebook blue */
+    }
+    .footer .icons a.linkedin {
+      color: #0077B5; /* LinkedIn blue */
+    }
+    .footer .icons a.map {
+      color: #EA4335; /* Google Maps red */
+    }
+    .footer .icons a.instagram {
+      color: #E1306C; /* Instagram pink */
+    }
+    .footer .icons a.youtube {
+      color: #FF0000; /* YouTube red */
+    }
+    .privacy-policy {
+      background: #E8E6E6;
+      color: black;
+      padding: 20px;
+      max-width: 600px;
+      border-radius: 8px;
+      margin-left: -20px;
+    }
+    h2 {
+      color: red;
+    }
+    a {
+      color: black;
+      text-decoration: none; 
+      transition: color 0.3s, text-decoration 0.3s; 
+    }
+    a:hover, a:focus {
+      color: #FF6347; 
+      text-decoration: underline; 
+    }
+    .copyright {
+      text-align: center;
+      width: 1200px;
+      text-wrap: wrap;
+      color: white;
+      margin-top: 10px;
+      padding-left: 620px; /* Added padding to the right */
+    }
+    hr {
+      border-top: 1px solid white;
+      margin: 0;
     }
 
-    .read-more:hover {
-        background-color: darkred; /* Darkens button on hover */
-    }
-    /* Improved responsive breakpoints for various screen sizes */
-    @media (max-width: 1200px) {
-        .container {
-            width: 45%; /* Two columns on medium-sized screens */
-        }
-    }
-    @media (max-width: 800px) {
-        .container {
-            width: 100%; /* Full width containers on smaller screens */
-            min-height: auto; /* Allow container to adjust on mobile */
-        }
-        .description {
-            min-height: auto; /* Allow height to adjust on mobile */
-            margin-bottom: 60px; /* Ensure space for button on mobile */
-        }
-        .title {
-            min-height: auto; /* Allow height to adjust on mobile */
-        }
-    }
-</style>
+  </style>
 </head>
 <body>
+  <div class="footer">
+    <div class="footer-row">
+      <div class="footer-col">
+        <h2>Head Office</h2>
+        <p>F-52, First Floor, <br> Near Gurudwara, <br>Madhu Vihar, I.P. Extension, <br>Delhi-110092</p>
+        <p>+91 7503468992 <br> +91 9958600397</p>
+        <p>contact@architectshive.com</p>
+        <h2>Info</h2>
+        <ul class="links residences">
+          <li><a href="https://www.architectshive.com/construct" target="_blank">CNSTRCT</a></li>
+          <li><a href="https://www.architectshive.com/" target="_blank">DeSIGN</a></li>
+          <li><a href="https://ahive-intiria.netlify.app/" target="_blank">Intiria</a></li>
+          <li><a href="https://www.architectshive.com/project" target="_blank">Projects</a></li>
+          <li><a href="https://www.architectshive.com/services" target="_blank">Services</a></li>
+          <li><a href="https://www.architectshive.com/blogs" target="_blank">Blogs</a></li>
+          <li><a href="https://www.architectshive.com/about-us" target="_blank">About Us</a></li>
+          <li><a href="https://www.architectshive.com/contact-us" target="_blank">Contact Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h2>Residential Projects</h2>
+        <ul class="links residences">
+          <li><a href="https://www.architectshive.com/project/mrsonu-residence" target="_blank">Residence At Jewar Greater Noida</a></li>
+          <li><a href="https://www.architectshive.com/sector-12residence" target="_blank">Residential Project in Sector 12, Noida</a></li>
+          <li><a href="https://www.architectshive.com/project/kuldeepsharmaresidence" target="_blank">Residential Project In Loni</a></li>
+          <li><a href="https://www.architectshive.com/project/gupta-villa" target="_blank">Residential Project In Rohtak</a></li>
+          <li><a href="https://www.architectshive.com/project/lalit-bhist-residence" target="_blank">Residential Project In Muradnagar</a></li>
+          <li><a href="https://www.architectshive.com/project/mr-manoj-agrawal-residence">Residential Project In Sector-40, Noida</a></li>
+        </ul>
+        <h2>Commercial Projects</h2>
+        <ul class="links residences">
+          <li><a href="https://www.architectshive.com/project/ingress" target="_blank">Commercial Project In Gurgaon</a></li>
+          <li><a href="https://www.architectshive.com/project/office-at-greenpark" target="_blank">Commercial Project in Green Park, Delhi</a></li>
+          <li><a href="https://www.architectshive.com/project/ri-style" target="_blank">Commercial Project in Rohtak</a></li>
+          <li><a href="https://www.architectshive.com/titan-eyeplus" target="_blank">Commercial Project Showroom in Kohat Enclave </a></li>
+          <li><a href="https://www.architectshive.com/project/avery-dennison-gurgaon" target="_blank">Commercial Project in Gurgaon</a></li>
+          <li><a href="https://www.architectshive.com/project/inayat-saloon" target="_blank">Commercial Project Studio in Delhi</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h2>Hotels / Restaurants / Healthcare</h2>
+        <ul class="links residences">
+          <li><a href="https://www.architectshive.com/project/ginger-hotel-mumbai" target="_blank">Hotel In  Mumbai</a></li>
+          <li><a href="https://www.architectshive.com/project/daily-dose-restraunt" target="_blank">Cafe In Dwarka</a></li>
+          <li><a href="#">OYO Hotel At Hosiyarpur </a></li>
+          <li><a href="https://www.architectshive.com/project/annapurna-sweet-shop" target="_blank">Sweet Shop In Delhi</a></li>
+          <li><a href="https://www.architectshive.com/project/lotus-labs-rohtak" target="_blank">Labs In Rohtak</a></li>
+          <li><a href="https://www.architectshive.com/project/bharatpur-rajasthan-hospital" target="_blank">Hospital In Bharatpur</a></li>
+        </ul>
 
-<div class="container-row">
-    <div class="container">
-        <p class="date">May 15, 2024</p>
-        <h3><p class="title">Luxury Low-Rise Living in Gurugram & Patodi: Best Interior Designer in Gurugram</p></h3>
-        <p class="author">By Ar. Prabhat Arya</p>
-        <img src="https://static.wixstatic.com/media/7fba3905ea184ee29642cf0def056821.jpg/v1/fill/w_5760,h_3840,al_c,q_90,enc_auto/Architecture%20Illustration.jpg" alt="Description of image 1">
-        <p class="description">Gurugram, famously known as the Millennium City, showcases an impressive skyline adorned with its towering skyscrapers. However, an intriguing trend has emerged in recent years: luxury low-rise living. This housing concept combines modern amenities with a serene lifestyle, catering to those who seek elegance without the hustle and bustle of high-rise living. In this blog, we will delve into what luxury low-rise living entails in Gurugram, its benefits, and how architects and interior designers, like ArchitectsHive, regarded by many as the best interior designers in Gurugram, are contributing to its growing appeal.</p>
-        <a href="https://architecthive.blogspot.com/2025/05/luxury-low-rise-living-in-gurugram.html" target="_blank" class="read-more">Read More</a>
-    </div>
+        <h2>Resorts / Farmhouse / Marriage Home</h2>
+        <ul class="links residences">
+          <li><a href="https://www.architectshive.com/project/afzalpur-resort" target="_blank">Resort At Afzalpur</a></li>
+          <li><a href="https://www.architectshive.com/project/rohtak-resort" target="_blank">Resort At Rohtak</a></li>
+          <li><a href="https://www.architectshive.com/project/dehradun-farmhouse" target="_blank">Resort At Dehradun</a></li>
+          <li><a href="https://www.architectshive.com/project/marriage-home" target="_blank">Marriage Home at Afzalpur</a></li>
+          <li><a href="https://www.architectshive.com/project/gurgaon-marriage-home" target="_blank">Marriage Home at Gurugram </a></li>
+        </ul>
 
-    <div class="container">
-        <p class="date">May 20, 2024</p>
-        <h3><p class="title">Modern Hospital Interior Designers in Delhi NCR: A Design Evolution </p></h3>
-        <p class="author">By Ar. Prabhat Arya</p>
-        <img src="https://static.wixstatic.com/media/ea8ca5a4eed94b4b9f84309b740656ac.jpg/v1/fill/w_5120,h_3413,al_c,q_90,enc_auto/Construction%20Project.jpg" alt="Description of image 2">
-        <p class="description">Today, we're exploring the transformative journey of hospital interiors in Delhi-NCR, led by the innovative minds redefining healthcare spaces. As modern hospital interior designers in Delhi NCR, ArchitectsHive is setting new benchmarks in functionality, aesthetics, and patient-centered care.</p>
-        <a href="https://architecthive.blogspot.com/2025/05/modern-hospital-interior-designers-in.html" target="_blank" class="read-more">Read More</a>
+      </div>
+      <div class="footer-col">
+        <h2>Follow Us</h2>
+        <div class="icons">
+          <a href="https://www.facebook.com/profile.php?id=100089457390637" target="_blank" class="facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://www.linkedin.com/in/architectshive-cnstrct-1399b6322/" target="_blank" class="linkedin"><i class="fab fa-linkedin"></i></a>
+          <a href="https://maps.app.goo.gl/fZPzTcsSJqkrFDD7A" target="_blank" class="map"><i class="fas fa-map-marker-alt"></i></a>
+          <a href="https://www.instagram.com/architectshive_official" target="_blank" class="instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://www.youtube.com/channel/architectshive" target="_blank" class="youtube"><i class="fab fa-youtube"></i></a>
+        </div>
+        <div class="privacy-policy">
+          <ul>
+            <li><a href="https://www.architectshive.com/privacy-policy" target="_blank">Privacy Policy</a></li>
+            <li><a href="https://www.architectshive.com/terms-and-condition" target="_blank">Terms Of Service</a></li>
+            <li><a href="https://www.architectshive.com/shipping-policy" target="_blank">Shipping Policy</a></li>
+            <li><a href="https://www.architectshive.com/disclaimer" target="_blank">Disclaimer</a></li>
+          </ul>
+        </div>
+        <p>Enter your email to get further updates:</p>
+        <form action="#">
+          <input type="text" placeholder="Your email" required>
+          <button type="submit">SUBSCRIBE</button>
+        </form>
+        <br>
+        <div class="gif-icons">
+          <img src="https://static.wixstatic.com/media/3c0ec6_74f6cc9ce84d40f1923a189e2bdd71e5~mv2.gif" alt="GIF 1" style="width: 40px; height: 40px;">
+          <img src="https://static.wixstatic.com/media/3c0ec6_9a86349597994e21855539524b5cb9ad~mv2.gif" alt="GIF 2" style="width: 40px; height: 40px;">
+          <img src="https://static.wixstatic.com/media/3c0ec6_3c77712cd8bf4f6787464d4aa8e12216~mv2.gif" alt="GIF 3" style="width: 40px; height: 40px;">
+          <img src="https://static.wixstatic.com/media/3c0ec6_f6e29cd5f8474babb868b9f8995f3ba7~mv2.gif" alt="GIF 4" style="width: 40px; height: 40px;">
+          <img src="https://static.wixstatic.com/media/3c0ec6_9c1a8a7c281f4df5a48c42b01e5c98ca~mv2.gif" alt="GIF 5" style="width: 40px; height: 40px;">
+          <!-- Add more GIFs if needed -->
+      </div>
+      </div>
     </div>
-
-    <div class="container">
-        <p class="date">May 25, 2024</p>
-        <h3><p class="title">Elevating Excellence in Architecture: Premium Materials in Delhi NCR </p></h3>
-        <p class="author">By Ar. Prabhat Arya</p>
-        <img src="https://static.wixstatic.com/media/defe51ec28b144bf837e391e91626341.jpg/v1/fill/w_4912,h_3264,al_c,q_90,enc_auto/Red%20Roof.jpg">
-        <p class="description">In the dynamic environment of Delhi NCR, where modern urbanization intertwines with rich traditions and cultural heritage, the desire for opulent living has undergone a transformation. With a booming population and increasing urban density, there's a growing emphasis on "luxury low-rise living". This trend signifies the integration of contemporary design and sustainability, ensuring that residents enjoy not just a home, but a lifestyle. At the forefront of this movement is ArchitectsHive, a premier architectural firm known for elevating excellence in architecture through the use of quality materials and innovative designs.</p>
-        <a href="https://architecthive.blogspot.com/2025/05/elevating-excellence-in-architecture.html" target="_blank" class="read-more">Read More</a>
-    </div>
-    <div class="container">
-        <p class="date">May 28, 2024</p>
-        <h3><p class="title">How To Calculate Budget For Interior Designing: Insights From Professionals</p></h3>
-        <p class="author">By Ar. Prabhat Arya</p>
-        <img src="https://static.wixstatic.com/media/3c0ec6_9c955ee566aa4bc8a75090c1ef501441~mv2.jpg" alt="Description of image 2">
-        <p class="description">In the realm of interior design, one of the most common questions clients face is how to calculate budget for interior designing. As leading architects in Delhi NCR with a proven track record of completing hundreds of projects successfully, ArchitectsHive understands the importance of striking the right balance between budgetary constraints and design aspirations. Let's explore their expert advice on budgeting for interior design.</p>
-        <a href="https://architecthive.blogspot.com/2024/02/navigating-interior-budgets-insights.html" target="_blank" class="read-more">Read More</a>
-    </div>
-    <div class="container">
-        <p class="date">June 1, 2024</p>
-        <h3><p class="title">Elevate Your Construction Project: The Role of Architects and Interior Designers in Delhi NCR</p></h3>
-        <p class="author">By Ar. Prabhat Arya</p>
-        <img src="https://static.wixstatic.com/media/0e13e6a230c4492ca3a6c8b7b195d587.jpg/v1/fill/w_5760,h_3840,al_c,q_90,enc_auto/College%20Student.jpg" alt="Description of image 2">
-        <p class="description">Are you contemplating a renovation or construction project in Delhi NCR? As you navigate the intricate landscape of design, budgeting, and construction, a pivotal choice emerges: should you hire professional architects? In this blog post, we will explore the role of architects and interior designers in Delhi NCR, focusing on how helpful ArchitectsHive's experts can be for your project. Their experience is essential for executing successful, high-quality developments in vibrant areas like Delhi, Noida, and the greater NCR region.</p>
-        <a href="https://architecthive.blogspot.com/2025/05/elevate-your-construction-project-role.html" target="_blank" class="read-more">Read More</a>
-    </div>
-    <div class="container">
-        <p class="date">June 5, 2024</p>
-        <h3><p class="title">Top 10 Urban Design Projects of 2025: Affordable Housing in India</p></h3>
-        <p class="author">By Ar. Prabhat Arya</p>
-        <img src="https://static.wixstatic.com/media/3c0ec6_459c49dad1654e26bd854155d6a82668~mv2.jpg" alt="Description of image 2">
-           <p class="description">In the heart of Delhi NCR, where towering skyscrapers dominate the skyline, urban villages are emerging as hidden gems. These vibrant areas combine the charm of heritage, close-knit communities, and affordable living—offering a unique opportunity for those seeking a more grounded lifestyle amid the city's hustle. In this post, we explore the growing trend of affordable residences in urban villages and highlight how architects are creatively reshaping these spaces to meet the needs of today's urban dwellers. As we highlight the Top 10 Urban Design Projects of 2025, we'll explore how combining innovation with cultural sensitivity is shaping modern homes that truly reflect a sense of place.</p>
-        <a href="https://architecthive.blogspot.com/2025/05/top-10-urban-design-projects-of-2025.html" target="_blank" class="read-more">Read More</a>
-    </div>
-</div>
-
+    <hr>
+  </div>
 </body>
 </html>

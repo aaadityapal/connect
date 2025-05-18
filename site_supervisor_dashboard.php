@@ -57,6 +57,7 @@ if (isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="css/supervisor/calendar-events-modal-enhanced.css">
     <link rel="stylesheet" href="css/supervisor/event-view-modal.css">
     <link rel="stylesheet" href="css/supervisor/enhanced-event-view.css">
+    <link rel="stylesheet" href="css/supervisor/greeting-section.css">
 
     
     <!-- Include custom styles -->
@@ -1026,65 +1027,92 @@ if (isset($_SESSION['user_id'])) {
     <div class="main-content" id="mainContent">
         <div class="container-fluid">
         
-            
             <!-- Greetings Section -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="dashboard-card greetings-card">
-                        <div class="greetings-header">
-                            <div class="greeting-time">
-                                <?php
-                                // Set timezone to Indian Standard Time
-                                date_default_timezone_set('Asia/Kolkata');
-                                
-                                $hour = date('H');
-                                $greeting = '';
-                                if ($hour >= 5 && $hour < 12) {
-                                    $greeting = 'Good Morning';
-                                    $icon = 'fa-sun';
-                                    $greet_class = 'morning';
-                                } elseif ($hour >= 12 && $hour < 18) {
-                                    $greeting = 'Good Afternoon';
-                                    $icon = 'fa-cloud-sun';
-                                    $greet_class = 'afternoon';
-                                } else {
-                                    $greeting = 'Good Evening';
-                                    $icon = 'fa-moon';
-                                    $greet_class = 'evening';
-                                }
-                                ?>
-                                <h4 class="greeting <?php echo $greet_class; ?>"><i class="fas <?php echo $icon; ?>"></i> <?php echo $greeting; ?>, <?php echo $username; ?>!</h4>
-                                <div class="date-time" id="live-datetime">
-                                    <span><i class="fas fa-calendar-alt"></i> <?php echo date('l, F j, Y'); ?> <small>(IST)</small></span>
-                                    <span><i class="fas fa-clock"></i> <span id="live-time"><?php echo date('h:i:s A'); ?></span></span>
+                    <div class="dashboard-card greeting-section">
+                        <div class="row align-items-center">
+                            <div class="col-12">
+                                <h2 class="greeting-text">
+                                    <i id="greeting-icon" class="fas fa-sun"></i> <span id="greeting-time">Good morning</span>, <span class="greeting-name"><?php echo htmlspecialchars($username); ?></span>!
+                                </h2>
+                                <div class="greeting-small-time">
+                                    <i class="fas fa-clock"></i> <span id="small-current-time">Loading time...</span>
+                                    <span class="greeting-small-separator">•</span>
+                                    <i class="fas fa-calendar-alt"></i> <span id="small-current-date">Loading date...</span>
                                 </div>
-                            </div>
-                            <div class="greeting-actions">
-                                <div class="notification-icon">
-                                    <a href="#" class="notification-bell">
-                                        <i class="fas fa-bell"></i>
-                                        <span class="notification-badge">3</span>
-                                    </a>
-                                </div>
-                                <div class="punch-button">
-                                    <?php
-                                    // Assume this is the simple check to see if user is punched in
-                                    $isPunchedIn = false;
-                                    if (isset($_SESSION['punched_in']) && $_SESSION['punched_in'] === true) {
-                                        $isPunchedIn = true;
-                                    }
-                                    ?>
-                                    <button id="punchButton" class="btn <?php echo $isPunchedIn ? 'btn-danger' : 'btn-success'; ?> btn-sm">
-                                        <i class="fas <?php echo $isPunchedIn ? 'fa-sign-out-alt' : 'fa-sign-in-alt'; ?>"></i>
-                                        <?php echo $isPunchedIn ? 'Punch Out' : 'Punch In'; ?>
-                                        <span class="punch-button-status <?php echo $isPunchedIn ? 'status-in' : 'status-out'; ?>"></span>
-                                    </button>
-                                    <?php if($isPunchedIn && isset($_SESSION['punch_in_time'])): ?>
-                                    <div class="punch-time">Since: <?php echo date('h:i A', strtotime($_SESSION['punch_in_time'])); ?></div>
-                                    <?php endif; ?>
+                                <div class="greeting-actions">
+                                    <div class="shift-time-remaining">
+                                        <div class="time-display">
+                                            <i class="fas fa-hourglass-half"></i> Shift ends in: <span id="shift-remaining-time">Loading...</span>
+                                        </div>
+                                        <!-- Shift info will be inserted here by JavaScript -->
+                                    </div>
+                                    <div class="punch-button-container">
+                                        <button id="punchButton" class="btn btn-success punch-button">
+                                            <i class="fas fa-sign-in-alt"></i> Punch In
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Camera Container for Punch In/Out -->
+            <div id="cameraContainer" class="punch-camera-container">
+                <div class="punch-camera-overlay"></div>
+                <div class="punch-camera-content">
+                    <div class="punch-camera-header">
+                        <h4 id="camera-title">Take Selfie for Punch In</h4>
+                        <button id="closeCameraBtn" class="punch-close-camera-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="punch-camera-body">
+                        <div class="punch-video-wrapper">
+                            <video id="cameraVideo" autoplay playsinline></video>
+                            <canvas id="cameraCanvas" style="display: none;"></canvas>
+                            <div id="cameraCaptureBtn" class="punch-camera-capture-btn">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="punch-captured-image-wrapper" style="display: none;">
+                            <img id="capturedImage" src="" alt="Captured selfie">
+                        </div>
+                        <div class="punch-location-info">
+                            <div class="punch-location-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="locationStatus">Getting your location...</span>
+                            </div>
+                            <div class="punch-location-item">
+                                <i class="fas fa-globe"></i>
+                                <span id="locationCoords">Latitude: -- | Longitude: --</span>
+                            </div>
+                            <div class="punch-location-item">
+                                <i class="fas fa-map"></i>
+                                <span id="locationAddress">Address: --</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Work Report Section (shown only when punching out) -->
+                        <div id="workReportSection" class="punch-work-report" style="display: none;">
+                            <div class="work-report-header">
+                                <i class="fas fa-clipboard-list"></i>
+                                <span>Daily Work Report</span>
+                            </div>
+                            <div class="form-group">
+                                <textarea id="workReportText" class="form-control" rows="4" placeholder="Enter details about your work today..."></textarea>
+                                <small class="form-text text-muted">Please provide a brief description of tasks completed today.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="punch-camera-footer">
+                        <button id="retakePhotoBtn" class="btn btn-secondary punch-retake-btn" style="display: none;">
+                            <i class="fas fa-redo"></i> Retake
+                        </button>
+                        <button id="confirmPunchBtn" class="btn btn-primary punch-confirm-btn" style="display: none;">
+                            <i class="fas fa-check"></i> Confirm Punch
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1607,7 +1635,7 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/calendar-events-modal.js"></script>
     <script src="js/supervisor/date-events-modal.js"></script>
     <script src="js/supervisor/enhanced-event-view-modal.js"></script>
-
+    <script src="js/supervisor/greeting-section.js"></script>
 
     
     <!-- Override native alerts for calendar messages -->

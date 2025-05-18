@@ -297,3 +297,23 @@
 [25-Apr-2025 10:34:47 Asia/Kolkata] Attempting punch-in for user ID: 3
 [25-Apr-2025 10:34:47 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-04-25","2025-04-25 10:34:47","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/135.0.0.0 Safari\/537.36 Edg\/135.0.0.0","present","2025-04-25 10:34:47","2025-04-25 10:34:47"]
 [25-Apr-2025 10:34:47 Asia/Kolkata] Successfully inserted attendance record with ID: 1107
+[17-May-2025 19:55:55 Asia/Kolkata] Received input: {"action":"punch_in"}
+[17-May-2025 19:55:55 Asia/Kolkata] Attempting punch-in for user ID: 3
+[17-May-2025 19:55:55 Asia/Kolkata] Attempting to insert attendance with params: [3,"2025-05-17","2025-05-17 19:55:55","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36 Edg\/136.0.0.0","present","2025-05-17 19:55:55","2025-05-17 19:55:55"]
+[17-May-2025 19:55:55 Asia/Kolkata] Successfully inserted attendance record with ID: 1161
+[17-May-2025 19:56:10 Asia/Kolkata] Received input: {"action":"punch_in","location":{"latitude":28.636855913776973,"longitude":77.30269226681013}}
+[17-May-2025 19:56:10 Asia/Kolkata] Attempting punch-in for user ID: 2
+[17-May-2025 19:56:10 Asia/Kolkata] Attempting to insert attendance with params: [2,"2025-05-17","2025-05-17 19:56:10","::1","Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36 Edg\/136.0.0.0","present","2025-05-17 19:56:10","2025-05-17 19:56:10"]
+[17-May-2025 19:56:10 Asia/Kolkata] Successfully inserted attendance record with ID: 1162
+[17-May-2025 19:56:18 Asia/Kolkata] Received input: {"action":"punch_out","location":{"latitude":28.636855913776973,"longitude":77.30269226681013}}
+[17-May-2025 19:56:35 Asia/Kolkata] Received input: {"action":"punch_out","work_report":"fghjkl"}
+[18-May-2025 12:52:10 Asia/Kolkata] Formatted working hours: 00:07:38 from 458 seconds
+[18-May-2025 12:52:10 Asia/Kolkata] Overtime calculation: raw=0 hours, minutes=0, rounded=0 minutes, final=0 hours, formatted=00:00:00
+[18-May-2025 12:52:10 Asia/Kolkata] Working hours: decimal=0.12722222222222, formatted=00:07:38, seconds worked=458
+[18-May-2025 12:52:10 Asia/Kolkata] Punch-out data: time=12:52:10, photo=uploads/attendance/21_out_20250518125210.jpg, lat=28.63688077424893, lng=77.30267265407726, acc=128, addr=Madhu Vihar Market, Madhu Vihar, Indraprastha Extension, Preet Vihar Tehsil, East Delhi, Delhi, 110051, India, wh=00:07:38, oh=00:00:00, wr=kjhg..., dt=2025-05-18 12:52:10, uid=21, date=2025-05-18
+[18-May-2025 12:52:10 Asia/Kolkata] Update query parameters: time=12:52:10, photo=uploads/attendance/21_out_20250518125210.jpg, lat=28.63688077424893, lng=77.30267265407726, acc=128, addr=Madhu Vihar Market, Madhu Vihar, Indraprastha Extension, Preet Vihar Tehsil, East Delhi, Delhi, 110051, India, wh=00:07:38, oh=00:00:00, wr=kjhg, dt=2025-05-18 12:52:10, uid=21, date=2025-05-18
+[18-May-2025 12:53:27 Asia/Kolkata] Formatted working hours: 00:00:32 from 32 seconds
+[18-May-2025 12:53:27 Asia/Kolkata] Overtime calculation: raw=0 hours, minutes=0, rounded=0 minutes, final=0 hours, formatted=00:00:00
+[18-May-2025 12:53:27 Asia/Kolkata] Working hours: decimal=0.0088888888888889, formatted=00:00:32, seconds worked=32
+[18-May-2025 12:53:27 Asia/Kolkata] Punch-out data: time=12:53:27, photo=uploads/attendance/21_out_20250518125327.jpg, lat=28.63688697859831, lng=77.30266343097367, acc=102, addr=Madhu Vihar Market, Madhu Vihar, Indraprastha Extension, Preet Vihar Tehsil, East Delhi, Delhi, 110051, India, wh=00:00:32, oh=00:00:00, wr=hello there..., dt=2025-05-18 12:53:27, uid=21, date=2025-05-18
+[18-May-2025 12:53:27 Asia/Kolkata] Update query parameters: time=12:53:27, photo=uploads/attendance/21_out_20250518125327.jpg, lat=28.63688697859831, lng=77.30266343097367, acc=102, addr=Madhu Vihar Market, Madhu Vihar, Indraprastha Extension, Preet Vihar Tehsil, East Delhi, Delhi, 110051, India, wh=00:00:32, oh=00:00:00, wr=hello there, dt=2025-05-18 12:53:27, uid=21, date=2025-05-18

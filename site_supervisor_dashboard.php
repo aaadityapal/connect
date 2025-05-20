@@ -1013,6 +1013,73 @@ if (isset($_SESSION['user_id'])) {
                 padding: 2px;
             }
         }
+        
+        /* Punch Camera Modal Styles */
+        .punch-camera-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .punch-camera-header {
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .punch-camera-body {
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        
+        .punch-camera-footer {
+            padding: 15px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+        }
+        
+        .punch-work-report {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        @media (max-height: 600px) {
+            .punch-work-report {
+                max-height: 100px;
+            }
+            
+            .punch-work-report textarea {
+                max-height: 60px;
+            }
+            
+            .punch-video-wrapper, .punch-captured-image-wrapper {
+                max-height: 180px;
+            }
+            
+            .punch-location-info {
+                margin-top: 5px;
+                margin-bottom: 5px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1889,14 +1956,18 @@ if (isset($_SESSION['user_id'])) {
                             max-width: 500px;
                             overflow: hidden;
                             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                            max-height: 90vh;
+                            display: flex;
+                            flex-direction: column;
                         }
                         .camera-header {
                             padding: 15px;
-                            background-color: var(--primary-color);
+                            background-color: #3498db;
                             color: white;
                             display: flex;
                             justify-content: space-between;
                             align-items: center;
+                            flex-shrink: 0;
                         }
                         .camera-header h4 {
                             margin: 0;
@@ -1991,6 +2062,9 @@ if (isset($_SESSION['user_id'])) {
                             display: flex;
                             justify-content: center;
                             gap: 10px;
+                            flex-shrink: 0;
+                            position: sticky;
+                            bottom: 0;
                         }
                         #photo-preview {
                             position: relative;

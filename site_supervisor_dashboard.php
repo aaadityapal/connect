@@ -58,6 +58,7 @@ if (isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="css/supervisor/event-view-modal.css">
     <link rel="stylesheet" href="css/supervisor/enhanced-event-view.css">
     <link rel="stylesheet" href="css/supervisor/greeting-section.css">
+    <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
 
     
     <!-- Include custom styles -->
@@ -1301,7 +1302,7 @@ if (isset($_SESSION['user_id'])) {
                                             <h3>₹4,250</h3>
                                             <span class="stat-trend trend-down"><i class="fas fa-arrow-down"></i> 12%</span>
                                         </div>
-                                        <p>Travel Expenses</p>
+                                        <p>Travel Expenses <button id="addTravelExpenseBtn" class="btn btn-sm btn-danger ml-2" title="Add Travel Expense" type="button" style="border-radius: 18px;"><i class="fas fa-plus"></i></button></p>
                                         <div class="progress stat-progress" style="height: 5px;">
                                             <div class="progress-bar bg-danger" role="progressbar" style="width: 42%" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
@@ -1319,7 +1320,7 @@ if (isset($_SESSION['user_id'])) {
                                                 </svg>
                                             </div>
                                             <div class="stat-actions mt-2">
-                                                <a href="site_expenses.php" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-eye"></i> View Details</a>
+                                                <a href="view_travel_expenses.php" class="btn btn-sm btn-outline-danger btn-block"><i class="fas fa-eye"></i> View Details</a>
                                             </div>
                                         </div>
                                     </div>
@@ -1636,6 +1637,7 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/date-events-modal.js"></script>
     <script src="js/supervisor/enhanced-event-view-modal.js"></script>
     <script src="js/supervisor/greeting-section.js"></script>
+    <script src="js/supervisor/travel-expense-modal.js"></script>
 
     
     <!-- Override native alerts for calendar messages -->
@@ -2890,5 +2892,112 @@ if (isset($_SESSION['user_id'])) {
         updateCalendarStats();
     });
     </script>
+    
+    <!-- Travel Expense Modal -->
+    <div class="modal fade" id="travelExpenseModal" tabindex="-1" role="dialog" aria-labelledby="travelExpenseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="travelExpenseModalLabel">Add Travel Expense</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="travel-expenses-container">
+                        <div class="travel-expenses-list">
+                            <!-- Travel expense entries will be added here dynamically -->
+                        </div>
+                        
+                        <form id="travelExpenseForm">
+                            <div class="row form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="purposeOfVisit">Purpose of Visit</label>
+                                        <input type="text" class="form-control" id="purposeOfVisit" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="modeOfTransport">Mode of Transport</label>
+                                        <select class="form-control" id="modeOfTransport" required>
+                                            <option value="">Select mode</option>
+                                            <option value="Car">Car</option>
+                                            <option value="Bike">Bike</option>
+                                            <option value="Public Transport">Public Transport</option>
+                                            <option value="Taxi">Taxi</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fromLocation">From</label>
+                                        <input type="text" class="form-control" id="fromLocation" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="toLocation">To</label>
+                                        <input type="text" class="form-control" id="toLocation" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row form-row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="travelDate">Date</label>
+                                        <input type="date" class="form-control" id="travelDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="approxDistance">Approx Distance (km)</label>
+                                        <input type="number" min="0" step="0.1" class="form-control" id="approxDistance" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="totalExpense">Total Expenses (₹)</label>
+                                        <input type="number" min="0" step="0.01" class="form-control" id="totalExpense" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="expenseNotes">Notes (Optional)</label>
+                                <textarea class="form-control" id="expenseNotes" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="text-right">
+                                <button type="button" class="btn btn-outline-secondary" id="resetExpenseForm">Reset</button>
+                                <button type="button" class="btn btn-primary" id="addExpenseEntry">Add Entry</button>
+                            </div>
+                        </form>
+                        
+                        <div class="travel-expenses-summary mt-4" style="display: none;">
+                            <h5>Summary</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>Total Entries: <span id="totalEntries">0</span></p>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <p>Total Amount: ₹<span id="totalAmount">0.00</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="saveAllExpenses">Save All Expenses</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

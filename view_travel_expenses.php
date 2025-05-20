@@ -1,0 +1,872 @@
+<?php
+// Start session and check for authentication
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// Include database connection
+include_once('includes/db_connect.php');
+
+// Get travel expenses for the current user
+$user_id = $_SESSION['user_id'];
+$expenses = array();
+
+// Get filter values from GET parameters or set defaults
+$status_filter = isset($_GET['status']) ? $_GET['status'] : 'all';
+$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
+$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
+
+// Build query based on filters
+$query = "SELECT * FROM travel_expenses WHERE user_id = ?";
+$params = array($user_id);
+$types = "i";
+
+if ($status_filter != 'all') {
+    $query .= " AND status = ?";
+    $params[] = $status_filter;
+    $types .= "s";
+}
+
+if (!empty($date_from)) {
+    $query .= " AND travel_date >= ?";
+    $params[] = $date_from;
+    $types .= "s";
+}
+
+if (!empty($date_to)) {
+    $query .= " AND travel_date <= ?";
+    $params[] = $date_to;
+    $types .= "s";
+}
+
+$query .= " ORDER BY travel_date DESC";
+
+// Prepare and execute the query
+$stmt = $conn->prepare($query);
+
+if ($stmt) {
+    // Bind parameters dynamically
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $expenses[] = $row;
+    }
+    
+    $stmt->close();
+}
+
+// Calculate summary statistics
+$total_expenses = count($expenses);
+$total_amount = 0;
+$approved_amount = 0;
+$pending_amount = 0;
+$rejected_amount = 0;
+
+foreach ($expenses as $expense) {
+    $total_amount += $expense['amount'];
+    
+    if ($expense['status'] == 'approved') {
+        $approved_amount += $expense['amount'];
+    } elseif ($expense['status'] == 'pending') {
+        $pending_amount += $expense['amount'];
+    } elseif ($expense['status'] == 'rejected') {
+        $rejected_amount += $expense['amount'];
+    }
+}
+
+// Get username for display
+$username = "User";
+if (isset($_SESSION['username'])) {
+    $username = $_SESSION['username'];
+} else {
+    $user_stmt = $conn->prepare("SELECT username FROM users WHERE id = ?");
+    if ($user_stmt) {
+        $user_stmt->bind_param("i", $user_id);
+        $user_stmt->execute();
+        $user_result = $user_stmt->get_result();
+        if ($user_row = $user_result->fetch_assoc()) {
+            $username = $user_row['username'];
+        }
+        $user_stmt->close();
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Expenses</title>
+    
+    <!-- Include CSS files -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/supervisor/dashboard.css">
+    <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
+    
+    <style>
+        .expense-card {
+            border-left: 4px solid #e74c3c;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .expense-card .card-header {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+        
+        .expense-card .card-title {
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        
+        .expense-card .card-body {
+            padding: 20px;
+        }
+        
+        .expense-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            margin-bottom: 10px;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+        }
+        
+        .expense-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .expense-amount {
+            font-weight: 600;
+            color: #e74c3c;
+            font-size: 1.2rem;
+        }
+        
+        .expense-summary {
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .summary-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .total-amount {
+            color: #3498db;
+        }
+        
+        .approved-amount {
+            color: #2ecc71;
+        }
+        
+        .pending-amount {
+            color: #f39c12;
+        }
+        
+        .rejected-amount {
+            color: #e74c3c;
+        }
+        
+        .filters-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .no-expenses {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .no-expenses i {
+            font-size: 3rem;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .no-expenses h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .no-expenses p {
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        
+        /* Custom Toast Styles */
+        #custom-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .custom-toast {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 15px;
+            margin-bottom: 10px;
+            min-width: 250px;
+            max-width: 350px;
+            position: relative;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.3s ease;
+        }
+        
+        .custom-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .custom-toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .custom-toast-title {
+            font-weight: bold;
+        }
+        
+        .custom-toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .custom-toast-success {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .custom-toast-error {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .custom-toast-warning {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .custom-toast-info {
+            border-left: 4px solid #3498db;
+        }
+        
+        /* Hamburger menu for mobile */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background-color: #1e3246;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 14px;
+            z-index: 1000;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        
+        .mobile-menu-toggle:hover {
+            background-color: #283d52;
+        }
+        
+        .mobile-menu-toggle i {
+            font-size: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .expense-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .left-panel {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .left-panel.mobile-visible {
+                transform: translateX(0);
+            }
+            
+            /* Hide the regular toggle button on mobile */
+            .toggle-btn {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle Button -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Include Left Panel -->
+    <?php include 'includes/supervisor_panel.php'; ?>
+    
+    <!-- Main Content Area -->
+    <div class="main-content" id="mainContent">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <h2><i class="fas fa-taxi"></i> Travel Expenses</h2>
+                        <p>View and manage your travel expense reports</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Summary Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="expense-summary">
+                        <h3 class="summary-title">Expense Summary</h3>
+                        <div class="summary-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Total Expenses</div>
+                                <div class="stat-value total-amount"><?php echo $total_expenses; ?></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Total Amount</div>
+                                <div class="stat-value total-amount">₹<?php echo number_format($total_amount, 2); ?></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Approved Amount</div>
+                                <div class="stat-value approved-amount">₹<?php echo number_format($approved_amount, 2); ?></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Pending Amount</div>
+                                <div class="stat-value pending-amount">₹<?php echo number_format($pending_amount, 2); ?></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Rejected Amount</div>
+                                <div class="stat-value rejected-amount">₹<?php echo number_format($rejected_amount, 2); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="filters-section">
+                        <h3 class="filter-title">Filter Expenses</h3>
+                        <form action="" method="GET" class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="status">Status</label>
+                                <select name="status" id="status" class="form-control">
+                                    <option value="all" <?php echo $status_filter == 'all' ? 'selected' : ''; ?>>All Statuses</option>
+                                    <option value="pending" <?php echo $status_filter == 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                    <option value="approved" <?php echo $status_filter == 'approved' ? 'selected' : ''; ?>>Approved</option>
+                                    <option value="rejected" <?php echo $status_filter == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="date_from">Date From</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control" value="<?php echo $date_from; ?>">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="date_to">Date To</label>
+                                <input type="date" name="date_to" id="date_to" class="form-control" value="<?php echo $date_to; ?>">
+                            </div>
+                            <div class="col-md-3 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary mr-2">Apply Filters</button>
+                                <a href="view_travel_expenses.php" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add New Expense Button -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <button id="addNewExpenseBtn" class="btn btn-danger">
+                        <i class="fas fa-plus"></i> Add New Expense
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Expenses List -->
+            <div class="row">
+                <div class="col-12">
+                    <?php if (empty($expenses)): ?>
+                        <div class="no-expenses">
+                            <i class="fas fa-search"></i>
+                            <h4>No expenses found</h4>
+                            <p>No travel expenses match your search criteria or you haven't submitted any expenses yet.</p>
+                            <button id="addFirstExpenseBtn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add Your First Expense
+                            </button>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($expenses as $index => $expense): ?>
+                            <div class="expense-card card">
+                                <div class="card-header">
+                                    <h5 class="card-title">
+                                        <span class="expense-entry-number">Expense #<?php echo $total_expenses - $index; ?>:</span>
+                                        <?php echo htmlspecialchars($expense['purpose']); ?>
+                                    </h5>
+                                    <div>
+                                        <span class="expense-status status-<?php echo $expense['status']; ?>">
+                                            <?php echo ucfirst($expense['status']); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="expense-details">
+                                        <div class="detail-item">
+                                            <div class="detail-label">Date</div>
+                                            <div class="detail-value"><?php echo date('M d, Y', strtotime($expense['travel_date'])); ?></div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Mode</div>
+                                            <div class="detail-value"><?php echo htmlspecialchars($expense['mode_of_transport']); ?></div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">From</div>
+                                            <div class="detail-value"><?php echo htmlspecialchars($expense['from_location']); ?></div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">To</div>
+                                            <div class="detail-value"><?php echo htmlspecialchars($expense['to_location']); ?></div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Distance</div>
+                                            <div class="detail-value"><?php echo $expense['distance']; ?> km</div>
+                                        </div>
+                                        <div class="detail-item">
+                                            <div class="detail-label">Amount</div>
+                                            <div class="detail-value expense-amount">₹<?php echo number_format($expense['amount'], 2); ?></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <?php if (!empty($expense['notes'])): ?>
+                                        <div class="expense-notes">
+                                            <div class="detail-label">Notes</div>
+                                            <div class="detail-value"><?php echo htmlspecialchars($expense['notes']); ?></div>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($expense['bill_file_path'])): ?>
+                                        <div class="expense-attachment mt-2">
+                                            <div class="detail-label">Attachment</div>
+                                            <div class="detail-value">
+                                                <?php 
+                                                $file_extension = strtolower(pathinfo($expense['bill_file_path'], PATHINFO_EXTENSION));
+                                                $is_image = in_array($file_extension, ['jpg', 'jpeg', 'png', 'gif']);
+                                                $is_pdf = ($file_extension === 'pdf');
+                                                
+                                                if ($is_image): ?>
+                                                    <a href="<?php echo htmlspecialchars($expense['bill_file_path']); ?>" target="_blank" class="attachment-preview">
+                                                        <img src="<?php echo htmlspecialchars($expense['bill_file_path']); ?>" alt="Receipt" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                                                    </a>
+                                                <?php elseif ($is_pdf): ?>
+                                                    <a href="<?php echo htmlspecialchars($expense['bill_file_path']); ?>" target="_blank" class="attachment-preview">
+                                                        <i class="fas fa-file-pdf" style="font-size: 2rem; color: #e74c3c;"></i>
+                                                        <span class="ml-2">View Bill</span>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <a href="<?php echo htmlspecialchars($expense['bill_file_path']); ?>" target="_blank" class="attachment-preview">
+                                                        <i class="fas fa-file" style="font-size: 2rem; color: #3498db;"></i>
+                                                        <span class="ml-2">View Attachment</span>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="expense-actions mt-3">
+                                        <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="<?php echo $expense['id']; ?>">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </button>
+                                        
+                                        <?php if ($expense['status'] == 'pending'): ?>
+                                            <button class="btn btn-sm btn-outline-secondary edit-expense-btn" data-id="<?php echo $expense['id']; ?>">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger delete-expense-btn" data-id="<?php echo $expense['id']; ?>">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include Travel Expense Modal -->
+    <div class="modal fade" id="travelExpenseModal" tabindex="-1" role="dialog" aria-labelledby="travelExpenseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="travelExpenseModalLabel">Add Travel Expense</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="travel-expenses-container">
+                        <div class="travel-expenses-list">
+                            <!-- Travel expense entries will be added here dynamically -->
+                        </div>
+                        
+                        <form id="travelExpenseForm" enctype="multipart/form-data">
+                            <div class="row form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="purposeOfVisit">Purpose of Visit</label>
+                                        <input type="text" class="form-control" id="purposeOfVisit" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="modeOfTransport">Mode of Transport</label>
+                                        <select class="form-control" id="modeOfTransport" required>
+                                            <option value="">Select mode</option>
+                                            <option value="Car">Car</option>
+                                            <option value="Bike">Bike</option>
+                                            <option value="Public Transport">Public Transport</option>
+                                            <option value="Taxi">Taxi</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fromLocation">From</label>
+                                        <input type="text" class="form-control" id="fromLocation" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="toLocation">To</label>
+                                        <input type="text" class="form-control" id="toLocation" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row form-row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="travelDate">Date</label>
+                                        <input type="date" class="form-control" id="travelDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="approxDistance">Approx Distance (km)</label>
+                                        <input type="number" min="0" step="0.1" class="form-control" id="approxDistance" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="totalExpense">Total Expenses (₹)</label>
+                                        <input type="number" min="0" step="0.01" class="form-control" id="totalExpense" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="expenseNotes">Notes (Optional)</label>
+                                <textarea class="form-control" id="expenseNotes" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="text-right">
+                                <button type="button" class="btn btn-outline-secondary" id="resetExpenseForm">Reset</button>
+                                <button type="button" class="btn btn-primary" id="addExpenseEntry">Add Entry</button>
+                            </div>
+                        </form>
+                        
+                        <div class="travel-expenses-summary mt-4" style="display: none;">
+                            <h5>Summary</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>Total Entries: <span id="totalEntries">0</span></p>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <p>Total Amount: ₹<span id="totalAmount">0.00</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="saveAllExpenses">Save All Expenses</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Debug Panel (Hidden By Default) -->
+    <div id="debugPanel" style="position: fixed; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: #fff; padding: 10px; max-width: 400px; max-height: 300px; overflow: auto; z-index: 9999; display: none;">
+        <h5>Debug Info</h5>
+        <div id="debugContent"></div>
+    </div>
+    
+    <!-- Include JS files -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="js/supervisor/dashboard.js"></script>
+    <script src="js/supervisor/travel-expense-modal.js"></script>
+    
+    <!-- Add hidden trigger button for the travel expense modal -->
+    <button id="addTravelExpenseBtn" style="display: none;">Hidden Trigger</button>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded - initializing travel expense buttons');
+            
+            // Mobile menu toggle functionality
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const leftPanel = document.getElementById('leftPanel');
+            
+            if (mobileMenuToggle && leftPanel) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    leftPanel.classList.toggle('mobile-visible');
+                    // Change icon based on panel state
+                    const icon = this.querySelector('i');
+                    if (leftPanel.classList.contains('mobile-visible')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+                
+                // Close panel when clicking outside on mobile
+                document.addEventListener('click', function(event) {
+                    const isClickInsidePanel = leftPanel.contains(event.target);
+                    const isClickOnToggle = mobileMenuToggle.contains(event.target);
+                    
+                    if (!isClickInsidePanel && !isClickOnToggle && leftPanel.classList.contains('mobile-visible') && window.innerWidth <= 768) {
+                        leftPanel.classList.remove('mobile-visible');
+                        const icon = mobileMenuToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+            }
+            
+            // Check if debug mode is enabled
+            const urlParams = new URLSearchParams(window.location.search);
+            const debugMode = urlParams.get('debug') === '1';
+            if (debugMode) {
+                document.getElementById('debugPanel').style.display = 'block';
+                
+                // Add debug logging
+                const originalConsoleLog = console.log;
+                console.log = function() {
+                    const args = Array.from(arguments);
+                    const debugContent = document.getElementById('debugContent');
+                    const message = args.map(arg => 
+                        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+                    ).join(' ');
+                    
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'debug-log';
+                    logEntry.style.borderBottom = '1px solid #444';
+                    logEntry.style.paddingBottom = '4px';
+                    logEntry.style.marginBottom = '4px';
+                    logEntry.innerHTML = `<span style="color:#aaa; font-size:0.8em;">${new Date().toLocaleTimeString()}</span> ${message}`;
+                    
+                    debugContent.appendChild(logEntry);
+                    debugContent.scrollTop = debugContent.scrollHeight;
+                    
+                    // Still call the original console.log
+                    originalConsoleLog.apply(console, args);
+                };
+                
+                // Monitor AJAX requests
+                const originalFetch = window.fetch;
+                window.fetch = function() {
+                    const url = arguments[0];
+                    console.log(`📤 Fetch request to: ${url}`);
+                    
+                    if (arguments[1] && arguments[1].body instanceof FormData) {
+                        console.log('📦 FormData keys: ' + Array.from(arguments[1].body.keys()).join(', '));
+                    }
+                    
+                    return originalFetch.apply(this, arguments).then(response => {
+                        console.log(`📥 Response from ${url}: ${response.status} ${response.statusText}`);
+                        return response;
+                    }).catch(error => {
+                        console.log(`❌ Error with ${url}: ${error}`);
+                        throw error;
+                    });
+                };
+            }
+            
+            // Check if CSS is loaded
+            const stylesLoaded = document.querySelector('link[href*="travel-expense-modal.css"]');
+            console.log('Travel expense modal CSS loaded:', !!stylesLoaded);
+            
+            // Both these buttons should work to open the modal
+            const addNewExpenseBtn = document.getElementById('addNewExpenseBtn');
+            const addFirstExpenseBtn = document.getElementById('addFirstExpenseBtn');
+            const hiddenTriggerBtn = document.getElementById('addTravelExpenseBtn');
+            
+            // Add event listeners to the visible buttons to trigger the hidden button
+            if (addNewExpenseBtn) {
+                console.log('Add New Expense button found');
+                addNewExpenseBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Triggering travel expense modal');
+                    // Programmatically click the hidden button that travel-expense-modal.js is listening for
+                    hiddenTriggerBtn.click();
+                });
+            }
+            
+            if (addFirstExpenseBtn) {
+                console.log('Add First Expense button found');
+                addFirstExpenseBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Triggering travel expense modal from First Expense button');
+                    // Programmatically click the hidden button
+                    hiddenTriggerBtn.click();
+                });
+            }
+            
+            // Add event listeners for view, edit, and delete buttons
+            document.querySelectorAll('.view-details-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const expenseId = this.getAttribute('data-id');
+                    window.location.href = 'view_expense_details.php?id=' + expenseId;
+                });
+            });
+            
+            document.querySelectorAll('.edit-expense-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const expenseId = this.getAttribute('data-id');
+                    window.location.href = 'edit_expense.php?id=' + expenseId;
+                });
+            });
+            
+            document.querySelectorAll('.delete-expense-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const expenseId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this expense?')) {
+                        window.location.href = 'delete_expense.php?id=' + expenseId;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

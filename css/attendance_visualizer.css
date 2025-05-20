@@ -1,0 +1,797 @@
+/* Custom CSS for Attendance Visualizer Page */
+
+/* Main content adjustments */
+.main-content {
+    transition: all 0.3s ease;
+    background-color: #f9fafb;
+}
+
+.main-content.collapsed {
+    margin-left: 70px;
+}
+
+/* Dashboard cards styling */
+.dashboard-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    margin-bottom: 24px;
+    border: none;
+}
+
+/* Overview Cards Styling */
+.overview-card {
+    display: flex;
+    align-items: center;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+    background-color: #ffffff;
+}
+
+.overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 18px;
+    flex-shrink: 0;
+}
+
+.icon-box i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.overview-details {
+    flex-grow: 1;
+}
+
+.overview-details h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #2d3748;
+}
+
+.overview-details p {
+    font-size: 1rem;
+    color: #4a5568;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.overview-details small {
+    font-size: 0.8rem;
+    color: #718096;
+    display: block;
+    margin-top: 6px;
+}
+
+.overview-details .progress {
+    height: 8px;
+    margin-bottom: 6px;
+    background-color: #edf2f7;
+    border-radius: 10px;
+}
+
+.overview-details .progress-bar {
+    border-radius: 10px;
+}
+
+/* Background colors for icon boxes */
+.bg-primary {
+    background-color: #3182ce;
+}
+
+.bg-success {
+    background-color: #38a169;
+}
+
+.bg-info {
+    background-color: #4299e1;
+}
+
+.bg-warning {
+    background-color: #ed8936;
+}
+
+.bg-danger {
+    background-color: #e53e3e;
+}
+
+/* Chart container styling */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    margin-top: 10px;
+}
+
+/* Card headers and titles */
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: #2d3748;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+/* Page header styling */
+.dashboard-card h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: #2d3748;
+}
+
+.dashboard-card h2 i {
+    margin-right: 10px;
+    color: #3182ce;
+}
+
+/* Filter section styling */
+.filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* New Filter Controls Styling */
+.filter-controls-wrapper {
+    width: 100%;
+    background-color: #f8fafc;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.filter-row-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+}
+
+.filter-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.range-separator {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 8px;
+    color: #718096;
+    font-weight: 500;
+    padding: 0 5px;
+}
+
+.submit-group {
+    align-self: flex-end;
+    min-width: auto;
+}
+
+.submit-group .btn-primary {
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background-color: #3182ce;
+    border-color: #3182ce;
+    box-shadow: 0 4px 6px rgba(49, 130, 206, 0.25);
+}
+
+.submit-group .btn-primary:hover {
+    background-color: #2b6cb0;
+    border-color: #2b6cb0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(49, 130, 206, 0.35);
+}
+
+.submit-group .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
+}
+
+/* Filter form styling */
+#attendanceFilterForm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#attendanceFilterForm select.form-control,
+#attendanceFilterForm input.form-control {
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+#attendanceFilterForm select.form-control:hover,
+#attendanceFilterForm input.form-control:hover {
+    border-color: #cbd5e0;
+}
+
+#attendanceFilterForm select.form-control:focus,
+#attendanceFilterForm input.form-control:focus {
+    border-color: #a3bffa;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+/* Table styling */
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.table th {
+    background-color: #f8fafc;
+    border-top: none;
+    font-weight: 600;
+    color: #4a5568;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 16px;
+    border-top: none;
+    border-bottom: 1px solid #edf2f7;
+    color: #4a5568;
+    font-size: 0.95rem;
+}
+
+.table tr:hover {
+    background-color: #f7fafc;
+}
+
+.table .badge {
+    padding: 6px 10px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    border-radius: 6px;
+}
+
+/* Status badge colors */
+.badge-success {
+    background-color: #38a169;
+    color: white;
+}
+
+.badge-danger {
+    background-color: #e53e3e;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #ed8936;
+    color: white;
+}
+
+.badge-info {
+    background-color: #4299e1;
+    color: white;
+}
+
+.badge-primary {
+    background-color: #4c51bf;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #718096;
+    color: white;
+}
+
+/* Highlight today's record */
+tr.today {
+    background-color: #ebf8ff !important;
+}
+
+tr.today td:first-child {
+    font-weight: 600;
+    position: relative;
+    color: #2b6cb0;
+}
+
+tr.today td:first-child::before {
+    content: "•";
+    color: #3182ce;
+    position: absolute;
+    left: 8px;
+    font-size: 1.8em;
+    line-height: 0.6;
+}
+
+/* Empty state styling */
+.text-center {
+    padding: 24px;
+    color: #718096;
+    font-style: italic;
+}
+
+/* Additional animation for attendance rate card */
+.overview-card:nth-child(4):hover .progress-bar {
+    animation: progressBarGrow 1s ease-in-out;
+}
+
+@keyframes progressBarGrow {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: attr(aria-valuenow);
+    }
+}
+
+/* Tooltip customization */
+.tooltip {
+    font-size: 0.8rem;
+}
+
+.tooltip-inner {
+    max-width: 250px;
+    padding: 8px 12px;
+    background-color: #2d3748;
+    border-radius: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-controls-wrapper {
+        padding: 12px;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .filter-row-group {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .filter-group {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    #rangeFilters {
+        flex-direction: column;
+        padding: 15px;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    #rangeFilters input[type="date"] {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    .range-separator {
+        width: 100%;
+        text-align: center;
+        margin: 0;
+        padding: 5px 0;
+        align-self: center;
+    }
+    
+    .range-separator::after {
+        width: 40px;
+    }
+    
+    .submit-group {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .submit-group .btn-primary {
+        width: 100%;
+    }
+
+    .overview-card {
+        padding: 15px;
+    }
+    
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        margin-right: 15px;
+    }
+    
+    .icon-box i {
+        font-size: 1.4rem;
+    }
+    
+    .overview-details h3 {
+        font-size: 1.4rem;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
+    #monthlyFilters {
+        flex-direction: column;
+        padding: 15px;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    #monthlyFilters select.form-control {
+        width: 100%;
+        min-width: 100%;
+    }
+    
+    #viewMode {
+        background-color: #fff;
+        border: 2px solid #e2e8f0;
+        font-weight: 600;
+        color: #2d3748;
+    }
+}
+
+@media (max-width: 576px) {
+    .filter-label {
+        font-size: 0.8rem;
+    }
+    
+    .overview-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .icon-box {
+        margin: 0 auto 15px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .dashboard-card h2 {
+        font-size: 1.3rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .filter-group {
+        min-width: 120px;
+    }
+    
+    .filter-row-group {
+        flex-wrap: wrap;
+    }
+}
+
+/* Table responsive fixes */
+@media (max-width: 992px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+/* Date Range Specific Styling */
+#rangeFilters {
+    display: flex;
+    align-items: center;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    padding: 12px 15px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+#rangeFilters .filter-group {
+    position: relative;
+}
+
+#rangeFilters input[type="date"] {
+    padding-right: 30px;
+    height: 42px;
+    border-color: #e2e8f0;
+    font-weight: 500;
+    color: #2d3748;
+    min-width: 180px;
+    transition: all 0.2s ease;
+}
+
+#rangeFilters input[type="date"]:hover {
+    border-color: #a0aec0;
+}
+
+#rangeFilters input[type="date"]:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.range-separator {
+    font-weight: 600;
+    color: #4a5568;
+    margin: 0 10px;
+    padding: 0 5px;
+    align-self: flex-end;
+    margin-bottom: 13px;
+    position: relative;
+}
+
+.range-separator::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    width: 12px;
+    background-color: #4a5568;
+    left: 50%;
+    bottom: -3px;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+/* Enhance focus and hover effects for all form controls */
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    border-color: #4299e1;
+}
+
+/* Calendar icon styling for date inputs */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.7;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 4px;
+    transition: all 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background-color: rgba(66, 153, 225, 0.1);
+}
+
+/* Monthly Filter Specific Styling */
+#monthlyFilters {
+    display: flex;
+    align-items: center;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    padding: 12px 15px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    gap: 15px;
+}
+
+#monthlyFilters .filter-group {
+    position: relative;
+}
+
+#monthlyFilters select.form-control {
+    height: 42px;
+    border-color: #e2e8f0;
+    font-weight: 500;
+    color: #2d3748;
+    min-width: 140px;
+    padding-right: 30px;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+}
+
+#monthlyFilters select.form-control:hover {
+    border-color: #a0aec0;
+}
+
+#monthlyFilters select.form-control:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+/* Filter control animations */
+#monthlyFilters, #rangeFilters {
+    transition: all 0.3s ease-in-out;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation for view toggle */
+#viewMode {
+    transition: all 0.2s ease;
+    border: 2px solid #e2e8f0;
+}
+
+#viewMode:hover {
+    border-color: #4299e1;
+    background-color: #f7fafc;
+}
+
+/* Add pulse effect to submit button on hover */
+.submit-group .btn-primary:hover {
+    animation: buttonPulse 1s infinite;
+}
+
+@keyframes buttonPulse {
+    0% {
+        box-shadow: 0 4px 6px rgba(49, 130, 206, 0.25);
+    }
+    50% {
+        box-shadow: 0 6px 10px rgba(49, 130, 206, 0.4);
+    }
+    100% {
+        box-shadow: 0 4px 6px rgba(49, 130, 206, 0.25);
+    }
+}
+
+/* Left panel toggle functionality */
+.left-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #2d3748;
+    color: #fff;
+    z-index: 1000;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
+
+.left-panel.collapsed {
+    width: 70px;
+}
+
+.left-panel .menu-text {
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.left-panel.collapsed .menu-text {
+    opacity: 0;
+    display: none;
+}
+
+.left-panel .toggle-btn {
+    position: absolute;
+    top: 20px;
+    right: -12px;
+    width: 24px;
+    height: 24px;
+    background-color: #fff;
+    border-radius: 50%;
+    border: none;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.left-panel .toggle-btn:hover {
+    background-color: #edf2f7;
+    transform: scale(1.1);
+}
+
+.main-content {
+    margin-left: 250px;
+    transition: all 0.3s ease;
+}
+
+.main-content.expanded {
+    margin-left: 70px;
+}
+
+/* Responsive adjustments for panel toggle */
+@media (max-width: 768px) {
+    .left-panel {
+        width: 200px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .left-panel.collapsed {
+        width: 70px;
+    }
+    
+    .left-panel.mobile-visible {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .main-content.expanded {
+        margin-left: 0;
+    }
+    
+    /* Hide the regular toggle button on mobile */
+    .left-panel .toggle-btn {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    .left-panel {
+        width: 250px;
+        transform: translateX(0);
+    }
+    
+    .left-panel.collapsed {
+        width: 70px;
+    }
+    
+    .main-content {
+        margin-left: 250px;
+    }
+    
+    .main-content.expanded {
+        margin-left: 70px;
+    }
+} 

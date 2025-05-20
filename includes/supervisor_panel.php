@@ -29,16 +29,6 @@
         <span class="menu-text">Issues & Reports</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_expenses.php' ? 'active' : ''; ?>" onclick="window.location.href='site_expenses.php'">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span class="menu-text">Site Expenses</span>
-    </div>
-    
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_progress.php' ? 'active' : ''; ?>" onclick="window.location.href='site_progress.php'">
-        <i class="fas fa-chart-line"></i>
-        <span class="menu-text">Project Progress</span>
-    </div>
-    
     <!-- Worker Management Section -->
     <div class="menu-item section-start">
         <i class="fas fa-users"></i>
@@ -71,20 +61,20 @@
         <span class="menu-text">Inventory</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'equipment_management.php' ? 'active' : ''; ?>" onclick="window.location.href='equipment_management.php'">
-        <i class="fas fa-truck-loading"></i>
-        <span class="menu-text">Equipment</span>
-    </div>
-    
     <!-- Reports Section -->
     <div class="menu-item section-start">
         <i class="fas fa-file-alt"></i>
         <span class="menu-text">Reports</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'daily_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='daily_reports.php'">
-        <i class="fas fa-calendar-day"></i>
-        <span class="menu-text">Daily Reports</span>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'view_travel_expenses.php' ? 'active' : ''; ?>" onclick="window.location.href='view_travel_expenses.php'">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span class="menu-text">Travel Expenses</span>
+    </div>
+    
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'attendance_visualizer.php' ? 'active' : ''; ?>" onclick="window.location.href='attendance_visualizer.php'">
+        <i class="fas fa-user-clock"></i>
+        <span class="menu-text">Attendance Reports</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'weekly_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='weekly_reports.php'">

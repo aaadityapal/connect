@@ -1,0 +1,406 @@
+/* Travel Expense Modal Styles */
+.travel-expenses-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Increase modal width */
+#travelExpenseModal .modal-dialog {
+    max-width: 850px; /* Increased width */
+    width: 95%;
+    margin: 1.75rem auto;
+}
+
+/* Ensure modal body doesn't overflow horizontally */
+#travelExpenseModal .modal-body {
+    padding: 1.5rem;
+    overflow-x: hidden;
+}
+
+.travel-expenses-list {
+    margin-bottom: 20px;
+}
+
+.expense-entry {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-left: 4px solid #e74c3c;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Add entry number badge */
+.expense-entry::before {
+    content: attr(data-entry-number);
+    position: absolute;
+    top: 12px;
+    left: 00px;
+    background-color: #e74c3c;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.expense-entry-number {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-right: 8px;
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.expense-entry:last-child {
+    margin-bottom: 0;
+}
+
+.expense-entry .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.expense-entry .entry-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+    margin-right: 20px;
+}
+
+.expense-entry .entry-number-text {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.expense-entry .entry-actions {
+    white-space: nowrap;
+}
+
+.expense-entry .entry-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.expense-entry .entry-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.expense-entry .detail-item {
+    margin-bottom: 5px;
+}
+
+.expense-entry .detail-label {
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.expense-entry .detail-value {
+    font-size: 0.95rem;
+}
+
+.expense-entry .entry-amount {
+    font-weight: 600;
+    color: #e74c3c;
+}
+
+.expense-entry .entry-notes {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+    font-style: italic;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.travel-expenses-summary {
+    background-color: #f1f8ff;
+    border-radius: 6px;
+    padding: 15px;
+    border-left: 4px solid #4299e1;
+}
+
+.travel-expenses-summary h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #2c5282;
+}
+
+.travel-expenses-summary p {
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.travel-expenses-summary #totalEntries {
+    font-weight: 600;
+    color: #3182ce;
+}
+
+.travel-expenses-summary #totalAmount {
+    font-weight: 600;
+    color: #e53e3e;
+}
+
+.form-row {
+    margin-bottom: 10px;
+}
+
+#travelExpenseModal .modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+}
+
+#travelExpenseModal .modal-header {
+    background-color: #e74c3c;
+    color: white;
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+#travelExpenseModal .modal-header .close {
+    color: white;
+    opacity: 0.8;
+    text-shadow: none;
+}
+
+#travelExpenseModal .modal-header .close:hover {
+    opacity: 1;
+}
+
+#travelExpenseModal .modal-title {
+    font-weight: 600;
+}
+
+#travelExpenseForm label {
+    font-weight: 500;
+    color: #495057;
+}
+
+#addExpenseEntry,
+#saveAllExpenses {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+#addExpenseEntry:hover,
+#saveAllExpenses:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+/* Make add travel expense button more round */
+#addTravelExpenseBtn {
+    border-radius: 10px;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+}
+
+#addTravelExpenseBtn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#addTravelExpenseBtn i {
+    margin-right: 2px;
+}
+
+/* Responsive styles */
+@media (max-width: 767px) {
+    .expense-entry .entry-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .expense-entry .entry-header {
+        flex-direction: column;
+    }
+    
+    .expense-entry .entry-actions {
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+    }
+    
+    .expense-entry .entry-title {
+        margin-right: 0;
+    }
+    
+    .travel-expenses-summary .row {
+        flex-direction: column;
+    }
+    
+    .travel-expenses-summary .col-md-6.text-right {
+        text-align: left !important;
+        margin-top: 5px;
+    }
+}
+
+/* Animation for new entries */
+@keyframes highlightNew {
+    0% {
+        background-color: #fff3cd;
+    }
+    100% {
+        background-color: #f8f9fa;
+    }
+}
+
+.expense-entry.new-entry {
+    animation: highlightNew 1.5s ease;
+}
+
+/* Bill Upload Styles */
+.bill-upload-container {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border-left: 4px solid #17a2b8;
+}
+
+.bill-upload-container label {
+    font-weight: 500;
+    color: #17a2b8;
+}
+
+.custom-file {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.custom-file-input {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: calc(1.5em + 0.75rem + 2px);
+    margin: 0;
+    opacity: 0;
+}
+
+.custom-file-label {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-file-label::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    display: block;
+    height: calc(1.5em + 0.75rem);
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
+    color: #495057;
+    content: "Browse";
+    background-color: #e9ecef;
+    border-left: inherit;
+    border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.bill-preview {
+    margin-top: 10px;
+}
+
+.bill-file-name {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.remove-bill-btn {
+    padding: 0.1rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.bill-thumbnail {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.bill-thumbnail img {
+    max-width: 100%;
+    max-height: 150px;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+}
+
+.pdf-icon {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.pdf-icon i {
+    margin-right: 8px;
+}
+
+.bill-file-info {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px dashed #dee2e6;
+}
+
+.bill-file-info .badge {
+    font-weight: normal;
+    padding: 5px 8px;
+}
+
+.expense-entry .bill-file-info {
+    grid-column: 1 / -1; /* Make it span all columns */
+    margin-top: 10px;
+    border-top: 1px dashed #dee2e6;
+    padding-top: 5px;
+}
+
+/* Animation for file upload validation */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.custom-file-input.is-invalid ~ .custom-file-label {
+    border-color: #dc3545;
+    animation: shake 0.6s ease;
+} 

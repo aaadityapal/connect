@@ -1,17 +1,25 @@
 <?php
 // Include database connection
-require_once 'config/db_connect.php'; // try the correct path for your db connection
+include_once('includes/db_connect.php');
 
+// Add bill_file_path column to travel_expenses table if it doesn't exist
 try {
-    // Add the leave_penalty_days column
-    $alterQuery = "ALTER TABLE salary_penalties ADD COLUMN leave_penalty_days float DEFAULT 0 AFTER penalty_days";
-    
-    if ($conn->query($alterQuery)) {
-        echo "Success: The leave_penalty_days column has been added to the salary_penalties table.";
+    // Check if column exists
+    $result = $conn->query("SHOW COLUMNS FROM travel_expenses LIKE 'bill_file_path'");
+    $exists = ($result->num_rows > 0);
+
+    if (!$exists) {
+        // Add the column
+        $query = "ALTER TABLE travel_expenses ADD COLUMN bill_file_path VARCHAR(255) DEFAULT NULL";
+        if ($conn->query($query)) {
+            echo "Column 'bill_file_path' added successfully to travel_expenses table.";
+        } else {
+            echo "Error adding column: " . $conn->error;
+        }
     } else {
-        echo "Error: " . $conn->error;
+        echo "Column 'bill_file_path' already exists in travel_expenses table.";
     }
 } catch (Exception $e) {
-    echo "Exception: " . $e->getMessage();
+    echo "Error: " . $e->getMessage();
 }
 ?> 

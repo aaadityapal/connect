@@ -153,10 +153,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
     $current_date = date('Y-m-d');
     $current_time = date('H:i:s');
+    $current_datetime = date('Y-m-d H:i:s');
     $ip_address = getUserIP();
     $device_info = getDeviceInfo();
     $status = 'present';
-    $created_at = date('Y-m-d H:i:s');
+    $created_at = $current_datetime;
     
     // Get user's shift details
     $shift_details = getUserShiftDetails($conn, $user_id);
@@ -297,7 +298,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ) VALUES (
                 ?, 
                 ?, 
-                TIME(?), 
                 ?, 
                 ?, 
                 ?, 
@@ -305,7 +305,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?, 
                 ?, 
                 ?, 
-                TIME(?),
+                ?, 
+                ?,
                 ?,
                 ?,
                 ?,
@@ -317,6 +318,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $shift_time = $shift_details['start_time'] . '-' . $shift_details['end_time'];
             $weekly_offs = $shift_details['weekly_offs'];
             $auto_punch_out = $shift_details['end_time'];
+            
+            // Log the punch in time to debug the issue
+            error_log("Punch In Debug - Current Time: " . $current_time);
             
             $stmt->bind_param("issssssssssisddd", 
                 $user_id, 
@@ -350,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Format response message
-                $message = 'Punched in successfully at ' . date('h:i A', strtotime($current_time));
+                $message = 'Punched in successfully at ' . date('h:i:s A', strtotime($current_time));
                 if ($is_weekly_off) {
                     $message .= ' (Working on Weekly Off)';
                 }
@@ -358,6 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode([
                     'success' => true, 
                     'message' => $message,
+                    'punch_time' => $current_time,
                     'shift_time' => "Shift: " . $shift_details['shift_name'] . " (" . 
                                   date('h:i A', strtotime($shift_details['start_time'])) . 
                                   " - " . date('h:i A', strtotime($shift_details['end_time'])) . ")"
@@ -522,7 +527,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query = "UPDATE attendance SET punch_out = ?, working_hours = ?, overtime_hours = ?, work_report = ?, modified_at = ?, modified_by = ?, punch_out_photo = ?, punch_out_latitude = ?, punch_out_longitude = ?, punch_out_accuracy = ? WHERE user_id = ? AND date = ? AND punch_out IS NULL";
             
             $stmt = $conn->prepare($query);
-            $modified_at = date('Y-m-d H:i:s');
+            $modified_at = $current_datetime;
             $work_report = trim($data['work_report']);
             
             // Get location data if provided
@@ -532,6 +537,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Add debugging information
             error_log("Punch Out Debug - Query: " . $query);
+            error_log("Punch Out Debug - Current Time: " . $current_time);
             error_log("Punch Out Debug - Work Report: " . substr($work_report, 0, 50) . "...");
             error_log("Punch Out Debug - Photo Path: " . ($punch_out_photo ? $punch_out_photo : "None"));
             error_log("Punch Out Debug - Location: Lat: " . ($punch_out_latitude ?? 'NULL') . ", Long: " . ($punch_out_longitude ?? 'NULL') . ", Accuracy: " . ($punch_out_accuracy ?? 'NULL'));
@@ -543,30 +549,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       ", current_date=" . $current_date);
             
             // Fix any potential issues with data types and make sure all parameters are properly set
-            $current_time = $current_time; // Time format
-            $total_time = $time_details['total_time']; // Time format
-            $overtime = $time_details['overtime']; // Time format
-            $work_report = $work_report; // String
-            $modified_at = $modified_at; // String
-            $modified_by = $user_id; // Integer
-            $photo_path = $punch_out_photo ?: null; // String or null
+            $current_time = $current_time;
+            $total_time = $time_details['total_time'];
+            $overtime = $time_details['overtime'];
+            $work_report = $work_report;
+            $modified_by = $user_id;
+            $photo_path = $punch_out_photo ?: null;
             
             // Make sure we have correct parameter types for bind_param
             // s=string, i=integer, d=double, b=blob
             try {
                 $stmt->bind_param("sssssisdddis", 
-                $current_time,
+                    $current_time,
                     $total_time,
                     $overtime,
-                $work_report,
-                $modified_at,
+                    $work_report,
+                    $modified_at,
                     $modified_by,
                     $photo_path,
                     $punch_out_latitude,
                     $punch_out_longitude,
                     $punch_out_accuracy,
-                    $user_id, // WHERE user_id
-                    $current_date // WHERE date
+                    $user_id,
+                    $current_date
                 );
                 
                 error_log("Punch Out Debug - After bind_param setup");
@@ -634,7 +639,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Format response message
-                $message = 'Punched out successfully at ' . date('h:i A', strtotime($current_time));
+                $message = 'Punched out successfully at ' . date('h:i:s A', strtotime($current_time));
                 $time_message = sprintf(
                     "Regular hours: %s\n%s",
                     $time_details['regular_time'],
@@ -644,6 +649,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode([
                     'success' => true, 
                     'message' => $message,
+                    'punch_time' => $current_time,
                     'working_hours' => $time_message,
                     'has_overtime' => $time_details['has_overtime'],
                     'work_report' => $work_report,

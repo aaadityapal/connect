@@ -560,3 +560,51 @@ Stack trace:
 [15-May-2025 17:21:36 Asia/Kolkata] 2025-05-15 17:21:36 - Inventory media record saved to database - {"media_id":"12"}
 [15-May-2025 17:21:36 Asia/Kolkata] 2025-05-15 17:21:36 - Transaction committed successfully
 [15-May-2025 17:21:36 Asia/Kolkata] 2025-05-15 17:21:36 - Save process completed successfully - {"event_id":"32"}
+[21-May-2025 14:48:21 Europe/Berlin] 2025-05-21 14:48:21 - Starting calendar event save process
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Database connection included
+[21-May-2025 18:18:21 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Session started - {"user_id":21}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Started database transaction
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-07","user_id":21}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Event created successfully - {"event_id":"33"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Processing work progress entries - {"count":1}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Processing work progress entry - {"number":1,"category":"structural","type":"foundation","done":"yes"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Work progress entry saved successfully - {"work_id":"10","number":1}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Processing work media files - {"work_id":"10","count":2}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_10\/"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Processing work media file - {"work_id":"10","file_name":"SampleVideo_1280x720_1mb (1).mp4","file_type":"video\/mp4","file_size":1055736}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb (1)_1747831701_9459.mp4","saved_as":"682dcb95c4eef_1747831701.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_10\/682dcb95c4eef_1747831701.mp4"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_10\/682dcb95c4eef_1747831701.mp4","filename":"SampleVideo_1280x720_1mb (1)_1747831701_9459.mp4","original_name":"SampleVideo_1280x720_1mb (1).mp4"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Work media record saved to database - {"media_id":"14"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Processing work media file - {"work_id":"10","file_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg","file_type":"image\/jpeg","file_size":3004346}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1747831701_1955.jpeg","saved_as":"682dcb95c56bd_1747831701.jpeg","file_type":"image\/jpeg","file_size":3004346,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_10\/682dcb95c56bd_1747831701.jpeg"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_10\/682dcb95c56bd_1747831701.jpeg","filename":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1747831701_1955.jpeg","original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Work media record saved to database - {"media_id":"15"}
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Transaction committed successfully
+[21-May-2025 18:18:21 Asia/Kolkata] 2025-05-21 18:18:21 - Save process completed successfully - {"event_id":"33"}
+[21-May-2025 15:10:28 Europe/Berlin] 2025-05-21 15:10:28 - Starting calendar event save process
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Database connection included
+[21-May-2025 18:40:28 Asia/Kolkata] Error [8]: session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\backend\save_calendar_event.php on line 32
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Session started - {"user_id":21}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Started database transaction
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-06","user_id":21}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Event created successfully - {"event_id":"34"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Processing work progress entries - {"count":1}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Processing work progress entry - {"number":1,"category":"structural","type":"foundation","done":"yes"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Work progress entry saved successfully - {"work_id":"11","number":1}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Processing work media files - {"work_id":"11","count":2}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_11\/"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Processing work media file - {"work_id":"11","file_name":"SampleVideo_1280x720_1mb (1).mp4","file_type":"video\/mp4","file_size":1055736}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb (1)_1747833028_9727.mp4","saved_as":"682dd0c4b0808_1747833028.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_11\/682dd0c4b0808_1747833028.mp4"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_11\/682dd0c4b0808_1747833028.mp4","filename":"SampleVideo_1280x720_1mb (1)_1747833028_9727.mp4","original_name":"SampleVideo_1280x720_1mb (1).mp4"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Work media record saved to database - {"media_id":"16"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Processing work media file - {"work_id":"11","file_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg","file_type":"image\/jpeg","file_size":3004346}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1747833028_3224.jpeg","saved_as":"682dd0c4b3149_1747833028.jpeg","file_type":"image\/jpeg","file_size":3004346,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_11\/682dd0c4b3149_1747833028.jpeg"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_11\/682dd0c4b3149_1747833028.jpeg","filename":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1747833028_3224.jpeg","original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Work media record saved to database - {"media_id":"17"}
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Transaction committed successfully
+[21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Save process completed successfully - {"event_id":"34"}

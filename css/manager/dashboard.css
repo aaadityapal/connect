@@ -1,0 +1,774 @@
+/* Site Manager Dashboard Styles */
+
+/* Base Layout */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --body-bg: #f5f8fa;
+    --card-bg: #ffffff;
+    --border-color: #e6e8eb;
+    --text-color: #333;
+    --text-muted: #6c757d;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.10);
+    --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    --transition-speed: 0.3s;
+    
+    /* Professional color scheme for sidebar */
+    --sidebar-bg: #1a3a63;
+    --sidebar-hover: rgba(255, 255, 255, 0.1);
+    --sidebar-active: #2c5282;
+    --sidebar-text: #f0f4f8;
+    --sidebar-muted: #a0aec0;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+    background-color: var(--body-bg);
+    color: var(--text-color);
+}
+
+.main-container {
+    display: flex;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Overlay for mobile */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 900;
+    display: none;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+}
+
+.overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Left Panel / Sidebar Styles */
+.left-panel {
+    width: 260px;
+    height: 100vh;
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    transition: all var(--transition-speed) ease;
+    box-shadow: var(--shadow);
+    z-index: 10000;
+}
+
+.left-panel.collapsed {
+    width: 70px;
+}
+
+.toggle-btn {
+    position: absolute;
+    right: -12px;
+    top: 20px;
+    width: 24px;
+    height: 24px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform var(--transition-speed) ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.left-panel.collapsed .toggle-btn i {
+    transform: rotate(180deg);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.menu-item:hover {
+    background-color: var(--sidebar-hover);
+}
+
+.menu-item.active {
+    background-color: var(--sidebar-active);
+}
+
+.menu-item i {
+    font-size: 1.2rem;
+    min-width: 20px;
+    margin-right: 15px;
+}
+
+.menu-text {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.left-panel.collapsed .menu-text {
+    display: none;
+}
+
+.menu-item.section-start {
+    border-top: 1px solid var(--sidebar-border);
+    margin-top: 5px;
+    padding-top: 12px;
+    cursor: default;
+    color: var(--sidebar-muted);
+}
+
+.menu-item.section-start:hover {
+    background-color: transparent;
+}
+
+.logout-item {
+    margin-top: 20px;
+    color: #ff7a89;
+    margin-bottom: 20px;
+}
+
+/* Hamburger Menu */
+.hamburger-menu {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1050;
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.hamburger-menu i {
+    font-size: 1.5rem;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 20px;
+    transition: margin-left var(--transition-speed) ease;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.main-content.expanded {
+    margin-left: 70px;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    margin-bottom: 25px;
+}
+
+.welcome-section h1 {
+    font-size: 1.8rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.welcome-section p {
+    color: var(--text-muted);
+    margin: 5px 0 0 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.header-actions .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+}
+
+.dashboard-card .card-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: var(--dark-color);
+}
+
+/* Stats Cards */
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: white;
+}
+
+.stat-icon i {
+    font-size: 1.5rem;
+}
+
+.stat-content h4 {
+    font-size: 1.8rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.stat-content p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Progress Section */
+.progress-container {
+    margin-bottom: 10px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.progress-bar {
+    height: 8px;
+    border-radius: 4px;
+    background-color: var(--border-color);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+}
+
+/* Recent Activities */
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.activity-item {
+    display: flex;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.activity-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 15px;
+}
+
+/* Project Cards */
+.project-card {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.project-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.project-title {
+    font-weight: 500;
+    margin: 0;
+}
+
+.project-status {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.project-details {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.project-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.project-stat {
+    text-align: center;
+}
+
+.project-stat-value {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.project-stat-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Supervisor List */
+.supervisor-list {
+    margin-top: 15px;
+}
+
+.supervisor-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.supervisor-item i {
+    margin-right: 10px;
+    color: var(--success-color);
+}
+
+/* Status Colors */
+.status-pending {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.status-progress {
+    background-color: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+}
+
+.status-completed {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+}
+
+.status-hold {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+}
+
+.status-delayed {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+/* Notification Badge */
+.notification-badge {
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .left-panel {
+        width: 70px;
+    }
+    
+    .left-panel .menu-text {
+        display: none;
+    }
+    
+    .main-content {
+        margin-left: 70px;
+    }
+    
+    .left-panel.expanded {
+        width: 260px;
+    }
+    
+    .left-panel.expanded .menu-text {
+        display: inline;
+    }
+}
+
+@media (max-width: 768px) {
+    .hamburger-menu {
+        display: flex;
+    }
+    
+    .left-panel {
+        width: 0;
+        left: -260px;
+    }
+    
+    .left-panel.mobile-open {
+        width: 260px;
+        left: 0;
+    }
+    
+    .left-panel.mobile-open .menu-text {
+        display: inline;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding-top: 60px;
+    }
+    
+    .toggle-btn {
+        display: none;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-actions {
+        margin-top: 15px;
+    }
+}
+
+/* Calendar Section */
+.calendar-widget {
+    overflow: hidden;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.calendar-nav button {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav button:hover {
+    background-color: var(--light-color);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.8rem;
+    padding: 5px 0;
+    color: var(--text-muted);
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.calendar-day:hover {
+    background-color: var(--light-color);
+}
+
+.calendar-day.today {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.calendar-day.has-events::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--danger-color);
+    margin-top: 3px;
+}
+
+/* Task List */
+.task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-checkbox {
+    margin-right: 10px;
+}
+
+.task-content {
+    flex: 1;
+}
+
+.task-title {
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+.task-due {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.task-priority {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 10px;
+}
+
+.priority-high {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+.priority-medium {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.priority-low {
+    background-color: rgba(13, 202, 240, 0.15);
+    color: #0dcaf0;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.quick-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: var(--light-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-action-card:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.quick-action-icon {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.quick-action-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Greeting Section Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-section {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Custom scrollbar for main content only */
+.main-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.main-content::-webkit-scrollbar-track {
+    background: var(--light-color);
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-color);
+}
+
+/* Hide scrollbar but allow scrolling */
+@media (max-height: 700px) {
+    .left-panel {
+        overflow-y: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    .left-panel::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none; /* Chrome and Safari */
+    }
+}
+
+/* Mobile specific left panel styling */
+@media (max-width: 768px) {
+    .left-panel.mobile-open {
+        width: 260px;
+        left: 0;
+        overflow-y: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    .left-panel.mobile-open::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none; /* Chrome and Safari */
+    }
+}
+
+/* Allow scrolling but hide scrollbar for smaller screens */
+.left-panel.needs-scrolling {
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.left-panel.needs-scrolling::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; /* Chrome and Safari */
+} 

@@ -121,6 +121,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $existing_record = $result->fetch_assoc();
     $check_stmt->close();
     
+    // Get user's shift information from user_shifts table
+    $shift_query = "SELECT us.*, s.start_time, s.end_time 
+                   FROM user_shifts us
+                   JOIN shifts s ON us.shift_id = s.id
+                   WHERE us.user_id = ? 
+                   AND us.effective_from <= ?
+                   AND (us.effective_to IS NULL OR us.effective_to >= ?)
+                   ORDER BY us.effective_from DESC 
+                   LIMIT 1";
+    
+    $shift_stmt = $conn->prepare($shift_query);
+    
+    if (!$shift_stmt) {
+        error_log("Failed to prepare shift query: " . $conn->error);
+        // Continue with default shift if query fails
+        $shift_id = null;
+        $weekly_offs = 'Saturday,Sunday';
+        $standard_hours = 8; // Default
+    } else {
+        $shift_stmt->bind_param("iss", $user_id, $current_date, $current_date);
+        $shift_stmt->execute();
+        $shift_result = $shift_stmt->get_result();
+        
+        if ($shift_result->num_rows > 0) {
+            $shift_data = $shift_result->fetch_assoc();
+            $shift_id = $shift_data['shift_id'];
+            $weekly_offs = $shift_data['weekly_offs'];
+            
+            // Calculate standard hours from shift start and end times
+            $shift_start = strtotime($shift_data['start_time']);
+            $shift_end = strtotime($shift_data['end_time']);
+            // Handle overnight shifts
+            if ($shift_end <= $shift_start) {
+                $shift_end += 86400; // Add 24 hours
+            }
+            $standard_hours = ($shift_end - $shift_start) / 3600;
+        } else {
+            // No shift assigned, use defaults
+            $shift_id = null;
+            $weekly_offs = 'Saturday,Sunday';
+            $standard_hours = 8; // Default
+        }
+        
+        $shift_stmt->close();
+    }
+    
     // Process punch in
     if ($punch_type === 'in') {
         if ($existing_record) {
@@ -151,8 +197,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 punch_in_photo, 
                 punch_in_latitude, 
                 punch_in_longitude, 
-                punch_in_accuracy
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                punch_in_accuracy,
+                shifts_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             $insert_stmt = $conn->prepare($insert_query);
             
@@ -164,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status = 'present';
             
             $insert_stmt->bind_param(
-                "isssssssssssssss",
+                "isssssssssssssssi",
                 $user_id,
                 $current_date,
                 $current_time,
@@ -180,7 +227,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $photo_filename,
                 $latitude,
                 $longitude,
-                $accuracy
+                $accuracy,
+                $shift_id
             );
             
             if ($insert_stmt->execute()) {
@@ -190,6 +238,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'time' => date('h:i A', strtotime($current_time)),
                     'date' => date('d M Y', strtotime($current_date))
                 ];
+                
+                // Update session state to reflect the punch-in
+                $_SESSION['punched_in'] = true;
+                $_SESSION['attendance_completed'] = false;
             } else {
                 $response = [
                     'status' => 'error',
@@ -209,15 +261,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
+            // Get work report if provided
+            $work_report = isset($_POST['work_report']) ? $_POST['work_report'] : 'Punched out';
+            
             // Calculate working hours
             $punch_in_time = strtotime($existing_record['date'] . ' ' . $existing_record['punch_in']);
             $punch_out_time = strtotime($current_date . ' ' . $current_time);
-            $working_hours = round(($punch_out_time - $punch_in_time) / 3600, 2); // Convert seconds to hours
+            $seconds_worked = $punch_out_time - $punch_in_time;
             
-            // Get shift details (assumed to be retrieved from another table)
-            // For demo purposes, assuming 8-hour shift
-            $standard_hours = 8;
-            $overtime_hours = max(0, $working_hours - $standard_hours);
+            // Format working hours as HH:MM:SS for better precision
+            $hours = floor($seconds_worked / 3600);
+            $minutes = floor(($seconds_worked % 3600) / 60);
+            $seconds = $seconds_worked % 60;
+            $working_hours_formatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+            
+            // Also calculate decimal hours for compatibility
+            $working_hours_decimal = round($seconds_worked / 3600, 2);
+            
+            // Use shift information if available, otherwise use default
+            if (!empty($existing_record['shifts_id'])) {
+                // If there's already a shift ID in the record, use that one
+                $existing_shift_id = $existing_record['shifts_id'];
+                
+                // Query to get shift details
+                $shift_details_query = "SELECT s.start_time, s.end_time 
+                                      FROM shifts s
+                                      WHERE s.id = ?";
+                $shift_details_stmt = $conn->prepare($shift_details_query);
+                
+                if ($shift_details_stmt) {
+                    $shift_details_stmt->bind_param("i", $existing_shift_id);
+                    $shift_details_stmt->execute();
+                    $shift_details_result = $shift_details_stmt->get_result();
+                    
+                    if ($shift_details_result->num_rows > 0) {
+                        $shift_details = $shift_details_result->fetch_assoc();
+                        
+                        // Calculate standard hours from shift
+                        $shift_start = strtotime($shift_details['start_time']);
+                        $shift_end = strtotime($shift_details['end_time']);
+                        // Handle overnight shifts
+                        if ($shift_end <= $shift_start) {
+                            $shift_end += 86400; // Add 24 hours
+                        }
+                        $standard_hours = ($shift_end - $shift_start) / 3600;
+                    }
+                    
+                    $shift_details_stmt->close();
+                }
+            }
+            
+            // Calculate overtime based on standard hours
+            $overtime_seconds = max(0, $seconds_worked - ($standard_hours * 3600));
+            $overtime_hours = floor($overtime_seconds / 3600);
+            $overtime_minutes = floor(($overtime_seconds % 3600) / 60);
+            $overtime_seconds_remainder = $overtime_seconds % 60;
+            $overtime_hours_formatted = sprintf('%02d:%02d:%02d', $overtime_hours, $overtime_minutes, $overtime_seconds_remainder);
+            
+            // Also calculate decimal overtime for compatibility
+            $overtime_hours_decimal = round($overtime_seconds / 3600, 2);
             
             // Update the attendance record
             $update_query = "UPDATE attendance SET 
@@ -228,7 +330,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 punch_out_accuracy = ?, 
                 punch_out_address = ?, 
                 working_hours = ?, 
-                overtime_hours = ?, 
+                overtime_hours = ?,
+                work_report = ?, 
                 modified_at = ?
                 WHERE user_id = ? AND date = ?";
             
@@ -239,16 +342,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
+            // Debug - log the values
+            error_log("Punch Out Debug - Values: time=$current_time, photo=$photo_filename, lat=$latitude, lng=$longitude, acc=$accuracy, addr=$address, wh=$working_hours_formatted, wh_decimal=$working_hours_decimal, oh=$overtime_hours_formatted, oh_decimal=$overtime_hours_decimal, wr=" . substr($work_report, 0, 50) . "..., dt=$current_datetime, uid=$user_id, date=$current_date, shift_id=" . ($shift_id ?? 'NULL'));
+            
+            // Fix the parameter binding to match the SQL query
+            // s=string, d=double, i=integer
             $update_stmt->bind_param(
-                "sssssddsssi",
+                "ssddssddssis",
                 $current_time,
                 $photo_filename,
                 $latitude,
                 $longitude,
                 $accuracy,
                 $address,
-                $working_hours,
-                $overtime_hours,
+                $working_hours_formatted,
+                $overtime_hours_formatted,
+                $work_report,
                 $current_datetime,
                 $user_id,
                 $current_date
@@ -260,9 +369,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'message' => 'Punch out successful',
                     'time' => date('h:i A', strtotime($current_time)),
                     'date' => date('d M Y', strtotime($current_date)),
-                    'working_hours' => $working_hours,
-                    'overtime_hours' => $overtime_hours
+                    'working_hours' => $working_hours_formatted,
+                    'working_hours_decimal' => $working_hours_decimal,
+                    'overtime_hours' => $overtime_hours_formatted,
+                    'overtime_hours_decimal' => $overtime_hours_decimal
                 ];
+                
+                // Update session state to reflect the punch-out
+                $_SESSION['punched_in'] = false;
+                $_SESSION['attendance_completed'] = true;
             } else {
                 $response = [
                     'status' => 'error',

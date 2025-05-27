@@ -43,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'Senior Manager (Site)', 
                 'Senior Manager (Marketing)', 
                 'Senior Manager (Sales)',
-                'Site Supervisor'
+                'Site Supervisor',
+                'Site Manager'
             ];
 
             if (in_array($user['role'], $senior_roles)) {
@@ -69,6 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         break;
                     case 'Site Supervisor':
                         header('Location: site_supervisor_dashboard.php');
+                        break;
+                    case 'Site Manager':
+                        header('Location: site_manager_dashboard.php');
                         break;
                 }
             } else {

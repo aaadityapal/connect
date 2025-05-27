@@ -764,6 +764,167 @@ function createModalElements() {
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+            
+            <!-- Targets Section - Read Only -->
+            <div class="ce-work-targets-section">
+                <div class="ce-work-targets-header">
+                    <h6><i class="fas fa-bullseye"></i> Targets Section</h6>
+                    <p class="ce-work-targets-description">Review your construction targets</p>
+                </div>
+                
+                <div class="ce-work-targets-container">
+                    <!-- Monthly Targets -->
+                    <div class="ce-work-targets-group">
+                        <div class="ce-work-targets-group-header">
+                            <i class="fas fa-calendar-alt"></i> Monthly Targets
+                            <div class="ce-work-targets-period-selector">
+                                <select class="ce-work-targets-period-dropdown" data-period-type="monthly">
+                                    <option value="previous">Previous Month</option>
+                                    <option value="present" selected>Present Month</option>
+                                    <option value="next">Next Month</option>
+                                </select>
+                            </div>
+                        </div>
+                        <ul class="ce-work-targets-list" data-period-type="monthly" data-period="present">
+                            <li>Complete foundation work for entire building</li>
+                            <li>Finish structural framework for floors 1-3</li>
+                            <li>Install main electrical panels and distribution</li>
+                            <li>Complete plumbing rough-in for ground floor</li>
+                            <li>Finish exterior wall construction</li>
+                            <li>Begin window installation on completed floors</li>
+                            <li>Set up permanent site security measures</li>
+                            <li>Complete drainage system installation</li>
+                            <li>Begin HVAC ductwork installation</li>
+                            <li>Complete monthly safety inspection and reporting</li>
+                        </ul>
+                        <ul class="ce-work-targets-list" data-period-type="monthly" data-period="previous" style="display: none;">
+                            <li>Site preparation and excavation completed</li>
+                            <li>Temporary facilities and utilities set up</li>
+                            <li>Initial foundation layout and marking</li>
+                            <li>Procurement of primary building materials</li>
+                            <li>Approval of final architectural drawings</li>
+                            <li>Soil testing and foundation preparation</li>
+                            <li>Security fencing and site access control</li>
+                            <li>Environmental compliance measures implemented</li>
+                            <li>Subcontractor agreements finalized</li>
+                            <li>Initial site drainage systems installed</li>
+                        </ul>
+                        <ul class="ce-work-targets-list" data-period-type="monthly" data-period="next" style="display: none;">
+                            <li>Begin interior wall framing on all floors</li>
+                            <li>Complete roof structure and waterproofing</li>
+                            <li>Install electrical wiring in completed sections</li>
+                            <li>Begin plumbing fixture installation</li>
+                            <li>Start interior drywall installation</li>
+                            <li>Complete all window and exterior door installation</li>
+                            <li>Begin exterior finishing and cladding</li>
+                            <li>Install fire suppression systems</li>
+                            <li>Begin elevator shaft construction</li>
+                            <li>Prepare for initial building inspection</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Weekly Targets -->
+                    <div class="ce-work-targets-group">
+                        <div class="ce-work-targets-group-header">
+                            <i class="fas fa-calendar-week"></i> Weekly Targets
+                            <div class="ce-work-targets-period-selector">
+                                <select class="ce-work-targets-period-dropdown" data-period-type="weekly">
+                                    <option value="previous">Previous Week</option>
+                                    <option value="present" selected>Present Week</option>
+                                    <option value="next">Next Week</option>
+                                </select>
+                            </div>
+                        </div>
+                        <ul class="ce-work-targets-list" data-period-type="weekly" data-period="present">
+                            <li>Pour concrete for section B foundation</li>
+                            <li>Complete electrical wiring for ground floor</li>
+                            <li>Install temporary power distribution boxes</li>
+                            <li>Complete brick laying for east wall</li>
+                            <li>Install scaffolding for roof work</li>
+                            <li>Complete material inventory and ordering</li>
+                            <li>Conduct weekly safety meeting and training</li>
+                            <li>Finish waterproofing basement areas</li>
+                            <li>Begin installation of ground floor windows</li>
+                            <li>Complete weekly progress report documentation</li>
+                        </ul>
+                        <ul class="ce-work-targets-list" data-period-type="weekly" data-period="previous" style="display: none;">
+                            <li>Excavation of foundation area completed</li>
+                            <li>Rebar installation for foundation sections A and C</li>
+                            <li>Form work for concrete pouring prepared</li>
+                            <li>Material delivery scheduling and coordination</li>
+                            <li>Site drainage temporary measures implemented</li>
+                            <li>Safety barriers and signage installed</li>
+                            <li>Equipment maintenance and inspection</li>
+                            <li>Subcontractor coordination meetings</li>
+                            <li>Quality control checks on delivered materials</li>
+                            <li>Site cleanup and waste management</li>
+                        </ul>
+                        <ul class="ce-work-targets-list" data-period-type="weekly" data-period="next" style="display: none;">
+                            <li>Begin electrical conduit installation on first floor</li>
+                            <li>Start plumbing rough-in for second floor</li>
+                            <li>Complete concrete curing and form removal</li>
+                            <li>Begin west wall brick laying</li>
+                            <li>Install roof trusses and supports</li>
+                            <li>Begin HVAC ductwork on ground floor</li>
+                            <li>Schedule inspections for completed foundation</li>
+                            <li>Prepare for delivery of window units</li>
+                            <li>Begin interior framing on ground floor</li>
+                            <li>Update project timeline and resource allocation</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Daily Targets -->
+                    <div class="ce-work-targets-group">
+                        <div class="ce-work-targets-group-header">
+                            <i class="fas fa-calendar-day"></i> Daily Targets
+                            <div class="ce-work-targets-period-selector">
+                                <select class="ce-work-targets-period-dropdown" data-period-type="daily">
+                                    <option value="previous">Previous Day</option>
+                                    <option value="present" selected>Today</option>
+                                    <option value="next">Tomorrow</option>
+                                </select>
+                            </div>
+                        </div>
+                        <ul class="ce-work-targets-list" data-period-type="daily" data-period="present">
+                            <li>Mix and pour 20 cubic meters of concrete</li>
+                            <li>Install 10 meters of safety railing</li>
+                            <li>Complete waterproofing for 30 square meters</li>
+                            <li>Paint 50 square meters of completed walls</li>
+                            <li>Clean and organize work area before day end</li>
+                            <li>Inspect and maintain all power tools</li>
+                            <li>Complete daily safety checklist</li>
+                            <li>Coordinate material deliveries for tomorrow</li>
+                            <li>Document daily progress with photos</li>
+                            <li>Brief team on next day's priorities</li>
+                        </ul>
+                        <ul class="ce-work-targets-list" data-period-type="daily" data-period="previous" style="display: none;">
+                            <li>Completed form work inspection and adjustments</li>
+                            <li>Finalized rebar placement and secured ties</li>
+                            <li>Prepared concrete pump and equipment</li>
+                            <li>Completed safety briefing for concrete pour</li>
+                            <li>Organized labor teams for efficient workflow</li>
+                            <li>Verified material quantities for day's tasks</li>
+                            <li>Checked weather forecast and made contingency plans</li>
+                            <li>Prepared tools and equipment for waterproofing</li>
+                            <li>Cleared access paths for material transport</li>
+                            <li>Updated daily log and task assignments</li>
+                        </ul>
+                        <ul class="ce-work-targets-list" data-period-type="daily" data-period="next" style="display: none;">
+                            <li>Begin concrete curing process and monitoring</li>
+                            <li>Start electrical conduit installation in section A</li>
+                            <li>Continue brick laying on east wall section</li>
+                            <li>Prepare forms for next concrete pour</li>
+                            <li>Install plumbing sleeves before floor pour</li>
+                            <li>Conduct quality inspection on completed work</li>
+                            <li>Prepare staging area for window delivery</li>
+                            <li>Apply primer to prepared wall surfaces</li>
+                            <li>Set up laser levels for next day's work</li>
+                            <li>Review and update material requirements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
             <div class="ce-work-form-row">
                 <div class="ce-work-form-group">
                     <label><i class="fas fa-th-list"></i> Work Category</label>
@@ -1273,6 +1434,21 @@ function initializeEventHandlers() {
                     updateInventoryEntryNumbers();
                 }, 300);
             }
+        }
+    });
+    
+    // Initialize the target period dropdown selectors
+    document.addEventListener('click', function(e) {
+        // Delegate the click event for dynamically added elements
+        if (e.target && e.target.classList.contains('ce-work-targets-period-dropdown')) {
+            handleTargetPeriodChange(e.target);
+        }
+    });
+    
+    // Also bind change event for direct selection
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.classList.contains('ce-work-targets-period-dropdown')) {
+            handleTargetPeriodChange(e.target);
         }
     });
 }
@@ -3445,3 +3621,33 @@ window.debugCalendarEvents = function() {
 };
 
 console.log('Calendar Events Modal JS loaded successfully');
+
+/**
+ * Handle target period dropdown change
+ * @param {HTMLElement} dropdown - The dropdown that was changed
+ */
+function handleTargetPeriodChange(dropdown) {
+    const periodType = dropdown.getAttribute('data-period-type');
+    const selectedPeriod = dropdown.value;
+    const targetGroup = dropdown.closest('.ce-work-targets-group');
+    
+    // Hide all lists for this period type
+    const allLists = targetGroup.querySelectorAll(`.ce-work-targets-list[data-period-type="${periodType}"]`);
+    allLists.forEach(list => {
+        list.style.display = 'none';
+        list.style.opacity = '0';
+    });
+    
+    // Show the selected period list
+    const selectedList = targetGroup.querySelector(`.ce-work-targets-list[data-period-type="${periodType}"][data-period="${selectedPeriod}"]`);
+    if (selectedList) {
+        selectedList.style.display = 'block';
+        // Use setTimeout to create a smooth fade-in effect
+        setTimeout(() => {
+            selectedList.style.opacity = '1';
+        }, 10);
+    }
+    
+    // Log the change for debugging
+    console.log(`Changed ${periodType} targets to show: ${selectedPeriod}`);
+}

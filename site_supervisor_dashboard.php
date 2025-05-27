@@ -253,6 +253,40 @@ if (isset($_SESSION['user_id'])) {
             animation: pulse-animation 2s infinite;
         }
         
+        /* Pending expense indicator styles */
+        .pending-expense-indicator {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 4px 8px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid #f8d7da;
+        }
+        
+        .pending-amount {
+            font-weight: bold;
+            color: #dc3545;
+            font-size: 0.9rem;
+        }
+        
+        .pending-label {
+            font-size: 0.7rem;
+            color: #dc3545;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Position the stat card as relative for absolute positioning of the indicator */
+        .stat-card {
+            position: relative;
+        }
+        
         /* Calendar styles */
         .calendar-nav {
             display: flex;
@@ -1361,29 +1395,161 @@ if (isset($_SESSION['user_id'])) {
                             
                             <div class="col-lg-1-5 col-md-4 col-sm-6 mb-3">
                                 <div class="dashboard-card stat-card" data-toggle="tooltip" data-placement="top" title="Total travel expenses reported by workers this month">
+                                    <?php
+                                    // Fetch total pending amount for travel expenses for the current month
+                                    $current_month = date('m');
+                                    $current_year = date('Y');
+                                    
+                                    // Query to get total pending amount
+                                    $pending_query = "SELECT SUM(amount) as pending_amount 
+                                                      FROM travel_expenses 
+                                                      WHERE status = 'pending' 
+                                                      AND MONTH(travel_date) = ? 
+                                                      AND YEAR(travel_date) = ?";
+                                    
+                                    $pending_stmt = $conn->prepare($pending_query);
+                                    $pending_stmt->bind_param("ii", $current_month, $current_year);
+                                    $pending_stmt->execute();
+                                    $pending_result = $pending_stmt->get_result();
+                                    $pending_data = $pending_result->fetch_assoc();
+                                    
+                                    $pending_amount = $pending_data['pending_amount'] ? $pending_data['pending_amount'] : 0;
+                                    
+                                    // Format the pending amount
+                                    $formatted_pending = '₹' . number_format($pending_amount, 2);
+                                    
+                                    // If there are pending expenses, show the indicator
+                                    if ($pending_amount > 0) {
+                                        echo '<div class="pending-expense-indicator">
+                                                <span class="pending-amount">' . $formatted_pending . '</span>
+                                                <span class="pending-label">Pending</span>
+                                             </div>';
+                                    }
+                                    ?>
                                     <div class="stat-icon bg-danger">
                                         <i class="fas fa-taxi"></i>
                                     </div>
                                     <div class="stat-details">
                                         <div class="d-flex justify-content-between align-items-baseline">
-                                            <h3>₹4,250</h3>
-                                            <span class="stat-trend trend-down"><i class="fas fa-arrow-down"></i> 12%</span>
+                                            <?php
+                                            // Fetch total approved expenses for the current month
+                                            $approved_query = "SELECT SUM(amount) as total_amount 
+                                                               FROM travel_expenses 
+                                                               WHERE status = 'approved' 
+                                                               AND MONTH(travel_date) = ? 
+                                                               AND YEAR(travel_date) = ?";
+                                            
+                                            $approved_stmt = $conn->prepare($approved_query);
+                                            $approved_stmt->bind_param("ii", $current_month, $current_year);
+                                            $approved_stmt->execute();
+                                            $approved_result = $approved_stmt->get_result();
+                                            $approved_data = $approved_result->fetch_assoc();
+                                            
+                                            $total_amount = $approved_data['total_amount'] ? $approved_data['total_amount'] : 0;
+                                            
+                                            // Format the approved amount
+                                            $formatted_amount = '₹' . number_format($total_amount, 0);
+                                            
+                                            // Get percentage change from last month
+                                            $last_month = $current_month == 1 ? 12 : $current_month - 1;
+                                            $last_month_year = $current_month == 1 ? $current_year - 1 : $current_year;
+                                            
+                                            $last_month_query = "SELECT SUM(amount) as last_month_amount 
+                                                                 FROM travel_expenses 
+                                                                 WHERE status = 'approved' 
+                                                                 AND MONTH(travel_date) = ? 
+                                                                 AND YEAR(travel_date) = ?";
+                                            
+                                            $last_month_stmt = $conn->prepare($last_month_query);
+                                            $last_month_stmt->bind_param("ii", $last_month, $last_month_year);
+                                            $last_month_stmt->execute();
+                                            $last_month_result = $last_month_stmt->get_result();
+                                            $last_month_data = $last_month_result->fetch_assoc();
+                                            
+                                            $last_month_amount = $last_month_data['last_month_amount'] ? $last_month_data['last_month_amount'] : 0;
+                                            
+                                            // Calculate percentage change
+                                            $percent_change = 0;
+                                            if ($last_month_amount > 0) {
+                                                $percent_change = round((($total_amount - $last_month_amount) / $last_month_amount) * 100);
+                                            }
+                                            
+                                            // Determine if trend is up or down
+                                            $trend_class = $percent_change >= 0 ? 'trend-up' : 'trend-down';
+                                            $trend_icon = $percent_change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                                            ?>
+                                            <h3><?php echo $formatted_amount; ?></h3>
+                                            <span class="stat-trend <?php echo $trend_class; ?>">
+                                                <i class="fas <?php echo $trend_icon; ?>"></i> <?php echo abs($percent_change); ?>%
+                                            </span>
                                         </div>
                                         <p>Travel Expenses <button id="addTravelExpenseBtn" class="btn btn-sm btn-danger ml-2" title="Add Travel Expense" type="button" style="border-radius: 18px;"><i class="fas fa-plus"></i></button></p>
                                         <div class="progress stat-progress" style="height: 5px;">
-                                            <div class="progress-bar bg-danger" role="progressbar" style="width: 42%" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <?php
+                                            // Calculate budget usage percentage (budget is ₹10,000)
+                                            $budget = 10000;
+                                            $budget_percent = min(100, round(($total_amount / $budget) * 100));
+                                            ?>
+                                            <div class="progress-bar bg-danger" role="progressbar" style="width: <?php echo $budget_percent; ?>%" aria-valuenow="<?php echo $budget_percent; ?>" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center stat-goal-text">
                                             <small>Budget: ₹10,000</small>
-                                            <small>42% Used</small>
+                                            <small><?php echo $budget_percent; ?>% Used</small>
                                         </div>
                                         <div class="stat-footer">
                                             <div class="stat-secondary">
-                                                <small>Avg/Worker: ₹101</small>
+                                                <?php
+                                                // Calculate average expense per worker
+                                                $workers_query = "SELECT COUNT(DISTINCT user_id) as worker_count 
+                                                                  FROM travel_expenses 
+                                                                  WHERE status = 'approved' 
+                                                                  AND MONTH(travel_date) = ? 
+                                                                  AND YEAR(travel_date) = ?";
+                                                
+                                                $workers_stmt = $conn->prepare($workers_query);
+                                                $workers_stmt->bind_param("ii", $current_month, $current_year);
+                                                $workers_stmt->execute();
+                                                $workers_result = $workers_stmt->get_result();
+                                                $workers_data = $workers_result->fetch_assoc();
+                                                
+                                                $worker_count = $workers_data['worker_count'] ? $workers_data['worker_count'] : 1;
+                                                $avg_per_worker = round($total_amount / $worker_count);
+                                                ?>
+                                                <small>Avg/Worker: ₹<?php echo $avg_per_worker; ?></small>
                                             </div>
                                             <div class="stat-chart">
                                                 <svg width="100%" height="20" class="stat-sparkline">
-                                                    <polyline points="0,5 10,7 20,6 30,8 40,10 50,9 60,11 70,10 80,8 90,5" fill="none" stroke="#e74c3c" stroke-width="2"></polyline>
+                                                    <?php
+                                                    // Generate sparkline from last 6 months data
+                                                    $points = '';
+                                                    
+                                                    for ($i = 5; $i >= 0; $i--) {
+                                                        $month_num = ($current_month - $i) <= 0 ? ($current_month - $i + 12) : ($current_month - $i);
+                                                        $year_num = ($current_month - $i) <= 0 ? ($current_year - 1) : $current_year;
+                                                        
+                                                        $month_query = "SELECT SUM(amount) as month_amount 
+                                                                       FROM travel_expenses 
+                                                                       WHERE status = 'approved' 
+                                                                       AND MONTH(travel_date) = ? 
+                                                                       AND YEAR(travel_date) = ?";
+                                                        
+                                                        $month_stmt = $conn->prepare($month_query);
+                                                        $month_stmt->bind_param("ii", $month_num, $year_num);
+                                                        $month_stmt->execute();
+                                                        $month_result = $month_stmt->get_result();
+                                                        $month_data = $month_result->fetch_assoc();
+                                                        
+                                                        $month_amount = $month_data['month_amount'] ? $month_data['month_amount'] : 0;
+                                                        
+                                                        // Scale the amount to fit in our 20px height (max assumed to be ₹20,000)
+                                                        $height = 15 - min(15, round(($month_amount / 20000) * 15));
+                                                        
+                                                        // Add point to the sparkline
+                                                        $x_pos = 90 - ($i * 18);
+                                                        $points .= "$x_pos,$height ";
+                                                    }
+                                                    ?>
+                                                    <polyline points="<?php echo trim($points); ?>" fill="none" stroke="#e74c3c" stroke-width="2"></polyline>
                                                 </svg>
                                             </div>
                                             <div class="stat-actions mt-2">
@@ -1426,77 +1592,68 @@ if (isset($_SESSION['user_id'])) {
                                 </div>
                                 <div class="col-lg-4">
                                     <div class="calendar-stats-summary">
-                                        <h5 class="stats-summary-title">Monthly Overview</h5>
-                                        <div class="stats-summary-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Inspections</span>
-                                                <span class="badge badge-success">12</span>
-                                            </div>
-                                            <div class="progress mt-2" style="height: 6px;">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                        <div class="stats-summary-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Deliveries</span>
-                                                <span class="badge badge-warning">8</span>
-                                            </div>
-                                            <div class="progress mt-2" style="height: 6px;">
-                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                        <div class="stats-summary-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Meetings</span>
-                                                <span class="badge badge-primary">15</span>
-                                            </div>
-                                            <div class="progress mt-2" style="height: 6px;">
-                                                <div class="progress-bar bg-primary" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                        <div class="stats-summary-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Reports</span>
-                                                <span class="badge badge-info">6</span>
-                                            </div>
-                                            <div class="progress mt-2" style="height: 6px;">
-                                                <div class="progress-bar bg-info" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                        </div>
-                                        <div class="stats-summary-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Issues</span>
-                                                <span class="badge badge-danger">3</span>
-                                            </div>
-                                            <div class="progress mt-2" style="height: 6px;">
-                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <h5 class="stats-summary-title">Recent Month Targets</h5>
+                                        <div class="monthly-targets-section">
+                                            <!-- Monthly Targets -->
+                                            <div class="monthly-targets-group">
+                                                <div class="monthly-targets-header">
+                                                    <div class="monthly-targets-title">
+                                                        <i class="fas fa-bullseye"></i> Monthly Objectives
+                                                    </div>
+                                                    <div class="monthly-targets-period-selector">
+                                                        <select class="monthly-targets-period-dropdown" id="monthlyTargetPeriod">
+                                                            <option value="previous">Previous Month</option>
+                                                            <option value="present" selected>Current Month</option>
+                                                            <option value="next">Next Month</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Current Month Targets -->
+                                                <ul class="monthly-targets-list" id="currentMonthTargets">
+                                                    <li class="target-item">Complete foundation work for entire building</li>
+                                                    <li class="target-item">Finish structural framework for floors 1-3</li>
+                                                    <li class="target-item">Install main electrical panels and distribution</li>
+                                                    <li class="target-item">Complete plumbing rough-in for ground floor</li>
+                                                    <li class="target-item">Finish exterior wall construction</li>
+                                                    <li class="target-item">Begin window installation on completed floors</li>
+                                                    <li class="target-item">Set up permanent site security measures</li>
+                                                    <li class="target-item">Complete drainage system installation</li>
+                                                    <li class="target-item">Begin HVAC ductwork installation</li>
+                                                    <li class="target-item">Complete monthly safety inspection and reporting</li>
+                                                </ul>
+                                                
+                                                <!-- Previous Month Targets -->
+                                                <ul class="monthly-targets-list" id="previousMonthTargets" style="display: none;">
+                                                    <li class="target-item">Site preparation and excavation completed</li>
+                                                    <li class="target-item">Temporary facilities and utilities set up</li>
+                                                    <li class="target-item">Initial foundation layout and marking</li>
+                                                    <li class="target-item">Procurement of primary building materials</li>
+                                                    <li class="target-item">Approval of final architectural drawings</li>
+                                                    <li class="target-item">Soil testing and foundation preparation</li>
+                                                    <li class="target-item">Security fencing and site access control</li>
+                                                    <li class="target-item">Environmental compliance measures implemented</li>
+                                                    <li class="target-item">Subcontractor agreements finalized</li>
+                                                    <li class="target-item">Initial site drainage systems installed</li>
+                                                </ul>
+                                                
+                                                <!-- Next Month Targets -->
+                                                <ul class="monthly-targets-list" id="nextMonthTargets" style="display: none;">
+                                                    <li class="target-item">Begin interior wall framing on all floors</li>
+                                                    <li class="target-item">Complete roof structure and waterproofing</li>
+                                                    <li class="target-item">Install electrical wiring in completed sections</li>
+                                                    <li class="target-item">Begin plumbing fixture installation</li>
+                                                    <li class="target-item">Start interior drywall installation</li>
+                                                    <li class="target-item">Complete all window and exterior door installation</li>
+                                                    <li class="target-item">Begin exterior finishing and cladding</li>
+                                                    <li class="target-item">Install fire suppression systems</li>
+                                                    <li class="target-item">Begin elevator shaft construction</li>
+                                                    <li class="target-item">Prepare for initial building inspection</li>
+                                                </ul>
                                             </div>
                                         </div>
                                         
-                                        <div class="upcoming-events mt-4">
-                                            <h5 class="stats-summary-title">Upcoming Events</h5>
-                                            <div class="upcoming-event-item">
-                                                <div class="event-dot event-inspection"></div>
-                                                <div class="event-details">
-                                                    <div class="event-title">Safety Inspection</div>
-                                                    <div class="event-time">Today, 2:30 PM</div>
-                                                </div>
-                                            </div>
-                                            <div class="upcoming-event-item">
-                                                <div class="event-dot event-meeting"></div>
-                                                <div class="event-details">
-                                                    <div class="event-title">Team Meeting</div>
-                                                    <div class="event-time">Tomorrow, 10:00 AM</div>
-                                                </div>
-                                            </div>
-                                            <div class="upcoming-event-item">
-                                                <div class="event-dot event-delivery"></div>
-                                                <div class="event-details">
-                                                    <div class="event-title">Material Delivery</div>
-                                                    <div class="event-time">May 25, 9:00 AM</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <!-- Upcoming Events section removed -->
                                     </div>
                                 </div>
                             </div>
@@ -1890,7 +2047,7 @@ if (isset($_SESSION['user_id'])) {
                         <div class="camera-header">
                             <h4 id="camera-title">Take Photo for Punch In</h4>
                             <button class="camera-close">&times;</button>
-                        </div>
+                                    </div>
                         <div class="camera-body">
                             <div class="video-container">
                                 <video id="camera-video" playsinline autoplay></video>
@@ -2790,6 +2947,30 @@ if (isset($_SESSION['user_id'])) {
             }
             
             calendarHTML += `</div>`;
+            
+            // Add calendar footer with legend
+            calendarHTML += `
+                <!-- Calendar Footer with Legend -->
+                <div class="calendar-footer">
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <span class="legend-color legend-inspection"></span>
+                            <span>Inspection</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color legend-meeting"></span>
+                            <span>Meeting</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color legend-delivery"></span>
+                            <span>Delivery</span>
+                        </div>
+                    </div>
+                    <div class="calendar-actions">
+                        <button class="btn btn-sm btn-outline-primary">View All Events</button>
+                    </div>
+                </div>
+            `;
             
             // Update the calendar
             calendarContainer.innerHTML = calendarHTML;

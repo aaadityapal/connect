@@ -2246,4 +2246,198 @@
     border-color: #6366f1;
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
     outline: none;
+}
+
+/* Targets Section Styles */
+.ce-work-targets-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.ce-work-targets-header {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.ce-work-targets-header h6 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.ce-work-targets-header h6 i {
+    margin-right: 8px;
+    color: #007bff;
+}
+
+.ce-work-targets-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+.ce-work-targets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ce-work-targets-group {
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ce-work-targets-group:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+}
+
+.ce-work-targets-group-header {
+    background-color: #e9ecef;
+    padding: 12px 15px;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    border-left: 4px solid #007bff;
+    justify-content: space-between;
+}
+
+.ce-work-targets-group:nth-child(2) .ce-work-targets-group-header {
+    border-left-color: #28a745;
+}
+
+.ce-work-targets-group:nth-child(2) .ce-work-targets-group-header i {
+    color: #28a745;
+}
+
+.ce-work-targets-group:nth-child(3) .ce-work-targets-group-header {
+    border-left-color: #fd7e14;
+}
+
+.ce-work-targets-group:nth-child(3) .ce-work-targets-group-header i {
+    color: #fd7e14;
+}
+
+.ce-work-targets-group-header i {
+    margin-right: 8px;
+    color: #007bff;
+    font-size: 1.1rem;
+}
+
+/* Target Period Selector Styles */
+.ce-work-targets-period-selector {
+    display: flex;
+    align-items: center;
+}
+
+.ce-work-targets-period-dropdown {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 24px 4px 8px;
+    font-size: 0.85rem;
+    color: #495057;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23495057' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ce-work-targets-period-dropdown:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.ce-work-targets-group:nth-child(2) .ce-work-targets-period-dropdown:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.ce-work-targets-group:nth-child(3) .ce-work-targets-period-dropdown:focus {
+    border-color: #fd7e14;
+    box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
+}
+
+.ce-work-targets-list {
+    list-style-type: none;
+    padding: 15px 20px;
+    margin: 0;
+}
+
+.ce-work-targets-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    color: #495057;
+    line-height: 1.4;
+}
+
+.ce-work-targets-list li:last-child {
+    margin-bottom: 0;
+}
+
+.ce-work-targets-list li:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #007bff;
+}
+
+.ce-work-targets-group:nth-child(2) .ce-work-targets-list li:before {
+    background-color: #28a745;
+}
+
+.ce-work-targets-group:nth-child(3) .ce-work-targets-list li:before {
+    background-color: #fd7e14;
+}
+
+/* Target period transition animation */
+.ce-work-targets-list {
+    transition: opacity 0.3s ease;
+}
+
+/* Responsive adjustments for targets section */
+@media (max-width: 768px) {
+    .ce-work-targets-container {
+        gap: 10px;
+    }
+    
+    .ce-work-targets-group {
+        margin-bottom: 0;
+    }
+    
+    .ce-work-targets-group-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+    
+    .ce-work-targets-period-selector {
+        width: 100%;
+    }
+    
+    .ce-work-targets-period-dropdown {
+        width: 100%;
+    }
 } 

@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     }
+    
+    // Initialize the monthly targets selector
+    initMonthlyTargetsSelector();
 });
 
 /**
@@ -292,5 +295,34 @@ function getColorForType(type) {
         case 'danger': return '#e74c3c';
         case 'info': 
         default: return '#3498db';
+    }
+}
+
+// Monthly targets period selection
+function initMonthlyTargetsSelector() {
+    const monthlyTargetPeriod = document.getElementById('monthlyTargetPeriod');
+    if (monthlyTargetPeriod) {
+        monthlyTargetPeriod.addEventListener('change', function() {
+            const selectedPeriod = this.value;
+            const allTargetLists = document.querySelectorAll('.monthly-targets-list');
+            
+            // Hide all target lists first
+            allTargetLists.forEach(list => {
+                list.style.display = 'none';
+                list.style.opacity = '0';
+            });
+            
+            // Show the selected period's targets
+            const selectedList = document.getElementById(selectedPeriod + 'MonthTargets');
+            if (selectedList) {
+                selectedList.style.display = 'block';
+                // Slight delay for smooth fade-in effect
+                setTimeout(() => {
+                    selectedList.style.opacity = '1';
+                }, 10);
+            }
+            
+            console.log('Changed monthly targets view to:', selectedPeriod);
+        });
     }
 } 

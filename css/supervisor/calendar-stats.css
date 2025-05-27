@@ -3,12 +3,16 @@
     border: 1px solid #e0e0e0;
     border-radius: 10px;
     padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    background-color: #ffffff;
 }
 
 .supervisor-calendar-wrapper {
     position: relative;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    border-radius: 8px;
 }
 
 .supervisor-calendar-container {
@@ -16,17 +20,19 @@
     min-height: 350px;
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    padding: 15px;
-    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid #eaeaea;
 }
 
 .calendar-stats-summary {
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 20px;
     height: 100%;
+    border: 1px solid #eaeaea;
 }
 
 .stats-summary-title {
@@ -47,63 +53,6 @@
     padding: 5px 8px;
 }
 
-.upcoming-events {
-    margin-top: 20px;
-}
-
-.upcoming-event-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.upcoming-event-item:last-child {
-    border-bottom: none;
-}
-
-.event-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 10px;
-    margin-top: 5px;
-}
-
-.event-inspection {
-    background-color: #38a169;
-}
-
-.event-delivery {
-    background-color: #e67e22;
-}
-
-.event-meeting {
-    background-color: #805ad5;
-}
-
-.event-report {
-    background-color: #ffb347;
-}
-
-.event-issue {
-    background-color: #e53e3e;
-}
-
-.event-details {
-    flex: 1;
-}
-
-.event-title {
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-.event-time {
-    color: #666;
-    font-size: 0.8rem;
-}
-
 /* Supervisor Calendar Styles */
 .supervisor-calendar-table {
     width: 100%;
@@ -117,14 +66,19 @@
     background-color: #f8f9fa;
     border-radius: 6px 6px 0 0;
     overflow: hidden;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 8px;
 }
 
 .supervisor-calendar-header-cell {
-    padding: 8px 5px;
+    padding: 10px 5px;
     text-align: center;
     font-weight: 600;
     font-size: 0.9rem;
     color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
 }
 
 .supervisor-calendar-body {
@@ -139,28 +93,32 @@
     border-radius: 6px;
     background: #fff;
     border: 1px solid #e9ecef;
-    padding: 8px;
+    padding: 10px;
     position: relative;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     cursor: pointer;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
 .supervisor-calendar-day:hover {
     background: #f8f9fa;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
     transform: translateY(-2px);
+    border-color: #dee2e6;
 }
 
 .supervisor-calendar-day.today {
     background-color: #e8f4ff;
     border: 1px solid #4299e1;
+    box-shadow: 0 0 0 1px rgba(66, 153, 225, 0.2);
 }
 
 .supervisor-calendar-day.other-month {
     opacity: 0.4;
+    background-color: #fafafa;
 }
 
 .supervisor-calendar-day.has-events {
@@ -195,8 +153,8 @@
 
 /* Add button */
 .supervisor-add-event-btn {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background-color: #3498db;
     color: white;
@@ -206,11 +164,11 @@
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s ease;
-    opacity: 0.9;
+    transition: all 0.25s ease;
+    opacity: 0.85;
     border: none;
     padding: 0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     line-height: 1;
     position: relative;
     z-index: 5;
@@ -223,7 +181,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     line-height: 1;
 }
@@ -232,9 +190,9 @@
     background-color: #2980b9;
     opacity: 1;
     transform: scale(1.1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
 .supervisor-calendar-day.other-month .supervisor-add-event-btn {
     opacity: 0.4;
     background-color: #cbd5e0;
@@ -259,35 +217,53 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 3px 6px;
-    border-radius: 3px;
-    margin-bottom: 3px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
     color: white;
     font-weight: 500;
-    font-size: 0.7rem;
-    line-height: 1.2;
+    font-size: 0.75rem;
+    line-height: 1.3;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+
+.supervisor-calendar-event:before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.8);
+    margin-right: 5px;
+    flex-shrink: 0;
 }
 
 .supervisor-calendar-event:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    filter: brightness(1.05);
 }
 
 .supervisor-event-more {
     text-align: center;
     color: #718096;
     font-style: italic;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     cursor: pointer;
-    padding: 2px 0;
+    padding: 3px 0;
     transition: color 0.15s ease;
+    background-color: #f8f9fa;
+    border-radius: 3px;
+    margin-top: 2px;
 }
 
 .supervisor-event-more:hover {
     color: #4a5568;
-    text-decoration: underline;
+    background-color: #edf2f7;
 }
 
 /* Event type colors */
@@ -405,19 +381,33 @@
 .calendar-nav {
     display: flex;
     align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eaeaea;
 }
 
 .calendar-nav-btn {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
 }
 
 .current-month-display {
     margin: 0 15px;
-    font-weight: 500;
-    font-size: 1.1rem;
+    font-weight: 600;
+    font-size: 1.2rem;
     min-width: 120px;
     text-align: center;
+    color: #343a40;
 }
 
 /* Responsive styles for calendar stats */
@@ -510,24 +500,18 @@
     .stats-summary-title {
         font-size: 1rem;
     }
-    
-    .event-title {
-        font-size: 0.85rem;
-    }
-    
-    .event-time {
-        font-size: 0.75rem;
-    }
 }
 
 @media (max-width: 450px) {
     .supervisor-calendar-container {
         overflow-x: auto;
-        padding-bottom: 10px;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
     }
     
     .supervisor-calendar-day {
         min-width: 40px;
+        height: 55px;
     }
     
     .supervisor-add-event-btn {
@@ -535,4 +519,46 @@
         height: 14px;
         font-size: 9px;
     }
+}
+
+/* Footer styling for calendar section */
+.calendar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 1px solid #eaeaea;
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 5px;
+}
+
+.legend-inspection {
+    background-color: #38a169;
+}
+
+.legend-meeting {
+    background-color: #805ad5;
+}
+
+.legend-delivery {
+    background-color: #e67e22;
 } 

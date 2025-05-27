@@ -16,7 +16,7 @@ $user_id = $_SESSION['user_id'];
 $today = date('Y-m-d');
 
 // Check current punch status
-$check_punch = $conn->prepare("SELECT punch_in, punch_out FROM attendance WHERE user_id = ? AND date = ?");
+$check_punch = $conn->prepare("SELECT punch_in, punch_out, working_hours, overtime_hours, shifts_id FROM attendance WHERE user_id = ? AND date = ?");
 $check_punch->bind_param("is", $user_id, $today);
 $check_punch->execute();
 $result = $check_punch->get_result();
@@ -84,10 +84,46 @@ if ($attendance) {
         if ($attendance['punch_out']) {
             $response['is_completed'] = true;
             
-            // Calculate working hours
-            $punch_in_time = strtotime($today . ' ' . $attendance['punch_in']);
-            $punch_out_time = strtotime($today . ' ' . $attendance['punch_out']);
-            $response['working_hours'] = round(($punch_out_time - $punch_in_time) / 3600, 2);
+            // Get the working hours and overtime hours directly from the database
+            if (isset($attendance['working_hours'])) {
+                // Use the stored working hours if available
+                $response['working_hours'] = $attendance['working_hours'];
+                $response['overtime_hours'] = $attendance['overtime_hours'] ?? '00:00:00';
+                
+                // Also calculate hours in decimal for compatibility
+                $parts = explode(':', $attendance['working_hours']);
+                if (count($parts) === 3) {
+                    $hours = intval($parts[0]);
+                    $minutes = intval($parts[1]);
+                    $seconds = intval($parts[2]);
+                    $decimal_hours = $hours + ($minutes / 60) + ($seconds / 3600);
+                    $response['working_hours_decimal'] = round($decimal_hours, 2);
+                }
+                
+                // Calculate decimal overtime
+                if (isset($attendance['overtime_hours'])) {
+                    $overtime_parts = explode(':', $attendance['overtime_hours']);
+                    if (count($overtime_parts) === 3) {
+                        $oh = intval($overtime_parts[0]);
+                        $om = intval($overtime_parts[1]);
+                        $os = intval($overtime_parts[2]);
+                        $decimal_overtime = $oh + ($om / 60) + ($os / 3600);
+                        $response['overtime_hours_decimal'] = round($decimal_overtime, 2);
+                    }
+                }
+            } else {
+                // Calculate if not stored
+                $punch_in_time = strtotime($today . ' ' . $attendance['punch_in']);
+                $punch_out_time = strtotime($today . ' ' . $attendance['punch_out']);
+                $seconds_worked = $punch_out_time - $punch_in_time;
+                
+                // Format as HH:MM:SS
+                $hours = floor($seconds_worked / 3600);
+                $minutes = floor(($seconds_worked % 3600) / 60);
+                $seconds = $seconds_worked % 60;
+                $response['working_hours'] = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+                $response['working_hours_decimal'] = round($seconds_worked / 3600, 2);
+            }
         }
     }
 }

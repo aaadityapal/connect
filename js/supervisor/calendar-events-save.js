@@ -277,72 +277,56 @@ function saveCalendarEvent(eventData, successCallback, errorCallback) {
             try {
                 data = JSON.parse(xhr.responseText);
             } catch (e) {
-                data = { status: 'error', message: 'Invalid server response' };
+                console.error('Failed to parse server response:', xhr.responseText);
+                data = { 
+                    status: 'error', 
+                    message: 'Invalid server response format',
+                    details: 'The server response could not be parsed as JSON. Check the console for more details.'
+                };
             }
+            
             if (data.status === 'success') {
+                console.log('Event saved successfully:', data);
                 if (typeof successCallback === 'function') {
                     successCallback(data);
-                } else {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: data.message,
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        alert('Event saved successfully!');
-                    }
                 }
             } else {
+                console.error('Server returned error:', data);
                 if (typeof errorCallback === 'function') {
                     errorCallback(data);
-                } else {
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            title: 'Error',
-                            text: data.message,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
                 }
             }
         } else {
+            console.error('HTTP error:', xhr.status, xhr.statusText);
+            console.error('Response:', xhr.responseText);
+            
+            let errorData;
+            try {
+                errorData = JSON.parse(xhr.responseText);
+            } catch (e) {
+                errorData = {
+                    status: 'error',
+                    message: `HTTP Error: ${xhr.status} ${xhr.statusText}`,
+                    details: 'Failed to connect to the server or the server returned an unexpected response.'
+                };
+            }
+            
             if (typeof errorCallback === 'function') {
-                errorCallback({ status: 'error', message: 'Network or server error' });
-            } else {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'An unexpected error occurred. Please try again.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    alert('An unexpected error occurred. Please try again.');
-                }
+                errorCallback(errorData);
             }
         }
     };
     
     xhr.onerror = function() {
         hideUploadLoader();
+        console.error('Network error occurred');
+        
         if (typeof errorCallback === 'function') {
-            errorCallback({ status: 'error', message: 'Network or server error' });
-        } else {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'An unexpected error occurred. Please try again.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                alert('An unexpected error occurred. Please try again.');
-            }
+            errorCallback({
+                status: 'error',
+                message: 'Network error occurred',
+                details: 'Failed to connect to the server. Please check your internet connection and try again.'
+            });
         }
     };
     

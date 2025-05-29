@@ -3,7 +3,7 @@
     <div class="brand-logo" style="padding: 15px 20px; margin-bottom: 10px;">
         <img src="#" alt="Company Logo" style="max-width: 140px; height: auto;">
     </div>
-    <button class="toggle-btn" onclick="togglePanel()" title="Toggle Panel">
+    <button class="toggle-btn" id="leftPanelToggleBtn" title="Toggle Panel">
         <i class="fas fa-chevron-left" id="toggleIcon"></i>
     </button>
     
@@ -85,6 +85,11 @@
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'performance_metrics.php' ? 'active' : ''; ?>" onclick="window.location.href='performance_metrics.php'">
         <i class="fas fa-tachometer-alt"></i>
         <span class="menu-text">Performance Metrics</span>
+    </div>
+    
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'travel_expenses.php' ? 'active' : ''; ?>" onclick="window.location.href='travel_expenses.php'">
+        <i class="fas fa-car"></i>
+        <span class="menu-text">Travel Expenses</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'financial_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='financial_reports.php'">

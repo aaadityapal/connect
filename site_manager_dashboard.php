@@ -233,6 +233,7 @@ if ($currentHour < 12) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/manager/dashboard.css">
     <link rel="stylesheet" href="css/manager/site-overview.css">
+    <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
     <style>
         :root {
             --primary-color: #0d6efd;
@@ -1536,33 +1537,33 @@ if ($currentHour < 12) {
                     <!-- Productivity Card -->
                     <div class="site-card" data-card-type="productivity">
                         <div class="site-card-header">
-                            <h3 class="site-card-title">Productivity</h3>
+                            <h3 class="site-card-title">Labor Attendance</h3>
                             <div class="site-card-icon bg-productivity">
-                                <i class="fas fa-chart-line"></i>
+                                <i class="fas fa-hard-hat"></i>
                             </div>
                         </div>
                         <div class="site-card-body">
-                            <div class="site-card-value" data-value="87">0</div>
-                            <div class="site-card-trend trend-up">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>+2% from last week</span>
+                            <div class="site-card-value" data-value="0">0</div>
+                            <div class="site-card-trend trend-neutral">
+                                <i class="fas fa-minus"></i>
+                                <span>Loading data...</span>
                             </div>
                             <div class="site-card-progress">
-                                <div class="site-card-progress-bar bg-productivity" data-width="87" style="width: 0%"></div>
+                                <div class="site-card-progress-bar bg-productivity" data-width="0" style="width: 0%"></div>
                             </div>
                             <div class="site-card-stats">
                                 <div class="site-card-stat" data-stat="tasks">
-                                    <div class="site-card-stat-value">168</div>
-                                    <div class="site-card-stat-label">Tasks</div>
+                                    <div class="site-card-stat-value">0</div>
+                                    <div class="site-card-stat-label">Present</div>
                                 </div>
                                 <div class="site-card-stat">
-                                    <div class="site-card-stat-value">85%</div>
-                                    <div class="site-card-stat-label">Completion</div>
+                                    <div class="site-card-stat-value">0%</div>
+                                    <div class="site-card-stat-label">Attendance</div>
                                 </div>
                             </div>
                         </div>
                         <div class="site-card-footer">
-                            Last updated: Today, 10:15 AM
+                            Click to view labor attendance details
                         </div>
                     </div>
                     
@@ -1599,36 +1600,41 @@ if ($currentHour < 12) {
                         </div>
                     </div>
                     
-                    <!-- Workforce Card -->
-                    <div class="site-card" data-card-type="workforce">
+                    <!-- Travel Expenses Card (Replacing Workforce Card) -->
+                    <div class="site-card" data-card-type="travel-expenses">
                         <div class="site-card-header">
-                            <h3 class="site-card-title">Workforce</h3>
-                            <div class="site-card-icon bg-workforce">
-                                <i class="fas fa-users"></i>
+                            <h3 class="site-card-title">Travel Expenses</h3>
+                            <div class="site-card-icon bg-primary">
+                                <i class="fas fa-car"></i>
                             </div>
                         </div>
                         <div class="site-card-body">
-                            <div class="site-card-value" data-value="89">0</div>
-                            <div class="site-card-trend trend-up">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>+4% from last week</span>
+                            <div class="site-card-value" data-value="0">0</div>
+                            <div class="site-card-trend trend-neutral">
+                                <i class="fas fa-minus"></i>
+                                <span>No recent expenses</span>
                             </div>
                             <div class="site-card-progress">
-                                <div class="site-card-progress-bar bg-workforce" data-width="89" style="width: 0%"></div>
+                                <div class="site-card-progress-bar bg-primary" data-width="0" style="width: 0%"></div>
                             </div>
                             <div class="site-card-stats">
-                                <div class="site-card-stat" data-stat="present">
-                                    <div class="site-card-stat-value">178</div>
-                                    <div class="site-card-stat-label">Present</div>
+                                <div class="site-card-stat" data-stat="expenses">
+                                    <div class="site-card-stat-value">0</div>
+                                    <div class="site-card-stat-label">This Month</div>
                                 </div>
                                 <div class="site-card-stat">
-                                    <div class="site-card-stat-value">12</div>
-                                    <div class="site-card-stat-label">Absent</div>
+                                    <div class="site-card-stat-value">₹0</div>
+                                    <div class="site-card-stat-label">Total</div>
                                 </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <button id="addTravelExpenseBtn" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-plus"></i> Add Expense
+                                </button>
                             </div>
                         </div>
                         <div class="site-card-footer">
-                            Last updated: Today, 09:30 AM
+                            Click to view all travel expenses
                         </div>
                     </div>
                 </div>
@@ -1890,6 +1896,11 @@ if ($currentHour < 12) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="js/manager/site-overview.js"></script>
+    <script>
+        // Override the save_travel_expenses.php endpoint for the travel expense modal
+        window.travelExpenseEndpoint = 'api/save_travel_expenses.php';
+    </script>
+    <script src="js/supervisor/travel-expense-modal.js"></script>
     <script>
         // Variables to track punch status
         let isPunchedIn = false;
@@ -2815,6 +2826,18 @@ if ($currentHour < 12) {
                 updateNotificationBadge();
             }
             
+            // Make travel expenses card clickable
+            const travelExpensesCard = document.querySelector('.site-card[data-card-type="travel-expenses"]');
+            if (travelExpensesCard) {
+                travelExpensesCard.addEventListener('click', function(e) {
+                    // Don't navigate if the click was on the Add Expense button (it has its own handler)
+                    if (!e.target.closest('#addTravelExpenseBtn')) {
+                        // Navigate to travel expenses page
+                        window.location.href = 'travel_expenses.php';
+                    }
+                });
+            }
+            
             // Check if we should enable scrolling based on screen height
             function checkPanelScrolling() {
                 if (window.innerHeight < 700 || window.innerWidth <= 768) {
@@ -3080,5 +3103,117 @@ if ($currentHour < 12) {
     });
     </script>
 </body>
+
+<!-- Travel Expense Modal -->
+<div class="modal fade" id="travelExpenseModal" tabindex="-1" role="dialog" aria-labelledby="travelExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="travelExpenseModalLabel">Add Travel Expense</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="travel-expenses-container">
+                    <form id="travelExpenseForm" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="purposeOfVisit">Purpose of Visit<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="purposeOfVisit" placeholder="Enter purpose" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="modeOfTransport">Mode of Transport<span class="text-danger">*</span></label>
+                                    <select class="form-control" id="modeOfTransport" required>
+                                        <option value="">Select mode</option>
+                                        <option value="Car">Car</option>
+                                        <option value="Bike">Bike</option>
+                                        <option value="Taxi">Taxi</option>
+                                        <option value="Bus">Bus</option>
+                                        <option value="Train">Train</option>
+                                        <option value="Auto">Auto</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fromLocation">From<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="fromLocation" placeholder="Starting location" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="toLocation">To<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="toLocation" placeholder="Destination" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="travelDate">Date<span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="travelDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="approxDistance">Distance (km)<span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="approxDistance" placeholder="Approx distance" min="0" step="0.1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="totalExpense">Amount (₹)<span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="totalExpense" placeholder="Total expense" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="expenseNotes">Notes</label>
+                            <textarea class="form-control" id="expenseNotes" rows="2" placeholder="Additional notes (optional)"></textarea>
+                        </div>
+                        
+                        <div class="form-group text-right">
+                            <button type="button" class="btn btn-secondary" id="resetExpenseForm">Reset</button>
+                            <button type="button" class="btn btn-primary" id="addExpenseEntry">Add Entry</button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="travel-expenses-list">
+                        <!-- Expense entries will be added here dynamically -->
+                    </div>
+                    
+                    <div class="travel-expenses-summary" style="display: none;">
+                        <h5>Summary</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>Total Entries: <span id="totalEntries">0</span></p>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <p>Total Amount: ₹<span id="totalAmount">0.00</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveAllExpenses">Save All Expenses</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </html>
 

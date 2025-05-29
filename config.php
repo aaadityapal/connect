@@ -52,7 +52,4 @@ function handleError($errno, $errstr, $errfile, $errline) {
 }
 
 // Set error handler
-set_error_handler("handleError");
-?>
-
-                
+set_error_handler("handleError"); 

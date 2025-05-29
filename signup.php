@@ -713,6 +713,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Business Developer">Business Developer</option>
                                     <option value="Social Media Manager">Social Media Manager</option>
                                     <option value="Site Manager">Site Manager</option>
+                                    <option value="Site Coordinator">Site Coordinator</option>
                                     <option value="Site Supervisor">Site Supervisor</option>
                                     <option value="Site Trainee">Site Trainee</option>
                                     <option value="Relationship Manager">Relationship Manager</option>

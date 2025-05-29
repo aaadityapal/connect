@@ -659,4 +659,116 @@
 .status-meeting {
     background-color: #17a2b8;
     box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.2);
+}
+
+/* Labor Attendance Modal Styles */
+.labor-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.labor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border-color: rgba(13, 110, 253, 0.3);
+}
+
+#laborAttendanceModal .modal-header {
+    background: linear-gradient(135deg, #2196F3 0%, #03A9F4 100%);
+}
+
+#laborAttendanceModal .nav-tabs {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#laborAttendanceModal .nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #495057;
+    font-weight: 500;
+    padding: 10px 15px;
+    transition: all 0.2s ease;
+}
+
+#laborAttendanceModal .nav-tabs .nav-link:hover {
+    border-bottom-color: rgba(13, 110, 253, 0.3);
+}
+
+#laborAttendanceModal .nav-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+    background-color: transparent;
+}
+
+#laborAttendanceModal .tab-content {
+    padding: 20px 0;
+}
+
+#laborAttendanceModal .table th {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-top: none;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    color: #495057;
+}
+
+#laborAttendanceModal .badge {
+    font-weight: 500;
+    padding: 0.4em 0.8em;
+    border-radius: 30px;
+}
+
+.labor-item {
+    transition: all 0.2s ease;
+}
+
+.labor-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Labor summary cards */
+#laborAttendanceModal .card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+#laborAttendanceModal .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+#laborAttendanceModal .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+#laborAttendanceModal .card-text {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Filter buttons */
+#laborAttendanceModal .btn-group .btn {
+    border-radius: 20px;
+    margin-right: 5px;
+    border-color: #dee2e6;
+    color: #495057;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+#laborAttendanceModal .btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+#laborAttendanceModal .btn-group .btn.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
 } 

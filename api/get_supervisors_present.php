@@ -7,6 +7,7 @@ header('Content-Type: application/json');
 
 // Get current date in Y-m-d format
 $today = date('Y-m-d');
+$yesterday = date('Y-m-d', strtotime('-1 day'));
 
 try {
     // Query to get all site supervisors who have punched in today
@@ -97,11 +98,29 @@ try {
     $totalStmt = $pdo->query($totalQuery);
     $totalSupervisors = $totalStmt->fetch()['total'];
     
+    // Count of supervisors present yesterday
+    $yesterdayQuery = "
+        SELECT COUNT(DISTINCT u.id) as total 
+        FROM users u 
+        JOIN attendance a ON u.id = a.user_id 
+        WHERE u.role = 'Site Supervisor' 
+        AND a.date = :yesterday 
+        AND a.punch_in IS NOT NULL
+    ";
+    $yesterdayStmt = $pdo->prepare($yesterdayQuery);
+    $yesterdayStmt->execute([':yesterday' => $yesterday]);
+    $yesterdaySupervisors = $yesterdayStmt->fetch()['total'];
+    
+    // Calculate trend
+    $trend = count($supervisors) - $yesterdaySupervisors;
+    
     // Return response
     echo json_encode([
         'status' => 'success',
         'total_supervisors' => (int)$totalSupervisors,
         'present_supervisors' => count($supervisors),
+        'yesterday_supervisors' => (int)$yesterdaySupervisors,
+        'trend' => $trend,
         'supervisors' => $supervisors
     ]);
     

@@ -1,20 +1,170 @@
 from docx import Document
-from docx.shared import Pt
+from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+import os
+
+# Check if logo file exists, if not create placeholder message
+logo_path = "lol.jpeg"
+logo_exists = os.path.exists(logo_path)
 
 # Create Word Document with updated details
 doc = Document()
+
+# Add logo to the header
+section = doc.sections[0]
+header = section.header
+header_para = header.paragraphs[0]
+header_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+
+if logo_exists:
+    run = header_para.add_run()
+    run.add_picture(logo_path, width=Inches(1.5))  # Adjust width as needed
+else:
+    header_para.add_run("Logo placeholder (lol.jpeg not found)")
+
+# Add footer with contact information
+footer = section.footer
+
+# Add page number to the top left side
+footer_para = footer.add_paragraph()
+footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+footer_para.paragraph_format.space_after = Pt(0)
+page_num = footer_para.add_run("P a g e  ")
+page_num.font.size = Pt(8)
+
+# Add field for page number
+run = footer_para.add_run()
+fldChar = OxmlElement('w:fldChar')
+fldChar.set(qn('w:fldCharType'), 'begin')
+run._element.append(fldChar)
+
+instrText = OxmlElement('w:instrText')
+instrText.set(qn('xml:space'), 'preserve')
+instrText.text = 'PAGE'
+run._element.append(instrText)
+
+fldChar = OxmlElement('w:fldChar')
+fldChar.set(qn('w:fldCharType'), 'end')
+run._element.append(fldChar)
+run.font.size = Pt(8)
+
+# Add horizontal line below page number
+footer_para = footer.add_paragraph()
+p = footer_para._p  # Get the paragraph element
+pPr = p.get_or_add_pPr()  # Get or create paragraph properties
+pBdr = OxmlElement('w:pBdr')  # Create paragraph border element
+pPr.append(pBdr)  # Add border element to paragraph properties
+
+# Add top border (horizontal line)
+top = OxmlElement('w:top')
+top.set(qn('w:val'), 'single')
+top.set(qn('w:sz'), '6')  # Border width
+top.set(qn('w:space'), '1')
+top.set(qn('w:color'), 'auto')
+pBdr.append(top)
+
+# Add contact information right-justified in the footer
+# First line
+footer_para = footer.add_paragraph()
+footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+footer_para.paragraph_format.space_before = Pt(0)
+contact_line1 = footer_para.add_run("H.O.: F-52, First Floor, Lane No.16, Madhu Vihar,")
+contact_line1.font.size = Pt(8)
+
+# Second line
+footer_para = footer.add_paragraph()
+footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+footer_para.paragraph_format.space_before = Pt(0)
+footer_para.paragraph_format.space_after = Pt(0)
+contact_line2 = footer_para.add_run("I. P. Extension, Delhi-110092 Phone: 9958600397, 7503477154")
+contact_line2.font.size = Pt(8)
+
+# Third line with email and website as hyperlinks
+footer_para = footer.add_paragraph()
+footer_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+footer_para.paragraph_format.space_before = Pt(0)
+footer_para.add_run("E-Mail:").font.size = Pt(8)
+
+# Add email as hyperlink
+hyperlink_id = f"email_link"
+email_address = "contact@architectshive.com"
+email_run = footer_para.add_run(" ")
+email_run.font.size = Pt(8)
+
+# Create hyperlink for email
+hyperlink_rel = footer_para.part.relate_to(f"mailto:{email_address}", "hyperlink", is_external=True)
+hyperlink = OxmlElement('w:hyperlink')
+hyperlink.set(qn('r:id'), hyperlink_rel)
+hyperlink.set(qn('w:history'), '1')
+
+# Create properties element
+rPr = OxmlElement('w:rPr')
+# Add color
+c = OxmlElement('w:color')
+c.set(qn('w:val'), '0000FF')  # Blue color
+rPr.append(c)
+# Add underline
+u = OxmlElement('w:u')
+u.set(qn('w:val'), 'single')
+rPr.append(u)
+
+# Create run element
+r = OxmlElement('w:r')
+r.append(rPr)
+t = OxmlElement('w:t')
+t.text = email_address
+r.append(t)
+hyperlink.append(r)
+
+# Add hyperlink to run
+email_run._r.append(hyperlink)
+
+footer_para.add_run(", Website:").font.size = Pt(8)
+
+# Add website as hyperlink
+website_run = footer_para.add_run(" ")
+website_run.font.size = Pt(8)
+website_address = "www.architectshive.com"
+
+# Create hyperlink for website
+hyperlink_rel = footer_para.part.relate_to(f"http://{website_address}", "hyperlink", is_external=True)
+hyperlink = OxmlElement('w:hyperlink')
+hyperlink.set(qn('r:id'), hyperlink_rel)
+hyperlink.set(qn('w:history'), '1')
+
+# Create properties element
+rPr = OxmlElement('w:rPr')
+# Add color
+c = OxmlElement('w:color')
+c.set(qn('w:val'), '0000FF')  # Blue color
+rPr.append(c)
+# Add underline
+u = OxmlElement('w:u')
+u.set(qn('w:val'), 'single')
+rPr.append(u)
+
+# Create run element
+r = OxmlElement('w:r')
+r.append(rPr)
+t = OxmlElement('w:t')
+t.text = website_address
+r.append(t)
+hyperlink.append(r)
+
+# Add hyperlink to run
+website_run._r.append(hyperlink)
+
 doc.add_heading('Minutes of Meeting (MoM) – Construction Site Visit', 0)
 
 # Meeting Details
 doc.add_paragraph('Date: 25/05/2025')
 doc.add_paragraph('Time: Afternoon (2:30 PM – 4:00 PM)')
 doc.add_paragraph('Location: Flat Number 4041, Jasola, New Delhi')
-doc.add_paragraph('Project Name: [Project Title or Name]')
+doc.add_paragraph('Project Name: 4041, Jasola, New Delhi')
 doc.add_paragraph('Meeting Type: Progress Review and Coordination')
-doc.add_paragraph('Meeting Conducted By: Mr. Khwaja (Client), Nikesh (Site Coordinator), Rachana Pal & Prabhat Arya (Architects)')
+doc.add_paragraph('Meeting Conducted By: Mr. Khwaza Fratulla (Client), Mr. Faraz Fratulla (Client), Rachana Pal & Prabhat Arya (Architects), Tanis Shil (Site Coordinator) ')
 
 # Attendees
 doc.add_heading('Attendees', level=1)
@@ -40,11 +190,13 @@ for cell in hdr_cells:
             run.bold = True
 
 attendees = [
-    ('Mr. Khwaja', 'Client', '-', '-'),
-    ('Mr. ABC', 'Client', '-', '-'),
-    ('Nikesh', 'Site Coordinator', '-', '-'),
-    ('Rachana Pal', 'Architect', '-', '-'),
-    ('Prabhat Arya', 'Architect', '-', '-')
+    ('Mr. Khwaza Fratulla', 'Client', '-', '-'),
+    ('Mr. Faraz Fratulla', 'Client', '-', '-'),
+    ('Prabhat Arya', 'Architect', 'ArchitectsHive', '+91 7503468992'),
+    ('Rachana Pal', 'Architect', 'ArchitectsHive', '+91 7503468992'),
+    ('Tanis Shil', 'Site Coordinator', 'ArchitectsHive', '+91 9211549809'),
+
+
 ]
 
 for name, desig, org, contact in attendees:
@@ -120,11 +272,6 @@ next_steps = [
 for step in next_steps:
     doc.add_paragraph(step, style='List Bullet')
 
-# Next Meeting Schedule
-doc.add_heading('Next Meeting Schedule', level=1)
-doc.add_paragraph('Date: [Insert Date]')
-doc.add_paragraph('Time: [Insert Time]')
-doc.add_paragraph('Location: [Site / Office / Online]')
 
 # Signatures - Updated to match the provided format
 doc.add_heading('Signatures', level=1)
@@ -132,8 +279,8 @@ doc.add_paragraph('Name | Designation | Signature | Date')
 
 # Add signature lines for each attendee
 signatures = [
-    ('Mr. Khwaja', 'Client', '25/05/2025'),
-    ('Nikesh', 'Site Supervisor', '25/05/2025'),
+    ('Mr. Khwaza Fratulla', 'Client', '25/05/2025'),
+    ('Tanis Shil', 'Site Coordinator', '25/05/2025'),
     ('Rachana Pal', 'Architect', '25/05/2025'),
     ('Prabhat Arya', 'Architect', '25/05/2025')
 ]

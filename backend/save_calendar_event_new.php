@@ -1,8 +1,8 @@
-<?php
+﻿<?php
 // Enable error logging to a file
 ini_set('log_errors', 1);
 ini_set('error_log', '../logs/calendar_event_errors.log');
-            
+
 // Create logs directory if it doesn't exist
 if (!file_exists('../logs')) {
     mkdir('../logs', 0777, true);

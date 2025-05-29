@@ -84,6 +84,8 @@ $query = "SELECT
     DATE_FORMAT(a.date, '%d-%m-%Y') as formatted_date,
     TIME_FORMAT(a.punch_in, '%h:%i %p') as formatted_punch_in,
     TIME_FORMAT(a.punch_out, '%h:%i %p') as formatted_punch_out,
+    a.punch_in_photo,
+    a.punch_out_photo,
     s.shift_name,
     s.start_time as raw_shift_start,
     s.end_time as raw_shift_end,
@@ -257,6 +259,8 @@ $debug_info = [
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
         /* Add dashboard container styles */
@@ -828,9 +832,333 @@ $debug_info = [
             color: #92400e;
             font-size: 0.875rem;
         }
+        
+        /* Add these new responsive styles */
+        .hamburger-menu {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 1.25rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Enhanced responsive styles for all sections */
+        @media (max-width: 991px) {
+            /* Existing mobile styles */
+            
+            /* Prevent horizontal scrolling */
+            html, body {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+            
+            .main-content {
+                width: 100%;
+                max-width: 100vw;
+                overflow-x: hidden;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            
+            /* Make table container handle scrolling internally */
+            .worksheet-table-container {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin-left: 0;
+                margin-right: 0;
+                padding: 0.5rem;
+                border-radius: var(--radius-md);
+            }
+            
+            .worksheet-table {
+                width: 100%;
+                min-width: 100%;
+                table-layout: fixed;
+            }
+            
+            /* Adjust column widths for better mobile display */
+            .worksheet-table th,
+            .worksheet-table td {
+                padding: 0.5rem 0.4rem;
+                font-size: 0.75rem;
+            }
+            
+            .worksheet-table th:nth-child(1), 
+            .worksheet-table td:nth-child(1) {
+                width: 20%;
+            }
+            
+            .worksheet-table th:nth-child(3), 
+            .worksheet-table td:nth-child(3),
+            .worksheet-table th:nth-child(4), 
+            .worksheet-table td:nth-child(4),
+            .worksheet-table th:nth-child(5), 
+            .worksheet-table td:nth-child(5) {
+                width: 15%;
+            }
+            
+            .worksheet-table th:nth-child(8), 
+            .worksheet-table td:nth-child(8) {
+                width: 20%;
+            }
+            
+            /* Hide more columns on mobile */
+            .worksheet-table th:nth-child(2), 
+            .worksheet-table td:nth-child(2),
+            .worksheet-table th:nth-child(6), 
+            .worksheet-table td:nth-child(6),
+            .worksheet-table th:nth-child(7), 
+            .worksheet-table td:nth-child(7) {
+                display: none;
+            }
+            
+            /* Make charts fit within container */
+            .charts-container {
+                width: 100%;
+                overflow: hidden;
+            }
+            
+            .chart-wrapper {
+                width: 100%;
+                overflow: hidden;
+            }
+            
+            /* Fix container width */
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            
+            /* Fix attendance overview width */
+            .attendance-overview {
+                width: 100%;
+                max-width: 100%;
+                margin-left: 0;
+                margin-right: 0;
+                padding: 0.75rem;
+            }
+            
+            /* Fix header width */
+            .header {
+                width: 100%;
+                max-width: 100%;
+                margin-left: 0;
+                margin-right: 0;
+            }
+            
+            /* Adjust filter controls to fit width */
+            .date-filter {
+                width: 100%;
+            }
+            
+            .month-year-picker {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+                gap: 0.5rem;
+                width: 100%;
+            }
+            
+            .filter-btn {
+                grid-column: span 2;
+                width: 100%;
+            }
+        }
+
+        /* Extra adjustments for very small screens */
+        @media (max-width: 360px) {
+            .main-content {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+            
+            .worksheet-table th, 
+            .worksheet-table td {
+                padding: 0.4rem 0.3rem;
+                font-size: 0.7rem;
+            }
+            
+            /* Show only essential columns on very small screens */
+            .worksheet-table th:nth-child(5), 
+            .worksheet-table td:nth-child(5) {
+                display: none;
+            }
+            
+            .worksheet-table th:nth-child(1), 
+            .worksheet-table td:nth-child(1) {
+                width: 30%;
+            }
+            
+            .worksheet-table th:nth-child(3), 
+            .worksheet-table td:nth-child(3),
+            .worksheet-table th:nth-child(4), 
+            .worksheet-table td:nth-child(4) {
+                width: 20%;
+            }
+            
+            .worksheet-table th:nth-child(8), 
+            .worksheet-table td:nth-child(8) {
+                width: 30%;
+            }
+            
+            /* Make status badges more compact */
+            .status-badge {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.6rem;
+            }
+            
+            /* Adjust stat cards for very small screens */
+            .stat-card {
+                padding: 0.5rem;
+                gap: 0.5rem;
+            }
+            
+            .stat-icon {
+                width: 2rem;
+                height: 2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Fix for SweetAlert2 on mobile */
+        @media (max-width: 576px) {
+            .swal2-popup {
+                width: 90% !important;
+                max-width: 90vw !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+        }
+
+        /* Photo viewer modal styles */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            overflow: auto;
+        }
+        
+        .photo-modal-content {
+            position: relative;
+            margin: auto;
+            padding: 0;
+            width: 90%;
+            max-width: 700px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .photo-close {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1060;
+        }
+        
+        .punch-photo {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .photo-caption {
+            text-align: center;
+            color: white;
+            padding: 10px 0;
+            font-size: 1rem;
+        }
+        
+        .photo-icon {
+            margin-left: 5px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .photo-icon:hover {
+            color: var(--secondary-color);
+        }
+        
+        /* Responsive adjustments for photo viewer */
+        @media (max-width: 576px) {
+            .photo-modal-content {
+                width: 95%;
+            }
+            
+            .photo-caption {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Add these styles to your CSS section */
+        .fa-file-excel {
+            color: #1D6F42 !important; /* Excel green color */
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .fa-file-excel:hover {
+            transform: scale(1.2);
+        }
+
+        /* Add tooltip style */
+        th {
+            position: relative;
+        }
+
+        [title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        @media (max-width: 991px) {
+            /* Make sure the Excel icon is visible on mobile */
+            .worksheet-table th:nth-child(7), 
+            .worksheet-table td:nth-child(7) {
+                display: table-cell;
+                width: 15%;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Add hamburger menu button -->
+    <button class="hamburger-menu" id="hamburgerMenu">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <div class="dashboard-container">
         <!-- Include Left Panel -->
         <?php include 'left_panel.php'; ?>
@@ -969,7 +1297,12 @@ $debug_info = [
                                 <th>Punch Out</th>
                                 <th>Working Hours</th>
                                 <th>Overtime</th>
-                                <th>Work Report</th>
+                                <th>
+                                    Work Report
+                                    <i class="fas fa-file-excel photo-icon" style="color: #1D6F42; margin-left: 5px;" 
+                                       onclick="exportWorkReportsToExcel()" 
+                                       title="Export work reports to Excel"></i>
+                                </th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -978,8 +1311,18 @@ $debug_info = [
                                 <tr>
                                     <td><?php echo $row['formatted_date']; ?></td>
                                     <td><?php echo $row['shift_name'] . ' (' . $row['shift_start'] . ' - ' . $row['shift_end'] . ')'; ?></td>
-                                    <td class="time-cell"><?php echo $row['formatted_punch_in']; ?></td>
-                                    <td class="time-cell"><?php echo $row['formatted_punch_out'] ?: '-'; ?></td>
+                                    <td class="time-cell">
+                                        <?php echo $row['formatted_punch_in']; ?>
+                                        <?php if (!empty($row['punch_in_photo'])): ?>
+                                            <i class="fas fa-folder photo-icon" onclick="showPunchPhoto('<?php echo htmlspecialchars($row['punch_in_photo']); ?>', 'Punch In - <?php echo $row['formatted_date']; ?> (<?php echo $row['formatted_punch_in']; ?>')"></i>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="time-cell">
+                                        <?php echo $row['formatted_punch_out'] ?: '-'; ?>
+                                        <?php if (!empty($row['punch_out_photo'])): ?>
+                                            <i class="fas fa-folder photo-icon" onclick="showPunchPhoto('<?php echo htmlspecialchars($row['punch_out_photo']); ?>', 'Punch Out - <?php echo $row['formatted_date']; ?> (<?php echo $row['formatted_punch_out']; ?>')"></i>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="time-cell"><?php echo $row['working_hours'] ?: '-'; ?></td>
                                     <td class="time-cell <?php echo $row['calculated_overtime'] !== '00:00:00' ? 'overtime' : ''; ?>">
                                         <?php echo $row['calculated_overtime'] !== '00:00:00' ? $row['calculated_overtime'] : '-'; ?>
@@ -1052,6 +1395,15 @@ $debug_info = [
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Add this at the end of the body for the photo viewer modal -->
+    <div id="photoModal" class="photo-modal">
+        <div class="photo-modal-content">
+            <span class="photo-close">&times;</span>
+            <img id="punchPhoto" class="punch-photo" src="" alt="Punch Photo">
+            <div id="photoCaption" class="photo-caption"></div>
         </div>
     </div>
 
@@ -1440,6 +1792,198 @@ $debug_info = [
                     popup: 'work-report-popup'
                 }
             });
+        }
+
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const leftPanel = document.querySelector('.left-panel');
+            const mainContent = document.getElementById('mainContent');
+            const overlay = document.createElement('div');
+            
+            // Create overlay for mobile
+            overlay.classList.add('panel-overlay');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.bottom = '0';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            overlay.style.zIndex = '998';
+            overlay.style.display = 'none';
+            document.body.appendChild(overlay);
+            
+            // Toggle menu function
+            function toggleMenu() {
+                leftPanel.classList.toggle('show');
+                if (leftPanel.classList.contains('show')) {
+                    overlay.style.display = 'block';
+                } else {
+                    overlay.style.display = 'none';
+                }
+            }
+            
+            // Event listeners
+            hamburgerMenu.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+            
+            // Close menu when window is resized to larger size
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991 && leftPanel.classList.contains('show')) {
+                    leftPanel.classList.remove('show');
+                    overlay.style.display = 'none';
+                }
+            });
+        });
+
+        function showPunchPhoto(photoUrl, caption) {
+            // Get the modal
+            const modal = document.getElementById("photoModal");
+            const photoImg = document.getElementById("punchPhoto");
+            const photoCaption = document.getElementById("photoCaption");
+            const closeBtn = document.querySelector(".photo-close");
+            
+            // Set the image source and caption
+            photoImg.src = photoUrl;
+            photoCaption.textContent = caption;
+            
+            // Show the modal
+            modal.style.display = "block";
+            
+            // Close the modal when clicking the close button
+            closeBtn.onclick = function() {
+                modal.style.display = "none";
+            }
+            
+            // Close the modal when clicking outside of it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+
+        function exportWorkReportsToExcel() {
+            // Show loading indicator
+            Swal.fire({
+                title: 'Generating Excel File',
+                html: 'Please wait...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Collect data from the table
+            const rows = document.querySelectorAll('.worksheet-table tbody tr');
+            let workReportData = [];
+            
+            rows.forEach((row) => {
+                const dateCell = row.querySelector('td:nth-child(1)');
+                const workReportCell = row.querySelector('td:nth-child(7)');
+                const statusCell = row.querySelector('td:nth-child(8) .status-badge');
+                
+                if (dateCell && workReportCell) {
+                    const date = dateCell.textContent.trim();
+                    
+                    // Get day of week
+                    const dateParts = date.split('-');
+                    const day = parseInt(dateParts[0], 10);
+                    const month = parseInt(dateParts[1], 10) - 1; // JS months are 0-indexed
+                    const year = parseInt(dateParts[2], 10);
+                    const dateObj = new Date(year, month, day);
+                    const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dateObj.getDay()];
+                    
+                    // Get work report content
+                    let workReport = '-';
+                    if (workReportCell.querySelector('.work-report-preview')) {
+                        // Extract the original work report from the onclick attribute
+                        const onclickAttr = workReportCell.querySelector('.work-report-preview').getAttribute('onclick');
+                        if (onclickAttr) {
+                            const match = onclickAttr.match(/showWorkReport\('([^']+)',/);
+                            if (match && match[1]) {
+                                workReport = match[1].replace(/\\'/g, "'").replace(/\\"/g, '"');
+                            } else {
+                                workReport = workReportCell.querySelector('.work-report-preview').textContent.trim();
+                            }
+                        }
+                    }
+                    
+                    // Get status
+                    const status = statusCell ? statusCell.textContent.trim() : '-';
+                    
+                    workReportData.push({
+                        date: date,
+                        day: dayOfWeek,
+                        status: status,
+                        workReport: workReport
+                    });
+                }
+            });
+            
+            // Create worksheet data with headers
+            const wsData = [
+                ['Date', 'Day', 'Status', 'Work Report'] // Headers
+            ];
+            
+            // Add data rows
+            workReportData.forEach(item => {
+                wsData.push([item.date, item.day, item.status, item.workReport]);
+            });
+            
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Set column widths
+            const cols = [
+                { wch: 12 },  // Date column width
+                { wch: 10 },  // Day column width
+                { wch: 15 },  // Status column width
+                { wch: 80 }   // Work Report column width
+            ];
+            ws['!cols'] = cols;
+            
+            // Apply bold formatting to header row
+            const headerRange = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+                if (!ws[cellAddress]) continue;
+                
+                // Create cell object if it doesn't exist
+                if (!ws[cellAddress].s) ws[cellAddress].s = {};
+                
+                // Apply bold font
+                ws[cellAddress].s = { 
+                    font: { bold: true },
+                    alignment: { horizontal: 'center' },
+                    fill: { fgColor: { rgb: "EEEEEE" } } // Light gray background
+                };
+            }
+            
+            // Set the month name and year
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                'July', 'August', 'September', 'October', 'November', 'December'];
+            const sheetName = `${monthNames[currentMonth-1]} ${currentYear}`;
+            const fileName = `Work_Reports_${monthNames[currentMonth-1]}_${currentYear}.xlsx`;
+            
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            
+            // Generate Excel file and trigger download
+            setTimeout(() => {
+                // Write workbook and download
+                XLSX.writeFile(wb, fileName);
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Excel File Ready',
+                    text: `Downloaded ${fileName}`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }, 500);
         }
     </script>
 </body>

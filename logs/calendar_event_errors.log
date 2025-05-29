@@ -608,3 +608,118 @@ Stack trace:
 [21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Work media record saved to database - {"media_id":"17"}
 [21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Transaction committed successfully
 [21-May-2025 18:40:28 Asia/Kolkata] 2025-05-21 18:40:28 - Save process completed successfully - {"event_id":"34"}
+[28-May-2025 09:49:34 Europe/Berlin] 2025-05-28 09:49:34 - Starting calendar event save process
+[28-May-2025 13:19:34 Asia/Kolkata] 2025-05-28 13:19:34 - Database connection included
+[28-May-2025 13:19:34 Asia/Kolkata] 2025-05-28 13:19:34 - Session started - {"user_id":"not set"}
+[28-May-2025 13:19:34 Asia/Kolkata] 2025-05-28 13:19:34 - Error: User not logged in
+[28-May-2025 09:49:41 Europe/Berlin] 2025-05-28 09:49:41 - Starting calendar event save process
+[28-May-2025 13:19:41 Asia/Kolkata] 2025-05-28 13:19:41 - Database connection included
+[28-May-2025 13:19:41 Asia/Kolkata] 2025-05-28 13:19:41 - Session started - {"user_id":"not set"}
+[28-May-2025 13:19:41 Asia/Kolkata] 2025-05-28 13:19:41 - Error: User not logged in
+[28-May-2025 09:50:01 Europe/Berlin] 2025-05-28 09:50:01 - Starting calendar event save process
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Database connection included
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Session started - {"user_id":21}
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Started database transaction
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Processing event data - {"title":"Construction Site At Dilshad Garden","date":"2025-05-28","user_id":21}
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Event created successfully - {"event_id":"42"}
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Transaction committed successfully
+[28-May-2025 13:20:01 Asia/Kolkata] 2025-05-28 13:20:01 - Save process completed successfully - {"event_id":"42"}
+[28-May-2025 09:52:12 Europe/Berlin] 2025-05-28 09:52:12 - Starting calendar event save process
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Database connection included
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Session started - {"user_id":21}
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Started database transaction
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-28","user_id":21}
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Event created successfully - {"event_id":"43"}
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Processing vendors - {"count":1}
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Processing vendor - {"index":1,"type":"material","name":"testtt"}
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Vendor created successfully - {"vendor_id":"25"}
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Transaction committed successfully
+[28-May-2025 13:22:12 Asia/Kolkata] 2025-05-28 13:22:12 - Save process completed successfully - {"event_id":"43"}
+[28-May-2025 09:53:04 Europe/Berlin] 2025-05-28 09:53:04 - Starting calendar event save process
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Database connection included
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Session started - {"user_id":21}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Started database transaction
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-28","user_id":21}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Event created successfully - {"event_id":"44"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing work progress entries - {"count":1}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing work progress entry - {"number":1,"category":"structural","type":"foundation","done":"yes"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Work progress entry saved successfully - {"work_id":"12","number":1}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing work media files - {"work_id":"12","count":2}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_12\/"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing work media file - {"work_id":"12","file_name":"SampleVideo_1280x720_1mb (1).mp4","file_type":"video\/mp4","file_size":1055736}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb (1)_1748418784_1589.mp4","saved_as":"6836c0e0294d2_1748418784.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_12\/6836c0e0294d2_1748418784.mp4"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_12\/6836c0e0294d2_1748418784.mp4","filename":"SampleVideo_1280x720_1mb (1)_1748418784_1589.mp4","original_name":"SampleVideo_1280x720_1mb (1).mp4"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Work media record saved to database - {"media_id":"18"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing work media file - {"work_id":"12","file_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg","file_type":"image\/jpeg","file_size":3004346}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1748418784_8961.jpeg","saved_as":"6836c0e029e57_1748418784.jpeg","file_type":"image\/jpeg","file_size":3004346,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_12\/6836c0e029e57_1748418784.jpeg"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_12\/6836c0e029e57_1748418784.jpeg","filename":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1748418784_8961.jpeg","original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Work media record saved to database - {"media_id":"19"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing inventory entries - {"count":1}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing inventory entry - {"number":1,"type":"consumed","material":"glass","quantity":"400","unit":"kg"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Inventory entry saved successfully - {"inventory_id":"8","number":1}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing inventory bill image - {"inventory_id":"8","file_name":"Business SMB oxford.pdf","file_size":207741}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File upload type check - {"file_type":"application\/pdf","allowed":true}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File uploaded successfully - {"original_name":"Business SMB oxford.pdf","saved_as":"6836c0e02affb_1748418784.pdf","file_type":"application\/pdf","file_size":207741,"path":"..\/uploads\/calendar_events\/inventory_bills\/inventory_8\/6836c0e02affb_1748418784.pdf"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Inventory bill image saved to database - {"media_id":"13"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing inventory media files - {"inventory_id":"8","count":2}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing inventory media file - {"inventory_id":"8","file_name":"SampleVideo_1280x720_1mb (1).mp4","file_type":"video\/mp4","file_size":1055736}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb (1)_1748418784_8874.mp4","saved_as":"6836c0e02d074_1748418784.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_8\/6836c0e02d074_1748418784.mp4"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_8\/6836c0e02d074_1748418784.mp4","filename":"SampleVideo_1280x720_1mb (1)_1748418784_8874.mp4","original_name":"SampleVideo_1280x720_1mb (1).mp4"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Inventory media record saved to database - {"media_id":"14"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Processing inventory media file - {"inventory_id":"8","file_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg","file_type":"image\/jpeg","file_size":3004346}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1748418784_5410.jpeg","saved_as":"6836c0e02d898_1748418784.jpeg","file_type":"image\/jpeg","file_size":3004346,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_8\/6836c0e02d898_1748418784.jpeg"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_8\/6836c0e02d898_1748418784.jpeg","filename":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1)_1748418784_5410.jpeg","original_name":"WhatsApp Image 2025-04-23 at 5.56.55 PM (1).jpeg"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Inventory media record saved to database - {"media_id":"15"}
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Transaction committed successfully
+[28-May-2025 13:23:04 Asia/Kolkata] 2025-05-28 13:23:04 - Save process completed successfully - {"event_id":"44"}
+[28-May-2025 09:54:10 Europe/Berlin] 2025-05-28 09:54:10 - Starting calendar event save process
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Database connection included
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Created test session for development - {"user_id":1}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Session started - {"user_id":1}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Started database transaction
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Processing event data - {"title":"Test Event","date":"2023-08-15","user_id":1}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Event created successfully - {"event_id":"45"}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Processing vendors - {"count":1}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Processing vendor - {"index":1,"type":"Test","name":"Test Vendor"}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Vendor created successfully - {"vendor_id":"26"}
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Transaction committed successfully
+[28-May-2025 13:24:10 Asia/Kolkata] 2025-05-28 13:24:10 - Save process completed successfully - {"event_id":"45"}
+[28-May-2025 09:55:54 Europe/Berlin] 2025-05-28 09:55:54 - Starting calendar event save process
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Database connection included
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Session started - {"user_id":1}
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Started database transaction
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-28","user_id":1}
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Event created successfully - {"event_id":"46"}
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Transaction committed successfully
+[28-May-2025 13:25:54 Asia/Kolkata] 2025-05-28 13:25:54 - Save process completed successfully - {"event_id":"46"}
+[28-May-2025 10:00:03 Europe/Berlin] 2025-05-28 10:00:03 - Starting calendar event save process
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Database connection included
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Session started - {"user_id":1}
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Started database transaction
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Processing event data - {"title":"Construction Site At Dilshad Garden","date":"2025-05-03","user_id":1}
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Event created successfully - {"event_id":"47"}
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Transaction committed successfully
+[28-May-2025 13:30:03 Asia/Kolkata] 2025-05-28 13:30:03 - Save process completed successfully - {"event_id":"47"}
+[28-May-2025 10:20:58 Europe/Berlin] 2025-05-28 10:20:58 - Starting calendar event save process
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Database connection included
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Session started - {"user_id":1}
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Started database transaction
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-28","user_id":1}
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Event created successfully - {"event_id":"48"}
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Transaction committed successfully
+[28-May-2025 13:50:58 Asia/Kolkata] 2025-05-28 13:50:58 - Save process completed successfully - {"event_id":"48"}
+[28-May-2025 10:50:46 Europe/Berlin] 2025-05-28 10:50:46 - Starting calendar event save process
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Database connection included
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Session started - {"user_id":1}
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Started database transaction
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-05-28","user_id":1}
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Event created successfully - {"event_id":"49"}
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Processing vendors - {"count":1}
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Processing vendor - {"index":1,"type":"material","name":"bvcxz"}
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Vendor created successfully - {"vendor_id":"30"}
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Transaction committed successfully
+[28-May-2025 14:20:46 Asia/Kolkata] 2025-05-28 14:20:46 - Save process completed successfully - {"event_id":"49"}

@@ -23,5 +23,4 @@ try {
 } catch(PDOException $e) {
     error_log("PDO Connection failed: " . $e->getMessage());
     // We already have mysqli, so we don't need to die here
-}
-?> 
+} 

@@ -646,6 +646,7 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                                                                 data-title="Punch In Photo" 
                                                                 data-date="' . htmlspecialchars($record['date']) . '"
                                                                 data-time="' . date('h:i A', strtotime($record['punch_in'])) . '"
+                                                                data-address="' . htmlspecialchars($record['address']) . '"
                                                                 data-type="in"><i class="fas fa-folder text-primary"></i></a>';
                                                         }
                                                     } else {
@@ -685,6 +686,7 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                                                                 data-title="Punch Out Photo" 
                                                                 data-date="' . htmlspecialchars($record['date']) . '"
                                                                 data-time="' . date('h:i A', strtotime($record['punch_out'])) . '"
+                                                                data-address="' . htmlspecialchars($record['punch_out_address']) . '"
                                                                 data-type="out"><i class="fas fa-folder text-primary"></i></a>';
                                                         }
                                                     } else {
@@ -822,6 +824,7 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                             <p><strong>Date:</strong> <span id="photoDate"></span></p>
                             <p><strong>Time:</strong> <span id="photoTime"></span></p>
                             <p><strong>Type:</strong> <span id="photoType"></span></p>
+                            <p><strong>Address:</strong> <span id="photoAddress"></span></p>
                         </div>
                     </div>
                 </div>
@@ -1195,12 +1198,14 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                 const photoDate = link.data('date');
                 const photoTime = link.data('time');
                 const photoType = link.data('type');
+                const photoAddress = link.data('address');
                 
                 // Set photo source and show photo view
                 $('#attendancePhoto').attr('src', photoUrl);
                 $('#photoDate').text(photoDate);
                 $('#photoTime').text(photoTime);
                 $('#photoType').text(photoType === 'in' ? 'Punch In' : 'Punch Out');
+                $('#photoAddress').text(photoAddress || 'Address not available');
             });
         });
         

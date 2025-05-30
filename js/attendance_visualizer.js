@@ -59,6 +59,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Handle opening the photo modal
+    $('#photoModal').on('show.bs.modal', function (event) {
+        const link = $(event.relatedTarget);
+        const photoUrl = link.data('photo');
+        const photoDate = link.data('date');
+        const photoTime = link.data('time');
+        const photoType = link.data('type');
+        const photoAddress = link.data('address'); // Get address data
+        
+        // Set photo source and show photo view
+        $('#attendancePhoto').attr('src', photoUrl);
+        $('#photoDate').text(photoDate);
+        $('#photoTime').text(photoTime);
+        $('#photoType').text(photoType === 'in' ? 'Punch In' : 'Punch Out');
+        $('#photoAddress').text(photoAddress || 'Address not available'); // Display address
+    });
 });
 
 /**

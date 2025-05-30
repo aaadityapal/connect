@@ -59,6 +59,7 @@ if (isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="css/supervisor/enhanced-event-view.css">
     <link rel="stylesheet" href="css/supervisor/greeting-section.css">
     <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
+    <link rel="stylesheet" href="css/supervisor/supervisor-camera-modal.css">
 
     
     <!-- Include custom styles -->
@@ -1151,8 +1152,13 @@ if (isset($_SESSION['user_id'])) {
                                         <!-- Shift info will be inserted here by JavaScript -->
                                     </div>
                                     <div class="punch-button-container">
-                                        <button id="punchButton" class="btn btn-success punch-button">
+                                        <!-- Hide the original button with CSS but keep it in the DOM -->
+                                        <button id="punchButton" class="btn btn-success punch-button" style="display: none;">
                                             <i class="fas fa-sign-in-alt"></i> Punch In
+                                        </button>
+                                        <!-- Keep the Punch In 2 button with improved styling -->
+                                        <button id="supervisorCameraBtn" class="btn btn-primary supervisor-camera-button" style="border-radius: 50px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
+                                            <i class="fas fa-camera"></i> Punch In
                                         </button>
                                     </div>
                                 </div>
@@ -1862,6 +1868,7 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/enhanced-event-view-modal.js"></script>
     <script src="js/supervisor/greeting-section.js"></script>
     <script src="js/supervisor/travel-expense-modal.js"></script>
+    <script src="js/supervisor/supervisor-camera-module.js"></script>
 
     
     <!-- Override native alerts for calendar messages -->
@@ -3251,6 +3258,32 @@ if (isset($_SESSION['user_id'])) {
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-success" id="saveAllExpenses">Save All Expenses</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Supervisor Camera Modal -->
+    <div id="supervisorCameraModal" class="supervisor-camera-modal-overlay">
+        <div class="supervisor-camera-modal-content">
+            <div class="supervisor-camera-modal-header">
+                <h4>Supervisor Camera</h4>
+                <button id="closeSupervisorCameraBtn" class="supervisor-camera-close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="supervisor-camera-modal-body">
+                <div class="supervisor-camera-container">
+                    <video id="supervisorCameraVideo" autoplay playsinline></video>
+                    <canvas id="supervisorCameraCanvas" style="display: none;"></canvas>
+                    <div id="supervisorCameraCaptureBtn" class="supervisor-camera-capture-btn">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <div class="supervisor-captured-image-container" style="display: none;">
+                    <img id="supervisorCapturedImage" src="" alt="Captured image">
+                </div>
+            </div>
+            <div class="supervisor-camera-modal-footer">
+                <button id="supervisorRetakeBtn" class="btn btn-secondary" style="display: none;">Retake</button>
+                <button id="supervisorSaveImageBtn" class="btn btn-success" style="display: none;">Save Image</button>
             </div>
         </div>
     </div>

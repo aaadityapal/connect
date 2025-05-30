@@ -1,0 +1,632 @@
+/* Supervisor Camera Modal Styles */
+.supervisor-camera-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.supervisor-camera-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.supervisor-camera-modal-content {
+    background-color: #ffffff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 550px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.supervisor-camera-modal-overlay.active .supervisor-camera-modal-content {
+    transform: scale(1);
+}
+
+.supervisor-camera-modal-header {
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #2c3e50, #1a2530);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.supervisor-camera-modal-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.supervisor-camera-close-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: all 0.2s;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.supervisor-camera-close-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
+}
+
+.supervisor-camera-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex-grow: 1;
+    background-color: #f8f9fa;
+}
+
+.supervisor-camera-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* 4:3 aspect ratio */
+    background-color: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid #fff;
+}
+
+#supervisorCameraVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.supervisor-camera-capture-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 
+                inset 0 -2px 5px rgba(0, 0, 0, 0.1), 
+                inset 0 2px 5px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease;
+    z-index: 10;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+}
+
+.supervisor-camera-capture-btn:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 
+                inset 0 -2px 5px rgba(0, 0, 0, 0.1), 
+                inset 0 2px 5px rgba(255, 255, 255, 0.5);
+}
+
+.supervisor-camera-capture-btn:active {
+    transform: translateX(-50%) scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 
+                inset 0 -1px 3px rgba(0, 0, 0, 0.1), 
+                inset 0 1px 3px rgba(255, 255, 255, 0.5);
+}
+
+.supervisor-camera-capture-btn i {
+    font-size: 28px;
+    color: #2c3e50;
+}
+
+.supervisor-captured-image-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%;
+    background-color: #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid #fff;
+    transition: opacity 0.3s ease;
+}
+
+#supervisorCapturedImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Enhanced location address styles to ensure full address is visible */
+.supervisor-location-address {
+    margin-bottom: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.4;
+    width: 100%;
+}
+
+.supervisor-location-address span {
+    display: inline-block;
+    width: calc(100% - 26px); /* Account for icon width and margin */
+}
+
+.supervisor-location-coordinates {
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+}
+
+.supervisor-location-info {
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    border-radius: 8px;
+    padding: 12px 15px;
+    width: 100%;
+    font-size: 0.9rem;
+    color: #495057;
+    border-left: 4px solid #3498db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 100%;
+    margin-right: 0;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.supervisor-location-info i {
+    width: 18px;
+    text-align: center;
+    margin-right: 8px;
+    color: #3498db;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+/* Increase footer padding to accommodate longer addresses */
+.supervisor-camera-modal-footer {
+    padding: 15px 20px;
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-top: 1px solid #e9ecef;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    max-height: 40vh; /* Limit maximum height */
+    overflow-y: auto; /* Allow scrolling if needed */
+}
+
+/* Ensure buttons are always visible */
+.supervisor-button-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+    padding-top: 10px;
+    z-index: 5;
+}
+
+.location-success {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.location-error {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Camera error styles */
+.supervisor-camera-error {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    border-radius: 12px;
+    backdrop-filter: blur(3px);
+}
+
+.supervisor-camera-error-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    max-width: 80%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.supervisor-camera-error-content i {
+    font-size: 3rem;
+    color: #f39c12;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.supervisor-camera-error-content p {
+    margin-bottom: 20px;
+    color: #495057;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.retry-camera-btn {
+    padding: 8px 16px;
+    font-weight: 500;
+}
+
+/* Button styles - improved for visibility */
+#supervisorRetakeBtn, #supervisorSaveImageBtn {
+    padding: 10px 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: none;
+    flex: 1;
+    text-align: center;
+    font-size: 0.95rem;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#supervisorRetakeBtn {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ced4da;
+}
+
+#supervisorRetakeBtn:hover {
+    background-color: #e9ecef;
+    color: #212529;
+}
+
+#supervisorSaveImageBtn {
+    background-color: #28a745;
+    color: white;
+}
+
+#supervisorSaveImageBtn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Camera flash animation */
+@keyframes camera-flash {
+    0% { background-color: rgba(255, 255, 255, 0); }
+    50% { background-color: rgba(255, 255, 255, 0.8); }
+    100% { background-color: rgba(255, 255, 255, 0); }
+}
+
+.camera-flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    animation: camera-flash 0.5s ease-out;
+}
+
+/* Camera switch button */
+.supervisor-camera-switch-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.supervisor-camera-switch-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: rotate(180deg);
+}
+
+.supervisor-camera-switch-btn i {
+    color: #2c3e50;
+    font-size: 20px;
+}
+
+/* Fade-in animation */
+.fade-in {
+    animation: fade-in 0.5s ease-out;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Rotating animation for camera switch button */
+.rotating {
+    animation: rotate 0.5s ease-out;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Pulsing animation for location info while loading */
+.pulsing {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Camera frame guide */
+.supervisor-camera-frame-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Responsive adjustments - simplified since we're now using column layout by default */
+@media (max-width: 768px) {
+    .supervisor-camera-modal-footer {
+        padding: 12px 15px;
+        gap: 12px;
+    }
+    
+    .supervisor-location-info {
+        font-size: 0.85rem;
+    }
+    
+    #supervisorRetakeBtn, #supervisorSaveImageBtn {
+        padding: 8px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .supervisor-camera-modal-footer {
+        padding: 12px;
+    }
+    
+    .supervisor-button-container {
+        gap: 8px;
+    }
+    
+    #supervisorRetakeBtn, #supervisorSaveImageBtn {
+        font-size: 0.9rem;
+        padding: 8px 10px;
+    }
+}
+
+/* Remove countdown overlay styles since we're not using it anymore */
+.supervisor-camera-countdown {
+    display: none !important;
+}
+
+/* Camera frame guide */
+.supervisor-camera-frame-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.3);
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Fade-in animation */
+.fade-in {
+    animation: fade-in 0.5s ease-out;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Rotating animation for camera switch button */
+.rotating {
+    animation: rotate 0.5s ease-out;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Pulsing animation for location info while loading */
+.pulsing {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Disabled capture button */
+.supervisor-camera-capture-btn.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    background: linear-gradient(145deg, #cccccc, #e0e0e0);
+}
+
+/* Pulse animation for when the button becomes enabled */
+@keyframes pulse-once {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.supervisor-camera-capture-btn.pulse-once {
+    animation: pulse-once 1s ease-out;
+}
+
+/* Add a visual indicator when location is being fetched */
+.location-fetching-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+
+/* Work Report Styles */
+.supervisor-work-report-container {
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #3498db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: none;
+}
+
+.supervisor-work-report-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.supervisor-work-report-header i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+#supervisorWorkReportText {
+    resize: vertical;
+    min-height: 80px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+#supervisorWorkReportText::-webkit-scrollbar {
+    display: none;
+}
+
+/* Make the textarea slightly taller to compensate for hidden scrollbar */
+@media (min-width: 576px) {
+    #supervisorWorkReportText {
+        min-height: 100px;
+    }
+}
+
+#supervisorWorkReportText:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+#supervisorWorkReportText.is-invalid {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-2px, 0, 0); }
+    40%, 60% { transform: translate3d(2px, 0, 0); }
+}
+
+.form-text.text-muted {
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+/* Responsive adjustments for work report */
+@media (max-width: 576px) {
+    .supervisor-work-report-container {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    #supervisorWorkReportText {
+        min-height: 60px;
+    }
+} 

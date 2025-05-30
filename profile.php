@@ -551,15 +551,19 @@ $user_role = $_SESSION['role'] ?? 'employee';
         @media (max-width: 768px) {
             .profile-tabs {
                 flex-wrap: wrap;
+                padding: 0.5rem;
+                gap: 0.25rem;
             }
             
             .profile-tab {
-                flex: 1 0 calc(50% - 0.5rem);
+                flex: 1 0 calc(50% - 0.25rem);
+                padding: 0.6rem 0.75rem;
+                font-size: 0.85rem;
             }
             
             .main-content {
                 margin-left: 0;
-                padding: 1rem;
+                padding: 1rem 0.75rem;
             }
             
             .main-content.collapsed {
@@ -569,142 +573,418 @@ $user_role = $_SESSION['role'] ?? 'employee';
             .document-type-tabs {
                 overflow-x: auto;
                 padding-bottom: 0.5rem;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
             }
             
             .form-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .breadcrumb {
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .section-title {
+                font-size: 1.25rem;
+                margin-bottom: 1rem;
+            }
+            
+            .profile-card, 
+            .notification-preferences,
+            .activity-log, 
+            .hr-documents {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .document-item {
+                padding: 1rem;
+                flex-direction: column;
+            }
+            
+            .document-icon {
+                margin-right: 0;
+                margin-bottom: 0.75rem;
+            }
+            
+            .document-actions {
+                margin-top: 1rem;
+                justify-content: space-between;
+                width: 100%;
+            }
         }
 
-        /* Education section styling */
-        .education-section {
-            margin: 2rem 0;
+        /* iPhone XR/XS specific adjustments */
+        @media (max-width: 414px) {
+            .profile-tab {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.5rem;
+            }
+            
+            .profile-tab i {
+                font-size: 0.9rem;
+                margin-right: 0.25rem;
+            }
+            
+            .main-content {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .form-control {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            
+            .form-group label {
+                font-size: 0.85rem;
+                margin-bottom: 0.25rem;
+            }
+            
+            .education-table th,
+            .education-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.8rem;
+            }
+            
+            .activity-item {
+                padding: 0.75rem;
+            }
+            
+            .activity-icon {
+                width: 35px;
+                height: 35px;
+                margin-right: 0.75rem;
+            }
+            
+            .preference-item {
+                padding: 0.75rem 0;
+            }
+            
+            .preference-info h3 {
+                font-size: 0.9rem;
+            }
+            
+            .preference-info p {
+                font-size: 0.8rem;
+            }
+            
+            .switch {
+                width: 50px;
+                height: 26px;
+            }
+            
+            .slider:before {
+                height: 18px;
+                width: 18px;
+            }
+            
+            input:checked + .slider:before {
+                transform: translateX(24px);
+            }
+            
+            .document-details h3 {
+                font-size: 1rem;
+            }
         }
 
-        .education-section h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.25rem;
-            color: var(--dark-text);
-            font-weight: 600;
-            border-bottom: 3px solid var(--primary-color);
-            padding-bottom: 0.5rem;
-            display: inline-block;
+        /* iPhone SE and other very small screens */
+        @media (max-width: 375px) {
+            .profile-tabs {
+                padding: 0.4rem;
+                gap: 0.2rem;
+            }
+            
+            .profile-tab {
+                padding: 0.4rem;
+                font-size: 0.75rem;
+            }
+            
+            .profile-tab i {
+                margin-right: 0.2rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+            
+            .document-type-tabs {
+                gap: 0.5rem;
+            }
+            
+            .doc-tab {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+            
+            .document-details h3 {
+                font-size: 0.9rem;
+            }
+            
+            .document-details p {
+                font-size: 0.8rem;
+            }
+            
+            .document-details small {
+                font-size: 0.7rem;
+            }
+            
+            .status-badge {
+                padding: 0.15rem 0.5rem;
+                font-size: 0.7rem;
+            }
+            
+            .document-type-badge {
+                font-size: 0.65rem;
+                padding: 0.15rem 0.4rem;
+            }
+            
+            .btn-sm {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+            
+            .activity-time {
+                font-size: 0.75rem;
+            }
         }
 
-        .education-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            align-items: end;
+        /* Add this for better handling of the left panel on mobile */
+        @media (max-width: 991px) {
+            /* Prevent horizontal scrolling */
+            html, body {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+            
+            .main-content {
+                width: 100%;
+                max-width: 100vw;
+                overflow-x: hidden;
+                margin-left: 0;
+                padding: 15px;
+                padding-top: 60px;
+            }
+            
+            .main-content.collapsed {
+                margin-left: 0;
+            }
+            
+            .hamburger-menu {
+                display: flex;
+            }
+            
+            .left-panel {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 999;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+            }
+            
+            .left-panel.show {
+                transform: translateX(0);
+            }
+            
+            /* Remove the existing mobile-menu-toggle styles */
+            .mobile-menu-toggle {
+                display: none;
+            }
+            
+            /* Replace menu-overlay with panel-overlay */
+            .menu-overlay {
+                display: none;
+            }
+            
+            .panel-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 998;
+                display: none;
+            }
+            
+            /* Adjust breadcrumb to not overlap with menu button */
+            .breadcrumb {
+                margin-left: 0;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+            
+            /* Profile tabs responsive adjustments */
+            .profile-tabs {
+                flex-wrap: wrap;
+                padding: 0.75rem;
+                gap: 0.5rem;
+            }
+            
+            .profile-tab {
+                flex: 1 0 calc(50% - 0.5rem);
+                padding: 0.6rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            
+            /* Form and card adjustments */
+            .profile-card, 
+            .notification-preferences,
+            .activity-log, 
+            .hr-documents {
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: var(--radius-md);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            
+            /* Document sections */
+            .document-type-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 0.5rem;
+            }
         }
 
-        .education-form .form-group {
-            margin-bottom: 0;
+        /* Extra adjustments for very small screens */
+        @media (max-width: 360px) {
+            .main-content {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+            
+            .profile-tab {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+            
+            .form-control {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+            }
+            
+            .document-details h3 {
+                font-size: 0.9rem;
+            }
         }
 
-        .add-education-btn {
-            background-color: var(--primary-color);
+        /* Fix for SweetAlert2 on mobile */
+        @media (max-width: 576px) {
+            .swal2-popup {
+                width: 90% !important;
+                max-width: 90vw !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+        }
+
+        /* Fix for iPhone notch */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .main-content {
+                padding-top: calc(60px + env(safe-area-inset-top));
+                padding-left: calc(15px + env(safe-area-inset-left));
+                padding-right: calc(15px + env(safe-area-inset-right));
+                padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            }
+            
+            .hamburger-menu {
+                top: calc(20px + env(safe-area-inset-top));
+                left: calc(20px + env(safe-area-inset-left));
+            }
+        }
+
+        /* Update the hamburger menu styles to make it bigger and more visible */
+        .hamburger-menu {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 0.75rem 1.5rem;
-            font-size: 0.95rem;
-            font-weight: 500;
+            border-radius: 8px; /* Increased from 4px */
+            padding: 12px 15px; /* Increased from 8px 12px */
+            font-size: 1.5rem; /* Increased from 1.25rem */
             cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3); /* Enhanced shadow */
+            width: 50px; /* Set fixed width */
+            height: 50px; /* Set fixed height */
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 2px 5px rgba(67, 97, 238, 0.3);
+            justify-content: center;
+            transition: all 0.2s ease;
         }
 
-        .add-education-btn:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.4);
+        .hamburger-menu:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
         }
 
-        .add-education-btn i {
-            font-size: 0.9rem;
+        .hamburger-menu:active {
+            transform: scale(0.95);
         }
 
-        .education-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        .hamburger-menu i {
+            font-size: 1.75rem; /* Make the icon itself larger */
         }
 
-        .education-table th,
-        .education-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .education-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: var(--dark-text);
-        }
-
-        .education-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .education-table tr:hover {
-            background-color: rgba(67, 97, 238, 0.03);
-        }
-
-        .action-btn {
-            padding: 0.4rem 0.6rem;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: var(--transition);
-        }
-
-        .edit-btn {
-            background-color: #e9ecef;
-            color: var(--primary-color);
-        }
-
-        .edit-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .delete-btn {
-            background-color: #f8d7da;
-            color: #dc3545;
-        }
-
-        .delete-btn:hover {
-            background-color: #dc3545;
-            color: white;
+        @media (max-width: 991px) {
+            .hamburger-menu {
+                display: flex; /* Changed from block to flex for better centering */
+            }
+            
+            /* Add a subtle pulse animation to draw attention */
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            /* Apply the animation when the page loads */
+            .hamburger-menu {
+                animation: pulse 1s ease-in-out;
+            }
         }
     </style>
 </head>
 <body>
+    <button class="hamburger-menu" id="hamburgerMenu">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <div class="dashboard-container">
-        <!-- Left Panel -->
         <?php include 'left_panel.php'; ?>
 
-        <!-- Main Content -->
         <div class="main-content" id="mainContent">
-            <!-- Breadcrumb -->
             <div class="breadcrumb">
                 <a href="similar_dashboard.php">Dashboard</a>
                 <i class="fas fa-chevron-right"></i>
                 <span>My Profile</span>
             </div>
 
-            <!-- Profile Tabs -->
             <div class="profile-tabs">
                 <div class="profile-tab active" data-tab="personal">
                     <i class="fas fa-user"></i> Personal Info
@@ -723,15 +1003,12 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 </div>
             </div>
 
-            <!-- Profile Card (Personal Info) -->
             <div class="profile-section active" id="personal">
                 <div class="profile-card">
-                    <!-- Your existing profile form here -->
                     <?php include 'includes/profile_form.php'; ?>
                 </div>
             </div>
 
-            <!-- Security Section -->
             <div class="profile-section" id="security">
                 <div class="profile-card">
                     <h2 class="section-title">Security Settings</h2>
@@ -759,7 +1036,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 </div>
             </div>
 
-            <!-- Notifications Section -->
             <div class="profile-section" id="notifications">
                 <div class="notification-preferences">
                     <h2 class="section-title">Notification Preferences</h2>
@@ -783,15 +1059,12 @@ $user_role = $_SESSION['role'] ?? 'employee';
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <!-- Add more notification preferences as needed -->
                 </div>
             </div>
 
-            <!-- Activity Log Section -->
             <div class="profile-section" id="activity">
                 <div class="activity-log">
                     <h2 class="section-title">Recent Activity</h2>
-                    <!-- Activity items will be loaded dynamically -->
                     <div id="activityContainer">
                         <div class="activity-item">
                             <div class="activity-icon">
@@ -802,36 +1075,27 @@ $user_role = $_SESSION['role'] ?? 'employee';
                                 <div class="activity-time">Today at 9:30 AM</div>
                             </div>
                         </div>
-                        <!-- More activity items -->
                     </div>
                 </div>
             </div>
 
-            <!-- HR Documents Section -->
             <div class="profile-section" id="hr-documents">
                 <div class="hr-documents">
                     <h2 class="section-title">HR Documents</h2>
 
-                    <!-- Change the document type tabs to remove HR Documents -->
                     <div class="document-type-tabs">
                         <button class="doc-tab active" data-doctype="policies">Policies & Staff Requirements Forms</button>
                         <button class="doc-tab" data-doctype="official">Official Documents</button>
                         <button class="doc-tab" data-doctype="personal">User Personal Documents</button>
                     </div>
 
-                    <!-- Policies Container -->
                     <div class="documents-container" id="policyDocuments">
-                        <!-- Policies will be loaded here -->
                     </div>
 
-                    <!-- Official Documents Container -->
                     <div class="documents-container" id="officialDocuments" style="display: none;">
-                        <!-- Official documents will be loaded here -->
                     </div>
 
-                    <!-- Personal Documents Container -->
                     <div class="documents-container" id="personalDocuments" style="display: none;">
-                        <!-- Personal documents will be loaded here -->
                     </div>
                 </div>
             </div>
@@ -840,20 +1104,16 @@ $user_role = $_SESSION['role'] ?? 'employee';
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Tab switching functionality
         document.querySelectorAll('.profile-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                // Remove active class from all tabs and sections
                 document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
                 
-                // Add active class to clicked tab and corresponding section
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.tab).classList.add('active');
             });
         });
 
-        // Handle avatar upload
         function handleAvatarUpload(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -868,7 +1128,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
             }
         }
 
-        // Upload avatar to server
         function uploadAvatar(file) {
             const formData = new FormData();
             formData.append('avatar', file);
@@ -898,7 +1157,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
             });
         }
 
-        // Handle form submission
         function handleSubmit(event) {
             event.preventDefault();
             
@@ -931,7 +1189,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
             return false;
         }
 
-        // Handle security form submission
         function updateSecurity(event) {
             event.preventDefault();
             
@@ -974,7 +1231,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
             return false;
         }
 
-        // Handle notification preferences
         document.querySelectorAll('.switch input').forEach(toggle => {
             toggle.addEventListener('change', function() {
                 const type = this.id;
@@ -1002,13 +1258,11 @@ $user_role = $_SESSION['role'] ?? 'employee';
                         title: 'Error',
                         text: error.message
                     });
-                    // Revert toggle if update failed
                     this.checked = !enabled;
                 });
             });
         });
 
-        // Load activity log
         function loadActivityLog() {
             fetch('get_activity_log.php')
                 .then(response => response.json())
@@ -1036,7 +1290,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 login: 'fas fa-sign-in-alt',
                 profile_update: 'fas fa-user-edit',
                 password_change: 'fas fa-key',
-                // Add more activity types and icons as needed
             };
             return icons[type] || 'fas fa-info-circle';
         }
@@ -1046,16 +1299,12 @@ $user_role = $_SESSION['role'] ?? 'employee';
             return date.toLocaleString();
         }
 
-        // Load activity log when the activity tab is shown
         document.querySelector('[data-tab="activity"]').addEventListener('click', loadActivityLog);
 
-        // Update this event listener
         document.querySelector('[data-tab="hr-documents"]').addEventListener('click', () => {
-            // Remove the loadHRDocuments() call and replace with loadPolicyDocuments()
             loadPolicyDocuments();
         });
 
-        // Add helper function for file size formatting
         function formatFileSize(bytes) {
             if (!bytes) return '0 Bytes';
             const k = 1024;
@@ -1064,22 +1313,17 @@ $user_role = $_SESSION['role'] ?? 'employee';
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Add these functions to your existing JavaScript
         function initializeDocumentTabs() {
             const tabs = document.querySelectorAll('.doc-tab');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    // Remove active class from all tabs
                     tabs.forEach(t => t.classList.remove('active'));
-                    // Add active class to clicked tab
                     tab.classList.add('active');
                     
-                    // Hide all containers
                     document.querySelectorAll('.documents-container').forEach(container => {
                         container.style.display = 'none';
                     });
 
-                    // Show appropriate container
                     switch(tab.dataset.doctype) {
                         case 'policies':
                             document.getElementById('policyDocuments').style.display = 'block';
@@ -1102,7 +1346,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
             fetch('get_employee_official_documents.php')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Document data:', data); // Debug log
+                    console.log('Document data:', data);
                     const container = document.getElementById('officialDocuments');
                     
                     if (!data.documents || data.documents.length === 0) {
@@ -1115,7 +1359,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
                     }
 
                     container.innerHTML = data.documents.map(doc => {
-                        // Debug log for each document
                         console.log('Processing document:', {
                             id: doc.id,
                             status: doc.status,
@@ -1126,7 +1369,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
                         const showActions = doc.status === 'pending' && 
                                           parseInt(doc.assigned_user_id) === parseInt(doc.current_user_id);
                         
-                        console.log('Show actions:', showActions); // Debug log
+                        console.log('Show actions:', showActions);
 
                         return `
                             <div class="document-item">
@@ -1177,7 +1420,6 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 });
         }
 
-        // Add function to handle status updates
         function updateDocumentStatus(docId, status) {
             Swal.fire({
                 title: `Confirm ${status.charAt(0).toUpperCase() + status.slice(1)}`,
@@ -1224,22 +1466,17 @@ $user_role = $_SESSION['role'] ?? 'employee';
             });
         }
 
-        // Update the document load event listener
         document.addEventListener('DOMContentLoaded', () => {
             initializeDocumentTabs();
             
-            // Load policy documents by default when HR Documents tab is active
             if (document.querySelector('[data-tab="hr-documents"]').classList.contains('active')) {
                 loadPolicyDocuments();
             }
-            
-            // Rest of your existing document tab click handlers...
         });
 
         function loadPersonalDocuments() {
             const container = document.getElementById('personalDocuments');
             
-            // Add filter section at the top
             container.innerHTML = `
                 <div class="filter-section" style="margin-bottom: 20px;">
                     <div class="row">
@@ -1275,12 +1512,10 @@ $user_role = $_SESSION['role'] ?? 'employee';
                 <div id="personalDocumentsContent"></div>
             `;
 
-            // Add event listener for filter change
             document.getElementById('personalDocTypeFilter').addEventListener('change', function() {
                 loadFilteredDocuments(this.value);
             });
 
-            // Initial load of all documents
             loadFilteredDocuments('');
         }
 
@@ -1344,14 +1579,14 @@ $user_role = $_SESSION['role'] ?? 'employee';
         }
 
         function loadPolicyDocuments() {
-            console.log('Loading policy documents...'); // Debug log
+            console.log('Loading policy documents...');
             fetch('get_policy_documents.php')
                 .then(response => {
-                    console.log('Raw response:', response); // Debug log
+                    console.log('Raw response:', response);
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Policy data:', data); // Debug log
+                    console.log('Policy data:', data);
                     const container = document.getElementById('policyDocuments');
                     
                     if (!data.policies || data.policies.length === 0) {
@@ -1436,7 +1671,7 @@ $user_role = $_SESSION['role'] ?? 'employee';
                     .then(data => {
                         if (data.success) {
                             Swal.fire('Success', 'Policy acknowledged successfully', 'success');
-                            loadPolicyDocuments(); // Reload the policies
+                            loadPolicyDocuments();
                         } else {
                             throw new Error(data.message || 'Failed to acknowledge policy');
                         }
@@ -1451,21 +1686,18 @@ $user_role = $_SESSION['role'] ?? 'employee';
         function viewDocument(docId, type) {
             console.log(`Attempting to view document: ID=${docId}, Type=${type}`);
             
-            // Direct method using the new direct viewer
             window.open(`direct_view_document.php?id=${docId}&type=${type}`, '_blank');
         }
 
         function downloadDocument(docId, type) {
-            // Create a temporary anchor element
             const link = document.createElement('a');
             link.href = `down_document.php?id=${docId}&type=${type}`;
-            link.setAttribute('download', ''); // This will force download instead of navigation
+            link.setAttribute('download', '');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // Add this to handle main content margin when panel is toggled
         function togglePanel() {
             const panel = document.getElementById('leftPanel');
             const mainContent = document.getElementById('mainContent');
@@ -1475,6 +1707,60 @@ $user_role = $_SESSION['role'] ?? 'employee';
             icon.classList.toggle('fa-chevron-left');
             icon.classList.toggle('fa-chevron-right');
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const leftPanel = document.querySelector('.left-panel');
+            const mainContent = document.getElementById('mainContent');
+            const overlay = document.createElement('div');
+            
+            // Create overlay for mobile
+            overlay.classList.add('panel-overlay');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.bottom = '0';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            overlay.style.zIndex = '998';
+            overlay.style.display = 'none';
+            document.body.appendChild(overlay);
+            
+            // Toggle menu function
+            function toggleMenu() {
+                leftPanel.classList.toggle('show');
+                if (leftPanel.classList.contains('show')) {
+                    overlay.style.display = 'block';
+                } else {
+                    overlay.style.display = 'none';
+                }
+            }
+            
+            // Event listeners
+            hamburgerMenu.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+            
+            // Close menu when window is resized to larger size
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991 && leftPanel.classList.contains('show')) {
+                    leftPanel.classList.remove('show');
+                    overlay.style.display = 'none';
+                }
+            });
+            
+            // Tab switching functionality
+            document.querySelectorAll('.profile-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and sections
+                    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding section
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+        });
     </script>
 </body>
 </html>

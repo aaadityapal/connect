@@ -734,9 +734,185 @@ CREATE TABLE IF NOT EXISTS leaves (
             background-color: #f8d7da;
             color: #721c24;
         }
+
+        /* Add hamburger menu styles */
+        .hamburger-menu {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-menu:hover {
+            background: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .hamburger-menu:active {
+            transform: scale(0.95);
+        }
+
+        .hamburger-menu i {
+            font-size: 1.75rem;
+        }
+        
+        /* Mobile responsive styles */
+        @media (max-width: 991px) {
+            .hamburger-menu {
+                display: flex;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            .hamburger-menu {
+                animation: pulse 1s ease-in-out;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+                padding-top: 60px;
+                width: 100%;
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+            
+            .main-content.collapsed {
+                margin-left: 0;
+            }
+            
+            .left-panel {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 999;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+            }
+            
+            .left-panel.show {
+                transform: translateX(0);
+            }
+            
+            .panel-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 998;
+                display: none;
+            }
+        }
+        
+        /* iPhone XR/XS specific adjustments */
+        @media (max-width: 414px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .leave-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .history-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .form-control {
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            
+            .form-group label {
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* iPhone SE and other very small screens */
+        @media (max-width: 375px) {
+            .main-content {
+                padding: 10px 5px;
+                padding-top: 60px;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+            
+            .form-control {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .submit-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Prevent horizontal scrolling */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        /* Fix for iPhone notch */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .main-content {
+                padding-top: calc(60px + env(safe-area-inset-top));
+                padding-left: calc(15px + env(safe-area-inset-left));
+                padding-right: calc(15px + env(safe-area-inset-right));
+                padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            }
+            
+            .hamburger-menu {
+                top: calc(15px + env(safe-area-inset-top));
+                left: calc(15px + env(safe-area-inset-left));
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Add hamburger menu button -->
+    <button class="hamburger-menu" id="hamburgerMenu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
     <div class="dashboard-container">
         <!-- Include Left Panel -->
         <?php include 'left_panel.php'; ?>
@@ -996,8 +1172,40 @@ CREATE TABLE IF NOT EXISTS leaves (
         </div>
     </div>
 
+    <!-- Add overlay div and JavaScript for mobile menu -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const leftPanel = document.querySelector('.left-panel');
+            const mainContent = document.getElementById('mainContent');
+            const overlay = document.createElement('div');
+            
+            // Create overlay for mobile
+            overlay.classList.add('panel-overlay');
+            document.body.appendChild(overlay);
+            
+            // Toggle menu function
+            function toggleMenu() {
+                leftPanel.classList.toggle('show');
+                if (leftPanel.classList.contains('show')) {
+                    overlay.style.display = 'block';
+                } else {
+                    overlay.style.display = 'none';
+                }
+            }
+            
+            // Event listeners
+            hamburgerMenu.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+            
+            // Close menu when window is resized to larger size
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991 && leftPanel.classList.contains('show')) {
+                    leftPanel.classList.remove('show');
+                    overlay.style.display = 'none';
+                }
+            });
+
             const startDate = document.getElementById('start_date');
             const endDate = document.getElementById('end_date');
             const daysDisplay = document.getElementById('daysDisplay');

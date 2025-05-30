@@ -103,7 +103,7 @@
         <span class="menu-text">Personal</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'manager_profile.php' ? 'active' : ''; ?>" onclick="window.location.href='manager_profile.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_manager_profile.php' ? 'active' : ''; ?>" onclick="window.location.href='site_manager_profile.php'">
         <i class="fas fa-user-circle"></i>
         <span class="menu-text">My Profile</span>
     </div>

@@ -1426,7 +1426,7 @@ if ($currentHour < 12) {
                                     <p><?php echo $_SESSION['role']; ?></p>
                                 </div>
                                 <div class="dropdown-divider"></div>
-                                <a href="manager_profile.php" class="dropdown-item">
+                                <a href="site_manager_profile.php" class="dropdown-item">
                                     <i class="fas fa-user"></i> Profile
                                 </a>
                                 <a href="settings.php" class="dropdown-item">

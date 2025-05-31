@@ -326,13 +326,13 @@ try {
     ]);
     
     // Insert event
-    $sql = "INSERT INTO sv_calendar_events (title, event_date, created_by) 
-            VALUES (?, ?, ?)";
+    $sql = "INSERT INTO sv_calendar_events (title, event_date, created_by, is_custom_title) 
+            VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         throw new Exception("Prepare statement failed");
     }
-    $stmt->execute([$event_title, $event_date, $user_id]);
+    $stmt->execute([$event_title, $event_date, $user_id, isset($_POST['save_custom_title']) ? 1 : 0]);
     
     $event_id = $conn->lastInsertId();
     debug_log('Event created successfully', ['event_id' => $event_id]);

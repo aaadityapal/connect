@@ -233,6 +233,8 @@ if ($currentHour < 12) {
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/manager/dashboard.css">
     <link rel="stylesheet" href="css/manager/site-overview.css">
+    <link rel="stylesheet" href="css/manager/calendar-stats.css">
+    <link rel="stylesheet" href="css/manager/calendar-event-modal.css">
     <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
     <style>
         :root {
@@ -1239,6 +1241,40 @@ if ($currentHour < 12) {
                 justify-content: center;
             }
         }
+
+        /* Preloader Overlay Styles */
+        .preloader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .preloader-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .preloader-content .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        #preloaderMessage {
+            font-size: 1.1rem;
+            margin-top: 15px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -1640,6 +1676,426 @@ if ($currentHour < 12) {
                 </div>
             </div>
             
+            <!-- Calendar Stats Section -->
+            <div class="calendar-stats-section">
+                <div class="calendar-stats-header">
+                    <h2>Calendar Stats</h2>
+                    <div class="d-flex align-items-center">
+                        <button id="refreshCalendarStats" class="btn btn-sm btn-outline-primary mr-2" title="Refresh Calendar">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <a href="calendar_view.php" class="view-all">
+                            View Full Calendar <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="calendar-container">
+                                <div class="calendar-header">
+                                    <h3 class="mb-3"><?php echo date('F Y'); ?></h3>
+                                    <div class="calendar-nav">
+                                        <button class="btn btn-sm btn-outline-secondary" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                                        <button class="btn btn-sm btn-outline-primary" id="currentMonth">Today</button>
+                                        <button class="btn btn-sm btn-outline-secondary" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                                    </div>
+                                </div>
+                                
+                                <div class="calendar-grid-container">
+                                    <div class="calendar-grid">
+                                        <!-- Weekday Headers -->
+                                        <div class="calendar-weekday">Sun</div>
+                                        <div class="calendar-weekday">Mon</div>
+                                        <div class="calendar-weekday">Tue</div>
+                                        <div class="calendar-weekday">Wed</div>
+                                        <div class="calendar-weekday">Thu</div>
+                                        <div class="calendar-weekday">Fri</div>
+                                        <div class="calendar-weekday">Sat</div>
+                                        
+                                        <?php
+                                        // Get current month and year
+                                        $month = date('m');
+                                        $year = date('Y');
+                                        
+                                        // Calculate the first day of the month
+                                        $firstDayOfMonth = date('w', strtotime("$year-$month-01"));
+                                        
+                                        // Get the number of days in the month
+                                        $daysInMonth = date('t', strtotime("$year-$month-01"));
+                                        
+                                        // Add empty cells for days before the 1st
+                                        for ($i = 0; $i < $firstDayOfMonth; $i++) {
+                                            echo '<div class="calendar-day empty"></div>';
+                                        }
+                                        
+                                        // Output all days of the month
+                                        for ($day = 1; $day <= $daysInMonth; $day++) {
+                                            $date = "$year-$month-" . sprintf('%02d', $day);
+                                            $isToday = ($date == date('Y-m-d'));
+                                            
+                                            // Sample data - in a real app, you would fetch events from database
+                                            $hasEvents = in_array($day, [3, 8, 12, 15, 20, 25]);
+                                            $eventCount = $hasEvents ? rand(1, 3) : 0;
+                                            
+                                            $classes = 'calendar-day';
+                                            if ($isToday) $classes .= ' today';
+                                            if ($hasEvents) $classes .= ' has-events';
+                                            
+                                            echo '<div class="' . $classes . '">';
+                                            echo '<div class="day-number">' . $day . '</div>';
+                                            
+                                            if ($eventCount > 0) {
+                                                echo '<div class="event-indicator">';
+                                                echo '<span class="event-dot"></span>';
+                                                if ($eventCount > 1) {
+                                                    echo '<span class="event-count">+' . $eventCount . '</span>';
+                                                }
+                                                echo '</div>';
+                                            }
+                                            
+                                            echo '</div>';
+                                        }
+                                        
+                                        // Add empty cells for days after the last day of the month to complete the grid
+                                        $cellsAfterMonth = 42 - ($firstDayOfMonth + $daysInMonth); // 42 = 6 rows × 7 days
+                                        for ($i = 0; $i < $cellsAfterMonth; $i++) {
+                                            echo '<div class="calendar-day empty"></div>';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="calendar-stats">
+                                <h4>Month Overview</h4>
+                                <div class="stats-item">
+                                    <div class="stats-icon bg-primary">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-value">12</div>
+                                        <div class="stats-label">Total Events</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stats-item">
+                                    <div class="stats-icon bg-success">
+                                        <i class="fas fa-tasks"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-value">8</div>
+                                        <div class="stats-label">Completed Tasks</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stats-item">
+                                    <div class="stats-icon bg-warning">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-value">5</div>
+                                        <div class="stats-label">Pending Tasks</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stats-item">
+                                    <div class="stats-icon bg-info">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="stats-content">
+                                        <div class="stats-value">3</div>
+                                        <div class="stats-label">Team Meetings</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="upcoming-events">
+                                    <h4>Upcoming Events</h4>
+                                    <div class="event-list">
+                                        <div class="event-item">
+                                            <div class="event-date">
+                                                <span class="event-day"><?php echo date('d', strtotime('+2 days')); ?></span>
+                                                <span class="event-month"><?php echo date('M', strtotime('+2 days')); ?></span>
+                                            </div>
+                                            <div class="event-details">
+                                                <h5>Site Inspection</h5>
+                                                <p><i class="fas fa-clock"></i> 10:00 AM - 12:00 PM</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="event-item">
+                                            <div class="event-date">
+                                                <span class="event-day"><?php echo date('d', strtotime('+5 days')); ?></span>
+                                                <span class="event-month"><?php echo date('M', strtotime('+5 days')); ?></span>
+                                            </div>
+                                            <div class="event-details">
+                                                <h5>Progress Review Meeting</h5>
+                                                <p><i class="fas fa-clock"></i> 2:00 PM - 4:00 PM</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="event-item">
+                                            <div class="event-date">
+                                                <span class="event-day"><?php echo date('d', strtotime('+8 days')); ?></span>
+                                                <span class="event-month"><?php echo date('M', strtotime('+8 days')); ?></span>
+                                            </div>
+                                            <div class="event-details">
+                                                <h5>Material Delivery</h5>
+                                                <p><i class="fas fa-clock"></i> 9:00 AM - 11:00 AM</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                /* Calendar Stats Section Styles */
+                .calendar-stats-section {
+                    margin-bottom: 30px;
+                }
+                
+                .calendar-stats-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                }
+                
+                .calendar-stats-header h2 {
+                    font-size: 1.5rem;
+                    margin: 0;
+                }
+                
+                .calendar-container {
+                    padding: 10px;
+                }
+                
+                .calendar-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+                
+                .calendar-header h3 {
+                    margin: 0;
+                    font-weight: 600;
+                }
+                
+                .calendar-nav {
+                    display: flex;
+                    gap: 10px;
+                }
+                
+                .calendar-grid-container {
+                    overflow-x: auto;
+                }
+                
+                .calendar-grid {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    gap: 5px;
+                    min-width: 100%;
+                }
+                
+                .calendar-weekday {
+                    text-align: center;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                    color: #6c757d;
+                    padding: 5px;
+                    background-color: #f8f9fa;
+                    border-radius: 4px;
+                }
+                
+                .calendar-day {
+                    aspect-ratio: 1/1;
+                    border-radius: 4px;
+                    background-color: #ffffff;
+                    border: 1px solid #e9ecef;
+                    padding: 5px;
+                    position: relative;
+                    min-height: 40px;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .calendar-day.empty {
+                    background-color: #f8f9fa;
+                    border: 1px dashed #dee2e6;
+                }
+                
+                .calendar-day.today {
+                    background-color: rgba(13, 110, 253, 0.1);
+                    border: 2px solid #0d6efd;
+                }
+                
+                .calendar-day.has-events {
+                    background-color: rgba(40, 167, 69, 0.05);
+                }
+                
+                .day-number {
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                }
+                
+                .event-indicator {
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    margin-top: 3px;
+                }
+                
+                .event-dot {
+                    width: 6px;
+                    height: 6px;
+                    background-color: #0d6efd;
+                    border-radius: 50%;
+                }
+                
+                .event-count {
+                    font-size: 0.7rem;
+                    color: #6c757d;
+                }
+                
+                /* Calendar Stats Styles */
+                .calendar-stats {
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .calendar-stats h4 {
+                    font-size: 1.1rem;
+                    margin-bottom: 15px;
+                    font-weight: 600;
+                }
+                
+                .stats-item {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    padding: 10px;
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    transition: transform 0.2s;
+                }
+                
+                .stats-item:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+                }
+                
+                .stats-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 15px;
+                    color: white;
+                }
+                
+                .stats-content {
+                    flex: 1;
+                }
+                
+                .stats-value {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                }
+                
+                .stats-label {
+                    font-size: 0.8rem;
+                    color: #6c757d;
+                }
+                
+                /* Upcoming Events Styles */
+                .upcoming-events {
+                    margin-top: 20px;
+                }
+                
+                .event-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                
+                .event-item {
+                    display: flex;
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 10px;
+                    transition: transform 0.2s;
+                }
+                
+                .event-item:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+                }
+                
+                .event-date {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 50px;
+                    margin-right: 15px;
+                    background-color: #0d6efd;
+                    color: white;
+                    border-radius: 6px;
+                    padding: 5px;
+                }
+                
+                .event-day {
+                    font-size: 1.2rem;
+                    font-weight: 600;
+                    line-height: 1;
+                }
+                
+                .event-month {
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                }
+                
+                .event-details {
+                    flex: 1;
+                }
+                
+                .event-details h5 {
+                    font-size: 0.9rem;
+                    margin: 0 0 5px 0;
+                }
+                
+                .event-details p {
+                    font-size: 0.8rem;
+                    color: #6c757d;
+                    margin: 0;
+                }
+                
+                .event-details p i {
+                    margin-right: 5px;
+                }
+                
+                @media (max-width: 768px) {
+                    .calendar-grid {
+                        grid-template-columns: repeat(7, minmax(40px, 1fr));
+                    }
+                    
+                    .calendar-day {
+                        min-height: 30px;
+                    }
+                }
+            </style>
+            
             <!-- Dashboard Header -->
             <div class="dashboard-header">
                 <div class="welcome-section">
@@ -1896,6 +2352,8 @@ if ($currentHour < 12) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="js/manager/site-overview.js"></script>
+    <script src="js/manager/calendar-event-modal.js"></script>
+    <script src="js/manager/calendar-stats.js"></script>
     <script>
         // Override the save_travel_expenses.php endpoint for the travel expense modal
         window.travelExpenseEndpoint = 'api/save_travel_expenses.php';
@@ -1927,6 +2385,9 @@ if ($currentHour < 12) {
         const shiftName = document.getElementById('shiftName');
         const shiftTiming = document.getElementById('shiftTiming');
         const shiftWeeklyOffs = document.getElementById('shiftWeeklyOffs');
+        const preloaderOverlay = document.getElementById('preloaderOverlay');
+        const preloaderProgress = document.getElementById('preloaderProgress');
+        const preloaderMessage = document.getElementById('preloaderMessage');
         
         // Camera variables
         let stream = null;
@@ -2793,6 +3254,35 @@ if ($currentHour < 12) {
                 `;
             }
         }
+
+        /**
+         * Shows the preloader overlay with optional message
+         * @param {string} message - Message to display
+         */
+        function showPreloader(message = 'Saving data...') {
+            preloaderMessage.textContent = message;
+            preloaderProgress.style.width = '0%';
+            preloaderOverlay.style.display = 'flex';
+        }
+        
+        /**
+         * Updates the preloader progress
+         * @param {number} percent - Progress percentage (0-100)
+         * @param {string} message - Optional new message
+         */
+        function updatePreloaderProgress(percent, message = null) {
+            preloaderProgress.style.width = percent + '%';
+            if (message) {
+                preloaderMessage.textContent = message;
+            }
+        }
+        
+        /**
+         * Hides the preloader overlay
+         */
+        function hidePreloader() {
+            preloaderOverlay.style.display = 'none';
+        }
     </script>
     <script>
         // Toggle Panel Function
@@ -3215,5 +3705,1068 @@ if ($currentHour < 12) {
     </div>
 </div>
 
+<!-- Add Preloader Overlay -->
+<div class="preloader-overlay" id="preloaderOverlay" style="display: none;">
+    <div class="preloader-content">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <p class="mt-2" id="preloaderMessage">Saving data...</p>
+        <div class="progress mt-2" style="height: 5px; width: 200px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="preloaderProgress" role="progressbar" style="width: 0%"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Preloader Overlay Styles */
+    .preloader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    
+    .preloader-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .preloader-content .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    #preloaderMessage {
+        font-size: 1.1rem;
+        margin-top: 15px;
+        color: #333;
+    }
+</style>
+
+<script>
+    // Variables to track punch status
+    let isPunchedIn = false;
+    let isCompletedForToday = false;
+    
+    // DOM elements
+    const punchButton = document.getElementById('punchButton');
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraTitle = document.getElementById('cameraTitle');
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const videoContainer = document.getElementById('videoContainer');
+    const capturedImageContainer = document.getElementById('capturedImageContainer');
+    const capturedImage = document.getElementById('capturedImage');
+    const captureBtn = document.getElementById('captureBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const confirmPunchBtn = document.getElementById('confirmPunchBtn');
+    const rotateCameraBtn = document.getElementById('rotateCameraBtn');
+    const locationStatus = document.getElementById('locationStatus');
+    const locationCoords = document.getElementById('locationCoords');
+    const locationAddress = document.getElementById('locationAddress');
+    const workReportContainer = document.getElementById('workReportContainer');
+    const workReportText = document.getElementById('workReportText');
+    const shiftName = document.getElementById('shiftName');
+    const shiftTiming = document.getElementById('shiftTiming');
+    const shiftWeeklyOffs = document.getElementById('shiftWeeklyOffs');
+    const preloaderOverlay = document.getElementById('preloaderOverlay');
+    const preloaderProgress = document.getElementById('preloaderProgress');
+    const preloaderMessage = document.getElementById('preloaderMessage');
+    
+    // Camera variables
+    let stream = null;
+    let facingMode = 'user'; // Default to front camera
+    let capturedPhotoData = null;
+    let userLocation = null;
+    let userShiftInfo = null;
+    
+    // Initialize components when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check punch status
+        checkPunchStatus();
+        
+        // Use either the new updateDateTime function or the legacy updateTime function, but not both
+        if (typeof updateDateTime === 'function') {
+            // Start updating date and time with the new function
+            updateDateTime();
+        } else {
+            // Use legacy updateTime as fallback
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+        
+        // No need to set interval since updateDateTime calls itself
+    });
+    
+    // Punch button click handler
+    punchButton.addEventListener('click', function() {
+        // Check if already completed for today
+        if (isCompletedForToday) {
+            showNotification('Attendance already completed for today', 'warning');
+            return;
+        }
+        
+        // Update camera title
+        cameraTitle.textContent = isPunchedIn ? 'Take Selfie for Punch Out' : 'Take Selfie for Punch In';
+        
+        // Show/hide work report based on punch type
+        workReportContainer.style.display = isPunchedIn ? 'block' : 'none';
+        
+        // Open camera modal
+        openCameraModal();
+        
+        // Initialize camera
+        initCamera();
+        
+        // Get user location
+        getUserLocation();
+    });
+    
+    // Close camera button click handler
+    closeCameraBtn.addEventListener('click', closeCameraModal);
+    
+    // Capture photo button click handler
+    captureBtn.addEventListener('click', capturePhoto);
+    
+    // Retake photo button click handler
+    retakeBtn.addEventListener('click', function() {
+        // Show video container and hide image container
+        videoContainer.style.display = 'block';
+        capturedImageContainer.style.display = 'none';
+        
+        // Show capture button and hide retake/confirm buttons
+        captureBtn.style.display = 'block';
+        retakeBtn.style.display = 'none';
+        confirmPunchBtn.style.display = 'none';
+        
+        // Reset captured photo data
+        capturedPhotoData = null;
+    });
+    
+    // Rotate camera button click handler
+    rotateCameraBtn.addEventListener('click', function() {
+        // Toggle facing mode
+        facingMode = facingMode === 'user' ? 'environment' : 'user';
+        
+        // Reinitialize camera with new facing mode
+        initCamera();
+    });
+    
+    // Confirm punch button click handler
+    confirmPunchBtn.addEventListener('click', function() {
+        // Check if work report is provided for punch out
+        if (isPunchedIn && workReportContainer.style.display === 'block') {
+            if (!workReportText.value.trim()) {
+                showNotification('Please enter your work report before punching out', 'warning');
+                workReportText.focus();
+                return;
+            }
+        }
+        
+        // Set button to loading state
+        confirmPunchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        confirmPunchBtn.disabled = true;
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('punch_type', isPunchedIn ? 'out' : 'in');
+        
+        // Add photo data if available
+        if (capturedPhotoData) {
+            formData.append('photo_data', capturedPhotoData);
+        } else {
+            // Show error and return if no photo was captured
+            showNotification('Please capture a photo before submitting', 'error');
+            confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
+            confirmPunchBtn.disabled = false;
+            return;
+        }
+        
+        // Add location data if available
+        if (userLocation) {
+            formData.append('latitude', userLocation.latitude);
+            formData.append('longitude', userLocation.longitude);
+            formData.append('accuracy', userLocation.accuracy);
+            if (userLocation.address) {
+                formData.append('address', userLocation.address);
+            }
+        } else {
+            // Show error and return if no location data
+            showNotification('Location data is required. Please allow location access.', 'error');
+            confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
+            confirmPunchBtn.disabled = false;
+            return;
+        }
+        
+        // Add work report for punch out
+        if (isPunchedIn && workReportText.value.trim()) {
+            formData.append('work_report', workReportText.value.trim());
+        }
+        
+        // Add shift information if available
+        if (userShiftInfo && userShiftInfo.shift_id) {
+            formData.append('shift_id', userShiftInfo.shift_id);
+        }
+        
+        // Get IP address and device info
+        formData.append('ip_address', '<?php echo $_SERVER['REMOTE_ADDR']; ?>');
+        formData.append('device_info', navigator.userAgent);
+        
+        console.log('Submitting punch data. Type:', isPunchedIn ? 'out' : 'in'); // Debug log
+        
+        // Send request to process_punch.php
+        fetch('process_punch.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Punch response:', data); // Debug log
+            
+            if (data.status === 'success') {
+                // Close camera modal
+                closeCameraModal();
+                
+                // Update button state
+                checkPunchStatus();
+                
+                // Show success notification
+                let successMessage = isPunchedIn ? 
+                    `Punched out successfully at ${data.time}` : 
+                    `Punched in successfully at ${data.time}`;
+                
+                // Add working hours info for punch out
+                if (isPunchedIn && data.working_hours) {
+                    // Format the hours:minutes:seconds nicely
+                    let workingHoursDisplay = '';
+                    const parts = data.working_hours.split(':');
+                    if (parts.length === 3) {
+                        const hours = parseInt(parts[0]);
+                        const minutes = parseInt(parts[1]);
+                        const seconds = parseInt(parts[2]);
+                        
+                        if (hours > 0) {
+                            workingHoursDisplay += `${hours}h `;
+                        }
+                        if (minutes > 0 || hours > 0) {
+                            workingHoursDisplay += `${minutes}m `;
+                        }
+                        workingHoursDisplay += `${seconds}s`;
+                    } else {
+                        workingHoursDisplay = data.working_hours;
+                    }
+                    
+                    successMessage += `<br>Hours worked: ${workingHoursDisplay}`;
+                    
+                    // Format and add overtime if exists
+                    if (data.overtime_hours && data.overtime_hours !== '00:00:00') {
+                        // Format the overtime nicely
+                        let overtimeDisplay = '';
+                        const overtimeParts = data.overtime_hours.split(':');
+                        if (overtimeParts.length === 3) {
+                            const overtimeHours = parseInt(overtimeParts[0]);
+                            const overtimeMinutes = parseInt(overtimeParts[1]);
+                            const overtimeSeconds = parseInt(overtimeParts[2]);
+                            
+                            if (overtimeHours > 0) {
+                                overtimeDisplay += `${overtimeHours}h `;
+                            }
+                            if (overtimeMinutes > 0 || overtimeHours > 0) {
+                                overtimeDisplay += `${overtimeMinutes}m `;
+                            }
+                            overtimeDisplay += `${overtimeSeconds}s`;
+                        } else {
+                            overtimeDisplay = data.overtime_hours;
+                        }
+                        
+                        successMessage += ` (including ${overtimeDisplay} overtime)`;
+                    }
+                }
+                
+                showNotification(successMessage, 'success');
+            } else {
+                // Show error notification
+                showNotification(data.message || 'Error processing punch', 'error');
+                
+                // Reset button state
+                confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
+                confirmPunchBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Connection error: ' + error.message, 'error');
+            
+            // Reset button state
+            confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
+            confirmPunchBtn.disabled = false;
+        });
+    });
+    
+    /**
+     * Opens the camera modal
+     */
+    function openCameraModal() {
+        cameraModal.classList.add('open');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+    
+    /**
+     * Closes the camera modal and cleans up resources
+     */
+    function closeCameraModal() {
+        cameraModal.classList.remove('open');
+        document.body.style.overflow = 'auto'; // Restore scrolling
+        
+        // Stop camera stream
+        stopCamera();
+        
+        // Reset UI
+        videoContainer.style.display = 'block';
+        capturedImageContainer.style.display = 'none';
+        captureBtn.style.display = 'block';
+        retakeBtn.style.display = 'none';
+        confirmPunchBtn.style.display = 'none';
+        workReportContainer.style.display = 'none';
+        workReportText.value = '';
+        
+        // Reset data
+        capturedPhotoData = null;
+    }
+    
+    /**
+     * Initializes the camera
+     */
+    function initCamera() {
+        // Check if browser supports getUserMedia
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            locationStatus.textContent = 'Camera not supported in this browser';
+            return;
+        }
+        
+        // Stop any existing stream
+        stopCamera();
+        
+        // Set up camera constraints
+        const constraints = {
+            video: {
+                facingMode: facingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        };
+        
+        // Get camera stream
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function(mediaStream) {
+                stream = mediaStream;
+                cameraVideo.srcObject = mediaStream;
+                cameraVideo.play()
+                    .catch(error => {
+                        console.error('Error playing video:', error);
+                    });
+            })
+            .catch(function(error) {
+                console.error('Error accessing camera:', error);
+                locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Camera access denied or not available';
+            });
+    }
+    
+    /**
+     * Stops the camera stream
+     */
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+    
+    /**
+     * Captures a photo from the camera
+     */
+    function capturePhoto() {
+        if (!stream) return;
+        
+        // Create a canvas element
+        const canvas = document.createElement('canvas');
+        canvas.width = cameraVideo.videoWidth;
+        canvas.height = cameraVideo.videoHeight;
+        
+        // Draw video frame to canvas
+        const context = canvas.getContext('2d');
+        context.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+        
+        // Get image data as base64
+        capturedPhotoData = canvas.toDataURL('image/jpeg');
+        
+        // Display captured image
+        capturedImage.src = capturedPhotoData;
+        
+        // Show image container and hide video container
+        videoContainer.style.display = 'none';
+        capturedImageContainer.style.display = 'block';
+        
+        // Show retake and confirm buttons, hide capture button
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'block';
+        confirmPunchBtn.style.display = 'block';
+    }
+    
+    /**
+     * Gets the user's current location
+     */
+    function getUserLocation() {
+        // Check if geolocation is supported
+        if (!navigator.geolocation) {
+            locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Geolocation not supported';
+            return;
+        }
+        
+        // Update status
+        locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
+        
+        // Get current position
+        navigator.geolocation.getCurrentPosition(
+            // Success callback
+            function(position) {
+                userLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                };
+                
+                // Update location info
+                locationStatus.innerHTML = `<i class="fas fa-check-circle"></i> Location found (Accuracy: ${Math.round(position.coords.accuracy)}m)`;
+                locationCoords.innerHTML = `<i class="fas fa-compass"></i> Coordinates: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                
+                // Get address from coordinates
+                getAddressFromCoordinates(position.coords.latitude, position.coords.longitude);
+            },
+            // Error callback
+            function(error) {
+                console.error('Geolocation error:', error);
+                
+                let errorMessage = 'Error getting location';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Location permission denied';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Location information unavailable';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Location request timed out';
+                        break;
+                }
+                
+                locationStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMessage}`;
+                locationCoords.innerHTML = '<i class="fas fa-compass"></i> Coordinates: Not available';
+                locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Not available';
+            },
+            // Options
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+    
+    /**
+     * Gets address from coordinates using reverse geocoding
+     */
+    function getAddressFromCoordinates(latitude, longitude) {
+        // Update status
+        locationAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting address...';
+        
+        // Use Nominatim API for reverse geocoding
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`;
+        
+        fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'HR Attendance System'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.display_name) {
+                locationAddress.innerHTML = `<i class="fas fa-map"></i> Address: ${data.display_name}`;
+                userLocation.address = data.display_name;
+            } else {
+                locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Could not determine address';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching address:', error);
+            locationAddress.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Address: Error retrieving address';
+        });
+    }
+    
+    /**
+     * Check current punch status from the server
+     */
+    function checkPunchStatus() {
+        // Set button to loading state
+        punchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        punchButton.disabled = true;
+        
+        // Fetch status from server
+        fetch('api/check_punch_status.php')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Punch status data:', data); // Debug log
+                
+                // Update variables
+                isPunchedIn = data.is_punched_in || false;
+                isCompletedForToday = data.is_completed || false;
+                
+                // Save shift info
+                userShiftInfo = data.shift_info || {
+                    shift_id: null,
+                    shift_name: 'Default Shift',
+                    start_time: '09:00:00',
+                    end_time: '18:00:00',
+                    start_time_formatted: '09:00 AM',
+                    end_time_formatted: '06:00 PM',
+                    weekly_offs: 'Saturday,Sunday'
+                };
+                
+                // Update shift information display
+                updateShiftDisplay();
+                
+                // Update button UI
+                updatePunchButton();
+                
+                // Update display of punch time if available
+                const buttonContainer = punchButton.closest('.user-actions');
+                
+                // Remove any existing time display
+                const existingPunchTime = document.querySelector('.punch-time');
+                if (existingPunchTime) {
+                    existingPunchTime.remove();
+                }
+                
+                // Add time display if available
+                if (isPunchedIn && data.last_punch_in) {
+                    const punchTimeElem = document.createElement('div');
+                    punchTimeElem.className = 'punch-time';
+                    punchTimeElem.innerHTML = `Since: ${data.last_punch_in}`;
+                    punchTimeElem.style.marginTop = '5px';
+                    punchTimeElem.style.fontSize = '0.8rem';
+                    punchTimeElem.style.color = '#666';
+                    buttonContainer.appendChild(punchTimeElem);
+                } else if (isCompletedForToday && data.working_hours) {
+                    const punchTimeElem = document.createElement('div');
+                    punchTimeElem.className = 'punch-time';
+                    punchTimeElem.innerHTML = `Hours worked: ${data.working_hours}`;
+                    punchTimeElem.style.marginTop = '5px';
+                    punchTimeElem.style.fontSize = '0.8rem';
+                    punchTimeElem.style.color = '#666';
+                    buttonContainer.appendChild(punchTimeElem);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking punch status:', error);
+                
+                // Set default state on error
+                punchButton.classList.remove('btn-danger', 'btn-secondary');
+                punchButton.classList.add('btn-success');
+                punchButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Punch In';
+                punchButton.disabled = false;
+                
+                showNotification('Failed to check punch status', 'error');
+            });
+    }
+    
+    /**
+     * Update the punch button appearance based on current status
+     */
+    function updatePunchButton() {
+        if (isCompletedForToday) {
+            // User has completed attendance for today
+            punchButton.classList.remove('btn-success', 'btn-danger');
+            punchButton.classList.add('btn-secondary');
+            punchButton.innerHTML = '<i class="fas fa-check-circle"></i> Completed';
+            punchButton.disabled = true;
+        } else if (isPunchedIn) {
+            // User is punched in but not yet punched out
+            punchButton.classList.remove('btn-success', 'btn-secondary');
+            punchButton.classList.add('btn-danger');
+            punchButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> Punch Out';
+            punchButton.disabled = false;
+        } else {
+            // User is not punched in
+            punchButton.classList.remove('btn-danger', 'btn-secondary');
+            punchButton.classList.add('btn-success');
+            punchButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Punch In';
+            punchButton.disabled = false;
+        }
+    }
+    
+    /**
+     * Update the shift information display
+     */
+    function updateShiftDisplay() {
+        // Update the shift info in the camera modal
+        if (userShiftInfo) {
+            shiftName.textContent = userShiftInfo.shift_name || 'Default Shift';
+            shiftTiming.textContent = `${userShiftInfo.start_time_formatted || '09:00 AM'} - ${userShiftInfo.end_time_formatted || '06:00 PM'}`;
+            shiftWeeklyOffs.textContent = userShiftInfo.weekly_offs ? `Weekly offs: ${userShiftInfo.weekly_offs}` : 'Weekly offs: Saturday, Sunday';
+            
+            // Update the greeting section shift info
+            const greetingShiftInfo = document.getElementById('greeting-shift-info');
+            if (greetingShiftInfo) {
+                greetingShiftInfo.innerHTML = `
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <i class="fas fa-id-badge" style="color: #0d6efd; width: 15px; text-align: center;"></i>
+                        ${userShiftInfo.shift_name || 'Default Shift'}
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
+                        <i class="fas fa-clock" style="color: #0d6efd; width: 15px; text-align: center;"></i>
+                        ${userShiftInfo.start_time_formatted || '09:00 AM'} - ${userShiftInfo.end_time_formatted || '06:00 PM'}
+                    </span>
+                `;
+            }
+            
+            // Start updating shift time
+            updateShiftTime();
+        } else {
+            shiftName.textContent = 'Default Shift';
+            shiftTiming.textContent = '09:00 AM - 06:00 PM';
+            shiftWeeklyOffs.textContent = 'Weekly offs: Saturday, Sunday';
+            
+            // Default greeting section shift info
+            const greetingShiftInfo = document.getElementById('greeting-shift-info');
+            if (greetingShiftInfo) {
+                greetingShiftInfo.innerHTML = `
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <i class="fas fa-id-badge" style="color: #0d6efd; width: 15px; text-align: center;"></i>
+                        Default Shift
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
+                        <i class="fas fa-clock" style="color: #0d6efd; width: 15px; text-align: center;"></i>
+                        09:00 AM - 06:00 PM
+                    </span>
+                `;
+            }
+        }
+    }
+    
+    /**
+     * Updates the shift remaining time
+     */
+    function updateShiftTime() {
+        const shiftRemainingTimeEl = document.getElementById('shift-remaining-time');
+        if (!shiftRemainingTimeEl || !userShiftInfo || !userShiftInfo.end_time) {
+            return;
+        }
+        
+        const now = new Date();
+        
+        // Parse shift end time
+        const [endHours, endMinutes, endSeconds] = userShiftInfo.end_time.split(':').map(Number);
+        
+        // Create shift end date for today
+        const shiftEndDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            endHours,
+            endMinutes,
+            endSeconds || 0
+        );
+        
+        // If current time is after shift end time, the shift has ended for today
+        if (now > shiftEndDate) {
+            // Only update if text has changed to avoid flickering
+            if (shiftRemainingTimeEl.textContent !== 'Shift ended') {
+                shiftRemainingTimeEl.textContent = 'Shift ended';
+                shiftRemainingTimeEl.style.color = '#6c757d'; // Gray color
+            }
+            return;
+        }
+        
+        // Calculate time difference
+        let timeDiff = shiftEndDate - now;
+        
+        // Convert time difference to hours, minutes, seconds
+        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+        timeDiff -= hours * (1000 * 60 * 60);
+        
+        const minutes = Math.floor(timeDiff / (1000 * 60));
+        timeDiff -= minutes * (1000 * 60);
+        
+        const seconds = Math.floor(timeDiff / 1000);
+        
+        // Format the countdown string
+        const countdownText = `${hours}h ${minutes}m ${seconds}s`;
+        
+        // Only update if text has changed to avoid flickering
+        if (shiftRemainingTimeEl.textContent !== countdownText) {
+            shiftRemainingTimeEl.textContent = countdownText;
+            
+            // Only set color if it's not already blue
+            if (shiftRemainingTimeEl.style.color !== '#0d6efd') {
+                shiftRemainingTimeEl.style.color = '#0d6efd'; // Blue color
+            }
+        }
+        
+        // Schedule next update in 1 second
+        setTimeout(updateShiftTime, 1000);
+    }
+    
+    /**
+     * Shows a notification message
+     */
+    function showNotification(message, type) {
+        // Check if the notification container exists
+        let notificationContainer = document.querySelector('.notification-container');
+        
+        // Create notification container if it doesn't exist
+        if (!notificationContainer) {
+            notificationContainer = document.createElement('div');
+            notificationContainer.className = 'notification-container';
+            document.body.appendChild(notificationContainer);
+        }
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        // Set icon based on notification type
+        let icon = 'fa-info-circle';
+        if (type === 'success') icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+        if (type === 'warning') icon = 'fa-exclamation-triangle';
+        
+        notification.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <div class="notification-message">${message}</div>
+        `;
+        
+        // Add to container
+        notificationContainer.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    /**
+     * Updates the date and time display
+     */
+    function updateDateTime() {
+        const now = new Date();
+        
+        // Options for formatting date and time with consistent format
+        const dateOptions = {
+            weekday: 'long',
+            day: '2-digit',  // Use 2-digit to ensure leading zeros
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'Asia/Kolkata' // IST timezone
+        };
+        
+        const timeOptions = {
+            hour: '2-digit',  // Use 2-digit to ensure leading zeros
+            minute: '2-digit', // Use 2-digit to ensure leading zeros
+            hour12: true,
+            timeZone: 'Asia/Kolkata' // IST timezone
+        };
+        
+        // Format date and time using Intl.DateTimeFormat with specific parts
+        const formattedTime = new Intl.DateTimeFormat('en-US', timeOptions).format(now);
+        
+        // Format date components separately to avoid inconsistencies
+        const formatter = new Intl.DateTimeFormat('en-US', dateOptions);
+        const dateParts = formatter.formatToParts(now);
+        
+        // Extract individual date components
+        let weekday = '', day = '', month = '', year = '';
+        dateParts.forEach(part => {
+            if (part.type === 'weekday') weekday = part.value;
+            if (part.type === 'day') day = part.value;
+            if (part.type === 'month') month = part.value;
+            if (part.type === 'year') year = part.value;
+        });
+        
+        // Cache current values to avoid unnecessary updates
+        if (!window.lastTimeValues) {
+            window.lastTimeValues = {
+                time: '',
+                weekday: '',
+                day: '',
+                month: '',
+                year: ''
+            };
+        }
+        
+        // Find the time display elements
+        const timeElements = document.querySelectorAll('.time-item');
+        if (timeElements && timeElements.length >= 2) {
+            // Only update time if changed
+            if (window.lastTimeValues.time !== formattedTime) {
+                // Find or create time text element
+                let timeTextEl = timeElements[0].querySelector('.time-text');
+                if (!timeTextEl) {
+                    // First time setup - create stable structure
+                    timeElements[0].innerHTML = `<i class="far fa-clock"></i> <span class="time-text">${formattedTime}</span> <span class="time-label">IST</span>`;
+                } else {
+                    // Update only the text content, not the whole structure
+                    timeTextEl.textContent = formattedTime;
+                }
+                window.lastTimeValues.time = formattedTime;
+            }
+            
+            // Update date components individually to avoid flickering
+            const dateEl = timeElements[1];
+            
+            // Create date structure if not exists
+            if (!dateEl.querySelector('.weekday-text')) {
+                dateEl.innerHTML = `
+                    <i class="far fa-calendar-alt"></i> 
+                    <span class="date-container">
+                        <span class="weekday-text">${weekday}</span>, 
+                        <span class="day-text">${day}</span> 
+                        <span class="month-text">${month}</span> 
+                        <span class="year-text">${year}</span>
+                    </span>
+                `;
+            } else {
+                // Update individual parts only if changed
+                if (window.lastTimeValues.weekday !== weekday) {
+                    dateEl.querySelector('.weekday-text').textContent = weekday;
+                    window.lastTimeValues.weekday = weekday;
+                }
+                
+                if (window.lastTimeValues.day !== day) {
+                    dateEl.querySelector('.day-text').textContent = day;
+                    window.lastTimeValues.day = day;
+                }
+                
+                if (window.lastTimeValues.month !== month) {
+                    dateEl.querySelector('.month-text').textContent = month;
+                    window.lastTimeValues.month = month;
+                }
+                
+                if (window.lastTimeValues.year !== year) {
+                    dateEl.querySelector('.year-text').textContent = year;
+                    window.lastTimeValues.year = year;
+                }
+            }
+        }
+        
+        // Update greeting based on time of day
+        updateGreeting(now);
+        
+        // Schedule next update in 1 second
+        setTimeout(updateDateTime, 1000);
+    }
+    
+    /**
+     * Update the greeting based on the time of day
+     */
+    function updateGreeting(now) {
+        const hour = now.getHours();
+        let greeting = '';
+        let iconClass = '';
+        let iconColor = '';
+        
+        if (hour >= 5 && hour < 12) {
+            greeting = 'Good morning';
+            iconClass = 'fa-sun';
+            iconColor = '#f39c12'; // yellow/orange
+        } else if (hour >= 12 && hour < 17) {
+            greeting = 'Good afternoon';
+            iconClass = 'fa-sun';
+            iconColor = '#e67e22'; // orange
+        } else if (hour >= 17 && hour < 22) {
+            greeting = 'Good evening';
+            iconClass = 'fa-moon';
+            iconColor = '#9b59b6'; // purple
+        } else {
+            greeting = 'Good night';
+            iconClass = 'fa-moon';
+            iconColor = '#34495e'; // dark blue
+        }
+        
+        // Update the greeting text
+        const greetingEl = document.querySelector('.greeting-text h1');
+        if (greetingEl) {
+            // Extract username from the current text by removing the greeting part
+            // This prevents accumulating exclamation marks
+            let userName = '';
+            const commaIndex = greetingEl.textContent.indexOf(',');
+            if (commaIndex !== -1) {
+                // Extract everything after the comma and before any exclamation marks
+                const afterComma = greetingEl.textContent.substring(commaIndex + 1);
+                const exclamationIndex = afterComma.indexOf('!');
+                if (exclamationIndex !== -1) {
+                    userName = afterComma.substring(0, exclamationIndex).trim();
+                } else {
+                    userName = afterComma.trim();
+                }
+            }
+            
+            // Set the greeting with exactly one exclamation mark
+            greetingEl.innerHTML = `
+                <i class="fas ${iconClass} greeting-icon" style="color: ${iconColor}"></i>
+                ${greeting}, ${userName || 'User'}!
+            `;
+        }
+    }
+</script>
+
+<!-- Update the saveAllExpenses click handler in the travel expense script -->
+<script>
+    // Override the save_travel_expenses.php endpoint for the travel expense modal
+    window.travelExpenseEndpoint = 'api/save_travel_expenses.php';
+</script>
+<script src="js/supervisor/travel-expense-modal.js"></script>
+<script>
+    // Add this after the travel-expense-modal.js script is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Override the saveAllExpenses click handler
+        const saveAllExpensesBtn = document.getElementById('saveAllExpenses');
+        if (saveAllExpensesBtn) {
+            // Remove existing click listeners
+            const newSaveBtn = saveAllExpensesBtn.cloneNode(true);
+            saveAllExpensesBtn.parentNode.replaceChild(newSaveBtn, saveAllExpensesBtn);
+            
+            // Add new click handler with preloader
+            newSaveBtn.addEventListener('click', function() {
+                const expenseEntries = document.querySelectorAll('.expense-entry');
+                
+                if (expenseEntries.length === 0) {
+                    showNotification('No expense entries to save', 'warning');
+                    return;
+                }
+                
+                // Show preloader
+                showPreloader('Preparing expense data...');
+                
+                // Collect all expense data
+                const expenses = [];
+                expenseEntries.forEach((entry, index) => {
+                    const entryId = entry.dataset.entryId;
+                    expenses.push({
+                        purpose: entry.dataset.purpose,
+                        mode: entry.dataset.mode,
+                        from: entry.dataset.from,
+                        to: entry.dataset.to,
+                        date: entry.dataset.date,
+                        distance: entry.dataset.distance,
+                        amount: entry.dataset.amount,
+                        notes: entry.dataset.notes || ''
+                    });
+                    
+                    // Update progress for data collection
+                    updatePreloaderProgress(10 + (index / expenseEntries.length) * 20);
+                });
+                
+                // Update preloader message
+                setTimeout(() => {
+                    updatePreloaderProgress(30, 'Uploading expense data...');
+                }, 500);
+                
+                // Send data to server
+                fetch(window.travelExpenseEndpoint || 'api/save_travel_expenses.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ expenses: expenses })
+                })
+                .then(response => {
+                    // Update progress for server response
+                    updatePreloaderProgress(70, 'Processing response...');
+                    
+                    if (!response.ok) {
+                        throw new Error('Server returned error status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update progress for completion
+                    updatePreloaderProgress(100, 'Completed successfully!');
+                    
+                    setTimeout(() => {
+                        hidePreloader();
+                        
+                        if (data.status === 'success') {
+                            // Show success notification
+                            showNotification('All expenses saved successfully!', 'success');
+                            
+                            // Clear the expenses list
+                            const expensesList = document.querySelector('.travel-expenses-list');
+                            expensesList.innerHTML = '';
+                            
+                            // Reset summary
+                            document.getElementById('totalEntries').textContent = '0';
+                            document.getElementById('totalAmount').textContent = '0.00';
+                            document.querySelector('.travel-expenses-summary').style.display = 'none';
+                            
+                            // Close the modal
+                            $('#travelExpenseModal').modal('hide');
+                            
+                            // Refresh travel expense card data
+                            if (typeof refreshTravelExpenseCard === 'function') {
+                                refreshTravelExpenseCard();
+                            }
+                        } else {
+                            // Show error notification
+                            showNotification(data.message || 'Error saving expenses', 'error');
+                        }
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    
+                    // Update progress for error
+                    updatePreloaderProgress(100, 'Error occurred!');
+                    
+                    setTimeout(() => {
+                        hidePreloader();
+                        showNotification('Error: ' + error.message, 'error');
+                    }, 1000);
+                });
+            });
+        }
+    });
+</script>
 </html>
 

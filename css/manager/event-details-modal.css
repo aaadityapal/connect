@@ -1,0 +1,330 @@
+/* Enhanced Event Details Modal Styles */
+.event-details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(3px);
+}
+
+.event-details-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.event-details-modal-content {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.3s ease;
+}
+
+.event-details-modal.show .event-details-modal-content {
+  transform: translateY(0) scale(1);
+}
+
+.event-details-modal-header {
+  padding: 18px 25px;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.event-details-modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.event-details-modal-close {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.event-details-modal-close:hover {
+  background-color: #f1f1f1;
+  color: #dc3545;
+  transform: rotate(90deg);
+}
+
+.event-details-modal-body {
+  padding: 25px;
+  position: relative;
+}
+
+.event-details-loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  border-radius: 0 0 12px 12px;
+}
+
+.event-details-modal-footer {
+  padding: 15px 25px;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background-color: #f8f9fa;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+/* Event Details Content Styles */
+.event-details-header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.event-details-header h3 {
+  margin-bottom: 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.event-details-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.event-details-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.event-details-meta-item i {
+  color: #0d6efd;
+}
+
+/* Enhanced Tab Styles */
+.event-details-tabs {
+  margin-top: 20px;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  gap: 5px;
+}
+
+.event-details-tabs .nav-item {
+  margin-bottom: -1px;
+}
+
+.event-details-tabs .nav-link {
+  padding: 10px 15px;
+  border: 1px solid transparent;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  color: #6c757d;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.event-details-tabs .nav-link i {
+  font-size: 1rem;
+}
+
+.event-details-tabs .nav-link:hover {
+  background-color: #f8f9fa;
+  color: #0d6efd;
+}
+
+.event-details-tabs .nav-link.active {
+  color: #0d6efd;
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+}
+
+.event-details-tab-content {
+  padding: 25px 0;
+}
+
+/* Enhanced Card styles for overview tab */
+.event-details-tab-content .card {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  height: 100%;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+.event-details-tab-content .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.event-details-tab-content .card-body {
+  padding: 20px;
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+}
+
+.event-details-tab-content .card-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.event-details-tab-content .card-text {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+/* Enhanced Table Styles */
+.event-details-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.event-details-table th,
+.event-details-table td {
+  padding: 12px 15px;
+  border: none;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.event-details-table th {
+  background: linear-gradient(to right, #f1f5f9, #f8f9fa);
+  font-weight: 600;
+  text-align: left;
+  color: #495057;
+}
+
+.event-details-table tr:last-child td {
+  border-bottom: none;
+}
+
+.event-details-table tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.event-details-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Export Button Styles */
+.export-excel-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #107c41; /* Excel green color */
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.export-excel-btn:hover {
+  background-color: #0c6234;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.export-excel-btn i {
+  font-size: 1.1rem;
+}
+
+/* Make tabs scrollable on mobile */
+@media (max-width: 768px) {
+  .event-details-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    white-space: nowrap;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+  }
+  
+  .event-details-tabs .nav-item {
+    float: none;
+    display: inline-block;
+  }
+  
+  .event-details-tabs::-webkit-scrollbar {
+    height: 3px;
+  }
+  
+  .event-details-tabs::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+  
+  .event-details-modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .event-details-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .event-details-modal-body {
+    padding: 15px;
+  }
+} 

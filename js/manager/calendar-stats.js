@@ -109,8 +109,8 @@ function handleCalendarEventCreated(e) {
  * Initialize the calendar
  */
 function initCalendar() {
-    // Load sample events into the calendar state
-    loadSampleEvents();
+    // Load events for current month
+    loadEvents(calendarState.currentDate);
     
     // Render the calendar with current month
     renderCalendar(calendarState.currentDate);
@@ -120,25 +120,69 @@ function initCalendar() {
 }
 
 /**
- * Load sample events into the calendar state
+ * Load events for the given month
  */
-function loadSampleEvents() {
+function loadEvents(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+    
+    // Clear existing events
     calendarState.events = {};
     
-    // Process sample events
-    calendarState.sampleEvents.forEach(event => {
-        if (!calendarState.events[event.date]) {
-            calendarState.events[event.date] = [];
-        }
-        calendarState.events[event.date].push(event);
-    });
+    // Show loading indicator
+    const calendarGrid = document.querySelector('.calendar-grid');
+    if (calendarGrid) {
+        calendarGrid.classList.add('loading');
+    }
     
-    // Add current date to calendar state
-    const today = new Date();
-    const todayStr = formatDateToYYYYMMDD(today);
-    
-    // Update event counts in the Month Overview section
-    updateEventStats();
+    // Fetch events from API
+    fetch(`backend/get_calendar_events.php?year=${year}&month=${month}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Process events
+                data.events.forEach(event => {
+                    const eventDate = event.date;
+                    
+                    // Initialize array for this date if it doesn't exist
+                    if (!calendarState.events[eventDate]) {
+                        calendarState.events[eventDate] = [];
+                    }
+                    
+                    // Add event to the calendar state
+                    calendarState.events[eventDate].push({
+                        id: event.id,
+                        title: event.title,
+                        date: eventDate,
+                        type: event.type,
+                        startTime: '09:00', // Default time if not provided
+                        endTime: '10:00',   // Default time if not provided
+                        location: 'Not specified',
+                        description: `Created by: ${event.created_by.name}`,
+                        createdBy: event.created_by
+                    });
+                });
+                
+                // Update calendar UI
+                renderCalendar(calendarState.currentDate);
+                
+                // Update event stats
+                updateEventStats();
+            } else {
+                // Show error notification
+                showNotification('Failed to load events: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching events:', error);
+            showNotification('Error loading events. Please try again.', 'error');
+        })
+        .finally(() => {
+            // Remove loading indicator
+            if (calendarGrid) {
+                calendarGrid.classList.remove('loading');
+            }
+        });
 }
 
 /**
@@ -211,10 +255,10 @@ function navigateToPreviousMonth() {
     newDate.setMonth(newDate.getMonth() - 1);
     calendarState.currentDate = newDate;
     
-    renderCalendar(calendarState.currentDate);
-    updateCalendarHeader(calendarState.currentDate);
+    // Load events for the new month
+    loadEvents(calendarState.currentDate);
     
-    // Add animation effect
+    updateCalendarHeader(calendarState.currentDate);
     animateCalendarChange('slide-right');
 }
 
@@ -226,10 +270,10 @@ function navigateToNextMonth() {
     newDate.setMonth(newDate.getMonth() + 1);
     calendarState.currentDate = newDate;
     
-    renderCalendar(calendarState.currentDate);
-    updateCalendarHeader(calendarState.currentDate);
+    // Load events for the new month
+    loadEvents(calendarState.currentDate);
     
-    // Add animation effect
+    updateCalendarHeader(calendarState.currentDate);
     animateCalendarChange('slide-left');
 }
 
@@ -239,10 +283,10 @@ function navigateToNextMonth() {
 function navigateToCurrentMonth() {
     calendarState.currentDate = new Date();
     
-    renderCalendar(calendarState.currentDate);
-    updateCalendarHeader(calendarState.currentDate);
+    // Load events for current month
+    loadEvents(calendarState.currentDate);
     
-    // Add animation effect
+    updateCalendarHeader(calendarState.currentDate);
     animateCalendarChange('fade');
 }
 
@@ -577,9 +621,17 @@ function showEventsModal(date, events) {
     const eventsList = document.getElementById('eventsList');
     const noEvents = document.getElementById('noEvents');
     
+    // Convert string date to Date object if it's not already
+    let dateObj;
+    if (typeof date === 'string') {
+        dateObj = new Date(date);
+    } else {
+        dateObj = date;
+    }
+    
     // Format date for display
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    modalDate.textContent = date.toLocaleDateString('en-US', options);
+    modalDate.textContent = dateObj.toLocaleDateString('en-US', options);
     
     // Clear previous events
     eventsList.innerHTML = '';
@@ -589,8 +641,8 @@ function showEventsModal(date, events) {
         eventsList.innerHTML = events.map(event => `
             <div class="event-item" data-event-id="${event.id}">
                 <div class="event-date">
-                    <span class="event-day">${date.getDate()}</span>
-                    <span class="event-month">${date.toLocaleDateString('en-US', { month: 'short' })}</span>
+                    <span class="event-day">${dateObj.getDate()}</span>
+                    <span class="event-month">${dateObj.toLocaleDateString('en-US', { month: 'short' })}</span>
                 </div>
                 <div class="event-details">
                     <h5>${event.title}</h5>

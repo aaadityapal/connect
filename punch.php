@@ -21,6 +21,31 @@ function getDeviceInfo() {
     return $_SERVER['HTTP_USER_AGENT'];
 }
 
+// Function to get address from coordinates using reverse geocoding
+function getAddressFromCoordinates($latitude, $longitude) {
+    if (!$latitude || !$longitude) {
+        return "Unknown location";
+    }
+    
+    $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1";
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'HR Attendance System');
+    
+    $response = curl_exec($ch);
+    curl_close($ch);
+    
+    $data = json_decode($response, true);
+    
+    if (isset($data['display_name'])) {
+        return $data['display_name'];
+    }
+    
+    return "Unknown location";
+}
+
 // Function to calculate working hours and overtime
 function calculateWorkingHours($punch_in, $punch_out, $shift_end_time) {
     $in_time = strtotime($punch_in);
@@ -188,7 +213,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $latitude = null;
             $longitude = null;
             $accuracy = null;
-            $image_file_path = null;  // Initialize to ensure it's always defined
+            $address = null;  // Initialize address variable
+            $image_file_path = null; // Initialize image_file_path variable
             
             if (isset($data['latitude']) && isset($data['longitude'])) {
                 $latitude = $data['latitude'];
@@ -198,13 +224,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Form a basic location string from coordinates
                     $location = "Lat: $latitude, Long: $longitude";
                     
-                    // Optional: Use a geocoding service to get a readable address
-                    // This requires an API key and external service, so using coordinates as fallback
-                    // $geocode_url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=YOUR_API_KEY";
-                    // $geocode_data = json_decode(file_get_contents($geocode_url), true);
-                    // if ($geocode_data['status'] == 'OK') {
-                    //     $location = $geocode_data['results'][0]['formatted_address'];
-                    // }
+                    // Get address from coordinates using reverse geocoding
+                    $address = getAddressFromCoordinates($latitude, $longitude);
+                    
                 } catch (Exception $e) {
                     // If geocoding fails, just use the coordinates
                     error_log("Geocoding failed: " . $e->getMessage());
@@ -214,6 +236,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($data['accuracy'])) {
                     $accuracy = $data['accuracy'];
                 }
+            }
+            
+            // Use address from request if provided, otherwise use the one from geocoding
+            if (isset($data['address']) && !empty($data['address'])) {
+                $address = $data['address'];
             }
             
             // Handle selfie image if available
@@ -294,7 +321,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 punch_in_photo,
                 latitude,
                 longitude,
-                accuracy
+                accuracy,
+                address
             ) VALUES (
                 ?, 
                 ?, 
@@ -311,6 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?,
                 ?,
                 ?,
+                ?,
                 ?
             )";
             
@@ -322,7 +351,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Log the punch in time to debug the issue
             error_log("Punch In Debug - Current Time: " . $current_time);
             
-            $stmt->bind_param("issssssssssisddd", 
+            $stmt->bind_param("issssssssssisddds", 
                 $user_id, 
                 $current_date, 
                 $current_time,
@@ -338,7 +367,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $image_file_path,
                 $latitude,
                 $longitude,
-                $accuracy
+                $accuracy,
+                $address
             );
             
             try {
@@ -386,14 +416,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $latitude = null;
             $longitude = null;
             $accuracy = null;
+            $punch_out_address = null;  // Initialize punch_out_address variable
 
             // Get location data if provided
             if (isset($data['latitude']) && isset($data['longitude'])) {
                 $latitude = $data['latitude'];
                 $longitude = $data['longitude'];
+                
+                // Get address from coordinates
+                $punch_out_address = getAddressFromCoordinates($latitude, $longitude);
+                
                 if (isset($data['accuracy'])) {
                     $accuracy = $data['accuracy'];
                 }
+            }
+            
+            // Use address from request if provided, otherwise use the one from geocoding
+            if (isset($data['address']) && !empty($data['address'])) {
+                $punch_out_address = $data['address'];
             }
 
             // Handle punch out photo if available
@@ -524,7 +564,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $time_details = calculateWorkingHours($punch_in_time, $current_time, $shift_end_time);
             
             // Update attendance record with punch out time, working hours, overtime and work report
-            $query = "UPDATE attendance SET punch_out = ?, working_hours = ?, overtime_hours = ?, work_report = ?, modified_at = ?, modified_by = ?, punch_out_photo = ?, punch_out_latitude = ?, punch_out_longitude = ?, punch_out_accuracy = ? WHERE user_id = ? AND date = ? AND punch_out IS NULL";
+            $query = "UPDATE attendance SET punch_out = ?, working_hours = ?, overtime_hours = ?, work_report = ?, modified_at = ?, modified_by = ?, punch_out_photo = ?, punch_out_latitude = ?, punch_out_longitude = ?, punch_out_accuracy = ?, punch_out_address = ? WHERE user_id = ? AND date = ? AND punch_out IS NULL";
             
             $stmt = $conn->prepare($query);
             $modified_at = $current_datetime;
@@ -541,6 +581,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Punch Out Debug - Work Report: " . substr($work_report, 0, 50) . "...");
             error_log("Punch Out Debug - Photo Path: " . ($punch_out_photo ? $punch_out_photo : "None"));
             error_log("Punch Out Debug - Location: Lat: " . ($punch_out_latitude ?? 'NULL') . ", Long: " . ($punch_out_longitude ?? 'NULL') . ", Accuracy: " . ($punch_out_accuracy ?? 'NULL'));
+            error_log("Punch Out Debug - Address: " . ($punch_out_address ?? 'NULL'));
             error_log("Punch Out Debug - Values: current_time=" . $current_time . 
                       ", total_time=" . $time_details['total_time'] . 
                       ", overtime=" . $time_details['overtime'] . 
@@ -559,7 +600,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Make sure we have correct parameter types for bind_param
             // s=string, i=integer, d=double, b=blob
             try {
-                $stmt->bind_param("sssssisdddis", 
+                $stmt->bind_param("sssssisdddsis", 
                     $current_time,
                     $total_time,
                     $overtime,
@@ -570,6 +611,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $punch_out_latitude,
                     $punch_out_longitude,
                     $punch_out_accuracy,
+                    $punch_out_address,
                     $user_id,
                     $current_date
                 );

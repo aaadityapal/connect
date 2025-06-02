@@ -65,7 +65,11 @@ $query = "
         us.weekly_offs,
         us.effective_from as shift_effective_from,
         us.effective_to as shift_effective_to,
-        a.overtime_hours
+        a.overtime_hours,
+        a.punch_in_photo,
+        a.punch_out_photo,
+        a.address as punch_in_address,
+        a.punch_out_address
     FROM attendance a
     JOIN users u ON a.user_id = u.id
     LEFT JOIN user_shifts us ON (
@@ -1117,6 +1121,216 @@ function formatDecimalToTime($timeString) {
                 margin-left: 0;
             }
         }
+
+        /* Photo link styling */
+        .photo-link {
+            margin-left: 8px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .photo-link .fas {
+            color: #4361ee;
+            font-size: 14px;
+            transition: transform 0.2s ease;
+        }
+        
+        .photo-link:hover .fas {
+            transform: scale(1.2);
+            color: #3f37c9;
+        }
+        
+        /* Modal styling */
+        .modal-content {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            background-color: var(--primary-light);
+            border-bottom: 1px solid var(--border);
+            border-radius: 10px 10px 0 0;
+            padding: 15px 20px;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 10px 10px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        #punchPhotoImage {
+            max-height: 70vh;
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        /* Ensure modal is centered properly */
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100% - 1rem);
+            margin: 0 auto;
+        }
+        
+        /* Fix modal position */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1050;
+            display: none;
+            overflow: hidden;
+            outline: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal.fade .modal-dialog {
+            transform: translate(0, -50px);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .modal.show .modal-dialog {
+            transform: translate(0, 0);
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .btn-close {
+            background-color: transparent;
+            border: none;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            color: #dc3545;
+        }
+        
+        .btn-close:hover {
+            opacity: 1;
+            color: #c82333;
+        }
+        
+        .btn-close span {
+            font-size: 1.75rem;
+            line-height: 1;
+            display: block;
+        }
+        
+        @media (min-width: 576px) {
+            .modal-dialog-centered {
+                min-height: calc(100% - 3.5rem);
+            }
+            
+            .modal-dialog {
+                max-width: 700px;
+                margin: 1.75rem auto;
+            }
+        }
+
+        .btn-secondary {
+            background-color: #4361ee;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #3f37c9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 10px 10px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .mobile-close-btn {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        @media (max-width: 576px) {
+            .mobile-close-btn {
+                display: block;
+            }
+            
+            .modal-footer {
+                display: none;
+            }
+        }
+
+        /* Address column styling */
+        .address-column {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .address-column:hover {
+            white-space: normal;
+            overflow: visible;
+            position: relative;
+            z-index: 1;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 5px;
+            border-radius: 4px;
+            max-width: 300px;
+        }
+        
+        @media (max-width: 1200px) {
+            .address-column {
+                max-width: 150px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1543,7 +1757,9 @@ function formatDecimalToTime($timeString) {
                                 <th>Shift</th>
                                 <th>Weekly Off Status</th>
                                 <th>Punch In</th>
+                                <th>Punch In Address</th>
                                 <th>Punch Out</th>
+                                <th>Punch Out Address</th>
                                 <th>Working Hours</th>
                                 <th>Overtime</th>
                                 <th>Status</th>
@@ -1561,7 +1777,7 @@ function formatDecimalToTime($timeString) {
                                     $current_user = $record['username'];
                             ?>
                                     <tr class="user-row">
-                                        <td colspan="9">
+                                        <td colspan="11">
                                             <div class="user-header">
                                                 <span class="user-name">
                                                     <i class="fas fa-user"></i>
@@ -1607,8 +1823,30 @@ function formatDecimalToTime($timeString) {
                                             <span class="badge working-day"><i class="fas fa-sun"></i> Working Day</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?></td>
-                                    <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?></td>
+                                    <td><?php echo $record['punch_in'] ? date('h:i A', strtotime($record['punch_in'])) : '-'; ?>
+                                        <?php if ($record['punch_in'] && !empty($record['punch_in_photo'])): ?>
+                                            <a href="#" class="photo-link" data-bs-toggle="modal" data-bs-target="#punchPhotoModal" 
+                                               data-photo="<?php echo htmlspecialchars($record['punch_in_photo']); ?>" 
+                                               data-title="Punch In Photo - <?php echo htmlspecialchars($record['username']); ?> (<?php echo date('d M Y h:i A', strtotime($record['punch_in'])); ?>)">
+                                                <i class="fas fa-folder text-primary ml-2"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="address-column" title="<?php echo htmlspecialchars($record['punch_in_address']); ?>">
+                                        <?php echo $record['punch_in'] ? htmlspecialchars($record['punch_in_address']) : '-'; ?>
+                                    </td>
+                                    <td><?php echo $record['punch_out'] ? date('h:i A', strtotime($record['punch_out'])) : '-'; ?>
+                                        <?php if ($record['punch_out'] && !empty($record['punch_out_photo'])): ?>
+                                            <a href="#" class="photo-link" data-bs-toggle="modal" data-bs-target="#punchPhotoModal" 
+                                               data-photo="<?php echo htmlspecialchars($record['punch_out_photo']); ?>" 
+                                               data-title="Punch Out Photo - <?php echo htmlspecialchars($record['username']); ?> (<?php echo date('d M Y h:i A', strtotime($record['punch_out'])); ?>)">
+                                                <i class="fas fa-folder text-primary ml-2"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="address-column" title="<?php echo htmlspecialchars($record['punch_out_address']); ?>">
+                                        <?php echo $record['punch_out'] ? htmlspecialchars($record['punch_out_address']) : '-'; ?>
+                                    </td>
                                     <td><?php 
                                         if (!empty($record['working_hours'])) {
                                             // Convert decimal hours to hours and minutes
@@ -1908,6 +2146,96 @@ function formatDecimalToTime($timeString) {
                     mainContent.classList.add('expanded');
                     sidebarToggle.classList.add('collapsed');
                 }
+            });
+        });
+    </script>
+
+    <!-- Punch Photo Modal -->
+    <div class="modal fade" id="punchPhotoModal" tabindex="-1" aria-labelledby="punchPhotoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="punchPhotoModalLabel">Punch Photo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="punchPhotoImage" src="" class="img-fluid" alt="Punch Photo">
+                    <div class="mobile-close-btn">
+                        <button type="button" class="btn btn-danger mt-3" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times-circle mr-2"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize photo modal functionality
+            const photoLinks = document.querySelectorAll('.photo-link');
+            
+            // Check if Bootstrap 5 is being used
+            const isBootstrap5 = typeof bootstrap !== 'undefined';
+            
+            photoLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const photoUrl = this.getAttribute('data-photo');
+                    const photoTitle = this.getAttribute('data-title');
+                    
+                    // Set modal content
+                    document.getElementById('punchPhotoModalLabel').textContent = photoTitle;
+                    document.getElementById('punchPhotoImage').src = photoUrl;
+                    
+                    // Show modal using appropriate method
+                    const modalElement = document.getElementById('punchPhotoModal');
+                    if (isBootstrap5) {
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                    } else {
+                        // Fallback for older Bootstrap or manual implementation
+                        modalElement.classList.add('show');
+                        modalElement.style.display = 'block';
+                        document.body.classList.add('modal-open');
+                        
+                        // Add backdrop if it doesn't exist
+                        let backdrop = document.querySelector('.modal-backdrop');
+                        if (!backdrop) {
+                            backdrop = document.createElement('div');
+                            backdrop.className = 'modal-backdrop fade show';
+                            document.body.appendChild(backdrop);
+                        }
+                    }
+                });
+            });
+            
+            // Close modal when close button is clicked
+            const closeButtons = document.querySelectorAll('[data-bs-dismiss="modal"]');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const modalElement = document.getElementById('punchPhotoModal');
+                    if (isBootstrap5) {
+                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                        if (modalInstance) modalInstance.hide();
+                    } else {
+                        // Fallback for older Bootstrap or manual implementation
+                        modalElement.classList.remove('show');
+                        modalElement.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+                        
+                        // Remove backdrop
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) backdrop.remove();
+                    }
+                });
             });
         });
     </script>

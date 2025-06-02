@@ -236,6 +236,7 @@ if ($currentHour < 12) {
     <link rel="stylesheet" href="css/manager/calendar-stats.css">
     <link rel="stylesheet" href="css/manager/calendar-event-modal.css">
     <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
+    <link rel="stylesheet" href="css/manager/event-details-modal.css">
     <style>
         :root {
             --primary-color: #0d6efd;
@@ -4768,5 +4769,57 @@ if ($currentHour < 12) {
         }
     });
 </script>
+
+<!-- Event Details Modal -->
+<div id="eventDetailsModal" class="event-details-modal">
+  <div class="event-details-modal-content">
+    <div class="event-details-modal-header">
+      <h5 class="event-details-modal-title">Event Details</h5>
+      <button type="button" class="event-details-modal-close" id="closeEventDetailsModal">&times;</button>
+    </div>
+    <div class="event-details-modal-body">
+      <div class="event-details-loader">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <div id="eventDetailsContent"></div>
+    </div>
+    <div class="event-details-modal-footer">
+      <button type="button" class="btn btn-secondary" id="closeEventDetailsModalBtn">Close</button>
+    </div>
+  </div>
+</div>
 </html>
+
+<!-- Add this before the closing body tag of site_manager_dashboard.php -->
+<script src="js/manager/event-details-modal.js"></script>
+
+<!-- Add this right before the closing body tag -->
+<script>
+  // Additional event listeners for closing the event details modal
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get close buttons
+    const closeEventDetailsBtn = document.getElementById('closeEventDetailsModal');
+    const closeEventDetailsModalBtn = document.getElementById('closeEventDetailsModalBtn');
+    
+    // Add click handlers
+    if (closeEventDetailsBtn) {
+      closeEventDetailsBtn.onclick = function() {
+        const modal = document.getElementById('eventDetailsModal');
+        if (modal) modal.classList.remove('show');
+      };
+    }
+    
+    if (closeEventDetailsModalBtn) {
+      closeEventDetailsModalBtn.onclick = function() {
+        const modal = document.getElementById('eventDetailsModal');
+        if (modal) modal.classList.remove('show');
+      };
+    }
+  });
+</script>
+
+<!-- Add SheetJS library for Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 

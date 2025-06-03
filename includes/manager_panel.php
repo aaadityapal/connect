@@ -3,7 +3,7 @@
     <div class="brand-logo" style="padding: 15px 20px; margin-bottom: 10px;">
         <img src="#" alt="Company Logo" style="max-width: 140px; height: auto;">
     </div>
-    <button class="toggle-btn" id="leftPanelToggleBtn" title="Toggle Panel">
+    <button class="toggle-btn" id="leftPanelToggleBtn" title="Toggle Panel (Ctrl+B)">
         <i class="fas fa-chevron-left" id="toggleIcon"></i>
     </button>
     
@@ -92,9 +92,9 @@
         <span class="menu-text">Travel Expenses</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'financial_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='financial_reports.php'">
-        <i class="fas fa-file-invoice"></i>
-        <span class="menu-text">Financial Reports</span>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'attendance_overview.php' ? 'active' : ''; ?>" onclick="window.location.href='attendance_overview.php'">
+        <i class="fas fa-calendar-check"></i>
+        <span class="menu-text">Attendance Overview</span>
     </div>
     
     <!-- Settings & Personal Section -->

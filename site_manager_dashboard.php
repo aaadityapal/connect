@@ -2357,7 +2357,7 @@ if ($currentHour < 12) {
     <script src="js/manager/calendar-stats.js"></script>
     <script>
         // Override the save_travel_expenses.php endpoint for the travel expense modal
-        window.travelExpenseEndpoint = 'api/save_travel_expenses.php';
+        window.travelExpenseEndpoint = 'save_travel_expenses.php';
     </script>
     <script src="js/supervisor/travel-expense-modal.js"></script>
     <script>
@@ -4655,7 +4655,7 @@ if ($currentHour < 12) {
 <!-- Update the saveAllExpenses click handler in the travel expense script -->
 <script>
     // Override the save_travel_expenses.php endpoint for the travel expense modal
-    window.travelExpenseEndpoint = 'api/save_travel_expenses.php';
+    window.travelExpenseEndpoint = 'save_travel_expenses.php';
 </script>
 <script src="js/supervisor/travel-expense-modal.js"></script>
 <script>
@@ -4705,7 +4705,7 @@ if ($currentHour < 12) {
                 }, 500);
                 
                 // Send data to server
-                fetch(window.travelExpenseEndpoint || 'api/save_travel_expenses.php', {
+                fetch(window.travelExpenseEndpoint || 'save_travel_expenses.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

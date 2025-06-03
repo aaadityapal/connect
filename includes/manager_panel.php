@@ -16,33 +16,33 @@
     <!-- Project Management Section -->
     <div class="menu-item section-start">
         <i class="fas fa-project-diagram"></i>
-        <span class="menu-text">Project Management</span>
+        <span class="menu-text">Manager Accessible *</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'project_overview.php' ? 'active' : ''; ?>" onclick="window.location.href='project_overview.php'">
         <i class="fas fa-tasks"></i>
-        <span class="menu-text">Project Overview</span>
+        <span class="menu-text">Travel Expenses</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'project_planning.php' ? 'active' : ''; ?>" onclick="window.location.href='project_planning.php'">
         <i class="fas fa-calendar-alt"></i>
-        <span class="menu-text">Project Planning</span>
+        <span class="menu-text">Attendance Overview</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'milestone_tracker.php' ? 'active' : ''; ?>" onclick="window.location.href='milestone_tracker.php'">
         <i class="fas fa-flag-checkered"></i>
-        <span class="menu-text">Milestone Tracker</span>
+        <span class="menu-text">Vendor Management</span>
     </div>
     
     <!-- Site Supervision Section -->
     <div class="menu-item section-start">
         <i class="fas fa-hard-hat"></i>
-        <span class="menu-text">Site Supervision</span>
+        <span class="menu-text">Purchase Management</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'supervisor_management.php' ? 'active' : ''; ?>" onclick="window.location.href='supervisor_management.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'travel_expenses_approval.php' ? 'active' : ''; ?>" onclick="window.location.href='travel_expenses_approval.php'">
         <i class="fas fa-user-tie"></i>
-        <span class="menu-text">Supervisor Management</span>
+        <span class="menu-text">Travel Expenses Approval</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_allocation.php' ? 'active' : ''; ?>" onclick="window.location.href='site_allocation.php'">

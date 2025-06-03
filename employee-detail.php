@@ -1096,6 +1096,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Senior Manager (Site)" <?php echo $employee['role'] === 'Senior Manager (Site)' ? 'selected' : ''; ?>>Senior Manager (Site)</option>
                                 <option value="Senior Manager (Marketing)" <?php echo $employee['role'] === 'Senior Manager (Marketing)' ? 'selected' : ''; ?>>Senior Manager (Marketing)</option>
                                 <option value="Senior Manager (Sales)" <?php echo $employee['role'] === 'Senior Manager (Sales)' ? 'selected' : ''; ?>>Senior Manager (Sales)</option>
+                                <option value="Senior Manager (Purchase)" <?php echo $employee['role'] === 'Senior Manager (Purchase)' ? 'selected' : ''; ?>>Senior Manager (Purchase)</option>
                                 <option value="Design Team" <?php echo $employee['role'] === 'Design Team' ? 'selected' : ''; ?>>Design Team</option>
                                 <option value="Working Team" <?php echo $employee['role'] === 'Working Team' ? 'selected' : ''; ?>>Working Team</option>
                                 <option value="Draughtsman" <?php echo $employee['role'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
@@ -1104,12 +1105,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Business Developer" <?php echo $employee['role'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
                                 <option value="Social Media Manager" <?php echo $employee['role'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
                                 <option value="Site Manager" <?php echo $employee['role'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                <option value="Site Coordinator" <?php echo $employee['role'] === 'Site Coordinator' ? 'selected' : ''; ?>>Site Coordinator</option>
                                 <option value="Site Supervisor" <?php echo $employee['role'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
                                 <option value="Site Trainee" <?php echo $employee['role'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
                                 <option value="Relationship Manager" <?php echo $employee['role'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
                                 <option value="Sales Manager" <?php echo $employee['role'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
                                 <option value="Sales Consultant" <?php echo $employee['role'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
                                 <option value="Field Sales Representative" <?php echo $employee['role'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
+                                <option value="Purchase Manager" <?php echo $employee['role'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
+                                <option value="Purchase Executive" <?php echo $employee['role'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
+                                <option value="Sales" <?php echo $employee['role'] === 'Sales' ? 'selected' : ''; ?>>Sales</option>
+                                <option value="Purchase" <?php echo $employee['role'] === 'Purchase' ? 'selected' : ''; ?>>Purchase</option>
                             </select>
                         </div>
                     </div>
@@ -1152,11 +1158,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Business Developer" <?php echo $employee['designation'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
                                 <option value="Social Media Manager" <?php echo $employee['designation'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
                                 <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                <option value="Site Coordinator" <?php echo $employee['designation'] === 'Site Coordinator' ? 'selected' : ''; ?>>Site Coordinator</option>
                                 <option value="Site Supervisor" <?php echo $employee['designation'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
                                 <option value="Site Trainee" <?php echo $employee['designation'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
                                 <option value="Relationship Manager" <?php echo $employee['designation'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
                                 <option value="Sales Consultant" <?php echo $employee['designation'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
                                 <option value="Field Sales Representative" <?php echo $employee['designation'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
+                                <option value="Purchase Manager" <?php echo $employee['designation'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
+                                <option value="Purchase Executive" <?php echo $employee['designation'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
+                                <option value="Sales Executive" <?php echo $employee['designation'] === 'Sales Executive' ? 'selected' : ''; ?>>Sales Executive</option>
                                 <option value="Other" <?php echo $employee['designation'] === 'Other' ? 'selected' : ''; ?>>Other</option>
                             </select>
                         </div>
@@ -1412,6 +1422,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     position: 'Manager',
                     designation: 'Site Manager'
                 },
+                'Site Coordinator': {
+                    position: 'Coordinator',
+                    designation: 'Site Coordinator'
+                },
                 'Site Supervisor': {
                     position: 'Supervisor',
                     designation: 'Site Supervisor'
@@ -1435,6 +1449,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'Field Sales Representative': {
                     position: 'Representative',
                     designation: 'Field Sales Representative'
+                },
+                'Purchase Manager': {
+                    position: 'Manager',
+                    designation: 'Purchase Manager'
+                },
+                'Purchase Executive': {
+                    position: 'Executive',
+                    designation: 'Purchase Executive'
+                },
+                'Sales': {
+                    position: 'Executive',
+                    designation: 'Sales Executive'
+                },
+                'Purchase': {
+                    position: 'Executive',
+                    designation: 'Purchase Executive'
+                },
+                'Senior Manager (Purchase)': {
+                    position: 'Senior Manager',
+                    designation: 'Purchase Manager'
                 }
             };
             

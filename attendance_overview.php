@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Check if user has the correct role
-$allowed_roles = ['Site Manager', 'Senior Manager (Site)'];
+$allowed_roles = ['Site Manager', 'Senior Manager (Site)', 'Purchase Manager', 'Site Coordinator'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     // Redirect to appropriate page based on role
     $_SESSION['error'] = "You don't have permission to access this page";

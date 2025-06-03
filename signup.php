@@ -64,6 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             case 'Site Manager':
                 $prefix = 'STM';
                 break;
+            case 'Site Coordinator':
+                $prefix = 'STC';
+                break;
             case 'Site Supervisor':
                 $prefix = 'STS';
                 break;
@@ -81,6 +84,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 break;
             case 'Field Sales Representative':
                 $prefix = 'FSR';
+                break;
+            case 'Senior Manager (Purchase)':
+                $prefix = 'SMP';
+                break;
+            case 'Purchase Manager':
+                $prefix = 'PM';
+                break;
+            case 'Purchase Executive':
+                $prefix = 'PE';
+                break;
+            case 'Sales':
+                $prefix = 'SL';
+                break;
+            case 'Purchase':
+                $prefix = 'PR';
                 break;
             default:
                 $prefix = 'EMP';
@@ -190,7 +208,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'Senior Manager (Studio)', 
                 'Senior Manager (Site)', 
                 'Senior Manager (Marketing)', 
-                'Senior Manager (Sales)'
+                'Senior Manager (Sales)',
+                'Senior Manager (Purchase)'
             ];
 
             if (in_array($new_user['role'], $senior_roles)) {
@@ -705,6 +724,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Senior Manager (Site)">Senior Manager (Site)</option>
                                     <option value="Senior Manager (Marketing)">Senior Manager (Marketing)</option>
                                     <option value="Senior Manager (Sales)">Senior Manager (Sales)</option>
+                                    <option value="Senior Manager (Purchase)">Senior Manager (Purchase)</option>
                                     <option value="Design Team">Design Team</option>
                                     <option value="Working Team">Working Team</option>
                                     <option value="Draughtsman">Draughtsman</option>
@@ -720,6 +740,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Sales Manager">Sales Manager</option>
                                     <option value="Sales Consultant">Sales Consultant</option>
                                     <option value="Field Sales Representative">Field Sales Representative</option>
+                                    <option value="Purchase Manager">Purchase Manager</option>
+                                    <option value="Purchase Executive">Purchase Executive</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Purchase">Purchase</option>
                                 </select>
                             </div>
                         </div>
@@ -838,7 +862,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             console.log('Selected role:', role); // Debug log
             
             const seniorRoles = ['admin', 'HR', 'Senior Manager (Studio)', 'Senior Manager (Site)', 
-                               'Senior Manager (Marketing)', 'Senior Manager (Sales)'];
+                               'Senior Manager (Marketing)', 'Senior Manager (Sales)', 'Senior Manager (Purchase)'];
             
             if (!seniorRoles.includes(role)) {
                 $('#reportingManagerDiv').show();
@@ -850,12 +874,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     manager = 'Sr. Manager (Studio)';
                 } else if (role === 'Business Developer') {
                     manager = 'Sr. Manager (Business Developer)';
-                } else if (['Relationship Manager', 'Sales Manager', 'Sales Consultant', 'Field Sales Representative'].includes(role)) {
+                } else if (['Relationship Manager', 'Sales Manager', 'Sales Consultant', 'Field Sales Representative', 'Sales'].includes(role)) {
                     manager = 'Sr. Manager (Relationship Manager)';
-                } else if (['Site Manager', 'Site Supervisor', 'Site Trainee'].includes(role)) {
+                } else if (['Site Manager', 'Site Coordinator', 'Site Supervisor', 'Site Trainee'].includes(role)) {
                     manager = 'Sr. Manager (Operations)';
                 } else if (role === 'Social Media Manager') {
                     manager = 'Sr. Manager (HR)';
+                } else if (['Purchase Manager', 'Purchase Executive', 'Purchase'].includes(role)) {
+                    manager = 'Sr. Manager (Purchase)';
                 }
                 
                 $('#reporting_manager').val(manager);

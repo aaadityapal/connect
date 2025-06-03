@@ -983,3 +983,73 @@ Stack trace:
 [31-May-2025 18:11:55 Asia/Kolkata] 2025-05-31 18:11:55 - Event created successfully - {"event_id":"69"}
 [31-May-2025 18:11:55 Asia/Kolkata] 2025-05-31 18:11:55 - Transaction committed successfully
 [31-May-2025 18:11:55 Asia/Kolkata] 2025-05-31 18:11:55 - Save process completed successfully - {"event_id":"69"}
+[03-Jun-2025 10:40:35 Europe/Berlin] 2025-06-03 10:40:35 - Starting calendar event save process
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Database connection included
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Session started - {"user_id":33}
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Started database transaction
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-06-03","user_id":33}
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Event created successfully - {"event_id":"70"}
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Processing vendors - {"count":1}
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Processing vendor - {"index":1,"type":"material","name":"new"}
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Vendor created successfully - {"vendor_id":"37"}
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Transaction committed successfully
+[03-Jun-2025 14:10:35 Asia/Kolkata] 2025-06-03 14:10:35 - Save process completed successfully - {"event_id":"70"}
+[03-Jun-2025 10:43:09 Europe/Berlin] 2025-06-03 10:43:09 - Starting calendar event save process
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Database connection included
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Session started - {"user_id":33}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Started database transaction
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing event data - {"title":"Construction Site At Dilshad Garden","date":"2025-06-03","user_id":33}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Event created successfully - {"event_id":"71"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing vendors - {"count":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing vendor - {"index":1,"type":"material","name":"new"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Vendor created successfully - {"vendor_id":"38"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing materials - {"vendor_id":"38","count":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing material - {"material_key":"material_1_1"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Material data - {"material_key":"material_1_1","remarks":"dd","amount":"100"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Material created successfully - {"material_id":"24"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing material image - {"material_key":"material_1_1","file_name":"no-photo.png","file_size":19456}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"image\/png","allowed":true}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File uploaded successfully - {"original_name":"no-photo.png","saved_as":"683eb59d42f7e_1748940189.png","file_type":"image\/png","file_size":19456,"path":"..\/uploads\/calendar_events\/material_images\/683eb59d42f7e_1748940189.png"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Material image uploaded - {"path":"..\/uploads\/calendar_events\/material_images\/683eb59d42f7e_1748940189.png"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Material image saved to database
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing bill image - {"material_key":"material_1_1","file_name":"Overtime Policy for ArchitectsHive.pdf","file_size":378860}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"application\/pdf","allowed":true}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File uploaded successfully - {"original_name":"Overtime Policy for ArchitectsHive.pdf","saved_as":"683eb59d43bef_1748940189.pdf","file_type":"application\/pdf","file_size":378860,"path":"..\/uploads\/calendar_events\/bill_images\/683eb59d43bef_1748940189.pdf"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Bill image uploaded - {"path":"..\/uploads\/calendar_events\/bill_images\/683eb59d43bef_1748940189.pdf"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Bill image saved to database
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing beverages - {"count":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing beverage - {"number":1,"type":"coffee","name":"ddd","amount":"100"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Beverage saved successfully - {"beverage_id":"7","number":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing work progress entries - {"count":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing work progress entry - {"number":1,"category":"civil","type":"new","done":"yes"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Work progress entry saved successfully - {"work_id":"15","number":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing work media files - {"work_id":"15","count":2}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_15\/"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing work media file - {"work_id":"15","file_name":"WhatsApp Image 2025-05-28 at 5.43.29 PM.jpeg","file_type":"image\/jpeg","file_size":71881}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File uploaded successfully - {"original_name":"WhatsApp Image 2025-05-28 at 5.43.29 PM_1748940189_3472.jpeg","saved_as":"683eb59d47222_1748940189.jpeg","file_type":"image\/jpeg","file_size":71881,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_15\/683eb59d47222_1748940189.jpeg"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_15\/683eb59d47222_1748940189.jpeg","filename":"WhatsApp Image 2025-05-28 at 5.43.29 PM_1748940189_3472.jpeg","original_name":"WhatsApp Image 2025-05-28 at 5.43.29 PM.jpeg"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Work media record saved to database - {"media_id":"23"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing work media file - {"work_id":"15","file_name":"car_1200x768.avif","file_type":"image\/avif","file_size":33567}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"image\/avif","allowed":false}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Failed to upload work media file - {"error":"Invalid file type: image\/avif. Allowed types include images, videos, and PDFs."}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing inventory entries - {"count":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing inventory entry - {"number":1,"type":"received","material":"glass","quantity":"100","unit":"sqft"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory entry saved successfully - {"inventory_id":"10","number":1}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing inventory bill image - {"inventory_id":"10","file_name":"Overtime Policy for ArchitectsHive.pdf","file_size":378860}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"application\/pdf","allowed":true}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File uploaded successfully - {"original_name":"Overtime Policy for ArchitectsHive.pdf","saved_as":"683eb59d49037_1748940189.pdf","file_type":"application\/pdf","file_size":378860,"path":"..\/uploads\/calendar_events\/inventory_bills\/inventory_10\/683eb59d49037_1748940189.pdf"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory bill image saved to database - {"media_id":"18"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing inventory media files - {"inventory_id":"10","count":2}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing inventory media file - {"inventory_id":"10","file_name":"SampleVideo_1280x720_1mb (1).mp4","file_type":"video\/mp4","file_size":1055736}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File uploaded successfully - {"original_name":"SampleVideo_1280x720_1mb (1)_1748940189_1005.mp4","saved_as":"683eb59d4a087_1748940189.mp4","file_type":"video\/mp4","file_size":1055736,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_10\/683eb59d4a087_1748940189.mp4"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_10\/683eb59d4a087_1748940189.mp4","filename":"SampleVideo_1280x720_1mb (1)_1748940189_1005.mp4","original_name":"SampleVideo_1280x720_1mb (1).mp4"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory media record saved to database - {"media_id":"19"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Processing inventory media file - {"inventory_id":"10","file_name":"ESKfoZEqX4QZNpS79-915x549.jpeg","file_type":"image\/jpeg","file_size":285088}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - File uploaded successfully - {"original_name":"ESKfoZEqX4QZNpS79-915x549_1748940189_4439.jpeg","saved_as":"683eb59d4aa4e_1748940189.jpeg","file_type":"image\/jpeg","file_size":285088,"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_10\/683eb59d4aa4e_1748940189.jpeg"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory media file uploaded - {"path":"..\/uploads\/calendar_events\/inventory_media\/inventory_10\/683eb59d4aa4e_1748940189.jpeg","filename":"ESKfoZEqX4QZNpS79-915x549_1748940189_4439.jpeg","original_name":"ESKfoZEqX4QZNpS79-915x549.jpeg"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory media record saved to database - {"media_id":"20"}
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Transaction committed successfully
+[03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Save process completed successfully - {"event_id":"71"}

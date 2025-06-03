@@ -1,0 +1,3049 @@
+<?php
+// Start session for authentication
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    // Redirect to login page if not logged in
+    $_SESSION['error'] = "You must log in to access this page";
+    header('Location: login.php');
+    exit();
+}
+
+// Check if user has the correct role
+$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager'];
+if (!in_array($_SESSION['role'], $allowed_roles)) {
+    // Redirect to appropriate page based on role
+    $_SESSION['error'] = "You don't have permission to access this page";
+    header('Location: dashboard.php');
+    exit();
+}
+
+// Include database connection
+include_once('includes/db_connect.php');
+
+// Get user information
+$user_id = $_SESSION['user_id'];
+$username = isset($_SESSION['username']) ? $_SESSION['username'] : "Manager";
+
+// Debug: Check server paths
+$document_root = $_SERVER['DOCUMENT_ROOT'];
+$script_filename = $_SERVER['SCRIPT_FILENAME'];
+$script_name = $_SERVER['SCRIPT_NAME'];
+$absolute_path = str_replace($script_name, '', $script_filename);
+$uploads_dir = $absolute_path . '/uploads/profile_pictures/';
+error_log("Document Root: " . $document_root);
+error_log("Script Path: " . $script_filename);
+error_log("Script Name: " . $script_name);
+error_log("Calculated Path: " . $absolute_path);
+error_log("Uploads Directory: " . $uploads_dir);
+error_log("Directory exists check: " . (is_dir($uploads_dir) ? 'Yes' : 'No'));
+
+// Fetch user profile picture from database
+$profile_image = "https://via.placeholder.com/40x40"; // Default image path
+try {
+    $stmt = $conn->prepare("SELECT profile_picture FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($row = $result->fetch_assoc()) {
+        if (!empty($row['profile_picture'])) {
+            $picture = $row['profile_picture'];
+            
+            // Check if it's already a full URL
+            if (filter_var($picture, FILTER_VALIDATE_URL)) {
+                $profile_image = $picture;
+                error_log("Using URL from database: " . $profile_image);
+            }
+            // Check if it starts with http:// or https:// but isn't a valid URL
+            else if (strpos($picture, 'http://') === 0 || strpos($picture, 'https://') === 0) {
+                $profile_image = $picture;
+                error_log("Using URL-like path from database: " . $profile_image);
+            }
+            // Check if it's a relative path with uploads/profile_pictures
+            else if (strpos($picture, 'uploads/profile_pictures/') === 0) {
+                $profile_image = $picture;
+                error_log("Using relative path from database: " . $profile_image);
+            }
+            // Check if it's just a filename
+            else {
+                $temp_path = "uploads/profile_pictures/" . $picture;
+                
+                // Check if file exists
+                if (file_exists($temp_path)) {
+                    $profile_image = $temp_path;
+                    error_log("Using constructed path: " . $profile_image);
+                } else {
+                    // Log that file doesn't exist
+                    error_log("Profile picture file not found: " . $temp_path);
+                    
+                    // Try alternate paths
+                    $alt_paths = [
+                        "uploads/profile_images/" . $picture,
+                        "uploads/" . $picture
+                    ];
+                    
+                    foreach ($alt_paths as $path) {
+                        if (file_exists($path)) {
+                            $profile_image = $path;
+                            error_log("Found profile picture at alternate path: " . $path);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Debug info
+    error_log("User ID: " . $user_id . ", Final profile picture path: " . $profile_image);
+    
+    // Try to load as base64 if it's a local file and not a URL
+    if (!filter_var($profile_image, FILTER_VALIDATE_URL) && 
+        strpos($profile_image, 'data:image') !== 0 && 
+        strpos($profile_image, 'http://') !== 0 && 
+        strpos($profile_image, 'https://') !== 0) {
+        
+        $base64Image = getImageAsBase64($profile_image);
+        if ($base64Image !== false) {
+            $profile_image = $base64Image;
+            error_log("Converted image to base64");
+        }
+    }
+    
+} catch (Exception $e) {
+    // Log error but continue with default image
+    error_log("Error fetching profile picture: " . $e->getMessage());
+}
+
+// Function to get image as base64
+function getImageAsBase64($path) {
+    if (!file_exists($path)) {
+        return false;
+    }
+    
+    $type = pathinfo($path, PATHINFO_EXTENSION);
+    $data = file_get_contents($path);
+    if ($data === false) {
+        return false;
+    }
+    
+    return 'data:image/' . $type . ';base64,' . base64_encode($data);
+}
+
+// Add pagination variables
+$records_per_page = 10; // Number of records per page
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1; // Current page
+$offset = ($page - 1) * $records_per_page; // Offset for SQL query
+
+// Get filter parameters from URL
+$search_filter = isset($_GET['search']) ? $_GET['search'] : '';
+$month_filter = isset($_GET['month']) ? intval($_GET['month']) : 0;
+$year_filter = isset($_GET['year']) ? intval($_GET['year']) : 0;
+
+// Build WHERE clause for filtering
+$where_clause = "te.status = 'pending'";
+$params = [];
+$param_types = "";
+
+if (!empty($search_filter)) {
+    $where_clause .= " AND (u.username LIKE ? OR te.purpose LIKE ?)";
+    $search_param = "%{$search_filter}%";
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $param_types .= "ss";
+}
+
+if ($month_filter > 0) {
+    $where_clause .= " AND MONTH(te.travel_date) = ?";
+    $params[] = $month_filter;
+    $param_types .= "i";
+}
+
+if ($year_filter > 0) {
+    $where_clause .= " AND YEAR(te.travel_date) = ?";
+    $params[] = $year_filter;
+    $param_types .= "i";
+}
+
+try {
+    // Count filtered expenses for pagination
+    $count_query = "SELECT COUNT(*) as total FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$where_clause}";
+    $stmt = $conn->prepare($count_query);
+    
+    if (!empty($params)) {
+        $stmt->bind_param($param_types, ...$params);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $total_records = $row['total'];
+    $total_pages = ceil($total_records / $records_per_page);
+    
+    // Ensure page is within valid range
+    if ($page < 1) $page = 1;
+    if ($page > $total_pages && $total_pages > 0) $page = $total_pages;
+    
+    // Fetch filtered expenses with pagination
+    $query = "
+        SELECT te.*, u.username, u.unique_id as employee_id, u.profile_picture 
+        FROM travel_expenses te
+        JOIN users u ON te.user_id = u.id
+        WHERE {$where_clause}
+        ORDER BY te.travel_date DESC
+        LIMIT ? OFFSET ?
+    ";
+    
+    $stmt = $conn->prepare($query);
+    
+    // Add pagination parameters
+    $params[] = $records_per_page;
+    $params[] = $offset;
+    $param_types .= "ii";
+    
+    if (!empty($params)) {
+        $stmt->bind_param($param_types, ...$params);
+    }
+    
+    $stmt->execute();
+    $pendingExpenses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    
+} catch (Exception $e) {
+    // Log error
+    error_log("Error fetching expense data: " . $e->getMessage());
+    
+    // Set default values
+    $pendingExpenses = [];
+    $total_pages = 0;
+    $page = 1;
+}
+
+// Fetch pending approval counts and statistics from database
+// This is placeholder code - implement actual database queries
+$pendingCount = 0;
+$approvedCount = 0;
+$rejectedCount = 0;
+$totalAmount = 0;
+
+try {
+    // Count pending expenses
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE status = 'pending'");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $pendingCount = $row['count'];
+    }
+    
+    // Count approved expenses
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE status = 'approved'");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $approvedCount = $row['count'];
+    }
+    
+    // Count rejected expenses
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE status = 'rejected'");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $rejectedCount = $row['count'];
+    }
+    
+    // Calculate total amount
+    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $totalAmount = $row['total'] ?: 0;
+    }
+    
+} catch (Exception $e) {
+    // Log error
+    error_log("Error fetching expense statistics: " . $e->getMessage());
+    
+    // Set default values
+    $pendingExpenses = [];
+}
+
+// Helper function to get appropriate icon for transport mode
+function getTransportIcon($mode) {
+    if (!$mode) return 'fa-question-circle';
+    
+    $mode = strtolower($mode);
+    
+    if (strpos($mode, 'car') !== false || strpos($mode, 'taxi') !== false) {
+        return 'fa-car';
+    } else if (strpos($mode, 'train') !== false || strpos($mode, 'rail') !== false) {
+        return 'fa-train';
+    } else if (strpos($mode, 'bus') !== false) {
+        return 'fa-bus';
+    } else if (strpos($mode, 'plane') !== false || strpos($mode, 'flight') !== false || strpos($mode, 'air') !== false) {
+        return 'fa-plane';
+    } else if (strpos($mode, 'bike') !== false || strpos($mode, 'motorcycle') !== false) {
+        return 'fa-motorcycle';
+    } else if (strpos($mode, 'walk') !== false || strpos($mode, 'foot') !== false) {
+        return 'fa-walking';
+    } else if (strpos($mode, 'ship') !== false || strpos($mode, 'boat') !== false || strpos($mode, 'ferry') !== false) {
+        return 'fa-ship';
+    } else {
+        return 'fa-route';
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Expenses Approval | Corporate Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-gray: #f3f4f6;
+            --medium-gray: #e5e7eb;
+            --dark-gray: #6b7280;
+            --text-color: #111827;
+            --panel-bg: #1e2a78;
+            --panel-hover: #2c3a88;
+            --panel-active: #354298;
+            --panel-text: #ffffff;
+            --panel-text-muted: #a3aed0;
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --panel-icon: #4d61c9;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9fafb;
+            color: var(--text-color);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Main container and layout styles */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px 30px 30px 30px;
+            overflow-y: auto;
+            height: 100vh;
+            box-sizing: border-box;
+            margin-left: 250px; /* Match the width of the left panel */
+            position: relative;
+            transition: margin-left 0.3s;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+        
+        /* Left panel responsive styles */
+        #leftPanel {
+            width: 250px;
+            background: linear-gradient(180deg, #1e2a78 0%, #2a3a94 100%);
+            color: var(--panel-text);
+            transition: all 0.3s;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: fixed;
+            left: 0;
+            top: 0;
+            /* Hide scrollbar but maintain functionality */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+            font-size: 14px;
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        #leftPanel::-webkit-scrollbar {
+            display: none;
+        }
+
+        #leftPanel.collapsed {
+            width: 70px;
+            overflow: visible; /* Important to keep the toggle button visible */
+        }
+        
+        /* Hide text but keep icons when collapsed */
+        #leftPanel.collapsed .menu-text {
+            display: none;
+        }
+
+        /* Adjust spacing for icons when panel is collapsed */
+        #leftPanel.collapsed .menu-item i {
+            margin-right: 0;
+        }
+
+        /* Center the icons when collapsed */
+        #leftPanel.collapsed .menu-item {
+            justify-content: center;
+        }
+        
+        /* Enhancing left panel styles */
+        .brand-logo {
+            padding: 20px;
+            border-bottom: 1px solid var(--panel-border);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: -12px;
+            width: 24px;
+            height: 24px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            color: var(--panel-bg);
+            font-size: 12px;
+            transition: all 0.2s;
+            z-index: 1001;
+        }
+        
+        .toggle-btn:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.1);
+        }
+        
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 6px;
+            margin: 2px 10px;
+            position: relative;
+        }
+        
+        .menu-item:hover {
+            background-color: var(--panel-hover);
+        }
+        
+        .menu-item.active {
+            background-color: var(--panel-active);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: #ffffff;
+            border-radius: 0 2px 2px 0;
+        }
+        
+        .menu-item i {
+            margin-right: 14px;
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+            color: var(--panel-icon);
+            transition: all 0.2s;
+        }
+        
+        .menu-item:hover i, 
+        .menu-item.active i {
+            color: #ffffff;
+        }
+        
+        .menu-text {
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .section-start {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--panel-text-muted);
+            pointer-events: none;
+        }
+        
+        .logout-item {
+            margin-top: 30px;
+            border-top: 1px solid var(--panel-border);
+            border-radius: 0;
+            margin-left: 0;
+            margin-right: 0;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+        
+        .logout-item i {
+            color: #ff5a5a;
+        }
+        
+        /* Overlay styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 900;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Hamburger menu styles */
+        .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color, #0d6efd);
+            color: white;
+            border-radius: 5px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Responsive styles for mobile */
+        @media (max-width: 768px) {
+            .hamburger-menu {
+                display: flex;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            #leftPanel {
+                width: 0;
+                overflow: hidden;
+                transform: translateX(-100%);
+                transition: transform 0.3s, width 0.3s;
+            }
+            
+            #leftPanel.mobile-open {
+                width: 250px;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Main Content */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 8px 16px;
+            border-radius: 50px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eaeaea;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-info {
+            margin-left: 12px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-color);
+            margin-bottom: 2px;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: var(--dark-gray);
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-role i {
+            font-size: 10px;
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+        
+        /* User dropdown styling */
+        .dropdown {
+            margin-left: 10px;
+            position: relative;
+        }
+        
+        .dropdown-toggle {
+            background: transparent;
+            border: none;
+            color: var(--dark-gray);
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        
+        .dropdown-toggle:focus {
+            outline: none;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 1000;
+            display: none;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            margin: 0.125rem 0 0;
+            font-size: 0.875rem;
+            color: var(--text-color);
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.5rem 1.5rem;
+            clear: both;
+            font-weight: 400;
+            color: var(--text-color);
+            text-align: inherit;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+            text-decoration: none;
+        }
+        
+        .dropdown-item:hover, .dropdown-item:focus {
+            color: var(--primary-color);
+            text-decoration: none;
+            background-color: #f8f9fa;
+        }
+        
+        .dropdown-item i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            height: 0;
+            margin: 0.5rem 0;
+            overflow: hidden;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* Approval Dashboard */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .card-title {
+            font-size: 14px;
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+        
+        .card-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .card-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-change.positive {
+            color: var(--success-color);
+        }
+        
+        .card-change.negative {
+            color: var(--danger-color);
+        }
+        
+        .pending-card {
+            border-top: 4px solid var(--warning-color);
+        }
+        
+        .approved-card {
+            border-top: 4px solid var(--success-color);
+        }
+        
+        .rejected-card {
+            border-top: 4px solid var(--danger-color);
+        }
+        
+        .total-card {
+            border-top: 4px solid var(--primary-color);
+        }
+        
+        /* Expense Table */
+        .expense-table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            overflow-x: auto;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .search-filter {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-right: 16px;
+        }
+        
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            font-size: 14px;
+            width: 200px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dark-gray);
+        }
+        
+        .filter-dropdown {
+            padding: 8px 12px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* Responsive table container */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px; /* Ensures table doesn't get too squished */
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 500;
+            color: var(--dark-gray);
+            border-bottom: 1px solid var(--medium-gray);
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--medium-gray);
+            vertical-align: middle;
+        }
+        
+        /* Mobile card view for tables */
+        .mobile-expense-cards {
+            display: none;
+        }
+        
+        .mobile-expense-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .mobile-expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--light-gray);
+            padding-bottom: 8px;
+        }
+        
+        .mobile-expense-employee {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .mobile-expense-details {
+            margin-bottom: 12px;
+        }
+        
+        .mobile-expense-row {
+            display: flex;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .mobile-expense-label {
+            font-weight: 500;
+            color: var(--dark-gray);
+            width: 100px;
+            flex-shrink: 0;
+        }
+        
+        .mobile-expense-value {
+            flex: 1;
+        }
+        
+        .mobile-expense-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        .employee-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .employee-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 12px;
+            object-fit: cover;
+        }
+        
+        .employee-name {
+            font-weight: 500;
+        }
+        
+        .employee-id {
+            font-size: 12px;
+            color: var(--dark-gray);
+        }
+        
+        .expense-purpose {
+            font-weight: 500;
+        }
+        
+        .expense-date {
+            color: var(--dark-gray);
+            font-size: 14px;
+        }
+        
+        .expense-amount {
+            font-weight: 700;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-approved {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+        
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--medium-gray);
+            margin-bottom: 16px;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            margin-bottom: 16px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .dashboard-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .search-box input {
+                width: 150px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-filter {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
+            }
+            
+            .search-box {
+                margin-right: 8px;
+            }
+            
+            .search-box input {
+                width: 130px;
+            }
+            
+            /* Switch to mobile card view */
+            .table-responsive {
+                display: none;
+            }
+            
+            .mobile-expense-cards {
+                display: block;
+            }
+            
+            .pagination {
+                justify-content: center;
+            }
+        }
+        
+        /* iPhone XS and SE specific adjustments */
+        @media only screen 
+            and (max-width: 375px),
+            only screen and (max-width: 414px) {
+            
+            .expense-table-container {
+                padding: 16px 12px;
+            }
+            
+            .section-title {
+                font-size: 18px;
+            }
+            
+            .search-box input {
+                width: 110px;
+                font-size: 13px;
+            }
+            
+            .filter-dropdown {
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+            
+            .mobile-expense-card {
+                padding: 12px;
+            }
+            
+            .mobile-expense-label {
+                width: 80px;
+            }
+            
+            .mobile-expense-row {
+                margin-bottom: 6px;
+            }
+            
+            .status-badge {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+            
+            .mobile-expense-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .mobile-expense-actions .btn {
+                width: 100%;
+            }
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--medium-gray);
+            color: var(--text-color);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--light-gray);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #0d9b6c;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .page-item {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            color: var(--text-color);
+            background-color: white;
+            border: 1px solid var(--medium-gray);
+            transition: all 0.2s;
+        }
+        
+        .page-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .page-item:hover:not(.active):not(.disabled) {
+            background-color: var(--light-gray);
+        }
+        
+        .page-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .page-item-ellipsis {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        /* Responsive adjustments for pagination */
+        @media (max-width: 576px) {
+            .pagination {
+                justify-content: center;
+            }
+            
+            .page-item {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            outline: 0;
+        }
+        
+        .modal.fade .modal-dialog {
+            transition: transform 0.3s ease-out;
+            transform: translate(0, -50px);
+        }
+        
+        .modal.show .modal-dialog {
+            transform: none;
+        }
+        
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 1.75rem auto;
+            max-width: 500px;
+            pointer-events: none;
+        }
+        
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+            margin: 1.75rem auto;
+        }
+        
+        .modal-lg {
+            max-width: 800px;
+        }
+        
+        .modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            pointer-events: auto;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 0.3rem;
+            outline: 0;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid var(--medium-gray);
+            border-top-left-radius: 0.3rem;
+            border-top-right-radius: 0.3rem;
+        }
+        
+        .modal-title {
+            margin-bottom: 0;
+            line-height: 1.5;
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+        
+        .modal-body {
+            position: relative;
+            flex: 1 1 auto;
+            padding: 1rem;
+        }
+        
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 1rem;
+            border-top: 1px solid var(--medium-gray);
+        }
+        
+        .modal-footer > :not(:first-child) {
+            margin-left: 0.25rem;
+        }
+        
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #000;
+            text-shadow: 0 1px 0 #fff;
+            opacity: 0.5;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+            text-decoration: none;
+            opacity: 0.75;
+        }
+        
+        /* Responsive modal adjustments */
+        @media (max-width: 767.98px) {
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+            
+            .modal-dialog-centered {
+                min-height: calc(100% - 1rem);
+            }
+            
+            .modal-lg {
+                max-width: calc(100% - 1rem);
+            }
+            
+            .modal-body {
+                padding: 0.75rem;
+            }
+            
+            .modal-header, .modal-footer {
+                padding: 0.75rem;
+            }
+            
+            .expense-detail .row {
+                margin-bottom: 0.5rem;
+            }
+            
+            .expense-detail .row [class*="col-"] {
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        /* iPhone specific adjustments */
+        @media (max-width: 375px) {
+            .modal-dialog {
+                margin: 0.25rem;
+                max-width: calc(100% - 0.5rem);
+            }
+            
+            .modal-body {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .modal-header, .modal-footer {
+                padding: 0.5rem;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+            
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Expense detail styling */
+        .expense-detail {
+            padding: 0.5rem;
+        }
+        
+        .expense-detail .row {
+            margin-bottom: 0.75rem;
+        }
+        
+        .expense-detail strong {
+            color: var(--dark-gray);
+        }
+        
+        /* Form styling */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        
+        .form-control:focus {
+            color: #495057;
+            background-color: #fff;
+            border-color: var(--primary-color);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        
+        textarea.form-control {
+            height: auto;
+            resize: vertical;
+        }
+        
+        /* Add this to your existing CSS */
+        .filter-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid var(--medium-gray);
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .filter-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .filter-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--dark-gray);
+        }
+        
+        .filter-dropdown {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dark-gray);
+        }
+        
+        .clear-all-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+        }
+        
+        /* Add these styles to your existing CSS */
+        .status-badge.status-approved {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .status-badge.status-rejected {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.status-pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        /* Style for the expense detail layout */
+        .expense-detail .row {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .expense-detail .row:last-child {
+            border-bottom: none;
+        }
+
+        .expense-detail strong {
+            display: inline-block;
+            min-width: 120px;
+            color: var(--dark-gray);
+        }
+        
+        /* Add these styles to your existing CSS */
+        
+        /* Enhanced modal styles */
+        .modal-header.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        /* Expense detail card styling */
+        .expense-detail-card {
+            background: white;
+        }
+        
+        .expense-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .employee-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .employee-detail-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .employee-detail-info {
+            margin-left: 15px;
+        }
+        
+        .employee-detail-info h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .employee-id-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--dark-gray);
+            margin-top: 5px;
+        }
+        
+        .expense-status-container {
+            text-align: right;
+        }
+        
+        .expense-amount-display {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-top: 5px;
+        }
+        
+        .expense-detail-body {
+            padding: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detail-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .detail-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: var(--dark-gray);
+            margin-bottom: 5px;
+        }
+        
+        .detail-label i {
+            margin-right: 5px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .detail-notes {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .detail-attachments {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .attachment-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+        
+        .attachment-link:hover {
+            background-color: #e9ecef;
+            text-decoration: none;
+        }
+        
+        .attachment-link i {
+            font-size: 18px;
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .expense-id {
+            font-family: monospace;
+            background: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 767.98px) {
+            .expense-detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .employee-profile {
+                flex-direction: column;
+                margin-bottom: 15px;
+            }
+            
+            .employee-detail-info {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
+            .expense-status-container {
+                text-align: center;
+                margin-top: 10px;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Add these styles for the transport mode display */
+        .transport-mode {
+            display: flex;
+            align-items: center;
+        }
+        
+        .transport-mode i {
+            margin-right: 8px;
+            color: var(--primary-color);
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Adjust the colspan in the empty state row */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+    </style>
+    <script>
+        // Define togglePanel function globally and early
+        window.togglePanel = function() {
+            const leftPanel = document.getElementById('leftPanel');
+            const mainContent = document.getElementById('mainContent');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (leftPanel && mainContent && toggleIcon) {
+                leftPanel.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                
+                if (leftPanel.classList.contains('collapsed')) {
+                    toggleIcon.classList.remove('fa-chevron-left');
+                    toggleIcon.classList.add('fa-chevron-right');
+                    mainContent.style.marginLeft = '70px';
+                } else {
+                    toggleIcon.classList.remove('fa-chevron-right');
+                    toggleIcon.classList.add('fa-chevron-left');
+                    mainContent.style.marginLeft = '250px';
+                }
+                
+                console.log('Toggle panel function executed');
+            } else {
+                console.error('One or more elements required for togglePanel not found');
+            }
+        };
+        
+        // Handle profile image loading errors
+        function handleProfileImageError(img) {
+            console.error('Failed to load profile image: ' + img.src);
+            
+            // Try to load from data attribute if available
+            if (img.dataset.originalSrc && img.dataset.originalSrc !== img.src) {
+                console.log('Trying original source: ' + img.dataset.originalSrc);
+                img.src = img.dataset.originalSrc;
+                return;
+            }
+            
+            // Fall back to placeholder
+            img.src = 'https://via.placeholder.com/40x40';
+            
+            // Add a class to indicate error
+            img.classList.add('image-load-error');
+        }
+    </script>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Include left panel -->
+        <?php include_once('includes/manager_panel.php'); ?>
+        
+        <!-- Overlay for mobile menu -->
+        <div class="overlay" id="overlay"></div>
+        
+        <!-- Hamburger menu for mobile -->
+        <div class="hamburger-menu" id="hamburgerMenu">
+            <i class="fas fa-bars"></i>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content" id="mainContent">
+            <div class="header">
+                <h1 class="page-title">Travel Expenses Approval</h1>
+                <div class="user-profile">
+                    <img src="<?php echo htmlspecialchars($profile_image); ?>" 
+                         alt="User Profile" 
+                         class="user-avatar"
+                         onerror="handleProfileImageError(this)"
+                         data-original-src="<?php echo htmlspecialchars($profile_image); ?>">
+                    <div class="user-info">
+                        <div class="user-name"><?php echo htmlspecialchars($username); ?></div>
+                        <div class="user-role">
+                            <i class="fas fa-user-shield"></i>
+                            <?php echo htmlspecialchars($_SESSION['role']); ?>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="site_manager_profile.php">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                            <a class="dropdown-item" href="settings.php">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="logout.php">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add filter controls above the dashboard cards -->
+            <div class="filter-container">
+                <div class="filter-header">
+                    <h3>Filter Expenses</h3>
+                    <button class="btn btn-sm btn-outline-primary clear-all-btn" id="clearAllFiltersBtn">Clear All</button>
+                </div>
+                <div class="filter-body">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="expenseSearch">Search:</label>
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="Search expenses..." id="expenseSearch" 
+                                       value="<?php echo htmlspecialchars($search_filter); ?>">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="monthFilter">Month:</label>
+                            <select class="filter-dropdown" id="monthFilter">
+                                <option value="">All Months</option>
+                                <?php for($i = 1; $i <= 12; $i++): ?>
+                                    <option value="<?php echo $i; ?>" <?php echo ($month_filter == $i) ? 'selected' : ''; ?>>
+                                        <?php echo date('F', mktime(0, 0, 0, $i, 1)); ?>
+                                    </option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="yearFilter">Year:</label>
+                            <select class="filter-dropdown" id="yearFilter">
+                                <option value="">All Years</option>
+                                <?php 
+                                $currentYear = date('Y');
+                                for($i = $currentYear; $i >= $currentYear - 3; $i--): 
+                                ?>
+                                    <option value="<?php echo $i; ?>" <?php echo ($year_filter == $i) ? 'selected' : ''; ?>>
+                                        <?php echo $i; ?>
+                                    </option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+         <!-- Dashboard Cards -->
+            <div class="dashboard-cards">
+                <div class="card pending-card">
+                    <div class="card-header">
+                        <span class="card-title">Pending Approval</span>
+                        <i class="fas fa-clock" style="color: var(--warning-color);"></i>
+                    </div>
+                    <div class="card-value"><?php echo $pendingCount; ?></div>
+                    <div class="card-change positive">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Awaiting review</span>
+                    </div>
+                </div>
+                
+                <div class="card approved-card">
+                    <div class="card-header">
+                        <span class="card-title">Approved</span>
+                        <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+                    </div>
+                    <div class="card-value"><?php echo $approvedCount; ?></div>
+                    <div class="card-change positive">
+                        <i class="fas fa-check"></i>
+                        <span>Processed successfully</span>
+                    </div>
+                </div>
+                
+                <div class="card rejected-card">
+                    <div class="card-header">
+                        <span class="card-title">Rejected</span>
+                        <i class="fas fa-times-circle" style="color: var(--danger-color);"></i>
+                    </div>
+                    <div class="card-value"><?php echo $rejectedCount; ?></div>
+                    <div class="card-change negative">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Needs attention</span>
+                    </div>
+                </div>
+                
+                <div class="card total-card">
+                    <div class="card-header">
+                        <span class="card-title">Total Amount</span>
+                        <i class="fas fa-rupee-sign" style="color: var(--primary-color);"></i>
+                    </div>
+                    <div class="card-value">₹<?php echo number_format($totalAmount, 2); ?></div>
+                    <div class="card-change positive">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>All expenses</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Expense Approval Table -->
+            <div class="expense-table-container">
+                <div class="table-header">
+                    <h2 class="section-title">Pending Expense Reports</h2>
+                </div>
+                
+                <!-- Desktop Table View -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Purpose</th>
+                                <th>Mode</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($pendingExpenses) > 0): ?>
+                                <?php foreach ($pendingExpenses as $expense): ?>
+                                    <?php 
+                                    // Prepare profile picture URL
+                                    $profilePic = "https://via.placeholder.com/36x36"; // Default image
+                                    
+                                    if (!empty($expense['profile_picture'])) {
+                                        $picture = $expense['profile_picture'];
+                                        
+                                        // Check if it's already a full URL
+                                        if (filter_var($picture, FILTER_VALIDATE_URL)) {
+                                            $profilePic = $picture;
+                                        }
+                                        // Check if it starts with http:// or https:// but isn't a valid URL
+                                        else if (strpos($picture, 'http://') === 0 || strpos($picture, 'https://') === 0) {
+                                            $profilePic = $picture;
+                                        }
+                                        // Check if it's a relative path with uploads/profile_pictures
+                                        else if (strpos($picture, 'uploads/profile_pictures/') === 0) {
+                                            $profilePic = $picture;
+                                        }
+                                        // Check if it's just a filename
+                                        else {
+                                            $temp_path = "uploads/profile_pictures/" . $picture;
+                                            
+                                            // Check if file exists
+                                            if (file_exists($temp_path)) {
+                                                $profilePic = $temp_path;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Prepare employee ID
+                                    $employeeId = !empty($expense['employee_id']) ? $expense['employee_id'] : 'EMP-'.rand(1000,9999);
+                                    ?>
+                                    <tr data-id="<?php echo $expense['id']; ?>">
+                                        <td>
+                                            <div class="employee-info">
+                                                <img src="<?php echo htmlspecialchars($profilePic); ?>" 
+                                                     alt="Employee" 
+                                                     class="employee-avatar"
+                                                     onerror="this.src='https://via.placeholder.com/36x36'">
+                                                <div>
+                                                    <div class="employee-name"><?php echo htmlspecialchars($expense['username']); ?></div>
+                                                    <div class="employee-id"><?php echo htmlspecialchars($employeeId); ?></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="expense-purpose"><?php echo htmlspecialchars($expense['purpose']); ?></div>
+                                            <div class="expense-date">
+                                                <?php 
+                                                    $date = new DateTime($expense['travel_date']);
+                                                    echo $date->format('M d, Y'); 
+                                                ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="transport-mode">
+                                                <i class="fas <?php echo getTransportIcon($expense['mode_of_transport']); ?>"></i>
+                                                <span><?php echo htmlspecialchars($expense['mode_of_transport'] ?? 'N/A'); ?></span>
+                                            </div>
+                                        </td>
+                                        <td><?php echo date('M d, Y', strtotime($expense['created_at'] ?? $expense['travel_date'])); ?></td>
+                                        <td class="expense-amount">₹<?php echo number_format($expense['amount'], 2); ?></td>
+                                        <td><span class="status-badge status-pending">Pending</span></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-success approve-btn" data-id="<?php echo $expense['id']; ?>">Approve</button>
+                                                <button class="btn btn-sm btn-danger reject-btn" data-id="<?php echo $expense['id']; ?>">Reject</button>
+                                                <button class="btn btn-sm btn-outline view-details-btn" data-id="<?php echo $expense['id']; ?>">Details</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="empty-state">
+                                            <i class="fas fa-clipboard-check mb-3"></i>
+                                            <p>No pending expenses to approve</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Mobile Card View -->
+                <div class="mobile-expense-cards">
+                    <?php if (count($pendingExpenses) > 0): ?>
+                        <?php foreach ($pendingExpenses as $expense): ?>
+                            <?php 
+                            // Prepare profile picture URL (same logic as above)
+                            $profilePic = "https://via.placeholder.com/36x36"; // Default image
+                            
+                            if (!empty($expense['profile_picture'])) {
+                                $picture = $expense['profile_picture'];
+                                
+                                // Check if it's already a full URL
+                                if (filter_var($picture, FILTER_VALIDATE_URL)) {
+                                    $profilePic = $picture;
+                                }
+                                // Check if it starts with http:// or https:// but isn't a valid URL
+                                else if (strpos($picture, 'http://') === 0 || strpos($picture, 'https://') === 0) {
+                                    $profilePic = $picture;
+                                }
+                                // Check if it's a relative path with uploads/profile_pictures
+                                else if (strpos($picture, 'uploads/profile_pictures/') === 0) {
+                                    $profilePic = $picture;
+                                }
+                                // Check if it's just a filename
+                                else {
+                                    $temp_path = "uploads/profile_pictures/" . $picture;
+                                    
+                                    // Check if file exists
+                                    if (file_exists($temp_path)) {
+                                        $profilePic = $temp_path;
+                                    }
+                                }
+                            }
+                            
+                            // Prepare employee ID
+                            $employeeId = !empty($expense['employee_id']) ? $expense['employee_id'] : 'EMP-'.rand(1000,9999);
+                            ?>
+                            <div class="mobile-expense-card" data-id="<?php echo $expense['id']; ?>">
+                                <div class="mobile-expense-header">
+                                    <span class="status-badge status-pending">Pending</span>
+                                    <span class="expense-amount">₹<?php echo number_format($expense['amount'], 2); ?></span>
+                                </div>
+                                
+                                <div class="mobile-expense-employee">
+                                    <img src="<?php echo htmlspecialchars($profilePic); ?>" 
+                                         alt="Employee" 
+                                         class="employee-avatar"
+                                         onerror="this.src='https://via.placeholder.com/36x36'">
+                                    <div>
+                                        <div class="employee-name"><?php echo htmlspecialchars($expense['username']); ?></div>
+                                        <div class="employee-id"><?php echo htmlspecialchars($employeeId); ?></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mobile-expense-details">
+                                    <div class="mobile-expense-row">
+                                        <div class="mobile-expense-label">Purpose:</div>
+                                        <div class="mobile-expense-value"><?php echo htmlspecialchars($expense['purpose']); ?></div>
+                                    </div>
+                                    <div class="mobile-expense-row">
+                                        <div class="mobile-expense-label">Mode:</div>
+                                        <div class="mobile-expense-value">
+                                            <i class="fas <?php echo getTransportIcon($expense['mode_of_transport']); ?> mr-1"></i>
+                                            <?php echo htmlspecialchars($expense['mode_of_transport'] ?? 'N/A'); ?>
+                                        </div>
+                                    </div>
+                                    <div class="mobile-expense-row">
+                                        <div class="mobile-expense-label">Travel Date:</div>
+                                        <div class="mobile-expense-value">
+                                            <?php 
+                                                $date = new DateTime($expense['travel_date']);
+                                                echo $date->format('M d, Y'); 
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <div class="mobile-expense-row">
+                                        <div class="mobile-expense-label">Submitted:</div>
+                                        <div class="mobile-expense-value">
+                                            <?php echo date('M d, Y', strtotime($expense['created_at'] ?? $expense['travel_date'])); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mobile-expense-actions">
+                                    <button class="btn btn-sm btn-success approve-btn" data-id="<?php echo $expense['id']; ?>">Approve</button>
+                                    <button class="btn btn-sm btn-danger reject-btn" data-id="<?php echo $expense['id']; ?>">Reject</button>
+                                    <button class="btn btn-sm btn-outline view-details-btn" data-id="<?php echo $expense['id']; ?>">Details</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-check"></i>
+                            <p>No pending expenses to approve</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="pagination">
+                    <?php if ($total_pages > 1): ?>
+                        <!-- First page and previous page links -->
+                        <?php if ($page > 1): ?>
+                            <a href="?page=1" class="page-item"><i class="fas fa-angle-double-left"></i></a>
+                            <a href="?page=<?php echo $page - 1; ?>" class="page-item"><i class="fas fa-chevron-left"></i></a>
+                        <?php else: ?>
+                            <span class="page-item disabled"><i class="fas fa-angle-double-left"></i></span>
+                            <span class="page-item disabled"><i class="fas fa-chevron-left"></i></span>
+                        <?php endif; ?>
+                        
+                        <!-- Page numbers -->
+                        <?php
+                        // Calculate range of page numbers to show
+                        $range = 2; // Show 2 pages before and after current page
+                        $start_page = max(1, $page - $range);
+                        $end_page = min($total_pages, $page + $range);
+                        
+                        // Always show first page
+                        if ($start_page > 1) {
+                            echo '<a href="?page=1" class="page-item">1</a>';
+                            if ($start_page > 2) {
+                                echo '<span class="page-item-ellipsis">...</span>';
+                            }
+                        }
+                        
+                        // Show page numbers
+                        for ($i = $start_page; $i <= $end_page; $i++) {
+                            if ($i == $page) {
+                                echo '<span class="page-item active">' . $i . '</span>';
+                            } else {
+                                echo '<a href="?page=' . $i . '" class="page-item">' . $i . '</a>';
+                            }
+                        }
+                        
+                        // Always show last page
+                        if ($end_page < $total_pages) {
+                            if ($end_page < $total_pages - 1) {
+                                echo '<span class="page-item-ellipsis">...</span>';
+                            }
+                            echo '<a href="?page=' . $total_pages . '" class="page-item">' . $total_pages . '</a>';
+                        }
+                        ?>
+                        
+                        <!-- Next page and last page links -->
+                        <?php if ($page < $total_pages): ?>
+                            <a href="?page=<?php echo $page + 1; ?>" class="page-item"><i class="fas fa-chevron-right"></i></a>
+                            <a href="?page=<?php echo $total_pages; ?>" class="page-item"><i class="fas fa-angle-double-right"></i></a>
+                        <?php else: ?>
+                            <span class="page-item disabled"><i class="fas fa-chevron-right"></i></span>
+                            <span class="page-item disabled"><i class="fas fa-angle-double-right"></i></span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Details Modal -->
+    <div class="modal fade" id="expenseDetailsModal" tabindex="-1" role="dialog" aria-labelledby="expenseDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="expenseDetailsModalLabel">
+                        <i class="fas fa-receipt mr-2"></i>Expense Details
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="expenseDetailsContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                            <p class="mt-3">Loading expense details...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approval/Rejection Modal -->
+    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="approvalModalLabel">Confirm Action</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="approvalModalText">Are you sure you want to approve this expense?</p>
+                    <div class="form-group">
+                        <label for="approvalNotes">Notes (optional):</label>
+                        <textarea class="form-control" id="approvalNotes" rows="3" placeholder="Enter any notes or comments"></textarea>
+                    </div>
+                    <input type="hidden" id="expenseIdInput" value="">
+                    <input type="hidden" id="actionTypeInput" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu functions
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const leftPanel = document.getElementById('leftPanel');
+            const overlay = document.getElementById('overlay');
+            
+            // Direct solution: Find toggle button and add event listener
+            document.querySelectorAll('.toggle-btn').forEach(function(toggleBtn) {
+                // Remove any existing onclick attribute
+                toggleBtn.removeAttribute('onclick');
+                
+                // Add event listener
+                toggleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.togglePanel();
+                    console.log('Toggle button clicked via direct selector');
+                });
+            });
+            
+            // Fallback: Add event listener to document for any future toggle buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.toggle-btn')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.togglePanel();
+                    console.log('Toggle button clicked via document listener');
+                }
+            });
+            
+            // Check if we should enable scrolling based on screen height
+            function checkPanelScrolling() {
+                if (window.innerHeight < 700 || window.innerWidth <= 768) {
+                    leftPanel.classList.add('needs-scrolling');
+                } else {
+                    leftPanel.classList.remove('needs-scrolling');
+                }
+            }
+            
+            // Hamburger menu click handler
+            if (hamburgerMenu) {
+                hamburgerMenu.addEventListener('click', function() {
+                    leftPanel.classList.toggle('mobile-open');
+                    overlay.classList.toggle('active');
+                    checkPanelScrolling();
+                });
+            }
+            
+            // Overlay click handler (close menu when clicking outside)
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    leftPanel.classList.remove('mobile-open');
+                    overlay.classList.remove('active');
+                    
+                    // Also close any open dropdowns
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                });
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    leftPanel.classList.remove('mobile-open');
+                    if (overlay) {
+                        overlay.classList.remove('active');
+                    }
+                }
+                checkPanelScrolling();
+            });
+            
+            // Initial check for scrolling
+            checkPanelScrolling();
+            
+            // Expense approval functionality
+            const approveButtons = document.querySelectorAll('.approve-btn');
+            const rejectButtons = document.querySelectorAll('.reject-btn');
+            const detailButtons = document.querySelectorAll('.view-details-btn');
+            
+            // Handle approve button clicks
+            approveButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const expenseId = this.getAttribute('data-id');
+                    showApprovalModal(expenseId, 'approve');
+                });
+            });
+            
+            // Handle reject button clicks
+            rejectButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const expenseId = this.getAttribute('data-id');
+                    showApprovalModal(expenseId, 'reject');
+                });
+            });
+            
+            // Handle details button clicks
+            detailButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const expenseId = this.getAttribute('data-id');
+                    showExpenseDetails(expenseId);
+                });
+            });
+            
+            // Confirm action button click
+            document.getElementById('confirmActionBtn').addEventListener('click', function() {
+                const expenseId = document.getElementById('expenseIdInput').value;
+                const action = document.getElementById('actionTypeInput').value;
+                const notes = document.getElementById('approvalNotes').value;
+                
+                // Close the modal
+                $('#approvalModal').modal('hide');
+                
+                // Process the action
+                processExpenseAction(expenseId, action, notes);
+            });
+            
+            // Initialize Bootstrap modals
+            $('.modal').modal({
+                show: false,
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            // Ensure modals are properly positioned when shown
+            $('#expenseDetailsModal, #approvalModal').on('shown.bs.modal', function() {
+                $(this).find('.modal-dialog').css({
+                    'margin-top': function() {
+                        return ($(window).height() - $(this).height()) / 2;
+                    }
+                });
+            });
+            
+            // Month and year filter functionality
+            const monthFilter = document.getElementById('monthFilter');
+            const yearFilter = document.getElementById('yearFilter');
+            
+            if (monthFilter) {
+                monthFilter.addEventListener('change', function() {
+                    applyFilters();
+                });
+            }
+            
+            if (yearFilter) {
+                yearFilter.addEventListener('change', function() {
+                    applyFilters();
+                });
+            }
+            
+            // Apply all filters together
+            function applyFilters() {
+                const searchTerm = document.getElementById('expenseSearch').value.toLowerCase();
+                const month = document.getElementById('monthFilter').value;
+                const year = document.getElementById('yearFilter').value;
+                
+                // Filter desktop table rows
+                const rows = document.querySelectorAll('.table-responsive tbody tr');
+                rows.forEach(row => {
+                    let showRow = true;
+                    
+                    // Search term filter
+                    if (searchTerm) {
+                        const employeeName = row.querySelector('.employee-name')?.textContent.toLowerCase() || '';
+                        const purpose = row.querySelector('.expense-purpose')?.textContent.toLowerCase() || '';
+                        const amount = row.querySelector('.expense-amount')?.textContent.toLowerCase() || '';
+                        
+                        if (!(employeeName.includes(searchTerm) || purpose.includes(searchTerm) || amount.includes(searchTerm))) {
+                            showRow = false;
+                        }
+                    }
+                    
+                    // Date filtering
+                    if ((month || year) && showRow) {
+                        const dateCell = row.querySelector('.expense-date')?.textContent || '';
+                        const expenseDate = new Date(dateCell);
+                        
+                        if (!isNaN(expenseDate.getTime())) {
+                            const expenseMonth = expenseDate.getMonth() + 1; // getMonth() is 0-indexed
+                            const expenseYear = expenseDate.getFullYear();
+                            
+                            if (month && parseInt(month) !== expenseMonth) {
+                                showRow = false;
+                            }
+                            
+                            if (year && parseInt(year) !== expenseYear) {
+                                showRow = false;
+                            }
+                        }
+                    }
+                    
+                    // Show or hide row based on all filters
+                    row.style.display = showRow ? '' : 'none';
+                });
+                
+                // Filter mobile cards with same logic
+                const cards = document.querySelectorAll('.mobile-expense-card');
+                cards.forEach(card => {
+                    let showCard = true;
+                    
+                    // Search term filter
+                    if (searchTerm) {
+                        const employeeName = card.querySelector('.employee-name')?.textContent.toLowerCase() || '';
+                        const purpose = card.querySelector('.mobile-expense-value')?.textContent.toLowerCase() || '';
+                        const amount = card.querySelector('.expense-amount')?.textContent.toLowerCase() || '';
+                        
+                        if (!(employeeName.includes(searchTerm) || purpose.includes(searchTerm) || amount.includes(searchTerm))) {
+                            showCard = false;
+                        }
+                    }
+                    
+                    // Date filtering
+                    if ((month || year) && showCard) {
+                        const dateElement = card.querySelector('.mobile-expense-value:nth-of-type(2)')?.textContent || '';
+                        const expenseDate = new Date(dateElement);
+                        
+                        if (!isNaN(expenseDate.getTime())) {
+                            const expenseMonth = expenseDate.getMonth() + 1;
+                            const expenseYear = expenseDate.getFullYear();
+                            
+                            if (month && parseInt(month) !== expenseMonth) {
+                                showCard = false;
+                            }
+                            
+                            if (year && parseInt(year) !== expenseYear) {
+                                showCard = false;
+                            }
+                        }
+                    }
+                    
+                    // Show or hide card based on all filters
+                    card.style.display = showCard ? '' : 'none';
+                });
+                
+                // Check if we have any visible results
+                const visibleRows = document.querySelectorAll('.table-responsive tbody tr:not([style*="display: none"])');
+                const visibleCards = document.querySelectorAll('.mobile-expense-card:not([style*="display: none"])');
+                
+                // Show empty state if no results
+                const tableEmptyState = document.querySelector('.table-responsive .empty-state') || 
+                                       document.createElement('div');
+                const mobileEmptyState = document.querySelector('.mobile-expense-cards .empty-state') || 
+                                        document.createElement('div');
+                
+                if (visibleRows.length === 0) {
+                    if (!document.querySelector('.table-responsive .empty-state')) {
+                        tableEmptyState.className = 'empty-state';
+                        tableEmptyState.innerHTML = `
+                            <i class="fas fa-filter"></i>
+                            <p>No expenses match your filters</p>
+                            <button class="btn btn-outline-primary btn-sm clear-filters">Clear Filters</button>
+                        `;
+                        document.querySelector('.table-responsive tbody').appendChild(tableEmptyState);
+                    }
+                    } else {
+                    if (document.querySelector('.table-responsive .empty-state')) {
+                        document.querySelector('.table-responsive .empty-state').remove();
+                    }
+                }
+                
+                if (visibleCards.length === 0) {
+                    if (!document.querySelector('.mobile-expense-cards .empty-state')) {
+                        mobileEmptyState.className = 'empty-state';
+                        mobileEmptyState.innerHTML = `
+                            <i class="fas fa-filter"></i>
+                            <p>No expenses match your filters</p>
+                            <button class="btn btn-outline-primary btn-sm clear-filters">Clear Filters</button>
+                        `;
+                        document.querySelector('.mobile-expense-cards').appendChild(mobileEmptyState);
+                    }
+                } else {
+                    if (document.querySelector('.mobile-expense-cards .empty-state')) {
+                        document.querySelector('.mobile-expense-cards .empty-state').remove();
+                    }
+                }
+                
+                // Add event listeners to "Clear Filters" buttons
+                document.querySelectorAll('.clear-filters').forEach(button => {
+                    button.addEventListener('click', clearAllFilters);
+                });
+            }
+            
+            // Function to clear all filters
+            function clearAllFilters() {
+                document.getElementById('expenseSearch').value = '';
+                document.getElementById('monthFilter').value = '';
+                document.getElementById('yearFilter').value = '';
+                
+                // Show all rows and cards
+                document.querySelectorAll('.table-responsive tbody tr').forEach(row => {
+                    row.style.display = '';
+                });
+                document.querySelectorAll('.mobile-expense-card').forEach(card => {
+                    card.style.display = '';
+                });
+                
+                // Remove empty states if they exist
+                if (document.querySelector('.table-responsive .empty-state')) {
+                    document.querySelector('.table-responsive .empty-state').remove();
+                }
+                if (document.querySelector('.mobile-expense-cards .empty-state')) {
+                    document.querySelector('.mobile-expense-cards .empty-state').remove();
+                }
+            }
+            
+            // Update existing search input event listener
+            const searchInput = document.getElementById('expenseSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    applyFilters();
+                });
+            }
+            
+            // Replace existing filterExpenses and filterByDepartment functions with the new applyFilters function
+            function filterExpenses(searchTerm) {
+                // Filter desktop table rows
+                const rows = document.querySelectorAll('.table-responsive tbody tr');
+                rows.forEach(row => {
+                    const employeeName = row.querySelector('.employee-name')?.textContent.toLowerCase() || '';
+                    const purpose = row.querySelector('.expense-purpose')?.textContent.toLowerCase() || '';
+                    const amount = row.querySelector('.expense-amount')?.textContent.toLowerCase() || '';
+                    
+                    if (employeeName.includes(searchTerm) || purpose.includes(searchTerm) || amount.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Filter mobile cards
+                const cards = document.querySelectorAll('.mobile-expense-card');
+                cards.forEach(card => {
+                    const employeeName = card.querySelector('.employee-name')?.textContent.toLowerCase() || '';
+                    const purpose = card.querySelector('.mobile-expense-value')?.textContent.toLowerCase() || '';
+                    const amount = card.querySelector('.expense-amount')?.textContent.toLowerCase() || '';
+                    
+                    if (employeeName.includes(searchTerm) || purpose.includes(searchTerm) || amount.includes(searchTerm)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+            
+            function filterByDepartment(department) {
+                // This would require additional data about departments
+                // For now, just log the selected department
+                console.log('Filter by department:', department);
+                
+                // In a real implementation, you would filter the rows based on department
+                if (!department) {
+                    // Show all rows if no department is selected
+                    document.querySelectorAll('.table-responsive tbody tr').forEach(row => {
+                        row.style.display = '';
+                    });
+                    document.querySelectorAll('.mobile-expense-card').forEach(card => {
+                        card.style.display = '';
+                    });
+                }
+            }
+            
+            /**
+             * Show expense details
+             */
+            function showExpenseDetails(expenseId) {
+                // Show the modal with proper Bootstrap API
+                const detailsModal = $('#expenseDetailsModal');
+                
+                // Set loading state
+                document.getElementById('expenseDetailsContent').innerHTML = `
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-3">Loading expense details...</p>
+                    </div>
+                `;
+                
+                // Show the modal
+                detailsModal.modal('show');
+                
+                // Fetch expense details from server
+                fetch(`get_expense_details.php?id=${expenseId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Format dates
+                        const travelDate = new Date(data.travel_date);
+                        const formattedTravelDate = travelDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        
+                        const createdDate = new Date(data.created_at);
+                        const formattedCreatedDate = createdDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        
+                        // Format amount
+                        const formattedAmount = parseFloat(data.amount).toLocaleString('en-IN', {
+                            style: 'currency',
+                            currency: 'INR',
+                            minimumFractionDigits: 2
+                        });
+                        
+                        // Prepare profile picture
+                        const profilePic = data.profile_picture || 'https://via.placeholder.com/64x64';
+                        
+                        // Update the modal content with the fetched data
+                    document.getElementById('expenseDetailsContent').innerHTML = `
+                            <div class="expense-detail-card">
+                                <div class="expense-detail-header">
+                                    <div class="employee-profile">
+                                        <img src="${profilePic}" alt="Employee" class="employee-detail-avatar" onerror="this.src='https://via.placeholder.com/64x64'">
+                                        <div class="employee-detail-info">
+                                            <h4>${data.username || 'N/A'}</h4>
+                                            <span class="employee-id-badge">${data.employee_id || 'N/A'}</span>
+                                </div>
+                                </div>
+                                    <div class="expense-status-container">
+                                        <span class="status-badge status-${data.status.toLowerCase()}">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span>
+                                        <div class="expense-amount-display">${formattedAmount}</div>
+                            </div>
+                                </div>
+                                
+                                <div class="expense-detail-body">
+                                    <div class="detail-section">
+                                        <h5 class="detail-section-title">Travel Information</h5>
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-tag"></i> Purpose</span>
+                                                <span class="detail-value">${data.purpose || 'N/A'}</span>
+                                </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-calendar"></i> Travel Date</span>
+                                                <span class="detail-value">${formattedTravelDate}</span>
+                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> From</span>
+                                                <span class="detail-value">${data.from_location || 'N/A'}</span>
+                                </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> To</span>
+                                                <span class="detail-value">${data.to_location || 'N/A'}</span>
+                                </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-car"></i> Mode</span>
+                                                <span class="detail-value">${data.mode_of_transport || 'N/A'}</span>
+                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-road"></i> Distance</span>
+                                                <span class="detail-value">${data.distance ? data.distance + ' km' : 'N/A'}</span>
+                                </div>
+                                </div>
+                                </div>
+                                    
+                                    <div class="detail-section">
+                                        <h5 class="detail-section-title">Notes</h5>
+                                        <div class="detail-notes">
+                                            ${data.notes ? data.notes : '<em>No notes provided.</em>'}
+                            </div>
+                                </div>
+                                    
+                                    ${data.bill_file_path ? `
+                                    <div class="detail-section">
+                                        <h5 class="detail-section-title">Attachments</h5>
+                                        <div class="detail-attachments">
+                                            <a href="${data.bill_file_path}" class="attachment-link" target="_blank">
+                                                <i class="fas fa-file-invoice"></i>
+                                                <span>View Receipt</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                    ` : ''}
+                                    
+                                    <div class="detail-section">
+                                        <h5 class="detail-section-title">Additional Information</h5>
+                                        <div class="detail-grid">
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-clock"></i> Submitted On</span>
+                                                <span class="detail-value">${formattedCreatedDate}</span>
+                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-hashtag"></i> Expense ID</span>
+                                                <span class="detail-value expense-id">${data.id}</span>
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                        
+                        // Add action buttons if status is pending
+                        if (data.status.toLowerCase() === 'pending') {
+                            const footerButtons = document.querySelector('#expenseDetailsModal .modal-footer');
+                            footerButtons.innerHTML = `
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-danger" onclick="showApprovalModal(${data.id}, 'reject')">
+                                    <i class="fas fa-times-circle mr-1"></i> Reject
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="showApprovalModal(${data.id}, 'approve')">
+                                    <i class="fas fa-check-circle mr-1"></i> Approve
+                                </button>
+                            `;
+                        } else {
+                            // Reset footer if not pending
+                            const footerButtons = document.querySelector('#expenseDetailsModal .modal-footer');
+                            footerButtons.innerHTML = `
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching expense details:', error);
+                        document.getElementById('expenseDetailsContent').innerHTML = `
+                            <div class="alert alert-danger m-4">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                Error loading expense details. Please try again.
+                            </div>
+                        `;
+                    });
+            }
+            
+            /**
+             * Show approval/rejection modal
+             */
+            function showApprovalModal(expenseId, action) {
+                // Get modal element
+                const approvalModal = $('#approvalModal');
+                
+                // Set modal title and text based on action
+                const actionText = action === 'approve' ? 'approve' : 'reject';
+                document.getElementById('approvalModalLabel').textContent = 
+                    action === 'approve' ? 'Approve Expense' : 'Reject Expense';
+                document.getElementById('approvalModalText').textContent = 
+                    `Are you sure you want to ${actionText} this expense?`;
+                
+                // Set button color based on action
+                const confirmBtn = document.getElementById('confirmActionBtn');
+                confirmBtn.className = action === 'approve' 
+                    ? 'btn btn-success' 
+                    : 'btn btn-danger';
+                confirmBtn.textContent = action === 'approve' ? 'Approve' : 'Reject';
+                
+                // Set hidden inputs
+                document.getElementById('expenseIdInput').value = expenseId;
+                document.getElementById('actionTypeInput').value = action;
+                
+                // Clear previous notes
+                document.getElementById('approvalNotes').value = '';
+                
+                // Show the modal with proper Bootstrap API
+                approvalModal.modal('show');
+            }
+            
+            /**
+             * Process expense approval/rejection
+             */
+            function processExpenseAction(expenseId, action, notes) {
+                // Create form data
+                const formData = new FormData();
+                formData.append('expense_id', expenseId);
+                formData.append('action', action);
+                formData.append('notes', notes);
+                
+                // Send to server
+                fetch('process_expense_action.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                alert(`Expense ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
+                
+                // Reload the page to reflect changes
+                window.location.reload();
+                    } else {
+                        // Show error message
+                        alert(`Error: ${data.error || 'Unknown error occurred'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error processing action:', error);
+                    alert('An error occurred while processing your request. Please try again.');
+                });
+            }
+            
+            // Clear all filters button
+            const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
+            if (clearAllFiltersBtn) {
+                clearAllFiltersBtn.addEventListener('click', clearAllFilters);
+            }
+        });
+    </script>
+    <script>
+        // Add this function to preserve pagination when applying filters
+        function applyFiltersWithPagination() {
+            // Get current URL
+            let url = new URL(window.location.href);
+            let params = new URLSearchParams(url.search);
+            
+            // Get filter values
+            const searchTerm = document.getElementById('expenseSearch').value.toLowerCase();
+            const month = document.getElementById('monthFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            
+            // Add filter parameters to URL
+            if (searchTerm) {
+                params.set('search', searchTerm);
+            } else {
+                params.delete('search');
+            }
+            
+            if (month) {
+                params.set('month', month);
+            } else {
+                params.delete('month');
+            }
+            
+            if (year) {
+                params.set('year', year);
+            } else {
+                params.delete('year');
+            }
+            
+            // Reset to page 1 when applying new filters
+            params.set('page', '1');
+            
+            // Redirect with new parameters
+            window.location.href = url.pathname + '?' + params.toString();
+        }
+        
+        // Update the existing filter event listeners
+        const searchInput = document.getElementById('expenseSearch');
+        if (searchInput) {
+            // Use debounce to avoid too many requests while typing
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    applyFiltersWithPagination();
+                }, 500); // Wait 500ms after typing stops
+            });
+        }
+        
+        const monthFilter = document.getElementById('monthFilter');
+        if (monthFilter) {
+            monthFilter.addEventListener('change', function() {
+                applyFiltersWithPagination();
+            });
+        }
+        
+        const yearFilter = document.getElementById('yearFilter');
+        if (yearFilter) {
+            yearFilter.addEventListener('change', function() {
+                applyFiltersWithPagination();
+            });
+        }
+        
+        // Update clear filters function
+        function clearAllFilters() {
+            // Clear filter inputs
+            document.getElementById('expenseSearch').value = '';
+            document.getElementById('monthFilter').value = '';
+            document.getElementById('yearFilter').value = '';
+            
+            // Redirect to page without query parameters
+            window.location.href = window.location.pathname;
+        }
+        
+        // Make sure the clear filters button uses the updated function
+        const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
+        if (clearAllFiltersBtn) {
+            clearAllFiltersBtn.addEventListener('click', clearAllFilters);
+        }
+    </script>
+    <script>
+        // Define global functions for modal actions
+        window.showApprovalModal = function(expenseId, action) {
+            // Get modal element
+            const approvalModal = $('#approvalModal');
+            
+            // Set modal title and text based on action
+            const actionText = action === 'approve' ? 'approve' : 'reject';
+            document.getElementById('approvalModalLabel').textContent = 
+                action === 'approve' ? 'Approve Expense' : 'Reject Expense';
+            document.getElementById('approvalModalText').textContent = 
+                `Are you sure you want to ${actionText} this expense?`;
+            
+            // Set button color based on action
+            const confirmBtn = document.getElementById('confirmActionBtn');
+            confirmBtn.className = action === 'approve' 
+                ? 'btn btn-success' 
+                : 'btn btn-danger';
+            confirmBtn.textContent = action === 'approve' ? 'Approve' : 'Reject';
+            
+            // Set hidden inputs
+            document.getElementById('expenseIdInput').value = expenseId;
+            document.getElementById('actionTypeInput').value = action;
+            
+            // Clear previous notes
+            document.getElementById('approvalNotes').value = '';
+            
+            // Show the modal with proper Bootstrap API
+            approvalModal.modal('show');
+        };
+    </script>
+</body>
+</html>

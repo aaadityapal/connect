@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Check if user has the correct role
-$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager'];
+$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'Accountant', 'HR Manager', 'HR'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Permission denied']);
@@ -18,7 +18,7 @@ if (!in_array($_SESSION['role'], $allowed_roles)) {
 }
 
 // Include database connection
-include_once('includes/db_connect.php');
+require_once 'config/db_connect.php';
 
 // Check if expense ID is provided
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -47,6 +47,12 @@ try {
             te.created_at,
             te.updated_at,
             te.bill_file_path,
+            te.manager_status,
+            te.accountant_status,
+            te.hr_status,
+            te.manager_reason,
+            te.accountant_reason,
+            te.hr_reason,
             u.username,
             u.unique_id as employee_id,
             u.profile_picture

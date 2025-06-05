@@ -19,7 +19,7 @@
         <span class="menu-text">Manager Accessible *</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'project_overview.php' ? 'active' : ''; ?>" onclick="window.location.href='project_overview.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'travel_expenses_approval_manager.php' ? 'active' : ''; ?>" onclick="window.location.href='travel_expenses_approval_manager.php'">
         <i class="fas fa-tasks"></i>
         <span class="menu-text">Travel Expenses</span>
     </div>

@@ -1,0 +1,223 @@
+2025-06-04 12:30:43 - Request received
+2025-06-04 12:30:43 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => reject
+    [notes] => ww
+)
+
+2025-06-04 12:30:43 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 12:31:57 - Request received
+2025-06-04 12:31:57 - POST data: Array
+(
+    [expense_id] => 6
+    [action] => approve
+    [notes] => done
+)
+
+2025-06-04 12:31:57 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 12:41:27 - Request received
+2025-06-04 12:41:27 - POST data: Array
+(
+    [expense_id] => 5
+    [action] => approve
+    [notes] => gg
+)
+
+2025-06-04 12:41:27 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 12:42:32 - Request received
+2025-06-04 12:42:32 - POST data: Array
+(
+    [expense_id] => 9
+    [action] => reject
+    [notes] => hh
+)
+
+2025-06-04 12:42:32 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 12:43:32 - Request received
+2025-06-04 12:43:32 - POST data: Array
+(
+    [expense_id] => 12
+    [action] => reject
+    [notes] => ggg
+)
+
+2025-06-04 12:43:32 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-04 12:44:34 - Request received
+2025-06-04 12:44:34 - POST data: Array
+(
+    [expense_id] => 13
+    [action] => reject
+    [notes] => fff
+)
+
+2025-06-04 12:44:34 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-04 13:36:02 - Request received
+2025-06-04 13:36:02 - POST data: Array
+(
+    [expense_id] => 9
+    [action] => approve
+    [notes] => hh
+)
+
+2025-06-04 13:36:02 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 13:40:11 - Request received
+2025-06-04 13:40:11 - POST data: Array
+(
+    [expense_id] => 8
+    [action] => reject
+    [notes] => sss
+)
+
+2025-06-04 13:40:11 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 13:47:04 - Request received
+2025-06-04 13:47:04 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => reject
+    [notes] => hh
+)
+
+2025-06-04 13:47:04 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-04 14:27:38 - Request received
+2025-06-04 14:27:38 - POST data: Array
+(
+    [expense_id] => 14
+    [action] => approve
+    [notes] => gg
+)
+
+2025-06-04 14:27:38 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-04 14:42:45 - Request received
+2025-06-04 14:42:45 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => approve
+    [notes] => ddd
+)
+
+2025-06-04 14:42:45 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-04 14:43:16 - Request received
+2025-06-04 14:43:16 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => approve
+    [notes] => jj
+)
+
+2025-06-04 14:43:16 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1748945876.jpeg
+)
+

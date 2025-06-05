@@ -2,6 +2,12 @@
 // Start session for authentication
 session_start();
 
+// Debug log
+$log_file = 'expense_action_log.txt';
+file_put_contents($log_file, date('Y-m-d H:i:s') . " - Request received\n", FILE_APPEND);
+file_put_contents($log_file, date('Y-m-d H:i:s') . " - POST data: " . print_r($_POST, true) . "\n", FILE_APPEND);
+file_put_contents($log_file, date('Y-m-d H:i:s') . " - SESSION data: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
     header('Content-Type: application/json');
@@ -10,7 +16,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Check if user has the correct role
-$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager'];
+$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'Accountant', 'HR Manager', 'HR'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'Permission denied']);
@@ -18,54 +24,112 @@ if (!in_array($_SESSION['role'], $allowed_roles)) {
 }
 
 // Include database connection
-include_once('includes/db_connect.php');
+require_once 'config/db_connect.php';
 
 // Check if required parameters are provided
-if (!isset($_POST['expense_id']) || !is_numeric($_POST['expense_id']) || !isset($_POST['action'])) {
+if (!isset($_POST['expense_id']) || !isset($_POST['action'])) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
+    echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
     exit();
 }
 
 $expense_id = intval($_POST['expense_id']);
-$action = $_POST['action'];
+$action = $_POST['action']; // 'approve' or 'reject'
 $notes = isset($_POST['notes']) ? $_POST['notes'] : '';
-$manager_id = $_SESSION['user_id'];
-$status = ($action === 'approve') ? 'approved' : 'rejected';
+$user_id = $_SESSION['user_id'];
+$role = $_SESSION['role'];
+
+// Validate action
+if ($action !== 'approve' && $action !== 'reject') {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'error' => 'Invalid action']);
+    exit();
+}
+
+// Convert action to status value
+$status_value = ($action === 'approve') ? 'approved' : 'rejected';
 
 try {
-    // Begin transaction
+    // Start transaction
     $conn->begin_transaction();
     
-    // Update expense status
-    $stmt = $conn->prepare("
-        UPDATE travel_expenses 
-        SET status = ?, 
-            approved_by = ?, 
-            approval_notes = ?,
-            approval_date = NOW() 
-        WHERE id = ? AND status = 'pending'
-    ");
-    $stmt->bind_param("sisi", $status, $manager_id, $notes, $expense_id);
-    $stmt->execute();
-    
-    // Check if any rows were affected
-    if ($stmt->affected_rows === 0) {
-        throw new Exception("Expense not found or already processed");
+    // Special case for Purchase Manager who also acts as Accountant
+    if ($role === 'Purchase Manager') {
+        // Update both manager and accountant status fields
+        $stmt = $conn->prepare("
+            UPDATE travel_expenses
+            SET accountant_status = ?,
+                accountant_reason = ?,
+                updated_by = ?
+            WHERE id = ?
+        ");
+        
+        $stmt->bind_param("ssis", $status_value, $notes, $user_id, $expense_id);
+        $stmt->execute();
+        
+        if ($stmt->affected_rows === 0) {
+            throw new Exception('Expense not found or no changes made');
+        }
+    } else {
+        // Determine which status field to update based on the user's role
+        $status_field = '';
+        $reason_field = '';
+        
+        if ($role === 'Senior Manager (Site)') {
+            $status_field = 'manager_status';
+            $reason_field = 'manager_reason';
+        } elseif ($role === 'Accountant') {
+            $status_field = 'accountant_status';
+            $reason_field = 'accountant_reason';
+        } elseif ($role === 'HR Manager' || $role === 'HR') {
+            $status_field = 'hr_status';
+            $reason_field = 'hr_reason';
+        }
+        
+        if (empty($status_field)) {
+            throw new Exception('Role not configured for expense approval');
+        }
+        
+        // Update the specific status field and reason
+        $stmt = $conn->prepare("
+            UPDATE travel_expenses
+            SET $status_field = ?,
+                $reason_field = ?,
+                updated_by = ?
+            WHERE id = ?
+        ");
+        
+        $stmt->bind_param("ssis", $status_value, $notes, $user_id, $expense_id);
+        $stmt->execute();
+        
+        if ($stmt->affected_rows === 0) {
+            throw new Exception('Expense not found or no changes made');
+        }
     }
+    
+    // The main status field will be updated automatically by the database trigger
     
     // Commit transaction
     $conn->commit();
     
     // Return success response
     header('Content-Type: application/json');
-    echo json_encode(['success' => true]);
+    echo json_encode([
+        'success' => true,
+        'message' => "Expense {$action}ed successfully",
+        'status' => $status_value,
+        'expense_id' => $expense_id
+    ]);
     
 } catch (Exception $e) {
     // Rollback transaction on error
     $conn->rollback();
     
+    // Return error response
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Database error: ' . $e->getMessage()
+    ]);
 }
 ?> 

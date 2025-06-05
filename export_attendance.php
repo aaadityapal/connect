@@ -661,13 +661,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
                 <i class="bi bi-briefcase-fill"></i>
                 Recruitment
             </a>
-            <a href="#" class="nav-link">
-                <i class="bi bi-file-earmark-text-fill"></i>
-                Reports
+            <a href="hr_travel_expenses.php" class="nav-link">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
             </a>
             <a href="generate_agreement.php" class="nav-link">
                 <i class="bi bi-chevron-contract"></i>
                 Contracts
+            </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
             </a>
             <a href="hr_settings.php" class="nav-link">
                 <i class="bi bi-gear-fill"></i>

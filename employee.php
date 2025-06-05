@@ -59,6 +59,7 @@ foreach ($managers as $manager) {
         :root {
             --primary-color: #4F46E5;
             --primary-dark: #4338CA;
+            --secondary: #7C3AED;
             --text-dark: #1F2937;
             --text-light: #6B7280;
             --bg-light: #F3F4F6;
@@ -108,19 +109,21 @@ foreach ($managers as $manager) {
         .sidebar-logo {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--primary-color);
             margin-bottom: 2rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
 
-        .sidebar nav a {
-            text-decoration: none;
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px);
         }
 
         .nav-link {
-            color: var(--gray);
+            color: var(--text-light);
             padding: 0.875rem 1rem;
             border-radius: 0.5rem;
             margin-bottom: 0.5rem;
@@ -129,23 +132,24 @@ foreach ($managers as $manager) {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-decoration: none;
         }
 
         .nav-link:hover, 
         .nav-link.active {
-            color: #4361ee;
-            background-color: #F3F4FF;
+            color: var(--primary-color);
+            background-color: rgba(79, 70, 229, 0.1);
         }
 
         .nav-link.active {
-            background-color: #F3F4FF;
+            background-color: rgba(79, 70, 229, 0.1);
             font-weight: 500;
         }
 
         /* Update icon color on hover and active */
         .nav-link:hover i,
         .nav-link.active i {
-            color: #4361ee;
+            color: var(--primary-color);
         }
 
         .nav-link i {
@@ -157,20 +161,13 @@ foreach ($managers as $manager) {
             margin-top: auto;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             padding-top: 1rem;
-            color: black!important;
+            color: white !important;
             background-color: #D22B2B;
         }
 
         .logout-link:hover {
             background-color: rgba(220, 53, 69, 0.1) !important;
             color: #dc3545 !important;
-        }
-
-        /* Update nav container to allow for margin-top: auto on logout */
-        .sidebar nav {
-            display: flex;
-            flex-direction: column;
-            height: calc(100% - 10px);
         }
 
         /* Main Content Styles */
@@ -1009,13 +1006,17 @@ foreach ($managers as $manager) {
                 <i class="bi bi-briefcase-fill"></i>
                 Recruitment
             </a>
-            <a href="#" class="nav-link">
-                <i class="bi bi-file-earmark-text-fill"></i>
-                Reports
+            <a href="hr_travel_expenses.php" class="nav-link">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
             </a>
             <a href="generate_agreement.php" class="nav-link">
                 <i class="bi bi-chevron-contract"></i>
                 Contracts
+            </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
             </a>
             <a href="hr_settings.php" class="nav-link">
                 <i class="bi bi-gear-fill"></i>
@@ -1714,10 +1715,20 @@ foreach ($managers as $manager) {
                     sidebar.classList.add('collapsed');
                     mainContent.classList.add('expanded');
                     sidebarToggle.classList.add('collapsed');
+                    
+                    // Update the icon
+                    const icon = sidebarToggle.querySelector('i');
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
                 } else {
                     sidebar.classList.remove('collapsed');
                     mainContent.classList.remove('expanded');
                     sidebarToggle.classList.remove('collapsed');
+                    
+                    // Update the icon
+                    const icon = sidebarToggle.querySelector('i');
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
                 }
             }
             
@@ -1731,10 +1742,15 @@ foreach ($managers as $manager) {
             document.addEventListener('click', function(e) {
                 const isMobile = window.innerWidth <= 768;
                 
-                if (isMobile && !sidebar.contains(e.target) && !sidebar.classList.contains('collapsed')) {
+                if (isMobile && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && !sidebar.classList.contains('collapsed')) {
                     sidebar.classList.add('collapsed');
                     mainContent.classList.add('expanded');
                     sidebarToggle.classList.add('collapsed');
+                    
+                    // Update the icon
+                    const icon = sidebarToggle.querySelector('i');
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
                 }
             });
         });

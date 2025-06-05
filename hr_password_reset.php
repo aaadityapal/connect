@@ -719,9 +719,9 @@ try {
                 <i class="bi bi-briefcase-fill"></i>
                 Recruitment
             </a>
-            <a href="hr_documents_manager.php" class="nav-link">
-                <i class="bi bi-file-earmark-text-fill"></i>
-                Documents
+            <a href="hr_travel_expenses.php" class="nav-link">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
             </a>
             <a href="generate_agreement.php" class="nav-link">
                 <i class="bi bi-chevron-contract"></i>

@@ -49,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             case 'Working Team':
                 $prefix = 'WT';
                 break;
+            case 'Interior Designer':
+                $prefix = 'ID';
+                break;
             case '3D Designing Team':
                 $prefix = '3DT';
                 break;
@@ -640,13 +643,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <i class="bi bi-briefcase-fill"></i>
                 Recruitment
             </a>
-            <a href="hr_documents_manager.php" class="nav-link">
-                <i class="bi bi-file-earmark-text-fill"></i>
-                Documents
+            <a href="hr_travel_expenses.php" class="nav-link">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
             </a>
             <a href="generate_agreement.php" class="nav-link">
                 <i class="bi bi-chevron-contract"></i>
                 Contracts
+            </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
             </a>
             <a href="hr_settings.php" class="nav-link">
                 <i class="bi bi-gear-fill"></i>
@@ -727,6 +734,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Senior Manager (Purchase)">Senior Manager (Purchase)</option>
                                     <option value="Design Team">Design Team</option>
                                     <option value="Working Team">Working Team</option>
+                                    <option value="Interior Designer">Interior Designer</option>
                                     <option value="Draughtsman">Draughtsman</option>
                                     <option value="3D Designing Team">3D Designing Team</option>
                                     <option value="Studio Trainees">Studio Trainees</option>

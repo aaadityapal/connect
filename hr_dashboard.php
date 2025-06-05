@@ -2484,6 +2484,7 @@ try {
     padding: 4px 8px;
     border-radius: 4px;
     margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .approval-status.manager-approved {
@@ -2942,8 +2943,8 @@ try {
                                     $duration = (strtotime($leave['end_date']) - strtotime($leave['start_date'])) / (60 * 60 * 24) + 1;
                                     echo "<div class='tooltip-item'>";
                                     echo "<div class='employee-info'>";
-                                    echo "<span class='employee-name'><i class='bi bi-person-circle'></i> " . htmlspecialchars($leave['username']) . "</span>";
-                                    echo "<span class='leave-type'>" . htmlspecialchars($leave['leave_type']) . "</span>";
+                                    echo "<span class='employee-name'><i class='bi bi-person-circle'></i> " . htmlspecialchars($leave['username'] ?? '') . "</span>";
+                                    echo "<span class='leave-type'>" . htmlspecialchars($leave['leave_type'] ?? '') . "</span>";
                                     echo "</div>";
                                     echo "<div class='leave-duration'>";
                                     echo "<i class='bi bi-calendar3'></i> ";
@@ -2955,7 +2956,7 @@ try {
                                     echo "</div>";
                                     if (!empty($leave['reason'])) {
                                         echo "<div class='leave-reason'>";
-                                        echo "<i class='bi bi-chat-left-text'></i> " . htmlspecialchars($leave['reason']);
+                                        echo "<i class='bi bi-chat-left-text'></i> " . htmlspecialchars($leave['reason'] ?? '');
                                         echo "</div>";
                                     }
                                     echo "</div>";
@@ -2999,7 +3000,13 @@ try {
                                         u.employee_id
                                      FROM leave_request lr
                                      JOIN users u ON lr.user_id = u.id
-                                     WHERE lr.status = 'pending'
+                                     WHERE (
+                                        lr.status = 'pending' 
+                                        OR lr.status = 'pending_hr'
+                                        OR (lr.manager_approval = 'approved' AND lr.hr_approval IS NULL)
+                                        OR (lr.manager_approval IS NULL AND lr.status != 'rejected')
+                                        OR (lr.hr_approval IS NULL AND lr.status != 'rejected')
+                                     )
                                      ORDER BY lr.created_at DESC";
                             
                             try {
@@ -3014,12 +3021,12 @@ try {
                                                 <div class="user-details">
                                                     <span class="leave-user-name">
                                                         <i class="bi bi-person-circle"></i>
-                                                        <?php echo htmlspecialchars($leave['username']); ?>
+                                                        <?php echo htmlspecialchars($leave['username'] ?? ''); ?>
                                                     </span>
-                                                    <span class="employee-id">(<?php echo htmlspecialchars($leave['employee_id']); ?>)</span>
+                                                    <span class="employee-id">(<?php echo htmlspecialchars($leave['employee_id'] ?? ''); ?>)</span>
                                                 </div>
                                                 <span class="leave-type-badge">
-                                                    <?php echo htmlspecialchars($leave['leave_type']); ?>
+                                                    <?php echo htmlspecialchars($leave['leave_type'] ?? ''); ?>
                                                 </span>
                                             </div>
                                             <div class="leave-details">
@@ -3038,7 +3045,25 @@ try {
                                                 <?php if (!empty($leave['reason'])): ?>
                                                     <div class="leave-reason">
                                                         <i class="bi bi-chat-left-text"></i>
-                                                        <?php echo htmlspecialchars($leave['reason']); ?>
+                                                        <?php echo htmlspecialchars($leave['reason'] ?? ''); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <?php if (!empty($leave['manager_approval']) && $leave['manager_approval'] == 'approved'): ?>
+                                                    <div class="approval-status manager-approved">
+                                                        <i class="bi bi-check-circle"></i>
+                                                        Manager Approved
+                                                        <?php if (!empty($leave['manager_approval_reason'])): ?>
+                                                            <span class="action-reason">: <?php echo htmlspecialchars($leave['manager_approval_reason'] ?? ''); ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php elseif (!empty($leave['manager_approval']) && $leave['manager_approval'] == 'rejected'): ?>
+                                                    <div class="approval-status manager-rejected">
+                                                        <i class="bi bi-x-circle"></i>
+                                                        Manager Rejected
+                                                        <?php if (!empty($leave['manager_approval_reason'])): ?>
+                                                            <span class="action-reason">: <?php echo htmlspecialchars($leave['manager_approval_reason'] ?? ''); ?></span>
+                                                        <?php endif; ?>
                                                     </div>
                                                 <?php endif; ?>
                                                 
@@ -3145,7 +3170,7 @@ try {
                                     foreach ($short_leave_details as $leave) {
                                         echo "<div class='tooltip-item'>";
                                         echo "<div class='employee-info'>";
-                                        echo "<span class='employee-name'><i class='bi bi-person-circle'></i> " . htmlspecialchars($leave['username']) . "</span>";
+                                        echo "<span class='employee-name'><i class='bi bi-person-circle'></i> " . htmlspecialchars($leave['username'] ?? '') . "</span>";
                                         echo "</div>";
                                         echo "<div class='leave-time'>";
                                         echo "<i class='bi bi-clock'></i> ";
@@ -3153,7 +3178,7 @@ try {
                                         echo "</div>";
                                         if (!empty($leave['reason'])) {
                                             echo "<div class='leave-reason'>";
-                                            echo "<i class='bi bi-chat-left-text'></i> " . htmlspecialchars($leave['reason']);
+                                            echo "<i class='bi bi-chat-left-text'></i> " . htmlspecialchars($leave['reason'] ?? '');
                                             echo "</div>";
                                         }
                                         echo "</div>";
@@ -5371,7 +5396,7 @@ try {
 
     <script>
     // Add this JavaScript function to handle leave actions
-    function handleLeaveAction(leaveId, action, button) {
+    function handleLeaveAction(leaveId, action, approvalType, button) {
         // Prevent double submission
         if (button) {
             button.disabled = true;
@@ -5394,6 +5419,7 @@ try {
             body: JSON.stringify({
                 leave_id: parseInt(leaveId),
                 action: action,
+                approval_type: approvalType || 'all', // 'all', 'manager', or 'hr'
                 action_reason: actionReason
             })
         })
@@ -5403,10 +5429,34 @@ try {
                 // Show success message
                 showToast('Success', data.message, 'success');
                 
-                // Update UI or reload page
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
+                // Remove the item from the list with animation
+                const leaveItem = document.getElementById(`leave-item-${leaveId}`);
+                if (leaveItem) {
+                    leaveItem.classList.add('removing');
+                    setTimeout(() => {
+                        leaveItem.remove();
+                        
+                        // Update the counter
+                        const counterElement = document.getElementById('pendingLeavesCount');
+                        if (counterElement) {
+                            const currentCount = parseInt(counterElement.textContent);
+                            if (!isNaN(currentCount) && currentCount > 0) {
+                                counterElement.textContent = currentCount - 1;
+                            }
+                        }
+                        
+                        // Check if no more items
+                        const tooltipContent = document.getElementById('pendingLeavesContent');
+                        if (tooltipContent && !tooltipContent.querySelector('.tooltip-item')) {
+                            tooltipContent.innerHTML = '<div class="no-data"><i class="bi bi-check-circle"></i> No pending leave requests</div>';
+                        }
+                    }, 300);
+                } else {
+                    // If can't find the item, just reload the page
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
             } else {
                 throw new Error(data.message || 'Failed to process leave request');
             }

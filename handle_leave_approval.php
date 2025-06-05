@@ -50,7 +50,10 @@ try {
 
     // Set status based on action
     $status = $data['action'] === 'accept' ? 'approved' : 'rejected';
-    $managerApproval = $data['action'] === 'accept' ? 'accepted' : 'rejected';
+    $managerApproval = $data['action'] === 'accept' ? 'approved' : 'rejected';
+    
+    // Debug log
+    error_log("Leave approval debug - Action: " . $data['action'] . ", Status: " . $status . ", Manager Approval: " . $managerApproval);
 
     // Execute update
     $success = $updateStmt->execute([
@@ -60,6 +63,14 @@ try {
         $_SESSION['user_id'],
         $data['leave_id']
     ]);
+
+    // Debug log the SQL execution result
+    error_log("SQL execution result - Success: " . ($success ? 'true' : 'false'));
+    if (!$success) {
+        error_log("SQL Error: " . print_r($updateStmt->errorInfo(), true));
+    } else {
+        error_log("Rows affected: " . $updateStmt->rowCount());
+    }
 
     if (!$success) {
         throw new Exception('Failed to update leave request');

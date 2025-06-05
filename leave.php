@@ -139,8 +139,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_leave'])) {
     $leave_type = $_POST['leave_type'];
     $start_date = $_POST['start_date'];
     $end_date = isset($_POST['end_date']) ? $_POST['end_date'] : $_POST['start_date'];
-    $half_day_type = isset($_POST['half_day_type']) ? $_POST['half_day_type'] : null;
-    $reason = $_POST['reason'];
     
     // Get leave type details
     $leave_type_query = "SELECT name FROM leave_types WHERE id = ?";
@@ -161,6 +159,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_leave'])) {
         $duration = $interval->days + 1;
     }
 
+    // Check if the selected leave type is Half Day Leave
+    if ($leave_type_data['name'] === 'Half Day Leave') {
+        $half_day_type = isset($_POST['half_day_type']) ? $_POST['half_day_type'] : null;
+    } else {
+        $half_day_type = null; // Set to null for other leave types
+    }
+
+    $reason = $_POST['reason'];
+    
     try {
         // Insert into leave_request table
         $insert_query = "INSERT INTO leave_request (
@@ -234,78 +241,18 @@ CREATE TABLE IF NOT EXISTS leaves (
     <title>Leave Application</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Dashboard container styles */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            margin-left: 280px;
-            transition: margin-left 0.3s ease;
-            background-color: #f9fafb;
-        }
-
-        .main-content.collapsed {
-            margin-left: 70px;
-        }
-
-        /* Enhanced Header Styles */
-        .page-header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .page-title {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin: 0;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #64748b;
-            font-size: 0.95rem;
-        }
-
-        .user-info span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-info i {
-            color: #3b82f6;
-            font-size: 1.1rem;
-        }
-
-        /* Add your CSS styles here */
         :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #6366f1;
-            --success-color: #22c55e;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --danger-color: #ef233c;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+            --light-text: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
         }
 
         * {
@@ -315,33 +262,78 @@ CREATE TABLE IF NOT EXISTS leaves (
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #f9fafb;
-            color: var(--gray-700);
-            line-height: 1.5;
+            color: var(--dark-text);
+            line-height: 1.6;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
             padding: 2rem;
+            margin-left: 280px;
+            transition: var(--transition);
+            background-color: #f9fafb;
         }
 
+        .main-content.collapsed {
+            margin-left: 70px;
+        }
+
+        /* Enhanced Header */
+        .page-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .page-title i {
+            color: var(--primary-color);
+        }
+
+        .user-info {
+            color: var(--light-text);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Leave Cards */
         .leave-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .leave-card {
             background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
             padding: 1.5rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
             position: relative;
             overflow: hidden;
+            transition: var(--transition);
         }
 
         .leave-card::before {
@@ -355,9 +347,8 @@ CREATE TABLE IF NOT EXISTS leaves (
         }
 
         .leave-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-color: var(--card-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
         }
 
         .leave-card-header {
@@ -370,74 +361,93 @@ CREATE TABLE IF NOT EXISTS leaves (
         .leave-type {
             font-weight: 600;
             font-size: 1.1rem;
-            color: var(--card-color);
+            color: var(--dark-text);
         }
 
         .leave-balance {
             font-size: 1.2rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--card-color);
         }
 
+        .progress {
+            background-color: #f1f1f1;
+            height: 6px;
+            border-radius: 3px;
+            margin: 0.75rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            background-color: var(--card-color);
+            transition: width 0.5s ease;
+        }
+
         .days-label {
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 0.8rem;
+            color: var(--light-text);
+            display: block;
+            margin-bottom: 0.75rem;
         }
 
         .leave-description {
-            margin-top: 0.5rem;
             font-size: 0.9rem;
-            color: #666;
+            color: var(--light-text);
+            margin-top: 0.75rem;
         }
 
-        .apply-leave-section {
+        /* Apply Leave Section */
+        .apply-leave-section, 
+        .leave-history {
             background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            padding: 1.75rem;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
         }
 
         .section-title {
-            color: #2c3e50;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e9ecef;
+            color: var(--dark-text);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #edf2f7;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            color: #4a5568;
+            margin-bottom: 0.5rem;
+            color: var(--dark-text);
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .form-control {
             width: 100%;
-            padding: 10px 15px;
+            padding: 0.75rem 1rem;
             border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
             background-color: #f8fafc;
         }
 
         .form-control:focus {
-            border-color: #6366f1;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
             outline: none;
             background-color: #fff;
@@ -449,56 +459,49 @@ CREATE TABLE IF NOT EXISTS leaves (
         }
 
         .submit-btn {
-            background-color: #6366f1;
+            background-color: var(--primary-color);
             color: white;
-            padding: 12px 24px;
+            padding: 0.75rem 1.5rem;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             font-weight: 500;
+            font-size: 0.95rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            gap: 0.5rem;
+            transition: var(--transition);
         }
 
         .submit-btn:hover {
-            background-color: #4f46e5;
+            background-color: var(--secondary-color);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
         }
 
-        .submit-btn i {
-            font-size: 1.1rem;
-        }
-
-        .leave-history {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
+        /* Leave History Table */
         .history-table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            margin-top: 15px;
+            margin-top: 1rem;
         }
 
         .history-table th {
             background-color: #f8fafc;
-            color: #4a5568;
+            color: var(--dark-text);
             font-weight: 600;
-            padding: 12px 20px;
+            font-size: 0.85rem;
+            padding: 0.75rem 1rem;
             text-align: left;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .history-table td {
-            padding: 12px 20px;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid #e2e8f0;
-            color: #4b5563;
+            color: var(--dark-text);
+            font-size: 0.9rem;
         }
 
         .history-table tr:hover {
@@ -506,9 +509,9 @@ CREATE TABLE IF NOT EXISTS leaves (
         }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: 0.35rem 0.75rem;
             border-radius: 9999px;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             font-weight: 500;
             text-align: center;
             display: inline-block;
@@ -529,200 +532,42 @@ CREATE TABLE IF NOT EXISTS leaves (
             color: #991b1b;
         }
 
+        /* Alerts */
         .alert {
-            padding: 1rem;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
         }
 
         .alert-success {
             background-color: #dcfce7;
             color: #166534;
-            border: 1px solid #86efac;
+            border-left: 4px solid #86efac;
         }
 
         .alert-error {
             background-color: #fee2e2;
             color: #991b1b;
-            border: 1px solid #fecaca;
+            border-left: 4px solid #fecaca;
         }
 
-        .progress {
-            background-color: #f5f5f5;
-            height: 6px;
-            border-radius: 3px;
-            margin: 10px 0;
-        }
-
-        .progress-bar {
-            height: 100%;
-            border-radius: 3px;
-            background-color: var(--card-color);
-        }
-
-        .restriction-btn {
-            background: none;
-            border: 1px solid var(--card-color);
-            color: var(--card-color);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .restriction-btn:hover {
-            background: var(--card-color);
-            color: white;
-        }
-
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: flex-start;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex; /* Will only show when this class is added */
-        }
-
-        .modal-content {
-            position: relative;
-            background-color: #fff;
-            margin-top: 5%;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 500px;
-            width: 95%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .modal-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .rules-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
-
-        .rules-table th {
-            background-color: #f5f5f5;
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #ddd;
-            font-weight: 600;
-        }
-
-        .rules-table td {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-        }
-
-        .rules-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        .close-btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-
-        .close-btn:hover {
-            background-color: #e0e0e0;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .history-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-
-        .filters-section {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .filter-select {
-            padding: 6px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background-color: #f8fafc;
-        }
-
-        .status-cell {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-        }
-
-        .status-comment {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .status-date {
-            font-size: 0.7rem;
-            color: #888;
-        }
-
+        /* Days Display */
         .days-display {
-            margin-top: 15px;
-            padding: 10px 15px;
+            margin-top: 0.75rem;
+            padding: 0.75rem 1rem;
             background-color: #f3f4f6;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-            color: #4b5563;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--dark-text);
         }
 
         .days-count {
             font-weight: 600;
-            color: #6366f1;
+            color: var(--primary-color);
         }
 
         .days-display.warning {
@@ -735,7 +580,119 @@ CREATE TABLE IF NOT EXISTS leaves (
             color: #721c24;
         }
 
-        /* Add hamburger menu styles */
+        /* Filters */
+        .filters-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            background-color: #f8fafc;
+            font-size: 0.85rem;
+        }
+
+        /* Restriction Button */
+        .restriction-btn {
+            background: none;
+            border: 1px solid var(--card-color);
+            color: var(--card-color);
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .restriction-btn:hover {
+            background: var(--card-color);
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: #fff;
+            padding: 1.75rem;
+            border-radius: var(--border-radius);
+            max-width: 500px;
+            width: 95%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--dark-text);
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .rules-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        .rules-table th {
+            background-color: #f5f5f5;
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid #eee;
+            font-weight: 600;
+        }
+
+        .rules-table td {
+            padding: 0.6rem 0.75rem;
+            border: 1px solid #eee;
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Hamburger Menu */
         .hamburger-menu {
             display: none;
             position: fixed;
@@ -745,17 +702,15 @@ CREATE TABLE IF NOT EXISTS leaves (
             background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 12px 15px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-            width: 50px;
-            height: 50px;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            transition: var(--transition);
         }
 
         .hamburger-menu:hover {
@@ -763,72 +718,18 @@ CREATE TABLE IF NOT EXISTS leaves (
             transform: scale(1.05);
         }
 
-        .hamburger-menu:active {
-            transform: scale(0.95);
-        }
-
-        .hamburger-menu i {
-            font-size: 1.75rem;
-        }
-        
-        /* Mobile responsive styles */
+        /* Mobile Responsive */
         @media (max-width: 991px) {
             .hamburger-menu {
                 display: flex;
             }
             
-            @keyframes pulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-                100% { transform: scale(1); }
-            }
-            
-            .hamburger-menu {
-                animation: pulse 1s ease-in-out;
-            }
-            
             .main-content {
                 margin-left: 0;
-                padding: 15px;
-                padding-top: 60px;
-                width: 100%;
-                max-width: 100vw;
-                overflow-x: hidden;
+                padding: 1rem;
+                padding-top: 4rem;
             }
             
-            .main-content.collapsed {
-                margin-left: 0;
-            }
-            
-            .left-panel {
-                transform: translateX(-100%);
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100%;
-                z-index: 999;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-                transition: transform 0.3s ease;
-            }
-            
-            .left-panel.show {
-                transform: translateX(0);
-            }
-            
-            .panel-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: rgba(0,0,0,0.5);
-                z-index: 998;
-                display: none;
-            }
-        }
-        
-        /* iPhone XR/XS specific adjustments */
-        @media (max-width: 414px) {
             .form-grid {
                 grid-template-columns: 1fr;
             }
@@ -840,69 +741,36 @@ CREATE TABLE IF NOT EXISTS leaves (
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
+                gap: 0.75rem;
             }
             
             .history-table {
                 display: block;
                 overflow-x: auto;
-                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 0.75rem;
+                padding-top: 4rem;
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
             }
             
             .form-control {
                 padding: 0.6rem;
-                font-size: 0.9rem;
-            }
-            
-            .form-group label {
-                font-size: 0.85rem;
-            }
-        }
-        
-        /* iPhone SE and other very small screens */
-        @media (max-width: 375px) {
-            .main-content {
-                padding: 10px 5px;
-                padding-top: 60px;
-            }
-            
-            .page-title {
-                font-size: 1.5rem;
-            }
-            
-            .section-title {
-                font-size: 1.2rem;
-            }
-            
-            .form-control {
-                padding: 0.5rem;
-                font-size: 0.85rem;
             }
             
             .submit-btn {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-        }
-        
-        /* Prevent horizontal scrolling */
-        html, body {
-            max-width: 100%;
-            overflow-x: hidden;
-        }
-        
-        /* Fix for iPhone notch */
-        @supports (padding-top: env(safe-area-inset-top)) {
-            .main-content {
-                padding-top: calc(60px + env(safe-area-inset-top));
-                padding-left: calc(15px + env(safe-area-inset-left));
-                padding-right: calc(15px + env(safe-area-inset-right));
-                padding-bottom: calc(15px + env(safe-area-inset-bottom));
-            }
-            
-            .hamburger-menu {
-                top: calc(15px + env(safe-area-inset-top));
-                left: calc(15px + env(safe-area-inset-left));
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>

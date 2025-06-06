@@ -144,6 +144,38 @@
   color: #0d6efd;
 }
 
+.event-details-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.event-details-badge-meeting {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.event-details-badge-site_visit {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.event-details-badge-delivery {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.event-details-badge-inspection {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.event-details-badge-other {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
 /* Enhanced Tab Styles */
 .event-details-tabs {
   margin-top: 20px;
@@ -287,6 +319,137 @@
   font-size: 1.1rem;
 }
 
+/* Media display styles */
+.event-details-media {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+/* Media category styles */
+.inventory-media-section {
+  margin-top: 20px;
+}
+
+.media-category {
+  margin-bottom: 25px;
+}
+
+.media-category-title {
+  font-size: 1rem;
+  color: #495057;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.media-category-title i {
+  margin-right: 5px;
+  color: #6c757d;
+}
+
+/* Media type tag styles */
+.media-type-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  z-index: 2;
+}
+
+.event-details-media-item {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-details-media-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.event-details-media-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Video item styles */
+.event-details-media-item.video-item {
+  aspect-ratio: 16/9;
+  grid-column: span 2;
+}
+
+.event-details-media-item video {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+/* PDF item styles */
+.event-details-media-item.pdf-item,
+.event-details-media-item.file-item {
+  background-color: #f8f9fa;
+  text-align: center;
+  cursor: pointer;
+}
+
+.pdf-preview,
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 15px;
+}
+
+.pdf-preview i,
+.file-preview i {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.pdf-preview i {
+  color: #dc3545;
+}
+
+.file-preview i {
+  color: #6c757d;
+}
+
+.pdf-preview span,
+.file-preview span {
+  font-size: 0.8rem;
+  color: #495057;
+}
+
+.media-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 8px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Make tabs scrollable on mobile */
 @media (max-width: 768px) {
   .event-details-tabs {
@@ -327,4 +490,196 @@
   .event-details-modal-body {
     padding: 15px;
   }
+  
+  .event-details-media {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .event-details-media-item.video-item {
+    grid-column: span 1;
+  }
+}
+
+/* Prevent nested modals from showing */
+#eventDetailsModal .modal,
+#eventDetailsModal .modal.fade,
+#eventDetailsModal .modal.fade.show,
+#eventDetailsModal .nested-modal {
+  display: none !important;
+  visibility: hidden !important;
+  z-index: -1 !important;
+  opacity: 0 !important;
+}
+
+/* Nested modal close button */
+.close-nested-modal {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  background: #dc3545;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Image Viewer Overlay */
+.image-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 11000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-viewer-overlay.show {
+  display: flex;
+  opacity: 1;
+}
+
+.image-viewer-container {
+  position: relative;
+  max-width: 90%;
+  max-height: 85%;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+.image-viewer-image {
+  max-width: 100%;
+  max-height: 85vh;
+  display: block;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.image-viewer-close {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #dc3545;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.image-viewer-close:hover {
+  background-color: #bd2130;
+  transform: scale(1.1);
+}
+
+.image-viewer-caption {
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: white;
+  padding: 10px;
+  font-size: 14px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* PDF Fallback Message Styles */
+.pdf-fallback-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 11100;
+  display: none;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.pdf-fallback-content {
+  background-color: white;
+  width: 350px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.pdf-fallback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 15px;
+}
+
+.pdf-fallback-header h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.pdf-fallback-header .close {
+  color: white;
+  opacity: 0.8;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.pdf-fallback-header .close:hover {
+  opacity: 1;
+}
+
+.pdf-fallback-body {
+  padding: 15px;
+}
+
+.pdf-fallback-message p {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.pdf-fallback-message ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.pdf-fallback-message li {
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.pdf-fallback-message a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.pdf-fallback-message a:hover {
+  text-decoration: underline;
 } 

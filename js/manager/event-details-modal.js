@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+  
+  // Initialize image viewer
+  initImageViewer();
 });
 
 /**
@@ -60,6 +63,14 @@ function showEventDetails(eventId) {
   modal.classList.add('show');
   loader.style.display = 'flex';
   content.innerHTML = '';
+  
+  // Close any other modals that might be open
+  const otherModals = document.querySelectorAll('.modal.show, .modal.fade.show');
+  otherModals.forEach(otherModal => {
+    if (otherModal !== modal && typeof $(otherModal).modal === 'function') {
+      $(otherModal).modal('hide');
+    }
+  });
   
   // Fetch event details from API
   fetch(`backend/get_event_details.php?event_id=${eventId}`)
@@ -428,12 +439,53 @@ function renderEventDetails(event) {
             
             ${work.media && work.media.length > 0 ? `
               <div class="event-details-media">
-                ${work.media.map(media => `
+                ${work.media.map(media => {
+                  const fileExt = media.file_name.split('.').pop().toLowerCase();
+                  const mediaUrl = `fetch_media.php?id=${media.media_id}&type=work_progress`;
+                  
+                  if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+                // Image file - use our custom image viewer instead of opening in new tab
+                return `
                   <div class="event-details-media-item">
-                    <img src="${media.file_path}" alt="${media.file_name}" 
-                      onclick="window.open('${media.file_path}', '_blank')">
+                    <img src="${mediaUrl}" alt="${media.file_name}" 
+                      onclick="openImageViewer('${mediaUrl}', '${media.file_name}')" title="${media.file_name}">
                   </div>
-                `).join('')}
+                `;
+                  } else if (['mp4', 'webm', 'ogg'].includes(fileExt)) {
+                    // Video file
+                    return `
+                      <div class="event-details-media-item video-item">
+                        <video controls width="100%" height="auto">
+                          <source src="${mediaUrl}" type="video/${fileExt}">
+                          Your browser does not support the video tag.
+                        </video>
+                        <div class="media-caption">${media.file_name}</div>
+                      </div>
+                    `;
+                  } else if (fileExt === 'pdf') {
+                    // PDF file - add more robust fallback handling
+                    return `
+                      <div class="event-details-media-item pdf-item">
+                        <div class="pdf-preview" onclick="handlePdfClick('${mediaUrl}', '${media.file_name}', ${media.media_id}, 'work_progress')">
+                          <i class="fas fa-file-pdf"></i>
+                          <span>PDF Document</span>
+                        </div>
+                        <div class="media-caption">${media.file_name}</div>
+                      </div>
+                    `;
+                  } else {
+                    // Other file types
+                    return `
+                      <div class="event-details-media-item file-item">
+                        <div class="file-preview" onclick="window.open('${mediaUrl}', '_blank')">
+                          <i class="fas fa-file"></i>
+                          <span>File</span>
+                        </div>
+                        <div class="media-caption">${media.file_name}</div>
+                      </div>
+                    `;
+                  }
+                }).join('')}
               </div>
             ` : ''}
           </div>
@@ -487,16 +539,134 @@ function renderEventDetails(event) {
         </table>
         
         ${event.inventory.some(item => item.media && item.media.length > 0) ? `
+          <div class="inventory-media-section">
           <h5 class="mt-3">Inventory Media</h5>
+            
+            <!-- Bills Section -->
+            ${event.inventory.some(item => item.media && item.media.some(media => media.media_type === 'bill')) ? `
+              <div class="media-category">
+                <h6 class="media-category-title"><i class="fas fa-file-invoice"></i> Bills</h6>
           <div class="event-details-media">
             ${event.inventory.flatMap(item => 
-              item.media ? item.media.map(media => `
+                    item.media ? item.media.filter(media => media.media_type === 'bill').map(media => {
+                      const fileExt = media.file_name.split('.').pop().toLowerCase();
+                      const mediaUrl = `fetch_media.php?id=${media.media_id}&type=inventory`;
+                      
+                      if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+                        // Image file - use our custom image viewer instead of opening in new tab
+                        return `
                 <div class="event-details-media-item">
-                  <img src="${media.file_path}" alt="${media.file_name}" 
-                    onclick="window.open('${media.file_path}', '_blank')">
+                            <div class="media-type-tag">Bill</div>
+                            <img src="${mediaUrl}" alt="${media.file_name}" 
+                              onclick="openImageViewer('${mediaUrl}', '${media.file_name}')" title="${media.file_name}">
+                            <div class="media-caption">${media.file_name}</div>
                 </div>
-              `) : []
+                        `;
+                      } else if (['mp4', 'webm', 'ogg'].includes(fileExt)) {
+                        // Video file
+                        return `
+                          <div class="event-details-media-item video-item">
+                            <div class="media-type-tag">Bill</div>
+                            <video controls width="100%" height="auto">
+                              <source src="${mediaUrl}" type="video/${fileExt}">
+                              Your browser does not support the video tag.
+                            </video>
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      } else if (fileExt === 'pdf') {
+                        // PDF file - add more robust fallback handling
+                        return `
+                          <div class="event-details-media-item pdf-item">
+                            <div class="media-type-tag">Bill</div>
+                            <div class="pdf-preview" onclick="handlePdfClick('${mediaUrl}', '${media.file_name}', ${media.media_id}, 'inventory')">
+                              <i class="fas fa-file-pdf"></i>
+                              <span>PDF Document</span>
+                            </div>
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      } else {
+                        // Other file types
+                        return `
+                          <div class="event-details-media-item file-item">
+                            <div class="media-type-tag">Bill</div>
+                            <div class="file-preview" onclick="window.open('${mediaUrl}', '_blank')">
+                              <i class="fas fa-file"></i>
+                              <span>File</span>
+                            </div>
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      }
+                    }) : []
             ).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            <!-- Other Media Section -->
+            ${event.inventory.some(item => item.media && item.media.some(media => media.media_type !== 'bill')) ? `
+              <div class="media-category">
+                <h6 class="media-category-title"><i class="fas fa-images"></i> Photos & Videos</h6>
+                <div class="event-details-media">
+                  ${event.inventory.flatMap(item => 
+                    item.media ? item.media.filter(media => media.media_type !== 'bill').map(media => {
+                      const fileExt = media.file_name.split('.').pop().toLowerCase();
+                      const mediaUrl = `fetch_media.php?id=${media.media_id}&type=inventory`;
+                      
+                      if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+                        // Image file - use our custom image viewer instead of opening in new tab
+                        return `
+                          <div class="event-details-media-item">
+                            <div class="media-type-tag">${media.media_type === 'photo' ? 'Photo' : 'Media'}</div>
+                            <img src="${mediaUrl}" alt="${media.file_name}" 
+                              onclick="openImageViewer('${mediaUrl}', '${media.file_name}')" title="${media.file_name}">
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      } else if (['mp4', 'webm', 'ogg'].includes(fileExt)) {
+                        // Video file
+                        return `
+                          <div class="event-details-media-item video-item">
+                            <div class="media-type-tag">Video</div>
+                            <video controls width="100%" height="auto">
+                              <source src="${mediaUrl}" type="video/${fileExt}">
+                              Your browser does not support the video tag.
+                            </video>
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      } else if (fileExt === 'pdf') {
+                        // PDF file - add more robust fallback handling
+                        return `
+                          <div class="event-details-media-item pdf-item">
+                            <div class="media-type-tag">Document</div>
+                            <div class="pdf-preview" onclick="handlePdfClick('${mediaUrl}', '${media.file_name}', ${media.media_id}, 'inventory')">
+                              <i class="fas fa-file-pdf"></i>
+                              <span>PDF Document</span>
+                            </div>
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      } else {
+                        // Other file types
+                        return `
+                          <div class="event-details-media-item file-item">
+                            <div class="media-type-tag">File</div>
+                            <div class="file-preview" onclick="window.open('${mediaUrl}', '_blank')">
+                              <i class="fas fa-file"></i>
+                              <span>File</span>
+                            </div>
+                            <div class="media-caption">${media.file_name}</div>
+                          </div>
+                        `;
+                      }
+                    }) : []
+                  ).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         ` : ''}
       </div>
@@ -530,6 +700,9 @@ function renderEventDetails(event) {
       exportEventToExcel(event);
     });
   }
+  
+  // Handle any nested modals
+  handleNestedModals();
 }
 
 /**
@@ -1036,9 +1209,234 @@ function exportEventToExcel(event) {
  * Close the event details modal
  */
 function closeEventDetailsModal() {
-  console.log('Closing event details modal'); // Debug log
   const modal = document.getElementById('eventDetailsModal');
   if (modal) {
     modal.classList.remove('show');
   }
+  
+  // Stop any videos that might be playing
+  const videos = document.querySelectorAll('.event-details-media-item video');
+  videos.forEach(video => {
+    if (!video.paused) {
+      video.pause();
+    }
+  });
+}
+
+/**
+ * Function to ensure nested modals are properly handled
+ * This should be called after the modal content is rendered
+ */
+function handleNestedModals() {
+  // Find any nested Bootstrap modals and disable them
+  const nestedModals = document.querySelectorAll('#eventDetailsModal .modal');
+  nestedModals.forEach(nestedModal => {
+    // Add class to identify these as nested modals
+    nestedModal.classList.add('nested-modal');
+    
+    // Add close buttons to all nested modals
+    const closeButtons = nestedModal.querySelectorAll('.close, [data-dismiss="modal"]');
+    closeButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        nestedModal.style.display = 'none';
+      });
+    });
+    
+    // Hide the nested modal
+    nestedModal.style.display = 'none';
+  });
+  
+  // Check specifically for the events listing modal which is causing issues
+  const eventsListModal = document.querySelector('#eventDetailsModal [id*="events-for"]');
+  if (eventsListModal) {
+    eventsListModal.style.display = 'none';
+    
+    // Add a close button if not already present
+    if (!eventsListModal.querySelector('.close-nested-modal')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'close close-nested-modal';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.right = '10px';
+      closeBtn.style.top = '10px';
+      closeBtn.style.zIndex = '1000';
+      closeBtn.addEventListener('click', function() {
+        eventsListModal.style.display = 'none';
+      });
+      
+      if (eventsListModal.firstChild) {
+        eventsListModal.insertBefore(closeBtn, eventsListModal.firstChild);
+      } else {
+        eventsListModal.appendChild(closeBtn);
+      }
+    }
+  }
+}
+
+/**
+ * Initialize the image viewer functionality
+ */
+function initImageViewer() {
+  const overlay = document.getElementById('imageViewerOverlay');
+  const closeBtn = document.getElementById('imageViewerClose');
+  const image = document.getElementById('imageViewerImage');
+  
+  // Close on X button click
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      closeImageViewer();
+    });
+  }
+  
+  // Close on overlay click (but not on image)
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        closeImageViewer();
+      }
+    });
+  }
+  
+  // Close on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay && overlay.classList.contains('show')) {
+      closeImageViewer();
+    }
+  });
+}
+
+/**
+ * Open the image viewer with the specified image
+ */
+function openImageViewer(imageUrl, caption) {
+  const overlay = document.getElementById('imageViewerOverlay');
+  const image = document.getElementById('imageViewerImage');
+  const captionEl = document.getElementById('imageViewerCaption');
+  
+  if (overlay && image) {
+    // Set image source
+    image.src = imageUrl;
+    
+    // Set caption if provided
+    if (captionEl) {
+      captionEl.textContent = caption || '';
+      captionEl.style.display = caption ? 'block' : 'none';
+    }
+    
+    // Show overlay
+    overlay.classList.add('show');
+    
+    // Prevent body scrolling
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+/**
+ * Close the image viewer
+ */
+function closeImageViewer() {
+  const overlay = document.getElementById('imageViewerOverlay');
+  
+  if (overlay) {
+    overlay.classList.remove('show');
+    
+    // Restore body scrolling
+    document.body.style.overflow = '';
+    
+    // Clear image source after animation completes
+    setTimeout(() => {
+      const image = document.getElementById('imageViewerImage');
+      if (image) {
+        image.src = '';
+      }
+    }, 300);
+  }
+}
+
+/**
+ * Handle PDF click with fallbacks
+ * This function tries multiple approaches to open a PDF file
+ */
+function handlePdfClick(mediaUrl, fileName, mediaId, mediaType) {
+  // First try: Open in new tab
+  const pdfWindow = window.open(mediaUrl, '_blank');
+  
+  // Check if window was blocked or failed to open
+  setTimeout(() => {
+    if (!pdfWindow || pdfWindow.closed || typeof pdfWindow.closed === 'undefined') {
+      console.log('PDF window was blocked or failed to open. Trying alternative methods...');
+      
+      // Second try: Create a temporary anchor and trigger click
+      const link = document.createElement('a');
+      link.href = mediaUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show a fallback message to the user if needed
+      const fallbackMessage = `
+        <div class="pdf-fallback-message">
+          <p>If the PDF doesn't open automatically, you can:</p>
+          <ul>
+            <li><a href="${mediaUrl}" target="_blank">Click here to open in a new tab</a></li>
+            <li><a href="${mediaUrl}" download="${fileName}">Click here to download the file</a></li>
+            <li><a href="download_pdf.php?id=${mediaId}&type=${mediaType}" target="_blank">Try alternative download method</a></li>
+          </ul>
+        </div>
+      `;
+      
+      // Create a modal or toast to display the fallback message
+      showPdfFallbackMessage(fallbackMessage);
+    }
+  }, 1000);
+}
+
+/**
+ * Show PDF fallback message to the user
+ */
+function showPdfFallbackMessage(message) {
+  // Check if a fallback message already exists
+  let fallbackEl = document.getElementById('pdfFallbackMessage');
+  
+  if (!fallbackEl) {
+    // Create fallback element
+    fallbackEl = document.createElement('div');
+    fallbackEl.id = 'pdfFallbackMessage';
+    fallbackEl.className = 'pdf-fallback-container';
+    fallbackEl.innerHTML = `
+      <div class="pdf-fallback-content">
+        <div class="pdf-fallback-header">
+          <h4>PDF Viewer</h4>
+          <button type="button" class="close" onclick="document.getElementById('pdfFallbackMessage').remove();">&times;</button>
+        </div>
+        <div class="pdf-fallback-body"></div>
+      </div>
+    `;
+    document.body.appendChild(fallbackEl);
+  }
+  
+  // Update message content
+  const bodyEl = fallbackEl.querySelector('.pdf-fallback-body');
+  if (bodyEl) {
+    bodyEl.innerHTML = message;
+  }
+  
+  // Show the fallback message
+  fallbackEl.style.display = 'flex';
+  
+  // Auto-hide after 10 seconds
+  setTimeout(() => {
+    if (document.body.contains(fallbackEl)) {
+      fallbackEl.style.opacity = '0';
+      setTimeout(() => {
+        if (document.body.contains(fallbackEl)) {
+          fallbackEl.remove();
+        }
+      }, 500);
+    }
+  }, 10000);
 } 

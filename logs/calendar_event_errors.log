@@ -1053,3 +1053,44 @@ Stack trace:
 [03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Inventory media record saved to database - {"media_id":"20"}
 [03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Transaction committed successfully
 [03-Jun-2025 14:13:09 Asia/Kolkata] 2025-06-03 14:13:09 - Save process completed successfully - {"event_id":"71"}
+[05-Jun-2025 14:54:06 Europe/Berlin] 2025-06-05 14:54:06 - Starting calendar event save process
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Database connection included
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Session started - {"user_id":21}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Started database transaction
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-06-05","user_id":21}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Event created successfully - {"event_id":"72"}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Processing work progress entries - {"count":1}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Processing work progress entry - {"number":1,"category":"structural","type":"foundation","done":"yes"}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Work progress entry saved successfully - {"work_id":"16","number":1}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Processing work media files - {"work_id":"16","count":1}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_16\/"}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Processing work media file - {"work_id":"16","file_name":"ample.mp4","file_type":"video\/mp4","file_size":13927646}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - File uploaded successfully - {"original_name":"ample_1749128046_9671.mp4","saved_as":"6841936e5d999_1749128046.mp4","file_type":"video\/mp4","file_size":13927646,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_16\/6841936e5d999_1749128046.mp4"}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_16\/6841936e5d999_1749128046.mp4","filename":"ample_1749128046_9671.mp4","original_name":"ample.mp4"}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Work media record saved to database - {"media_id":"24"}
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Transaction committed successfully
+[05-Jun-2025 18:24:06 Asia/Kolkata] 2025-06-05 18:24:06 - Save process completed successfully - {"event_id":"72"}
+[05-Jun-2025 15:43:35 Europe/Berlin] 2025-06-05 15:43:35 - Starting calendar event save process
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Database connection included
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Session started - {"user_id":21}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Started database transaction
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-06-05","user_id":21}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Event created successfully - {"event_id":"73"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Processing work progress entries - {"count":1}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Processing work progress entry - {"number":1,"category":"civil","type":"repair","done":"yes"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Work progress entry saved successfully - {"work_id":"17","number":1}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Processing work media files - {"work_id":"17","count":2}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_17\/"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Processing work media file - {"work_id":"17","file_name":"ample.mp4","file_type":"video\/mp4","file_size":13927646}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - File uploaded successfully - {"original_name":"ample_1749131015_4903.mp4","saved_as":"68419f0760f05_1749131015.mp4","file_type":"video\/mp4","file_size":13927646,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_17\/68419f0760f05_1749131015.mp4"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_17\/68419f0760f05_1749131015.mp4","filename":"ample_1749131015_4903.mp4","original_name":"ample.mp4"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Work media record saved to database - {"media_id":"25"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Processing work media file - {"work_id":"17","file_name":"Grosery Store At Mathura.jpg","file_type":"image\/jpeg","file_size":7866663}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - File uploaded successfully - {"original_name":"Grosery Store At Mathura_1749131015_6083.jpg","saved_as":"68419f0761b76_1749131015.jpg","file_type":"image\/jpeg","file_size":7866663,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_17\/68419f0761b76_1749131015.jpg"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_17\/68419f0761b76_1749131015.jpg","filename":"Grosery Store At Mathura_1749131015_6083.jpg","original_name":"Grosery Store At Mathura.jpg"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Work media record saved to database - {"media_id":"26"}
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Transaction committed successfully
+[05-Jun-2025 19:13:35 Asia/Kolkata] 2025-06-05 19:13:35 - Save process completed successfully - {"event_id":"73"}

@@ -3726,6 +3726,17 @@ if ($currentHour < 12) {
     </div>
   </div>
 </div>
+
+<!-- Add this right before the closing body tag -->
+<div class="image-viewer-overlay" id="imageViewerOverlay">
+  <div class="image-viewer-container">
+    <img src="" alt="Full size image" class="image-viewer-image" id="imageViewerImage">
+    <button class="image-viewer-close" id="imageViewerClose">&times;</button>
+    <div class="image-viewer-caption" id="imageViewerCaption"></div>
+  </div>
+</div>
+
+</body>
 </html>
 
 <!-- Add this before the closing body tag of site_manager_dashboard.php -->

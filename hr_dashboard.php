@@ -398,6 +398,18 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Add Chart.js plugins -->
+    <script>
+        // Create global Chart.js instance to ensure it's available
+        window.ChartInstance = Chart;
+    </script>
+    
+    <!-- Custom chart initialization script -->
+    <script src="assets/js/labour-charts.js"></script>
+    
     <style>
         :root {
             --primary: #4F46E5;
@@ -2702,7 +2714,7 @@ try {
                 <i class="bi bi-calendar-check-fill"></i>
                 Leave Request
             </a>
-            <a href="manage_leave_balance.php" class="nav-link">
+            <a href="construction_site_overview.php" class="nav-link">
                 <i class="bi bi-briefcase-fill"></i>
                 Recruitment
             </a>
@@ -3743,571 +3755,129 @@ try {
             </div>
         </div>
 
-        <!-- Construction Stats Section -->
-        <div class="employee-overview construction-section">
-            <div class="section-header d-flex justify-content-between align-items-center">
+        <!-- Site Overview Section -->
+        <div class="employee-overview last-section">
+            <div class="section-header mb-4">
                 <div class="section-title">
-                    <i class="bi bi-tools"></i>
+                    <i class="bi bi-buildings"></i>
                     Site Overview
                 </div>
                 <div class="dropdown-container">
-                    <select class="form-select form-select-sm">
-                        <option value="" selected>All Construction Sites</option>
-                        <option value="site1">Site A - Mumbai Central</option>
-                        <option value="site2">Site B - Thane West</option>
-                        <option value="site3">Site C - Pune IT Park</option>
+                    <select class="form-select" id="siteFilter">
+                        <option value="all">All Construction</option>
+                        <option value="site1">Site 1</option>
+                        <option value="site2">Site 2</option>
+                        <option value="site3">Site 3</option>
                     </select>
                 </div>
             </div>
 
             <div class="site-overview-grid">
-                <!-- Total Site Active Box -->
-                <div class="employee-stat-box">
-                    <div class="stat-icon">
-                        <i class="bi bi-building"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h4>Total Site Active</h4>
-                        <div class="stat-numbers">
-                            <span class="current">3</span>
-                        </div>
-                        <div class="stat-label">Current active sites</div>
-                    </div>
-
-                    <!-- Custom Tooltip -->
-                    <div class="stat-tooltip">
-                        <div class="tooltip-header">
-                            <h6>Site Status Overview</h6>
-                        </div>
-                        <div class="tooltip-content">
-                            <div class="site-status-item">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Under Construction</span>
-                                    <span class="text-primary">2 Sites</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-primary" style="width: 75%"></div>
-                                </div>
-                            </div>
-
-                            <div class="site-status-item">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Planning Phase</span>
-                                    <span class="text-warning">1 Site</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-warning" style="width: 30%"></div>
-                                </div>
-                            </div>
-
-                            <div class="site-status-item">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <span>Average Completion</span>
-                                    <span class="text-success">70%</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-success" style="width: 70%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tooltip-footer">
-                            Last updated: <?php echo date('d M Y, h:i A'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Manager on Site Box -->
-                <div class="employee-stat-box">
-                    <div class="stat-icon">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h4>Manager on Site</h4>
-                        <div class="stat-numbers">
-                            <span class="current">2</span>
-                        </div>
-                        <div class="stat-label">Present today</div>
-                    </div>
-
-                    <!-- Custom Tooltip -->
-                    <div class="stat-tooltip">
-                        <div class="tooltip-header">
-                            <h6>Manager Distribution</h6>
-                        </div>
-                        <div class="tooltip-content">
-                            <div class="manager-list">
-                                <div class="site-group">
-                                    <h6 class="site-title">Site A - Mumbai Central</h6>
-                                    <div class="manager-item">
-                                        <i class="bi bi-person-check text-success"></i>
-                                        <span>Rajesh Kumar</span>
-                                        <span class="badge bg-success">Present</span>
-                                    </div>
-                                </div>
-
-                                <div class="site-group">
-                                    <h6 class="site-title">Site B - Thane West</h6>
-                                    <div class="manager-item">
-                                        <i class="bi bi-person-check text-success"></i>
-                                        <span>Amit Patel</span>
-                                        <span class="badge bg-success">Present</span>
-                                    </div>
-                                </div>
-
-                                <div class="site-group">
-                                    <h6 class="site-title">On Leave</h6>
-                                    <div class="manager-item">
-                                        <i class="bi bi-person-x text-danger"></i>
-                                        <span>Suresh Verma</span>
-                                        <span class="badge bg-danger">Leave</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tooltip-footer">
-                            Last updated: <?php echo date('d M Y, h:i A'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Engineer on Site Box -->
-                <div class="employee-stat-box">
-                    <div class="stat-icon">
-                        <i class="bi bi-person-gear"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h4>Engineer on Site</h4>
-                        <div class="stat-numbers">
-                            <span class="current">4</span>
-                        </div>
-                        <div class="stat-label">Present today</div>
-                    </div>
-
-                    <!-- Custom Tooltip -->
-                    <div class="stat-tooltip">
-                        <div class="tooltip-header">
-                            <h6>Engineering Team Overview</h6>
-                        </div>
-                        <div class="tooltip-content">
-                            <div class="engineer-stats">
-                                <div class="stat-row">
-                                    <div class="stat-label">Civil Engineers</div>
-                                    <div class="stat-value">
-                                        <span class="number">5</span>
-                                        <div class="progress" style="height: 4px;">
-                                            <div class="progress-bar bg-primary" style="width: 80%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="stat-row">
-                                    <div class="stat-label">Electrical Engineers</div>
-                                    <div class="stat-value">
-                                        <span class="number">3</span>
-                                        <div class="progress" style="height: 4px;">
-                                            <div class="progress-bar bg-success" style="width: 60%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="stat-row">
-                                    <div class="stat-label">MEP Engineers</div>
-                                    <div class="stat-value">
-                                        <span class="number">2</span>
-                                        <div class="progress" style="height: 4px;">
-                                            <div class="progress-bar bg-info" style="width: 40%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="active-projects">
-                                    <i class="bi bi-clipboard2-check"></i>
-                                    <span>4 Active Projects</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tooltip-footer">
-                            Last updated: <?php echo date('d M Y, h:i A'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Supervisor on Site Box -->
-                <div class="employee-stat-box">
-                    <div class="stat-icon">
-                        <i class="bi bi-person-check-fill"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h4>Supervisor on Site</h4>
-                        <div class="stat-numbers">
-                            <span class="current">6</span>
-                        </div>
-                        <div class="stat-label">Present today</div>
-                    </div>
-
-                    <!-- Custom Tooltip -->
-                    <div class="stat-tooltip">
-                        <div class="tooltip-header">
-                            <h6>Supervisor Distribution</h6>
-                        </div>
-                        <div class="tooltip-content">
-                            <div class="supervisor-stats">
-                                <!-- Site A Supervisors -->
-                                <div class="site-group">
-                                    <h6 class="site-title">Site A - Mumbai Central</h6>
-                                    <div class="progress-info">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Present: 3/4</span>
-                                            <span class="text-success">75%</span>
-                                        </div>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-success" style="width: 75%"></div>
-                                        </div>
-                                    </div>
-                                    <div class="supervisor-list mt-2">
-                                        <div class="supervisor-item">
-                                            <i class="bi bi-person-check text-success"></i>
-                                            <span>Rahul Sharma - Civil</span>
-                                        </div>
-                                        <div class="supervisor-item">
-                                            <i class="bi bi-person-check text-success"></i>
-                                            <span>Prakash Patel - Electrical</span>
-                                        </div>
-                                        <div class="supervisor-item">
-                                            <i class="bi bi-person-check text-success"></i>
-                                            <span>Sunil Kumar - MEP</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Site B Supervisors -->
-                                <div class="site-group mt-3">
-                                    <h6 class="site-title">Site B - Thane West</h6>
-                                    <div class="progress-info">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Present: 2/3</span>
-                                            <span class="text-warning">67%</span>
-                                        </div>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-warning" style="width: 67%"></div>
-                                        </div>
-                                    </div>
-                                    <div class="supervisor-list mt-2">
-                                        <div class="supervisor-item">
-                                            <i class="bi bi-person-check text-success"></i>
-                                            <span>Amit Singh - Civil</span>
-                                        </div>
-                                        <div class="supervisor-item">
-                                            <i class="bi bi-person-check text-success"></i>
-                                            <span>Rajesh Kumar - MEP</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tooltip-footer">
-                            Last updated: <?php echo date('d M Y, h:i A'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Labour Present Box -->
-                <div class="employee-stat-box">
+                <div class="employee-stat-box" data-site-stat="total">
                     <div class="stat-icon">
                         <i class="bi bi-people-fill"></i>
                     </div>
                     <div class="stat-content">
-                        <h4>Labour Present</h4>
-                        <div class="stat-numbers">
-                            <span class="current">45</span>
-                        </div>
+                        <h4>Total Labour Present Today</h4>
+                        <?php
+                        // Fetch total labour present today from database
+                        $today = date('Y-m-d');
+                        
+                        // Query to count company labours present today
+                        $company_labour_query = "SELECT COUNT(*) as company_labour_count 
+                                               FROM sv_company_labours 
+                                               WHERE (morning_attendance = 1 OR evening_attendance = 1)
+                                               AND attendance_date = ?
+                                               AND is_deleted = 0";
+                        
+                        // Query to count vendor labours present today
+                        $vendor_labour_query = "SELECT COUNT(*) as vendor_labour_count 
+                                              FROM sv_vendor_labours 
+                                              WHERE (morning_attendance = 1 OR evening_attendance = 1)
+                                              AND attendance_date = ?
+                                              AND is_deleted = 0";
+                        
+                        try {
+                            // Get company labour count
+                            $stmt = $pdo->prepare($company_labour_query);
+                            $stmt->execute([$today]);
+                            $company_labour_result = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $company_labour_count = $company_labour_result['company_labour_count'] ?? 0;
+                            
+                            // Get vendor labour count
+                            $stmt = $pdo->prepare($vendor_labour_query);
+                            $stmt->execute([$today]);
+                            $vendor_labour_result = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $vendor_labour_count = $vendor_labour_result['vendor_labour_count'] ?? 0;
+                            
+                            // Calculate total labour count
+                            $total_labour_count = $company_labour_count + $vendor_labour_count;
+                        } catch (PDOException $e) {
+                            error_log("Error fetching labour count: " . $e->getMessage());
+                            $total_labour_count = 0;
+                        }
+                        ?>
+                        <div class="stat-numbers"><?php echo $total_labour_count; ?></div>
                         <div class="stat-label">Present today</div>
+                        <button class="view-details-btn" data-site-type="total">View Details</button>
                     </div>
+                </div>
 
-                    <!-- Custom Tooltip -->
-                    <div class="stat-tooltip">
-                        <div class="tooltip-header">
-                            <h6>Labour Attendance Overview</h6>
-                        </div>
-                        <div class="tooltip-content">
-                            <div class="labour-stats">
-                                <!-- Site-wise Distribution -->
-                                <div class="site-distribution mb-3">
-                                    <h6 class="section-title">Site Distribution</h6>
-                                    <!-- Site A -->
-                                    <div class="distribution-item">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Site A - Mumbai Central</span>
-                                            <span class="text-primary">25/30</span>
-                                        </div>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-primary" style="width: 83%"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Site B -->
-                                    <div class="distribution-item mt-2">
-                                        <div class="d-flex justify-content-between mb-1">
-                                            <span>Site B - Thane West</span>
-                                            <span class="text-success">20/25</span>
-                                        </div>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar bg-success" style="width: 80%"></div>
-                                        </div>
+                <div class="employee-stat-box" data-site-stat="manager">
+                    <div class="stat-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h4>Manager on Site</h4>
+                        <div class="stat-numbers">2</div>
+                        <div class="stat-label">Present today</div>
+                        <button class="view-details-btn" data-site-type="manager">View Details</button>
                                     </div>
                                 </div>
 
-                                <!-- Skill-wise Distribution -->
-                                <div class="skill-distribution">
-                                    <h6 class="section-title">Skill Distribution</h6>
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <div class="skill-item">
-                                                <i class="bi bi-tools"></i>
-                                                <span>Skilled: 20</span>
-                                            </div>
-                                            <div class="skill-item">
-                                                <i class="bi bi-gear"></i>
-                                                <span>Semi-skilled: 15</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="skill-item">
-                                                <i class="bi bi-person-workspace"></i>
-                                                <span>Unskilled: 10</span>
-                                            </div>
-                                            <div class="skill-item">
-                                                <i class="bi bi-person-x"></i>
-                                                <span>Absent: 10</span>
-                                            </div>
-                                        </div>
+                <div class="employee-stat-box" data-site-stat="engineer">
+                    <div class="stat-icon">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h4>Engineer on Site</h4>
+                        <div class="stat-numbers">4</div>
+                        <div class="stat-label">Present today</div>
+                        <button class="view-details-btn" data-site-type="engineer">View Details</button>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="tooltip-footer">
-                            Last updated: <?php echo date('d M Y, h:i A'); ?>
-                        </div>
+
+                <div class="employee-stat-box" data-site-stat="supervisor">
+                    <div class="stat-icon">
+                        <i class="bi bi-clipboard-check"></i>
                     </div>
-                </div>
-            </div>
-        </div>
+                    <div class="stat-content">
+                        <h4>Supervisor on Site</h4>
+                        <div class="stat-numbers">6</div>
+                        <div class="stat-label">Present today</div>
+                        <button class="view-details-btn" data-site-type="supervisor">View Details</button>
+                                    </div>
+                                </div>
 
-        <!-- Task Overview Section -->
-        <div class="employee-overview task-section">
-            <div class="section-header d-flex justify-content-between align-items-center">
-                <div class="section-title">
-                    <i class="bi bi-list-task"></i>
-                    Task Overview
-                </div>
-                <div class="date-filter d-flex align-items-center gap-2">
-                    <input type="date" class="form-control form-control-sm" value="<?php echo date('Y-m-d'); ?>">
-                    <span>to</span>
-                    <input type="date" class="form-control form-control-sm" value="<?php echo date('Y-m-d', strtotime('+30 days')); ?>">
-                    <button class="btn btn-primary btn-sm">
-                        <i class="bi bi-funnel"></i> Filter
-                    </button>
-                </div>
-            </div>
-
-            <!-- Task Stats Grid -->
-            <div class="task-stats-grid">
-                <!-- Left Column -->
-                <div class="task-stats-left">
-                    <!-- Total Tasks Card -->
-                    <div class="task-stat-card gradient-purple" data-bs-toggle="tooltip" data-bs-html="true" 
-                         title="<div class='priority-tooltip'>
-                                  <div class='priority-item'>
-                                    <span class='dot high'></span>
-                                    High Priority: 8 Tasks
-                                  </div>
-                                  <div class='priority-item'>
-                                    <span class='dot medium'></span>
-                                    Medium Priority: 12 Tasks
-                                  </div>
-                                  <div class='priority-item'>
-                                    <span class='dot low'></span>
-                                    Low Priority: 8 Tasks
-                                  </div>
-                                </div>">
-                        <div class="stat-content">
-                            <h3>Total Tasks</h3>
-                            <div class="stat-number">28</div>
-                            <div class="stat-label">Active tasks this month</div>
-                        </div>
+                <div class="employee-stat-box" data-site-stat="labour">
+                    <div class="stat-icon">
+                        <i class="bi bi-people"></i>
                     </div>
-
-                    <!-- Row of 3 Stat Boxes -->
-                    <div class="stat-boxes-row">
-                        <!-- Number of Stages Card -->
-                        <div class="task-stat-box">
-                            <div class="stat-header">
-                                <i class="bi bi-diagram-3"></i>
-                                <h4>Number of Stages</h4>
-                            </div>
-                            <div class="stat-body">
-                                <div class="stat-number">12</div>
-                                <div class="stat-label">Total workflow stages</div>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 75%"></div>
-                            </div>
-                        </div>
-
-                        <!-- Stages Pending Card -->
-                        <div class="task-stat-box">
-                            <div class="stat-header">
-                                <i class="bi bi-hourglass-split"></i>
-                                <h4>Stages Pending</h4>
-                            </div>
-                            <div class="stat-body">
-                                <div class="stat-number">8 <span class="text-muted">/ 12</span></div>
-                                <div class="stat-label">Stages awaiting completion</div>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 66%"></div>
-                            </div>
-                        </div>
-
-                        <!-- Tasks Delayed Card -->
-                        <div class="task-stat-box">
-                            <div class="stat-header">
-                                <i class="bi bi-clock-history"></i>
-                                <h4>Tasks Delayed</h4>
-                            </div>
-                            <div class="stat-body">
-                                <div class="stat-number">5</div>
-                                <div class="stat-label">Overdue tasks</div>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-danger" style="width: 40%"></div>
-                            </div>
-                        </div>
+                    <div class="stat-content">
+                        <h4>Labour Present</h4>
+                        <div class="stat-numbers">45</div>
+                        <div class="stat-label">Present today</div>
+                        <button class="view-details-btn" data-site-type="labour">View Details</button>
                     </div>
-                </div>
-
-                <!-- Right Column - Calendar -->
-                <div class="task-calendar">
-                <div class="calendar-header">
-                        <h4>
-                            <i class="fas fa-calendar-alt"></i> 
-                            Task Calendar
-                        </h4>
-                        <div class="calendar-stats">
-                            <span class="delayed-stat">
-                                <i class="fas fa-clock text-warning"></i> 
-                            </span>
-                            <span>•</span>
-                            <span class="completed-stat">
-                                <i class="fas fa-check text-success"></i> 
-                            </span>
                         </div>
-                    </div>
-                    <div class="calendar-container">
-                        <div class="month-navigation">
-                            <button id="prevMonth" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
-                            <h5 id="currentMonth">November 2024</h5>
-                            <button id="nextMonth" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="calendar-grid">
-                            <div class="weekday">Sun</div>
-                            <div class="weekday">Mon</div>
-                            <div class="weekday">Tue</div>
-                            <div class="weekday">Wed</div>
-                            <div class="weekday">Thu</div>
-                            <div class="weekday">Fri</div>
-                            <div class="weekday">Sat</div>
-                            <!-- Calendar days will be inserted here by JavaScript -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                    </div>
+                                </div>
 
-        <!-- Salary Overview Section -->
-        <div class="employee-overview salary-section">
-            <div class="section-header d-flex justify-content-between align-items-center">
-                <div class="section-title">
-                    <i class="bi bi-cash-stack"></i>
-                    Salary Overview
-                </div>
-                <div class="actions d-flex gap-2">
-                    <input type="month" class="form-control form-control-sm" 
-                           value="<?php echo date('Y-m'); ?>" 
-                           max="<?php echo date('Y-m'); ?>">
-                    <a href="export_salary.php" class="btn btn-primary btn-sm">
-                        <i class="bi bi-download"></i> Export
-                    </a>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Monthly Salary</th>
-                            <th>Total Working Days</th>
-                            <th>Present Days</th>
-                            <th>Leave Taken</th>
-                            <th>Short Leave</th>
-                            <th>Late</th>
-                            <th>Overtime (hrs)</th>
-                            <th colspan="2">Travelling Expenses</th>
-                            <th>Salary Amount</th>
-                            <th>Overtime Amount</th>
-                            <th>Travel Amount</th>
-                            <th>Misc. Amount</th>
-                            <th>Actions</th>
-                        </tr>
-                        <tr>
-                            <th colspan="8"></th>
-                            <th>Pending</th>
-                            <th>Approved</th>
-                            <th colspan="5"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($salary_data)): ?>
-                            <tr>
-                                <td colspan="15" class="text-center">No salary data available for the selected month</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($salary_data as $row): ?>
-                                <tr>
-                                    <!-- Add this temporary debug output -->
-                                    <!-- <?php var_dump($row); ?> -->
-                                    <td><?php echo htmlspecialchars($row['employee_name'] ?? 'N/A'); ?></td>
-                                    <td><?php echo isset($row['monthly_salary']) ? number_format($row['monthly_salary'], 2) : '0.00'; ?></td>
-                                    <td><?php echo $row['total_working_days'] ?? '0'; ?></td>
-                                    <td><?php echo $row['present_days'] ?? '0'; ?></td>
-                                    <td><?php echo $row['leave_taken'] ?? '0'; ?></td>
-                                    <td><?php echo $row['short_leave'] ?? '0'; ?></td>
-                                    <td><?php echo $row['late_count'] ?? '0'; ?></td>
-                                    <td><?php echo $row['overtime_hours'] ?? '0'; ?></td>
-                                    <td><?php echo number_format($row['travel_pending'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['travel_approved'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['salary_amount'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['overtime_amount'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['travel_amount'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['misc_amount'] ?? 0, 2); ?></td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button class="btn btn-sm btn-outline-primary" onclick="viewSalaryDetails(<?php echo $row['id'] ?? 0; ?>)">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="editSalaryDetails(<?php echo $row['user_id'] ?? 0; ?>)">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+        <!-- Link to external CSS and JS files for Site Overview -->
+        <link rel="stylesheet" href="assets/css/site-overview.css">
+        <script src="assets/js/site-overview.js" defer></script>
+        
+        
             
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

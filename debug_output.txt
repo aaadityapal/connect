@@ -1,0 +1,333 @@
+Array
+(
+    [status] => success
+    [message] => 
+    [data] => Array
+        (
+            [attendance_summary] => Array
+                (
+                    [present] => 0
+                    [absent] => 4
+                )
+
+            [attendance_trend] => Array
+                (
+                    [dates] => Array
+                        (
+                            [0] => Jun 01
+                            [1] => Jun 02
+                            [2] => Jun 03
+                            [3] => Jun 04
+                            [4] => Jun 05
+                            [5] => Jun 06
+                            [6] => Jun 07
+                        )
+
+                    [present] => Array
+                        (
+                            [0] => 0
+                            [1] => 0
+                            [2] => 2
+                            [3] => 0
+                            [4] => 0
+                            [5] => 2
+                            [6] => 4
+                        )
+
+                    [absent] => Array
+                        (
+                            [0] => 0
+                            [1] => 0
+                            [2] => 0
+                            [3] => 0
+                            [4] => 0
+                            [5] => 0
+                            [6] => 0
+                        )
+
+                )
+
+            [worker_distribution] => Array
+                (
+                    [company] => Array
+                        (
+                            [labels] => Array
+                                (
+                                    [0] => Sun, Jun 01
+                                    [1] => Mon, Jun 02
+                                    [2] => Tue, Jun 03
+                                    [3] => Wed, Jun 04
+                                    [4] => Thu, Jun 05
+                                    [5] => Fri, Jun 06
+                                    [6] => Sat, Jun 07
+                                )
+
+                            [data] => Array
+                                (
+                                    [0] => 0
+                                    [1] => 0
+                                    [2] => 1
+                                    [3] => 0
+                                    [4] => 0
+                                    [5] => 2
+                                    [6] => 2
+                                )
+
+                        )
+
+                    [vendor] => Array
+                        (
+                            [labels] => Array
+                                (
+                                    [0] => Sun, Jun 01
+                                    [1] => Mon, Jun 02
+                                    [2] => Tue, Jun 03
+                                    [3] => Wed, Jun 04
+                                    [4] => Thu, Jun 05
+                                    [5] => Fri, Jun 06
+                                    [6] => Sat, Jun 07
+                                )
+
+                            [data] => Array
+                                (
+                                    [0] => 0
+                                    [1] => 0
+                                    [2] => 1
+                                    [3] => 0
+                                    [4] => 0
+                                    [5] => 0
+                                    [6] => 2
+                                )
+
+                        )
+
+                )
+
+            [company_workers] => Array
+                (
+                    [0] => Array
+                        (
+                            [company_labour_id] => 15
+                            [event_id] => 75
+                            [labour_name] => defdfe
+                            [contact_number] => 2323232
+                            [sequence_number] => 1
+                            [is_deleted] => 0
+                            [created_by] => 
+                            [updated_by] => 
+                            [created_at] => 2025-06-07 13:12:45
+                            [updated_at] => 
+                            [morning_attendance] => present
+                            [evening_attendance] => present
+                            [attendance_date] => 2025-06-07
+                            [event_title] => Construction Site At Sector 80
+                        )
+
+                    [1] => Array
+                        (
+                            [company_labour_id] => 16
+                            [event_id] => 76
+                            [labour_name] => gfd
+                            [contact_number] => 0987654321
+                            [sequence_number] => 1
+                            [is_deleted] => 0
+                            [created_by] => 
+                            [updated_by] => 
+                            [created_at] => 2025-06-07 13:56:15
+                            [updated_at] => 
+                            [morning_attendance] => present
+                            [evening_attendance] => present
+                            [attendance_date] => 2025-06-07
+                            [event_title] => Construction Site At Dilshad Garden
+                        )
+
+                )
+
+            [vendor_workers] => Array
+                (
+                    [0] => Array
+                        (
+                            [labour_id] => 26
+                            [vendor_id] => 39
+                            [labour_name] => gfd
+                            [contact_number] => 98565
+                            [sequence_number] => 1
+                            [is_deleted] => 0
+                            [created_by] => 
+                            [updated_by] => 
+                            [created_at] => 2025-06-07 13:12:45
+                            [updated_at] => 
+                            [morning_attendance] => present
+                            [evening_attendance] => present
+                            [attendance_date] => 2025-06-07
+                            [vendor_name] => ss
+                            [vendor_type] => material
+                            [event_title] => Construction Site At Sector 80
+                        )
+
+                    [1] => Array
+                        (
+                            [labour_id] => 27
+                            [vendor_id] => 40
+                            [labour_name] => hgf
+                            [contact_number] => 0987654321
+                            [sequence_number] => 1
+                            [is_deleted] => 0
+                            [created_by] => 
+                            [updated_by] => 
+                            [created_at] => 2025-06-07 13:56:15
+                            [updated_at] => 
+                            [morning_attendance] => present
+                            [evening_attendance] => present
+                            [attendance_date] => 2025-06-07
+                            [vendor_name] => nbvc
+                            [vendor_type] => equipment
+                            [event_title] => Construction Site At Dilshad Garden
+                        )
+
+                )
+
+        )
+
+    [debug] => Array
+        (
+            [events_query] => SELECT event_id, title FROM sv_calendar_events WHERE DATE(event_date) = ?
+            [event_ids] => Array
+                (
+                    [0] => 75
+                    [1] => 76
+                )
+
+            [event_count] => 2
+            [event_ids_str] => 75,76
+            [company_labour_query] => SELECT cl.*, ce.title as event_title 
+                                FROM sv_company_labours cl
+                                JOIN sv_calendar_events ce ON cl.event_id = ce.event_id
+                                WHERE cl.event_id IN (75,76) 
+                                AND cl.is_deleted = 0
+                                AND cl.attendance_date = ?
+            [company_labour_count] => 2
+            [days] => Array
+                (
+                    [0] => Array
+                        (
+                            [date] => 2025-06-01
+                            [company_count] => 0
+                            [vendor_count] => 0
+                        )
+
+                    [1] => Array
+                        (
+                            [date] => 2025-06-02
+                            [company_count] => 0
+                            [vendor_count] => 0
+                        )
+
+                    [2] => Array
+                        (
+                            [date] => 2025-06-03
+                            [company_count] => 1
+                            [vendor_count] => 1
+                        )
+
+                    [3] => Array
+                        (
+                            [date] => 2025-06-04
+                            [company_count] => 0
+                            [vendor_count] => 0
+                        )
+
+                    [4] => Array
+                        (
+                            [date] => 2025-06-05
+                            [company_count] => 0
+                            [vendor_count] => 0
+                        )
+
+                    [5] => Array
+                        (
+                            [date] => 2025-06-06
+                            [company_count] => 2
+                            [vendor_count] => 0
+                        )
+
+                    [6] => Array
+                        (
+                            [date] => 2025-06-07
+                            [company_count] => 2
+                            [vendor_count] => 2
+                        )
+
+                )
+
+            [vendors_query] => SELECT ev.*, ce.title as event_title 
+                         FROM sv_event_vendors ev
+                         JOIN sv_calendar_events ce ON ev.event_id = ce.event_id
+                         WHERE ev.event_id IN (75,76) 
+                         AND ev.is_deleted = 0
+            [vendor_count] => 2
+            [vendor_ids_str] => 39,40
+            [vendor_labour_query] => SELECT vl.*, ev.vendor_name, ev.vendor_type, ce.title as event_title
+                                   FROM sv_vendor_labours vl
+                                   JOIN sv_event_vendors ev ON vl.vendor_id = ev.vendor_id
+                                   JOIN sv_calendar_events ce ON ev.event_id = ce.event_id
+                                   WHERE vl.vendor_id IN (39,40) 
+                                   AND vl.is_deleted = 0
+                                   AND vl.attendance_date = ?
+            [vendor_labour_count] => 2
+            [trend] => Array
+                (
+                    [0] => Array
+                        (
+                            [date] => 2025-06-01
+                            [present] => 0
+                            [absent] => 0
+                        )
+
+                    [1] => Array
+                        (
+                            [date] => 2025-06-02
+                            [present] => 0
+                            [absent] => 0
+                        )
+
+                    [2] => Array
+                        (
+                            [date] => 2025-06-03
+                            [present] => 2
+                            [absent] => 0
+                        )
+
+                    [3] => Array
+                        (
+                            [date] => 2025-06-04
+                            [present] => 0
+                            [absent] => 0
+                        )
+
+                    [4] => Array
+                        (
+                            [date] => 2025-06-05
+                            [present] => 0
+                            [absent] => 0
+                        )
+
+                    [5] => Array
+                        (
+                            [date] => 2025-06-06
+                            [present] => 2
+                            [absent] => 0
+                        )
+
+                    [6] => Array
+                        (
+                            [date] => 2025-06-07
+                            [present] => 4
+                            [absent] => 0
+                        )
+
+                )
+
+        )
+
+)

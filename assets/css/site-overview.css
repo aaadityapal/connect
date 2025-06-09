@@ -1,0 +1,620 @@
+/* Site Overview Styles */
+.site-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.site-overview-grid .employee-stat-box {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.site-overview-grid .employee-stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.site-overview-grid .stat-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #4F46E5;
+    height: 60px;
+    width: 60px;
+    background-color: rgba(79, 70, 229, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+}
+
+.site-overview-grid .employee-stat-box[data-site-stat="total"] .stat-icon {
+    color: #4F46E5;
+    background-color: rgba(79, 70, 229, 0.1);
+}
+
+.site-overview-grid .employee-stat-box[data-site-stat="manager"] .stat-icon {
+    color: #F59E0B;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.site-overview-grid .employee-stat-box[data-site-stat="engineer"] .stat-icon {
+    color: #10B981;
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.site-overview-grid .employee-stat-box[data-site-stat="supervisor"] .stat-icon {
+    color: #6366F1;
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.site-overview-grid .employee-stat-box[data-site-stat="labour"] .stat-icon {
+    color: #EF4444;
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.site-overview-grid .stat-content h4 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #1E293B;
+    font-weight: 600;
+}
+
+.site-overview-grid .stat-numbers {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin-bottom: 5px;
+}
+
+.site-overview-grid .stat-label {
+    font-size: 0.875rem;
+    color: #64748B;
+    margin-bottom: 15px;
+}
+
+/* View Details Button Styles */
+.view-details-btn {
+    background: transparent;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4F46E5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.view-details-btn:hover {
+    background: rgba(79, 70, 229, 0.1);
+    border-color: #4F46E5;
+    transform: translateY(-2px);
+}
+
+.employee-stat-box[data-site-stat="total"] .view-details-btn {
+    color: #4F46E5;
+}
+
+.employee-stat-box[data-site-stat="manager"] .view-details-btn {
+    color: #F59E0B;
+}
+
+.employee-stat-box[data-site-stat="engineer"] .view-details-btn {
+    color: #10B981;
+}
+
+.employee-stat-box[data-site-stat="supervisor"] .view-details-btn {
+    color: #6366F1;
+}
+
+.employee-stat-box[data-site-stat="labour"] .view-details-btn {
+    color: #EF4444;
+}
+
+.employee-stat-box[data-site-stat="total"] .view-details-btn:hover {
+    background: rgba(79, 70, 229, 0.1);
+    border-color: #4F46E5;
+}
+
+.employee-stat-box[data-site-stat="manager"] .view-details-btn:hover {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: #F59E0B;
+}
+
+.employee-stat-box[data-site-stat="engineer"] .view-details-btn:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10B981;
+}
+
+.employee-stat-box[data-site-stat="supervisor"] .view-details-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: #6366F1;
+}
+
+.employee-stat-box[data-site-stat="labour"] .view-details-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #EF4444;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1E293B;
+}
+
+.section-title i {
+    margin-right: 10px;
+    color: #4F46E5;
+}
+
+#siteFilter {
+    width: 200px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .site-overview-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .site-overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #siteFilter {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-overview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Enhanced Modal Styles */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+/* Extra-large modal adjustments */
+.modal-xl {
+    max-width: 95%;
+}
+
+@media (min-width: 1200px) {
+    .modal-xl {
+        max-width: 1140px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .modal-xl {
+        max-width: 1320px;
+    }
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.5rem;
+}
+
+.modal-header .modal-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.5rem;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.25rem;
+}
+
+.table th {
+    font-weight: 600;
+    color: #1e293b;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+    color: #475569;
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(79, 70, 229, 0.02);
+}
+
+.table-light {
+    background-color: #f8fafc;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+.badge.rounded-pill {
+    padding-right: 0.8em;
+    padding-left: 0.8em;
+}
+
+.badge.bg-light {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+}
+
+.alert {
+    border: none;
+    border-radius: 8px;
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.progress {
+    height: 6px;
+    background-color: #e2e8f0;
+    border-radius: 3px;
+}
+
+.progress-bar {
+    border-radius: 3px;
+}
+
+.labour-summary .card {
+    border-radius: 12px;
+    background-color: #f8fafc !important;
+}
+
+.labour-summary h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.labour-summary p {
+    font-size: 0.875rem;
+}
+
+/* Print-specific styles */
+@media print {
+    .modal-content {
+        box-shadow: none !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        break-inside: avoid;
+    }
+
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    .table th, .table td {
+        background-color: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .badge {
+        border: 1px solid #e2e8f0 !important;
+    }
+}
+
+/* Animation for modal */
+.modal.fade .modal-dialog {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Avatar styles */
+.avatar-sm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tooltip for the modal */
+[data-bs-toggle="tooltip"] {
+    cursor: help;
+}
+
+/* Contact link styles */
+.contact-link {
+    display: flex;
+    align-items: center;
+    color: #475569;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.contact-link:hover {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.contact-link i {
+    font-size: 1rem;
+}
+
+/* Add a subtle animation for the phone icon on hover */
+.contact-link:hover i {
+    animation: phone-wave 0.5s ease infinite;
+}
+
+@keyframes phone-wave {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* Supervisor Details Styles */
+.supervisor-details .card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.supervisor-details .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.supervisor-details .table {
+    margin-bottom: 0;
+}
+
+.supervisor-details .table th {
+    font-weight: 600;
+    color: #475569;
+    background-color: #f8fafc;
+    border-top: none;
+    padding: 12px 16px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.supervisor-details .table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-color: #f1f5f9;
+}
+
+.supervisor-details .contact-link {
+    color: #4F46E5;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s ease;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.supervisor-details .contact-link:hover {
+    color: #4338CA;
+}
+
+.supervisor-details .contact-link i.bi-telephone-fill {
+    color: #10B981;
+}
+
+.supervisor-details .contact-link i.bi-envelope-fill {
+    color: #3B82F6;
+}
+
+.supervisor-details .text-muted {
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.supervisor-details .fw-semibold {
+    font-weight: 600;
+}
+
+.supervisor-details .badge {
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+.supervisor-details .badge.bg-success {
+    background-color: #10B981 !important;
+}
+
+.supervisor-details .badge.bg-danger {
+    background-color: #EF4444 !important;
+}
+
+.supervisor-details .small.text-muted {
+    color: #64748B !important;
+    font-size: 0.75rem;
+}
+
+/* Style for profile pictures */
+.supervisor-details .rounded-circle {
+    object-fit: cover;
+    border: 2px solid #f1f5f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Daily Events Styles */
+.event-summary h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.event-summary p {
+    font-size: 0.875rem;
+    color: #64748B;
+}
+
+.event-summary .card {
+    border-radius: 12px;
+    background-color: #f8fafc !important;
+}
+
+.event-summary .col-md-3 {
+    padding: 1rem 0.5rem;
+    position: relative;
+}
+
+.event-summary .col-md-3:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background-color: #e2e8f0;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+.badge i {
+    font-size: 0.85em;
+}
+
+.badge[title] {
+    cursor: help;
+}
+
+.detail-badge {
+    cursor: pointer !important;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.detail-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.detail-badge:active {
+    transform: translateY(0);
+}
+
+.badge.bg-primary {
+    background-color: #4F46E5 !important;
+}
+
+.badge.bg-success {
+    background-color: #10B981 !important;
+}
+
+.badge.bg-warning {
+    background-color: #F59E0B !important;
+    color: #ffffff;
+}
+
+.badge.bg-info {
+    background-color: #3B82F6 !important;
+    color: #ffffff;
+}
+
+.badge.bg-danger {
+    background-color: #EF4444 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #64748B !important;
+}
+
+.badge.bg-light {
+    background-color: #F1F5F9 !important;
+    color: #334155;
+}
+
+/* Style for the event details modal */
+.table td .small.text-muted {
+    font-size: 0.75rem;
+    color: #64748B !important;
+}
+
+.table td .d-flex.gap-2 {
+    flex-wrap: wrap;
+} 

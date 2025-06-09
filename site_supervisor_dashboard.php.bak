@@ -252,6 +252,26 @@ if (isset($_SESSION['user_id'])) {
         
         .stat-card.needs-attention {
             animation: pulse-animation 2s infinite;
+            border: 1px solid #ffc107;
+        }
+        
+        .card-warning-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #ffc107;
+            color: #212529;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .card-warning-badge i {
+            margin-right: 4px;
         }
         
         /* Pending expense indicator styles */
@@ -1258,7 +1278,7 @@ if (isset($_SESSION['user_id'])) {
                                 </div>
                             </div>
                         </div>
-            <div class="row">
+                        <div class="row">
                             <div class="col-lg-1-5 col-md-4 col-sm-6 mb-3">
                                 <div class="dashboard-card stat-card" data-toggle="tooltip" data-placement="top" title="All workers currently assigned to active projects">
                         <div class="stat-icon bg-primary">
@@ -1266,28 +1286,127 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <div class="stat-details">
                                         <div class="d-flex justify-content-between align-items-baseline">
-                            <h3>42</h3>
-                                            <span class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 8%</span>
+                                        <?php
+                                        // Get today's date
+                                        $today = date('Y-m-d');
+                                        
+                                        // Query to get count of laborers present today
+                                        $workers_query = "SELECT COUNT(*) as active_workers 
+                                                         FROM sv_company_labours 
+                                                         WHERE (morning_attendance = 1 OR evening_attendance = 1) 
+                                                         AND attendance_date = ? 
+                                                         AND is_deleted = 0";
+                                        
+                                        $workers_stmt = $conn->prepare($workers_query);
+                                        $workers_stmt->bind_param("s", $today);
+                                        $workers_stmt->execute();
+                                        $workers_result = $workers_stmt->get_result();
+                                        $workers_data = $workers_result->fetch_assoc();
+                                        
+                                        $active_workers = $workers_data['active_workers'] ? $workers_data['active_workers'] : 0;
+                                        
+                                        // Get count from previous day for trend calculation
+                                        $yesterday = date('Y-m-d', strtotime('-1 day'));
+                                        $prev_workers_query = "SELECT COUNT(*) as prev_workers 
+                                                              FROM sv_company_labours 
+                                                              WHERE (morning_attendance = 1 OR evening_attendance = 1) 
+                                                              AND attendance_date = ? 
+                                                              AND is_deleted = 0";
+                                        
+                                        $prev_workers_stmt = $conn->prepare($prev_workers_query);
+                                        $prev_workers_stmt->bind_param("s", $yesterday);
+                                        $prev_workers_stmt->execute();
+                                        $prev_workers_result = $prev_workers_stmt->get_result();
+                                        $prev_workers_data = $prev_workers_result->fetch_assoc();
+                                        
+                                        $prev_workers = $prev_workers_data['prev_workers'] ? $prev_workers_data['prev_workers'] : 0;
+                                        
+                                        // Calculate trend percentage
+                                        $trend_percentage = 0;
+                                        if ($prev_workers > 0) {
+                                            $trend_percentage = round((($active_workers - $prev_workers) / $prev_workers) * 100);
+                                        }
+                                        
+                                        // Determine if trend is up or down
+                                        $trend_class = $trend_percentage >= 0 ? 'trend-up' : 'trend-down';
+                                        $trend_icon = $trend_percentage >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                                        
+                                        // Get total registered workers for goal calculation
+                                        $total_workers_query = "SELECT COUNT(DISTINCT labour_name) as total_workers 
+                                                               FROM sv_company_labours 
+                                                               WHERE is_deleted = 0";
+                                        
+                                        $total_workers_stmt = $conn->prepare($total_workers_query);
+                                        $total_workers_stmt->execute();
+                                        $total_workers_result = $total_workers_stmt->get_result();
+                                        $total_workers_data = $total_workers_result->fetch_assoc();
+                                        
+                                        $total_workers = $total_workers_data['total_workers'] ? $total_workers_data['total_workers'] : 0;
+                                        
+                                        // Calculate attendance rate
+                                        $attendance_rate = 0;
+                                        if ($total_workers > 0) {
+                                            $attendance_rate = round(($active_workers / $total_workers) * 100);
+                                        }
+                                        
+                                        // Calculate progress percentage (assuming goal is total registered workers)
+                                        $goal = $total_workers;
+                                        $progress_percentage = 0;
+                                        if ($goal > 0) {
+                                            $progress_percentage = round(($active_workers / $goal) * 100);
+                                        }
+                                        ?>
+                            <h3><?php echo $active_workers; ?></h3>
+                                            <span class="stat-trend <?php echo $trend_class; ?>"><i class="fas <?php echo $trend_icon; ?>"></i> <?php echo abs($trend_percentage); ?>%</span>
                                         </div>
                             <p>Active Workers</p>
                                         <div class="progress stat-progress" style="height: 5px;">
-                                            <div class="progress-bar bg-primary" role="progressbar" style="width: 84%" aria-valuenow="84" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: <?php echo $progress_percentage; ?>%" aria-valuenow="<?php echo $progress_percentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                                         <div class="d-flex justify-content-between align-items-center stat-goal-text">
-                                            <small>Goal: 50</small>
-                                            <small>84% Complete</small>
+                                            <small>Goal: <?php echo $goal; ?></small>
+                                            <small><?php echo $progress_percentage; ?>% Complete</small>
                                         </div>
                                         <div class="stat-footer">
                                             <div class="stat-secondary">
-                                                <small>Attendance Rate: 92%</small>
+                                                <small>Attendance Rate: <?php echo $attendance_rate; ?>%</small>
                                             </div>
                                             <div class="stat-chart">
+                                                <?php
+                                                // Generate sparkline data for the last 7 days
+                                                $points = '';
+                                                for ($i = 6; $i >= 0; $i--) {
+                                                    $date = date('Y-m-d', strtotime("-$i days"));
+                                                    
+                                                    $day_query = "SELECT COUNT(*) as day_count 
+                                                                 FROM sv_company_labours 
+                                                                 WHERE (morning_attendance = 1 OR evening_attendance = 1) 
+                                                                 AND attendance_date = ? 
+                                                                 AND is_deleted = 0";
+                                                    
+                                                    $day_stmt = $conn->prepare($day_query);
+                                                    $day_stmt->bind_param("s", $date);
+                                                    $day_stmt->execute();
+                                                    $day_result = $day_stmt->get_result();
+                                                    $day_data = $day_result->fetch_assoc();
+                                                    
+                                                    $day_count = $day_data['day_count'] ? $day_data['day_count'] : 0;
+                                                    
+                                                    // Scale the count to fit in our 20px height (max assumed to be max workers)
+                                                    $max_height = 15;
+                                                    $height = $total_workers > 0 ? $max_height - min($max_height, round(($day_count / $total_workers) * $max_height)) : $max_height;
+                                                    
+                                                    // Add point to the sparkline
+                                                    $x_pos = 90 - ($i * 15);
+                                                    $points .= "$x_pos,$height ";
+                                                }
+                                                ?>
                                                 <svg width="100%" height="20" class="stat-sparkline">
-                                                    <polyline points="0,15 10,10 20,12 30,7 40,9 50,5 60,8 70,4 80,6 90,2" fill="none" stroke="#5da5f7" stroke-width="2"></polyline>
+                                                    <polyline points="<?php echo trim($points); ?>" fill="none" stroke="#5da5f7" stroke-width="2"></polyline>
                                                 </svg>
                                             </div>
                                             <div class="stat-actions mt-2">
-                                                <a href="worker_attendance.php" class="btn btn-sm btn-outline-primary btn-block"><i class="fas fa-eye"></i> View Details</a>
+                                                <button type="button" class="btn btn-sm btn-outline-primary btn-block" data-toggle="modal" data-target="#activeWorkersModal"><i class="fas fa-eye"></i> View Details</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1301,28 +1420,78 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <div class="stat-details">
                                         <div class="d-flex justify-content-between align-items-baseline">
-                            <h3>8</h3>
-                                            <span class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 2</span>
+                            <?php
+                            // Get today's date
+                            $today = date('Y-m-d');
+                            
+                            // In a real implementation, you would fetch data from a targets table
+                            // For now, we'll create demo data
+                            
+                            // Demo data - daily targets
+                            $daily_targets = [
+                                'Complete foundation work for Building B',
+                                'Inspect electrical installations on Floor 3',
+                                'Review and approve material delivery schedule',
+                                'Conduct safety briefing for new workers',
+                                'Submit progress report to project manager',
+                                'Update site documentation and logs',
+                                'Coordinate with subcontractors for next week',
+                                'Inspect scaffolding safety measures'
+                            ];
+                            
+                            // Number of targets for today (between 5-8)
+                            $num_targets = count($daily_targets);
+                            
+                            // Number of completed targets (random for demo)
+                            $completed_targets = rand(1, $num_targets - 1);
+                            
+                            // Calculate completion percentage
+                            $completion_percentage = round(($completed_targets / $num_targets) * 100);
+                            
+                            // Compare with yesterday (for trend)
+                            // In real implementation, fetch from database
+                            $yesterday_completion = rand(40, 90);
+                            $trend_percentage = $completion_percentage - $yesterday_completion;
+                            
+                            // Determine if trend is up or down
+                            $trend_class = $trend_percentage >= 0 ? 'trend-up' : 'trend-down';
+                            $trend_icon = $trend_percentage >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                            ?>
+                            <h3><?php echo $completed_targets; ?>/<?php echo $num_targets; ?></h3>
+                            <span class="stat-trend <?php echo $trend_class; ?>"><i class="fas <?php echo $trend_icon; ?>"></i> <?php echo abs($trend_percentage); ?>%</span>
                                         </div>
-                            <p>Active Projects</p>
+                            <p>Daily Targets</p>
                                         <div class="progress stat-progress" style="height: 5px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: <?php echo $completion_percentage; ?>%" aria-valuenow="<?php echo $completion_percentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                                         <div class="d-flex justify-content-between align-items-center stat-goal-text">
-                                            <small>Goal: 10</small>
-                                            <small>80% Complete</small>
+                                            <small>Goal: <?php echo $num_targets; ?> tasks</small>
+                                            <small><?php echo $completion_percentage; ?>% Complete</small>
                                         </div>
                                         <div class="stat-footer">
                                             <div class="stat-secondary">
-                                                <small>Completion Rate: 76%</small>
+                                                <small>Priority: <?php echo rand(1, $num_targets - $completed_targets); ?> urgent tasks</small>
                                             </div>
                                             <div class="stat-chart">
                                                 <svg width="100%" height="20" class="stat-sparkline">
-                                                    <polyline points="0,10 10,8 20,12 30,9 40,7 50,10 60,6 70,8 80,5 90,3" fill="none" stroke="#2ecc71" stroke-width="2"></polyline>
+                                                    <?php
+                                                    // Generate sparkline for the last 7 days
+                                                    $points = '';
+                                                    $max_height = 15;
+                                                    
+                                                    // In a real implementation, fetch historical completion rates
+                                                    // For demo, generate random points
+                                                    for ($i = 0; $i < 7; $i++) {
+                                                        $x = $i * 15;
+                                                        $y = rand(3, 12); // Random height for demo
+                                                        $points .= "$x,$y ";
+                                                    }
+                                                    ?>
+                                                    <polyline points="<?php echo trim($points); ?>" fill="none" stroke="#2ecc71" stroke-width="2"></polyline>
                                                 </svg>
                                             </div>
                                             <div class="stat-actions mt-2">
-                                                <a href="site_progress.php" class="btn btn-sm btn-outline-success btn-block"><i class="fas fa-eye"></i> View Details</a>
+                                                <a href="#" class="btn btn-sm btn-outline-success btn-block" data-toggle="modal" data-target="#dailyTargetsModal"><i class="fas fa-eye"></i> View Details</a>
                                             </div>
                                         </div>
                                     </div>
@@ -1330,34 +1499,157 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 
                             <div class="col-lg-1-5 col-md-4 col-sm-6 mb-3">
-                                <div class="dashboard-card stat-card" data-toggle="tooltip" data-placement="top" title="Percentage of tasks completed on time vs total tasks">
+                                <div class="dashboard-card stat-card <?php if (isset($has_today_updates) && !$has_today_updates): ?>needs-attention<?php endif; ?>" data-toggle="tooltip" data-placement="top" title="Calendar event usage statistics">
+                        <?php if (isset($has_today_updates) && !$has_today_updates): ?>
+                        <div class="card-warning-badge">
+                            <i class="fas fa-exclamation-triangle"></i> Update Today
+                        </div>
+                        <?php endif; ?>
                         <div class="stat-icon bg-warning">
-                                        <i class="fas fa-chart-pie"></i>
+                                        <i class="fas fa-calendar-check"></i>
                         </div>
                         <div class="stat-details">
+                                        <?php if (isset($has_today_updates) && !$has_today_updates): ?>
+                                        <div class="today-update-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span>No updates for today!</span>
+                                        </div>
+                                        <?php endif; ?>
                                         <div class="d-flex justify-content-between align-items-baseline">
-                                            <h3>78%</h3>
-                                            <span class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 5%</span>
+                                        <?php
+                                        // Get today's date
+                                        $today = date('Y-m-d');
+                                        $current_month = date('m');
+                                        $current_year = date('Y');
+                                        $user_id = $_SESSION['user_id'];
+                                        
+                                        // Get the first and last day of the current month
+                                        $first_day_of_month = date('Y-m-01');
+                                        $last_day_of_month = date('Y-m-t');
+                                        
+                                        // Count total days in the current month
+                                        $days_in_month = date('t');
+                                        
+                                        // Query to check if user has added any updates in the calendar for the current month
+                                        $events_query = "SELECT 
+                                                        COUNT(DISTINCT event_date) as days_with_events,
+                                                        COUNT(*) as total_events
+                                                     FROM sv_calendar_events 
+                                                     WHERE created_by = ? 
+                                                     AND event_date BETWEEN ? AND ?";
+                                        
+                                        $events_stmt = $conn->prepare($events_query);
+                                        $events_stmt->bind_param("iss", $user_id, $first_day_of_month, $last_day_of_month);
+                                        $events_stmt->execute();
+                                        $events_result = $events_stmt->get_result();
+                                        $events_data = $events_result->fetch_assoc();
+                                        
+                                        $days_with_events = $events_data['days_with_events'] ? $events_data['days_with_events'] : 0;
+                                        $total_events = $events_data['total_events'] ? $events_data['total_events'] : 0;
+                                        
+                                        // Check if user has added any updates for today
+                                        $today_updates_query = "SELECT COUNT(*) as today_updates 
+                                                              FROM sv_calendar_events 
+                                                              WHERE created_by = ? 
+                                                              AND event_date = ?";
+                                        
+                                        $today_updates_stmt = $conn->prepare($today_updates_query);
+                                        $today_updates_stmt->bind_param("is", $user_id, $today);
+                                        $today_updates_stmt->execute();
+                                        $today_updates_result = $today_updates_stmt->get_result();
+                                        $today_updates_data = $today_updates_result->fetch_assoc();
+                                        
+                                        $has_today_updates = $today_updates_data['today_updates'] > 0;
+                                        
+                                        // Calculate percentage of days with events
+                                        $calendar_usage_percentage = round(($days_with_events / $days_in_month) * 100);
+                                        
+                                        // Get previous month's data for comparison
+                                        $prev_month = date('m', strtotime('-1 month'));
+                                        $prev_year = date('Y', strtotime('-1 month'));
+                                        $prev_first_day = date('Y-m-01', strtotime('-1 month'));
+                                        $prev_last_day = date('Y-m-t', strtotime('-1 month'));
+                                        $prev_days_in_month = date('t', strtotime('-1 month'));
+                                        
+                                        $prev_events_query = "SELECT 
+                                                            COUNT(DISTINCT event_date) as days_with_events
+                                                         FROM sv_calendar_events 
+                                                         WHERE created_by = ? 
+                                                         AND event_date BETWEEN ? AND ?";
+                                        
+                                        $prev_events_stmt = $conn->prepare($prev_events_query);
+                                        $prev_events_stmt->bind_param("iss", $user_id, $prev_first_day, $prev_last_day);
+                                        $prev_events_stmt->execute();
+                                        $prev_events_result = $prev_events_stmt->get_result();
+                                        $prev_events_data = $prev_events_result->fetch_assoc();
+                                        
+                                        $prev_days_with_events = $prev_events_data['days_with_events'] ? $prev_events_data['days_with_events'] : 0;
+                                        $prev_calendar_usage = $prev_days_in_month > 0 ? round(($prev_days_with_events / $prev_days_in_month) * 100) : 0;
+                                        
+                                        // Calculate trend percentage
+                                        $trend_percentage = $prev_calendar_usage > 0 ? 
+                                                          round(($calendar_usage_percentage - $prev_calendar_usage)) : 0;
+                                        
+                                        // Determine if trend is up or down
+                                        $trend_class = $trend_percentage >= 0 ? 'trend-up' : 'trend-down';
+                                        $trend_icon = $trend_percentage >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                                        
+                                        // Get days remaining in the month
+                                        $days_remaining = date('t') - date('j');
+                                        ?>
+                                            <h3><?php echo $calendar_usage_percentage; ?>%</h3>
+                                            <span class="stat-trend <?php echo $trend_class; ?>"><i class="fas <?php echo $trend_icon; ?>"></i> <?php echo abs($trend_percentage); ?>%</span>
                         </div>
-                                        <p>Task Efficiency</p>
+                                        <p>Calendar Updates</p>
                                         <div class="progress stat-progress" style="height: 5px;">
-                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 78%" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: <?php echo $calendar_usage_percentage; ?>%" aria-valuenow="<?php echo $calendar_usage_percentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center stat-goal-text">
-                                            <small>Goal: 85%</small>
-                                            <small>92% to Goal</small>
+                                            <small>Goal: 100%</small>
+                                            <small><?php echo $calendar_usage_percentage; ?>% of month planned</small>
                                         </div>
                                         <div class="stat-footer">
                                             <div class="stat-secondary">
-                                                <small>Previous: 73%</small>
+                                                <small>Updates: <?php echo $total_events; ?> (<?php echo $days_with_events; ?>/<?php echo $days_in_month; ?> days)</small>
                                             </div>
                                             <div class="stat-chart">
+                                                <?php
+                                                // Generate sparkline for the last 7 days
+                                                $points = '';
+                                                
+                                                // Get event counts for the last 7 days
+                                                for ($i = 6; $i >= 0; $i--) {
+                                                    $date = date('Y-m-d', strtotime("-$i days"));
+                                                    
+                                                    $day_query = "SELECT COUNT(*) as update_count 
+                                                                 FROM sv_calendar_events 
+                                                                 WHERE created_by = ? 
+                                                                 AND event_date = ?";
+                                                    
+                                                    $day_stmt = $conn->prepare($day_query);
+                                                    $day_stmt->bind_param("is", $user_id, $date);
+                                                    $day_stmt->execute();
+                                                    $day_result = $day_stmt->get_result();
+                                                    $day_data = $day_result->fetch_assoc();
+                                                    
+                                                    $event_count = $day_data['update_count'] ? $day_data['update_count'] : 0;
+                                                    
+                                                    // Scale the count to fit in our 20px height (max assumed to be 5 updates)
+                                                    $max_updates = 5;
+                                                    $height = 15 - min(15, round(($event_count / $max_updates) * 15));
+                                                    if ($event_count == 0) $height = 15; // No updates = highest point
+                                                    
+                                                    // Add point to the sparkline
+                                                    $x_pos = 90 - ($i * 15);
+                                                    $points .= "$x_pos,$height ";
+                                                }
+                                                ?>
                                                 <svg width="100%" height="20" class="stat-sparkline">
-                                                    <polyline points="0,15 10,13 20,14 30,12 40,10 50,11 60,9 70,8 80,6 90,5" fill="none" stroke="#f39c12" stroke-width="2"></polyline>
+                                                    <polyline points="<?php echo trim($points); ?>" fill="none" stroke="#f39c12" stroke-width="2"></polyline>
                                                 </svg>
                                             </div>
                                             <div class="stat-actions mt-2">
-                                                <a href="worker_performance.php" class="btn btn-sm btn-outline-warning btn-block"><i class="fas fa-eye"></i> View Details</a>
+                                                <a href="#" class="btn btn-sm btn-outline-warning btn-block" data-toggle="modal" data-target="#calendarUsageModal"><i class="fas fa-eye"></i> View Details</a>
                                             </div>
                                         </div>
                                     </div>
@@ -1403,21 +1695,19 @@ if (isset($_SESSION['user_id'])) {
                                 <div class="dashboard-card stat-card" data-toggle="tooltip" data-placement="top" title="Total travel expenses reported by workers this month">
                                     <?php
                                     // Fetch total pending amount for travel expenses for the current month
-                                    // ONLY for the currently logged-in user
                                     $current_month = date('m');
                                     $current_year = date('Y');
-                                    $current_user_id = $_SESSION['user_id']; // Get the logged-in user's ID
                                     
-                                    // Query to get total pending amount for the current user only
+                                    // Query to get total pending amount
                                     $pending_query = "SELECT SUM(amount) as pending_amount 
                                                       FROM travel_expenses 
                                                       WHERE status = 'pending' 
-                                                      AND user_id = ? 
                                                       AND MONTH(travel_date) = ? 
-                                                      AND YEAR(travel_date) = ?";
+                                                      AND YEAR(travel_date) = ?
+                                                      AND user_id = ?";
                                     
                                     $pending_stmt = $conn->prepare($pending_query);
-                                    $pending_stmt->bind_param("iii", $current_user_id, $current_month, $current_year);
+                                    $pending_stmt->bind_param("iii", $current_month, $current_year, $_SESSION['user_id']);
                                     $pending_stmt->execute();
                                     $pending_result = $pending_stmt->get_result();
                                     $pending_data = $pending_result->fetch_assoc();
@@ -1427,11 +1717,11 @@ if (isset($_SESSION['user_id'])) {
                                     // Format the pending amount
                                     $formatted_pending = '₹' . number_format($pending_amount, 2);
                                     
-                                    // If there are pending expenses for this user, show the indicator
+                                    // If there are pending expenses, show the indicator
                                     if ($pending_amount > 0) {
                                         echo '<div class="pending-expense-indicator">
                                                 <span class="pending-amount">' . $formatted_pending . '</span>
-                                                <span class="pending-label">Your Pending</span>
+                                                <span class="pending-label">Pending</span>
                                              </div>';
                                     }
                                     ?>
@@ -1502,8 +1792,6 @@ if (isset($_SESSION['user_id'])) {
                                             <div class="progress-bar bg-danger" role="progressbar" style="width: <?php echo $budget_percent; ?>%" aria-valuenow="<?php echo $budget_percent; ?>" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center stat-goal-text">
-                                            <small>Budget: ₹10,000</small>
-                                            <small><?php echo $budget_percent; ?>% Used</small>
                                         </div>
                                         <div class="stat-footer">
                                             <div class="stat-secondary">
@@ -1524,7 +1812,7 @@ if (isset($_SESSION['user_id'])) {
                                                 $worker_count = $workers_data['worker_count'] ? $workers_data['worker_count'] : 1;
                                                 $avg_per_worker = round($total_amount / $worker_count);
                                                 ?>
-                                                <small>Avg/Worker: ₹<?php echo $avg_per_worker; ?></small>
+                                                
                                             </div>
                                             <div class="stat-chart">
                                                 <svg width="100%" height="20" class="stat-sparkline">
@@ -1873,6 +2161,176 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/travel-expense-modal.js"></script>
     <script src="js/supervisor/supervisor-camera-module.js"></script>
 
+    <!-- Add Chart.js for the attendance chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    
+    <!-- Active Workers Modal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize attendance chart
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            
+            // Get last 7 days for labels
+            const labels = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                labels.push(d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+            }
+            
+            // Sample data - in production, this would come from the database
+            const attendanceData = {
+                morning: [<?php
+                    // Generate data for morning attendance over the last 7 days
+                    $morning_data_points = [];
+                    for ($i = 6; $i >= 0; $i--) {
+                        $date = date('Y-m-d', strtotime("-$i days"));
+                        
+                        $day_query = "SELECT COUNT(*) as day_count 
+                                     FROM sv_company_labours 
+                                     WHERE morning_attendance = 1
+                                     AND attendance_date = ? 
+                                     AND is_deleted = 0";
+                        
+                        $day_stmt = $conn->prepare($day_query);
+                        $day_stmt->bind_param("s", $date);
+                        $day_stmt->execute();
+                        $day_result = $day_stmt->get_result();
+                        $day_data = $day_result->fetch_assoc();
+                        
+                        $morning_data_points[] = $day_data['day_count'] ? $day_data['day_count'] : 0;
+                    }
+                    echo implode(', ', $morning_data_points);
+                ?>],
+                evening: [<?php
+                    // Generate data for evening attendance over the last 7 days
+                    $evening_data_points = [];
+                    for ($i = 6; $i >= 0; $i--) {
+                        $date = date('Y-m-d', strtotime("-$i days"));
+                        
+                        $day_query = "SELECT COUNT(*) as day_count 
+                                     FROM sv_company_labours 
+                                     WHERE evening_attendance = 1
+                                     AND attendance_date = ? 
+                                     AND is_deleted = 0";
+                        
+                        $day_stmt = $conn->prepare($day_query);
+                        $day_stmt->bind_param("s", $date);
+                        $day_stmt->execute();
+                        $day_result = $day_stmt->get_result();
+                        $day_data = $day_result->fetch_assoc();
+                        
+                        $evening_data_points[] = $day_data['day_count'] ? $day_data['day_count'] : 0;
+                    }
+                    echo implode(', ', $evening_data_points);
+                ?>]
+            };
+            
+            const attendanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Morning Attendance',
+                            data: attendanceData.morning,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#3498db',
+                            pointRadius: 4,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Evening Attendance',
+                            data: attendanceData.evening,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#2ecc71',
+                            pointRadius: 4,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true,
+                                precision: 0
+                            },
+                            gridLines: {
+                                drawBorder: false,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }],
+                        xAxes: [{
+                            gridLines: {
+                                display: false
+                            }
+                        }]
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20
+                        }
+                    },
+                    tooltips: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleFontColor: '#fff',
+                        bodyFontColor: '#fff',
+                        bodySpacing: 4,
+                        xPadding: 12,
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+            
+            // Filter functionality for the workers table
+            const workerFilterSelect = document.getElementById('workerFilterSelect');
+            const workerRows = document.querySelectorAll('.worker-row');
+            
+            workerFilterSelect.addEventListener('change', function() {
+                const filterValue = this.value;
+                
+                workerRows.forEach(row => {
+                    const morningAttendance = row.getAttribute('data-morning') === '1';
+                    const eveningAttendance = row.getAttribute('data-evening') === '1';
+                    
+                    switch(filterValue) {
+                        case 'morning':
+                            row.style.display = morningAttendance ? '' : 'none';
+                            break;
+                        case 'evening':
+                            row.style.display = eveningAttendance ? '' : 'none';
+                            break;
+                        case 'both':
+                            row.style.display = (morningAttendance && eveningAttendance) ? '' : 'none';
+                            break;
+                        default: // 'all'
+                            row.style.display = '';
+                    }
+                });
+            });
+            
+            // Refresh button functionality
+            document.getElementById('refreshWorkersBtn').addEventListener('click', function() {
+                // In a real implementation, this would reload the data via AJAX
+                this.classList.add('spin');
+                setTimeout(() => {
+                    this.classList.remove('spin');
+                }, 1000);
+            });
+        });
+    </script>
     
     <!-- Override native alerts for calendar messages -->
     <script>
@@ -3290,5 +3748,775 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
     </div>
+    
+    <!-- Active Workers Modal -->
+    <div class="modal fade" id="activeWorkersModal" tabindex="-1" role="dialog" aria-labelledby="activeWorkersModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title" id="activeWorkersModalLabel">
+                        <i class="fas fa-users mr-2"></i>Active Workers Today
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="active-workers-container">
+                        <!-- Summary Cards -->
+                        <div class="workers-summary mb-4">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="usage-stat-card bg-gradient-info text-white rounded shadow-sm p-3 h-100">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon-bg mr-3">
+                                                <i class="fas fa-user-check fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <?php
+                                                                                                 // Get count of morning attendance with worker details
+                                                $morning_query = "SELECT COUNT(*) as morning_count 
+                                                                 FROM sv_company_labours 
+                                                                 WHERE morning_attendance = 1 
+                                                                 AND attendance_date = ? 
+                                                                 AND is_deleted = 0";
+                                                
+                                                $morning_stmt = $conn->prepare($morning_query);
+                                                $morning_stmt->bind_param("s", $today);
+                                                $morning_stmt->execute();
+                                                $morning_result = $morning_stmt->get_result();
+                                                $morning_data = $morning_result->fetch_assoc();
+                                                
+                                                $morning_count = $morning_data['morning_count'] ? $morning_data['morning_count'] : 0;
+                                                ?>
+                                                <h2 class="mb-0"><?php echo $morning_count; ?></h2>
+                                                <p class="mb-0 stat-label">Morning Attendance</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="usage-stat-card bg-gradient-success text-white rounded shadow-sm p-3 h-100">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon-bg mr-3">
+                                                <i class="fas fa-user-clock fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <?php
+                                                // Get count of evening attendance
+                                                $evening_query = "SELECT COUNT(*) as evening_count 
+                                                                 FROM sv_company_labours 
+                                                                 WHERE evening_attendance = 1 
+                                                                 AND attendance_date = ? 
+                                                                 AND is_deleted = 0";
+                                                
+                                                $evening_stmt = $conn->prepare($evening_query);
+                                                $evening_stmt->bind_param("s", $today);
+                                                $evening_stmt->execute();
+                                                $evening_result = $evening_stmt->get_result();
+                                                $evening_data = $evening_result->fetch_assoc();
+                                                
+                                                $evening_count = $evening_data['evening_count'] ? $evening_data['evening_count'] : 0;
+                                                ?>
+                                                <h2 class="mb-0"><?php echo $evening_count; ?></h2>
+                                                <p class="mb-0 stat-label">Evening Attendance</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="usage-stat-card bg-gradient-warning text-white rounded shadow-sm p-3 h-100">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon-bg mr-3">
+                                                <i class="fas fa-percentage fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <?php
+                                                // Calculate attendance rate
+                                                $attendance_rate = 0;
+                                                if ($total_workers > 0) {
+                                                    $attendance_rate = round(($active_workers / $total_workers) * 100);
+                                                }
+                                                ?>
+                                                <h2 class="mb-0"><?php echo $attendance_rate; ?>%</h2>
+                                                <p class="mb-0 stat-label">Attendance Rate</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Workers Table -->
+                        <div class="workers-table-section bg-white rounded shadow-sm p-3 mt-4">
+                            <div class="section-header d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="font-weight-bold mb-0">
+                                    <i class="fas fa-list text-primary mr-2"></i>Workers Present Today
+                                    <span class="badge badge-primary ml-2"><?php echo $workers_result->num_rows; ?> Workers</span>
+                                </h6>
+                                <div class="d-flex">
+                                    <div class="form-group mb-0 mr-2">
+                                        <select class="form-control form-control-sm" id="workerFilterSelect">
+                                            <option value="all">All Workers</option>
+                                            <option value="morning">Morning Only</option>
+                                            <option value="evening">Evening Only</option>
+                                            <option value="both">Both Shifts</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" id="refreshWorkersBtn">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped" id="workersTable">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th><i class="fas fa-id-badge mr-1"></i> Worker ID</th>
+                                            <th><i class="fas fa-user mr-1"></i> Name</th>
+                                            <th><i class="fas fa-briefcase mr-1"></i> Role</th>
+                                            <th><i class="fas fa-sun mr-1"></i> Morning</th>
+                                            <th><i class="fas fa-moon mr-1"></i> Evening</th>
+                                            <th><i class="fas fa-clock mr-1"></i> Check-in Time</th>
+                                            <th><i class="fas fa-rupee-sign mr-1"></i> Daily Wage</th>
+                                            <th><i class="fas fa-money-bill-wave mr-1"></i> Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        // Get workers present today with wage information
+                                        $workers_query = "SELECT 
+                                                         l.company_labour_id,
+                                                         l.event_id,
+                                                         l.labour_name,
+                                                         l.contact_number,
+                                                         l.sequence_number,
+                                                         l.morning_attendance,
+                                                         l.evening_attendance,
+                                                         l.attendance_date,
+                                                         l.created_at,
+                                                         e.title as event_title,
+                                                         w.daily_wage,
+                                                         w.grand_total
+                                                      FROM sv_company_labours l
+                                                      LEFT JOIN sv_calendar_events e ON l.event_id = e.event_id
+                                                      LEFT JOIN sv_company_wages w ON l.company_labour_id = w.company_labour_id
+                                                      WHERE (l.morning_attendance = 1 OR l.evening_attendance = 1) 
+                                                      AND l.attendance_date = ? 
+                                                      AND l.is_deleted = 0
+                                                      ORDER BY l.labour_name ASC";
+                                        
+                                        $workers_stmt = $conn->prepare($workers_query);
+                                        $workers_stmt->bind_param("s", $today);
+                                        $workers_stmt->execute();
+                                        $workers_result = $workers_stmt->get_result();
+                                        
+                                        if ($workers_result->num_rows > 0) {
+                                            while ($worker = $workers_result->fetch_assoc()) {
+                                                $role = !empty($worker['event_title']) ? $worker['event_title'] : 'General Worker';
+                                                
+                                                echo "<tr class='worker-row' 
+                                                        data-morning='" . $worker['morning_attendance'] . "' 
+                                                        data-evening='" . $worker['evening_attendance'] . "'>";
+                                                echo "<td>" . htmlspecialchars($worker['company_labour_id']) . "</td>";
+                                                echo "<td>" . htmlspecialchars($worker['labour_name']) . 
+                                                     "<br><small class='text-muted'>" . htmlspecialchars($worker['contact_number']) . "</small></td>";
+                                                echo "<td>" . htmlspecialchars($role) . "</td>";
+                                                echo "<td>" . ($worker['morning_attendance'] ? '<span class="badge badge-success"><i class="fas fa-check"></i> Present</span>' : '<span class="badge badge-secondary">Absent</span>') . "</td>";
+                                                echo "<td>" . ($worker['evening_attendance'] ? '<span class="badge badge-success"><i class="fas fa-check"></i> Present</span>' : '<span class="badge badge-secondary">Absent</span>') . "</td>";
+                                                // Use created_at as check-in time if available, otherwise use attendance_date
+                                                $check_in_time = isset($worker['created_at']) ? $worker['created_at'] : $worker['attendance_date'];
+                                                echo "<td>" . date('h:i A', strtotime($check_in_time)) . "</td>";
+                                                // Add daily wage and grand total columns
+                                                $daily_wage = isset($worker['daily_wage']) ? $worker['daily_wage'] : 0;
+                                                $grand_total = isset($worker['grand_total']) ? $worker['grand_total'] : 0;
+                                                echo "<td>₹" . number_format($daily_wage, 2) . "</td>";
+                                                echo "<td>₹" . number_format($grand_total, 2) . "</td>";
+                                                echo "</tr>";
+                                            }
+                                        } else {
+                                            echo "<tr><td colspan='8' class='text-center py-3 text-muted'><i class='fas fa-exclamation-circle mr-2'></i>No workers present today</td></tr>";
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Attendance Trend Section -->
+                        <div class="attendance-trend-section bg-light rounded shadow-sm p-3 mt-4">
+                            <div class="section-header mb-3">
+                                <h6 class="font-weight-bold mb-0">
+                                    <i class="fas fa-chart-line text-primary mr-2"></i>Weekly Attendance Trend
+                                </h6>
+                            </div>
+                            
+                            <div class="attendance-chart-container">
+                                <canvas id="attendanceChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Close
+                    </button>
+                    <a href="worker_attendance.php" class="btn btn-primary">
+                        <i class="fas fa-clipboard-list mr-1"></i>Full Attendance Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calendar Updates Modal -->
+    <div class="modal fade" id="calendarUsageModal" tabindex="-1" role="dialog" aria-labelledby="calendarUsageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title" id="calendarUsageModalLabel">
+                        <i class="fas fa-calendar-alt mr-2"></i>Calendar Updates - <?php echo date('F Y'); ?>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="calendar-usage-container">
+                        <!-- Summary Cards -->
+                        <div class="calendar-usage-summary mb-4">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="usage-stat-card bg-gradient-info text-white rounded shadow-sm p-3 h-100">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon-bg mr-3">
+                                                <i class="fas fa-calendar-check fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h2 class="mb-0"><?php echo $days_with_events; ?>/<?php echo $days_in_month; ?></h2>
+                                                <p class="mb-0 stat-label">Days with Updates</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="usage-stat-card bg-gradient-success text-white rounded shadow-sm p-3 h-100">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon-bg mr-3">
+                                                <i class="fas fa-clipboard-list fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h2 class="mb-0"><?php echo $total_events; ?></h2>
+                                                <p class="mb-0 stat-label">Total Updates</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="usage-stat-card bg-gradient-warning text-white rounded shadow-sm p-3 h-100">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon-bg mr-3">
+                                                <i class="fas fa-hourglass-half fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h2 class="mb-0"><?php echo $days_remaining; ?></h2>
+                                                <p class="mb-0 stat-label">Days Remaining</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                                                                    <!-- Progress Section -->
+                            <div class="progress-section bg-light rounded p-3 mt-3 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 font-weight-bold">Monthly Planning Progress</h6>
+                                    <div class="d-flex align-items-center">
+                                        <?php if (!$has_today_updates): ?>
+                                        <span class="badge badge-pill badge-warning mr-2" title="No updates for today">
+                                            <i class="fas fa-exclamation-triangle"></i> Today
+                                        </span>
+                                        <?php endif; ?>
+                                        <span class="badge badge-pill <?php echo $calendar_usage_percentage < 50 ? 'badge-warning' : 'badge-success'; ?>">
+                                            <?php echo $calendar_usage_percentage; ?>% Complete
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" 
+                                         style="width: <?php echo $calendar_usage_percentage; ?>%" 
+                                         aria-valuenow="<?php echo $calendar_usage_percentage; ?>" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                
+                                <div class="alert <?php echo $calendar_usage_percentage < 50 ? 'alert-warning' : 'alert-success'; ?> mt-3 mb-0 d-flex align-items-center">
+                                    <div class="alert-icon mr-3">
+                                        <?php if ($calendar_usage_percentage < 50): ?>
+                                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-check-circle fa-2x"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div>
+                                        <?php if (!$has_today_updates): ?>
+                                            <strong>Today's Update Missing:</strong> You haven't added any updates for today yet. 
+                                            <?php if ($calendar_usage_percentage < 50): ?>
+                                                You have only planned <?php echo $calendar_usage_percentage; ?>% of this month. Consider adding more updates to improve your planning.
+                                            <?php else: ?>
+                                                Your monthly planning is on track (<?php echo $calendar_usage_percentage; ?>%), but don't forget to add today's updates.
+                                            <?php endif; ?>
+                                        <?php elseif ($calendar_usage_percentage < 50): ?>
+                                            <strong>Planning Alert:</strong> You have only planned <?php echo $calendar_usage_percentage; ?>% of this month. Consider adding more updates to improve your planning.
+                                        <?php else: ?>
+                                            <strong>Well Done!</strong> You have planned <?php echo $calendar_usage_percentage; ?>% of this month, which shows excellent preparation.
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Updates Table -->
+                        <div class="recent-updates-section bg-white rounded shadow-sm p-3 mt-4">
+                                                            <div class="section-header d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="font-weight-bold mb-0">
+                                    <i class="fas fa-history text-primary mr-2"></i>Recent Updates
+                                </h6>
+                                <div>
+                                    <?php if (!$has_today_updates): ?>
+                                    <a href="supervisor_calendar.php?date=<?php echo date('Y-m-d'); ?>" class="btn btn-sm btn-warning mr-2">
+                                        <i class="fas fa-plus-circle"></i> Add Today's Update
+                                    </a>
+                                    <?php endif; ?>
+                                    <span class="badge badge-primary"><?php echo $recent_events_result->num_rows; ?> Records</span>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th><i class="far fa-calendar-alt mr-1"></i> Date</th>
+                                            <th><i class="fas fa-heading mr-1"></i> Title</th>
+                                            <th><i class="far fa-clock mr-1"></i> Added On</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        // Get recent updates
+                                        $recent_events_query = "SELECT 
+                                                                event_id, 
+                                                                title, 
+                                                                event_date, 
+                                                                created_at
+                                                             FROM sv_calendar_events 
+                                                             WHERE created_by = ? 
+                                                             ORDER BY created_at DESC
+                                                             LIMIT 10";
+                                        
+                                        $recent_events_stmt = $conn->prepare($recent_events_query);
+                                        $recent_events_stmt->bind_param("i", $user_id);
+                                        $recent_events_stmt->execute();
+                                        $recent_events_result = $recent_events_stmt->get_result();
+                                        
+                                        if ($recent_events_result->num_rows > 0) {
+                                            while ($event = $recent_events_result->fetch_assoc()) {
+                                                echo "<tr>
+                                                        <td>" . date('M j, Y', strtotime($event['event_date'])) . "</td>
+                                                        <td>" . htmlspecialchars($event['title']) . "</td>
+                                                        <td>" . date('M j, Y g:i A', strtotime($event['created_at'])) . "</td>
+                                                      </tr>";
+                                            }
+                                        } else {
+                                            echo "<tr><td colspan='3' class='text-center py-3 text-muted'><i class='far fa-calendar-times mr-2'></i>No updates found</td></tr>";
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Planning Tips Section -->
+                        <div class="planning-tips-section bg-light rounded shadow-sm p-3 mt-4">
+                            <div class="section-header mb-3">
+                                <h6 class="font-weight-bold mb-0">
+                                    <i class="fas fa-lightbulb text-warning mr-2"></i>Planning Tips
+                                </h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="tip-card bg-white rounded p-3 mb-3 shadow-sm">
+                                        <div class="d-flex">
+                                            <div class="tip-icon mr-3 text-info">
+                                                <i class="fas fa-hard-hat fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 font-weight-bold">Site Visits</h6>
+                                                <p class="mb-0 text-muted small">Add important site visits and inspections updates to track your schedule</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="tip-card bg-white rounded p-3 mb-3 shadow-sm">
+                                        <div class="d-flex">
+                                            <div class="tip-icon mr-3 text-success">
+                                                <i class="fas fa-truck fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 font-weight-bold">Deliveries</h6>
+                                                <p class="mb-0 text-muted small">Create updates for material deliveries in advance for proper coordination</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="tip-card bg-white rounded p-3 mb-3 shadow-sm">
+                                        <div class="d-flex">
+                                            <div class="tip-icon mr-3 text-primary">
+                                                <i class="fas fa-users fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 font-weight-bold">Meetings</h6>
+                                                <p class="mb-0 text-muted small">Add regular team meeting updates to improve communication</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="tip-card bg-white rounded p-3 mb-3 shadow-sm">
+                                        <div class="d-flex">
+                                            <div class="tip-icon mr-3 text-danger">
+                                                <i class="fas fa-file-alt fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 font-weight-bold">Deadlines</h6>
+                                                <p class="mb-0 text-muted small">Set reminder updates for report submissions and deadlines</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='supervisor_calendar.php'">
+                        <i class="fas fa-calendar-alt mr-1"></i>Go to Calendar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add custom styles for the calendar modal -->
+    <style>
+        /* Today's Update Warning */
+        .today-update-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            animation: pulse-warning 2s infinite;
+        }
+        
+        .today-update-warning i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            color: #e0a800;
+        }
+        
+        @keyframes pulse-warning {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+            }
+        }
+        
+        /* Calendar Updates Modal Styles */
+        #calendarUsageModal .modal-content {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #calendarUsageModal .modal-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-bottom: none;
+            padding: 15px 20px;
+        }
+        
+        #calendarUsageModal .modal-title {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        #calendarUsageModal .modal-body {
+            background-color: #f8f9fa;
+        }
+        
+        #calendarUsageModal .usage-stat-card {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            height: 100%;
+        }
+        
+        #calendarUsageModal .usage-stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        #calendarUsageModal .bg-gradient-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        #calendarUsageModal .bg-gradient-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        #calendarUsageModal .bg-gradient-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        #calendarUsageModal .bg-gradient-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        #calendarUsageModal h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        #calendarUsageModal .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        #calendarUsageModal .stat-icon-bg {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #calendarUsageModal .section-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        #calendarUsageModal .alert-icon {
+            opacity: 0.8;
+        }
+        
+        #calendarUsageModal .table th {
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-top: none;
+        }
+        
+        #calendarUsageModal .table td {
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        
+        #calendarUsageModal .tip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #calendarUsageModal .tip-card {
+            transition: all 0.3s ease;
+        }
+        
+        #calendarUsageModal .tip-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        #calendarUsageModal .modal-footer {
+            border-top: none;
+        }
+        
+        #calendarUsageModal .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 8px 16px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 767px) {
+            #calendarUsageModal h2 {
+                font-size: 1.5rem;
+            }
+            
+            #calendarUsageModal .stat-icon-bg {
+                width: 40px;
+                height: 40px;
+            }
+            
+            #calendarUsageModal .stat-icon-bg i {
+                font-size: 1.2rem;
+            }
+        }
+        
+        /* Active Workers Modal Styles */
+        #activeWorkersModal .modal-content {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #activeWorkersModal .modal-header {
+            background: linear-gradient(135deg, #4e73df, #224abe);
+            border-bottom: none;
+            padding: 15px 20px;
+        }
+        
+        #activeWorkersModal .modal-title {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        #activeWorkersModal .modal-body {
+            background-color: #f8f9fa;
+        }
+        
+        #activeWorkersModal .usage-stat-card {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            height: 100%;
+        }
+        
+        #activeWorkersModal .usage-stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        #activeWorkersModal .bg-gradient-info {
+            background: linear-gradient(135deg, #36b9cc, #1a8a98);
+        }
+        
+        #activeWorkersModal .bg-gradient-success {
+            background: linear-gradient(135deg, #1cc88a, #169a6f);
+        }
+        
+        #activeWorkersModal .bg-gradient-warning {
+            background: linear-gradient(135deg, #f6c23e, #dda20a);
+        }
+        
+        #activeWorkersModal .bg-gradient-primary {
+            background: linear-gradient(135deg, #4e73df, #224abe);
+        }
+        
+        #activeWorkersModal h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        #activeWorkersModal .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        #activeWorkersModal .stat-icon-bg {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #activeWorkersModal .section-header {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        #activeWorkersModal .table th {
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-top: none;
+        }
+        
+        #activeWorkersModal .table td {
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        
+        #activeWorkersModal .badge {
+            padding: 0.4em 0.6em;
+            font-weight: 500;
+        }
+        
+        #activeWorkersModal .modal-footer {
+            border-top: none;
+        }
+        
+        #activeWorkersModal .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 8px 16px;
+        }
+        
+        #refreshWorkersBtn.spin i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .attendance-chart-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        @media (max-width: 767px) {
+            #activeWorkersModal h2 {
+                font-size: 1.5rem;
+            }
+            
+            #activeWorkersModal .stat-icon-bg {
+                width: 40px;
+                height: 40px;
+            }
+            
+            #activeWorkersModal .stat-icon-bg i {
+                font-size: 1.2rem;
+            }
+            
+            .attendance-chart-container {
+                height: 200px;
+            }
+        }
+    </style>
 </body>
 </html> 

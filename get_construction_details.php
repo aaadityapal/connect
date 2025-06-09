@@ -259,4 +259,4 @@ function getLaborDetails($pdo, $site) {
     
     return $response;
 }
-?> 
+?>

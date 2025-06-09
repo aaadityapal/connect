@@ -1324,7 +1324,7 @@ function getTransportIcon($mode) {
             position: relative;
             width: auto;
             margin: 1.75rem auto;
-            max-width: 500px;
+            max-width: 1200px;
             pointer-events: none;
         }
         
@@ -2860,6 +2860,619 @@ function getTransportIcon($mode) {
         .toast-notification.show {
             animation: toast-bounce 0.8s ease forwards;
         }
+
+        /* Enhanced styling for expense rows */
+        .table-responsive table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table-responsive table thead th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+            vertical-align: middle;
+        }
+        
+        .table-responsive table tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table-responsive table tr:hover {
+            background-color: #f8f9fc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .table-responsive table td {
+            vertical-align: middle;
+            padding: 16px 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .employee-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .employee-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .employee-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+        
+        .employee-id {
+            color: #6c757d;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .employee-id:before {
+            content: '#';
+            margin-right: 2px;
+            opacity: 0.6;
+        }
+        
+        .expense-purpose {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .expense-date {
+            color: #6c757d;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .expense-date:before {
+            content: '\f073';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-right: 6px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .transport-mode {
+            display: flex;
+            align-items: center;
+        }
+        
+        .transport-mode i {
+            font-size: 1.1rem;
+            margin-right: 8px;
+            color: #4a6cf7;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .more-expenses-badge {
+            margin-left: 8px;
+            background-color: #4a6cf7;
+            transition: all 0.2s ease;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .more-expenses-badge:hover {
+            background-color: #3a56d7;
+            box-shadow: 0 2px 5px rgba(74, 108, 247, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .expense-amount {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 1rem;
+        }
+        
+        .expense-amount .text-muted {
+            display: block;
+            margin-top: 4px;
+            color: #6c757d;
+            font-weight: normal;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            min-width: 90px;
+        }
+        
+        .status-approved {
+            background-color: #e6f7ef;
+            color: #28a745;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-rejected {
+            background-color: #fbe7e9;
+            color: #dc3545;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-pending {
+            background-color: #fff8dd;
+            color: #ffc107;
+            border: 1px solid #ffe69c;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn {
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            min-width: 76px;
+            margin-bottom: 5px;
+        }
+        
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .action-buttons .approve-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+        
+        .action-buttons .approve-btn:hover {
+            background-color: #218838;
+        }
+        
+        .action-buttons .reject-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        
+        .action-buttons .reject-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .action-buttons .view-details-btn {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+        }
+        
+        .action-buttons .view-details-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .multiple-modes {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .multiple-modes i {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-right: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+            margin-right: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        /* Style for the expense detail layout */
+        .expense-detail .row {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .expense-detail .row:last-child {
+            border-bottom: none;
+        }
+
+        .expense-detail strong {
+            display: inline-block;
+            min-width: 120px;
+            color: var(--dark-gray);
+        }
+
+        /* Enhance grouped expenses modal */
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-header .modal-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #333;
+        }
+        
+        .modal-header .close {
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+        
+        .modal-header .close:hover {
+            opacity: 1;
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .grouped-expenses-list {
+            margin-top: 10px;
+        }
+        
+        .grouped-expenses-list .table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .grouped-expenses-list .table thead th {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .grouped-expenses-list .table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .grouped-expenses-list .table tr:hover {
+            background-color: #f8f9fc;
+        }
+        
+        .expense-row-purpose {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .expense-row-transport {
+            display: flex;
+            align-items: center;
+        }
+        
+        .expense-row-transport i {
+            font-size: 1rem;
+            margin-right: 8px;
+            color: #4a6cf7;
+            width: 18px;
+            text-align: center;
+        }
+        
+        .expense-row-amount {
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .expense-action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+        }
+        
+        .expense-action-buttons .btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .expense-action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .expense-action-buttons .btn-approve {
+            background-color: #e6f7ef;
+            color: #28a745;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .expense-action-buttons .btn-approve:hover {
+            background-color: #d4edda;
+            color: #218838;
+        }
+        
+        .expense-action-buttons .btn-reject {
+            background-color: #fbe7e9;
+            color: #dc3545;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .expense-action-buttons .btn-reject:hover {
+            background-color: #f8d7da;
+            color: #c82333;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #f0f0f0;
+            padding: 16px 20px;
+        }
+        
+        .modal-footer .btn {
+            padding: 8px 16px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .modal-footer .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Enhanced Mobile Card View */
+        .mobile-expense-cards {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .mobile-expense-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .mobile-expense-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-card-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            background-color: #f8f9fa;
+        }
+        
+        .mobile-employee-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-right: 12px;
+        }
+        
+        .mobile-employee-info {
+            flex: 1;
+        }
+        
+        .mobile-employee-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 3px;
+            color: #333;
+        }
+        
+        .mobile-employee-id {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .mobile-expense-amount {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #28a745;
+        }
+        
+        .mobile-expense-count {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 2px;
+            text-align: right;
+        }
+        
+        .mobile-card-body {
+            padding: 15px;
+        }
+        
+        .mobile-expense-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .mobile-expense-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .mobile-expense-label {
+            font-weight: 500;
+            color: #6c757d;
+            font-size: 0.85rem;
+            width: 100px;
+        }
+        
+        .mobile-expense-value {
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+            text-align: right;
+        }
+        
+        .mobile-transport-mode {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .mobile-transport-mode i {
+            font-size: 1rem;
+            margin-right: 8px;
+            color: #4a6cf7;
+        }
+        
+        .mobile-card-footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .mobile-status-badges {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .mobile-action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .mobile-action-buttons .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .mobile-action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-action-buttons .approve-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+        
+        .mobile-action-buttons .reject-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        
+        .mobile-view-details {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+            width: 100%;
+            text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .mobile-view-details:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        
+        /* Improved responsive behavior */
+        @media (max-width: 992px) {
+            .table-responsive {
+                overflow-x: auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive {
+                display: none;
+            }
+            
+            .mobile-expense-cards {
+                display: flex;
+            }
+            
+            .pagination-container {
+                margin-top: 20px;
+            }
+        }
     </style>
     <script>
         // Define togglePanel function globally and early
@@ -3151,7 +3764,6 @@ function getTransportIcon($mode) {
                             <tr>
                                 <th>Employee</th>
                                 <th>Purpose</th>
-                                <th>Mode</th>
                                 <th>Date</th>
                                 <th>Amount</th>
                                 <th>Status</th>
@@ -3163,8 +3775,34 @@ function getTransportIcon($mode) {
                         </thead>
                         <tbody>
                             <?php if (count($pendingExpenses) > 0): ?>
-                                <?php foreach ($pendingExpenses as $expense): ?>
-                                    <?php 
+                                <?php 
+                                // Group expenses by user_id and travel_date
+                                $groupedExpenses = [];
+                                foreach ($pendingExpenses as $expense) {
+                                    $key = $expense['user_id'] . '_' . $expense['travel_date'];
+                                    if (!isset($groupedExpenses[$key])) {
+                                        $groupedExpenses[$key] = [
+                                            'expenses' => [],
+                                            'total_amount' => 0,
+                                            'total_distance' => 0,
+                                            'count' => 0
+                                        ];
+                                    }
+                                    
+                                    $groupedExpenses[$key]['expenses'][] = $expense;
+                                    $groupedExpenses[$key]['total_amount'] += $expense['amount'];
+                                    // Add distance to total (if it exists and is numeric)
+                                    if (isset($expense['distance']) && is_numeric($expense['distance'])) {
+                                        $groupedExpenses[$key]['total_distance'] += $expense['distance'];
+                                    }
+                                    $groupedExpenses[$key]['count']++;
+                                }
+                                
+                                foreach ($groupedExpenses as $group): 
+                                    // Use the first expense in the group as the main display item
+                                    $expense = $group['expenses'][0];
+                                    $additionalCount = $group['count'] - 1;
+                                    
                                     // Prepare profile picture URL
                                     $profilePic = "assets/images/no-image.png"; // Default image
                                     
@@ -3196,8 +3834,12 @@ function getTransportIcon($mode) {
                                     
                                     // Prepare employee ID
                                     $employeeId = !empty($expense['employee_id']) ? $expense['employee_id'] : 'EMP-'.rand(1000,9999);
+                                    
+                                    // Prepare expense IDs for multiple selection
+                                    $expenseIds = array_map(function($e) { return $e['id']; }, $group['expenses']);
+                                    $expenseIdsJson = json_encode($expenseIds);
                                     ?>
-                                    <tr data-id="<?php echo $expense['id']; ?>">
+                                    <tr data-id="<?php echo $expense['id']; ?>" data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
                                         <td>
                                             <div class="employee-info">
                                                 <img src="<?php echo htmlspecialchars($profilePic); ?>" 
@@ -3211,7 +3853,12 @@ function getTransportIcon($mode) {
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="expense-purpose"><?php echo htmlspecialchars($expense['purpose']); ?></div>
+                                            <div class="expense-purpose">
+                                                <?php echo htmlspecialchars($expense['purpose']); ?>
+                                                <?php if ($additionalCount > 0): ?>
+                                                    <span class="badge badge-primary more-expenses-badge" data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>' style="cursor: pointer;">+<?php echo $additionalCount; ?> more</span>
+                                                <?php endif; ?>
+                                            </div>
                                             <div class="expense-date">
                                                 <?php 
                                                     $date = new DateTime($expense['travel_date']);
@@ -3219,14 +3866,13 @@ function getTransportIcon($mode) {
                                                 ?>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div class="transport-mode">
-                                                <i class="fas <?php echo getTransportIcon($expense['mode_of_transport']); ?>"></i>
-                                                <span><?php echo htmlspecialchars($expense['mode_of_transport'] ?? 'N/A'); ?></span>
-                                            </div>
-                                        </td>
                                         <td><?php echo date('M d, Y', strtotime($expense['created_at'] ?? $expense['travel_date'])); ?></td>
-                                        <td class="expense-amount">₹<?php echo number_format($expense['amount'], 2); ?></td>
+                                        <td class="expense-amount">
+                                            ₹<?php echo number_format($group['total_amount'], 2); ?>
+                                            <?php if ($additionalCount > 0): ?>
+                                                <div class="text-muted small">(<?php echo $group['count']; ?> expenses)</div>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><span class="status-badge status-<?php echo $expense['status']; ?>"><?php echo ucfirst($expense['status']); ?></span></td>
                                         <td>
                                             <?php
@@ -3251,16 +3897,28 @@ function getTransportIcon($mode) {
                                         </td>
                                         <td>
                                             <div class="action-buttons">
-                                                <button class="btn btn-sm btn-success approve-btn" data-id="<?php echo $expense['id']; ?>">Approve</button>
-                                                <button class="btn btn-sm btn-danger reject-btn" data-id="<?php echo $expense['id']; ?>">Reject</button>
-                                                <button class="btn btn-sm btn-outline view-details-btn" data-id="<?php echo $expense['id']; ?>">Details</button>
+                                                <button class="btn btn-sm btn-success approve-btn" 
+                                                        data-id="<?php echo $expense['id']; ?>"
+                                                        data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
+                                                    Approve<?php echo $additionalCount > 0 ? ' All' : ''; ?>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger reject-btn" 
+                                                        data-id="<?php echo $expense['id']; ?>"
+                                                        data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
+                                                    Reject<?php echo $additionalCount > 0 ? ' All' : ''; ?>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline view-details-btn" 
+                                                        data-id="<?php echo $expense['id']; ?>"
+                                                        data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
+                                                    Details<?php echo $additionalCount > 0 ? ' (' . $group['count'] . ')' : ''; ?>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="10" class="text-center py-4">
+                                    <td colspan="9" class="text-center py-4">
                                         <div class="empty-state">
                                             <i class="fas fa-clipboard-check mb-3"></i>
                                             <p>No expense reports found</p>
@@ -3275,9 +3933,38 @@ function getTransportIcon($mode) {
                 <!-- Mobile Card View -->
                 <div class="mobile-expense-cards">
                     <?php if (count($pendingExpenses) > 0): ?>
-                        <?php foreach ($pendingExpenses as $expense): ?>
-                            <?php 
-                            // Prepare profile picture URL (same logic as above)
+                        <?php 
+                        // Use the same grouping logic as the desktop view
+                        // Group expenses by user_id and travel_date (if not already done)
+                        if (!isset($groupedExpenses)) {
+                            $groupedExpenses = [];
+                            foreach ($pendingExpenses as $expense) {
+                                $key = $expense['user_id'] . '_' . $expense['travel_date'];
+                                if (!isset($groupedExpenses[$key])) {
+                                    $groupedExpenses[$key] = [
+                                        'expenses' => [],
+                                        'total_amount' => 0,
+                                        'total_distance' => 0,
+                                        'count' => 0
+                                    ];
+                                }
+                                
+                                $groupedExpenses[$key]['expenses'][] = $expense;
+                                $groupedExpenses[$key]['total_amount'] += $expense['amount'];
+                                // Add distance to total (if it exists and is numeric)
+                                if (isset($expense['distance']) && is_numeric($expense['distance'])) {
+                                    $groupedExpenses[$key]['total_distance'] += $expense['distance'];
+                                }
+                                $groupedExpenses[$key]['count']++;
+                            }
+                        }
+                        
+                        foreach ($groupedExpenses as $group): 
+                            // Use the first expense in the group as the main display item
+                            $expense = $group['expenses'][0];
+                            $additionalCount = $group['count'] - 1;
+                            
+                            // Prepare profile picture URL
                             $profilePic = "assets/images/no-image.png"; // Default image
                             
                             if (!empty($expense['profile_picture'])) {
@@ -3308,11 +3995,20 @@ function getTransportIcon($mode) {
                             
                             // Prepare employee ID
                             $employeeId = !empty($expense['employee_id']) ? $expense['employee_id'] : 'EMP-'.rand(1000,9999);
+                            
+                            // Prepare expense IDs for multiple selection
+                            $expenseIds = array_map(function($e) { return $e['id']; }, $group['expenses']);
+                            $expenseIdsJson = json_encode($expenseIds);
                             ?>
-                            <div class="mobile-expense-card" data-id="<?php echo $expense['id']; ?>">
+                            <div class="mobile-expense-card" data-id="<?php echo $expense['id']; ?>" data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
                                 <div class="mobile-expense-header">
                                     <span class="status-badge status-<?php echo $expense['status']; ?>"><?php echo ucfirst($expense['status']); ?></span>
-                                    <span class="expense-amount">₹<?php echo number_format($expense['amount'], 2); ?></span>
+                                    <span class="expense-amount">
+                                        ₹<?php echo number_format($group['total_amount'], 2); ?>
+                                        <?php if ($additionalCount > 0): ?>
+                                            <small class="d-block">(<?php echo $group['count']; ?> expenses)</small>
+                                        <?php endif; ?>
+                                    </span>
                                 </div>
                                 
                                 <div class="mobile-expense-employee">
@@ -3329,15 +4025,14 @@ function getTransportIcon($mode) {
                                 <div class="mobile-expense-details">
                                     <div class="mobile-expense-row">
                                         <div class="mobile-expense-label">Purpose:</div>
-                                        <div class="mobile-expense-value"><?php echo htmlspecialchars($expense['purpose']); ?></div>
-                                    </div>
-                                    <div class="mobile-expense-row">
-                                        <div class="mobile-expense-label">Mode:</div>
                                         <div class="mobile-expense-value">
-                                            <i class="fas <?php echo getTransportIcon($expense['mode_of_transport']); ?> mr-1"></i>
-                                            <?php echo htmlspecialchars($expense['mode_of_transport'] ?? 'N/A'); ?>
+                                            <?php echo htmlspecialchars($expense['purpose']); ?>
+                                                                                            <?php if ($additionalCount > 0): ?>
+                                                <span class="badge badge-primary ml-1 more-expenses-badge" data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>' style="cursor: pointer;">+<?php echo $additionalCount; ?> more</span>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
+
                                     <div class="mobile-expense-row">
                                         <div class="mobile-expense-label">Travel Date:</div>
                                         <div class="mobile-expense-value">
@@ -3383,9 +4078,21 @@ function getTransportIcon($mode) {
                                 </div>
                                 
                                 <div class="mobile-expense-actions">
-                                    <button class="btn btn-sm btn-success approve-btn" data-id="<?php echo $expense['id']; ?>">Approve</button>
-                                    <button class="btn btn-sm btn-danger reject-btn" data-id="<?php echo $expense['id']; ?>">Reject</button>
-                                    <button class="btn btn-sm btn-outline view-details-btn" data-id="<?php echo $expense['id']; ?>">Details</button>
+                                    <button class="btn btn-sm btn-success approve-btn" 
+                                            data-id="<?php echo $expense['id']; ?>"
+                                            data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
+                                        Approve<?php echo $additionalCount > 0 ? ' All' : ''; ?>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger reject-btn" 
+                                            data-id="<?php echo $expense['id']; ?>"
+                                            data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
+                                        Reject<?php echo $additionalCount > 0 ? ' All' : ''; ?>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline view-details-btn" 
+                                            data-id="<?php echo $expense['id']; ?>"
+                                            data-all-ids='<?php echo htmlspecialchars($expenseIdsJson, ENT_QUOTES); ?>'>
+                                        Details<?php echo $additionalCount > 0 ? ' (' . $group['count'] . ')' : ''; ?>
+                                    </button>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -3528,6 +4235,7 @@ function getTransportIcon($mode) {
                     </div>
                     <input type="hidden" id="expenseIdInput" value="">
                     <input type="hidden" id="actionTypeInput" value="">
+                    <input type="hidden" id="allExpenseIdsInput" value="">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -3704,7 +4412,21 @@ function getTransportIcon($mode) {
             approveButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const expenseId = this.getAttribute('data-id');
-                    showApprovalModal(expenseId, 'approve');
+                    let allIds = this.getAttribute('data-all-ids');
+                    
+                    // If data-all-ids attribute exists and is not empty
+                    if (allIds) {
+                        try {
+                            allIds = JSON.parse(allIds);
+                        } catch (e) {
+                            console.error('Error parsing all-ids JSON:', e);
+                            allIds = [expenseId]; // Fallback to single ID
+                        }
+                    } else {
+                        allIds = [expenseId]; // Default to single ID
+                    }
+                    
+                    showApprovalModal(expenseId, 'approve', allIds);
                 });
             });
             
@@ -3712,7 +4434,21 @@ function getTransportIcon($mode) {
             rejectButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const expenseId = this.getAttribute('data-id');
-                    showApprovalModal(expenseId, 'reject');
+                    let allIds = this.getAttribute('data-all-ids');
+                    
+                    // If data-all-ids attribute exists and is not empty
+                    if (allIds) {
+                        try {
+                            allIds = JSON.parse(allIds);
+                        } catch (e) {
+                            console.error('Error parsing all-ids JSON:', e);
+                            allIds = [expenseId]; // Fallback to single ID
+                        }
+                    } else {
+                        allIds = [expenseId]; // Default to single ID
+                    }
+                    
+                    showApprovalModal(expenseId, 'reject', allIds);
                 });
             });
             
@@ -3720,7 +4456,21 @@ function getTransportIcon($mode) {
             detailButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const expenseId = this.getAttribute('data-id');
-                    showExpenseDetails(expenseId);
+                    let allIds = this.getAttribute('data-all-ids');
+                    
+                    // If data-all-ids attribute exists and is not empty
+                    if (allIds) {
+                        try {
+                            allIds = JSON.parse(allIds);
+                        } catch (e) {
+                            console.error('Error parsing all-ids JSON:', e);
+                            allIds = [expenseId]; // Fallback to single ID
+                        }
+                    } else {
+                        allIds = [expenseId]; // Default to single ID
+                    }
+                    
+                    showExpenseDetails(expenseId, allIds);
                 });
             });
             
@@ -3729,6 +4479,20 @@ function getTransportIcon($mode) {
                 const expenseId = document.getElementById('expenseIdInput').value;
                 const action = document.getElementById('actionTypeInput').value;
                 const notes = document.getElementById('approvalNotes').value;
+                let allIds = null;
+                
+                // Get all expense IDs if available
+                const allExpenseIdsInput = document.getElementById('allExpenseIdsInput');
+                if (allExpenseIdsInput && allExpenseIdsInput.value) {
+                    try {
+                        allIds = JSON.parse(allExpenseIdsInput.value);
+                    } catch (e) {
+                        console.error('Error parsing all expense IDs:', e);
+                        allIds = [expenseId]; // Fallback to single ID
+                    }
+                } else {
+                    allIds = [expenseId]; // Default to single ID
+                }
                 
                 // Check if all verification checkboxes are checked
                 const checkMeterPicture = document.getElementById('checkMeterPicture').checked;
@@ -3744,8 +4508,107 @@ function getTransportIcon($mode) {
                 $('#approvalModal').modal('hide');
                 
                 // Process the action
-                processExpenseAction(expenseId, action, notes);
+                processExpenseAction(expenseId, action, notes, allIds);
             });
+            
+            // Function to show expense details
+            function showExpenseDetails(expenseId, allIds) {
+                // Show modal
+                $('#expenseDetailsModal').modal('show');
+                
+                // Clear previous content and show loading spinner
+                $('#expenseDetailsContent').html(`
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-3">Loading expense details...</p>
+                    </div>
+                `);
+                
+                // Fetch expense details from server
+                $.ajax({
+                    url: 'get_expense_details.php',
+                    type: 'GET',
+                    data: { 
+                        id: expenseId,
+                        all_ids: allIds ? JSON.stringify(allIds) : null
+                    },
+                    success: function(response) {
+                        $('#expenseDetailsContent').html(response);
+                    },
+                    error: function() {
+                        $('#expenseDetailsContent').html(`
+                            <div class="alert alert-danger m-4">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                Error loading expense details. Please try again.
+                            </div>
+                        `);
+                    }
+                });
+            }
+            
+            // Function to process expense actions
+            function processExpenseAction(expenseId, action, notes, allIds = null) {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('expense_id', expenseId);
+                formData.append('action_type', action);
+                formData.append('notes', notes);
+                
+                // Add all expense IDs if available for batch processing
+                if (allIds && allIds.length > 1) {
+                    formData.append('all_expense_ids', JSON.stringify(allIds));
+                }
+                
+                // Show processing toast notification
+                const processingToast = showToast(
+                    'Processing', 
+                    `${allIds && allIds.length > 1 ? 'Expenses are' : 'Expense is'} being processed...`, 
+                    'info'
+                );
+                
+                // Send AJAX request
+                fetch('process_expense_approval.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove processing toast
+                    closeToast(processingToast);
+                    
+                    if (data.success) {
+                        // Show success message
+                        showToast(
+                            'Success', 
+                            `${allIds && allIds.length > 1 ? 'Expenses' : 'Expense'} ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 
+                            'success'
+                        );
+                        
+                        // Update UI or reload page after short delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        showToast('Error', data.message || 'An unknown error occurred', 'error');
+                    }
+                })
+                .catch(error => {
+                    // Remove processing toast
+                    closeToast(processingToast);
+                    
+                    // Show error message
+                    console.error('Error processing expense action:', error);
+                    showToast('Error', 'Failed to process expense action. Please try again.', 'error');
+                });
+            }
             
             // Initialize Bootstrap modals
             $('.modal').modal({
@@ -4254,7 +5117,7 @@ function getTransportIcon($mode) {
             /**
              * Show approval/rejection modal
              */
-            function showApprovalModal(expenseId, action) {
+            function showApprovalModal(expenseId, action, allExpenseIds = null) {
                 // Get modal element
                 const approvalModal = $('#approvalModal');
                 
@@ -4262,8 +5125,21 @@ function getTransportIcon($mode) {
                 const actionText = action === 'approve' ? 'approve' : 'reject';
                 document.getElementById('approvalModalLabel').textContent = 
                     action === 'approve' ? 'Approve Expense' : 'Reject Expense';
-                document.getElementById('approvalModalText').textContent = 
-                    `Are you sure you want to ${actionText} this expense?`;
+                
+                // Check if this is a batch operation
+                if (allExpenseIds && allExpenseIds.length > 1) {
+                    document.getElementById('approvalModalText').textContent = 
+                        `Are you sure you want to ${actionText} these ${allExpenseIds.length} expenses?`;
+                    
+                    // Store all expense IDs in hidden input
+                    document.getElementById('allExpenseIdsInput').value = JSON.stringify(allExpenseIds);
+                } else {
+                    document.getElementById('approvalModalText').textContent = 
+                        `Are you sure you want to ${actionText} this expense?`;
+                    
+                    // Clear the all expense IDs input
+                    document.getElementById('allExpenseIdsInput').value = '';
+                }
                 
                 // Set button color based on action
                 const confirmBtn = document.getElementById('confirmActionBtn');
@@ -4286,15 +5162,32 @@ function getTransportIcon($mode) {
             /**
              * Process expense approval/rejection
              */
-            function processExpenseAction(expenseId, action, notes) {
+            function processExpenseAction(expenseId, action, notes, allExpenseIds = null) {
                 // Create form data
                 const formData = new FormData();
                 formData.append('expense_id', expenseId);
-                formData.append('action', action);
+                formData.append('action_type', action);
                 formData.append('notes', notes);
                 
+                // Add all expense IDs if available for batch processing
+                if (allExpenseIds && allExpenseIds.length > 1) {
+                    formData.append('all_expense_ids', JSON.stringify(allExpenseIds));
+                }
+                
+                // Determine which endpoint to use based on whether this is a batch operation
+                const endpoint = (allExpenseIds && allExpenseIds.length > 1) 
+                    ? 'process_expense_approval.php'  // Batch processing
+                    : 'process_expense_action.php';   // Single expense processing
+                
+                // Show processing toast notification
+                const processingToast = showToast(
+                    'Processing', 
+                    `${allExpenseIds && allExpenseIds.length > 1 ? 'Expenses are' : 'Expense is'} being processed...`, 
+                    'info'
+                );
+                
                 // Send to server
-                fetch('process_expense_action.php', {
+                fetch(endpoint, {
                     method: 'POST',
                     body: formData
                 })
@@ -4307,18 +5200,41 @@ function getTransportIcon($mode) {
                 .then(data => {
                     if (data.success) {
                         // Show success message
-                alert(`Expense ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
-                
-                // Reload the page to reflect changes
-                window.location.reload();
+                        showToast(
+                            'Success', 
+                            `${allExpenseIds && allExpenseIds.length > 1 ? 'Expenses' : 'Expense'} ${action === 'approve' ? 'approved' : 'rejected'} successfully!`, 
+                            'success'
+                        );
+                        
+                        // Remove processing toast
+                        if (typeof processingToast !== 'undefined') {
+                            closeToast(processingToast);
+                        }
+                        
+                        // Reload the page to reflect changes after a short delay
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         // Show error message
-                        alert(`Error: ${data.error || 'Unknown error occurred'}`);
+                        showToast('Error', data.error || 'Unknown error occurred', 'error');
+                        
+                        // Remove processing toast
+                        if (typeof processingToast !== 'undefined') {
+                            closeToast(processingToast);
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error processing action:', error);
-                    alert('An error occurred while processing your request. Please try again.');
+                    
+                    // Show error message
+                    showToast('Error', 'An error occurred while processing your request. Please try again.', 'error');
+                    
+                    // Remove processing toast
+                    if (typeof processingToast !== 'undefined') {
+                        closeToast(processingToast);
+                    }
                 });
             }
             
@@ -4560,16 +5476,22 @@ function getTransportIcon($mode) {
     </script>
     <script>
         // Define global functions for modal actions
-        window.showApprovalModal = function(expenseId, action) {
+        window.showApprovalModal = function(expenseId, action, allIds) {
             // Get modal element
             const approvalModal = $('#approvalModal');
             
-            // Set modal title and text based on action
+            // Check if multiple expense IDs are provided
+            const isMultiple = allIds && allIds.length > 1;
+            
+            // Set modal title and text based on action and if multiple
             const actionText = action === 'approve' ? 'approve' : 'reject';
+            const pluralText = isMultiple ? ' expenses' : ' expense';
+            
             document.getElementById('approvalModalLabel').textContent = 
-                action === 'approve' ? 'Approve Expense' : 'Reject Expense';
+                action === 'approve' ? 'Approve' + pluralText : 'Reject' + pluralText;
+                
             document.getElementById('approvalModalText').textContent = 
-                `Are you sure you want to ${actionText} this expense?`;
+                `Are you sure you want to ${actionText} ${isMultiple ? 'all ' + allIds.length : 'this'} expense${isMultiple ? 's' : ''}?`;
             
             // Set button color based on action
             const confirmBtn = document.getElementById('confirmActionBtn');
@@ -4581,6 +5503,11 @@ function getTransportIcon($mode) {
             // Set hidden inputs
             document.getElementById('expenseIdInput').value = expenseId;
             document.getElementById('actionTypeInput').value = action;
+            
+            // Set all expense IDs for batch processing
+            if (isMultiple && document.getElementById('allExpenseIdsInput')) {
+                document.getElementById('allExpenseIdsInput').value = JSON.stringify(allIds);
+            }
             
             // Clear previous notes
             document.getElementById('approvalNotes').value = '';
@@ -4886,5 +5813,245 @@ function getTransportIcon($mode) {
 
     <!-- Toast container -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Add this before the closing </body> tag -->
+    
+    <!-- Grouped Expenses Modal -->
+    <div class="modal fade" id="groupedExpensesModal" tabindex="-1" role="dialog" aria-labelledby="groupedExpensesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="groupedExpensesModalLabel">
+                        <i class="fas fa-list-ul mr-2"></i>All Grouped Expenses
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="groupedExpensesContent">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                            <p class="mt-3">Loading expense details...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="approveAllGroupedBtn">Approve All</button>
+                    <button type="button" class="btn btn-danger" id="rejectAllGroupedBtn">Reject All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add event listener for the +x more badges
+        document.addEventListener('DOMContentLoaded', function() {
+            // Click handler for the more expenses badges
+            document.querySelectorAll('.more-expenses-badge').forEach(badge => {
+                badge.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Get the expense IDs
+                    let allIds;
+                    try {
+                        allIds = JSON.parse(this.getAttribute('data-all-ids'));
+                    } catch (err) {
+                        console.error('Error parsing expense IDs:', err);
+                        showToast('Error', 'Could not load expense details', 'error');
+                        return;
+                    }
+                    
+                    // Open the modal with expense details
+                    showGroupedExpenses(allIds);
+                });
+            });
+            
+            // Event listeners for approve all and reject all buttons in the grouped expenses modal
+            document.getElementById('approveAllGroupedBtn').addEventListener('click', function() {
+                const allIds = this.getAttribute('data-ids');
+                if (allIds) {
+                    try {
+                        const parsedIds = JSON.parse(allIds);
+                        if (parsedIds.length > 0) {
+                            // Close the grouped expenses modal
+                            $('#groupedExpensesModal').modal('hide');
+                            
+                            // Show the approval modal for all expenses
+                            showApprovalModal(parsedIds[0], 'approve', parsedIds);
+                        }
+                    } catch (err) {
+                        console.error('Error parsing expense IDs for approval:', err);
+                    }
+                }
+            });
+            
+            document.getElementById('rejectAllGroupedBtn').addEventListener('click', function() {
+                const allIds = this.getAttribute('data-ids');
+                if (allIds) {
+                    try {
+                        const parsedIds = JSON.parse(allIds);
+                        if (parsedIds.length > 0) {
+                            // Close the grouped expenses modal
+                            $('#groupedExpensesModal').modal('hide');
+                            
+                            // Show the approval modal for all expenses
+                            showApprovalModal(parsedIds[0], 'reject', parsedIds);
+                        }
+                    } catch (err) {
+                        console.error('Error parsing expense IDs for rejection:', err);
+                    }
+                }
+            });
+        });
+        
+                 // Function to show grouped expenses
+         function showGroupedExpenses(expenseIds) {
+             // Show the modal
+             $('#groupedExpensesModal').modal('show');
+             
+             // Clear previous content and show loading spinner
+             $('#groupedExpensesContent').html(`
+                 <div class="text-center py-5">
+                     <div class="spinner-border text-primary" role="status">
+                         <span class="sr-only">Loading...</span>
+                     </div>
+                     <p class="mt-3">Loading expense details...</p>
+                 </div>
+             `);
+             
+             // Set the expense IDs to the approve/reject all buttons
+             document.getElementById('approveAllGroupedBtn').setAttribute('data-ids', JSON.stringify(expenseIds));
+             document.getElementById('rejectAllGroupedBtn').setAttribute('data-ids', JSON.stringify(expenseIds));
+             
+             // Fetch expense details from server
+             $.ajax({
+                 url: 'get_grouped_expenses.php',
+                 type: 'GET',
+                 data: { ids: JSON.stringify(expenseIds) },
+                 success: function(response) {
+                     $('#groupedExpensesContent').html(response);
+                     
+                     // Add event listeners for individual expense approve/reject buttons
+                     setupSingleExpenseActions();
+                 },
+                 error: function() {
+                     $('#groupedExpensesContent').html(`
+                         <div class="alert alert-danger m-4">
+                             <i class="fas fa-exclamation-circle mr-2"></i>
+                             Error loading expense details. Please try again.
+                         </div>
+                     `);
+                 }
+             });
+         }
+         
+         // Function to set up single expense action buttons
+         function setupSingleExpenseActions() {
+             // Add event listeners for approve buttons
+             document.querySelectorAll('.approve-single-expense').forEach(button => {
+                 button.addEventListener('click', function() {
+                     const expenseId = this.getAttribute('data-id');
+                     
+                     // Close the grouped expenses modal
+                     $('#groupedExpensesModal').modal('hide');
+                     
+                     // Show the approval modal for single expense
+                     showApprovalModal(expenseId, 'approve', [expenseId]);
+                 });
+             });
+             
+             // Add event listeners for reject buttons
+             document.querySelectorAll('.reject-single-expense').forEach(button => {
+                 button.addEventListener('click', function() {
+                     const expenseId = this.getAttribute('data-id');
+                     
+                     // Close the grouped expenses modal
+                     $('#groupedExpensesModal').modal('hide');
+                     
+                     // Show the approval modal for single expense
+                     showApprovalModal(expenseId, 'reject', [expenseId]);
+                 });
+             });
+             
+             // Add event listeners for view buttons
+             document.querySelectorAll('.view-single-expense').forEach(button => {
+                 button.addEventListener('click', function() {
+                     const expenseId = this.getAttribute('data-id');
+                     
+                     // Show expense detail modal
+                     showExpenseDetailModal(expenseId);
+                 });
+             });
+         }
+         
+         // Function to show expense detail modal
+         function showExpenseDetailModal(expenseId) {
+             // Get the expense detail modal
+             const detailModal = document.getElementById('expenseDetailModal');
+             
+             // If the modal doesn't exist, create it
+             if (!detailModal) {
+                 // Create modal element
+                 const modalHTML = `
+                     <div class="modal fade" id="expenseDetailModal" tabindex="-1" role="dialog" aria-labelledby="expenseDetailModalLabel" aria-hidden="true">
+                         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                             <div class="modal-content">
+                                 <div class="modal-header bg-primary text-white">
+                                     <h5 class="modal-title" id="expenseDetailModalLabel">
+                                         <i class="fas fa-receipt mr-2"></i>Expense Details
+                                     </h5>
+                                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                         <span aria-hidden="true">&times;</span>
+                                     </button>
+                                 </div>
+                                 <div class="modal-body p-0">
+                                     <div id="expenseDetailContent">
+                                         <div class="text-center py-5">
+                                             <div class="spinner-border text-primary" role="status">
+                                                 <span class="sr-only">Loading...</span>
+                                             </div>
+                                             <p class="mt-3">Loading expense details...</p>
+                                         </div>
+                                     </div>
+                                 </div>
+                                 <div class="modal-footer">
+                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 `;
+                 
+                 // Append modal to body
+                 document.body.insertAdjacentHTML('beforeend', modalHTML);
+             }
+             
+             // Show the modal
+             $('#expenseDetailModal').modal('show');
+             
+             // Load expense details
+             $.ajax({
+                 url: 'get_expense_detail.php',
+                 type: 'GET',
+                 data: { id: expenseId },
+                 success: function(response) {
+                     $('#expenseDetailContent').html(response);
+                 },
+                 error: function() {
+                     $('#expenseDetailContent').html(`
+                         <div class="alert alert-danger m-4">
+                             <i class="fas fa-exclamation-circle mr-2"></i>
+                             Error loading expense details. Please try again.
+                         </div>
+                     `);
+                 }
+             });
+         }
+    </script>
 </body>
 </html>

@@ -27,14 +27,16 @@ if (!in_array($_SESSION['role'], $allowed_roles)) {
 require_once 'config/db_connect.php';
 
 // Check if required parameters are provided
-if (!isset($_POST['expense_id']) || !isset($_POST['action'])) {
+// Accept either 'action' or 'action_type' for backward compatibility
+if (!isset($_POST['expense_id']) || (!isset($_POST['action']) && !isset($_POST['action_type']))) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
     exit();
 }
 
 $expense_id = intval($_POST['expense_id']);
-$action = $_POST['action']; // 'approve' or 'reject'
+// Use action_type if available, otherwise fall back to action
+$action = isset($_POST['action_type']) ? $_POST['action_type'] : $_POST['action']; // 'approve' or 'reject'
 $notes = isset($_POST['notes']) ? $_POST['notes'] : '';
 $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'];
@@ -60,7 +62,8 @@ try {
             UPDATE travel_expenses
             SET accountant_status = ?,
                 accountant_reason = ?,
-                updated_by = ?
+                updated_by = ?,
+                updated_at = NOW()
             WHERE id = ?
         ");
         
@@ -95,7 +98,8 @@ try {
             UPDATE travel_expenses
             SET $status_field = ?,
                 $reason_field = ?,
-                updated_by = ?
+                updated_by = ?,
+                updated_at = NOW()
             WHERE id = ?
         ");
         
@@ -107,6 +111,19 @@ try {
         }
     }
     
+    // Log the approval/rejection
+    $log_stmt = $conn->prepare("
+        INSERT INTO expense_action_logs 
+        (expense_id, user_id, action_type, notes, created_at)
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+    
+    if ($log_stmt) {
+        $log_stmt->bind_param("isss", $expense_id, $user_id, $action, $notes);
+        $log_stmt->execute();
+        $log_stmt->close();
+    }
+    
     // The main status field will be updated automatically by the database trigger
     
     // Commit transaction
@@ -116,7 +133,7 @@ try {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
-        'message' => "Expense {$action}ed successfully",
+        'message' => "Expense {$action}d successfully",
         'status' => $status_value,
         'expense_id' => $expense_id
     ]);
@@ -124,6 +141,9 @@ try {
 } catch (Exception $e) {
     // Rollback transaction on error
     $conn->rollback();
+    
+    // Log the error
+    file_put_contents($log_file, date('Y-m-d H:i:s') . " - Error: " . $e->getMessage() . "\n", FILE_APPEND);
     
     // Return error response
     header('Content-Type: application/json');

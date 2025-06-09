@@ -221,3 +221,240 @@
     [profile_picture] => uploads/profile_pictures/profile_33_1748945876.jpeg
 )
 
+2025-06-09 12:06:30 - Request received
+2025-06-09 12:06:30 - POST data: Array
+(
+    [expense_id] => 12
+    [action] => reject
+    [notes] => dd
+)
+
+2025-06-09 12:06:30 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-09 12:07:08 - Request received
+2025-06-09 12:07:08 - POST data: Array
+(
+    [expense_id] => 12
+    [action] => approve
+    [notes] => df
+)
+
+2025-06-09 12:07:08 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-09 12:16:53 - Request received
+2025-06-09 12:16:53 - POST data: Array
+(
+    [expense_id] => 12
+    [action] => approve
+    [notes] => rr
+)
+
+2025-06-09 12:16:53 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-09 12:17:42 - Request received
+2025-06-09 12:17:42 - POST data: Array
+(
+    [expense_id] => 15
+    [action] => approve
+    [notes] => ee
+)
+
+2025-06-09 12:17:42 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-09 13:19:40 - Request received
+2025-06-09 13:19:40 - POST data: Array
+(
+    [expense_id] => 12
+    [action] => reject
+    [notes] => dd
+)
+
+2025-06-09 13:19:40 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:20:21 - Request received
+2025-06-09 13:20:21 - POST data: Array
+(
+    [expense_id] => 10
+    [action] => reject
+    [notes] => gg
+)
+
+2025-06-09 13:20:21 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:29:40 - Request received
+2025-06-09 13:29:40 - POST data: Array
+(
+    [expense_id] => 12
+    [action] => approve
+    [notes] => ttt
+)
+
+2025-06-09 13:29:40 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:30:07 - Request received
+2025-06-09 13:30:07 - POST data: Array
+(
+    [expense_id] => 3
+    [action] => approve
+    [notes] => ok
+)
+
+2025-06-09 13:30:07 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:30:43 - Request received
+2025-06-09 13:30:43 - POST data: Array
+(
+    [expense_id] => 10
+    [action] => approve
+    [notes] => hh
+)
+
+2025-06-09 13:30:43 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:35:58 - Batch approval request received
+2025-06-09 13:35:58 - POST data: Array
+(
+    [expense_id] => 10
+    [action_type] => approve
+    [notes] => tested
+    [all_expense_ids] => [10,11]
+)
+
+2025-06-09 13:35:58 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:35:58 - Processing expense IDs: [10,11]
+2025-06-09 13:35:58 - Updating status field: manager_status to value: approved
+2025-06-09 13:35:58 - Successfully processed 2 out of 2 expenses
+2025-06-09 13:36:28 - Batch approval request received
+2025-06-09 13:36:28 - POST data: Array
+(
+    [expense_id] => 3
+    [action_type] => approve
+    [notes] => tested
+    [all_expense_ids] => [3,4,7]
+)
+
+2025-06-09 13:36:28 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:36:28 - Processing expense IDs: [3,4,7]
+2025-06-09 13:36:28 - Updating status field: manager_status to value: approved
+2025-06-09 13:36:28 - Successfully processed 3 out of 3 expenses
+2025-06-09 13:36:46 - Batch approval request received
+2025-06-09 13:36:46 - POST data: Array
+(
+    [expense_id] => 3
+    [action_type] => reject
+    [notes] => tested
+
+    [all_expense_ids] => [3,4,7]
+)
+
+2025-06-09 13:36:46 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-09 13:36:46 - Processing expense IDs: [3,4,7]
+2025-06-09 13:36:46 - Updating status field: manager_status to value: rejected
+2025-06-09 13:36:46 - Successfully processed 3 out of 3 expenses

@@ -1,47 +1,60 @@
 <?php
-// Simple database connection test
+// Test database connection for process_expense_approval.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-echo "<h1>Database Connection Test</h1>";
+echo "Testing database connection for batch expense approval...<br>";
 
-// Database connection parameters
-$host = 'localhost';
-$dbname = 'crm';
-$username = 'root';
-$password = '';
-
-try {
-    // Create MySQLi connection
-    $conn = new mysqli($host, $username, $password, $dbname);
+// Check if config/db_connect.php exists
+if (file_exists('config/db_connect.php')) {
+    echo "Config file exists.<br>";
     
-    // Check connection
-    if ($conn->connect_error) {
-        throw new Exception("Connection failed: " . $conn->connect_error);
-    }
+    // Include the database connection
+    require_once 'config/db_connect.php';
     
-    echo "<p style='color:green'>Connected to database successfully!</p>";
-    
-    // List some tables
-    $tables_query = "SHOW TABLES";
-    $result = $conn->query($tables_query);
-    
-    if ($result) {
-        echo "<h2>Tables in Database:</h2>";
-        echo "<ul>";
-        while ($row = $result->fetch_row()) {
-            echo "<li>{$row[0]}</li>";
+    // Check if the connection is established
+    if (isset($conn) && $conn instanceof mysqli) {
+        if ($conn->connect_error) {
+            echo "Connection failed: " . $conn->connect_error . "<br>";
+        } else {
+            echo "Database connection successful!<br>";
+            
+            // Test if travel_expenses table exists
+            $result = $conn->query("SHOW TABLES LIKE 'travel_expenses'");
+            if ($result && $result->num_rows > 0) {
+                echo "Travel expenses table exists.<br>";
+                
+                // Test if expense_action_logs table exists
+                $result = $conn->query("SHOW TABLES LIKE 'expense_action_logs'");
+                if ($result && $result->num_rows > 0) {
+                    echo "Expense action logs table exists.<br>";
+                    
+                    // Show table structure
+                    $result = $conn->query("DESCRIBE expense_action_logs");
+                    if ($result) {
+                        echo "<h3>Expense Action Logs Table Structure:</h3>";
+                        echo "<table border='1'><tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
+                        while ($row = $result->fetch_assoc()) {
+                            echo "<tr>";
+                            foreach ($row as $key => $value) {
+                                echo "<td>" . htmlspecialchars($value ?? 'NULL') . "</td>";
+                            }
+                            echo "</tr>";
+                        }
+                        echo "</table>";
+                    }
+                } else {
+                    echo "Expense action logs table does not exist.<br>";
                 }
-        echo "</ul>";
+            } else {
+                echo "Travel expenses table does not exist.<br>";
+            }
+        }
     } else {
-        echo "<p style='color:red'>Error listing tables: " . $conn->error . "</p>";
+        echo "Database connection variable not found.<br>";
     }
-    
-    // Close connection
-    $conn->close();
-    
-} catch (Exception $e) {
-    echo "<p style='color:red'>Error: " . $e->getMessage() . "</p>";
+} else {
+    echo "Config file does not exist.<br>";
 }
 ?>
 <style>

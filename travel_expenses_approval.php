@@ -144,6 +144,7 @@ $month_filter = isset($_GET['month']) ? intval($_GET['month']) : 0;
 $year_filter = isset($_GET['year']) ? intval($_GET['year']) : 0;
 $employee_filter = isset($_GET['employee']) ? intval($_GET['employee']) : 0;
 $status_filter = isset($_GET['status']) ? $_GET['status'] : '';
+$approval_filter = isset($_GET['approval']) ? $_GET['approval'] : '';
 
 // Build WHERE clause for filtering
 $where_clause = "1=1"; // Changed from "te.status = 'pending'" to show all expenses
@@ -180,6 +181,30 @@ if ($year_filter > 0) {
     $where_clause .= " AND YEAR(te.travel_date) = ?";
     $params[] = $year_filter;
     $param_types .= "i";
+}
+
+if (!empty($approval_filter)) {
+    // Parse the approval filter to determine role and status
+    $approval_parts = explode('_', $approval_filter);
+    if (count($approval_parts) == 2) {
+        $role = $approval_parts[0];  // manager, accountant, hr
+        $status = $approval_parts[1]; // approved, rejected
+        
+        // Add appropriate condition based on role and status
+        if ($role == 'manager') {
+            $where_clause .= " AND te.manager_status = ?";
+            $params[] = $status;
+            $param_types .= "s";
+        } else if ($role == 'accountant') {
+            $where_clause .= " AND te.accountant_status = ?";
+            $params[] = $status;
+            $param_types .= "s";
+        } else if ($role == 'hr') {
+            $where_clause .= " AND te.hr_status = ?";
+            $params[] = $status;
+            $param_types .= "s";
+        }
+    }
 }
 
 try {
@@ -1363,7 +1388,7 @@ function getTransportIcon($mode) {
             position: relative;
             display: flex;
             flex-direction: column;
-            width: 100%;
+            width: 110%;
             pointer-events: auto;
             background-color: #fff;
             background-clip: padding-box;
@@ -3668,6 +3693,18 @@ function getTransportIcon($mode) {
                                 <?php endfor; ?>
                             </select>
                         </div>
+                        <div class="filter-group">
+                            <label for="approvalFilter">Approved By:</label>
+                            <select class="filter-dropdown" id="approvalFilter">
+                                <option value="">All Approvals</option>
+                                <option value="manager_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_approved') ? 'selected' : ''; ?>>Manager Approved</option>
+                                <option value="accountant_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_approved') ? 'selected' : ''; ?>>Accountant Approved</option>
+                                <option value="hr_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_approved') ? 'selected' : ''; ?>>HR Approved</option>
+                                <option value="manager_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_rejected') ? 'selected' : ''; ?>>Manager Rejected</option>
+                                <option value="accountant_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_rejected') ? 'selected' : ''; ?>>Accountant Rejected</option>
+                                <option value="hr_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_rejected') ? 'selected' : ''; ?>>HR Rejected</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5423,6 +5460,7 @@ function getTransportIcon($mode) {
             const year = document.getElementById('yearFilter').value;
             const employee = document.getElementById('employeeFilter').value;
             const status = document.getElementById('statusFilter').value;
+            const approval = document.getElementById('approvalFilter').value;
             
             // Add filter parameters to URL
             if (searchTerm) {
@@ -5453,6 +5491,12 @@ function getTransportIcon($mode) {
                 params.set('year', year);
             } else {
                 params.delete('year');
+            }
+            
+            if (approval) {
+                params.set('approval', approval);
+            } else {
+                params.delete('approval');
             }
             
             // Reset to page 1 when applying new filters
@@ -5509,6 +5553,13 @@ function getTransportIcon($mode) {
             });
         }
         
+        const approvalFilter = document.getElementById('approvalFilter');
+        if (approvalFilter) {
+            approvalFilter.addEventListener('change', function() {
+                applyFiltersWithPagination();
+            });
+        }
+        
         // Update clear filters function
         function clearAllFilters() {
             // Clear filter inputs
@@ -5517,6 +5568,7 @@ function getTransportIcon($mode) {
             document.getElementById('statusFilter').value = '';
             document.getElementById('monthFilter').value = '';
             document.getElementById('yearFilter').value = '';
+            document.getElementById('approvalFilter').value = '';
             
             // Redirect to page without query parameters
             window.location.href = window.location.pathname;

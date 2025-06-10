@@ -174,6 +174,7 @@ if (!empty($firstExpense['profile_picture'])) {
                     <th>Amount</th>
                     <th>Status</th>
                     <th>Manager Status</th>
+                    <th>Accountant Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -205,6 +206,14 @@ if (!empty($firstExpense['profile_picture'])) {
                             <?php echo ucfirst($managerStatus); ?>
                         </span>
                     </td>
+                    <td>
+                        <?php 
+                        $accountantStatus = isset($expense['accountant_status']) ? $expense['accountant_status'] : 'pending';
+                        ?>
+                        <span class="status-badge status-<?php echo $accountantStatus; ?>">
+                            <?php echo ucfirst($accountantStatus); ?>
+                        </span>
+                    </td>
                     <td class="expense-actions">
                         <button type="button" class="btn btn-sm btn-action view-single-expense" data-id="<?php echo $expense['id']; ?>" title="View Details">
                             <i class="fas fa-eye text-primary"></i>
@@ -230,6 +239,7 @@ if (!empty($firstExpense['profile_picture'])) {
                     <td colspan="5" class="text-right"><strong>Total:</strong></td>
                     <td><strong><?php echo number_format($totalDistance, 1); ?> km</strong></td>
                     <td class="expense-amount"><strong>₹<?php echo number_format($totalAmount, 2); ?></strong></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

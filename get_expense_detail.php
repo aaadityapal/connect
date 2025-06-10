@@ -343,7 +343,14 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
                         <div class="detail-icon"><i class="fas fa-tag"></i></div>
                         <div class="detail-content">
                             <div class="detail-label">Purpose</div>
-                            <div class="detail-value purpose-value"><?php echo htmlspecialchars($expense['purpose']); ?></div>
+                            <div class="detail-value purpose-value">
+                                <?php echo htmlspecialchars($expense['purpose']); ?>
+                                <?php if ($canEdit): ?>
+                                <button type="button" class="edit-icon-btn" data-field="purpose" data-value="<?php echo htmlspecialchars($expense['purpose']); ?>" onclick="editField(this, 'purpose', '<?php echo htmlspecialchars($expense['purpose']); ?>', <?php echo $expense['id']; ?>)">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -351,7 +358,14 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
                         <div class="detail-icon"><i class="fas fa-calendar-alt"></i></div>
                         <div class="detail-content">
                             <div class="detail-label">Travel Date</div>
-                            <div class="detail-value"><?php echo $travelDate; ?></div>
+                            <div class="detail-value">
+                                <?php echo $travelDate; ?>
+                                <?php if ($canEdit): ?>
+                                <button type="button" class="edit-icon-btn" data-field="travel_date" data-value="<?php echo date('Y-m-d', strtotime($expense['travel_date'])); ?>" onclick="editField(this, 'travel_date', '<?php echo date('Y-m-d', strtotime($expense['travel_date'])); ?>', <?php echo $expense['id']; ?>)">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -359,7 +373,14 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
                         <div class="detail-icon"><i class="fas fa-map-marker-alt"></i></div>
                         <div class="detail-content">
                             <div class="detail-label">From Location</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($expense['from_location'] ?? 'N/A'); ?></div>
+                            <div class="detail-value">
+                                <?php echo htmlspecialchars($expense['from_location'] ?? 'N/A'); ?>
+                                <?php if ($canEdit): ?>
+                                <button type="button" class="edit-icon-btn" data-field="from_location" data-value="<?php echo htmlspecialchars($expense['from_location'] ?? ''); ?>" onclick="editField(this, 'from_location', '<?php echo htmlspecialchars($expense['from_location'] ?? ''); ?>', <?php echo $expense['id']; ?>)">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -367,7 +388,14 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
                         <div class="detail-icon"><i class="fas fa-map-pin"></i></div>
                         <div class="detail-content">
                             <div class="detail-label">To Location</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($expense['to_location'] ?? 'N/A'); ?></div>
+                            <div class="detail-value">
+                                <?php echo htmlspecialchars($expense['to_location'] ?? 'N/A'); ?>
+                                <?php if ($canEdit): ?>
+                                <button type="button" class="edit-icon-btn" data-field="to_location" data-value="<?php echo htmlspecialchars($expense['to_location'] ?? ''); ?>" onclick="editField(this, 'to_location', '<?php echo htmlspecialchars($expense['to_location'] ?? ''); ?>', <?php echo $expense['id']; ?>)">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -1428,8 +1456,14 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
                 }
                 inputElement.appendChild(optElement);
             });
-        } else {
-            // Create text input for amount or distance
+        } else if (field === 'travel_date') {
+            // Create date input for travel date
+            inputElement = document.createElement('input');
+            inputElement.type = 'date';
+            inputElement.className = 'form-control inline-edit-input';
+            inputElement.value = currentValue; // Should be in YYYY-MM-DD format
+        } else if (field === 'amount' || field === 'distance') {
+            // Create number input for amount or distance
             inputElement = document.createElement('input');
             inputElement.type = 'number';
             inputElement.className = 'form-control inline-edit-input';
@@ -1442,6 +1476,20 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
             } else if (field === 'distance') {
                 inputElement.min = '0';
                 inputElement.placeholder = 'Enter distance in km';
+            }
+        } else {
+            // Create text input for purpose, from_location, to_location and other text fields
+            inputElement = document.createElement('input');
+            inputElement.type = 'text';
+            inputElement.className = 'form-control inline-edit-input';
+            inputElement.value = currentValue;
+            
+            if (field === 'purpose') {
+                inputElement.placeholder = 'Enter purpose';
+            } else if (field === 'from_location') {
+                inputElement.placeholder = 'Enter from location';
+            } else if (field === 'to_location') {
+                inputElement.placeholder = 'Enter to location';
             }
         }
         
@@ -1577,6 +1625,19 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
                 
             case 'distance':
                 displayValue = newValue + ' km';
+                break;
+            
+            case 'travel_date':
+                // Format date as Month Day, Year
+                const dateObj = new Date(newValue);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                displayValue = dateObj.toLocaleDateString('en-US', options);
+                break;
+                
+            case 'purpose':
+            case 'from_location':
+            case 'to_location':
+                displayValue = newValue;
                 break;
                 
             default:

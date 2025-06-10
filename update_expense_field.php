@@ -42,7 +42,7 @@ if ($expense_id <= 0) {
 }
 
 // Validate field name
-$allowed_fields = ['amount', 'mode_of_transport', 'distance'];
+$allowed_fields = ['amount', 'mode_of_transport', 'distance', 'purpose', 'from_location', 'to_location', 'travel_date'];
 if (!in_array($field, $allowed_fields)) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'Invalid field name']);
@@ -62,9 +62,17 @@ switch ($field) {
             $error = 'Distance must be a non-negative number';
         }
         break;
+    case 'travel_date':
+        if (empty($value) || !strtotime($value)) {
+            $error = 'Please enter a valid date';
+        }
+        break;
     case 'mode_of_transport':
+    case 'purpose':
+    case 'from_location':
+    case 'to_location':
         if (empty($value)) {
-            $error = 'Mode of transport cannot be empty';
+            $error = ucfirst(str_replace('_', ' ', $field)) . ' cannot be empty';
         }
         break;
 }
@@ -87,7 +95,10 @@ try {
 
     // Update the field in the database
     $stmt = $conn->prepare("UPDATE travel_expenses SET {$field} = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->bind_param($field === 'amount' || $field === 'distance' ? "di" : "si", $db_value, $expense_id);
+    
+    // Use "di" for numeric fields, "si" for string fields
+    $param_type = ($field === 'amount' || $field === 'distance') ? "di" : "si";
+    $stmt->bind_param($param_type, $db_value, $expense_id);
     $stmt->execute();
     
     // Check if update was successful

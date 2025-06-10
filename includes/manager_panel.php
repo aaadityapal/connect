@@ -45,9 +45,9 @@
         <span class="menu-text">Travel Expenses Approval</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_allocation.php' ? 'active' : ''; ?>" onclick="window.location.href='site_allocation.php'">
-        <i class="fas fa-map-marked-alt"></i>
-        <span class="menu-text">Site Allocation</span>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_expenses.php' ? 'active' : ''; ?>" onclick="window.location.href='site_expenses.php'">
+        <i class="fas fa-money-bill-wave"></i>
+        <span class="menu-text">Site Expenses</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_progress.php' ? 'active' : ''; ?>" onclick="window.location.href='site_progress.php'">

@@ -2706,6 +2706,10 @@ try {
                 <i class="bi bi-clock-history"></i>
                 Shifts
             </a>
+            <a href="payouts.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Manager Payouts
+            </a>
             <a href="salary_overview.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>
                 Salary

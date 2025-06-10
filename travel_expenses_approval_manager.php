@@ -248,8 +248,14 @@ $monthlyAmount = 0;
 $averageAmount = 0;
 
 try {
+    // Create base WHERE clauses for the cards, which will include the employee filter if selected
+    $employee_where = $employee_filter > 0 ? "user_id = $employee_filter AND " : "";
+    
+    // Log the filter being applied for debugging
+    error_log("Applied employee filter: " . ($employee_filter > 0 ? $employee_filter : "None"));
+    
     // Count pending expenses
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE status = 'pending'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE {$employee_where}status = 'pending'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -257,7 +263,7 @@ try {
     }
     
     // Count approved expenses
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE status = 'approved'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE {$employee_where}status = 'approved'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -265,7 +271,7 @@ try {
     }
     
     // Count rejected expenses
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE status = 'rejected'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses WHERE {$employee_where}status = 'rejected'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -273,7 +279,7 @@ try {
     }
     
     // Calculate total amount
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE status = 'pending'");
+    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE {$employee_where}status = 'pending'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -281,7 +287,7 @@ try {
     }
     
     // Calculate total approved amount
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE status = 'approved'");
+    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE {$employee_where}status = 'approved'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -289,7 +295,7 @@ try {
     }
     
     // Calculate total rejected amount
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE status = 'rejected'");
+    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE {$employee_where}status = 'rejected'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -299,7 +305,8 @@ try {
     // Calculate current month's total amount
     $currentMonth = date('m');
     $currentYear = date('Y');
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE MONTH(travel_date) = ? AND YEAR(travel_date) = ?");
+    $monthWhere = "{$employee_where}MONTH(travel_date) = ? AND YEAR(travel_date) = ?";
+    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses WHERE {$monthWhere}");
     $stmt->bind_param("ss", $currentMonth, $currentYear);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -308,7 +315,8 @@ try {
     }
     
     // Calculate average expense amount
-    $stmt = $conn->prepare("SELECT AVG(amount) as average FROM travel_expenses");
+    $avgWhere = $employee_filter > 0 ? "WHERE user_id = $employee_filter" : "";
+    $stmt = $conn->prepare("SELECT AVG(amount) as average FROM travel_expenses {$avgWhere}");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -768,6 +776,18 @@ function getTransportIcon($mode) {
         }
         
         /* Approval Dashboard */
+        .statistics-heading {
+            margin-bottom: 20px;
+        }
+        
+        .statistics-heading h2 {
+            color: var(--primary-color);
+            font-size: 20px;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
         .dashboard-cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -3653,6 +3673,35 @@ function getTransportIcon($mode) {
             </div>
             
          <!-- Dashboard Cards -->
+            <?php
+            // Get employee name if filter is applied
+            $employee_name = '';
+            if ($employee_filter > 0) {
+                $stmt = $conn->prepare("SELECT username FROM users WHERE id = ?");
+                $stmt->bind_param("i", $employee_filter);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($row = $result->fetch_assoc()) {
+                    $employee_name = $row['username'];
+                    // Log for debugging
+                    error_log("Found employee name: " . $employee_name);
+                } else {
+                    error_log("Employee not found for ID: " . $employee_filter);
+                }
+            }
+            ?>
+            
+            <!-- Statistics Heading -->
+            <div class="statistics-heading">
+                <h2>
+                    <?php if (!empty($employee_name)): ?>
+                        Expense Statistics for <?php echo htmlspecialchars($employee_name); ?>
+                    <?php else: ?>
+                        Overall Expense Statistics
+                    <?php endif; ?>
+                </h2>
+            </div>
+            
             <div class="dashboard-cards">
                 <div class="card pending-card">
                     <div class="card-header">
@@ -4192,7 +4241,7 @@ function getTransportIcon($mode) {
     </div>
 
     <!-- Approval/Rejection Modal -->
-    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true">
+    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true" style="z-index: 2000;">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -4569,7 +4618,7 @@ function getTransportIcon($mode) {
                 );
                 
                 // Send AJAX request
-                fetch('process_expense_approval.php', {
+                fetch('process_expense_action.php', {
                     method: 'POST',
                     body: formData
                 })
@@ -5116,8 +5165,9 @@ function getTransportIcon($mode) {
             
             /**
              * Show approval/rejection modal
+             * Make this function available globally so it can be called from the detail modal
              */
-            function showApprovalModal(expenseId, action, allExpenseIds = null) {
+            window.showApprovalModal = function(expenseId, action, allExpenseIds = null) {
                 // Get modal element
                 const approvalModal = $('#approvalModal');
                 
@@ -5174,10 +5224,8 @@ function getTransportIcon($mode) {
                     formData.append('all_expense_ids', JSON.stringify(allExpenseIds));
                 }
                 
-                // Determine which endpoint to use based on whether this is a batch operation
-                const endpoint = (allExpenseIds && allExpenseIds.length > 1) 
-                    ? 'process_expense_approval.php'  // Batch processing
-                    : 'process_expense_action.php';   // Single expense processing
+                // Use a single endpoint for all processing
+                const endpoint = 'process_expense_action.php';
                 
                 // Show processing toast notification
                 const processingToast = showToast(
@@ -5410,8 +5458,14 @@ function getTransportIcon($mode) {
             // Reset to page 1 when applying new filters
             params.set('page', '1');
             
-            // Redirect with new parameters
-            window.location.href = url.pathname + '?' + params.toString();
+            // Check if we're applying any filters
+            if (params.toString()) {
+                // Redirect with new parameters
+                window.location.href = url.pathname + '?' + params.toString();
+            } else {
+                // If no filters, go to base URL
+                window.location.href = url.pathname;
+            }
         }
         
         // Update the existing filter event listeners
@@ -6040,7 +6094,48 @@ function getTransportIcon($mode) {
                  type: 'GET',
                  data: { id: expenseId },
                  success: function(response) {
+                     // Add the HTML content to the modal
                      $('#expenseDetailContent').html(response);
+                     
+                     // Add event listeners to the approve and reject buttons
+                     const detailContent = document.getElementById('expenseDetailContent');
+                     if (detailContent) {
+                         // Find approve button in the loaded content
+                         const approveBtn = detailContent.querySelector('.btn-approve-detail');
+                         if (approveBtn) {
+                             approveBtn.addEventListener('click', function() {
+                                 const id = this.getAttribute('data-id');
+                                 // Hide the detail modal properly
+                                 $('#expenseDetailModal').modal('hide');
+                                 // Remove modal backdrop if it remains
+                                 $('.modal-backdrop').remove();
+                                 // Force body to be scrollable again
+                                 $('body').removeClass('modal-open').css('padding-right', '');
+                                 // Wait for modal to fully close before showing the approval modal
+                                 setTimeout(() => {
+                                     showApprovalModal(id, 'approve', [id]);
+                                 }, 300);
+                             });
+                         }
+                         
+                         // Find reject button in the loaded content
+                         const rejectBtn = detailContent.querySelector('.btn-reject-detail');
+                         if (rejectBtn) {
+                             rejectBtn.addEventListener('click', function() {
+                                 const id = this.getAttribute('data-id');
+                                 // Hide the detail modal properly
+                                 $('#expenseDetailModal').modal('hide');
+                                 // Remove modal backdrop if it remains
+                                 $('.modal-backdrop').remove();
+                                 // Force body to be scrollable again
+                                 $('body').removeClass('modal-open').css('padding-right', '');
+                                 // Wait for modal to fully close before showing the rejection modal
+                                 setTimeout(() => {
+                                     showApprovalModal(id, 'reject', [id]);
+                                 }, 300);
+                             });
+                         }
+                     }
                  },
                  error: function() {
                      $('#expenseDetailContent').html(`

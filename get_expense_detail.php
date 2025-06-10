@@ -506,26 +506,20 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
         <?php endif; ?>
     </div>
     
-    <!-- Action footer (if expense is pending) -->
+    <!-- Action Buttons Section -->
     <?php if ($expense['status'] === 'pending'): ?>
-    <div class="expense-detail-footer">
-        <button type="button" class="btn btn-outline-secondary btn-cancel" data-dismiss="modal">
-            <i class="fas fa-times mr-1"></i> Cancel
-        </button>
-        <div class="action-buttons">
-            <button type="button" class="btn btn-success approve-detail-btn" data-id="<?php echo $expense['id']; ?>">
-                <i class="fas fa-check-circle mr-1"></i> Approve
+    <div class="action-buttons-section">
+        <div class="action-buttons-container">
+            <button type="button" class="btn btn-secondary btn-cancel-detail" onclick="closeDetailModal()">
+                <i class="fas fa-times"></i> Cancel
             </button>
-            <button type="button" class="btn btn-danger reject-detail-btn" data-id="<?php echo $expense['id']; ?>">
-                <i class="fas fa-times-circle mr-1"></i> Reject
+            <button type="button" class="btn btn-success btn-approve-detail" data-id="<?php echo $expense['id']; ?>" onclick="approveFromDetail(<?php echo $expense['id']; ?>)">
+                <i class="fas fa-check"></i> Approve
+            </button>
+            <button type="button" class="btn btn-danger btn-reject-detail" data-id="<?php echo $expense['id']; ?>" onclick="rejectFromDetail(<?php echo $expense['id']; ?>)">
+                <i class="fas fa-times-circle"></i> Reject
             </button>
         </div>
-    </div>
-    <?php else: ?>
-    <div class="expense-detail-footer">
-        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
-            <i class="fas fa-times mr-1"></i> Close
-        </button>
     </div>
     <?php endif; ?>
 </div>
@@ -1262,6 +1256,46 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
             margin-top: 8px;
         }
     }
+    
+    /* Styling for action buttons */
+    .action-buttons-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eaedf2;
+    }
+    
+    .action-buttons-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .btn-approve-detail, .btn-reject-detail, .btn-cancel-detail {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-approve-detail:hover {
+        background-color: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-reject-detail:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-cancel-detail:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+    }
 </style>
 
 <script>
@@ -1558,5 +1592,52 @@ if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowedRoles) && $e
         
         // Re-add the edit button
         container.appendChild(editButton);
+    }
+
+    // Function to close the detail modal
+    function closeDetailModal() {
+        $('#expenseDetailModal').modal('hide');
+    }
+    
+    // Function to handle approval from detail view
+    function approveFromDetail(expenseId) {
+        // Hide the detail modal properly
+        $('#expenseDetailModal').modal('hide');
+        // Remove any remaining backdrop
+        $('.modal-backdrop').remove();
+        // Force body to be scrollable again
+        $('body').removeClass('modal-open').css('padding-right', '');
+        
+        // Wait for modal to fully close before showing the approval modal
+        setTimeout(() => {
+            // Show the approval modal for this expense
+            if (typeof window.parent.showApprovalModal === 'function') {
+                window.parent.showApprovalModal(expenseId, 'approve', [expenseId]);
+            } else {
+                console.error('Parent window function showApprovalModal not found');
+                alert('Error: Cannot access approval function. Please try using the approve button from the main page.');
+            }
+        }, 300);
+    }
+    
+    // Function to handle rejection from detail view
+    function rejectFromDetail(expenseId) {
+        // Hide the detail modal properly
+        $('#expenseDetailModal').modal('hide');
+        // Remove any remaining backdrop
+        $('.modal-backdrop').remove();
+        // Force body to be scrollable again
+        $('body').removeClass('modal-open').css('padding-right', '');
+        
+        // Wait for modal to fully close before showing the rejection modal
+        setTimeout(() => {
+            // Show the rejection modal for this expense
+            if (typeof window.parent.showApprovalModal === 'function') {
+                window.parent.showApprovalModal(expenseId, 'reject', [expenseId]);
+            } else {
+                console.error('Parent window function showApprovalModal not found');
+                alert('Error: Cannot access rejection function. Please try using the reject button from the main page.');
+            }
+        }, 300);
     }
 </script> 

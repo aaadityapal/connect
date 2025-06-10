@@ -458,3 +458,142 @@
 2025-06-09 13:36:46 - Processing expense IDs: [3,4,7]
 2025-06-09 13:36:46 - Updating status field: manager_status to value: rejected
 2025-06-09 13:36:46 - Successfully processed 3 out of 3 expenses
+2025-06-10 10:47:25 - Request received
+2025-06-10 10:47:25 - POST data: Array
+(
+    [expense_id] => 11
+    [action_type] => approve
+    [notes] => dfghj
+)
+
+2025-06-10 10:47:25 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 10:49:10 - Request received
+2025-06-10 10:49:10 - POST data: Array
+(
+    [expense_id] => 18
+    [action_type] => approve
+    [notes] => jj
+)
+
+2025-06-10 10:49:10 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 10:49:44 - Request received
+2025-06-10 10:49:44 - POST data: Array
+(
+    [expense_id] => 17
+    [action_type] => approve
+    [notes] => ll
+)
+
+2025-06-10 10:49:44 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 11:11:07 - Request received in process_expense_action.php
+2025-06-10 11:11:07 - POST data: Array
+(
+    [expense_id] => 18
+    [action_type] => reject
+    [notes] => rejected
+)
+
+2025-06-10 11:11:07 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 11:11:07 - Processing expense IDs: [18]
+2025-06-10 11:11:07 - Updating status field: accountant_status to value: rejected
+2025-06-10 11:11:07 - Successfully processed 1 out of 1 expenses
+2025-06-10 11:11:35 - Request received in process_expense_action.php
+2025-06-10 11:11:35 - POST data: Array
+(
+    [expense_id] => 17
+    [action_type] => approve
+    [notes] => okay tested
+    [all_expense_ids] => [17,18]
+)
+
+2025-06-10 11:11:35 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 11:11:35 - Processing expense IDs: [17,18]
+2025-06-10 11:11:35 - Updating status field: accountant_status to value: approved
+2025-06-10 11:11:35 - Successfully processed 2 out of 2 expenses
+2025-06-10 11:30:20 - Request received in process_expense_action.php
+2025-06-10 11:30:20 - POST data: Array
+(
+    [expense_id] => 17
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-06-10 11:30:20 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 11:30:20 - Processing expense IDs: [17]
+2025-06-10 11:30:20 - Updating status field: accountant_status to value: approved
+2025-06-10 11:30:20 - Successfully processed 1 out of 1 expenses
+2025-06-10 11:30:48 - Request received in process_expense_action.php
+2025-06-10 11:30:48 - POST data: Array
+(
+    [expense_id] => 17
+    [action_type] => reject
+    [notes] => hello
+)
+
+2025-06-10 11:30:48 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-10 11:30:48 - Processing expense IDs: [17]
+2025-06-10 11:30:48 - Updating status field: accountant_status to value: rejected
+2025-06-10 11:30:48 - Successfully processed 1 out of 1 expenses

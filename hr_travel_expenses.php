@@ -19,6 +19,8 @@ $filterMonth = isset($_GET['month']) ? $_GET['month'] : date('n');
 $filterYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $filterUser = isset($_GET['user_id']) ? $_GET['user_id'] : '';
 $filterRoleStatus = isset($_GET['role_status']) ? $_GET['role_status'] : '';
+$filterFromDate = isset($_GET['from_date']) ? $_GET['from_date'] : '';
+$filterToDate = isset($_GET['to_date']) ? $_GET['to_date'] : '';
 
 // Fetch travel expense statistics from database
 try {
@@ -32,36 +34,49 @@ try {
         $baseParams[] = $filterUser;
     }
     
-    // Add month filter if specified
-    if (!empty($filterMonth)) {
-        $baseConditions .= " AND MONTH(travel_date) = ?";
-        $baseParams[] = $filterMonth;
+    // If date range is specified, use that instead of month/year
+    if (!empty($filterFromDate) && !empty($filterToDate)) {
+        $baseConditions .= " AND travel_date BETWEEN ? AND ?";
+        $baseParams[] = $filterFromDate;
+        $baseParams[] = $filterToDate;
+    } else {
+        // Add month filter if specified
+        if (!empty($filterMonth)) {
+            $baseConditions .= " AND MONTH(travel_date) = ?";
+            $baseParams[] = $filterMonth;
+        }
+        
+        // Add year filter
+        $baseConditions .= " AND YEAR(travel_date) = ?";
+        $baseParams[] = $filterYear;
     }
-    
-    // Add year filter
-    $baseConditions .= " AND YEAR(travel_date) = ?";
-    $baseParams[] = $filterYear;
     
     // Add role status filter if specified
     if (!empty($filterRoleStatus)) {
         $parts = explode('_', $filterRoleStatus);
         if (count($parts) == 2) {
-            $role = $parts[0]; // hr, manager, or accountant
+            $role = $parts[0]; // hr, manager, accountant, or status
             $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
             
             // Add the appropriate condition based on the role
             switch ($role) {
                 case 'hr':
                     $baseConditions .= " AND hr_status = ?";
+                    $baseParams[] = $status;
                     break;
                 case 'manager':
                     $baseConditions .= " AND manager_status = ?";
+                    $baseParams[] = $status;
                     break;
                 case 'accountant':
                     $baseConditions .= " AND accountant_status = ?";
+                    $baseParams[] = $status;
+                    break;
+                case 'status':
+                    $baseConditions .= " AND status = ?";
+                    $baseParams[] = $status;
                     break;
             }
-            $baseParams[] = $status;
         }
     }
     
@@ -170,37 +185,50 @@ try {
         $params[] = $filterUser;
     }
     
-    // Add month filter if specified
-    if (!empty($filterMonth)) {
-        $query .= " AND MONTH(te.travel_date) = ?";
-        $params[] = $filterMonth;
+    // If date range is specified, use that instead of month/year
+    if (!empty($filterFromDate) && !empty($filterToDate)) {
+        $query .= " AND te.travel_date BETWEEN ? AND ?";
+        $params[] = $filterFromDate;
+        $params[] = $filterToDate;
+    } else {
+        // Add month filter if specified
+        if (!empty($filterMonth)) {
+            $query .= " AND MONTH(te.travel_date) = ?";
+            $params[] = $filterMonth;
+        }
+        
+        // Add year filter
+        $query .= " AND YEAR(te.travel_date) = ?";
+        $params[] = $filterYear;
     }
-    
-    // Add year filter
-    $query .= " AND YEAR(te.travel_date) = ?";
-    $params[] = $filterYear;
     
     // Add role status filter if specified
     if (!empty($filterRoleStatus)) {
         // Parse the role and status from the filter value (e.g., "hr_approved" => "hr", "Approved")
         $parts = explode('_', $filterRoleStatus);
         if (count($parts) == 2) {
-            $role = $parts[0]; // hr, manager, or accountant
+            $role = $parts[0]; // hr, manager, accountant, or status
             $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
             
             // Add the appropriate condition based on the role
             switch ($role) {
                 case 'hr':
                     $query .= " AND te.hr_status = ?";
+                    $params[] = $status;
                     break;
                 case 'manager':
                     $query .= " AND te.manager_status = ?";
+                    $params[] = $status;
                     break;
                 case 'accountant':
                     $query .= " AND te.accountant_status = ?";
+                    $params[] = $status;
+                    break;
+                case 'status':
+                    $query .= " AND te.status = ?";
+                    $params[] = $status;
                     break;
             }
-            $params[] = $status;
         }
     }
     
@@ -2118,6 +2146,25 @@ if (!empty($filterMonth)) {
       font-weight: 500;
     }
     
+    /* Date range filter styles */
+    .date-range-inputs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .date-range-inputs input[type="date"] {
+      border-color: #e5e7eb;
+      color: #1e293b;
+      font-weight: 500;
+      min-width: 140px;
+    }
+    
+    .date-separator {
+      color: #64748b;
+      font-weight: 500;
+    }
+    
     .filter-item button {
       display: flex;
       align-items: center;
@@ -2942,7 +2989,7 @@ if (!empty($filterMonth)) {
                 ?>
               </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item date-filter-group" id="monthYearFilters">
               <select name="month" id="monthFilter" class="form-select">
                 <?php
                 foreach ($months as $num => $name) {
@@ -2952,7 +2999,7 @@ if (!empty($filterMonth)) {
                 ?>
               </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item date-filter-group" id="yearFilters">
               <select name="year" id="yearFilter" class="form-select">
                 <?php
                 $currentYear = date('Y');
@@ -2963,9 +3010,26 @@ if (!empty($filterMonth)) {
                 ?>
               </select>
             </div>
+            <div class="filter-item date-filter-group" id="dateRangeFilters" style="<?php echo (!empty($filterFromDate) && !empty($filterToDate)) ? '' : 'display: none;'; ?>">
+              <div class="date-range-inputs">
+                <input type="date" id="fromDateFilter" name="from_date" class="form-control" placeholder="From Date" value="<?php echo $filterFromDate; ?>">
+                <span class="date-separator">to</span>
+                <input type="date" id="toDateFilter" name="to_date" class="form-control" placeholder="To Date" value="<?php echo $filterToDate; ?>">
+              </div>
+            </div>
+            <div class="filter-item">
+              <button type="button" id="toggleDateFilter" class="btn btn-outline-secondary" onclick="toggleDateFilterType()">
+                <i class="bi bi-calendar-range"></i> <?php echo (!empty($filterFromDate) && !empty($filterToDate)) ? 'Use Month/Year' : 'Use Date Range'; ?>
+              </button>
+            </div>
             <div class="filter-item">
               <select name="role_status" id="roleStatusFilter" class="form-select">
                 <option value="">All Statuses</option>
+                <optgroup label="Overall Status">
+                  <option value="status_approved" <?php echo $filterRoleStatus == 'status_approved' ? 'selected' : ''; ?>>Approved</option>
+                  <option value="status_pending" <?php echo $filterRoleStatus == 'status_pending' ? 'selected' : ''; ?>>Pending</option>
+                  <option value="status_rejected" <?php echo $filterRoleStatus == 'status_rejected' ? 'selected' : ''; ?>>Rejected</option>
+                </optgroup>
                 <optgroup label="HR">
                   <option value="hr_approved" <?php echo $filterRoleStatus == 'hr_approved' ? 'selected' : ''; ?>>HR - Approved</option>
                   <option value="hr_pending" <?php echo $filterRoleStatus == 'hr_pending' ? 'selected' : ''; ?>>HR - Pending</option>
@@ -2986,6 +3050,11 @@ if (!empty($filterMonth)) {
             <div class="filter-item">
               <button type="button" id="filterBtn" class="btn btn-primary" onclick="filterExpenses()">
                 <i class="bi bi-funnel"></i> Filter
+              </button>
+            </div>
+            <div class="filter-item">
+              <button type="button" id="exportBtn" class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-excel"></i> Export Excel
               </button>
             </div>
           </div>
@@ -4739,20 +4808,112 @@ if (!empty($filterMonth)) {
       }
     }
 
+    // Function to toggle between date range and month/year filters
+    function toggleDateFilterType() {
+      const monthYearFilters = document.getElementById('monthYearFilters');
+      const yearFilters = document.getElementById('yearFilters');
+      const dateRangeFilters = document.getElementById('dateRangeFilters');
+      const toggleBtn = document.getElementById('toggleDateFilter');
+      
+      if (dateRangeFilters.style.display === 'none') {
+        // Switch to date range
+        monthYearFilters.style.display = 'none';
+        yearFilters.style.display = 'none';
+        dateRangeFilters.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="bi bi-calendar-month"></i> Use Month/Year';
+        
+        // Set default date range if empty
+        const fromDate = document.getElementById('fromDateFilter');
+        const toDate = document.getElementById('toDateFilter');
+        if (!fromDate.value) {
+          const today = new Date();
+          const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+          const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          
+          fromDate.value = firstDay.toISOString().split('T')[0];
+          toDate.value = lastDay.toISOString().split('T')[0];
+        }
+      } else {
+        // Switch to month/year
+        monthYearFilters.style.display = 'block';
+        yearFilters.style.display = 'block';
+        dateRangeFilters.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="bi bi-calendar-range"></i> Use Date Range';
+      }
+    }
+    
     // Function to filter expenses based on selected values
     function filterExpenses() {
       const userId = document.getElementById('userFilter').value;
-      const month = document.getElementById('monthFilter').value;
-      const year = document.getElementById('yearFilter').value;
       const roleStatus = document.getElementById('roleStatusFilter').value;
       
-      // Redirect to the same page with filter parameters
-      let url = `hr_travel_expenses.php?user_id=${userId}&month=${month}&year=${year}`;
+      // Check which filter type is active
+      const dateRangeFilters = document.getElementById('dateRangeFilters');
+      let url = 'hr_travel_expenses.php?user_id=' + userId;
+      
+      if (dateRangeFilters.style.display === 'none') {
+        // Using month/year filters
+        const month = document.getElementById('monthFilter').value;
+        const year = document.getElementById('yearFilter').value;
+        url += `&month=${month}&year=${year}`;
+      } else {
+        // Using date range filters
+        const fromDate = document.getElementById('fromDateFilter').value;
+        const toDate = document.getElementById('toDateFilter').value;
+        
+        if (fromDate && toDate) {
+          url += `&from_date=${fromDate}&to_date=${toDate}`;
+        } else {
+          showToast('error', 'Please select both From and To dates');
+          return;
+        }
+      }
+      
       if (roleStatus) {
         url += `&role_status=${roleStatus}`;
       }
       
       window.location.href = url;
+    }
+    
+    // Function to export filtered data to Excel
+    function exportToExcel() {
+      // Get current filter values
+      const userId = document.getElementById('userFilter').value;
+      const roleStatus = document.getElementById('roleStatusFilter').value;
+      
+      // Show loading toast
+      showToast('info', 'Preparing Excel export...');
+      
+      // Build export URL with current filters
+      let exportUrl = `export_travel_expenses.php?user_id=${userId}`;
+      
+      // Check which filter type is active
+      const dateRangeFilters = document.getElementById('dateRangeFilters');
+      if (dateRangeFilters.style.display === 'none') {
+        // Using month/year filters
+        const month = document.getElementById('monthFilter').value;
+        const year = document.getElementById('yearFilter').value;
+        exportUrl += `&month=${month}&year=${year}`;
+      } else {
+        // Using date range filters
+        const fromDate = document.getElementById('fromDateFilter').value;
+        const toDate = document.getElementById('toDateFilter').value;
+        
+        if (fromDate && toDate) {
+          exportUrl += `&from_date=${fromDate}&to_date=${toDate}`;
+        } else {
+          showToast('error', 'Please select both From and To dates');
+          return;
+        }
+      }
+      
+      if (roleStatus) {
+        exportUrl += `&role_status=${roleStatus}`;
+      }
+      
+      // Redirect to export script
+      window.location.href = exportUrl;
     }
 
     // Function to handle edit icon click

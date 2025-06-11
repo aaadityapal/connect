@@ -56,6 +56,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const expenseInput = document.getElementById('totalExpense');
     const notesInput = document.getElementById('expenseNotes');
     
+    // Add visual indicator for read-only fields
+    expenseInput.addEventListener('focus', function() {
+        if (this.readOnly) {
+            this.blur(); // Remove focus if read-only
+            showNotification('This field is automatically calculated based on distance for Bike and Car modes', 'info');
+        }
+    });
+    
     // Check form elements
     const missingFormElements = [];
     if (!purposeInput) missingFormElements.push('purposeOfVisit');
@@ -112,6 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
     modeInput.addEventListener('change', function() {
         if (this.value === 'Taxi') {
             fileUploadContainer.style.display = 'block';
+            // Make expense field editable for Taxi
+            expenseInput.readOnly = false;
         } else {
             fileUploadContainer.style.display = 'none';
             // Reset file input when mode is not Taxi
@@ -130,6 +140,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileLabel = document.querySelector('.custom-file-label');
                 if (fileLabel) fileLabel.textContent = 'Choose file...';
             }
+        }
+        
+        // Auto-calculate expense based on distance for Bike and Car
+        if (this.value === 'Bike' || this.value === 'Car') {
+            // Make expense field read-only for Bike and Car
+            expenseInput.readOnly = true;
+            
+            if (distanceInput.value) {
+                const distance = parseFloat(distanceInput.value);
+                if (!isNaN(distance)) {
+                    const ratePerKm = this.value === 'Bike' ? 3.5 : 10; // 3.5 for Bike, 10 for Car
+                    const calculatedExpense = distance * ratePerKm;
+                    expenseInput.value = calculatedExpense.toFixed(2);
+                }
+            }
+        } else {
+            // Make expense field editable for other modes
+            expenseInput.readOnly = false;
         }
     });
     
@@ -1103,6 +1131,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ensure the value is positive
         if (this.value < 0) {
             this.value = 0;
+        }
+        
+        // Auto-calculate expense based on distance for Bike and Car
+        const currentMode = modeInput.value;
+        if ((currentMode === 'Bike' || currentMode === 'Car') && this.value) {
+            // Make sure expense field is read-only
+            expenseInput.readOnly = true;
+            
+            const distance = parseFloat(this.value);
+            if (!isNaN(distance)) {
+                const ratePerKm = currentMode === 'Bike' ? 3.5 : 10; // 3.5 for Bike, 10 for Car
+                const calculatedExpense = distance * ratePerKm;
+                expenseInput.value = calculatedExpense.toFixed(2);
+            }
         }
     });
     

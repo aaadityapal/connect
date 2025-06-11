@@ -597,3 +597,311 @@
 2025-06-10 11:30:48 - Processing expense IDs: [17]
 2025-06-10 11:30:48 - Updating status field: accountant_status to value: rejected
 2025-06-10 11:30:48 - Successfully processed 1 out of 1 expenses
+2025-06-11 08:08:45 - Request received in process_expense_action.php
+2025-06-11 08:08:45 - POST data: Array
+(
+    [expense_id] => 17
+    [action] => approve
+    [notes] => ii
+)
+
+2025-06-11 08:08:45 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 08:08:45 - Processing expense IDs: [17]
+2025-06-11 08:08:45 - Updating status field: hr_status to value: approved
+2025-06-11 08:08:45 - Successfully processed 1 out of 1 expenses
+2025-06-11 08:09:04 - Request received in process_expense_action.php
+2025-06-11 08:09:04 - POST data: Array
+(
+    [expense_id] => 18
+    [action] => approve
+    [notes] => ii
+)
+
+2025-06-11 08:09:04 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 08:09:04 - Processing expense IDs: [18]
+2025-06-11 08:09:04 - Updating status field: hr_status to value: approved
+2025-06-11 08:09:04 - Successfully processed 1 out of 1 expenses
+2025-06-11 08:57:38 - Request received in process_expense_action.php
+2025-06-11 08:57:38 - POST data: Array
+(
+    [expense_id] => 15
+    [action] => approve
+    [notes] => ddd
+)
+
+2025-06-11 08:57:38 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 08:57:38 - Processing expense IDs: [15]
+2025-06-11 08:57:38 - Updating status field: hr_status to value: approved
+2025-06-11 08:57:38 - Successfully processed 1 out of 1 expenses
+2025-06-11 08:57:38 - Request received in process_expense_action.php
+2025-06-11 08:57:38 - POST data: Array
+(
+    [expense_id] => 14
+    [action] => approve
+    [notes] => ddd
+)
+
+2025-06-11 08:57:38 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 08:57:38 - Processing expense IDs: [14]
+2025-06-11 08:57:38 - Updating status field: hr_status to value: approved
+2025-06-11 08:57:38 - Successfully processed 1 out of 1 expenses
+2025-06-11 08:58:19 - Request received in process_expense_action.php
+2025-06-11 08:58:19 - POST data: Array
+(
+    [expense_id] => 15
+    [action] => reject
+    [notes] => dd
+)
+
+2025-06-11 08:58:19 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 08:58:19 - Processing expense IDs: [15]
+2025-06-11 08:58:19 - Updating status field: hr_status to value: rejected
+2025-06-11 08:58:19 - Successfully processed 1 out of 1 expenses
+2025-06-11 08:58:19 - Request received in process_expense_action.php
+2025-06-11 08:58:19 - POST data: Array
+(
+    [expense_id] => 14
+    [action] => reject
+    [notes] => dd
+)
+
+2025-06-11 08:58:19 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 08:58:19 - Processing expense IDs: [14]
+2025-06-11 08:58:19 - Updating status field: hr_status to value: rejected
+2025-06-11 08:58:19 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:02:02 - Request received in process_expense_action.php
+2025-06-11 10:02:02 - POST data: Array
+(
+    [expense_id] => 19
+    [action] => approve
+    [notes] => dd
+)
+
+2025-06-11 10:02:02 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:02:02 - Processing expense IDs: [19]
+2025-06-11 10:02:02 - Updating status field: hr_status to value: approved
+2025-06-11 10:02:02 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:02:56 - Request received in process_expense_action.php
+2025-06-11 10:02:56 - POST data: Array
+(
+    [expense_id] => 18
+    [action] => approve
+    [notes] => hh
+)
+
+2025-06-11 10:02:56 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:02:56 - Processing expense IDs: [18]
+2025-06-11 10:02:56 - Updating status field: hr_status to value: approved
+2025-06-11 10:02:56 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:03:11 - Request received in process_expense_action.php
+2025-06-11 10:03:11 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => approve
+    [notes] => jj
+)
+
+2025-06-11 10:03:11 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:03:11 - Processing expense IDs: [16]
+2025-06-11 10:03:11 - Updating status field: hr_status to value: approved
+2025-06-11 10:03:11 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:03:26 - Request received in process_expense_action.php
+2025-06-11 10:03:26 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => reject
+    [notes] => jj
+)
+
+2025-06-11 10:03:26 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:03:26 - Processing expense IDs: [16]
+2025-06-11 10:03:26 - Updating status field: hr_status to value: rejected
+2025-06-11 10:03:26 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:09:54 - Request received in process_expense_action.php
+2025-06-11 10:09:54 - POST data: Array
+(
+    [expense_id] => 19
+    [action] => reject
+    [notes] => dd
+)
+
+2025-06-11 10:09:54 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:09:54 - Processing expense IDs: [19]
+2025-06-11 10:09:54 - Updating status field: hr_status to value: rejected
+2025-06-11 10:09:54 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:10:02 - Request received in process_expense_action.php
+2025-06-11 10:10:02 - POST data: Array
+(
+    [expense_id] => 19
+    [action] => approve
+    [notes] => dd
+)
+
+2025-06-11 10:10:02 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:10:02 - Processing expense IDs: [19]
+2025-06-11 10:10:02 - Updating status field: hr_status to value: approved
+2025-06-11 10:10:02 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:10:10 - Request received in process_expense_action.php
+2025-06-11 10:10:10 - POST data: Array
+(
+    [expense_id] => 16
+    [action] => approve
+    [notes] => dd
+)
+
+2025-06-11 10:10:10 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:10:10 - Processing expense IDs: [16]
+2025-06-11 10:10:10 - Updating status field: hr_status to value: approved
+2025-06-11 10:10:10 - Successfully processed 1 out of 1 expenses
+2025-06-11 10:10:30 - Request received in process_expense_action.php
+2025-06-11 10:10:30 - POST data: Array
+(
+    [expense_id] => 18
+    [action] => approve
+    [notes] => ddd
+)
+
+2025-06-11 10:10:30 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-06-11 10:10:30 - Processing expense IDs: [18]
+2025-06-11 10:10:30 - Updating status field: hr_status to value: approved
+2025-06-11 10:10:30 - Successfully processed 1 out of 1 expenses

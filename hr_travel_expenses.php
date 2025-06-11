@@ -18,36 +18,118 @@ require_once 'config/db_connect.php';
 $filterMonth = isset($_GET['month']) ? $_GET['month'] : date('n');
 $filterYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $filterUser = isset($_GET['user_id']) ? $_GET['user_id'] : '';
+$filterRoleStatus = isset($_GET['role_status']) ? $_GET['role_status'] : '';
 
 // Fetch travel expense statistics from database
 try {
+    // Build base query conditions for filters
+    $baseConditions = "1=1";
+    $baseParams = [];
+    
+    // Add user filter if specified
+    if (!empty($filterUser)) {
+        $baseConditions .= " AND user_id = ?";
+        $baseParams[] = $filterUser;
+    }
+    
+    // Add month filter if specified
+    if (!empty($filterMonth)) {
+        $baseConditions .= " AND MONTH(travel_date) = ?";
+        $baseParams[] = $filterMonth;
+    }
+    
+    // Add year filter
+    $baseConditions .= " AND YEAR(travel_date) = ?";
+    $baseParams[] = $filterYear;
+    
+    // Add role status filter if specified
+    if (!empty($filterRoleStatus)) {
+        $parts = explode('_', $filterRoleStatus);
+        if (count($parts) == 2) {
+            $role = $parts[0]; // hr, manager, or accountant
+            $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
+            
+            // Add the appropriate condition based on the role
+            switch ($role) {
+                case 'hr':
+                    $baseConditions .= " AND hr_status = ?";
+                    break;
+                case 'manager':
+                    $baseConditions .= " AND manager_status = ?";
+                    break;
+                case 'accountant':
+                    $baseConditions .= " AND accountant_status = ?";
+                    break;
+            }
+            $baseParams[] = $status;
+        }
+    }
+    
     // Get total count
-    $totalQuery = "SELECT COUNT(*) as total FROM travel_expenses";
-    $totalResult = $pdo->query($totalQuery);
-    $totalCount = $totalResult->fetch(PDO::FETCH_ASSOC)['total'];
+    $totalQuery = "SELECT COUNT(*) as total FROM travel_expenses WHERE $baseConditions";
+    $totalStmt = $pdo->prepare($totalQuery);
+    $totalStmt->execute($baseParams);
+    $totalCount = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Get pending count
-    $pendingQuery = "SELECT COUNT(*) as pending FROM travel_expenses WHERE status = 'Pending'";
-    $pendingResult = $pdo->query($pendingQuery);
-    $pendingCount = $pendingResult->fetch(PDO::FETCH_ASSOC)['pending'];
+    $pendingQuery = "SELECT COUNT(*) as pending FROM travel_expenses WHERE status = 'Pending' AND $baseConditions";
+    $pendingStmt = $pdo->prepare($pendingQuery);
+    $pendingStmt->execute($baseParams);
+    $pendingCount = $pendingStmt->fetch(PDO::FETCH_ASSOC)['pending'];
 
     // Get approved count
-    $approvedQuery = "SELECT COUNT(*) as approved FROM travel_expenses WHERE status = 'Approved'";
-    $approvedResult = $pdo->query($approvedQuery);
-    $approvedCount = $approvedResult->fetch(PDO::FETCH_ASSOC)['approved'];
+    $approvedQuery = "SELECT COUNT(*) as approved FROM travel_expenses WHERE status = 'Approved' AND $baseConditions";
+    $approvedStmt = $pdo->prepare($approvedQuery);
+    $approvedStmt->execute($baseParams);
+    $approvedCount = $approvedStmt->fetch(PDO::FETCH_ASSOC)['approved'];
 
     // Get rejected count
-    $rejectedQuery = "SELECT COUNT(*) as rejected FROM travel_expenses WHERE status = 'Rejected'";
-    $rejectedResult = $pdo->query($rejectedQuery);
-    $rejectedCount = $rejectedResult->fetch(PDO::FETCH_ASSOC)['rejected'];
+    $rejectedQuery = "SELECT COUNT(*) as rejected FROM travel_expenses WHERE status = 'Rejected' AND $baseConditions";
+    $rejectedStmt = $pdo->prepare($rejectedQuery);
+    $rejectedStmt->execute($baseParams);
+    $rejectedCount = $rejectedStmt->fetch(PDO::FETCH_ASSOC)['rejected'];
 
     // Get pending amount
-    $pendingAmountQuery = "SELECT SUM(amount) as total_pending FROM travel_expenses WHERE status = 'Pending'";
-    $pendingAmountResult = $pdo->query($pendingAmountQuery);
-    $pendingAmount = $pendingAmountResult->fetch(PDO::FETCH_ASSOC)['total_pending'] ?: 0;
+    $pendingAmountQuery = "SELECT SUM(amount) as total_pending FROM travel_expenses WHERE status = 'Pending' AND $baseConditions";
+    $pendingAmountStmt = $pdo->prepare($pendingAmountQuery);
+    $pendingAmountStmt->execute($baseParams);
+    $pendingAmount = $pendingAmountStmt->fetch(PDO::FETCH_ASSOC)['total_pending'] ?: 0;
     
     // Format the pending amount with commas
     $formattedPendingAmount = '₹' . number_format($pendingAmount, 0, '.', ',');
+    
+    // Get approved amount
+    $approvedAmountQuery = "SELECT SUM(amount) as total_approved FROM travel_expenses WHERE status = 'Approved' AND $baseConditions";
+    $approvedAmountStmt = $pdo->prepare($approvedAmountQuery);
+    $approvedAmountStmt->execute($baseParams);
+    $approvedAmount = $approvedAmountStmt->fetch(PDO::FETCH_ASSOC)['total_approved'] ?: 0;
+    
+    // Get rejected amount
+    $rejectedAmountQuery = "SELECT SUM(amount) as total_rejected FROM travel_expenses WHERE status = 'Rejected' AND $baseConditions";
+    $rejectedAmountStmt = $pdo->prepare($rejectedAmountQuery);
+    $rejectedAmountStmt->execute($baseParams);
+    $rejectedAmount = $rejectedAmountStmt->fetch(PDO::FETCH_ASSOC)['total_rejected'] ?: 0;
+    
+    // Get average expense amount
+    $avgExpenseQuery = "SELECT AVG(amount) as avg_expense FROM travel_expenses WHERE $baseConditions";
+    $avgExpenseStmt = $pdo->prepare($avgExpenseQuery);
+    $avgExpenseStmt->execute($baseParams);
+    $averageExpense = $avgExpenseStmt->fetch(PDO::FETCH_ASSOC)['avg_expense'] ?: 0;
+    
+    // Get recent month approved amount
+    $currentMonth = date('n');
+    $currentYear = date('Y');
+    
+    // Clone the base params and add month/year conditions
+    $recentMonthParams = $baseParams;
+    $recentMonthQuery = "SELECT SUM(amount) as recent_month_amount FROM travel_expenses 
+                         WHERE status = 'Approved' AND MONTH(travel_date) = ? AND YEAR(travel_date) = ? AND $baseConditions";
+    $recentMonthStmt = $pdo->prepare($recentMonthQuery);
+    
+    // Add month and year to the beginning of the params array
+    array_unshift($recentMonthParams, $currentMonth, $currentYear);
+    $recentMonthStmt->execute($recentMonthParams);
+    $recentMonthAmount = $recentMonthStmt->fetch(PDO::FETCH_ASSOC)['recent_month_amount'] ?: 0;
     
     // Fetch all users for the dropdown filter
     $usersQuery = "SELECT id, username, unique_id FROM users ORDER BY username";
@@ -98,12 +180,52 @@ try {
     $query .= " AND YEAR(te.travel_date) = ?";
     $params[] = $filterYear;
     
+    // Add role status filter if specified
+    if (!empty($filterRoleStatus)) {
+        // Parse the role and status from the filter value (e.g., "hr_approved" => "hr", "Approved")
+        $parts = explode('_', $filterRoleStatus);
+        if (count($parts) == 2) {
+            $role = $parts[0]; // hr, manager, or accountant
+            $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
+            
+            // Add the appropriate condition based on the role
+            switch ($role) {
+                case 'hr':
+                    $query .= " AND te.hr_status = ?";
+                    break;
+                case 'manager':
+                    $query .= " AND te.manager_status = ?";
+                    break;
+                case 'accountant':
+                    $query .= " AND te.accountant_status = ?";
+                    break;
+            }
+            $params[] = $status;
+        }
+    }
+    
     // Order by date descending
-    $query .= " ORDER BY te.travel_date DESC";
+    $query .= " ORDER BY te.travel_date DESC, te.user_id";
     
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Group expenses by date and user
+    $groupedExpenses = [];
+    foreach ($expenses as $expense) {
+        $groupKey = $expense['date'] . '_' . $expense['user_id'];
+        if (!isset($groupedExpenses[$groupKey])) {
+            $groupedExpenses[$groupKey] = [
+                'date' => $expense['date'],
+                'user_id' => $expense['user_id'],
+                'employee' => $expense['employee'],
+                'profile_picture' => $expense['profile_picture'],
+                'expenses' => []
+            ];
+        }
+        $groupedExpenses[$groupKey]['expenses'][] = $expense;
+    }
     
 } catch (PDOException $e) {
     // Log error and set default values
@@ -116,6 +238,7 @@ try {
     $formattedPendingAmount = '₹0';
     $expenses = [];
     $users = [];
+    $groupedExpenses = [];
 }
 
 // Format the filter period for display
@@ -299,13 +422,75 @@ if (!empty($filterMonth)) {
         margin-right: 0.75rem;
     }
 
+    /* Overview Section */
+    .overview-section {
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+    
+    .overview-section .section-header {
+      padding: 20px 25px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+    
+    .overview-section .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .filter-badge {
+      background-color: #f0f4ff;
+      border: 1px solid #d0d8ff;
+      color: #4F46E5;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    
+    .overview-section .section-title i {
+      color: #4F46E5;
+      font-size: 1.3rem;
+    }
+    
+    .stats-container {
+      padding: 20px;
+    }
+    
+    /* Gap spacer */
+    .gap-spacer {
+      height: 30px;
+    }
+    
     /* Stats */
     .stats {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .stats-row {
       display: flex;
       justify-content: space-between;
       gap: 20px;
       flex-wrap: wrap;
-      margin-bottom: 40px;
     }
 
     .card {
@@ -316,7 +501,7 @@ if (!empty($filterMonth)) {
       border-radius: 15px;
       box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
       text-align: center;
-      transition: transform 0.3s;
+      transition: transform 0.3s, box-shadow 0.3s;
       position: relative;
       overflow: hidden;
       display: flex;
@@ -327,10 +512,11 @@ if (!empty($filterMonth)) {
 
     .card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
     }
 
     .card h2 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       margin: 10px 0;
       font-weight: 700;
     }
@@ -351,6 +537,11 @@ if (!empty($filterMonth)) {
       width: 60px;
       height: 60px;
       border-radius: 50%;
+      transition: transform 0.3s;
+    }
+    
+    .card:hover .card-icon {
+      transform: scale(1.1);
     }
     
     /* Card type specific styles */
@@ -404,7 +595,59 @@ if (!empty($filterMonth)) {
     
     .amount-card h2 {
       color: #6366f1;
-      font-size: 1.8rem;
+    }
+    
+    /* New card styles */
+    .success-card {
+      border-top: 4px solid #10b981;
+    }
+    
+    .success-card .card-icon {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    
+    .success-card h2 {
+      color: #10b981;
+    }
+    
+    .danger-card {
+      border-top: 4px solid #ef4444;
+    }
+    
+    .danger-card .card-icon {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    
+    .danger-card h2 {
+      color: #ef4444;
+    }
+    
+    .info-card {
+      border-top: 4px solid #3b82f6;
+    }
+    
+    .info-card .card-icon {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    
+    .info-card h2 {
+      color: #3b82f6;
+    }
+    
+    .primary-card {
+      border-top: 4px solid #8b5cf6;
+    }
+    
+    .primary-card .card-icon {
+      background-color: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+    }
+    
+    .primary-card h2 {
+      color: #8b5cf6;
     }
 
     table {
@@ -431,34 +674,7 @@ if (!empty($filterMonth)) {
       border-bottom: none;
     }
 
-    .approve-btn {
-      background-color: #10b981;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
-      margin-right: 5px;
-    }
-
-    .approve-btn:hover {
-      background-color: #059669;
-    }
-    
-    .reject-btn {
-      background-color: #ef4444;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .reject-btn:hover {
-      background-color: #dc2626;
-    }
+    /* Status colors */
 
     .approved {
       color: #10b981;
@@ -492,9 +708,13 @@ if (!empty($filterMonth)) {
     }
 
     @media (max-width: 768px) {
-      .stats {
+      .stats-row {
         flex-direction: column;
         gap: 20px;
+      }
+      
+      .card {
+        min-width: 100%;
       }
     }
 
@@ -558,28 +778,42 @@ if (!empty($filterMonth)) {
     .table-section {
       background-color: white;
       border-radius: 15px;
-      padding: 20px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
     }
     
-    .section-header {
+    .table-section .section-header {
+      padding: 20px 25px;
+      border-bottom: 1px solid #e5e7eb;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     
-    .section-title {
+    .table-section .section-title {
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--dark);
+      color: #1e293b;
+      margin: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     
-    .section-title i {
-      color: var(--primary);
-      font-size: 1.2rem;
+    .table-section .section-title i {
+      color: #4F46E5;
+      font-size: 1.3rem;
+    }
+    
+    .table-section .table-content {
+      padding: 0 20px 20px 20px;
+    }
+    
+    .table-section table {
+      margin: 0;
+      border-radius: 0;
     }
     
     /* Status cell styling */
@@ -605,28 +839,77 @@ if (!empty($filterMonth)) {
     /* Action buttons */
     .action-buttons {
       display: flex;
-      gap: 5px;
       justify-content: center;
-      flex-wrap: wrap;
     }
     
-    .btn-sm {
-      padding: 5px 10px;
-      font-size: 0.8rem;
-      border-radius: 4px;
+    .action-btn-group {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    
+    .action-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
       border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    
-    .details-btn {
-      background-color: #6366f1;
+      transition: all 0.2s ease;
       color: white;
+      padding: 0;
+      font-size: 1rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
     }
     
-    .details-btn:hover {
+    .action-icon:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .action-icon:active {
+      transform: translateY(0);
+    }
+    
+    .action-icon.approve {
+      background-color: #10b981;
+    }
+    
+    .action-icon.approve:hover {
+      background-color: #059669;
+    }
+    
+    .action-icon.reject {
+      background-color: #ef4444;
+    }
+    
+    .action-icon.reject:hover {
+      background-color: #dc2626;
+    }
+    
+    .action-icon.details {
+      background-color: #6366f1;
+    }
+    
+    .action-icon.details:hover {
       background-color: #4f46e5;
+    }
+    
+    .action-icon i {
+      font-size: 1rem;
+    }
+    
+    .action-icon:disabled {
+      background-color: #d1d5db;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    
+    .action-icon:disabled:hover {
+      transform: none;
+      box-shadow: none;
     }
     
     /* Expense Details Modal Styles */
@@ -972,6 +1255,128 @@ if (!empty($filterMonth)) {
     #expenseDetailsModal .btn-secondary:hover {
       background-color: #5a6268;
       border-color: #545b62;
+    }
+    
+    /* When modal is open, prevent scrolling on body */
+    body.modal-open {
+      overflow: hidden;
+    }
+    
+    /* Confirmation Modal Styles */
+    #confirmationModal .modal-content {
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      max-width: 450px;
+      margin: 20vh auto;
+      width: 95%;
+      border: none;
+      overflow: hidden;
+      animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes modalPopIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    #confirmationModal .modal-header {
+      padding: 20px 25px;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      border-bottom: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    #confirmationModal .modal-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    #confirmationModal .modal-title i {
+      font-size: 1.4rem;
+    }
+    
+    #confirmationModal .modal-body {
+      padding: 25px;
+      background-color: #fff;
+    }
+    
+    #confirmationModal .confirmation-content {
+      text-align: center;
+    }
+    
+    #confirmationModal p {
+      font-size: 1.1rem;
+      color: #1e293b;
+      margin-bottom: 0;
+    }
+    
+    #confirmationModal .modal-footer {
+      padding: 15px 25px;
+      background-color: #f8fafc;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    #confirmationModal .btn-secondary {
+      padding: 10px 20px;
+      background-color: #e2e8f0;
+      color: #475569;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+    }
+    
+    #confirmationModal .btn-secondary:hover {
+      background-color: #cbd5e1;
+      transform: translateY(-2px);
+    }
+    
+    #confirmationModal .btn-primary {
+      padding: 10px 20px;
+      background-color: #4F46E5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+    }
+    
+    #confirmationModal .btn-primary:hover {
+      background-color: #4338CA;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    
+    #confirmationModal.warning .modal-header {
+      background: linear-gradient(135deg, #EA580C, #F97316);
+    }
+    
+    #confirmationModal.warning .btn-primary {
+      background-color: #F97316;
+    }
+    
+    #confirmationModal.warning .btn-primary:hover {
+      background-color: #EA580C;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
     }
 
     .close-modal {
@@ -1350,6 +1755,23 @@ if (!empty($filterMonth)) {
       height: 100%;
       overflow: auto;
       background-color: rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Modal z-index hierarchy to ensure proper stacking */
+    #confirmationModal {
+      z-index: 1070; /* Highest priority - confirmation should be on top */
+    }
+    
+    #actionDialog {
+      z-index: 1060; /* Second highest - approval/rejection dialog */
+    }
+    
+    #expenseDetailsModal {
+      z-index: 1055; /* Third highest - details modal */
+    }
+    
+    #groupExpensesModal {
+      z-index: 1050; /* Base level - group expenses modal */
     }
 
     /* Profile image styles */
@@ -1919,6 +2341,517 @@ if (!empty($filterMonth)) {
     .toast-info .toast-progress-bar {
       background-color: #3b82f6;
     }
+
+    /* New styles for grouped expenses */
+    .expense-group {
+      background-color: rgba(249, 250, 251, 0.5);
+      border-left: 3px solid #3b82f6;
+    }
+    
+    .expense-group-toggle {
+      cursor: pointer;
+      color: #3b82f6;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    
+    .expense-group-toggle:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    .expense-group-toggle i {
+      transition: transform 0.2s ease;
+    }
+    
+    .expense-group-toggle.expanded i {
+      transform: rotate(180deg);
+    }
+    
+    .expense-group-items {
+      display: none;
+    }
+    
+    .expense-group-items.show {
+      display: table-row;
+    }
+    
+    .expense-group-header td {
+      background-color: white;
+    }
+    
+    .grouped-expense-row {
+      background-color: #f8fafc;
+    }
+    
+    .grouped-expense-row td {
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+    }
+    
+    .grouped-expense-row:last-child td {
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .group-indicator {
+      position: relative;
+    }
+    
+    .group-indicator:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background-color: #3b82f6;
+    }
+
+    /* Group Modal Styles */
+    #groupExpensesModal .modal-content {
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      max-width: 1100px; /* Increased from 900px */
+      margin: 5vh auto;
+      width: 95%;
+      border: none;
+      overflow: hidden;
+      animation: modalSlideIn 0.3s ease-out;
+      background: linear-gradient(to bottom, #ffffff, #f8fafc);
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    #groupExpensesModal .modal-header {
+      padding: 20px 25px;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      border-bottom: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    
+    #groupExpensesModal .modal-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+    }
+    
+    #groupExpensesModal .modal-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    #groupExpensesModal .modal-title i {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.4rem;
+    }
+    
+    #groupExpensesModal .close-modal {
+      color: white;
+      opacity: 0.8;
+      font-size: 24px;
+      transition: all 0.2s;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    #groupExpensesModal .close-modal:hover {
+      opacity: 1;
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
+    }
+    
+    #groupExpensesModal .modal-body {
+      padding: 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    
+    #groupExpensesModal .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    #groupExpensesModal .modal-body::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    
+    #groupExpensesModal .modal-body::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 10px;
+      border: 2px solid #f1f5f9;
+    }
+    
+    #groupExpensesModal .group-header {
+      padding: 20px 25px;
+      background-color: #f8fafc;
+      position: relative;
+    }
+    
+         #groupExpensesModal .employee-info {
+       display: flex;
+       align-items: flex-start;
+       gap: 20px;
+       margin-bottom: 20px;
+     }
+     
+     #groupExpensesModal .employee-info img {
+       width: 70px;
+       height: 70px;
+       border-radius: 50%;
+       object-fit: cover;
+       border: 4px solid white;
+       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+     }
+     
+     #groupExpensesModal .employee-details {
+       flex: 1;
+     }
+     
+     #groupExpensesModal .employee-name {
+       font-weight: 700;
+       font-size: 1.5rem;
+       color: #1e293b;
+       margin-bottom: 6px;
+     }
+     
+     #groupExpensesModal .meta-info-container {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 15px;
+       margin-top: 10px;
+     }
+     
+     #groupExpensesModal .date-info {
+       display: flex;
+       align-items: center;
+       gap: 8px;
+       background-color: #f1f5f9;
+       border-radius: 50px;
+       padding: 6px 16px;
+       color: #334155;
+       font-size: 0.95rem;
+       font-weight: 500;
+     }
+     
+     #groupExpensesModal .date-info i {
+       color: #4F46E5;
+       font-size: 1.1rem;
+     }
+     
+     #groupExpensesModal .expense-count {
+       display: inline-flex;
+       align-items: center;
+       justify-content: center;
+       background: linear-gradient(135deg, #5E4FE5, #7C3AED);
+       color: white;
+       border-radius: 50px;
+       padding: 6px 16px;
+       font-size: 0.95rem;
+       font-weight: 600;
+       box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3);
+     }
+     
+     #groupExpensesModal .expense-count i {
+       margin-right: 6px;
+       font-size: 1.1rem;
+     }
+    
+    #groupExpensesModal .group-summary {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+      padding-top: 15px;
+      border-top: 1px dashed #e2e8f0;
+    }
+    
+    #groupExpensesModal .summary-item {
+      background-color: white;
+      border-radius: 8px;
+      padding: 12px 15px;
+      flex: 1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.2s ease;
+    }
+    
+    #groupExpensesModal .summary-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    #groupExpensesModal .summary-value {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 5px;
+    }
+    
+    #groupExpensesModal .summary-label {
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+    
+    #groupExpensesModal .total-amount {
+      color: #4F46E5;
+    }
+    
+    #groupExpensesModal .total-distance {
+      color: #10B981;
+    }
+    
+    #groupExpensesModal .group-table-container {
+      padding: 0 10px 15px 10px;
+    }
+    
+    #groupExpensesModal .group-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    #groupExpensesModal .group-table th {
+      background-color: #f1f5f9;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #334155;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    #groupExpensesModal .group-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+      font-size: 0.95rem;
+    }
+    
+    #groupExpensesModal .group-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    #groupExpensesModal .group-table tr {
+      transition: background-color 0.2s ease;
+    }
+    
+    #groupExpensesModal .group-table tr:hover {
+      background-color: #f8fafc;
+    }
+    
+    #groupExpensesModal .group-table tr:hover td {
+      position: relative;
+    }
+    
+    #groupExpensesModal .status-cell {
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 50px;
+      display: inline-block;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    
+    #groupExpensesModal .status-cell.pending {
+      background-color: #FEF3C7;
+      color: #92400E;
+    }
+    
+    #groupExpensesModal .status-cell.approved {
+      background-color: #D1FAE5;
+      color: #065F46;
+    }
+    
+    #groupExpensesModal .status-cell.rejected {
+      background-color: #FEE2E2;
+      color: #991B1B;
+    }
+    
+    #groupExpensesModal .from-to-cell {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #4B5563;
+    }
+    
+    #groupExpensesModal .modal-footer {
+      padding: 15px 25px;
+      background-color: #f8fafc;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    #groupExpensesModal .footer-note {
+      color: #64748b;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    #groupExpensesModal .btn-close-modal {
+      padding: 8px 20px;
+      background-color: #4F46E5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #groupExpensesModal .btn-close-modal:hover {
+      background-color: #4338CA;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    
+    /* Bulk action styles */
+    #groupExpensesModal .bulk-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    #groupExpensesModal .form-check {
+      margin-bottom: 0;
+    }
+    
+    #groupExpensesModal .form-check-input {
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    
+    #groupExpensesModal .form-check-label {
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    #groupExpensesModal .bulk-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    #groupExpensesModal .bulk-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    #groupExpensesModal .bulk-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    #groupExpensesModal .expense-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    #groupExpensesModal .expense-checkbox:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Override for +X more button - matching design in image */
+    .expense-group-toggle {
+      cursor: pointer;
+      color: white;
+      font-weight: 600;
+      padding: 6px 15px;
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      user-select: none;
+      background: linear-gradient(135deg, #5E4FE5, #7C3AED);
+      border: none;
+      box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .expense-group-toggle .receipt-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      font-size: 1.1rem;
+    }
+    
+    .expense-group-toggle .count {
+      font-weight: 600;
+    }
+    
+    .expense-group-toggle:hover {
+      background: linear-gradient(135deg, #4F46E5, #6D28D9);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(79, 70, 229, 0.4);
+    }
+    
+    .expense-group-toggle:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 3px rgba(79, 70, 229, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -2031,6 +2964,26 @@ if (!empty($filterMonth)) {
               </select>
             </div>
             <div class="filter-item">
+              <select name="role_status" id="roleStatusFilter" class="form-select">
+                <option value="">All Statuses</option>
+                <optgroup label="HR">
+                  <option value="hr_approved" <?php echo $filterRoleStatus == 'hr_approved' ? 'selected' : ''; ?>>HR - Approved</option>
+                  <option value="hr_pending" <?php echo $filterRoleStatus == 'hr_pending' ? 'selected' : ''; ?>>HR - Pending</option>
+                  <option value="hr_rejected" <?php echo $filterRoleStatus == 'hr_rejected' ? 'selected' : ''; ?>>HR - Rejected</option>
+                </optgroup>
+                <optgroup label="Manager">
+                  <option value="manager_approved" <?php echo $filterRoleStatus == 'manager_approved' ? 'selected' : ''; ?>>Manager - Approved</option>
+                  <option value="manager_pending" <?php echo $filterRoleStatus == 'manager_pending' ? 'selected' : ''; ?>>Manager - Pending</option>
+                  <option value="manager_rejected" <?php echo $filterRoleStatus == 'manager_rejected' ? 'selected' : ''; ?>>Manager - Rejected</option>
+                </optgroup>
+                <optgroup label="Accountant">
+                  <option value="accountant_approved" <?php echo $filterRoleStatus == 'accountant_approved' ? 'selected' : ''; ?>>Accountant - Approved</option>
+                  <option value="accountant_pending" <?php echo $filterRoleStatus == 'accountant_pending' ? 'selected' : ''; ?>>Accountant - Pending</option>
+                  <option value="accountant_rejected" <?php echo $filterRoleStatus == 'accountant_rejected' ? 'selected' : ''; ?>>Accountant - Rejected</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="filter-item">
               <button type="button" id="filterBtn" class="btn btn-primary" onclick="filterExpenses()">
                 <i class="bi bi-funnel"></i> Filter
               </button>
@@ -2040,106 +2993,180 @@ if (!empty($filterMonth)) {
       </div>
     </div>
 
-    <div class="stats">
-      <div class="card pending-card">
-        <div class="card-icon"><i class="bi bi-hourglass-split"></i></div>
-        <h2 id="pendingCount"><?php echo $pendingCount; ?></h2>
-        <p>Pending Travel Expenses</p>
-    </div>
-      <div class="card approved-card">
-        <div class="card-icon"><i class="bi bi-check-circle"></i></div>
-        <h2 id="approvedCount"><?php echo $approvedCount; ?></h2>
-        <p>Approved Expenses</p>
-    </div>
-      <div class="card rejected-card">
-        <div class="card-icon"><i class="bi bi-x-circle"></i></div>
-        <h2 id="rejectedCount"><?php echo $rejectedCount; ?></h2>
-        <p>Rejected Expenses</p>
-    </div>
-      <div class="card amount-card">
-        <div class="card-icon"><i class="bi bi-cash-stack"></i></div>
-        <h2 id="pendingAmount"><?php echo $formattedPendingAmount; ?></h2>
-        <p>Total Amount Pending</p>
+    <!-- Quick Overview Section -->
+    <div class="overview-section">
+      <div class="section-header">
+        <h3 class="section-title">
+          <i class="bi bi-speedometer2"></i> Quick Overview
+        </h3>
+        <div class="filter-badge">
+          <?php echo $filterText; ?>
+          <?php if (!empty($filterRoleStatus)): ?>
+            <?php 
+              $parts = explode('_', $filterRoleStatus);
+              if (count($parts) == 2) {
+                $role = ucfirst($parts[0]); // HR, Manager, or Accountant
+                $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
+                echo " | $role Status: $status";
+              }
+            ?>
+          <?php endif; ?>
+        </div>
       </div>
+      
+      <div class="stats-container">
+        <div class="stats">
+      <!-- First row of cards -->
+      <div class="stats-row">
+        <div class="card pending-card">
+          <div class="card-icon"><i class="bi bi-hourglass-split"></i></div>
+          <h2 id="pendingCount"><?php echo $pendingCount; ?></h2>
+          <p>Pending Travel Expenses</p>
+        </div>
+        <div class="card approved-card">
+          <div class="card-icon"><i class="bi bi-check-circle"></i></div>
+          <h2 id="approvedCount"><?php echo $approvedCount; ?></h2>
+          <p>Approved Expenses</p>
+        </div>
+        <div class="card rejected-card">
+          <div class="card-icon"><i class="bi bi-x-circle"></i></div>
+          <h2 id="rejectedCount"><?php echo $rejectedCount; ?></h2>
+          <p>Rejected Expenses</p>
+        </div>
+        <div class="card amount-card">
+          <div class="card-icon"><i class="bi bi-cash-stack"></i></div>
+          <h2 id="pendingAmount"><?php echo $formattedPendingAmount; ?></h2>
+          <p>Total Amount Pending</p>
+        </div>
+      </div>
+      
+      <!-- Second row of cards -->
+      <div class="stats-row">
+        <div class="card success-card">
+          <div class="card-icon"><i class="bi bi-currency-rupee"></i></div>
+          <h2 id="approvedAmount">₹<?php echo number_format($approvedAmount ?? 0, 0, '.', ','); ?></h2>
+          <p>Approved Amount</p>
+        </div>
+        <div class="card danger-card">
+          <div class="card-icon"><i class="bi bi-currency-rupee"></i></div>
+          <h2 id="rejectedAmount">₹<?php echo number_format($rejectedAmount ?? 0, 0, '.', ','); ?></h2>
+          <p>Rejected Amount</p>
+        </div>
+        <div class="card info-card">
+          <div class="card-icon"><i class="bi bi-calculator"></i></div>
+          <h2 id="averageExpense">₹<?php echo number_format($averageExpense ?? 0, 0, '.', ','); ?></h2>
+          <p>Average Travel Expense</p>
+        </div>
+        <div class="card primary-card">
+          <div class="card-icon"><i class="bi bi-calendar-check"></i></div>
+          <h2 id="recentMonthAmount">₹<?php echo number_format($recentMonthAmount ?? 0, 0, '.', ','); ?></h2>
+          <p>Recent Month Approved</p>
+              </div>
+    </div>
     </div>
 
-    <div class="table-section mt-4">
-      <div class="section-header mb-3">
+    <div class="gap-spacer"></div>
+
+    <div class="table-section">
+      <div class="section-header">
         <h3 class="section-title">
           <i class="bi bi-table"></i> Travel Expenses
         </h3>
-  </div>
+      </div>
 
-  <table id="expensesTable">
-    <thead>
-      <tr>
-        <th>Employee</th>
+      <div class="table-content">
+        <table id="expensesTable">
+        <thead>
+          <tr>
+            <th>Employee</th>
             <th>Purpose</th>
             <th>Mode</th>
             <th>Date</th>
-        <th>Amount (₹)</th>
-        <th>Status</th>
+            <th>Amount (₹)</th>
+            <th>Status</th>
             <th>Accountant</th>
             <th>Manager</th>
             <th>HR</th>
             <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-          <?php if (empty($expenses)): ?>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($groupedExpenses)): ?>
             <tr>
               <td colspan="10" class="text-center">No expense records found</td>
-      </tr>
+            </tr>
           <?php else: ?>
-            <?php foreach ($expenses as $expense): ?>
-            <tr data-id="<?php echo $expense['id']; ?>">
-              <td>
-                <div class="employee-cell">
-                  <div class="table-profile-image">
-                    <?php if (!empty($expense['profile_picture'])): ?>
-                      <img src="<?php echo htmlspecialchars($expense['profile_picture']); ?>" alt="Profile">
-                    <?php else: ?>
-                      <img src="assets/images/no-image.png" alt="No Profile">
-                    <?php endif; ?>
+            <?php foreach ($groupedExpenses as $groupKey => $group): ?>
+              <?php 
+                $expenseCount = count($group['expenses']);
+                $firstExpense = $group['expenses'][0];
+                $formattedDate = date('d M Y', strtotime($group['date']));
+              ?>
+              <!-- Main row - always visible -->
+              <tr class="expense-group-header" data-group="<?php echo $groupKey; ?>" data-id="<?php echo $firstExpense['id']; ?>">
+                <td>
+                  <div class="employee-cell">
+                    <div class="table-profile-image">
+                      <?php if (!empty($group['profile_picture'])): ?>
+                        <img src="<?php echo htmlspecialchars($group['profile_picture']); ?>" alt="Profile">
+                      <?php else: ?>
+                        <img src="assets/images/no-image.png" alt="No Profile">
+                      <?php endif; ?>
+                    </div>
+                    <?php echo htmlspecialchars($group['employee']); ?>
                   </div>
-                  <?php echo htmlspecialchars($expense['employee']); ?>
-                </div>
-              </td>
-              <td><?php echo htmlspecialchars($expense['purpose']); ?></td>
-              <td><?php echo htmlspecialchars($expense['mode']); ?></td>
-              <td><?php echo date('d M Y', strtotime($expense['date'])); ?></td>
-              <td>₹<?php echo number_format($expense['amount'], 0, '.', ','); ?></td>
-              <td class="status <?php echo strtolower($expense['status']); ?>">
-                <?php echo htmlspecialchars($expense['status']); ?>
-              </td>
-              <td class="status-cell <?php echo strtolower($expense['accountant_status']); ?>">
-                <?php echo htmlspecialchars($expense['accountant_status']); ?>
-              </td>
-              <td class="status-cell <?php echo strtolower($expense['manager_status']); ?>">
-                <?php echo htmlspecialchars($expense['manager_status']); ?>
-              </td>
-              <td class="status-cell <?php echo strtolower($expense['hr_status']); ?>">
-                <?php echo htmlspecialchars($expense['hr_status']); ?>
-              </td>
-              <td class="action-buttons">
-                <button class="btn-sm approve-btn" onclick="approveRow(this, <?php echo $expense['id']; ?>)">Accept</button>
-                <button class="btn-sm reject-btn" onclick="rejectRow(this, <?php echo $expense['id']; ?>)">Reject</button>
-                <button class="btn-sm details-btn" onclick="showDetails(<?php echo $expense['id']; ?>)">
-                  Details
-                </button>
-              </td>
-      </tr>
+                </td>
+                <td><?php echo htmlspecialchars($firstExpense['purpose']); ?></td>
+                <td><?php echo htmlspecialchars($firstExpense['mode']); ?></td>
+                <td>
+                  <?php echo $formattedDate; ?>
+                  <?php if ($expenseCount > 1): ?>
+                    <span class="expense-group-toggle" data-group="<?php echo $groupKey; ?>" 
+                          onclick="showGroupModal('<?php echo $groupKey; ?>')">
+                      <span class="receipt-icon"><i class="bi bi-receipt"></i></span>
+                      <span class="count"><?php echo $expenseCount; ?></span> expenses
+                    </span>
+                  <?php endif; ?>
+                </td>
+                <td>₹<?php echo number_format($firstExpense['amount'], 0, '.', ','); ?></td>
+                <td class="status <?php echo strtolower($firstExpense['status']); ?>">
+                  <?php echo htmlspecialchars($firstExpense['status']); ?>
+                </td>
+                <td class="status-cell <?php echo strtolower($firstExpense['accountant_status']); ?>">
+                  <?php echo htmlspecialchars($firstExpense['accountant_status']); ?>
+                </td>
+                <td class="status-cell <?php echo strtolower($firstExpense['manager_status']); ?>">
+                  <?php echo htmlspecialchars($firstExpense['manager_status']); ?>
+                </td>
+                <td class="status-cell <?php echo strtolower($firstExpense['hr_status']); ?>">
+                  <?php echo htmlspecialchars($firstExpense['hr_status']); ?>
+                </td>
+                <td class="action-buttons">
+                  <div class="action-btn-group">
+                    <button class="action-icon approve" title="Accept" onclick="approveRow(this, <?php echo $firstExpense['id']; ?>)">
+                      <i class="bi bi-check-circle-fill"></i>
+                    </button>
+                    <button class="action-icon reject" title="Reject" onclick="rejectRow(this, <?php echo $firstExpense['id']; ?>)">
+                      <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                    <button class="action-icon details" title="View Details" onclick="showDetails(<?php echo $firstExpense['id']; ?>)">
+                      <i class="bi bi-eye-fill"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
             <?php endforeach; ?>
           <?php endif; ?>
-    </tbody>
-  </table>
+        </tbody>
+      </table>
+      </div>
     </div>
   </div>
 
   <!-- Details Modal -->
   <div id="expenseDetailsModal" class="modal">
     <div class="modal-content">
-      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <span class="close-modal" onclick="closeDetailsModal()">&times;</span>
       <div class="modal-header">
         <h4 class="modal-title">Expense Details</h4>
       </div>
@@ -2188,11 +3215,49 @@ if (!empty($filterMonth)) {
     </div>
   </div>
 
+  <!-- Group Expenses Modal -->
+  <div id="groupExpensesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="bi bi-collection"></i> <span id="groupModalTitle">Grouped Expenses</span></h4>
+        <span class="close-modal" onclick="closeGroupModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="groupExpensesContent">
+          <!-- Content will be populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-close-modal" onclick="closeGroupModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="bi bi-question-circle"></i> <span id="confirmationTitle">Confirm Action</span></h4>
+        <span class="close-modal" onclick="closeModalById('confirmationModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="confirmation-content">
+          <p id="confirmationMessage">Are you sure you want to proceed?</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeModalById('confirmationModal')">Cancel</button>
+        <button type="button" id="confirmActionBtn" class="btn-primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Global variables
     let currentExpenseId = null;
     let currentAction = null;
+    let groupedExpensesData = {};
     
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('sidebar');
@@ -2326,9 +3391,19 @@ if (!empty($filterMonth)) {
             
             // Process the action
             if (currentAction === 'approve') {
-                processApproval(currentExpenseId, reason);
+                // Check if we're processing multiple IDs (bulk action)
+                if (Array.isArray(currentExpenseId)) {
+                    processBulkAction('approve', currentExpenseId, reason);
+                } else {
+                    processApproval(currentExpenseId, reason);
+                }
             } else if (currentAction === 'reject') {
-                processRejection(currentExpenseId, reason);
+                // Check if we're processing multiple IDs (bulk action)
+                if (Array.isArray(currentExpenseId)) {
+                    processBulkAction('reject', currentExpenseId, reason);
+                } else {
+                    processRejection(currentExpenseId, reason);
+                }
             }
             
             // Hide the dialog
@@ -2347,14 +3422,545 @@ if (!empty($filterMonth)) {
                 }
             });
         });
+
+        // Initialize expense group toggles
+        const groupToggles = document.querySelectorAll('.expense-group-toggle');
+        groupToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const groupKey = this.dataset.group;
+                const groupItems = document.querySelector(`.expense-group-items[data-parent="${groupKey}"]`);
+                
+                if (groupItems) {
+                    // Toggle visibility
+                    groupItems.classList.toggle('show');
+                    
+                    // Update toggle icon
+                    this.classList.toggle('expanded');
+                    
+                    // Prevent the click from triggering parent row actions
+                    return false;
+                }
+            });
+        });
+
+        // Store grouped expenses data for modal display
+        <?php if (!empty($groupedExpenses)): ?>
+        groupedExpensesData = <?php echo json_encode($groupedExpenses); ?>;
+        <?php endif; ?>
     });
 
+        // Function to show grouped expenses modal
+    function showGroupModal(groupKey) {
+        // Get group data
+        const group = groupedExpensesData[groupKey];
+        if (!group) {
+            showToast('error', 'Could not find group data');
+            return;
+        }
+        
+        // Get modal elements
+        const modal = document.getElementById('groupExpensesModal');
+        const modalTitle = document.getElementById('groupModalTitle');
+        const modalContent = document.getElementById('groupExpensesContent');
+        
+        // Set modal title
+        const formattedDate = new Date(group.date).toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric'
+        });
+        modalTitle.textContent = `Expenses for ${group.employee}`;
+        
+        // Calculate summary data
+        let totalAmount = 0;
+        let totalDistance = 0;
+        const uniqueRoutes = new Set();
+        const transportModes = {};
+        
+        group.expenses.forEach(expense => {
+            totalAmount += parseFloat(expense.amount);
+            totalDistance += parseFloat(expense.distance || 0);
+            uniqueRoutes.add(`${expense.from_location} to ${expense.to_location}`);
+            
+            // Count transport modes
+            if (transportModes[expense.mode]) {
+                transportModes[expense.mode]++;
+            } else {
+                transportModes[expense.mode] = 1;
+            }
+        });
+        
+        // Find the most used transport mode
+        let mostUsedMode = '';
+        let maxCount = 0;
+        for (const mode in transportModes) {
+            if (transportModes[mode] > maxCount) {
+                maxCount = transportModes[mode];
+                mostUsedMode = mode;
+            }
+        }
+        
+        // Build modal content
+        let html = `
+            <div class="group-header">
+                <div class="employee-info">
+                    ${group.profile_picture ? 
+                        `<img src="${group.profile_picture}" alt="Profile">` : 
+                        `<img src="assets/images/no-image.png" alt="No Profile">`
+                    }
+                    <div class="employee-details">
+                        <div class="employee-name">${group.employee}</div>
+                        <div class="meta-info-container">
+                            <div class="date-info">
+                                <i class="bi bi-calendar3"></i> ${formattedDate}
+                            </div>
+                            <div class="expense-count">
+                                <i class="bi bi-receipt"></i> ${group.expenses.length} expenses
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="group-summary">
+                    <div class="summary-item">
+                        <div class="summary-value total-amount">₹${totalAmount.toLocaleString('en-IN')}</div>
+                        <div class="summary-label">Total Amount</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value total-distance">${totalDistance.toFixed(1)} km</div>
+                        <div class="summary-label">Total Distance</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${uniqueRoutes.size}</div>
+                        <div class="summary-label">Unique Routes</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${mostUsedMode}</div>
+                        <div class="summary-label">Main Transport</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="group-table-container">
+                <div class="bulk-actions mb-3">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="selectAllExpenses" onchange="toggleAllExpenses(this)">
+                        <label class="form-check-label" for="selectAllExpenses">
+                            Select All Expenses
+                        </label>
+                    </div>
+                    <div class="bulk-buttons">
+                        <button class="btn btn-success btn-sm bulk-btn" onclick="bulkApprove()">
+                            <i class="bi bi-check2-all"></i> Approve Selected
+                        </button>
+                        <button class="btn btn-danger btn-sm bulk-btn" onclick="bulkReject()">
+                            <i class="bi bi-x-circle"></i> Reject Selected
+                        </button>
+                    </div>
+                </div>
+                
+                <table class="group-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <i class="bi bi-check2-square"></i>
+                            </th>
+                            <th>Purpose</th>
+                            <th>Mode</th>
+                            <th>Route</th>
+                            <th>Distance</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>HR Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        // Add rows for each expense
+        group.expenses.forEach(expense => {
+            const formattedAmount = '₹' + Number(expense.amount).toLocaleString('en-IN');
+            const distance = expense.distance ? `${expense.distance} km` : '-';
+            
+            const isCheckable = expense.status.toLowerCase() === 'pending';
+            
+            html += `
+                <tr data-id="${expense.id}">
+                    <td>
+                        ${isCheckable ? 
+                          `<input class="form-check-input expense-checkbox" type="checkbox" 
+                                  id="expense-${expense.id}" value="${expense.id}" 
+                                  data-expense-id="${expense.id}"
+                                  ${expense.status.toLowerCase() !== 'pending' ? 'disabled' : ''}>` 
+                          : 
+                          `<i class="bi bi-dash-circle text-muted"></i>`
+                        }
+                    </td>
+                    <td>${expense.purpose}</td>
+                    <td><i class="bi bi-${getTransportIcon(expense.mode)}"></i> ${expense.mode}</td>
+                    <td class="from-to-cell">
+                        ${expense.from_location} 
+                        <i class="bi bi-arrow-right"></i> 
+                        ${expense.to_location}
+                    </td>
+                    <td>${distance}</td>
+                    <td>${formattedAmount}</td>
+                    <td><span class="status-cell ${expense.status.toLowerCase()}">${expense.status}</span></td>
+                    <td><span class="status-cell ${expense.hr_status.toLowerCase()}">${expense.hr_status}</span></td>
+                    <td>
+                        <div class="action-btn-group">
+                            <button class="action-icon approve" title="Accept" onclick="approveRow(this, ${expense.id})" ${expense.status.toLowerCase() !== 'pending' ? 'disabled' : ''}>
+                              <i class="bi bi-check-circle-fill"></i>
+                            </button>
+                            <button class="action-icon reject" title="Reject" onclick="rejectRow(this, ${expense.id})" ${expense.status.toLowerCase() !== 'pending' ? 'disabled' : ''}>
+                              <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                            <button class="action-icon details" title="View Details" onclick="showDetails(${expense.id})">
+                              <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        // Set content and show modal
+        modalContent.innerHTML = html;
+        
+        // Set footer
+        const modalFooter = modal.querySelector('.modal-footer');
+        modalFooter.innerHTML = `
+            <div class="footer-note">
+                <i class="bi bi-info-circle"></i> ${group.expenses.length} expenses found for this user on ${formattedDate}
+            </div>
+            <button type="button" class="btn-close-modal" onclick="closeGroupModal()">
+                <i class="bi bi-x-circle"></i> Close
+            </button>
+        `;
+        
+        // Show modal using the modal management system
+        openModalById('groupExpensesModal');
+    }
+    
+    // Helper function to get transport icon
+    function getTransportIcon(mode) {
+        const iconMap = {
+            'Car': 'car-front-fill',
+            'Bus': 'bus-front',
+            'Train': 'train-freight-front',
+            'Flight': 'airplane',
+            'Taxi': 'taxi-front',
+            'Auto': 'bicycle',
+            'Bike': 'bicycle',
+            'Walk': 'person-walking'
+        };
+        
+        return iconMap[mode] || 'signpost-2-fill';
+    }
+    
+    // Toggle all expense checkboxes
+    function toggleAllExpenses(checkbox) {
+        const isChecked = checkbox.checked;
+        const expenseCheckboxes = document.querySelectorAll('.expense-checkbox:not(:disabled)');
+        
+        expenseCheckboxes.forEach(cb => {
+            cb.checked = isChecked;
+        });
+    }
+    
+    // Get all selected expense IDs
+    function getSelectedExpenseIds() {
+        const selectedCheckboxes = document.querySelectorAll('.expense-checkbox:checked');
+        const expenseIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        
+        return expenseIds;
+    }
+    
+    // Custom confirm dialog function
+    function showConfirmationDialog(message, title, onConfirm, isWarning = false) {
+      const modal = document.getElementById('confirmationModal');
+      const messageEl = document.getElementById('confirmationMessage');
+      const titleEl = document.getElementById('confirmationTitle');
+      const confirmBtn = document.getElementById('confirmActionBtn');
+      
+      // Update content
+      messageEl.textContent = message;
+      titleEl.textContent = title || 'Confirm Action';
+      
+      // Set warning class if needed
+      if (isWarning) {
+        modal.classList.add('warning');
+      } else {
+        modal.classList.remove('warning');
+      }
+      
+      // Set up the confirm button action
+      const oldConfirmListener = confirmBtn._confirmListener;
+      if (oldConfirmListener) {
+        confirmBtn.removeEventListener('click', oldConfirmListener);
+      }
+      
+      confirmBtn._confirmListener = function() {
+        closeModalById('confirmationModal');
+        // Small delay to ensure the confirmation modal is closed before opening the next one
+        setTimeout(() => {
+          onConfirm();
+        }, 100);
+      };
+      
+      confirmBtn.addEventListener('click', confirmBtn._confirmListener);
+      
+      // Make sure this modal appears on top of any other open modals
+      modal.style.zIndex = 1070; // Ensure it's the highest z-index
+      
+      // Display the modal
+      openModalById('confirmationModal');
+    }
+    
+    // Bulk approve expenses
+    function bulkApprove() {
+        const selectedIds = getSelectedExpenseIds();
+        
+        if (selectedIds.length === 0) {
+            showToast('error', 'Please select at least one expense to approve');
+            return;
+        }
+        
+        showConfirmationDialog(
+            `Are you sure you want to approve ${selectedIds.length} selected expense(s)?`,
+            'Confirm Bulk Approval',
+            () => {
+                // Show action dialog with custom handling for bulk approval
+                currentAction = 'approve';
+                currentExpenseId = selectedIds; // Store multiple IDs
+                
+                // Get dialog elements
+                const actionDialog = document.getElementById('actionDialog');
+                const dialogTitle = document.getElementById('dialogTitle');
+                const dialogSubmitBtn = document.getElementById('dialogSubmitBtn');
+                
+                // Set dialog title and button text
+                dialogTitle.textContent = `Approve ${selectedIds.length} Expense(s)`;
+                dialogSubmitBtn.textContent = 'Approve All';
+                dialogSubmitBtn.className = 'btn btn-success';
+                
+                // Reset form
+                document.getElementById('dialogForm').reset();
+                
+                // Show dialog using modal management
+                openModalById('actionDialog');
+            }
+        );
+    }
+    
+    // Bulk reject expenses
+    function bulkReject() {
+        const selectedIds = getSelectedExpenseIds();
+        
+        if (selectedIds.length === 0) {
+            showToast('error', 'Please select at least one expense to reject');
+            return;
+        }
+        
+        showConfirmationDialog(
+            `Are you sure you want to reject ${selectedIds.length} selected expense(s)?`,
+            'Confirm Bulk Rejection',
+            () => {
+                // Show action dialog with custom handling for bulk rejection
+                currentAction = 'reject';
+                currentExpenseId = selectedIds; // Store multiple IDs
+                
+                // Get dialog elements
+                const actionDialog = document.getElementById('actionDialog');
+                const dialogTitle = document.getElementById('dialogTitle');
+                const dialogSubmitBtn = document.getElementById('dialogSubmitBtn');
+                
+                // Set dialog title and button text
+                dialogTitle.textContent = `Reject ${selectedIds.length} Expense(s)`;
+                dialogSubmitBtn.textContent = 'Reject All';
+                dialogSubmitBtn.className = 'btn btn-danger';
+                
+                // Reset form
+                document.getElementById('dialogForm').reset();
+                
+                // Show dialog using modal management
+                openModalById('actionDialog');
+            },
+            true // use warning style
+        );
+    }
+    
+    // Function to close group modal
+    function closeGroupModal() {
+        closeModalById('groupExpensesModal');
+    }
+    
+    // Toast notification function
+    function showToast(type, message, duration = 5000) {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Create the toast element
+        const toast = document.createElement('div');
+        toast.className = `toast ${type.toLowerCase()}`;
+        
+        // Set the appropriate icon based on toast type
+        let icon = 'info-circle';
+        if (type.toLowerCase() === 'success') icon = 'check-circle';
+        if (type.toLowerCase() === 'error') icon = 'exclamation-circle';
+        if (type.toLowerCase() === 'warning') icon = 'exclamation-triangle';
+        
+        // Build toast HTML
+        toast.innerHTML = `
+            <div class="toast-header">
+                <i class="bi bi-${icon}"></i>
+                <div class="toast-title">${type}</div>
+                <button type="button" class="toast-close" onclick="this.parentNode.parentNode.remove()">&times;</button>
+            </div>
+            <div class="toast-body">${message}</div>
+            <div class="toast-progress">
+                <div class="toast-progress-bar"></div>
+            </div>
+        `;
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Set auto-dismiss timer
+        setTimeout(() => {
+            toast.classList.add('toast-fade-out');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, duration);
+    }
+
+    // Push modal to stack when opening
+    function pushToModalStack(modalId) {
+        // Remove the modal if it's already in the stack (to avoid duplicates)
+        activeModals = activeModals.filter(id => id !== modalId);
+        
+        // Add to active modals stack at the top
+        activeModals.push(modalId);
+        
+        // Log the current modal stack for debugging
+        console.log("Current modal stack:", activeModals);
+    }
+    
+    // Modal management
+    let activeModals = [];
+    
+    // Close modal and manage active modals stack
+    function closeModalById(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            // Add a fade-out animation
+            modal.animate([
+                { opacity: 1 },
+                { opacity: 0 }
+            ], {
+                duration: 200,
+                easing: 'ease-out'
+            }).onfinish = function() {
+                modal.style.display = 'none';
+            };
+            
+            // Remove from active modals stack
+            activeModals = activeModals.filter(id => id !== modalId);
+            console.log("Modal closed. Remaining stack:", activeModals);
+            
+            // If there are no more active modals, enable body scrolling
+            if (activeModals.length === 0) {
+                document.body.classList.remove('modal-open');
+            }
+        }
+    }
+    
+    // Open modal and manage active modals stack
+    function openModalById(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            // Add to modal stack
+            pushToModalStack(modalId);
+            
+            // Add modal-open class to body to prevent background scrolling
+            document.body.classList.add('modal-open');
+            
+            // Show the modal
+            modal.style.display = 'block';
+            
+            // Add subtle entrance animation
+            modal.animate([
+                { opacity: 0 },
+                { opacity: 1 }
+            ], {
+                duration: 300,
+                easing: 'ease-out'
+            });
+        }
+    }
+    
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const detailsModal = document.getElementById('expenseDetailsModal');
+        const groupModal = document.getElementById('groupExpensesModal');
+        const actionDialog = document.getElementById('actionDialog');
+        
+        // Only close the top-most modal when clicking outside
+        // This prevents closing background modals unintentionally
+        if (activeModals.length > 0) {
+                         const topModalId = activeModals[activeModals.length - 1];
+             const topModal = document.getElementById(topModalId);
+             
+             if (event.target === topModal) {
+                 closeModalById(topModalId);
+             }
+        } else {
+            // Fallback to individual checks if activeModals isn't working
+            if (event.target === detailsModal) {
+                detailsModal.style.display = 'none';
+            } else if (event.target === groupModal) {
+                groupModal.style.display = 'none';
+            } else if (event.target === actionDialog) {
+                actionDialog.style.display = 'none';
+            }
+        }
+    }
+    
+    // Existing functions
+    
     function approveRow(button, expenseId) {
-      showActionDialog('approve', expenseId);
+      showConfirmationDialog(
+        `Are you sure you want to approve this expense?`,
+        'Confirm Approval',
+        () => showActionDialog('approve', expenseId)
+      );
     }
     
     function rejectRow(button, expenseId) {
-      showActionDialog('reject', expenseId);
+      showConfirmationDialog(
+        `Are you sure you want to reject this expense?`,
+        'Confirm Rejection',
+        () => showActionDialog('reject', expenseId),
+        true // use warning style
+      );
     }
     
     function showActionDialog(action, expenseId) {
@@ -2381,8 +3987,12 @@ if (!empty($filterMonth)) {
       // Reset form
       document.getElementById('dialogForm').reset();
       
-      // Show dialog
-      actionDialog.style.display = 'block';
+      // Make sure dialog appears on top of other modals
+      // We don't close the other modals here because they might need to remain open
+      // The z-index will ensure this dialog appears on top
+      
+      // Show dialog using the modal management system
+      openModalById('actionDialog');
     }
     
     function processApproval(expenseId, reason) {
@@ -2466,6 +4076,70 @@ if (!empty($filterMonth)) {
       .catch(error => {
         console.error('Error:', error);
         showToast('Error', 'An error occurred while updating the status', 'error');
+      });
+    }
+    
+    // Process bulk actions (approve or reject multiple expenses)
+    function processBulkAction(action, expenseIds, reason) {
+      console.log(`Processing bulk ${action} for expense IDs:`, expenseIds, "with reason:", reason);
+      
+      // Show processing notification
+      showToast('info', `Processing ${action} for ${expenseIds.length} expenses...`);
+      
+      // Track success and failure counts
+      let successCount = 0;
+      let failureCount = 0;
+      let pendingCount = expenseIds.length;
+      
+      // Process each expense ID
+      expenseIds.forEach((expenseId) => {
+        // Create form data for submission
+        const formData = new FormData();
+        formData.append('expense_id', expenseId);
+        formData.append('action', action);
+        formData.append('notes', reason);
+        
+        // Send AJAX request to update status
+        fetch('process_expense_action.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          pendingCount--;
+          
+          if (data.success) {
+            successCount++;
+          } else {
+            failureCount++;
+            console.error(`Failed to ${action} expense ID: ${expenseId}`, data.error);
+          }
+          
+          // If all requests have completed, show summary
+          if (pendingCount === 0) {
+            if (successCount === expenseIds.length) {
+              showToast('success', `Successfully ${action}d all ${expenseIds.length} expenses`);
+            } else {
+              showToast('warning', `Processed ${successCount} of ${expenseIds.length} expenses. ${failureCount} failed.`);
+            }
+            
+            // Reload the page after a short delay to ensure all data is fresh
+            setTimeout(() => location.reload(), 2000);
+          }
+        })
+        .catch(error => {
+          pendingCount--;
+          failureCount++;
+          console.error(`Error ${action}ing expense ID: ${expenseId}`, error);
+          
+          // If all requests have completed, show summary
+          if (pendingCount === 0) {
+            showToast('warning', `Processed ${successCount} of ${expenseIds.length} expenses. ${failureCount} failed.`);
+            
+            // Reload the page after a short delay to ensure all data is fresh
+            setTimeout(() => location.reload(), 2000);
+          }
+        });
       });
     }
     
@@ -2611,7 +4285,12 @@ if (!empty($filterMonth)) {
       
       // Show loading message
       detailsContent.innerHTML = '<div class="text-center p-4"><i class="bi bi-hourglass-split fs-3 mb-3"></i><br>Loading expense details...</div>';
-      modal.style.display = 'block';
+      
+      // Close group modal if it's open
+      closeModalById('groupExpensesModal');
+      
+      // Show this modal using the modal management system
+      openModalById('expenseDetailsModal');
       
       // Store the current expense ID for the action buttons
       currentExpenseId = expenseId;
@@ -2880,8 +4559,8 @@ if (!empty($filterMonth)) {
         });
     }
     
-    function closeModal() {
-      document.getElementById('expenseDetailsModal').style.display = 'none';
+    function closeDetailsModal() {
+      closeModalById('expenseDetailsModal');
     }
     
     // Close modal when clicking outside of it
@@ -3065,9 +4744,15 @@ if (!empty($filterMonth)) {
       const userId = document.getElementById('userFilter').value;
       const month = document.getElementById('monthFilter').value;
       const year = document.getElementById('yearFilter').value;
+      const roleStatus = document.getElementById('roleStatusFilter').value;
       
       // Redirect to the same page with filter parameters
-      window.location.href = `hr_travel_expenses.php?user_id=${userId}&month=${month}&year=${year}`;
+      let url = `hr_travel_expenses.php?user_id=${userId}&month=${month}&year=${year}`;
+      if (roleStatus) {
+        url += `&role_status=${roleStatus}`;
+      }
+      
+      window.location.href = url;
     }
 
     // Function to handle edit icon click

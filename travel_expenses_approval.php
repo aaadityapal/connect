@@ -1388,7 +1388,7 @@ function getTransportIcon($mode) {
             position: relative;
             display: flex;
             flex-direction: column;
-            width: 110%;
+            width: 115%;
             pointer-events: auto;
             background-color: #fff;
             background-clip: padding-box;

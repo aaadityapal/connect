@@ -162,9 +162,25 @@ if (!empty($firstExpense['profile_picture'])) {
     
     <!-- Expenses table -->
     <div class="grouped-expenses-table-container">
+        <div class="bulk-actions-container">
+            <div class="select-all-container">
+                <input type="checkbox" id="select-all-expenses" class="select-all-checkbox">
+                <label for="select-all-expenses">Select All</label>
+            </div>
+            <div class="bulk-action-buttons">
+                <button type="button" id="bulk-approve-btn" class="btn btn-success btn-sm" disabled>
+                    <i class="fas fa-check-circle mr-1"></i> Approve Selected
+                </button>
+                <button type="button" id="bulk-reject-btn" class="btn btn-danger btn-sm" disabled>
+                    <i class="fas fa-times-circle mr-1"></i> Reject Selected
+                </button>
+            </div>
+        </div>
+        
         <table class="grouped-expenses-table">
             <thead>
                 <tr>
+                    <th><i class="fas fa-check-square"></i></th>
                     <th>#</th>
                     <th>Purpose</th>
                     <th>Mode</th>
@@ -175,12 +191,20 @@ if (!empty($firstExpense['profile_picture'])) {
                     <th>Status</th>
                     <th>Manager Status</th>
                     <th>Accountant Status</th>
+                    <th>HR Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($expenses as $index => $expense): ?>
                 <tr>
+                    <td>
+                        <?php if ($expense['status'] === 'pending'): ?>
+                        <input type="checkbox" class="expense-checkbox" data-id="<?php echo $expense['id']; ?>" data-amount="<?php echo $expense['amount']; ?>">
+                        <?php else: ?>
+                        <input type="checkbox" disabled>
+                        <?php endif; ?>
+                    </td>
                     <td><?php echo $index + 1; ?></td>
                     <td><?php echo htmlspecialchars($expense['purpose']); ?></td>
                     <td>
@@ -214,6 +238,14 @@ if (!empty($firstExpense['profile_picture'])) {
                             <?php echo ucfirst($accountantStatus); ?>
                         </span>
                     </td>
+                    <td>
+                        <?php 
+                        $hrStatus = isset($expense['hr_status']) ? $expense['hr_status'] : 'pending';
+                        ?>
+                        <span class="status-badge status-<?php echo $hrStatus; ?>">
+                            <?php echo ucfirst($hrStatus); ?>
+                        </span>
+                    </td>
                     <td class="expense-actions">
                         <button type="button" class="btn btn-sm btn-action view-single-expense" data-id="<?php echo $expense['id']; ?>" title="View Details">
                             <i class="fas fa-eye text-primary"></i>
@@ -236,9 +268,11 @@ if (!empty($firstExpense['profile_picture'])) {
             </tbody>
             <tfoot>
                 <tr>
+                    <td></td>
                     <td colspan="5" class="text-right"><strong>Total:</strong></td>
                     <td><strong><?php echo number_format($totalDistance, 1); ?> km</strong></td>
                     <td class="expense-amount"><strong>₹<?php echo number_format($totalAmount, 2); ?></strong></td>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -349,6 +383,55 @@ if (!empty($firstExpense['profile_picture'])) {
     .grouped-expenses-table-container {
         padding: 20px;
         overflow-x: auto;
+    }
+    
+    .bulk-actions-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .select-all-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .select-all-container label {
+        font-weight: 500;
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+    
+    .select-all-checkbox, .expense-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #4F46E5;
+    }
+    
+    .bulk-action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .bulk-action-buttons .btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .bulk-action-buttons .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
     
     .grouped-expenses-table {
@@ -534,4 +617,236 @@ if (!empty($firstExpense['profile_picture'])) {
             font-size: 1.1rem;
         }
     }
-</style> 
+</style>
+
+<script>
+// Execute script immediately instead of waiting for DOMContentLoaded
+(function() {
+    console.log('Script running');
+    
+    // Get references to elements
+    const selectAllCheckbox = document.getElementById('select-all-expenses');
+    const expenseCheckboxes = document.querySelectorAll('.expense-checkbox');
+    const bulkApproveBtn = document.getElementById('bulk-approve-btn');
+    const bulkRejectBtn = document.getElementById('bulk-reject-btn');
+    
+    console.log('Elements found:', {
+        selectAllCheckbox: !!selectAllCheckbox,
+        expenseCheckboxes: expenseCheckboxes.length,
+        bulkApproveBtn: !!bulkApproveBtn,
+        bulkRejectBtn: !!bulkRejectBtn
+    });
+    
+    // Function to update bulk action buttons state
+    function updateBulkActionButtons() {
+        const checkedBoxes = document.querySelectorAll('.expense-checkbox:checked');
+        const isAnyChecked = checkedBoxes.length > 0;
+        
+        console.log('Checked boxes:', checkedBoxes.length);
+        console.log('Setting buttons disabled:', !isAnyChecked);
+        
+        // Force enable/disable the buttons
+        if (isAnyChecked) {
+            bulkApproveBtn.disabled = false;
+            bulkApproveBtn.removeAttribute('disabled');
+            bulkRejectBtn.disabled = false;
+            bulkRejectBtn.removeAttribute('disabled');
+        } else {
+            bulkApproveBtn.disabled = true;
+            bulkApproveBtn.setAttribute('disabled', 'disabled');
+            bulkRejectBtn.disabled = true;
+            bulkRejectBtn.setAttribute('disabled', 'disabled');
+        }
+    }
+    
+    // Handle "Select All" checkbox
+    selectAllCheckbox.addEventListener('change', function() {
+        expenseCheckboxes.forEach(checkbox => {
+            if (!checkbox.disabled) {
+                checkbox.checked = this.checked;
+            }
+        });
+        
+        updateBulkActionButtons();
+    });
+    
+    // Handle individual checkboxes
+    expenseCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            console.log('Checkbox changed:', this.checked);
+            
+            // If any checkbox is unchecked, uncheck the "Select All" checkbox
+            if (!this.checked && selectAllCheckbox.checked) {
+                selectAllCheckbox.checked = false;
+            }
+            
+            // If all checkboxes are checked, check the "Select All" checkbox
+            if (document.querySelectorAll('.expense-checkbox:not(:checked):not([disabled])').length === 0) {
+                selectAllCheckbox.checked = true;
+            }
+            
+            updateBulkActionButtons();
+        });
+    });
+    
+    // Initialize buttons state on page load
+    updateBulkActionButtons();
+    
+        // Add direct click handler to select all checkbox as a backup
+    if (selectAllCheckbox) {
+        selectAllCheckbox.onclick = function() {
+            console.log('Select all clicked directly:', this.checked);
+            
+            // Update all checkboxes
+            document.querySelectorAll('.expense-checkbox').forEach(cb => {
+                if (!cb.disabled) {
+                    cb.checked = this.checked;
+                }
+            });
+            
+            // Update buttons
+            updateBulkActionButtons();
+        };
+    }
+
+    // Handle bulk approve button
+    bulkApproveBtn.addEventListener('click', function() {
+        const selectedExpenses = getSelectedExpenses();
+        if (selectedExpenses.length === 0) return;
+        
+        // Show confirmation dialog
+        if (confirm(`Are you sure you want to approve ${selectedExpenses.length} selected expense(s)?`)) {
+            processSelectedExpenses(selectedExpenses, 'approve');
+        }
+    });
+    
+    // Handle bulk reject button
+    bulkRejectBtn.addEventListener('click', function() {
+        const selectedExpenses = getSelectedExpenses();
+        if (selectedExpenses.length === 0) return;
+        
+        // Show confirmation dialog
+        if (confirm(`Are you sure you want to reject ${selectedExpenses.length} selected expense(s)?`)) {
+            processSelectedExpenses(selectedExpenses, 'reject');
+        }
+    });
+    
+    // Function to get selected expenses
+    function getSelectedExpenses() {
+        const selected = [];
+        document.querySelectorAll('.expense-checkbox:checked').forEach(checkbox => {
+            selected.push({
+                id: checkbox.getAttribute('data-id'),
+                amount: checkbox.getAttribute('data-amount')
+            });
+        });
+        return selected;
+    }
+    
+    // Function to process selected expenses (approve or reject)
+    function processSelectedExpenses(expenses, action) {
+        // Create array of IDs
+        const expenseIds = expenses.map(expense => expense.id);
+        
+        // Show processing message
+        const actionText = action === 'approve' ? 'Approving' : 'Rejecting';
+        const processingMessage = `${actionText} ${expenses.length} expense(s)...`;
+        
+        // If you have a toast notification system
+        if (typeof showToast === 'function') {
+            showToast('info', processingMessage);
+        } else {
+            alert(processingMessage);
+        }
+        
+        // Send request to server
+        fetch(`process_bulk_expenses.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                expense_ids: expenseIds,
+                action: action
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const successMessage = `Successfully ${action === 'approve' ? 'approved' : 'rejected'} ${expenses.length} expense(s)`;
+                
+                if (typeof showToast === 'function') {
+                    showToast('success', successMessage);
+                } else {
+                    alert(successMessage);
+                }
+                
+                // Reload the grouped expenses modal content
+                if (typeof refreshGroupedExpenses === 'function') {
+                    refreshGroupedExpenses();
+                } else {
+                    // Fallback to page reload if refresh function doesn't exist
+                    window.location.reload();
+                }
+            } else {
+                // Show error message
+                const errorMessage = data.message || `Failed to ${action} expenses`;
+                
+                if (typeof showToast === 'function') {
+                    showToast('error', errorMessage);
+                } else {
+                    alert(errorMessage);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            if (typeof showToast === 'function') {
+                showToast('error', 'An error occurred while processing the request');
+            } else {
+                alert('An error occurred while processing the request');
+            }
+        });
+    }
+    // Try jQuery approach if available (often more reliable in modals)
+    if (typeof jQuery !== 'undefined') {
+        console.log('jQuery available, adding backup handlers');
+        
+        jQuery(function($) {
+            $('#select-all-expenses').on('click', function() {
+                var isChecked = $(this).prop('checked');
+                console.log('jQuery select all clicked:', isChecked);
+                
+                $('.expense-checkbox:not([disabled])').prop('checked', isChecked);
+                
+                // Enable/disable buttons
+                if ($('.expense-checkbox:checked').length > 0) {
+                    $('#bulk-approve-btn, #bulk-reject-btn').prop('disabled', false);
+                } else {
+                    $('#bulk-approve-btn, #bulk-reject-btn').prop('disabled', true);
+                }
+            });
+            
+            $('.expense-checkbox').on('click', function() {
+                console.log('jQuery checkbox clicked');
+                
+                // Update select all checkbox
+                if (!$(this).prop('checked')) {
+                    $('#select-all-expenses').prop('checked', false);
+                } else if ($('.expense-checkbox:not(:checked):not([disabled])').length === 0) {
+                    $('#select-all-expenses').prop('checked', true);
+                }
+                
+                // Enable/disable buttons
+                if ($('.expense-checkbox:checked').length > 0) {
+                    $('#bulk-approve-btn, #bulk-reject-btn').prop('disabled', false);
+                } else {
+                    $('#bulk-approve-btn, #bulk-reject-btn').prop('disabled', true);
+                }
+            });
+        });
+    }
+})();
+</script>

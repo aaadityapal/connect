@@ -905,3 +905,47 @@
 2025-06-11 10:10:30 - Processing expense IDs: [18]
 2025-06-11 10:10:30 - Updating status field: hr_status to value: approved
 2025-06-11 10:10:30 - Successfully processed 1 out of 1 expenses
+2025-06-11 12:31:08 - Request received in process_expense_action.php
+2025-06-11 12:31:08 - POST data: Array
+(
+    [expense_id] => 19
+    [action_type] => approve
+    [notes] => 
+    [all_expense_ids] => [19,20]
+)
+
+2025-06-11 12:31:08 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-06-11 12:31:08 - Processing expense IDs: [19,20]
+2025-06-11 12:31:08 - Updating status field: accountant_status to value: approved
+2025-06-11 12:31:08 - Successfully processed 2 out of 2 expenses
+2025-06-11 12:32:03 - Request received in process_expense_action.php
+2025-06-11 12:32:03 - POST data: Array
+(
+    [expense_id] => 19
+    [action_type] => approve
+    [notes] => fghj
+    [all_expense_ids] => [19,20]
+)
+
+2025-06-11 12:32:03 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => 
+)
+
+2025-06-11 12:32:03 - Processing expense IDs: [19,20]
+2025-06-11 12:32:03 - Updating status field: manager_status to value: approved
+2025-06-11 12:32:03 - Successfully processed 2 out of 2 expenses

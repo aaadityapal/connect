@@ -3013,6 +3013,10 @@ if ($user_data && isset($user_data['shift_id'])) {
                 <i class="fas fa-calendar-alt"></i>
                 <span class="menu-text">Apply Leave</span>
             </div>
+            <div class="menu-item" onclick="window.location.href='std_travel_expenses.php'">
+                <i class="fas fa-file-excel"></i>
+                <span class="menu-text">Travel Expenses</span>
+            </div>
             <div class="menu-item" onclick="window.location.href='site_expenses.php'">
                 <i class="fas fa-file-excel"></i>
                 <span class="menu-text">Site Excel</span>

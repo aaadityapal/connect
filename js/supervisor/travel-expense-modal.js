@@ -224,6 +224,22 @@ document.addEventListener('DOMContentLoaded', function() {
      * @returns {string} - Formatted date string
      */
     function formatDateForDB(date) {
+        if (!(date instanceof Date)) {
+            // If it's a string, try to convert it to a Date object
+            if (typeof date === 'string') {
+                date = new Date(date);
+                
+                // Check if the date is valid
+                if (isNaN(date.getTime())) {
+                    console.error('Invalid date string:', date);
+                    return ''; // Return empty string for invalid dates
+                }
+            } else {
+                console.error('Invalid date input:', date);
+                return ''; // Return empty string for invalid inputs
+            }
+        }
+        
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -433,11 +449,12 @@ document.addEventListener('DOMContentLoaded', function() {
             mode: modeInput.value,
             from: fromInput.value.trim(),
             to: toInput.value.trim(),
-            date: dateInput.value,
+            date: formatDateForDB(dateInput.value),
             distance: parseFloat(distanceInput.value),
             amount: parseFloat(expenseInput.value),
             notes: notesInput.value.trim(),
-            billFile: billFileData
+            billFile: billFileData,
+            status: addExpenseEntryBtn.dataset.status || 'pending'
         };
         
         // Add to expenses array
@@ -464,10 +481,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Format date for display
         const formattedDate = formatDate(expense.date);
         
+        // Store the original date in data attributes for later retrieval
+        const originalDate = expense.date;
+        
         // Create expense entry element
         const entryElement = document.createElement('div');
         entryElement.className = 'expense-entry new-entry';
         entryElement.dataset.id = expense.id;
+        entryElement.dataset.entryNumber = travelExpenses.length;
+        entryElement.dataset.status = expense.status || 'pending';
         
         // Create bill file info HTML if present
         let billFileHtml = '';
@@ -503,27 +525,27 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="entry-details">
                 <div class="detail-item">
                     <div class="detail-label">Date</div>
-                    <div class="detail-value">${formattedDate}</div>
+                    <div class="detail-value" data-field="date" data-original-date="${originalDate}">${formattedDate}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Mode</div>
-                    <div class="detail-value">${expense.mode}</div>
+                    <div class="detail-value" data-field="mode">${expense.mode}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">From</div>
-                    <div class="detail-value">${expense.from}</div>
+                    <div class="detail-value" data-field="from">${expense.from}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">To</div>
-                    <div class="detail-value">${expense.to}</div>
+                    <div class="detail-value" data-field="to">${expense.to}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Distance</div>
-                    <div class="detail-value">${expense.distance} km</div>
+                    <div class="detail-value" data-field="distance">${expense.distance} km</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Amount</div>
-                    <div class="detail-value entry-amount">₹${expense.amount.toFixed(2)}</div>
+                    <div class="detail-value entry-amount" data-field="amount">₹${expense.amount.toFixed(2)}</div>
                 </div>
                 ${billFileHtml}
             </div>
@@ -647,12 +669,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Remove the expense from the array and UI
+        const originalStatus = expense.status || 'pending';
         deleteExpense(id, false); // false means don't show notification
         
         // Change add button to update button
         addExpenseEntryBtn.textContent = 'Update Entry';
         addExpenseEntryBtn.dataset.editing = 'true';
         addExpenseEntryBtn.dataset.editId = id;
+        addExpenseEntryBtn.dataset.status = originalStatus;
         
         // Scroll to form
         if (travelExpenseForm.scrollIntoView) {
@@ -766,6 +790,7 @@ document.addEventListener('DOMContentLoaded', function() {
             addExpenseEntryBtn.textContent = 'Add Entry';
             addExpenseEntryBtn.dataset.editing = 'false';
             delete addExpenseEntryBtn.dataset.editId;
+            delete addExpenseEntryBtn.dataset.status;
             
             // Reset the window.lastBillFile when exiting edit mode
             window.lastBillFile = null;

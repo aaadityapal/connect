@@ -3,17 +3,9 @@
 session_start();
 
 // Check if user is logged in
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+if (!isset($_SESSION['user_id'])) {
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Authentication required']);
-    exit();
-}
-
-// Check if user has the correct role
-$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'HR'];
-if (!in_array($_SESSION['role'], $allowed_roles)) {
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'Permission denied']);
     exit();
 }
 
@@ -28,9 +20,10 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $expense_id = intval($_GET['id']);
+$user_id = $_SESSION['user_id'];
 
 try {
-    // Fetch expense details with all columns
+    // Fetch expense details with all columns - relaxed permission check
     $stmt = $conn->prepare("
         SELECT 
             te.id,

@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Include database connection
-include_once('includes/db_connect.php');
+include_once('config/db_connect.php');
 
 // Check if the request is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -146,8 +146,8 @@ try {
     $stmt = $conn->prepare("
         INSERT INTO travel_expenses (
             user_id, purpose, mode_of_transport, from_location, 
-            to_location, travel_date, distance, amount, notes, bill_file_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            to_location, travel_date, distance, amount, status, notes, bill_file_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     if (!$stmt) {
@@ -199,9 +199,12 @@ try {
             throw new Exception("Invalid date: " . $travel_date);
         }
 
+        // Get status or default to 'pending'
+        $status = isset($expense['status']) ? $expense['status'] : 'pending';
+
         // Bind the parameters - note we're using 's' for date as it's a string in YYYY-MM-DD format
         $stmt->bind_param(
-            "isssssddss",
+            "isssssddsss",
             $user_id,
             $expense['purpose'],
             $expense['mode'],
@@ -210,6 +213,7 @@ try {
             $travel_date,
             $expense['distance'],
             $expense['amount'],
+            $status,
             $expense['notes'],
             $expense_bill_path
         );

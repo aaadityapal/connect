@@ -134,7 +134,7 @@ function getImageAsBase64($path) {
 }
 
 // Add pagination variables
-$records_per_page = 10; // Number of records per page
+$records_per_page = 25; // Number of records per page (increased from 15 to 25)
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1; // Current page
 $offset = ($page - 1) * $records_per_page; // Offset for SQL query
 
@@ -142,6 +142,7 @@ $offset = ($page - 1) * $records_per_page; // Offset for SQL query
 $search_filter = isset($_GET['search']) ? $_GET['search'] : '';
 $month_filter = isset($_GET['month']) ? intval($_GET['month']) : 0;
 $year_filter = isset($_GET['year']) ? intval($_GET['year']) : 0;
+$week_filter = isset($_GET['week']) ? intval($_GET['week']) : 0;
 $employee_filter = isset($_GET['employee']) ? intval($_GET['employee']) : 0;
 $status_filter = isset($_GET['status']) ? $_GET['status'] : '';
 $approval_filter = isset($_GET['approval']) ? $_GET['approval'] : '';
@@ -183,26 +184,66 @@ if ($year_filter > 0) {
     $param_types .= "i";
 }
 
+if ($week_filter > 0) {
+    // Filter by week number in the month
+    // Week 1: days 1-7, Week 2: days 8-14, Week 3: days 15-21, Week 4: days 22-28, Week 5: days 29+
+    if ($week_filter == 1) {
+        $where_clause .= " AND DAY(te.travel_date) BETWEEN 1 AND 7";
+    } else if ($week_filter == 2) {
+        $where_clause .= " AND DAY(te.travel_date) BETWEEN 8 AND 14";
+    } else if ($week_filter == 3) {
+        $where_clause .= " AND DAY(te.travel_date) BETWEEN 15 AND 21";
+    } else if ($week_filter == 4) {
+        $where_clause .= " AND DAY(te.travel_date) BETWEEN 22 AND 28";
+    } else if ($week_filter == 5) {
+        $where_clause .= " AND DAY(te.travel_date) >= 29";
+    }
+    
+    // If month filter is not set, use current month
+    if ($month_filter <= 0) {
+        $where_clause .= " AND MONTH(te.travel_date) = ?";
+        $params[] = date('m');
+        $param_types .= "i";
+    }
+}
+
 if (!empty($approval_filter)) {
     // Parse the approval filter to determine role and status
     $approval_parts = explode('_', $approval_filter);
     if (count($approval_parts) == 2) {
-        $role = $approval_parts[0];  // manager, accountant, hr
-        $status = $approval_parts[1]; // approved, rejected
+        $role = $approval_parts[0];  // manager, accountant, hr, overall
+        $status = $approval_parts[1]; // approved, rejected, pending
         
         // Add appropriate condition based on role and status
-        if ($role == 'manager') {
-            $where_clause .= " AND te.manager_status = ?";
+        if ($role == 'overall') {
+            // Filter by the main status column
+            $where_clause .= " AND te.status = ?";
             $params[] = $status;
             $param_types .= "s";
+        } else if ($role == 'manager') {
+            if ($status == 'pending') {
+                $where_clause .= " AND (te.manager_status = 'pending' OR te.manager_status IS NULL)";
+            } else {
+                $where_clause .= " AND te.manager_status = ?";
+                $params[] = $status;
+                $param_types .= "s";
+            }
         } else if ($role == 'accountant') {
-            $where_clause .= " AND te.accountant_status = ?";
-            $params[] = $status;
-            $param_types .= "s";
+            if ($status == 'pending') {
+                $where_clause .= " AND (te.accountant_status = 'pending' OR te.accountant_status IS NULL)";
+            } else {
+                $where_clause .= " AND te.accountant_status = ?";
+                $params[] = $status;
+                $param_types .= "s";
+            }
         } else if ($role == 'hr') {
-            $where_clause .= " AND te.hr_status = ?";
-            $params[] = $status;
-            $param_types .= "s";
+            if ($status == 'pending') {
+                $where_clause .= " AND (te.hr_status = 'pending' OR te.hr_status IS NULL)";
+            } else {
+                $where_clause .= " AND te.hr_status = ?";
+                $params[] = $status;
+                $param_types .= "s";
+            }
         }
     }
 }
@@ -1388,7 +1429,7 @@ function getTransportIcon($mode) {
             position: relative;
             display: flex;
             flex-direction: column;
-            width: 115%;
+            width: 120%;
             pointer-events: auto;
             background-color: #fff;
             background-clip: padding-box;
@@ -3680,6 +3721,17 @@ function getTransportIcon($mode) {
                             </select>
                         </div>
                         <div class="filter-group">
+                            <label for="weekFilter">Week:</label>
+                            <select class="filter-dropdown" id="weekFilter">
+                                <option value="">All Weeks</option>
+                                <option value="1" <?php echo ($week_filter == 1) ? 'selected' : ''; ?>>Week 1 (1-7)</option>
+                                <option value="2" <?php echo ($week_filter == 2) ? 'selected' : ''; ?>>Week 2 (8-14)</option>
+                                <option value="3" <?php echo ($week_filter == 3) ? 'selected' : ''; ?>>Week 3 (15-21)</option>
+                                <option value="4" <?php echo ($week_filter == 4) ? 'selected' : ''; ?>>Week 4 (22-28)</option>
+                                <option value="5" <?php echo ($week_filter == 5) ? 'selected' : ''; ?>>Week 5 (29+)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
                             <label for="yearFilter">Year:</label>
                             <select class="filter-dropdown" id="yearFilter">
                                 <option value="">All Years</option>
@@ -3694,15 +3746,29 @@ function getTransportIcon($mode) {
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label for="approvalFilter">Approved By:</label>
+                            <label for="approvalFilter">Approval Status:</label>
                             <select class="filter-dropdown" id="approvalFilter">
                                 <option value="">All Approvals</option>
-                                <option value="manager_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_approved') ? 'selected' : ''; ?>>Manager Approved</option>
-                                <option value="accountant_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_approved') ? 'selected' : ''; ?>>Accountant Approved</option>
-                                <option value="hr_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_approved') ? 'selected' : ''; ?>>HR Approved</option>
-                                <option value="manager_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_rejected') ? 'selected' : ''; ?>>Manager Rejected</option>
-                                <option value="accountant_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_rejected') ? 'selected' : ''; ?>>Accountant Rejected</option>
-                                <option value="hr_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_rejected') ? 'selected' : ''; ?>>HR Rejected</option>
+                                <optgroup label="Overall Status">
+                                    <option value="overall_pending" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'overall_pending') ? 'selected' : ''; ?>>Pending</option>
+                                    <option value="overall_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'overall_approved') ? 'selected' : ''; ?>>Approved</option>
+                                    <option value="overall_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'overall_rejected') ? 'selected' : ''; ?>>Rejected</option>
+                                </optgroup>
+                                <optgroup label="Manager">
+                                    <option value="manager_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_approved') ? 'selected' : ''; ?>>Manager Approved</option>
+                                    <option value="manager_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_rejected') ? 'selected' : ''; ?>>Manager Rejected</option>
+                                    <option value="manager_pending" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'manager_pending') ? 'selected' : ''; ?>>Manager Pending</option>
+                                </optgroup>
+                                <optgroup label="Accountant">
+                                    <option value="accountant_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_approved') ? 'selected' : ''; ?>>Accountant Approved</option>
+                                    <option value="accountant_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_rejected') ? 'selected' : ''; ?>>Accountant Rejected</option>
+                                    <option value="accountant_pending" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'accountant_pending') ? 'selected' : ''; ?>>Accountant Pending</option>
+                                </optgroup>
+                                <optgroup label="HR">
+                                    <option value="hr_approved" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_approved') ? 'selected' : ''; ?>>HR Approved</option>
+                                    <option value="hr_rejected" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_rejected') ? 'selected' : ''; ?>>HR Rejected</option>
+                                    <option value="hr_pending" <?php echo (isset($_GET['approval']) && $_GET['approval'] == 'hr_pending') ? 'selected' : ''; ?>>HR Pending</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -4192,10 +4258,21 @@ function getTransportIcon($mode) {
                 
                 <div class="pagination">
                     <?php if ($total_pages > 1): ?>
+                        <?php
+                        // Create query string with all current filters except page
+                        $query_params = $_GET;
+                        
+                        // Function to generate pagination URL with all filters preserved
+                        function getPaginationUrl($page_num, $params) {
+                            $params['page'] = $page_num;
+                            return '?' . http_build_query($params);
+                        }
+                        ?>
+                        
                         <!-- First page and previous page links -->
                         <?php if ($page > 1): ?>
-                            <a href="?page=1" class="page-item"><i class="fas fa-angle-double-left"></i></a>
-                            <a href="?page=<?php echo $page - 1; ?>" class="page-item"><i class="fas fa-chevron-left"></i></a>
+                            <a href="<?php echo getPaginationUrl(1, $query_params); ?>" class="page-item"><i class="fas fa-angle-double-left"></i></a>
+                            <a href="<?php echo getPaginationUrl($page - 1, $query_params); ?>" class="page-item"><i class="fas fa-chevron-left"></i></a>
                         <?php else: ?>
                             <span class="page-item disabled"><i class="fas fa-angle-double-left"></i></span>
                             <span class="page-item disabled"><i class="fas fa-chevron-left"></i></span>
@@ -4210,7 +4287,7 @@ function getTransportIcon($mode) {
                         
                         // Always show first page
                         if ($start_page > 1) {
-                            echo '<a href="?page=1" class="page-item">1</a>';
+                            echo '<a href="' . getPaginationUrl(1, $query_params) . '" class="page-item">1</a>';
                             if ($start_page > 2) {
                                 echo '<span class="page-item-ellipsis">...</span>';
                             }
@@ -4221,7 +4298,7 @@ function getTransportIcon($mode) {
                             if ($i == $page) {
                                 echo '<span class="page-item active">' . $i . '</span>';
                             } else {
-                                echo '<a href="?page=' . $i . '" class="page-item">' . $i . '</a>';
+                                echo '<a href="' . getPaginationUrl($i, $query_params) . '" class="page-item">' . $i . '</a>';
                             }
                         }
                         
@@ -4230,14 +4307,14 @@ function getTransportIcon($mode) {
                             if ($end_page < $total_pages - 1) {
                                 echo '<span class="page-item-ellipsis">...</span>';
                             }
-                            echo '<a href="?page=' . $total_pages . '" class="page-item">' . $total_pages . '</a>';
+                            echo '<a href="' . getPaginationUrl($total_pages, $query_params) . '" class="page-item">' . $total_pages . '</a>';
                         }
                         ?>
                         
                         <!-- Next page and last page links -->
                         <?php if ($page < $total_pages): ?>
-                            <a href="?page=<?php echo $page + 1; ?>" class="page-item"><i class="fas fa-chevron-right"></i></a>
-                            <a href="?page=<?php echo $total_pages; ?>" class="page-item"><i class="fas fa-angle-double-right"></i></a>
+                            <a href="<?php echo getPaginationUrl($page + 1, $query_params); ?>" class="page-item"><i class="fas fa-chevron-right"></i></a>
+                            <a href="<?php echo getPaginationUrl($total_pages, $query_params); ?>" class="page-item"><i class="fas fa-angle-double-right"></i></a>
                         <?php else: ?>
                             <span class="page-item disabled"><i class="fas fa-chevron-right"></i></span>
                             <span class="page-item disabled"><i class="fas fa-angle-double-right"></i></span>
@@ -4733,6 +4810,7 @@ function getTransportIcon($mode) {
                 const searchTerm = document.getElementById('expenseSearch').value.toLowerCase();
                 const month = document.getElementById('monthFilter').value;
                 const year = document.getElementById('yearFilter').value;
+                const week = document.getElementById('weekFilter').value;
                 
                 // Filter desktop table rows
                 const rows = document.querySelectorAll('.table-responsive tbody tr');
@@ -4751,13 +4829,14 @@ function getTransportIcon($mode) {
                     }
                     
                     // Date filtering
-                    if ((month || year) && showRow) {
+                    if ((month || year || week) && showRow) {
                         const dateCell = row.querySelector('.expense-date')?.textContent || '';
                         const expenseDate = new Date(dateCell);
                         
                         if (!isNaN(expenseDate.getTime())) {
                             const expenseMonth = expenseDate.getMonth() + 1; // getMonth() is 0-indexed
                             const expenseYear = expenseDate.getFullYear();
+                            const expenseDay = expenseDate.getDate();
                             
                             if (month && parseInt(month) !== expenseMonth) {
                                 showRow = false;
@@ -4765,6 +4844,22 @@ function getTransportIcon($mode) {
                             
                             if (year && parseInt(year) !== expenseYear) {
                                 showRow = false;
+                            }
+                            
+                            // Week filtering
+                            if (week && showRow) {
+                                const weekNum = parseInt(week);
+                                if (weekNum === 1 && (expenseDay < 1 || expenseDay > 7)) {
+                                    showRow = false;
+                                } else if (weekNum === 2 && (expenseDay < 8 || expenseDay > 14)) {
+                                    showRow = false;
+                                } else if (weekNum === 3 && (expenseDay < 15 || expenseDay > 21)) {
+                                    showRow = false;
+                                } else if (weekNum === 4 && (expenseDay < 22 || expenseDay > 28)) {
+                                    showRow = false;
+                                } else if (weekNum === 5 && expenseDay < 29) {
+                                    showRow = false;
+                                }
                             }
                         }
                     }
@@ -4790,13 +4885,14 @@ function getTransportIcon($mode) {
                     }
                     
                     // Date filtering
-                    if ((month || year) && showCard) {
+                    if ((month || year || week) && showCard) {
                         const dateElement = card.querySelector('.mobile-expense-value:nth-of-type(2)')?.textContent || '';
                         const expenseDate = new Date(dateElement);
                         
                         if (!isNaN(expenseDate.getTime())) {
                             const expenseMonth = expenseDate.getMonth() + 1;
                             const expenseYear = expenseDate.getFullYear();
+                            const expenseDay = expenseDate.getDate();
                             
                             if (month && parseInt(month) !== expenseMonth) {
                                 showCard = false;
@@ -4804,6 +4900,22 @@ function getTransportIcon($mode) {
                             
                             if (year && parseInt(year) !== expenseYear) {
                                 showCard = false;
+                            }
+                            
+                            // Week filtering
+                            if (week && showCard) {
+                                const weekNum = parseInt(week);
+                                if (weekNum === 1 && (expenseDay < 1 || expenseDay > 7)) {
+                                    showCard = false;
+                                } else if (weekNum === 2 && (expenseDay < 8 || expenseDay > 14)) {
+                                    showCard = false;
+                                } else if (weekNum === 3 && (expenseDay < 15 || expenseDay > 21)) {
+                                    showCard = false;
+                                } else if (weekNum === 4 && (expenseDay < 22 || expenseDay > 28)) {
+                                    showCard = false;
+                                } else if (weekNum === 5 && expenseDay < 29) {
+                                    showCard = false;
+                                }
                             }
                         }
                     }
@@ -4865,6 +4977,7 @@ function getTransportIcon($mode) {
                 document.getElementById('expenseSearch').value = '';
                 document.getElementById('monthFilter').value = '';
                 document.getElementById('yearFilter').value = '';
+                document.getElementById('weekFilter').value = '';
                 
                 // Show all rows and cards
                 document.querySelectorAll('.table-responsive tbody tr').forEach(row => {
@@ -4887,6 +5000,14 @@ function getTransportIcon($mode) {
             const searchInput = document.getElementById('expenseSearch');
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
+                    applyFilters();
+                });
+            }
+            
+            // Add event listener for week filter
+            const weekFilter = document.getElementById('weekFilter');
+            if (weekFilter) {
+                weekFilter.addEventListener('change', function() {
                     applyFilters();
                 });
             }
@@ -5458,6 +5579,7 @@ function getTransportIcon($mode) {
             const searchTerm = document.getElementById('expenseSearch').value.toLowerCase();
             const month = document.getElementById('monthFilter').value;
             const year = document.getElementById('yearFilter').value;
+            const week = document.getElementById('weekFilter').value;
             const employee = document.getElementById('employeeFilter').value;
             const status = document.getElementById('statusFilter').value;
             const approval = document.getElementById('approvalFilter').value;
@@ -5491,6 +5613,12 @@ function getTransportIcon($mode) {
                 params.set('year', year);
             } else {
                 params.delete('year');
+            }
+            
+            if (week) {
+                params.set('week', week);
+            } else {
+                params.delete('week');
             }
             
             if (approval) {
@@ -5553,6 +5681,13 @@ function getTransportIcon($mode) {
             });
         }
         
+        const weekFilter = document.getElementById('weekFilter');
+        if (weekFilter) {
+            weekFilter.addEventListener('change', function() {
+                applyFiltersWithPagination();
+            });
+        }
+        
         const approvalFilter = document.getElementById('approvalFilter');
         if (approvalFilter) {
             approvalFilter.addEventListener('change', function() {
@@ -5568,6 +5703,7 @@ function getTransportIcon($mode) {
             document.getElementById('statusFilter').value = '';
             document.getElementById('monthFilter').value = '';
             document.getElementById('yearFilter').value = '';
+            document.getElementById('weekFilter').value = '';
             document.getElementById('approvalFilter').value = '';
             
             // Redirect to page without query parameters

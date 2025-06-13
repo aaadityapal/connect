@@ -1,4 +1,451 @@
- <!DOCTYPE html>
+<?php
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Check for required files
+$requiredFiles = [
+    'config/db_connect.php' => file_exists(__DIR__ . '/config/db_connect.php'),
+    'includes/project_payout_functions.php' => file_exists(__DIR__ . '/includes/project_payout_functions.php'),
+    'includes/manager_payment_functions.php' => file_exists(__DIR__ . '/includes/manager_payment_functions.php')
+];
+
+// Include database connection
+require_once __DIR__ . '/config/db_connect.php';
+require_once __DIR__ . '/includes/project_payout_functions.php';
+require_once __DIR__ . '/includes/manager_payment_functions.php';
+
+// Test database connection
+$dbConnectionStatus = "Unknown";
+try {
+    if (isset($pdo)) {
+        $pdo->query("SELECT 1");
+        $dbConnectionStatus = "Connected successfully";
+        
+        // Check if required tables exist
+        $tables = ['project_payouts', 'manager_payments', 'users'];
+        $missingTables = [];
+        
+        foreach ($tables as $table) {
+            try {
+                $stmt = $pdo->query("SELECT 1 FROM $table LIMIT 1");
+                $stmt->execute();
+            } catch (PDOException $e) {
+                $missingTables[] = $table;
+            }
+        }
+        
+        if (!empty($missingTables)) {
+            $dbConnectionStatus = "Connected, but missing tables: " . implode(", ", $missingTables);
+        }
+    } else {
+        $dbConnectionStatus = "PDO object not available";
+    }
+} catch (PDOException $e) {
+    $dbConnectionStatus = "Connection failed: " . $e->getMessage();
+}
+
+// Function to create sample manager payments if none exist
+function createSampleManagerPayments($pdo) {
+    try {
+        // First check if we have any records
+        $stmt = $pdo->query("SELECT COUNT(*) FROM manager_payments");
+        $count = $stmt->fetchColumn();
+        
+        if ($count == 0 && isset($_GET['create_sample_data'])) {
+            // Get project payouts
+            $stmt = $pdo->query("SELECT id, amount, project_type FROM project_payouts LIMIT 10");
+            $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get senior managers
+            $stmt = $pdo->query("SELECT id FROM users WHERE (role = 'Senior Manager' OR role = 'Senior Manager (Site)' OR role = 'Senior Manager (Studio)') AND status = 'active'");
+            $managers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (count($projects) > 0 && count($managers) > 0) {
+                // Insert sample data
+                $stmt = $pdo->prepare("INSERT INTO manager_payments 
+                    (project_id, manager_id, amount, commission_rate, payment_status, created_at, updated_at) 
+                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+                
+                $inserted = 0;
+                foreach ($projects as $project) {
+                    foreach ($managers as $manager) {
+                        // Calculate commission based on project type
+                        $commissionRate = ($project['project_type'] == 'Construction') ? 3 : 5;
+                        $amount = $project['amount'] * ($commissionRate / 100);
+                        
+                        // Randomly set some as approved and some as pending
+                        $status = (rand(0, 1) == 1) ? 'approved' : 'pending';
+                        
+                        $stmt->execute([
+                            $project['id'],
+                            $manager['id'],
+                            $amount,
+                            $commissionRate,
+                            $status
+                        ]);
+                        $inserted++;
+                    }
+                }
+                
+                return "Created $inserted sample manager payment records.";
+            }
+            return "No projects or managers found to create sample data.";
+        }
+        return null;
+    } catch (PDOException $e) {
+        return "Error creating sample data: " . $e->getMessage();
+    }
+}
+
+// Function to get all manager payments
+function getAllManagerPayments($pdo) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT mp.*, pp.project_name, pp.project_type, pp.client_name, pp.project_date, 
+                   pp.amount as project_amount, pp.payment_mode, pp.project_stage,
+                   u.username, u.unique_id AS employee_id, u.designation, u.department, u.role
+            FROM manager_payments mp
+            JOIN project_payouts pp ON mp.project_id = pp.id
+            JOIN users u ON mp.manager_id = u.id
+            ORDER BY mp.created_at DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching manager payments: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Function to get manager payments by manager ID
+function getManagerPaymentsByManagerId($pdo, $managerId) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT mp.*, pp.project_name, pp.project_type, pp.client_name, pp.project_date, 
+                   pp.amount as project_amount, pp.payment_mode, pp.project_stage,
+                   u.username, u.unique_id AS employee_id, u.designation, u.department, u.role
+            FROM manager_payments mp
+            JOIN project_payouts pp ON mp.project_id = pp.id
+            JOIN users u ON mp.manager_id = u.id
+            WHERE mp.manager_id = :manager_id
+            ORDER BY mp.created_at DESC
+        ");
+        $stmt->bindParam(':manager_id', $managerId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching manager payments by manager ID: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Function to get manager payment summary
+function getManagerPaymentSummary($pdo) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                u.id AS manager_id,
+                u.username,
+                u.unique_id AS employee_id,
+                u.designation,
+                u.department,
+                u.role,
+                COUNT(mp.id) AS project_count,
+                SUM(mp.amount) AS total_paid,
+                SUM(CASE WHEN mp.payment_status = 'approved' THEN mp.amount ELSE 0 END) AS approved_amount,
+                SUM(CASE WHEN mp.payment_status = 'pending' THEN mp.amount ELSE 0 END) AS pending_amount
+            FROM users u
+            LEFT JOIN manager_payments mp ON u.id = mp.manager_id
+            WHERE u.role LIKE '%Senior Manager%' AND u.status = 'active'
+            GROUP BY u.id, u.username, u.unique_id, u.designation, u.department, u.role
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching manager payment summary: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Function to get total payment statistics
+function getPaymentStatistics($pdo) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                SUM(pp.amount) AS total_amount,
+                SUM(CASE WHEN pp.project_type = 'Architecture' THEN pp.amount ELSE 0 END) AS architecture_amount,
+                SUM(CASE WHEN pp.project_type = 'Interior' THEN pp.amount ELSE 0 END) AS interior_amount,
+                SUM(CASE WHEN pp.project_type = 'Construction' THEN pp.amount ELSE 0 END) AS construction_amount,
+                SUM(pp.remaining_amount) AS total_pending_amount,
+                COUNT(CASE WHEN pp.remaining_amount > 0 THEN 1 END) AS pending_projects_count,
+                SUM(mp.amount) AS total_paid_amount,
+                COUNT(DISTINCT CASE WHEN mp.payment_status = 'approved' THEN mp.manager_id END) AS paid_managers_count,
+                SUM(CASE WHEN mp.payment_status = 'pending' THEN mp.amount ELSE 0 END) AS total_pending_payouts
+            FROM project_payouts pp
+            LEFT JOIN manager_payments mp ON pp.id = mp.project_id
+        ");
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error fetching payment statistics: " . $e->getMessage());
+        return [
+            'total_amount' => 0,
+            'architecture_amount' => 0,
+            'interior_amount' => 0,
+            'construction_amount' => 0,
+            'total_pending_amount' => 0,
+            'pending_projects_count' => 0,
+            'total_paid_amount' => 0,
+            'paid_managers_count' => 0,
+            'total_pending_payouts' => 0
+        ];
+    }
+}
+
+// Initialize arrays in case of failure
+$projectPayouts = [];
+$seniorManagers = [];
+$managerPayments = [];
+$paymentStatistics = [
+    'total_amount' => 0,
+    'architecture_amount' => 0,
+    'interior_amount' => 0,
+    'construction_amount' => 0,
+    'total_pending_amount' => 0,
+    'pending_projects_count' => 0,
+    'total_paid_amount' => 0,
+    'paid_managers_count' => 0
+];
+$managerPaymentSummary = [];
+
+// Check if we need to create sample data
+$sampleDataMessage = createSampleManagerPayments($pdo);
+
+try {
+    // Get all project payouts
+    $projectPayouts = getAllProjectPayouts($pdo);
+    
+    // Get all senior managers (including Site and Studio managers)
+    $stmt = $pdo->prepare("SELECT id, username, unique_id AS employee_id, designation, department, profile_picture AS profile_image, role FROM users WHERE (role = 'Senior Manager' OR role = 'Senior Manager (Site)' OR role = 'Senior Manager (Studio)') AND status = 'active'");
+    $stmt->execute();
+    $seniorManagers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get all manager payments
+    $managerPayments = getAllManagerPayments($pdo);
+    
+    // Get payment statistics for dashboard
+    $paymentStatistics = getPaymentStatistics($pdo);
+    
+    // Get manager payment summary
+    $managerPaymentSummary = getManagerPaymentSummary($pdo);
+    
+    // Debug information - will be shown at the top of the page
+    $debugInfo = [
+        'DB Connection' => $dbConnectionStatus,
+        'Required Files' => $requiredFiles,
+        'Required Functions' => [
+            'getAllProjectPayouts' => function_exists('getAllProjectPayouts') ? 'Available' : 'Missing',
+            'getAllManagerPayments' => function_exists('getAllManagerPayments') ? 'Available' : 'Missing',
+            'getManagerPaymentsByManagerId' => function_exists('getManagerPaymentsByManagerId') ? 'Available' : 'Missing',
+            'getManagerPaymentSummary' => function_exists('getManagerPaymentSummary') ? 'Available' : 'Missing',
+            'getPaymentStatistics' => function_exists('getPaymentStatistics') ? 'Available' : 'Missing'
+        ],
+        'Project Payouts Count' => count($projectPayouts),
+        'Senior Managers Count' => count($seniorManagers),
+        'Manager Payments Count' => count($managerPayments),
+        'Payment Statistics' => $paymentStatistics ? 'Available' : 'Not Available',
+        'Manager Payment Summary Count' => count($managerPaymentSummary)
+    ];
+} catch (Exception $e) {
+    // Log the error but continue with empty arrays
+    error_log("Error fetching data: " . $e->getMessage());
+    
+    // Debug information - will show the error
+    $debugInfo = [
+        'DB Connection' => 'Failed',
+        'Error Message' => $e->getMessage(),
+        'Error Code' => $e->getCode(),
+        'Error File' => $e->getFile(),
+        'Error Line' => $e->getLine()
+    ];
+}
+
+// Handle AJAX requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    $response = ['success' => false, 'message' => 'Unknown action'];
+    
+    try {
+        switch ($_POST['action']) {
+            case 'add':
+                // Debug log the remaining amount
+                error_log("Remaining amount from POST: " . ($_POST['remaining_amount'] ?? 'not set'));
+                
+                $data = [
+                    'project_name' => $_POST['project_name'] ?? '',
+                    'project_type' => $_POST['project_type'] ?? '',
+                    'client_name' => $_POST['client_name'] ?? '',
+                    'project_date' => $_POST['project_date'] ?? '',
+                    'amount' => $_POST['amount'] ?? 0,
+                    'payment_mode' => $_POST['payment_mode'] ?? '',
+                    'project_stage' => $_POST['project_stage'] ?? '',
+                    'remaining_amount' => $_POST['remaining_amount'] ?? 0
+                ];
+                
+                $id = addProjectPayout($pdo, $data);
+                if ($id) {
+                    $data['id'] = $id;
+                    $response = [
+                        'success' => true, 
+                        'message' => 'Project added successfully',
+                        'project' => $data
+                    ];
+                } else {
+                    $response = [
+                        'success' => false, 
+                        'message' => 'Failed to add project'
+                    ];
+                }
+                break;
+                
+            case 'update':
+                $id = $_POST['id'] ?? 0;
+                
+                // Debug log the remaining amount
+                error_log("Update - Remaining amount from POST: " . ($_POST['remaining_amount'] ?? 'not set'));
+                
+                if (!$id) {
+                    $response = [
+                        'success' => false,
+                        'message' => 'Missing project ID for update'
+                    ];
+                    break;
+                }
+                
+                $data = [
+                    'project_name' => $_POST['project_name'] ?? '',
+                    'project_type' => $_POST['project_type'] ?? '',
+                    'client_name' => $_POST['client_name'] ?? '',
+                    'project_date' => $_POST['project_date'] ?? '',
+                    'amount' => $_POST['amount'] ?? 0,
+                    'payment_mode' => $_POST['payment_mode'] ?? '',
+                    'project_stage' => $_POST['project_stage'] ?? '',
+                    'remaining_amount' => $_POST['remaining_amount'] ?? 0
+                ];
+                
+                error_log("Updating project ID: $id with data: " . print_r($data, true));
+                
+                if (updateProjectPayout($pdo, $id, $data)) {
+                    // Get the updated project to return
+                    $updatedProject = getProjectPayoutById($pdo, $id);
+                    
+                    $response = [
+                        'success' => true, 
+                        'message' => 'Project updated successfully',
+                        'project' => $updatedProject ?: array_merge(['id' => $id], $data)
+                    ];
+                } else {
+                    $response = [
+                        'success' => false, 
+                        'message' => 'Failed to update project'
+                    ];
+                }
+                break;
+                
+            case 'delete':
+                $id = $_POST['id'] ?? 0;
+                if (deleteProjectPayout($pdo, $id)) {
+                    $response = [
+                        'success' => true, 
+                        'message' => 'Project deleted successfully'
+                    ];
+                } else {
+                    $response = [
+                        'success' => false, 
+                        'message' => 'Failed to delete project'
+                    ];
+                }
+                break;
+                
+            case 'get':
+                $id = $_POST['id'] ?? 0;
+                $project = getProjectPayoutById($pdo, $id);
+                if ($project) {
+                    $response = [
+                        'success' => true, 
+                        'project' => $project
+                    ];
+                } else {
+                    $response = [
+                        'success' => false, 
+                        'message' => 'Project not found'
+                    ];
+                }
+                break;
+                
+            case 'update_payment_status':
+                $projectId = $_POST['project_id'] ?? 0;
+                $managerId = $_POST['manager_id'] ?? 0;
+                $amount = $_POST['amount'] ?? 0;
+                $commissionRate = $_POST['commission_rate'] ?? 0;
+                $status = $_POST['status'] ?? 'approved';
+                
+                if (!$projectId || !$managerId) {
+                    $response = [
+                        'success' => false,
+                        'message' => 'Missing project ID or manager ID'
+                    ];
+                    break;
+                }
+                
+                if (saveManagerPayment($pdo, $projectId, $managerId, $amount, $commissionRate, $status)) {
+                    $response = [
+                        'success' => true,
+                        'message' => 'Payment status updated successfully',
+                        'status' => $status
+                    ];
+                } else {
+                    $response = [
+                        'success' => false,
+                        'message' => 'Failed to update payment status'
+                    ];
+                }
+                break;
+                
+            case 'get_payment_status':
+                $projectId = $_POST['project_id'] ?? 0;
+                $managerId = $_POST['manager_id'] ?? 0;
+                
+                if (!$projectId || !$managerId) {
+                    $response = [
+                        'success' => false,
+                        'message' => 'Missing project ID or manager ID'
+                    ];
+                    break;
+                }
+                
+                $status = getPaymentStatus($pdo, $projectId, $managerId);
+                $response = [
+                    'success' => true,
+                    'status' => $status
+                ];
+                break;
+        }
+    } catch (Exception $e) {
+        $response = [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ];
+        error_log("AJAX Error: " . $e->getMessage());
+    }
+    
+    echo json_encode($response);
+    exit;
+}
+?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +457,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap icons CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4361ee;
@@ -23,6 +472,11 @@
             --border-radius: 8px;
             --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             --sidebar-width: 280px;
+            
+            /* Project type colors */
+            --architecture-color: #3a86ff;
+            --interior-color: #8338ec;
+            --construction-color: #ff006e;
         }
 
         * {
@@ -36,628 +490,6 @@
             background-color: #f5f7fb;
             color: var(--dark-color);
             line-height: 1.6;
-        }
-
-        .container {
-            max-width: 100%;
-            margin-left: var(--sidebar-width);
-            padding: 20px;
-            transition: margin 0.3s ease;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .page-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .page-title h1 {
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .page-title i {
-            font-size: 32px;
-            color: var(--primary-color);
-        }
-
-        .actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: var(--border-radius);
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #3a9a38;
-            transform: translateY(-2px);
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 25px;
-        }
-
-        .sidebar {
-            background-color: white;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: var(--box-shadow);
-            height: fit-content;
-        }
-
-        .sidebar h3 {
-            margin-bottom: 20px;
-            color: var(--primary-color);
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .filter-title {
-            color: var(--primary-color);
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #eaedf2;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .filter-group {
-            margin-bottom: 20px;
-        }
-
-        .filter-group h4 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .filter-group h4:hover {
-            color: var(--primary-color);
-        }
-        
-        .filter-group h4 i:first-child {
-            margin-right: 8px;
-            color: var(--primary-color);
-        }
-        
-        .filter-group h4 i:last-child {
-            font-size: 0.8rem;
-            color: #999;
-            transition: transform 0.3s ease;
-        }
-        
-        .filter-group.collapsed h4 i:last-child {
-            transform: rotate(-90deg);
-        }
-
-        .filter-options {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filter-option {
-            padding: 6px 8px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-            cursor: pointer;
-            justify-content: space-between;
-        }
-        
-        .filter-option:hover {
-            background-color: rgba(67, 97, 238, 0.05);
-        }
-        
-        .filter-option input {
-            accent-color: var(--primary-color);
-        }
-
-        .form-check-input {
-            width: 16px;
-            height: 16px;
-            margin-top: 0;
-            cursor: pointer;
-        }
-        
-        .form-check-input:checked {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .form-check-label {
-            cursor: pointer;
-            margin-right: auto;
-            color: #555;
-        }
-        
-        .badge-count {
-            background-color: #f0f0f0;
-            color: #666;
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 500;
-        }
-        
-        .badge-count.paid {
-            background-color: rgba(75, 181, 67, 0.15);
-            color: var(--success-color);
-        }
-        
-        .badge-count.pending {
-            background-color: rgba(252, 163, 17, 0.15);
-            color: var(--warning-color);
-        }
-        
-        .badge-count.processing {
-            background-color: rgba(67, 97, 238, 0.15);
-            color: var(--primary-color);
-        }
-        
-        .date-range-inputs {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .date-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .date-input-group label {
-            font-size: 0.8rem;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .date-input {
-            padding: 8px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-        
-        .date-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-            outline: none;
-        }
-        
-        .range-slider {
-            padding: 0 5px;
-        }
-        
-        .range-values {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        
-        .form-range {
-            width: 100%;
-            height: 6px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: #e0e0e0;
-            border-radius: 3px;
-            outline: none;
-            margin: 10px 0;
-        }
-        
-        .form-range::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-        }
-        
-        .form-range::-webkit-slider-thumb:hover {
-            background: var(--secondary-color);
-            transform: scale(1.1);
-        }
-        
-        .active-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .filter-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        
-        .filter-badge i {
-            cursor: pointer;
-            font-size: 0.7rem;
-            opacity: 0.7;
-            transition: all 0.2s ease;
-        }
-        
-        .filter-badge:hover {
-            background-color: rgba(67, 97, 238, 0.15);
-        }
-        
-        .filter-badge i:hover {
-            opacity: 1;
-        }
-        
-        .filter-actions {
-            display: flex;
-            justify-content: space-between;
-            padding-top: 12px;
-            border-top: 1px solid #eaedf2;
-        }
-        
-        .filter-actions button {
-            padding: 7px 15px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        
-        .filter-actions .btn-outline-secondary {
-            color: #6c757d;
-            border: 1px solid #ced4da;
-            background-color: white;
-        }
-        
-        .filter-actions .btn-outline-secondary:hover {
-            background-color: #f8f9fa;
-            color: #495057;
-        }
-        
-        .filter-actions .btn-primary {
-            background-color: var(--primary-color);
-            border: none;
-        }
-        
-        .filter-actions .btn-primary:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .content-section {
-            background-color: white;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .section-header {
-            margin-bottom: 20px;
-        }
-
-        .section-header h2 {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .stat-card {
-            background-color: #f8f9fa;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-card .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-card .header i {
-            font-size: 24px;
-            color: var(--primary-color);
-            padding: 10px;
-            border-radius: 50%;
-            background-color: rgba(67, 97, 238, 0.1);
-        }
-
-        .stat-card h3 {
-            font-size: 14px;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .stat-card .value {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-
-        .stat-card .change {
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .change.positive {
-            color: var(--success-color);
-        }
-
-        .change.negative {
-            color: var(--danger-color);
-        }
-
-        .payouts-table {
-            overflow-x: auto;
-            width: 100%;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 500;
-            position: sticky;
-            top: 0;
-            background-color: var(--primary-color);
-        }
-
-        td {
-            padding: 15px;
-            text-align: left;
-            vertical-align: middle;
-        }
-
-        th:first-child, td:first-child {
-            padding-left: 25px;
-        }
-
-        th:last-child, td:last-child {
-            padding-right: 25px;
-        }
-
-        thead {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        th i {
-            margin-left: 5px;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid #eee;
-        }
-
-        tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status.paid {
-            background-color: rgba(75, 181, 67, 0.1);
-            color: var(--success-color);
-        }
-
-        .status.pending {
-            background-color: rgba(252, 163, 17, 0.1);
-            color: var(--warning-color);
-        }
-
-        .status.processing {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--primary-color);
-            font-size: 16px;
-            margin: 0 5px;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: flex-end;
-            padding: 15px;
-            background-color: white;
-            border-top: 1px solid #eee;
-        }
-
-        .pagination button {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 1px solid #ddd;
-            background: none;
-            margin: 0 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pagination button.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .pagination button:hover:not(.active) {
-            background-color: #f0f0f0;
-        }
-
-        @media (max-width: 1200px) {
-            .dashboard {
-                grid-template-columns: 250px 1fr;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-
-            .dashboard .sidebar {
-                margin-bottom: 20px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .payouts-table {
-                overflow-x: auto;
-            }
-            
-            table {
-                min-width: 800px;
-            }
-            
-            .sidebar#sidebar {
-                transform: translateX(-100%);
-            }
-
-            .container {
-                margin-left: 0;
-                padding: 15px;
-            }
-
-            .toggle-sidebar {
-                left: 1rem;
-            }
-
-            .sidebar#sidebar.show {
-                transform: translateX(0);
-            }
-            
-            th, td {
-                padding: 10px;
-            }
-            
-            th:first-child, td:first-child {
-                padding-left: 15px;
-            }
-
-            th:last-child, td:last-child {
-                padding-right: 15px;
-            }
-
-            .content-section {
-                padding: 15px;
-            }
-            
-            .section-header h2 {
-                font-size: 20px;
-            }
         }
 
         /* Left Sidebar Styles from hr_dashboard.php */
@@ -676,10 +508,6 @@
 
         .sidebar#sidebar.collapsed {
             transform: translateX(-100%);
-        }
-
-        .container.expanded {
-            margin-left: 0;
         }
 
         .toggle-sidebar {
@@ -761,44 +589,87 @@
             color: #dc3545 !important;
         }
 
-        /* Original responsive styles */
-        @media (max-width: 576px) {
-            .stats-cards {
-                grid-template-columns: 1fr;
-            }
-
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .actions {
-                width: 100%;
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+        /* Main content styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            transition: margin-left 0.3s ease;
         }
 
-        /* Fix conflict with existing sidebar class */
-        .dashboard .sidebar {
-            position: static;
-            width: 250px;
-            height: auto;
-            padding: 20px;
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: none;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0;
+            background: transparent;
+            border-bottom: none;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        /* Custom button styles */
+        .btn-custom-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1.25rem;
+            border-radius: var(--border-radius);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn-custom-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-custom-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn-custom-primary i {
+            font-size: 1rem;
         }
 
         @media (max-width: 768px) {
             .sidebar#sidebar {
                 transform: translateX(-100%);
-            }
-
-            .container {
-                margin-left: 0;
             }
 
             .toggle-sidebar {
@@ -808,763 +679,469 @@
             .sidebar#sidebar.show {
                 transform: translateX(0);
             }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Project type tag styles */
+        .project-type-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        /* Modal Styles */
-        .modal {
-            display: none;
+        .project-type-tag i {
+            margin-right: 0.4rem;
+            font-size: 0.9rem;
+        }
+        
+        .project-type-tag.architecture {
+            background: var(--architecture-color);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .project-type-tag.interior {
+            background: var(--interior-color);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .project-type-tag.construction {
+            background: var(--construction-color);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* Project stage badge styles */
+        .stage-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2);
+        }
+
+        /* Toast notification styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .toast-notification {
+            background-color: white;
+            color: var(--dark-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+            overflow: hidden;
+        }
+        
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+        
+        .toast-notification.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .toast-notification.error {
+            border-left-color: var(--danger-color);
+        }
+        
+        .toast-notification.info {
+            border-left-color: var(--primary-color);
+        }
+        
+        .toast-notification.warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .toast-icon {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toast-notification.success .toast-icon {
+            color: var(--success-color);
+        }
+        
+        .toast-notification.error .toast-icon {
+            color: var(--danger-color);
+        }
+        
+        .toast-notification.info .toast-icon {
+            color: var(--primary-color);
+        }
+        
+        .toast-notification.warning .toast-icon {
+            color: var(--warning-color);
+        }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+        
+        .toast-message {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0;
+            margin-left: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        
+        .toast-close:hover {
+            color: var(--dark-color);
+        }
+        
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .toast-progress-bar {
+            height: 100%;
+            background-color: currentColor;
+            width: 100%;
+        }
+
+        /* Confirmation modal styles */
+        .modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1050;
-            overflow: auto;
-            padding: 50px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
         }
         
-        .modal.show {
-            display: block;
+        .modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
         }
         
-        .modal-dialog {
-            max-width: 800px;
-            margin: 1.75rem auto;
-            position: relative;
-        }
-        
-        .modal-content {
-            background-color: #fff;
+        .confirmation-modal {
+            background-color: white;
             border-radius: var(--border-radius);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            position: relative;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            overflow: hidden;
         }
         
-        .modal-header {
+        .modal-backdrop.show .confirmation-modal {
+            transform: translateY(0);
+        }
+        
+        .confirmation-header {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 1rem;
-            border-bottom: 1px solid #dee2e6;
         }
         
-        .modal-title {
-            margin: 0;
+        .confirmation-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(220, 53, 69, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+        }
+        
+        .confirmation-icon i {
+            color: var(--danger-color);
             font-size: 1.25rem;
+        }
+        
+        .confirmation-title {
+            font-size: 1.1rem;
             font-weight: 600;
-            color: var(--primary-color);
+            margin: 0;
         }
         
-        .btn-close {
-            background: transparent;
-            border: 0;
-            font-size: 1.5rem;
-            font-weight: 700;
-            line-height: 1;
-            color: #000;
-            opacity: 0.5;
-            cursor: pointer;
+        .confirmation-body {
+            padding: 1.25rem 1rem;
+            color: #666;
         }
         
-        .btn-close:hover {
-            opacity: 0.75;
-        }
-        
-        .modal-body {
+        .confirmation-footer {
             padding: 1rem;
-        }
-        
-        .modal-footer {
+            border-top: 1px solid #eee;
             display: flex;
-            align-items: center;
             justify-content: flex-end;
-            padding: 1rem;
-            border-top: 1px solid #dee2e6;
             gap: 0.5rem;
         }
         
-        /* Form Styles */
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            margin-right: -0.5rem;
-            margin-left: -0.5rem;
-        }
-        
-        .col-md-4, .col-md-6 {
-            position: relative;
-            width: 100%;
-            padding-right: 0.5rem;
-            padding-left: 0.5rem;
-        }
-        
-        @media (min-width: 768px) {
-            .col-md-4 {
-                flex: 0 0 33.333333%;
-                max-width: 33.333333%;
-            }
-            .col-md-6 {
-                flex: 0 0 50%;
-                max-width: 50%;
-            }
-        }
-        
-        .mb-3 {
-            margin-bottom: 1rem;
-        }
-        
-        .form-label {
-            margin-bottom: 0.5rem;
-            display: block;
-            font-weight: 500;
-        }
-        
-        .form-control {
-            display: block;
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            color: #495057;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        
-        .form-control:focus {
-            color: #495057;
-            background-color: #fff;
-            border-color: var(--primary-color);
-            outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
-        }
-        
-        .input-group {
-            position: relative;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: stretch;
-            width: 100%;
-        }
-        
-        .input-group-text {
-            display: flex;
-            align-items: center;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            font-weight: 400;
-            line-height: 1.5;
-            color: #495057;
-            text-align: center;
-            white-space: nowrap;
-            background-color: #e9ecef;
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem 0 0 0.25rem;
-        }
-        
-        .input-group > .form-control {
-            position: relative;
-            flex: 1 1 auto;
-            width: 1%;
-            min-width: 0;
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-        }
-        
-        .btn-secondary {
-            color: #fff;
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-        
-        .btn-secondary:hover {
-            color: #fff;
-            background-color: #5a6268;
-            border-color: #545b62;
-            transform: translateY(-2px);
-        }
-        
-        .is-invalid {
-            border-color: #dc3545;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right calc(0.375em + 0.1875rem) center;
-            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-        }
-        
-        body.modal-open {
-            overflow: hidden;
-        }
-        
-        /* Projects Table Styles */
-        .projects-table {
-            overflow-x: auto;
-            width: 100%;
-        }
-        
-        .project-type {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .project-type.architecture {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
-        
-        .project-type.interior {
-            background-color: rgba(75, 181, 67, 0.1);
-            color: var(--success-color);
-        }
-        
-        .project-type.construction {
-            background-color: rgba(252, 163, 17, 0.1);
-            color: var(--warning-color);
-        }
-        
-        .status.active {
-            background-color: rgba(75, 181, 67, 0.1);
-            color: var(--success-color);
-        }
-        
-        .status.completed {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
-        
-        .status.on-hold {
-            background-color: rgba(252, 163, 17, 0.1);
-            color: var(--warning-color);
-        }
-        
-        .progress-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .progress-bar {
-            flex-grow: 1;
-            height: 8px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-        }
-        
-        tr:nth-child(1) .progress-fill, 
-        tr:nth-child(4) .progress-fill {
-            background-color: var(--primary-color);
-        }
-        
-        tr:nth-child(2) .progress-fill, 
-        tr:nth-child(5) .progress-fill {
-            background-color: var(--warning-color);
-        }
-        
-        tr:nth-child(3) .progress-fill {
-            background-color: var(--success-color);
-        }
-        
-        .progress-text {
-            font-size: 12px;
-            font-weight: 500;
-            color: #6c757d;
-            min-width: 40px;
-            text-align: right;
-        }
-        
-        /* Project Details Modal Styles */
-        .detail-label {
-            color: #6c757d;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
-        }
-        
-        .detail-value {
-            font-size: 1rem;
-            font-weight: 500;
-            margin-bottom: 1rem;
-        }
-        
-        .section-divider {
-            height: 1px;
-            background-color: #e9ecef;
-            margin: 1.5rem 0;
-        }
-        
-        .section-subheading {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--dark-color);
-            margin-bottom: 1rem;
-        }
-        
-        .budget-overview {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 1rem;
-        }
-        
-        .budget-card {
-            flex: 1;
-            background-color: #f8f9fa;
+        .confirmation-btn {
+            padding: 0.5rem 1.25rem;
             border-radius: var(--border-radius);
-            padding: 15px;
-            text-align: center;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
-        .budget-card h6 {
-            font-size: 0.75rem;
-            color: #6c757d;
-            margin-bottom: 0.5rem;
+        .btn-cancel {
+            background-color: #f1f3f5;
+            color: #495057;
         }
         
-        .budget-amount {
-            font-size: 1.25rem;
-            font-weight: 600;
+        .btn-cancel:hover {
+            background-color: #e9ecef;
         }
         
-        #detailBudget {
-            color: var(--dark-color);
-        }
-        
-        #detailPaid {
-            color: var(--success-color);
-        }
-        
-        #detailRemaining {
-            color: var(--warning-color);
-        }
-        
-        .payout-table {
-            margin-top: 1rem;
-            overflow-x: auto;
-        }
-        
-        .payout-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .payout-table th {
-            background-color: #f8f9fa;
-            color: var(--dark-color);
-            font-size: 0.8rem;
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .payout-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-        }
-        
-        .manager-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .avatar {
-            width: 30px;
-            height: 30px;
-            background-color: var(--primary-color);
+        .btn-confirm {
+            background-color: var(--danger-color);
             color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
         }
         
-        .status.upcoming {
-            background-color: rgba(149, 164, 252, 0.1);
-            color: #6366f1;
+        .btn-confirm:hover {
+            background-color: #d90429;
         }
 
-        /* Enhanced Modal Styles */
+        /* Fix modal z-index issues */
+        .modal {
+            z-index: 1050;
+        }
+        
+        .modal-backdrop.show {
+            z-index: 1040;
+        }
+        
+        /* Fix for edit modal */
+        #addProjectModal {
+            z-index: 1060 !important;
+        }
+        
+        .modal-dialog {
+            z-index: 1061;
+        }
+        
+        /* Ensure form inputs are accessible */
         .modal-content {
-            border: none;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            background-color: #f8f9fa;
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #eaedf2;
-        }
-        
-        .modal-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--dark-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .modal-title i {
-            color: var(--primary-color);
-            font-size: 1.2rem;
-        }
-        
-        .btn-close {
-            background: white;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            opacity: 1;
-            color: #6c757d;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-        
-        .btn-close:hover {
-            background-color: #f3f4f6;
-            transform: rotate(90deg);
-            color: var(--danger-color);
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .modal-footer {
-            background-color: #f8f9fa;
-            padding: 1rem 1.5rem;
-            border-top: 1px solid #eaedf2;
-        }
-        
-        .project-info-header {
             position: relative;
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 5px 0;
+            z-index: 1062;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
         
-        .detail-label {
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            color: #6c757d;
-            margin-bottom: 0.3rem;
-            font-weight: 500;
+        /* Fix for form controls */
+        .form-control, .form-select {
+            position: relative;
+            z-index: 5;
         }
         
-        .detail-value {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #212529;
-            margin-bottom: 1.5rem;
+        /* Ensure our custom modal is above Bootstrap modals */
+        .modal-backdrop#confirmationModal {
+            z-index: 1070;
         }
-        
-        .budget-overview {
-            gap: 15px;
-            margin-top: 0.5rem;
-        }
-        
-        .budget-card {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.2rem;
-            text-align: center;
-            border: 1px solid #eaedf2;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .budget-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .budget-card h6 {
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #6c757d;
-            margin-bottom: 0.75rem;
-        }
-        
-        .budget-amount {
-            font-size: 1.5rem;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-        
-        #detailBudget {
-            color: #212529;
-        }
-        
-        #detailPaid {
-            color: var(--success-color);
-        }
-        
-        #detailRemaining {
-            color: var(--warning-color);
-        }
-        
-        .section-divider {
-            height: 1px;
-            background-color: #eaedf2;
-            margin: 2rem 0;
-        }
-        
-        .section-subheading {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-subheading i {
-            color: var(--primary-color);
-            font-size: 1rem;
-        }
-        
-        .payout-table {
-            margin-top: 1.25rem;
-        }
-        
-        .payout-table table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 8px;
+
+        /* View Project Modal Styles */
+        .view-project-modal .modal-content {
+            border: none;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
         
-        .payout-table th {
-            background-color: #f8f9fa;
-            color: #495057;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 2px solid #eaedf2;
-        }
-        
-        .payout-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-            font-size: 0.95rem;
-            color: #495057;
-        }
-        
-        .payout-table tr:last-child td {
+        .view-project-modal .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.25rem;
             border-bottom: none;
         }
         
-        .payout-table tr:hover td {
-            background-color: #f8f9fa;
-        }
-        
-        .manager-info {
+        .view-project-modal .modal-title {
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 0.75rem;
         }
         
-        .avatar {
-            width: 36px;
-            height: 36px;
+        .view-project-modal .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .view-project-modal .modal-footer {
+            border-top: 1px solid #eee;
+            padding: 1rem 1.5rem;
+        }
+        
+        .project-detail-card {
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-label {
+            width: 40%;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .detail-label i {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+        
+        .detail-value {
+            width: 60%;
+            color: #212529;
+        }
+        
+        .detail-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .detail-badge i {
+            margin-right: 0.4rem;
+        }
+        
+        .detail-badge.architecture {
+            background: var(--architecture-color);
+        }
+        
+        .detail-badge.interior {
+            background: var(--interior-color);
+        }
+        
+        .detail-badge.construction {
+            background: var(--construction-color);
+        }
+        
+        .detail-stage {
             background-color: var(--primary-color);
             color: white;
-            border-radius: 50%;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .detail-amount {
+            font-weight: 600;
+            color: #212529;
+            font-size: 1.1rem;
+        }
+        
+        .detail-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .detail-date {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 600;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            gap: 0.5rem;
+            font-size: 0.9rem;
         }
         
-        .status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .status:before {
-            content: "";
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-        
-        .status.paid {
-            background-color: rgba(75, 181, 67, 0.1);
-            color: var(--success-color);
-        }
-        
-        .status.paid:before {
-            background-color: var(--success-color);
-        }
-        
-        .status.pending {
-            background-color: rgba(252, 163, 17, 0.1);
-            color: var(--warning-color);
-        }
-        
-        .status.pending:before {
-            background-color: var(--warning-color);
-        }
-        
-        .status.upcoming {
-            background-color: rgba(149, 164, 252, 0.1);
-            color: #6366f1;
-        }
-        
-        .status.upcoming:before {
-            background-color: #6366f1;
-        }
-        
-        .status.on-hold {
-            background-color: rgba(107, 114, 128, 0.1);
-            color: #6b7280;
-        }
-        
-        .status.on-hold:before {
-            background-color: #6b7280;
-        }
-        
-        .status.active {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-        }
-        
-        .status.active:before {
-            background-color: #3b82f6;
-        }
-        
-        .status.completed {
-            background-color: rgba(99, 102, 241, 0.1);
-            color: #6366f1;
-        }
-        
-        .status.completed:before {
-            background-color: #6366f1;
-        }
-        
-        .project-type {
-            display: inline-flex;
-            align-items: center;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .project-type:before {
-            content: "";
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        
-        .project-type.architecture {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
-        
-        .project-type.architecture:before {
-            background-color: var(--primary-color);
-        }
-        
-        .project-type.interior {
-            background-color: rgba(75, 181, 67, 0.1);
-            color: var(--success-color);
-        }
-        
-        .project-type.interior:before {
-            background-color: var(--success-color);
-        }
-        
-        .project-type.construction {
-            background-color: rgba(252, 163, 17, 0.1);
-            color: var(--warning-color);
-        }
-        
-        .project-type.construction:before {
-            background-color: var(--warning-color);
-        }
-        
-        .modal-footer .btn {
-            padding: 0.6rem 1.5rem;
-            font-weight: 500;
-            font-size: 0.95rem;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-        
-        .modal-footer .btn-primary {
-            background-color: var(--primary-color);
-            border: none;
-            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.15);
-        }
-        
-        .modal-footer .btn-primary:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(67, 97, 238, 0.2);
-        }
-        
-        .modal-footer .btn-secondary {
-            background-color: #fff;
+        .detail-date-label {
             color: #6c757d;
-            border: 1px solid #dee2e6;
         }
         
-        .modal-footer .btn-secondary:hover {
-            background-color: #f8f9fa;
-            color: #495057;
+        .detail-date-value {
+            font-weight: 500;
         }
         
-        /* Modal Animation */
-        .modal.show .modal-dialog {
-            animation: modalFadeIn 0.3s ease-out forwards;
+        /* Enhanced view modal styles */
+        .view-project-modal .card {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border: none;
+            transition: transform 0.2s ease;
         }
         
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .view-project-modal .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .view-project-modal .modal-lg {
+            max-width: 800px;
+        }
+        
+        .view-project-modal .card-header {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: linear-gradient(to right, #f8f9fa, #ffffff);
         }
     </style>
 </head>
@@ -1638,412 +1215,945 @@
         <i class="bi bi-chevron-left"></i>
     </button>
 
-    <div class="container">
-        <header>
-            <div class="page-title">
-                <i class="fas fa-money-bill-wave"></i>
-                <h1>Managers Payouts by Projects</h1>
-            </div>
-            <div class="actions">
-                <button class="btn btn-success">
-                    <i class="fas fa-plus"></i> Add Project For Payout
-                </button>
-                <button class="btn btn-primary">
-                    <i class="fas fa-download"></i> Export Report
-                </button>
-                <button class="btn btn-outline">
-                    <i class="fas fa-filter"></i> Advanced Filters
-                </button>
-            </div>
-        </header>
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-        <div class="dashboard">
-            <div class="sidebar">
-                <div class="filter-title">
-                    <i class="fas fa-sliders-h"></i> Smart Filters
+    <!-- Main Content Section -->
+    <div class="main-content" id="mainContent">
+        <?php if (isset($debugInfo)): ?>
+        <div class="alert alert-info mb-3">
+            <h5>Debug Information</h5>
+            <pre><?php print_r($debugInfo); ?></pre>
+            <p>PHP Version: <?php echo phpversion(); ?></p>
+            <p>Server: <?php echo $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'; ?></p>
+            
+            <h5>Data Sample</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Project Payouts (First 3)</h6>
+                    <pre><?php print_r(array_slice($projectPayouts, 0, 3)); ?></pre>
+                </div>
+                <div class="col-md-6">
+                    <h6>Senior Managers</h6>
+                    <pre><?php print_r($seniorManagers); ?></pre>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h6>Payment Statistics</h6>
+                    <pre><?php print_r($paymentStatistics); ?></pre>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning">
+                <strong>Issue Detected:</strong> The manager_payments table appears to be empty (0 records). 
+                This is why you're seeing zeros in the dashboard.
+                
+                <?php if ($sampleDataMessage): ?>
+                    <div class="mt-2 alert alert-success">
+                        <?php echo $sampleDataMessage; ?> Please refresh the page to see the data.
+                    </div>
+                <?php else: ?>
+                    <div class="mt-3">
+                        <a href="?create_sample_data=1" class="btn btn-primary">Create Sample Data</a>
+                        <small class="text-muted ms-2">Click this button to generate sample manager payment records</small>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <div class="page-header">
+            <h1>Manager Payouts</h1>
+        </div>
+        
+        <!-- Quick Overview Section -->
+        <div class="card mb-4 border shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h2 class="card-title mb-0">Section Quick Overview</h2>
+                <span class="badge bg-primary">Financial Summary</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Total Amount Received</h6>
+                                <h3 class="mb-0 fw-bold" id="totalAmountReceived">₹0.00</h3>
+                            </div>
+                            <div class="icon-box bg-light rounded p-3">
+                                <i class="bi bi-cash-coin text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Architecture Amount</h6>
+                                <h3 class="mb-0 fw-bold" id="architectureAmount">₹0.00</h3>
+                            </div>
+                            <div class="icon-box bg-light rounded p-3">
+                                <i class="bi bi-building text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%; background-color: var(--architecture-color)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Interior Amount</h6>
+                                <h3 class="mb-0 fw-bold" id="interiorAmount">₹0.00</h3>
+                            </div>
+                            <div class="icon-box bg-light rounded p-3">
+                                <i class="bi bi-house-door text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%; background-color: var(--interior-color)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Construction Amount</h6>
+                                <h3 class="mb-0 fw-bold" id="constructionAmount">₹0.00</h3>
+                            </div>
+                            <div class="icon-box bg-light rounded p-3">
+                                <i class="bi bi-bricks text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 5px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%; background-color: var(--construction-color)"></div>
+                        </div>
+                    </div>
+                </div>
                 </div>
                 
-                <div class="filter-group">
-                    <h4><i class="far fa-calendar-alt"></i> Date Range <i class="fas fa-chevron-down"></i></h4>
-                    <div class="date-range-inputs">
-                        <div class="date-input-group">
-                            <label>From</label>
-                            <input type="date" class="form-control date-input" placeholder="Start Date">
-                        </div>
-                        <div class="date-input-group">
-                            <label>To</label>
-                            <input type="date" class="form-control date-input" placeholder="End Date">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4><i class="fas fa-project-diagram"></i> Project Status <i class="fas fa-chevron-down"></i></h4>
-                    <div class="filter-options">
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="all-projects" checked>
-                            <span class="form-check-label">All Projects</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="active-projects">
-                            <span class="form-check-label">Active</span>
-                            <span class="badge-count">4</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="completed-projects">
-                            <span class="form-check-label">Completed</span>
-                            <span class="badge-count">1</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="onhold-projects">
-                            <span class="form-check-label">On Hold</span>
-                            <span class="badge-count">1</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4><i class="fas fa-money-check-alt"></i> Payout Status <i class="fas fa-chevron-down"></i></h4>
-                    <div class="filter-options">
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="all-statuses" checked>
-                            <span class="form-check-label">All Statuses</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="paid-status">
-                            <span class="form-check-label">Paid</span>
-                            <span class="badge-count paid">7</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="pending-status">
-                            <span class="form-check-label">Pending</span>
-                            <span class="badge-count pending">3</span>
-                        </label>
-                        <label class="filter-option">
-                            <input type="checkbox" class="form-check-input" id="processing-status">
-                            <span class="form-check-label">Processing</span>
-                            <span class="badge-count processing">2</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="filter-group">
-                    <h4><i class="fas fa-rupee-sign"></i> Amount Range <i class="fas fa-chevron-down"></i></h4>
-                    <div class="range-slider">
-                        <div class="range-values">
-                            <span>₹0</span>
-                            <span>₹5,00,00,000</span>
-                        </div>
-                        <input type="range" class="form-range" min="0" max="50000000" value="50000000">
-                    </div>
-                </div>
-
-                <div class="active-filters">
-                    <div class="filter-badge">
-                        Active <i class="fas fa-times"></i>
-                    </div>
-                    <div class="filter-badge">
-                        Paid <i class="fas fa-times"></i>
-                    </div>
-                </div>
-
-                <div class="filter-actions">
-                    <button class="btn btn-sm btn-outline-secondary">Reset</button>
-                    <button class="btn btn-sm btn-primary">Apply Filters</button>
-                </div>
-            </div>
-
-            <div class="main-content">
-                <div class="content-section">
-                    <div class="section-header">
-                        <h2>Payment Statistics</h2>
-                    </div>
-                <div class="stats-cards">
-                    <div class="stat-card">
-                        <div class="header">
-                            <h3>Total Payouts</h3>
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                            <div class="value">₹1,24,580</div>
-                        <div class="change positive">
-                            <i class="fas fa-arrow-up"></i> 12% from last month
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Payouts Pending</h5>
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h3 class="mb-0 fw-bold text-warning" id="totalPendingAmount">₹0.00</h3>
+                                        <small class="text-muted">Total pending amount</small>
+                                    </div>
+                                    <div class="icon-box bg-warning bg-opacity-10 rounded p-3">
+                                        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted" id="pendingProjectsCount">0 projects pending</span>
+                                    <span class="badge bg-light text-dark border" id="pendingPercentage">0%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="header">
-                            <h3>Active Projects</h3>
-                            <i class="fas fa-project-diagram"></i>
-                        </div>
-                        <div class="value">18</div>
-                        <div class="change positive">
-                            <i class="fas fa-arrow-up"></i> 3 new projects
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Paid to Senior Managers</h5>
+                                <span class="badge bg-success">Paid</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h3 class="mb-0 fw-bold text-success" id="totalPaidAmount">₹0.00</h3>
+                                        <small class="text-muted">Total paid amount</small>
+                                    </div>
+                                    <div class="icon-box bg-success bg-opacity-10 rounded p-3">
+                                        <i class="bi bi-check-circle text-success fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted" id="paidManagersCount">0 managers paid</span>
+                                    <span class="badge bg-light text-dark border" id="paidPercentage">0%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="header">
-                            <h3>Pending Payouts</h3>
-                            <i class="fas fa-clock"></i>
-                        </div>
-                            <div class="value">₹32,450</div>
-                        <div class="change negative">
-                            <i class="fas fa-arrow-down"></i> 8% from last month
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="header">
-                            <h3>Managers</h3>
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="value">24</div>
-                        <div class="change positive">
-                            <i class="fas fa-arrow-up"></i> 2 new managers
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">All Manager Payments</h5>
+                                <span class="badge bg-primary">Summary</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush" id="managerPaymentsList">
+                                    <div class="list-group-item text-center py-3">
+                                        <i class="bi bi-people text-muted mb-2 fs-4"></i>
+                                        <p class="mb-0 text-muted">No payment data available</p>
+                                    </div>
+                                </div>
+                                <div class="px-3 py-2 border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Pending Payouts:</span>
+                                        <span class="fw-bold text-warning" id="pendingManagerPayouts">₹0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-light text-center">
+                                <button class="btn btn-sm btn-outline-primary" id="viewAllManagerPaymentsBtn">
+                                    <i class="bi bi-eye me-1"></i> View All Payments
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Project-Based Manager Payouts</h2>
+                <button type="button" class="btn-custom-primary" id="addProjectBtn">
+                    <i class="bi bi-plus-circle"></i> Add Project Data
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Manager Payouts content will go here -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Project Name</th>
+                                <th scope="col">Project Type</th>
+                                <th scope="col">Client Name</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Payment Mode</th>
+                                <th scope="col">Stage</th>
+                                <th scope="col">Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No project data available. Click "Add Project Data" to add new projects.
+                                </td>
+                            </tr>
+                            <!-- Project data will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="content-section">
-                    <div class="section-header">
-                        <h2>Projects Details</h2>
+    <!-- Add Project Data Modal -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="addProjectModalLabel">
+                        <i class="bi bi-folder-plus text-primary me-2"></i>
+                        Add New Project Data
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProjectForm">
+                        <!-- Project Info Section -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Project Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="projectName" class="form-label">
+                                            <i class="bi bi-building text-primary me-2"></i>
+                                            Project Name
+                                        </label>
+                                        <input type="text" class="form-control" id="projectName" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="projectType" class="form-label">
+                                            <i class="bi bi-layers text-primary me-2"></i>
+                                            Project Type
+                                        </label>
+                                        <select class="form-select" id="projectType" required>
+                                            <option value="" selected disabled>Select Project Type</option>
+                                            <option value="Architecture">Architecture</option>
+                                            <option value="Interior">Interior</option>
+                                            <option value="Construction">Construction</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="clientName" class="form-label">
+                                        <i class="bi bi-person text-primary me-2"></i>
+                                        Client Name
+                                    </label>
+                                    <input type="text" class="form-control" id="clientName" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Project Stages Section -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Project Stages</h6>
+                                <button type="button" class="btn btn-sm btn-primary" id="addStageBtn">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Stage
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="stagesContainer">
+                                    <!-- Initial stage -->
+                                    <div class="project-stage mb-4" data-stage-index="0">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="stage-title mb-0">Stage 1</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-stage-btn" style="display: none;">
+                                                <i class="bi bi-trash me-1"></i>Remove
+                                            </button>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="projectDate_0" class="form-label">
+                                                    <i class="bi bi-calendar-date text-primary me-2"></i>
+                                                    Date
+                                                </label>
+                                                <input type="date" class="form-control" id="projectDate_0" name="projectDate[]" required>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label for="amount_0" class="form-label">
+                                                    <i class="bi bi-currency-dollar text-primary me-2"></i>
+                                                    Amount
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">₹</span>
+                                                    <input type="number" class="form-control" id="amount_0" name="amount[]" min="0" step="0.01" required>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input has-remaining-amount" type="checkbox" id="hasRemainingAmount_0" data-stage-index="0">
+                                                        <label class="form-check-label" for="hasRemainingAmount_0">Has remaining amount?</label>
+                                                    </div>
+                                                    <div class="input-group mt-2 remaining-amount-container" id="remainingAmountContainer_0" style="display: none;">
+                                                        <span class="input-group-text">₹</span>
+                                                        <input type="number" class="form-control remaining-amount" id="remainingAmount_0" name="remainingAmount[]" min="0" step="0.01" placeholder="Remaining Amount" value="0">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">
+                                                    <i class="bi bi-credit-card text-primary me-2"></i>
+                                                    Payment Modes
+                                                </label>
+                                                <div class="payment-modes-container" id="paymentModesContainer_0">
+                                                    <div class="payment-mode-entry mb-2">
+                                                        <div class="d-flex gap-2">
+                                                            <select class="form-select payment-mode-select" name="paymentMode_0[]" required>
+                                                                <option value="" selected disabled>Select Payment Mode</option>
+                                                                <option value="UPI">UPI</option>
+                                                                <option value="Net Banking">Net Banking</option>
+                                                                <option value="Credit Card">Credit Card</option>
+                                                                <option value="Debit Card">Debit Card</option>
+                                                                <option value="Cash">Cash</option>
+                                                                <option value="Cheque">Cheque</option>
+                                                                <option value="Bank Transfer">Bank Transfer</option>
+                                                            </select>
+                                                            <div class="input-group" style="max-width: 150px;">
+                                                                <span class="input-group-text">₹</span>
+                                                                <input type="number" class="form-control payment-amount" name="paymentAmount_0[]" min="0" step="0.01" required placeholder="Amount">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary mt-2 add-payment-mode-btn" data-stage-index="0">
+                                                    <i class="bi bi-plus-circle me-1"></i>Add Payment Mode
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label for="projectStage_0" class="form-label">
+                                                    <i class="bi bi-diagram-3 text-primary me-2"></i>
+                                                    Project Stage
+                                                </label>
+                                                <select class="form-select" id="projectStage_0" name="projectStage[]" required>
+                                                    <option value="" selected disabled>Select Stage</option>
+                                                    <option value="Stage 1">Stage 1</option>
+                                                    <option value="Stage 2">Stage 2</option>
+                                                    <option value="Stage 3">Stage 3</option>
+                                                    <option value="Stage 4">Stage 4</option>
+                                                    <option value="Stage 5">Stage 5</option>
+                                                    <option value="Stage 6">Stage 6</option>
+                                                    <option value="Stage 7">Stage 7</option>
+                                                    <option value="Stage 8">Stage 8</option>
+                                                    <option value="Stage 9">Stage 9</option>
+                                                    <option value="Stage 10">Stage 10</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="cancelProjectBtn">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancel
+                    </button>
+                    <button type="button" class="btn-custom-primary" id="saveProjectBtn">
+                        <i class="bi bi-save me-1"></i>
+                        Save Project
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-backdrop" id="confirmationModal">
+        <div class="confirmation-modal">
+            <div class="confirmation-header">
+                <div class="confirmation-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h3 class="confirmation-title">Confirm Deletion</h3>
+            </div>
+            <div class="confirmation-body">
+                Are you sure you want to delete this project? This action cannot be undone.
+            </div>
+            <div class="confirmation-footer">
+                <button class="confirmation-btn btn-cancel" id="cancelDeleteBtn">Cancel</button>
+                <button class="confirmation-btn btn-confirm" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manager Project Details Modal -->
+    <div class="modal fade" id="managerProjectDetailsModal" tabindex="-1" aria-labelledby="managerProjectDetailsModalLabel" aria-hidden="true" style="z-index: 1080;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), var(--accent-color));">
+                    <h5 class="modal-title" id="managerProjectDetailsModalLabel">
+                        <i class="bi bi-list-check me-2"></i>
+                        <span id="managerProjectDetailsTitle">Manager Project Details</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted mb-3">Manager Information</h6>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="avatar-lg me-3 bg-primary bg-opacity-10 rounded-circle">
+                                            <div class="avatar-text-lg" id="managerInitial">M</div>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1" id="managerName">Manager Name</h5>
+                                            <div class="text-muted" id="managerRole">Role</div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-muted small">Employee ID</div>
+                                            <div class="fw-bold" id="managerEmployeeId">EMP-001</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Department</div>
+                                            <div class="fw-bold" id="managerDepartment">Management</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted mb-3">Payment Summary</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <div class="text-muted small">Total Projects</div>
+                                            <div class="fs-4 fw-bold" id="managerTotalProjects">0</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Total Amount</div>
+                                            <div class="fs-4 fw-bold text-success" id="managerTotalAmount">₹0.00</div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-muted small">Approved</div>
+                                            <div class="text-success fw-bold" id="managerApprovedAmount">₹0.00</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-muted small">Pending</div>
+                                            <div class="text-warning fw-bold" id="managerPendingAmount">₹0.00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="projects-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                                                <th>Project Name</th>
-                            <th>Project Type</th>
-                            <th>Amount (₹)</th>
-                            <th>Progress</th>
-                            <th>Stage</th>
-                            <th>Actions</th>
-                        </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Godrej Central Park</td>
-                                    <td>Residential</td>
-                                    <td>1,25,00,000</td>
-                                    <td>
-                                        <div class="progress-wrapper">
-                                            <div class="progress">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 65%"></div>
-                                            </div>
-                                            <div class="progress-text">65%</div>
-                                        </div>
-                                    </td>
-                                                                <td>Stage 7/10</td>
-                            <td class="actions-cell">
-                                        <button class="action-btn" title="View Details"><i class="bi bi-eye"></i></button>
-                                        <button class="action-btn" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="action-btn" title="Delete"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>DLF Cyber City Phase 3</td>
-                                    <td>Commercial</td>
-                                    <td>3,50,00,000</td>
-                                    <td>
-                                        <div class="progress-wrapper">
-                                            <div class="progress">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 30%"></div>
-                                            </div>
-                                            <div class="progress-text">30%</div>
-                                        </div>
-                                    </td>
-                                                                <td>Stage 3/10</td>
-                            <td class="actions-cell">
-                                        <button class="action-btn" title="View Details"><i class="bi bi-eye"></i></button>
-                                        <button class="action-btn" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="action-btn" title="Delete"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Oberoi Sky Heights</td>
-                                    <td>Residential</td>
-                                    <td>75,50,000</td>
-                                    <td>
-                                        <div class="progress-wrapper">
-                                            <div class="progress">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
-                                            </div>
-                                            <div class="progress-text">100%</div>
-                                        </div>
-                                    </td>
-                                                                <td>Stage 10/10</td>
-                            <td class="actions-cell">
-                                        <button class="action-btn" title="View Details"><i class="bi bi-eye"></i></button>
-                                        <button class="action-btn" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="action-btn" title="Delete"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Prestige Lakeside Habitat</td>
-                                    <td>Residential</td>
-                                    <td>2,15,00,000</td>
-                                    <td>
-                                        <div class="progress-wrapper">
-                                            <div class="progress">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 45%"></div>
-                                            </div>
-                                            <div class="progress-text">45%</div>
-                                        </div>
-                                    </td>
-                                                                <td>Stage 5/10</td>
-                            <td class="actions-cell">
-                                        <button class="action-btn" title="View Details"><i class="bi bi-eye"></i></button>
-                                        <button class="action-btn" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="action-btn" title="Delete"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Lodha World Towers</td>
-                                    <td>Mixed Use</td>
-                                    <td>5,75,00,000</td>
-                                    <td>
-                                        <div class="progress-wrapper">
-                                            <div class="progress">
-                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 78%"></div>
-                                            </div>
-                                            <div class="progress-text">78%</div>
-                                        </div>
-                                    </td>
-                                                                <td>Stage 8/10</td>
-                            <td class="actions-cell">
-                                        <button class="action-btn" title="View Details"><i class="bi bi-eye"></i></button>
-                                        <button class="action-btn" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="action-btn" title="Delete"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="pagination">
-                            <button><i class="fas fa-chevron-left"></i></button>
-                            <button class="active">1</button>
-                            <button>2</button>
-                            <button>3</button>
-                            <button><i class="fas fa-chevron-right"></i></button>
+                    
+                    <div class="card mb-0 border-0 shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0">Project Payment Details</h6>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                                <button type="button" class="btn btn-outline-success" data-filter="approved">Approved</button>
+                                <button type="button" class="btn btn-outline-warning" data-filter="pending">Pending</button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">Project Name</th>
+                                            <th scope="col">Type</th>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Commission</th>
+                                            <th scope="col">Amount</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="managerProjectsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                Loading project data...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Close
+                    </button>
+                    <button type="button" class="btn-custom-primary" id="printManagerDetailsBtn">
+                        <i class="bi bi-printer me-1"></i>
+                        Print Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="content-section">
-                    <div class="section-header">
-                        <h2>Manager Payouts</h2>
-                    </div>
-                <div class="payouts-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Manager <i class="fas fa-sort"></i></th>
-                                <th>Project <i class="fas fa-sort"></i></th>
-                                <th>Payout Amount <i class="fas fa-sort"></i></th>
-                                <th>Payout Date <i class="fas fa-sort"></i></th>
-                                <th>Status <i class="fas fa-sort"></i></th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        Sarah Johnson
-                                    </div>
-                                </td>
-                                <td>Phoenix Marketing Campaign</td>
-                                    <td>₹12,500</td>
-                                <td>Jun 15, 2023</td>
-                                <td><span class="status paid">Paid</span></td>
-                                <td>
-                                    <button class="action-btn" title="View Details"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn" title="Download Invoice"><i class="fas fa-download"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        Michael Chen
-                                    </div>
-                                </td>
-                                <td>Global ERP Implementation</td>
-                                    <td>₹18,750</td>
-                                <td>Jun 18, 2023</td>
-                                <td><span class="status processing">Processing</span></td>
-                                <td>
-                                    <button class="action-btn" title="View Details"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn" title="Download Invoice"><i class="fas fa-download"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        David Rodriguez
-                                    </div>
-                                </td>
-                                <td>Mobile App Development</td>
-                                    <td>₹9,800</td>
-                                <td>Jun 20, 2023</td>
-                                <td><span class="status pending">Pending</span></td>
-                                <td>
-                                    <button class="action-btn" title="View Details"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn" title="Download Invoice"><i class="fas fa-download"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        Emily Wilson
-                                    </div>
-                                </td>
-                                <td>Website Redesign</td>
-                                    <td>₹7,200</td>
-                                <td>Jun 22, 2023</td>
-                                <td><span class="status paid">Paid</span></td>
-                                <td>
-                                    <button class="action-btn" title="View Details"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn" title="Download Invoice"><i class="fas fa-download"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        Robert Kim
-                                    </div>
-                                </td>
-                                <td>Data Migration Project</td>
-                                    <td>₹15,300</td>
-                                <td>Jun 25, 2023</td>
-                                <td><span class="status processing">Processing</span></td>
-                                <td>
-                                    <button class="action-btn" title="View Details"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn" title="Download Invoice"><i class="fas fa-download"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="pagination">
-                        <button><i class="fas fa-chevron-left"></i></button>
-                        <button class="active">1</button>
-                        <button>2</button>
-                        <button>3</button>
-                        <button><i class="fas fa-chevron-right"></i></button>
+    <!-- All Manager Payments Modal -->
+    <div class="modal fade" id="allManagerPaymentsModal" tabindex="-1" aria-labelledby="allManagerPaymentsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                    <h5 class="modal-title" id="allManagerPaymentsModalLabel">
+                        <i class="bi bi-cash-coin me-2"></i>
+                        All Senior Manager Payments
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
+                                <div class="card-body text-center">
+                                    <div class="display-6 fw-bold text-primary mb-2" id="modalTotalPaidAmount">₹0.00</div>
+                                    <div class="text-muted">Total Paid Amount</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
+                                <div class="card-body text-center">
+                                    <div class="display-6 fw-bold text-success mb-2" id="modalTotalManagers">0</div>
+                                    <div class="text-muted">Senior Managers</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
+                                <div class="card-body text-center">
+                                    <div class="display-6 fw-bold text-warning mb-2" id="modalTotalProjects">0</div>
+                                    <div class="text-muted">Projects</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="card mb-0 border-0 shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Payment Details</h5>
+                            <div class="input-group" style="width: 250px;">
+                                <span class="input-group-text bg-white">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" id="managerSearchInput" placeholder="Search manager...">
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">Manager</th>
+                                            <th scope="col">Role</th>
+                                            <th scope="col">Projects</th>
+                                            <th scope="col">Amount</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="managerPaymentsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                Loading manager payment data...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Close
+                    </button>
+                    <button type="button" class="btn-custom-primary" id="exportManagerPaymentsBtn">
+                        <i class="bi bi-download me-1"></i>
+                        Export Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Project Modal -->
+    <div class="modal fade view-project-modal" id="viewProjectModal" tabindex="-1" aria-labelledby="viewProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                    <h5 class="modal-title" id="viewProjectModalLabel">
+                        <i class="bi bi-eye-fill me-2"></i>
+                        <span id="viewProjectTitle">Project Details</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Basic Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-building text-primary me-2"></i>Project Name:
+                                </div>
+                                <div class="col-md-9" id="viewProjectName">-</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-layers text-primary me-2"></i>Project Type:
+                                </div>
+                                <div class="col-md-9" id="viewProjectType">-</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-person text-primary me-2"></i>Client Name:
+                                </div>
+                                <div class="col-md-9" id="viewClientName">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Financial Details</h6>
+                        </div>
+                        <div class="card-body">
+                                                            <div class="row mb-3">
+                                    <div class="col-md-3 fw-bold text-muted">
+                                        <i class="bi bi-currency-dollar text-primary me-2"></i>Amount:
+                                    </div>
+                                    <div class="col-md-9">
+                                        <span class="fs-5 fw-bold" id="viewAmount">-</span>
+                                        <div id="remainingAmountSection" style="display: none;" class="mt-2">
+                                            <div class="alert alert-warning d-flex align-items-center p-2" role="alert">
+                                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                <div>
+                                                    <small class="fw-bold">Remaining Amount:</small>
+                                                    <span class="ms-1 fw-bold" id="viewRemainingAmount">-</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                                            <div class="row">
+                                    <div class="col-md-3 fw-bold text-muted">
+                                        <i class="bi bi-credit-card text-primary me-2"></i>Payment Mode(s):
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div id="viewPaymentMode">-</div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-person-badge me-2"></i>Senior Manager Payout Section</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-info-circle text-primary me-2"></i>Project Type:
+                                </div>
+                                <div class="col-md-9">
+                                    <span class="badge bg-primary" id="projectTypeDisplay">-</span>
+                                    <span class="ms-2 text-muted">
+                                        Commission per manager: <span id="totalCommissionRate" class="fw-bold">-</span>
+                                    </span>
+                                    <div class="small text-muted mt-1">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Each eligible manager receives the full commission percentage of the project amount
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-currency-dollar text-primary me-2"></i>Total Combined Payout:
+                                </div>
+                                <div class="col-md-9">
+                                    <span class="fs-5 fw-bold text-success" id="totalPayoutAmount">-</span>
+                                    <div class="small text-muted mt-1">Each manager receives their individual commission</div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3">
+                            
+                            <div class="mb-3">
+                                <h6 class="mb-3"><i class="bi bi-people-fill me-2"></i>Eligible Senior Managers</h6>
+                                <div id="managersContainer" class="managers-grid">
+                                    <!-- Managers will be populated here -->
+                                    <div class="text-center text-muted py-3">
+                                        <i class="bi bi-person-x fs-3 d-block mb-2"></i>
+                                        No eligible managers found
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <style>
+                                .managers-grid {
+                                    display: grid;
+                                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                                    gap: 15px;
+                                }
+                                
+                                .manager-card {
+                                    border: 1px solid rgba(0,0,0,0.1);
+                                    border-radius: 8px;
+                                    padding: 15px;
+                                    transition: all 0.2s ease;
+                                    background: #f8f9fa;
+                                }
+                                
+                                .manager-card:hover {
+                                    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+                                    transform: translateY(-2px);
+                                }
+                                
+                                .manager-info {
+                                    display: flex;
+                                    align-items: center;
+                                    margin-bottom: 10px;
+                                }
+                                
+                                .manager-details {
+                                    flex: 1;
+                                }
+                                
+                                .payout-amount {
+                                    font-weight: 600;
+                                    font-size: 1.1rem;
+                                    color: var(--success-color);
+                                    text-align: right;
+                                }
+                                
+                                .payout-percent {
+                                    font-size: 0.9rem;
+                                    color: #6c757d;
+                                }
+                                
+                                .status-badge {
+                                    font-size: 0.8rem;
+                                    padding: 0.35rem 0.65rem;
+                                    transition: all 0.3s ease;
+                                }
+                                
+                                .status-badge.bg-warning {
+                                    background-color: #ffc107 !important;
+                                }
+                                
+                                .status-badge.bg-success {
+                                    background-color: #198754 !important;
+                                }
+                                
+                                .paid-btn {
+                                    font-size: 0.85rem;
+                                    padding: 0.35rem 0.65rem;
+                                    transition: all 0.3s ease;
+                                }
+                                
+                                .paid-btn:disabled {
+                                    opacity: 0.7;
+                                    cursor: default;
+                                }
+                                
+                                /* Project Stages Styles */
+                                .project-stage {
+                                    background-color: #f8f9fa;
+                                    border-radius: var(--border-radius);
+                                    padding: 1.25rem;
+                                    position: relative;
+                                    transition: all 0.3s ease;
+                                    border: 1px solid rgba(0,0,0,0.05);
+                                }
+                                
+                                .project-stage:hover {
+                                    background-color: #f1f3f5;
+                                    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+                                }
+                                
+                                .stage-title {
+                                    font-weight: 600;
+                                    color: var(--primary-color);
+                                }
+                                
+                                .remove-stage-btn {
+                                    padding: 0.25rem 0.5rem;
+                                    font-size: 0.8rem;
+                                }
+                                
+                                #addStageBtn {
+                                    padding: 0.25rem 0.75rem;
+                                    font-size: 0.85rem;
+                                }
+                                
+                                /* Payment Modes Styles */
+                                .payment-modes-container {
+                                    margin-bottom: 0.5rem;
+                                }
+                                
+                                .payment-mode-entry {
+                                    transition: all 0.2s ease;
+                                }
+                                
+                                .payment-mode-entry:hover {
+                                    background-color: rgba(0,0,0,0.02);
+                                    border-radius: 4px;
+                                }
+                                
+                                .add-payment-mode-btn {
+                                    font-size: 0.8rem;
+                                    padding: 0.25rem 0.5rem;
+                                }
+                                
+                                .remove-payment-btn {
+                                    padding: 0.25rem 0.5rem;
+                                    font-size: 0.8rem;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                }
+                            </style>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Project Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-diagram-3 text-primary me-2"></i>Project Stage:
+                                </div>
+                                <div class="col-md-9" id="viewProjectStage">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-0">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-calendar-date me-2"></i>Dates</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-calendar text-primary me-2"></i>Project Date:
+                                </div>
+                                <div class="col-md-9" id="viewProjectDate">-</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-calendar-plus text-primary me-2"></i>Created:
+                                </div>
+                                <div class="col-md-9" id="viewCreatedAt">-</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 fw-bold text-muted">
+                                    <i class="bi bi-calendar-check text-primary me-2"></i>Last Updated:
+                                </div>
+                                <div class="col-md-9" id="viewUpdatedAt">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-custom-primary" data-bs-dismiss="modal">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
@@ -2053,157 +2163,2581 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Add this JavaScript function to populate the project details modal
         document.addEventListener('DOMContentLoaded', function() {
-            // Sample project data
-            const projectData = {
-                name: "Godrej Central Park",
-                type: "Residential Complex",
-                location: "Sector 33, Gurugram",
-                status: "active",
-                budget: 12500000,
-                paid: 8125000,
-                remaining: 4375000,
-                payouts: [
-                    {
-                        manager: { initials: "RK", name: "Rahul Kumar" },
-                        amount: 2500000,
-                        date: "Jan 25, 2023",
-                        method: "Bank Transfer",
-                        status: "paid"
-                    },
-                    {
-                        manager: { initials: "AS", name: "Ananya Singh" },
-                        amount: 3125000,
-                        date: "Mar 15, 2023",
-                        method: "UPI",
-                        status: "paid"
-                    },
-                    {
-                        manager: { initials: "VP", name: "Vikram Patel" },
-                        amount: 2500000,
-                        date: "May 10, 2023",
-                        method: "Net Banking",
-                        status: "paid"
-                    },
-                    {
-                        manager: { initials: "RK", name: "Rahul Kumar" },
-                        amount: 1875000,
-                        date: "July 05, 2023",
-                        method: "Bank Transfer",
-                        status: "pending"
-                    },
-                    {
-                        manager: { initials: "VP", name: "Vikram Patel" },
-                        amount: 2500000,
-                        date: "Sep 15, 2023",
-                        method: "UPI",
-                        status: "upcoming"
-                    }
-                ]
-            };
+            // Toggle sidebar functionality
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
             
-            // Function to format currency as Indian Rupees
-            function formatIndianRupees(amount) {
-                const formatter = new Intl.NumberFormat('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                });
-                return formatter.format(amount).replace('₹', '₹ ');
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                sidebarToggle.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            });
+            
+            // Project data array to store all projects
+            let projectData = [];
+            
+            try {
+                // Debug data loading
+                console.log('Debugging data loading from PHP to JavaScript:');
+                
+                // Try to parse the PHP JSON data
+                const phpDataRaw = '<?php echo addslashes(json_encode($projectPayouts, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
+                console.log('Raw project payouts data:', phpDataRaw);
+                const phpData = JSON.parse(phpDataRaw);
+                if (Array.isArray(phpData)) {
+                    projectData = phpData;
+                    console.log('Project data loaded:', phpData.length, 'items');
+                } else {
+                    console.error('Project data is not an array:', phpData);
+                }
+                
+                // Get senior managers data
+                const seniorManagersRaw = '<?php echo addslashes(json_encode($seniorManagers, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
+                console.log('Raw senior managers data:', seniorManagersRaw);
+                const seniorManagersData = JSON.parse(seniorManagersRaw);
+                window.seniorManagers = seniorManagersData;
+                console.log('Senior Managers loaded:', seniorManagersData.length);
+                
+                // Get manager payments data
+                const managerPaymentsRaw = '<?php echo addslashes(json_encode($managerPayments, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
+                console.log('Raw manager payments data:', managerPaymentsRaw);
+                const managerPaymentsData = JSON.parse(managerPaymentsRaw);
+                window.managerPayments = managerPaymentsData;
+                console.log('Manager Payments loaded:', managerPaymentsData.length);
+                
+                // Get payment statistics
+                const paymentStatisticsRaw = '<?php echo addslashes(json_encode($paymentStatistics, JSON_NUMERIC_CHECK)) ?? '{}'; ?>';
+                console.log('Raw payment statistics data:', paymentStatisticsRaw);
+                const paymentStatisticsData = JSON.parse(paymentStatisticsRaw);
+                window.paymentStatistics = paymentStatisticsData;
+                console.log('Payment Statistics loaded:', paymentStatisticsData);
+                
+                // Get manager payment summary
+                const managerPaymentSummaryRaw = '<?php echo addslashes(json_encode($managerPaymentSummary, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
+                console.log('Raw manager payment summary data:', managerPaymentSummaryRaw);
+                const managerPaymentSummaryData = JSON.parse(managerPaymentSummaryRaw);
+                window.managerPaymentSummary = managerPaymentSummaryData;
+                console.log('Manager Payment Summary loaded:', managerPaymentSummaryData.length);
+            } catch (e) {
+                console.error('Error parsing data:', e);
+                console.error('Error details:', e.message, e.stack);
             }
             
-            // Function to update project details modal with data
-            function updateProjectDetailsModal(project) {
-                // Set basic project info
-                document.getElementById('detailProjectName').textContent = project.name;
-                document.getElementById('detailProjectType').textContent = project.type;
-                document.getElementById('detailLocation').textContent = project.location;
-                
-                // Set status with appropriate class
-                const statusElement = document.getElementById('detailStatus');
-                statusElement.textContent = project.status.charAt(0).toUpperCase() + project.status.slice(1);
-                statusElement.className = `status ${project.status}`;
-                
-                // Set budget information
-                document.getElementById('detailBudget').textContent = formatIndianRupees(project.budget);
-                document.getElementById('detailPaid').textContent = formatIndianRupees(project.paid);
-                document.getElementById('detailRemaining').textContent = formatIndianRupees(project.remaining);
-                
-                // Populate payout history table
-                const payoutHistoryTable = document.getElementById('payoutHistoryTable');
-                payoutHistoryTable.innerHTML = '';
-                
-                project.payouts.forEach(payout => {
-                    const row = document.createElement('tr');
+            // Initialize the table with data from the database
+            updateProjectTable();
+            
+            // Calculate and update overview cards
+            updateOverviewCards();
+            
+            // Add event listeners for initial payment mode buttons
+            document.querySelectorAll('.add-payment-mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    addPaymentMode(this.dataset.stageIndex);
+                });
+            });
+            
+            // Add event listeners for initial payment amount inputs
+            document.querySelectorAll('.payment-amount').forEach(input => {
+                input.addEventListener('input', function() {
+                    const stageElement = this.closest('.project-stage');
+                    if (stageElement) {
+                        updateTotalAmount(stageElement.dataset.stageIndex);
+                    }
+                });
+            });
+            
+            // Add event listeners for remaining amount toggles
+            document.querySelectorAll('.has-remaining-amount').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const stageIndex = this.dataset.stageIndex;
+                    const container = document.getElementById(`remainingAmountContainer_${stageIndex}`);
+                    if (container) {
+                        container.style.display = this.checked ? 'flex' : 'none';
+                        
+                        // Reset value when unchecked
+                        if (!this.checked) {
+                            const input = document.getElementById(`remainingAmount_${stageIndex}`);
+                            if (input) {
+                                input.value = '0';
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Add Project Button functionality
+            const addProjectBtn = document.getElementById('addProjectBtn');
+            if (addProjectBtn) {
+                addProjectBtn.addEventListener('click', function() {
+                    // Reset form
+                    document.getElementById('addProjectForm').reset();
                     
-                    // Manager column
-                    const managerCell = document.createElement('td');
-                    managerCell.innerHTML = `
-                        <div class="manager-info">
-                            <div class="avatar">${payout.manager.initials}</div>
-                            <div>${payout.manager.name}</div>
+                    // Reset modal title
+                    document.getElementById('addProjectModalLabel').innerHTML = 
+                        '<i class="bi bi-folder-plus text-primary me-2"></i> Add New Project Data';
+                    
+                    // Reset save button to add mode
+                    const saveBtn = document.getElementById('saveProjectBtn');
+                    saveBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Project';
+                    saveBtn.dataset.mode = 'add';
+                    if (saveBtn.dataset.id) {
+                        delete saveBtn.dataset.id;
+                    }
+                    
+                    const addProjectModal = new bootstrap.Modal(document.getElementById('addProjectModal'));
+                    addProjectModal.show();
+                });
+            }
+            
+            // Add Stage Button functionality
+            const addStageBtn = document.getElementById('addStageBtn');
+            if (addStageBtn) {
+                addStageBtn.addEventListener('click', function() {
+                    const stagesContainer = document.getElementById('stagesContainer');
+                    const stageElements = stagesContainer.querySelectorAll('.project-stage');
+                    const newStageIndex = stageElements.length;
+                    
+                    // Create new stage element
+                    const stageElement = document.createElement('div');
+                    stageElement.className = 'project-stage mb-4';
+                    stageElement.dataset.stageIndex = newStageIndex;
+                    
+                    // Create stage content
+                    stageElement.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="stage-title mb-0">Stage ${newStageIndex + 1}</h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-stage-btn">
+                                <i class="bi bi-trash me-1"></i>Remove
+                            </button>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="projectDate_${newStageIndex}" class="form-label">
+                                    <i class="bi bi-calendar-date text-primary me-2"></i>
+                                    Date
+                                </label>
+                                <input type="date" class="form-control" id="projectDate_${newStageIndex}" name="projectDate[]" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="amount_${newStageIndex}" class="form-label">
+                                    <i class="bi bi-currency-dollar text-primary me-2"></i>
+                                    Amount
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="amount_${newStageIndex}" name="amount[]" min="0" step="0.01" required>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input has-remaining-amount" type="checkbox" id="hasRemainingAmount_${newStageIndex}" data-stage-index="${newStageIndex}">
+                                        <label class="form-check-label" for="hasRemainingAmount_${newStageIndex}">Has remaining amount?</label>
+                                    </div>
+                                    <div class="input-group mt-2 remaining-amount-container" id="remainingAmountContainer_${newStageIndex}" style="display: none;">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control remaining-amount" id="remainingAmount_${newStageIndex}" name="remainingAmount[]" min="0" step="0.01" placeholder="Remaining Amount" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-credit-card text-primary me-2"></i>
+                                    Payment Modes
+                                </label>
+                                <div class="payment-modes-container" id="paymentModesContainer_${newStageIndex}">
+                                    <div class="payment-mode-entry mb-2">
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select payment-mode-select" name="paymentMode_${newStageIndex}[]" required>
+                                                <option value="" selected disabled>Select Payment Mode</option>
+                                                <option value="UPI">UPI</option>
+                                                <option value="Net Banking">Net Banking</option>
+                                                <option value="Credit Card">Credit Card</option>
+                                                <option value="Debit Card">Debit Card</option>
+                                                <option value="Cash">Cash</option>
+                                                <option value="Cheque">Cheque</option>
+                                                <option value="Bank Transfer">Bank Transfer</option>
+                                            </select>
+                                            <div class="input-group" style="max-width: 150px;">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" class="form-control payment-amount" name="paymentAmount_${newStageIndex}[]" min="0" step="0.01" required placeholder="Amount">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2 add-payment-mode-btn" data-stage-index="${newStageIndex}">
+                                    <i class="bi bi-plus-circle me-1"></i>Add Payment Mode
+                                </button>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="projectStage_${newStageIndex}" class="form-label">
+                                    <i class="bi bi-diagram-3 text-primary me-2"></i>
+                                    Project Stage
+                                </label>
+                                <select class="form-select" id="projectStage_${newStageIndex}" name="projectStage[]" required>
+                                    <option value="" selected disabled>Select Stage</option>
+                                    <option value="Stage 1">Stage 1</option>
+                                    <option value="Stage 2">Stage 2</option>
+                                    <option value="Stage 3">Stage 3</option>
+                                    <option value="Stage 4">Stage 4</option>
+                                    <option value="Stage 5">Stage 5</option>
+                                    <option value="Stage 6">Stage 6</option>
+                                    <option value="Stage 7">Stage 7</option>
+                                    <option value="Stage 8">Stage 8</option>
+                                    <option value="Stage 9">Stage 9</option>
+                                    <option value="Stage 10">Stage 10</option>
+                                </select>
+                            </div>
                         </div>
                     `;
                     
-                    // Amount column
-                    const amountCell = document.createElement('td');
-                    amountCell.textContent = formatIndianRupees(payout.amount);
+                    // Add to container
+                    stagesContainer.appendChild(stageElement);
                     
-                    // Date column
-                    const dateCell = document.createElement('td');
-                    dateCell.textContent = payout.date;
+                    // Show remove button for first stage if there are now multiple stages
+                    if (newStageIndex === 1) {
+                        const firstStage = stagesContainer.querySelector('.project-stage[data-stage-index="0"]');
+                        if (firstStage) {
+                            const removeBtn = firstStage.querySelector('.remove-stage-btn');
+                            if (removeBtn) {
+                                removeBtn.style.display = 'block';
+                            }
+                        }
+                    }
                     
-                    // Method column
-                    const methodCell = document.createElement('td');
-                    methodCell.textContent = payout.method;
-                    
-                    // Status column
-                    const statusCell = document.createElement('td');
-                    statusCell.innerHTML = `<span class="status ${payout.status}">${payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}</span>`;
-                    
-                    // Append cells to row
-                    row.appendChild(managerCell);
-                    row.appendChild(amountCell);
-                    row.appendChild(dateCell);
-                    row.appendChild(methodCell);
-                    row.appendChild(statusCell);
-                    
-                    // Append row to table
-                    payoutHistoryTable.appendChild(row);
+                                         // Add event listener for remove button
+                     const removeBtn = stageElement.querySelector('.remove-stage-btn');
+                     if (removeBtn) {
+                         removeBtn.addEventListener('click', function() {
+                             stageElement.remove();
+                             
+                             // Update stage indices and titles
+                             updateStageIndices();
+                             
+                             // Hide remove button for first stage if only one stage remains
+                             const remainingStages = stagesContainer.querySelectorAll('.project-stage');
+                             if (remainingStages.length === 1) {
+                                 const firstStage = remainingStages[0];
+                                 const removeBtn = firstStage.querySelector('.remove-stage-btn');
+                                 if (removeBtn) {
+                                     removeBtn.style.display = 'none';
+                                 }
+                             }
+                         });
+                     }
+                     
+                     // Add event listener for "Add Payment Mode" button
+                     const addPaymentModeBtn = stageElement.querySelector('.add-payment-mode-btn');
+                     if (addPaymentModeBtn) {
+                         addPaymentModeBtn.addEventListener('click', function() {
+                             addPaymentMode(this.dataset.stageIndex);
+                         });
+                     }
+                     
+                     // Add event listener for remaining amount toggle
+                     const remainingAmountCheckbox = stageElement.querySelector('.has-remaining-amount');
+                     if (remainingAmountCheckbox) {
+                         remainingAmountCheckbox.addEventListener('change', function() {
+                             const stageIndex = this.dataset.stageIndex;
+                             const container = document.getElementById(`remainingAmountContainer_${stageIndex}`);
+                             if (container) {
+                                 container.style.display = this.checked ? 'flex' : 'none';
+                                 
+                                 // Reset value when unchecked
+                                 if (!this.checked) {
+                                     const input = document.getElementById(`remainingAmount_${stageIndex}`);
+                                     if (input) {
+                                         input.value = '0';
+                                     }
+                                 }
+                             }
+                         });
+                     }
                 });
             }
             
-            // Get all view detail buttons
-            const viewDetailButtons = document.querySelectorAll('.btn-eye');
-            
-            // Add click event listener to each button
-            viewDetailButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // In a real application, you would fetch project data based on project ID
-                    // For this example, we'll use the sample data
-                    updateProjectDetailsModal(projectData);
-                    
-                    // Show the modal
-                    const modal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
-                    modal.show();
-                });
-            });
-            
-            // Add click event listener to "Schedule New Payout" button
-            document.getElementById('schedulePayoutBtn').addEventListener('click', function() {
-                // In a real application, this would open a form to schedule a new payout
-                // For this example, we'll just close the current modal and open the add project modal
-                const currentModal = bootstrap.Modal.getInstance(document.getElementById('projectDetailsModal'));
-                currentModal.hide();
+            // Function to add a new payment mode to a stage
+            function addPaymentMode(stageIndex) {
+                const container = document.getElementById(`paymentModesContainer_${stageIndex}`);
+                if (!container) return;
                 
-                // Wait for the current modal to close before opening the new one
+                // Create new payment mode entry
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'payment-mode-entry mb-2';
+                
+                // Create content
+                entryDiv.innerHTML = `
+                    <div class="d-flex gap-2 align-items-center">
+                        <select class="form-select payment-mode-select" name="paymentMode_${stageIndex}[]" required>
+                            <option value="" selected disabled>Select Payment Mode</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Net Banking">Net Banking</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                        <div class="input-group" style="max-width: 150px;">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control payment-amount" name="paymentAmount_${stageIndex}[]" min="0" step="0.01" required placeholder="Amount">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-payment-btn">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Add to container
+                container.appendChild(entryDiv);
+                
+                // Add event listener for remove button
+                const removeBtn = entryDiv.querySelector('.remove-payment-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        entryDiv.remove();
+                        updateTotalAmount(stageIndex);
+                    });
+                }
+                
+                // Add event listener for amount changes
+                const amountInput = entryDiv.querySelector('.payment-amount');
+                if (amountInput) {
+                    amountInput.addEventListener('input', function() {
+                        updateTotalAmount(stageIndex);
+                    });
+                }
+                
+                // Update total amount
+                updateTotalAmount(stageIndex);
+            }
+            
+            // Function to update the total amount for a stage
+            function updateTotalAmount(stageIndex) {
+                const container = document.getElementById(`paymentModesContainer_${stageIndex}`);
+                if (!container) return;
+                
+                // Get all amount inputs
+                const amountInputs = container.querySelectorAll('.payment-amount');
+                
+                // Calculate total
+                let total = 0;
+                amountInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    total += value;
+                });
+                
+                // Update the main amount field
+                const amountField = document.getElementById(`amount_${stageIndex}`);
+                if (amountField) {
+                    amountField.value = total.toFixed(2);
+                }
+            }
+            
+            // Function to update stage indices and titles
+            function updateStageIndices() {
+                const stagesContainer = document.getElementById('stagesContainer');
+                const stageElements = stagesContainer.querySelectorAll('.project-stage');
+                
+                stageElements.forEach((stage, index) => {
+                    // Get old index
+                    const oldIndex = stage.dataset.stageIndex;
+                    
+                    // Update data attribute
+                    stage.dataset.stageIndex = index;
+                    
+                    // Update title
+                    const titleElement = stage.querySelector('.stage-title');
+                    if (titleElement) {
+                        titleElement.textContent = `Stage ${index + 1}`;
+                    }
+                    
+                    // Update payment modes container ID
+                    const paymentModesContainer = stage.querySelector('.payment-modes-container');
+                    if (paymentModesContainer) {
+                        paymentModesContainer.id = `paymentModesContainer_${index}`;
+                    }
+                    
+                    // Update add payment mode button
+                    const addPaymentBtn = stage.querySelector('.add-payment-mode-btn');
+                    if (addPaymentBtn) {
+                        addPaymentBtn.dataset.stageIndex = index;
+                    }
+                    
+                                         // Update payment mode selects and amounts
+                     const paymentSelects = stage.querySelectorAll('.payment-mode-select');
+                     paymentSelects.forEach(select => {
+                         select.name = `paymentMode_${index}[]`;
+                     });
+                     
+                     const paymentAmounts = stage.querySelectorAll('.payment-amount');
+                     paymentAmounts.forEach(input => {
+                         input.name = `paymentAmount_${index}[]`;
+                     });
+                     
+                     // Update remaining amount elements
+                     const remainingAmountCheckbox = stage.querySelector('.has-remaining-amount');
+                     if (remainingAmountCheckbox) {
+                         remainingAmountCheckbox.id = `hasRemainingAmount_${index}`;
+                         remainingAmountCheckbox.dataset.stageIndex = index;
+                         
+                         const label = stage.querySelector(`label[for="hasRemainingAmount_${oldIndex}"]`);
+                         if (label) {
+                             label.setAttribute('for', `hasRemainingAmount_${index}`);
+                         }
+                     }
+                     
+                     const remainingAmountContainer = stage.querySelector('.remaining-amount-container');
+                     if (remainingAmountContainer) {
+                         remainingAmountContainer.id = `remainingAmountContainer_${index}`;
+                     }
+                     
+                     const remainingAmountInput = stage.querySelector('.remaining-amount');
+                     if (remainingAmountInput) {
+                         remainingAmountInput.id = `remainingAmount_${index}`;
+                         remainingAmountInput.name = `remainingAmount[${index}]`;
+                     }
+                    
+                    // Update input IDs and names
+                    const inputs = stage.querySelectorAll('input[id], select[id]');
+                    inputs.forEach(input => {
+                        const oldId = input.id;
+                        if (oldId) {
+                            const baseName = oldId.split('_')[0];
+                            input.id = `${baseName}_${index}`;
+                            
+                            // Update associated label
+                            const label = stage.querySelector(`label[for="${oldId}"]`);
+                            if (label) {
+                                label.setAttribute('for', input.id);
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Save Project Button functionality
+            const saveProjectBtn = document.getElementById('saveProjectBtn');
+            if (saveProjectBtn) {
+                // Initialize button to add mode
+                saveProjectBtn.dataset.mode = 'add';
+                if (saveProjectBtn.dataset.id) {
+                    delete saveProjectBtn.dataset.id;
+                }
+                
+                saveProjectBtn.addEventListener('click', function() {
+                    const form = document.getElementById('addProjectForm');
+                    
+                    // Check form validity
+                    const inputs = form.querySelectorAll('input, select');
+                    let isValid = true;
+                    
+                    inputs.forEach(input => {
+                        if (input.hasAttribute('required') && !input.value) {
+                            input.classList.add('is-invalid');
+                            isValid = false;
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                    
+                    if (isValid) {
+                        // Determine if this is an add or update operation
+                        const isUpdate = this.dataset.mode === 'update';
+                        const projectId = isUpdate ? this.dataset.id : null;
+                        
+                        console.log('Operation:', isUpdate ? 'Update' : 'Add', 'Project ID:', projectId);
+                        
+                        // Get project info
+                        const projectName = document.getElementById('projectName').value;
+                        const projectType = document.getElementById('projectType').value;
+                        const clientName = document.getElementById('clientName').value;
+                        
+                        // Get all stages
+                        const stagesContainer = document.getElementById('stagesContainer');
+                        const stageElements = stagesContainer.querySelectorAll('.project-stage');
+                        
+                        // Handle update mode
+                        if (isUpdate) {
+                            // Check if there are multiple stages in edit mode
+                            if (stageElements.length > 1) {
+                                // First update the original project
+                                const formData = new FormData();
+                                formData.append('action', 'update');
+                                formData.append('id', projectId);
+                                formData.append('project_name', projectName);
+                                formData.append('project_type', projectType);
+                                formData.append('client_name', clientName);
+                                
+                                const stageIndex = 0;
+                                formData.append('project_date', document.getElementById(`projectDate_${stageIndex}`).value);
+                                formData.append('amount', document.getElementById(`amount_${stageIndex}`).value);
+                                
+                                // Get remaining amount
+                                const remainingAmountInput = document.getElementById(`remainingAmount_${stageIndex}`);
+                                const hasRemainingAmount = document.getElementById(`hasRemainingAmount_${stageIndex}`).checked;
+                                const remainingAmount = hasRemainingAmount && remainingAmountInput ? remainingAmountInput.value : 0;
+                                formData.append('remaining_amount', remainingAmount);
+                                
+                                // Debug log the remaining amount
+                                console.log('Remaining amount for update:', remainingAmount, 'Has remaining:', hasRemainingAmount);
+                                
+                                // Get all payment modes and amounts for this stage
+                                const paymentModesContainer = document.getElementById(`paymentModesContainer_${stageIndex}`);
+                                const paymentModeSelects = paymentModesContainer.querySelectorAll('.payment-mode-select');
+                                const paymentAmountInputs = paymentModesContainer.querySelectorAll('.payment-amount');
+                                
+                                // Create a combined payment mode string
+                                const paymentModes = [];
+                                paymentModeSelects.forEach((select, i) => {
+                                    const mode = select.value;
+                                    const amount = paymentAmountInputs[i] ? paymentAmountInputs[i].value : 0;
+                                    paymentModes.push(`${mode} (₹${amount})`);
+                                });
+                                
+                                formData.append('payment_mode', paymentModes.join(', '));
+                                formData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
+                                
+                                // Send AJAX request for update
+                                fetch('payouts.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Update existing project in the array
+                                        const index = projectData.findIndex(p => p.id == projectId);
+                                        if (index !== -1) {
+                                            projectData[index] = data.project;
+                                        }
+                                        
+                                        // Now add the additional stages as new projects
+                                        let successCount = 1; // Count the first update as success
+                                        let failCount = 0;
+                                        let totalStages = stageElements.length;
+                                        
+                                        // Process additional stages starting from index 1
+                                        for (let i = 1; i < stageElements.length; i++) {
+                                            const stage = stageElements[i];
+                                            const stageIndex = stage.dataset.stageIndex;
+                                            
+                                            // Collect form data for this stage
+                                            const newStageData = new FormData();
+                                            newStageData.append('action', 'add');
+                                            newStageData.append('project_name', projectName);
+                                            newStageData.append('project_type', projectType);
+                                            newStageData.append('client_name', clientName);
+                                            newStageData.append('project_date', document.getElementById(`projectDate_${stageIndex}`).value);
+                                            newStageData.append('amount', document.getElementById(`amount_${stageIndex}`).value);
+                                            
+                                            // Get remaining amount
+                                            const remainingAmountInput = document.getElementById(`remainingAmount_${stageIndex}`);
+                                            const hasRemainingAmount = document.getElementById(`hasRemainingAmount_${stageIndex}`).checked;
+                                            const remainingAmount = hasRemainingAmount && remainingAmountInput ? remainingAmountInput.value : 0;
+                                            newStageData.append('remaining_amount', remainingAmount);
+                                            
+                                            // Get all payment modes and amounts for this stage
+                                            const paymentModesContainer = document.getElementById(`paymentModesContainer_${stageIndex}`);
+                                            const paymentModeSelects = paymentModesContainer.querySelectorAll('.payment-mode-select');
+                                            const paymentAmountInputs = paymentModesContainer.querySelectorAll('.payment-amount');
+                                            
+                                            // Create a combined payment mode string
+                                            const paymentModes = [];
+                                            paymentModeSelects.forEach((select, i) => {
+                                                const mode = select.value;
+                                                const amount = paymentAmountInputs[i] ? paymentAmountInputs[i].value : 0;
+                                                paymentModes.push(`${mode} (₹${amount})`);
+                                            });
+                                            
+                                            newStageData.append('payment_mode', paymentModes.join(', '));
+                                            newStageData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
+                                            
+                                            // Send AJAX request to add new stage
+                                            fetch('payouts.php', {
+                                                method: 'POST',
+                                                body: newStageData
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    // Add new project to the beginning of the array
+                                                    projectData.unshift(data.project);
+                                                    successCount++;
+                                                } else {
+                                                    failCount++;
+                                                    console.error('Failed to add additional stage:', data.message);
+                                                }
+                                                
+                                                // Check if all requests are complete
+                                                if (successCount + failCount === totalStages) {
+                                                    finishSaveProcess(successCount, failCount, totalStages);
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                failCount++;
+                                                
+                                                // Check if all requests are complete
+                                                if (successCount + failCount === totalStages) {
+                                                    finishSaveProcess(successCount, failCount, totalStages);
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        showNotification(data.message, 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showNotification('An error occurred while updating the project.', 'error');
+                                });
+                            } else {
+                                // Just update the single stage as before
+                                const formData = new FormData();
+                                formData.append('action', 'update');
+                                formData.append('id', projectId);
+                                formData.append('project_name', projectName);
+                                formData.append('project_type', projectType);
+                                formData.append('client_name', clientName);
+                                
+                                const stageIndex = 0;
+                                formData.append('project_date', document.getElementById(`projectDate_${stageIndex}`).value);
+                                formData.append('amount', document.getElementById(`amount_${stageIndex}`).value);
+                                
+                                // Get remaining amount
+                                const remainingAmountInput = document.getElementById(`remainingAmount_${stageIndex}`);
+                                const hasRemainingAmount = document.getElementById(`hasRemainingAmount_${stageIndex}`).checked;
+                                const remainingAmount = hasRemainingAmount && remainingAmountInput ? remainingAmountInput.value : 0;
+                                formData.append('remaining_amount', remainingAmount);
+                                
+                                // Debug log the remaining amount
+                                console.log('Remaining amount for update:', remainingAmount, 'Has remaining:', hasRemainingAmount);
+                                
+                                // Get all payment modes and amounts for this stage
+                                const paymentModesContainer = document.getElementById(`paymentModesContainer_${stageIndex}`);
+                                const paymentModeSelects = paymentModesContainer.querySelectorAll('.payment-mode-select');
+                                const paymentAmountInputs = paymentModesContainer.querySelectorAll('.payment-amount');
+                                
+                                // Create a combined payment mode string
+                                const paymentModes = [];
+                                paymentModeSelects.forEach((select, i) => {
+                                    const mode = select.value;
+                                    const amount = paymentAmountInputs[i] ? paymentAmountInputs[i].value : 0;
+                                    paymentModes.push(`${mode} (₹${amount})`);
+                                });
+                                
+                                formData.append('payment_mode', paymentModes.join(', '));
+                                formData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
+                                
+                                // Send AJAX request for update
+                                updateProject(formData);
+                            }
+                        } else {
+                            // For add mode, process all stages
+                            let successCount = 0;
+                            let failCount = 0;
+                            let totalStages = stageElements.length;
+                            
+                            stageElements.forEach((stage, index) => {
+                                const stageIndex = stage.dataset.stageIndex;
+                                
+                                // Collect form data for this stage
+                                const formData = new FormData();
+                                formData.append('action', 'add');
+                                formData.append('project_name', projectName);
+                                formData.append('project_type', projectType);
+                                formData.append('client_name', clientName);
+                                formData.append('project_date', document.getElementById(`projectDate_${stageIndex}`).value);
+                                formData.append('amount', document.getElementById(`amount_${stageIndex}`).value);
+                                
+                                // Get remaining amount
+                                const remainingAmountInput = document.getElementById(`remainingAmount_${stageIndex}`);
+                                const hasRemainingAmount = document.getElementById(`hasRemainingAmount_${stageIndex}`).checked;
+                                const remainingAmount = hasRemainingAmount && remainingAmountInput ? remainingAmountInput.value : 0;
+                                formData.append('remaining_amount', remainingAmount);
+                                
+                                // Debug log the remaining amount
+                                console.log('Remaining amount for add:', remainingAmount, 'Has remaining:', hasRemainingAmount);
+                                // Get all payment modes and amounts for this stage
+                                const paymentModesContainer = document.getElementById(`paymentModesContainer_${stageIndex}`);
+                                const paymentModeSelects = paymentModesContainer.querySelectorAll('.payment-mode-select');
+                                const paymentAmountInputs = paymentModesContainer.querySelectorAll('.payment-amount');
+                                
+                                // Create a combined payment mode string
+                                const paymentModes = [];
+                                paymentModeSelects.forEach((select, i) => {
+                                    const mode = select.value;
+                                    const amount = paymentAmountInputs[i] ? paymentAmountInputs[i].value : 0;
+                                    paymentModes.push(`${mode} (₹${amount})`);
+                                });
+                                
+                                formData.append('payment_mode', paymentModes.join(', '));
+                                formData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
+                                
+                                // Send AJAX request
+                                fetch('payouts.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Add new project to the beginning of the array
+                                        projectData.unshift(data.project);
+                                        successCount++;
+                                    } else {
+                                        failCount++;
+                                        console.error('Failed to add stage:', data.message);
+                                    }
+                                    
+                                    // Check if all requests are complete
+                                    if (successCount + failCount === totalStages) {
+                                        finishSaveProcess(successCount, failCount, totalStages);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    failCount++;
+                                    
+                                    // Check if all requests are complete
+                                    if (successCount + failCount === totalStages) {
+                                        finishSaveProcess(successCount, failCount, totalStages);
+                                    }
+                                });
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // Function to update a project
+            function updateProject(formData) {
+                fetch('payouts.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update existing project in the array
+                        const projectId = formData.get('id');
+                        const index = projectData.findIndex(p => p.id == projectId);
+                        if (index !== -1) {
+                            projectData[index] = data.project;
+                        }
+                        
+                        // Reset the button to "Save" mode
+                        const saveProjectBtn = document.getElementById('saveProjectBtn');
+                        saveProjectBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Project';
+                        saveProjectBtn.dataset.mode = 'add';
+                        delete saveProjectBtn.dataset.id;
+                        
+                        // Reset modal title
+                        document.getElementById('addProjectModalLabel').innerHTML = 
+                            '<i class="bi bi-folder-plus text-primary me-2"></i> Add New Project Data';
+                        
+                        // Update the table
+                        updateProjectTable();
+                        
+                        // Reset form
+                        document.getElementById('addProjectForm').reset();
+                        
+                        // Close modal
+                        const addProjectModal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+                        addProjectModal.hide();
+                        
+                        // Remove any lingering backdrops
+                        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                            backdrop.remove();
+                        });
+                        
+                        // Show success notification
+                        showNotification(data.message, 'success');
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while updating the project.', 'error');
+                });
+            }
+            
+            // Function to show manager project details
+            function showManagerProjectDetails(managerId, managerName, managerRole) {
+                // Get the modal elements
+                const modal = document.getElementById('managerProjectDetailsModal');
+                const tableBody = document.getElementById('managerProjectsTableBody');
+                
+                // Update manager information
+                document.getElementById('managerProjectDetailsTitle').textContent = `${managerName}'s Project Details`;
+                document.getElementById('managerInitial').textContent = managerName.charAt(0);
+                document.getElementById('managerName').textContent = managerName;
+                document.getElementById('managerRole').textContent = managerRole;
+                
+                // Get manager details from processed manager payments
+                const managerDetails = window.processedManagerPayments[managerId] || {};
+                
+                // Find manager in senior managers array for additional details
+                const managerInfo = window.seniorManagers.find(m => m.id == managerId) || {};
+                
+                // Set employee ID and department from real data
+                document.getElementById('managerEmployeeId').textContent = managerInfo.employee_id || managerDetails.employeeId || 'N/A';
+                document.getElementById('managerDepartment').textContent = managerInfo.department || managerDetails.department || 
+                                                                         (managerRole.includes('Site') ? 'Site Management' : 
+                                                                         managerRole.includes('Studio') ? 'Studio Management' : 'Management');
+                
+                // Get real project data for this manager from the managerPayments array
+                let projectsData = [];
+                
+                if (window.managerPayments && window.managerPayments.length > 0) {
+                    // Filter payments for this manager
+                    const managerPayments = window.managerPayments.filter(payment => payment.manager_id == managerId);
+                    
+                    // Convert to the format needed for the table
+                    projectsData = managerPayments.map(payment => {
+                        // Calculate commission rate based on project type
+                        let commission = 5; // Default for Architecture and Interior
+                        if (payment.project_type === 'Construction') {
+                            commission = 3;
+                        }
+                        
+                        return {
+                            id: payment.project_id,
+                            name: payment.project_name,
+                            type: payment.project_type,
+                            date: payment.project_date,
+                            commission: commission,
+                            amount: parseFloat(payment.amount) || 0,
+                            status: payment.payment_status === 'approved' ? 'Approved' : 'Pending'
+                        };
+                    });
+                }
+                
+                // Handle empty project data
+                if (!projectsData || projectsData.length === 0) {
+                    handleEmptyProjectData(tableBody);
+                    
+                    // Set zeros for all amounts
+                    document.getElementById('managerTotalProjects').textContent = '0';
+                    document.getElementById('managerTotalAmount').textContent = formatCurrency(0);
+                    document.getElementById('managerApprovedAmount').textContent = formatCurrency(0);
+                    document.getElementById('managerPendingAmount').textContent = formatCurrency(0);
+                    
+                    return; // Exit early if no data
+                }
+                
+                // Update summary information
+                document.getElementById('managerTotalProjects').textContent = projectsData.length;
+                
+                // Calculate totals
+                let totalAmount = 0;
+                let approvedAmount = 0;
+                let pendingAmount = 0;
+                
+                // If we have real data from the manager payment summary, use it
+                if (managerDetails.totalPaid !== undefined) {
+                    totalAmount = managerDetails.totalPaid;
+                    approvedAmount = managerDetails.approvedAmount || 0;
+                    pendingAmount = managerDetails.pendingAmount || 0;
+                } else {
+                    // Otherwise calculate from projects data
+                    projectsData.forEach(project => {
+                        totalAmount += project.amount;
+                        if (project.status === 'Approved') {
+                            approvedAmount += project.amount;
+                        } else {
+                            pendingAmount += project.amount;
+                        }
+                    });
+                }
+                
+                // Format currency
+                const formatCurrency = (value) => {
+                    return new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        maximumFractionDigits: 2
+                    }).format(value);
+                };
+                
+                // Update summary amounts
+                document.getElementById('managerTotalAmount').textContent = formatCurrency(totalAmount);
+                document.getElementById('managerApprovedAmount').textContent = formatCurrency(approvedAmount);
+                document.getElementById('managerPendingAmount').textContent = formatCurrency(pendingAmount);
+                
+                // Function to render projects table
+                function renderProjectsTable(projects, filter = 'all') {
+                    tableBody.innerHTML = '';
+                    
+                    // Filter projects if needed
+                    let filteredProjects = projects;
+                    if (filter === 'approved') {
+                        filteredProjects = projects.filter(p => p.status === 'Approved');
+                    } else if (filter === 'pending') {
+                        filteredProjects = projects.filter(p => p.status === 'Pending');
+                    }
+                    
+                    if (filteredProjects.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No ${filter !== 'all' ? filter : ''} project data available
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    filteredProjects.forEach((project, index) => {
+                        const row = document.createElement('tr');
+                        
+                        // Get project type icon
+                        let typeIcon = 'bi-briefcase';
+                        let typeBadgeClass = 'bg-secondary';
+                        
+                        switch(project.type.toLowerCase()) {
+                            case 'architecture':
+                                typeIcon = 'bi-building';
+                                typeBadgeClass = 'bg-primary';
+                                break;
+                            case 'interior':
+                                typeIcon = 'bi-house-door';
+                                typeBadgeClass = 'bg-info';
+                                break;
+                            case 'construction':
+                                typeIcon = 'bi-bricks';
+                                typeBadgeClass = 'bg-success';
+                                break;
+                        }
+                        
+                        // Format date
+                        const formattedDate = new Date(project.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                        
+                        // Determine status badge class
+                        const statusBadgeClass = project.status === 'Approved' ? 'bg-success' : 'bg-warning text-dark';
+                        
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${project.name}</td>
+                            <td>
+                                <span class="badge ${typeBadgeClass}">
+                                    <i class="bi ${typeIcon} me-1"></i>
+                                    ${project.type}
+                                </span>
+                            </td>
+                            <td>${formattedDate}</td>
+                            <td>${project.commission}%</td>
+                            <td class="fw-bold text-success">${formatCurrency(project.amount)}</td>
+                            <td>
+                                <span class="badge ${statusBadgeClass}">
+                                    <i class="bi ${project.status === 'Approved' ? 'bi-check-circle' : 'bi-hourglass-split'} me-1"></i>
+                                    ${project.status}
+                                </span>
+                            </td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                }
+                
+                // Initial render of projects
+                renderProjectsTable(projectsData);
+                
+                // Add filter functionality
+                const filterButtons = modal.querySelectorAll('.btn-group button[data-filter]');
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        // Remove active class from all buttons
+                        filterButtons.forEach(btn => btn.classList.remove('active'));
+                        
+                        // Add active class to clicked button
+                        this.classList.add('active');
+                        
+                        // Get filter value and update table
+                        const filter = this.dataset.filter;
+                        renderProjectsTable(projectsData, filter);
+                    });
+                });
+                
+                // Add print functionality
+                const printBtn = document.getElementById('printManagerDetailsBtn');
+                if (printBtn) {
+                    printBtn.addEventListener('click', function() {
+                        alert('Print functionality would be implemented here');
+                        // In a real implementation, this would open a print dialog
+                    });
+                }
+                
+                // Show the modal
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            }
+            
+            // Function to handle empty project data
+            function handleEmptyProjectData(tableBody) {
+                // Show empty state message
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No project payment data available for this manager
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            // Function to open and populate the All Manager Payments modal
+            function openAllManagerPaymentsModal() {
+                // Get modal elements
+                const modal = document.getElementById('allManagerPaymentsModal');
+                const tableBody = document.getElementById('managerPaymentsTableBody');
+                const searchInput = document.getElementById('managerSearchInput');
+                
+                // Use the processed manager payments
+                const managerPaymentsArray = Object.values(window.processedManagerPayments || {});
+                managerPaymentsArray.sort((a, b) => b.totalPaid - a.totalPaid);
+                
+                // Get total paid amount from payment statistics or calculate from manager payments
+                let totalPaidAmount = 0;
+                if (window.paymentStatistics && window.paymentStatistics.total_paid_amount !== undefined) {
+                    totalPaidAmount = parseFloat(window.paymentStatistics.total_paid_amount) || 0;
+                } else {
+                    totalPaidAmount = managerPaymentsArray.reduce((total, manager) => total + (parseFloat(manager.approvedAmount) || 0), 0);
+                }
+                
+                // Format currency function
+                const formatCurrency = (value) => {
+                    return new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        maximumFractionDigits: 2
+                    }).format(value);
+                };
+                
+                // Update summary cards
+                document.getElementById('modalTotalPaidAmount').textContent = formatCurrency(totalPaidAmount);
+                
+                // Count managers with payments
+                const managersWithPayments = managerPaymentsArray.filter(m => m.totalPaid > 0).length;
+                document.getElementById('modalTotalManagers').textContent = managersWithPayments;
+                
+                // Calculate total projects (avoiding duplicates)
+                const totalProjects = managerPaymentsArray.reduce((total, manager) => total + (manager.projectCount || 0), 0);
+                document.getElementById('modalTotalProjects').textContent = totalProjects;
+                
+                // Function to render the table with manager data
+                function renderManagersTable(managers) {
+                    tableBody.innerHTML = '';
+                    
+                    if (managers.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    No payment data available
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    managers.forEach((manager, index) => {
+                        const row = document.createElement('tr');
+                        
+                        // Get payment date from the latest manager payment if available
+                        let formattedDate = 'N/A';
+                        if (window.managerPayments && window.managerPayments.length > 0) {
+                            const managerPaymentRecords = window.managerPayments.filter(p => p.manager_id == manager.id);
+                            if (managerPaymentRecords.length > 0) {
+                                // Sort by created_at to get the latest
+                                managerPaymentRecords.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                                const latestPayment = managerPaymentRecords[0];
+                                if (latestPayment && latestPayment.created_at) {
+                                    const paymentDate = new Date(latestPayment.created_at);
+                                    formattedDate = paymentDate.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    });
+                                }
+                            }
+                        }
+                        
+                        // Determine status based on approved/pending amounts
+                        let status = 'Pending';
+                        if (manager.approvedAmount > 0 && manager.pendingAmount > 0) {
+                            status = 'Partially Paid';
+                        } else if (manager.approvedAmount > 0 && manager.pendingAmount === 0) {
+                            status = 'Completed';
+                        } else if (manager.totalPaid === 0) {
+                            status = 'No Payments';
+                        }
+                        
+                        let statusBadgeClass = 'bg-success';
+                        if (status === 'Pending') statusBadgeClass = 'bg-warning text-dark';
+                        if (status === 'Partially Paid') statusBadgeClass = 'bg-info';
+                        if (status === 'No Payments') statusBadgeClass = 'bg-secondary';
+                        
+                        // Only show managers with some payment data (either pending or approved)
+                        if (manager.totalPaid > 0 || manager.projectCount > 0) {
+                            row.innerHTML = `
+                                <td>${index + 1}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-2 bg-light rounded-circle">
+                                            <div class="avatar-text">${manager.name.charAt(0)}</div>
+                                        </div>
+                                        <div>
+                                            <div>${manager.name}</div>
+                                            <small class="text-muted">${manager.employeeId || 'N/A'}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">${manager.role}</span></td>
+                                <td>${manager.projectCount || 0}</td>
+                                <td>
+                                    <div class="fw-bold text-success">${formatCurrency(manager.totalPaid || 0)}</div>
+                                    ${manager.pendingAmount > 0 ? `<small class="text-warning">Pending: ${formatCurrency(manager.pendingAmount)}</small>` : ''}
+                                </td>
+                                <td><span class="badge ${statusBadgeClass}">${status}</span></td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary view-manager-details-btn" 
+                                            data-manager-id="${manager.id}" 
+                                            data-manager-name="${manager.name}"
+                                            data-manager-role="${manager.role}"
+                                            title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        ${manager.approvedAmount > 0 ? 
+                                            `<button class="btn btn-sm btn-outline-success" title="Download Receipt">
+                                                <i class="bi bi-download"></i>
+                                            </button>` : 
+                                            `<button class="btn btn-sm btn-outline-secondary" disabled title="No receipts available">
+                                                <i class="bi bi-download"></i>
+                                            </button>`
+                                        }
+                                    </div>
+                                </td>
+                            `;
+                        }
+                        
+                        tableBody.appendChild(row);
+                    });
+                }
+                
+                // Initial render
+                renderManagersTable(managerPaymentsArray);
+                
+                // Add event listeners for view details buttons
                 setTimeout(() => {
-                    const addProjectModal = new bootstrap.Modal(document.getElementById('addProjectModal'));
-                    addProjectModal.show();
-                }, 500);
+                    document.querySelectorAll('.view-manager-details-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const managerId = this.dataset.managerId;
+                            const managerName = this.dataset.managerName;
+                            const managerRole = this.dataset.managerRole;
+                            
+                            // Show manager project details
+                            showManagerProjectDetails(managerId, managerName, managerRole);
+                        });
+                    });
+                }, 100);
+                
+                // Add search functionality
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.toLowerCase();
+                        const filteredManagers = managerPaymentsArray.filter(manager => 
+                            manager.name.toLowerCase().includes(searchTerm) || 
+                            manager.role.toLowerCase().includes(searchTerm)
+                        );
+                        renderManagersTable(filteredManagers);
+                    });
+                }
+                
+                // Add export functionality
+                const exportBtn = document.getElementById('exportManagerPaymentsBtn');
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', function() {
+                        alert('Export functionality would be implemented here');
+                        // In a real implementation, this would generate and download a CSV/Excel file
+                    });
+                }
+                
+                // Add CSS for avatar
+                if (!document.getElementById('avatarStyles')) {
+                    const styleEl = document.createElement('style');
+                    styleEl.id = 'avatarStyles';
+                    styleEl.textContent = `
+                        .avatar {
+                            width: 36px;
+                            height: 36px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .avatar-text {
+                            font-weight: 600;
+                            color: var(--primary-color);
+                        }
+                        .avatar-lg {
+                            width: 64px;
+                            height: 64px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .avatar-text-lg {
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            color: var(--primary-color);
+                        }
+                    `;
+                    document.head.appendChild(styleEl);
+                }
+                
+                // Show the modal
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            }
+            
+            // Function to finish the save process
+            function finishSaveProcess(successCount, failCount, totalStages) {
+                // Update the table
+                updateProjectTable();
+                
+                // Update overview cards
+                updateOverviewCards();
+                
+                // Reset form
+                document.getElementById('addProjectForm').reset();
+                
+                // Reset stages container to just one stage
+                const stagesContainer = document.getElementById('stagesContainer');
+                const firstStage = stagesContainer.querySelector('.project-stage[data-stage-index="0"]');
+                if (firstStage) {
+                    stagesContainer.innerHTML = '';
+                    stagesContainer.appendChild(firstStage);
+                    
+                    // Hide remove button for the first stage
+                    const removeBtn = firstStage.querySelector('.remove-stage-btn');
+                    if (removeBtn) {
+                        removeBtn.style.display = 'none';
+                    }
+                }
+                
+                // Reset the button to "Save" mode
+                const saveProjectBtn = document.getElementById('saveProjectBtn');
+                saveProjectBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Project';
+                saveProjectBtn.dataset.mode = 'add';
+                delete saveProjectBtn.dataset.id;
+                
+                // Reset modal title
+                document.getElementById('addProjectModalLabel').innerHTML = 
+                    '<i class="bi bi-folder-plus text-primary me-2"></i> Add New Project Data';
+                
+                // Close modal
+                const addProjectModal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+                addProjectModal.hide();
+                
+                // Remove any lingering backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                    backdrop.remove();
+                });
+                
+                // Show success notification
+                if (successCount === totalStages) {
+                    showNotification(`Successfully saved all ${successCount} project stages.`, 'success');
+                } else if (successCount > 0) {
+                    showNotification(`Saved ${successCount} out of ${totalStages} project stages. ${failCount} failed.`, 'warning');
+                } else {
+                    showNotification('Failed to save project stages.', 'error');
+                }
+            }
+            
+            // Cancel button should reset the form and button state
+            const cancelProjectBtn = document.getElementById('cancelProjectBtn');
+            if (cancelProjectBtn) {
+                cancelProjectBtn.addEventListener('click', function() {
+                    // Reset the button to "Save" mode
+                    const saveBtn = document.getElementById('saveProjectBtn');
+                    saveBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Project';
+                    saveBtn.dataset.mode = 'add';
+                    delete saveBtn.dataset.id;
+                    
+                    // Reset modal title
+                    document.getElementById('addProjectModalLabel').innerHTML = 
+                        '<i class="bi bi-folder-plus text-primary me-2"></i> Add New Project Data';
+                    
+                    // Show the "Add Stage" button
+                    const addStageBtn = document.getElementById('addStageBtn');
+                    if (addStageBtn) {
+                        addStageBtn.style.display = 'block';
+                    }
+                    
+                    // Reset stages container to just one stage
+                    const stagesContainer = document.getElementById('stagesContainer');
+                    if (stagesContainer) {
+                        // Keep only the first stage
+                        const firstStage = stagesContainer.querySelector('.project-stage[data-stage-index="0"]');
+                        if (firstStage) {
+                            stagesContainer.innerHTML = '';
+                            stagesContainer.appendChild(firstStage);
+                            
+                            // Hide remove button for the first stage
+                            const removeBtn = firstStage.querySelector('.remove-stage-btn');
+                            if (removeBtn) {
+                                removeBtn.style.display = 'none';
+                            }
+                        }
+                    }
+                    
+                    // Reset form
+                    document.getElementById('addProjectForm').reset();
+                });
+            }
+            
+            // Function to update overview cards
+            function updateOverviewCards() {
+                // Use real data from the backend if available
+                let totalAmount = 0;
+                let architectureAmount = 0;
+                let interiorAmount = 0;
+                let constructionAmount = 0;
+                let totalPendingAmount = 0;
+                let pendingProjectsCount = 0;
+                let totalPaidAmount = 0;
+                let paidManagersCount = 0;
+                
+                // Use payment statistics from backend if available
+                if (window.paymentStatistics) {
+                    totalAmount = parseFloat(window.paymentStatistics.total_amount) || 0;
+                    architectureAmount = parseFloat(window.paymentStatistics.architecture_amount) || 0;
+                    interiorAmount = parseFloat(window.paymentStatistics.interior_amount) || 0;
+                    constructionAmount = parseFloat(window.paymentStatistics.construction_amount) || 0;
+                    totalPendingAmount = parseFloat(window.paymentStatistics.total_pending_amount) || 0;
+                    pendingProjectsCount = parseInt(window.paymentStatistics.pending_projects_count) || 0;
+                    totalPaidAmount = parseFloat(window.paymentStatistics.total_paid_amount) || 0;
+                    paidManagersCount = parseInt(window.paymentStatistics.paid_managers_count) || 0;
+                } else {
+                    // Fallback to calculating from project data if statistics not available
+                    projectData.forEach(project => {
+                        const amount = parseFloat(project.amount) || 0;
+                        const remainingAmount = parseFloat(project.remaining_amount) || 0;
+                        
+                        totalAmount += amount;
+                        
+                        // Add to specific category based on project type
+                        switch(project.project_type.toLowerCase()) {
+                            case 'architecture':
+                                architectureAmount += amount;
+                                break;
+                            case 'interior':
+                                interiorAmount += amount;
+                                break;
+                            case 'construction':
+                                constructionAmount += amount;
+                                break;
+                        }
+                        
+                        // Calculate pending amounts (using remaining_amount field)
+                        if (remainingAmount > 0) {
+                            totalPendingAmount += remainingAmount;
+                            pendingProjectsCount++;
+                        }
+                    });
+                }
+                
+                // Prepare manager payments data
+                const managerPaymentsMap = {};
+                
+                // Use real manager payment summary if available
+                if (window.managerPaymentSummary && window.managerPaymentSummary.length > 0) {
+                    window.managerPaymentSummary.forEach(manager => {
+                        managerPaymentsMap[manager.manager_id] = {
+                            id: manager.manager_id,
+                            name: manager.username,
+                            role: manager.role || 'Senior Manager',
+                            employeeId: manager.employee_id,
+                            department: manager.department,
+                            designation: manager.designation,
+                            totalPaid: parseFloat(manager.total_paid) || 0,
+                            approvedAmount: parseFloat(manager.approved_amount) || 0,
+                            pendingAmount: parseFloat(manager.pending_amount) || 0,
+                            projectCount: parseInt(manager.project_count) || 0
+                        };
+                    });
+                } else {
+                    // Fallback to calculating from manager payments if summary not available
+                    if (window.managerPayments && window.managerPayments.length > 0) {
+                        window.managerPayments.forEach(payment => {
+                            const managerId = payment.manager_id;
+                            const amount = parseFloat(payment.amount) || 0;
+                            const isApproved = payment.payment_status === 'approved';
+                            
+                            if (!managerPaymentsMap[managerId]) {
+                                // Find manager details from senior managers array
+                                const managerDetails = window.seniorManagers.find(m => m.id === managerId) || {};
+                                
+                                managerPaymentsMap[managerId] = {
+                                    id: managerId,
+                                    name: managerDetails.username || 'Unknown Manager',
+                                    role: managerDetails.role || 'Senior Manager',
+                                    employeeId: managerDetails.employee_id || '',
+                                    department: managerDetails.department || '',
+                                    designation: managerDetails.designation || '',
+                                    totalPaid: 0,
+                                    approvedAmount: 0,
+                                    pendingAmount: 0,
+                                    projectCount: 0
+                                };
+                            }
+                            
+                            managerPaymentsMap[managerId].totalPaid += amount;
+                            managerPaymentsMap[managerId].projectCount++;
+                            
+                            if (isApproved) {
+                                managerPaymentsMap[managerId].approvedAmount += amount;
+                                totalPaidAmount += amount;
+                                paidManagersCount++;
+                            } else {
+                                managerPaymentsMap[managerId].pendingAmount += amount;
+                            }
+                        });
+                    } else {
+                        // If no real data available, use the senior managers to create empty records
+                        if (window.seniorManagers && window.seniorManagers.length > 0) {
+                            window.seniorManagers.forEach(manager => {
+                                managerPaymentsMap[manager.id] = {
+                                    id: manager.id,
+                                    name: manager.username,
+                                    role: manager.role || 'Senior Manager',
+                                    employeeId: manager.employee_id || '',
+                                    department: manager.department || '',
+                                    designation: manager.designation || '',
+                                    totalPaid: 0,
+                                    approvedAmount: 0,
+                                    pendingAmount: 0,
+                                    projectCount: 0
+                                };
+                            });
+                        }
+                    }
+                }
+                
+                // Store the processed manager payments for use in other functions
+                window.processedManagerPayments = managerPaymentsMap;
+                
+                // Format currency values
+                const formatCurrency = (value) => {
+                    return new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        maximumFractionDigits: 2
+                    }).format(value);
+                };
+                
+                // Update card values for project types
+                document.getElementById('totalAmountReceived').textContent = formatCurrency(totalAmount);
+                document.getElementById('architectureAmount').textContent = formatCurrency(architectureAmount);
+                document.getElementById('interiorAmount').textContent = formatCurrency(interiorAmount);
+                document.getElementById('constructionAmount').textContent = formatCurrency(constructionAmount);
+                
+                // Update progress bars for project types
+                if (totalAmount > 0) {
+                    const archProgress = document.querySelector('#architectureAmount').closest('.card').querySelector('.progress-bar');
+                    const intProgress = document.querySelector('#interiorAmount').closest('.card').querySelector('.progress-bar');
+                    const constProgress = document.querySelector('#constructionAmount').closest('.card').querySelector('.progress-bar');
+                    
+                    archProgress.style.width = Math.round((architectureAmount / totalAmount) * 100) + '%';
+                    intProgress.style.width = Math.round((interiorAmount / totalAmount) * 100) + '%';
+                    constProgress.style.width = Math.round((constructionAmount / totalAmount) * 100) + '%';
+                }
+                
+                // Update pending amounts card
+                document.getElementById('totalPendingAmount').textContent = formatCurrency(totalPendingAmount);
+                document.getElementById('pendingProjectsCount').textContent = `${pendingProjectsCount} project${pendingProjectsCount !== 1 ? 's' : ''} pending`;
+                document.getElementById('pendingPercentage').textContent = totalAmount > 0 ? 
+                    Math.round((totalPendingAmount / totalAmount) * 100) + '%' : '0%';
+                
+                // Update paid amounts card
+                document.getElementById('totalPaidAmount').textContent = formatCurrency(totalPaidAmount);
+                document.getElementById('paidManagersCount').textContent = `${paidManagersCount} payment${paidManagersCount !== 1 ? 's' : ''} processed`;
+                document.getElementById('paidPercentage').textContent = totalAmount > 0 ? 
+                    Math.round((totalPaidAmount / (totalAmount * 0.05)) * 100) + '%' : '0%';
+                
+                // Update manager payments list
+                const managerPaymentsList = document.getElementById('managerPaymentsList');
+                if (managerPaymentsList) {
+                    managerPaymentsList.innerHTML = '';
+                    
+                    // Convert manager payments object to array and sort by total paid
+                    const managerPaymentsArray = Object.values(window.processedManagerPayments);
+                    managerPaymentsArray.sort((a, b) => b.totalPaid - a.totalPaid);
+                    
+                    // Get total pending payouts from database statistics
+                    let totalPendingPayouts = 0;
+                    if (window.paymentStatistics && window.paymentStatistics.total_pending_payouts !== undefined) {
+                        totalPendingPayouts = parseFloat(window.paymentStatistics.total_pending_payouts) || 0;
+                    } else {
+                        // Fallback to calculating from manager data if database value not available
+                        managerPaymentsArray.forEach(manager => {
+                            totalPendingPayouts += (manager.pendingAmount || 0);
+                        });
+                    }
+                    
+                    // Update pending payouts display
+                    const pendingManagerPayoutsElement = document.getElementById('pendingManagerPayouts');
+                    if (pendingManagerPayoutsElement) {
+                        pendingManagerPayoutsElement.textContent = formatCurrency(totalPendingPayouts);
+                        
+                        // Highlight if there are pending payouts
+                        if (totalPendingPayouts > 0) {
+                            pendingManagerPayoutsElement.classList.add('fw-bold');
+                            
+                            // Add a small indicator badge if significant amount
+                            if (totalPendingPayouts > 10000) {
+                                const badge = document.createElement('span');
+                                badge.className = 'badge bg-warning text-dark ms-2';
+                                badge.textContent = 'Action Needed';
+                                pendingManagerPayoutsElement.appendChild(badge);
+                            }
+                        } else {
+                            pendingManagerPayoutsElement.classList.remove('fw-bold');
+                        }
+                    }
+                    
+                    if (managerPaymentsArray.length > 0 && managerPaymentsArray.some(m => m.totalPaid > 0)) {
+                        // Show top 3 managers with payments
+                        const managersWithPayments = managerPaymentsArray.filter(m => m.totalPaid > 0);
+                        
+                        if (managersWithPayments.length > 0) {
+                            managersWithPayments.slice(0, 3).forEach(manager => {
+                                const listItem = document.createElement('div');
+                                listItem.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                                
+                                // Show pending amount indicator if there are pending payments
+                                const pendingIndicator = manager.pendingAmount > 0 ? 
+                                    `<div class="small text-warning">+ ${formatCurrency(manager.pendingAmount)} pending</div>` : '';
+                                
+                                listItem.innerHTML = `
+                                    <div>
+                                        <div class="fw-bold">${manager.name}</div>
+                                        <small class="text-muted">${manager.role} • ${manager.projectCount} project${manager.projectCount !== 1 ? 's' : ''}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success">${formatCurrency(manager.totalPaid)}</div>
+                                        ${pendingIndicator}
+                                    </div>
+                                `;
+                                managerPaymentsList.appendChild(listItem);
+                            });
+                        } else {
+                            // Show empty state
+                            const emptyState = document.createElement('div');
+                            emptyState.className = 'list-group-item text-center py-3';
+                            emptyState.innerHTML = `
+                                <i class="bi bi-people text-muted mb-2 fs-4"></i>
+                                <p class="mb-0 text-muted">No payment data available</p>
+                            `;
+                            managerPaymentsList.appendChild(emptyState);
+                        }
+                    } else {
+                        // Show empty state
+                        const emptyState = document.createElement('div');
+                        emptyState.className = 'list-group-item text-center py-3';
+                        emptyState.innerHTML = `
+                            <i class="bi bi-people text-muted mb-2 fs-4"></i>
+                            <p class="mb-0 text-muted">No payment data available</p>
+                        `;
+                        managerPaymentsList.appendChild(emptyState);
+                    }
+                }
+                
+                // Add click handler for view all payments button
+                const viewAllBtn = document.getElementById('viewAllManagerPaymentsBtn');
+                if (viewAllBtn) {
+                    viewAllBtn.onclick = function() {
+                        // Open the modal with all manager payments
+                        openAllManagerPaymentsModal();
+                    };
+                }
+            }
+            
+            // Function to update project table
+            function updateProjectTable() {
+                const tableBody = document.getElementById('projectTableBody');
+                
+                // Clear existing table content
+                tableBody.innerHTML = '';
+                
+                if (projectData.length === 0) {
+                    // Show empty state message
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No project data available. Click "Add Project Data" to add new projects.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Add each project to the table
+                projectData.forEach((project, index) => {
+                    // Format the date
+                    const formattedDate = new Date(project.project_date).toLocaleDateString();
+                    
+                    // Format the amount with currency symbol
+                    const formattedAmount = new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR'
+                    }).format(project.amount);
+                    
+                    // Check for remaining amount
+                    const remainingAmount = parseFloat(project.remaining_amount) || 0;
+                    let remainingAmountHtml = '';
+                    if (remainingAmount > 0) {
+                        const formattedRemainingAmount = new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR'
+                        }).format(remainingAmount);
+                        remainingAmountHtml = `<div class="small text-danger fw-bold mt-1">Remaining: ${formattedRemainingAmount}</div>`;
+                    }
+                    
+                    // Get project type icon
+                    let typeIcon = '';
+                    switch(project.project_type.toLowerCase()) {
+                        case 'architecture':
+                            typeIcon = 'bi-building';
+                            break;
+                        case 'interior':
+                            typeIcon = 'bi-house-door';
+                            break;
+                        case 'construction':
+                            typeIcon = 'bi-bricks';
+                            break;
+                        default:
+                            typeIcon = 'bi-briefcase';
+                    }
+                    
+                    // Create table row
+                    const row = document.createElement('tr');
+                    
+                    // Add activity buttons
+                    const activityButtons = `
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" title="Edit" onclick="editProject(${project.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" title="View Details" onclick="viewProject(${project.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteProject(${project.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Set row content
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${project.project_name}</td>
+                        <td>
+                            <span class="project-type-tag ${project.project_type.toLowerCase()}">
+                                <i class="bi ${typeIcon}"></i>
+                                ${project.project_type}
+                            </span>
+                        </td>
+                        <td>${project.client_name}</td>
+                        <td>${formattedDate}</td>
+                        <td>${formattedAmount}${remainingAmountHtml}</td>
+                        <td>${project.payment_mode}</td>
+                        <td><span class="stage-badge">${project.project_stage}</span></td>
+                        <td>${activityButtons}</td>
+                    `;
+                    
+                    // Add row to table
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Function to show notification
+            function showNotification(message, type = 'info', duration = 4000) {
+                const toastContainer = document.getElementById('toastContainer');
+                
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = `toast-notification ${type}`;
+                
+                // Get icon based on type
+                let icon = '';
+                let title = '';
+                
+                switch(type) {
+                    case 'success':
+                        icon = 'bi-check-circle-fill';
+                        title = 'Success';
+                        break;
+                    case 'error':
+                        icon = 'bi-x-circle-fill';
+                        title = 'Error';
+                        break;
+                    case 'warning':
+                        icon = 'bi-exclamation-triangle-fill';
+                        title = 'Warning';
+                        break;
+                    case 'info':
+                    default:
+                        icon = 'bi-info-circle-fill';
+                        title = 'Information';
+                        break;
+                }
+                
+                // Set toast content
+                toast.innerHTML = `
+                    <div class="toast-icon">
+                        <i class="bi ${icon}"></i>
+                    </div>
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button class="toast-close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div class="toast-progress">
+                        <div class="toast-progress-bar"></div>
+                    </div>
+                `;
+                
+                // Add to container
+                toastContainer.appendChild(toast);
+                
+                // Animate progress bar
+                const progressBar = toast.querySelector('.toast-progress-bar');
+                progressBar.style.transition = `width ${duration}ms linear`;
+                
+                // Show toast with a small delay for animation
+                setTimeout(() => {
+                    toast.classList.add('show');
+                    requestAnimationFrame(() => {
+                        progressBar.style.width = '0%';
+                    });
+                }, 10);
+                
+                // Set up close button
+                const closeBtn = toast.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => {
+                    removeToast(toast);
+                });
+                
+                // Auto close after duration
+                const timeoutId = setTimeout(() => {
+                    removeToast(toast);
+                }, duration);
+                
+                // Store timeout ID on the element
+                toast.dataset.timeoutId = timeoutId;
+                
+                // Function to remove toast
+                function removeToast(toast) {
+                    // Clear the timeout
+                    clearTimeout(parseInt(toast.dataset.timeoutId));
+                    
+                    // Remove show class
+                    toast.classList.remove('show');
+                    
+                    // Remove element after animation
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }
+            }
+            
+            // Expose functions to global scope for button onclick handlers
+            window.editProject = function(id) {
+                // Reset any previous form state
+                document.getElementById('addProjectForm').reset();
+                
+                // Reset modal title and button
+                document.getElementById('addProjectModalLabel').innerHTML = 
+                    '<i class="bi bi-pencil-square text-primary me-2"></i> Edit Project Data';
+                
+                // Send AJAX request to get project details
+                const formData = new FormData();
+                formData.append('action', 'get');
+                formData.append('id', id);
+                
+                fetch('payouts.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Ensure any existing Bootstrap modal is hidden first
+                        const existingModals = document.querySelectorAll('.modal.show');
+                        existingModals.forEach(modal => {
+                            const bsModal = bootstrap.Modal.getInstance(modal);
+                            if (bsModal) bsModal.hide();
+                        });
+                        
+                        // Remove any existing backdrops
+                        const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+                        existingBackdrops.forEach(backdrop => {
+                            backdrop.remove();
+                        });
+                        
+                        // Small delay to ensure previous modals are fully closed
+                        setTimeout(() => {
+                            // Reset stages container to just one stage
+                            const stagesContainer = document.getElementById('stagesContainer');
+                            if (stagesContainer) {
+                                // Keep only the first stage
+                                const firstStage = stagesContainer.querySelector('.project-stage[data-stage-index="0"]');
+                                if (firstStage) {
+                                    stagesContainer.innerHTML = '';
+                                    stagesContainer.appendChild(firstStage);
+                                    
+                                    // Hide remove button for the first stage
+                                    const removeBtn = firstStage.querySelector('.remove-stage-btn');
+                                    if (removeBtn) {
+                                        removeBtn.style.display = 'none';
+                                    }
+                                }
+                            }
+                            
+                            // Populate form with project data
+                            document.getElementById('projectName').value = data.project.project_name;
+                            document.getElementById('projectType').value = data.project.project_type;
+                            document.getElementById('clientName').value = data.project.client_name;
+                            document.getElementById('projectDate_0').value = data.project.project_date;
+                            document.getElementById('amount_0').value = data.project.amount;
+                            document.getElementById('projectStage_0').value = data.project.project_stage;
+                            
+                            // Handle remaining amount
+                            const remainingAmount = data.project.remaining_amount || 0;
+                            if (remainingAmount > 0) {
+                                const checkbox = document.getElementById('hasRemainingAmount_0');
+                                const container = document.getElementById('remainingAmountContainer_0');
+                                const input = document.getElementById('remainingAmount_0');
+                                
+                                if (checkbox) checkbox.checked = true;
+                                if (container) container.style.display = 'flex';
+                                if (input) input.value = remainingAmount;
+                            }
+                            
+                            // Handle payment modes
+                            const paymentModesContainer = document.getElementById('paymentModesContainer_0');
+                            if (paymentModesContainer) {
+                                // Clear existing payment modes
+                                paymentModesContainer.innerHTML = '';
+                                
+                                // Parse payment modes from string (format: "Mode1 (₹amount1), Mode2 (₹amount2)")
+                                const paymentModeString = data.project.payment_mode;
+                                let paymentModes = [];
+                                
+                                if (paymentModeString.includes(',')) {
+                                    // Multiple payment modes
+                                    paymentModes = paymentModeString.split(',').map(item => item.trim());
+                                } else {
+                                    // Single payment mode
+                                    paymentModes = [paymentModeString.trim()];
+                                }
+                                
+                                // Add each payment mode
+                                paymentModes.forEach(modeString => {
+                                    // Extract mode and amount
+                                    let mode = modeString;
+                                    let amount = '';
+                                    
+                                    const match = modeString.match(/(.+?)\s*\(₹(.+?)\)/);
+                                    if (match) {
+                                        mode = match[1].trim();
+                                        amount = match[2].trim();
+                                    }
+                                    
+                                    // Create payment mode entry
+                                    const entryDiv = document.createElement('div');
+                                    entryDiv.className = 'payment-mode-entry mb-2';
+                                    
+                                    // Create content
+                                    entryDiv.innerHTML = `
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <select class="form-select payment-mode-select" name="paymentMode_0[]" required>
+                                                <option value="" disabled>Select Payment Mode</option>
+                                                <option value="UPI" ${mode === 'UPI' ? 'selected' : ''}>UPI</option>
+                                                <option value="Net Banking" ${mode === 'Net Banking' ? 'selected' : ''}>Net Banking</option>
+                                                <option value="Credit Card" ${mode === 'Credit Card' ? 'selected' : ''}>Credit Card</option>
+                                                <option value="Debit Card" ${mode === 'Debit Card' ? 'selected' : ''}>Debit Card</option>
+                                                <option value="Cash" ${mode === 'Cash' ? 'selected' : ''}>Cash</option>
+                                                <option value="Cheque" ${mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
+                                                <option value="Bank Transfer" ${mode === 'Bank Transfer' ? 'selected' : ''}>Bank Transfer</option>
+                                            </select>
+                                            <div class="input-group" style="max-width: 150px;">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" class="form-control payment-amount" name="paymentAmount_0[]" min="0" step="0.01" required placeholder="Amount" value="${amount}">
+                                            </div>
+                                            ${paymentModes.length > 1 ? `
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-payment-btn">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            ` : ''}
+                                        </div>
+                                    `;
+                                    
+                                    // Add to container
+                                    paymentModesContainer.appendChild(entryDiv);
+                                    
+                                    // Add event listener for remove button
+                                    const removeBtn = entryDiv.querySelector('.remove-payment-btn');
+                                    if (removeBtn) {
+                                        removeBtn.addEventListener('click', function() {
+                                            entryDiv.remove();
+                                            updateTotalAmount(0);
+                                        });
+                                    }
+                                    
+                                    // Add event listener for amount changes
+                                    const amountInput = entryDiv.querySelector('.payment-amount');
+                                    if (amountInput) {
+                                        amountInput.addEventListener('input', function() {
+                                            updateTotalAmount(0);
+                                        });
+                                    }
+                                });
+                            }
+                            
+                            // Change save button to update
+                            const saveBtn = document.getElementById('saveProjectBtn');
+                            saveBtn.innerHTML = '<i class="bi bi-save me-1"></i> Update Project';
+                            saveBtn.dataset.mode = 'update';
+                            saveBtn.dataset.id = id;
+                            
+                            // Keep the "Add Stage" button visible in edit mode
+                            const addStageBtn = document.getElementById('addStageBtn');
+                            if (addStageBtn) {
+                                addStageBtn.style.display = 'block';
+                            }
+                            
+                            console.log('Set button to update mode with ID:', id);
+                            
+                            // Show modal
+                            const addProjectModal = new bootstrap.Modal(document.getElementById('addProjectModal'), {
+                                backdrop: 'static',
+                                keyboard: false
+                            });
+                            addProjectModal.show();
+                            
+                            // Ensure form inputs are in front
+                            document.querySelectorAll('.modal .form-control, .modal .form-select').forEach(input => {
+                                input.style.zIndex = '1065';
+                            });
+                        }, 300);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while fetching project details.', 'error');
+                });
+            };
+            
+            window.viewProject = function(id) {
+                // Send AJAX request to get project details
+                const formData = new FormData();
+                formData.append('action', 'get');
+                formData.append('id', id);
+                
+                fetch('payouts.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Get project data
+                        const project = data.project;
+                        
+                        // Set modal title
+                        document.getElementById('viewProjectTitle').textContent = project.project_name;
+                        
+                        // Fill in project details
+                        document.getElementById('viewProjectName').textContent = project.project_name;
+                        
+                        // Set project type with badge
+                        const projectTypeEl = document.getElementById('viewProjectType');
+                        let typeIcon = '';
+                        switch(project.project_type.toLowerCase()) {
+                            case 'architecture':
+                                typeIcon = 'bi-building';
+                                break;
+                            case 'interior':
+                                typeIcon = 'bi-house-door';
+                                break;
+                            case 'construction':
+                                typeIcon = 'bi-bricks';
+                                break;
+                            default:
+                                typeIcon = 'bi-briefcase';
+                        }
+                        projectTypeEl.innerHTML = `
+                            <span class="detail-badge ${project.project_type.toLowerCase()}" style="box-shadow: 0 3px 8px rgba(0,0,0,0.15); transform: translateY(-2px);">
+                                <i class="bi ${typeIcon}"></i>
+                                ${project.project_type}
+                            </span>
+                        `;
+                        
+                        // Set client name
+                        document.getElementById('viewClientName').textContent = project.client_name;
+                        
+                        // Set amount with formatting
+                        const formattedAmount = new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR'
+                        }).format(project.amount);
+                        document.getElementById('viewAmount').innerHTML = `<span style="background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 1.4rem;">${formattedAmount}</span>`;
+                        
+                        // Check for remaining amount
+                        const remainingAmount = parseFloat(project.remaining_amount) || 0;
+                        if (remainingAmount > 0) {
+                            const remainingAmountSection = document.getElementById('remainingAmountSection');
+                            const viewRemainingAmount = document.getElementById('viewRemainingAmount');
+                            
+                            if (remainingAmountSection) remainingAmountSection.style.display = 'block';
+                            if (viewRemainingAmount) {
+                                const formattedRemainingAmount = new Intl.NumberFormat('en-IN', {
+                                    style: 'currency',
+                                    currency: 'INR'
+                                }).format(remainingAmount);
+                                viewRemainingAmount.textContent = formattedRemainingAmount;
+                            }
+                        } else {
+                            const remainingAmountSection = document.getElementById('remainingAmountSection');
+                            if (remainingAmountSection) remainingAmountSection.style.display = 'none';
+                        }
+                        
+                        // Set payment mode(s)
+                        const paymentModeEl = document.getElementById('viewPaymentMode');
+                        const paymentModeString = project.payment_mode;
+                        
+                        if (paymentModeString.includes(',')) {
+                            // Multiple payment modes
+                            const paymentModes = paymentModeString.split(',').map(item => item.trim());
+                            
+                            // Create a list of payment modes
+                            const paymentModesList = document.createElement('ul');
+                            paymentModesList.className = 'list-group';
+                            
+                            paymentModes.forEach(modeString => {
+                                const listItem = document.createElement('li');
+                                listItem.className = 'list-group-item d-flex justify-content-between align-items-center p-2';
+                                
+                                // Extract mode and amount
+                                let mode = modeString;
+                                let amount = '';
+                                
+                                const match = modeString.match(/(.+?)\s*\(₹(.+?)\)/);
+                                if (match) {
+                                    mode = match[1].trim();
+                                    amount = match[2].trim();
+                                    
+                                    // Create mode badge
+                                    let badgeClass = 'bg-secondary';
+                                    if (mode === 'UPI') badgeClass = 'bg-success';
+                                    if (mode === 'Cash') badgeClass = 'bg-warning text-dark';
+                                    if (mode === 'Credit Card' || mode === 'Debit Card') badgeClass = 'bg-info';
+                                    if (mode === 'Bank Transfer') badgeClass = 'bg-primary';
+                                    if (mode === 'Cheque') badgeClass = 'bg-danger';
+                                    
+                                    listItem.innerHTML = `
+                                        <span><span class="badge ${badgeClass} me-2">${mode}</span></span>
+                                        <span class="fw-bold">₹${parseFloat(amount).toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                                    `;
+                                } else {
+                                    listItem.textContent = modeString;
+                                }
+                                
+                                paymentModesList.appendChild(listItem);
+                            });
+                            
+                            // Clear and append the list
+                            paymentModeEl.innerHTML = '';
+                            paymentModeEl.appendChild(paymentModesList);
+                        } else {
+                            // Single payment mode
+                            const modeString = paymentModeString.trim();
+                            let mode = modeString;
+                            let amount = '';
+                            
+                            const match = modeString.match(/(.+?)\s*\(₹(.+?)\)/);
+                            if (match) {
+                                mode = match[1].trim();
+                                amount = match[2].trim();
+                                
+                                // Create mode badge
+                                let badgeClass = 'bg-secondary';
+                                if (mode === 'UPI') badgeClass = 'bg-success';
+                                if (mode === 'Cash') badgeClass = 'bg-warning text-dark';
+                                if (mode === 'Credit Card' || mode === 'Debit Card') badgeClass = 'bg-info';
+                                if (mode === 'Bank Transfer') badgeClass = 'bg-primary';
+                                if (mode === 'Cheque') badgeClass = 'bg-danger';
+                                
+                                paymentModeEl.innerHTML = `
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><span class="badge ${badgeClass}">${mode}</span></span>
+                                        <span class="fw-bold">₹${parseFloat(amount).toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                                    </div>
+                                `;
+                            } else {
+                                paymentModeEl.textContent = modeString;
+                            }
+                        }
+                        
+                        // Set project stage with badge
+                        const projectStageEl = document.getElementById('viewProjectStage');
+                        projectStageEl.innerHTML = `
+                            <span class="detail-stage" style="box-shadow: 0 3px 8px rgba(67, 97, 238, 0.2); animation: pulse 2s infinite;">
+                                <i class="bi bi-diagram-3"></i>
+                                ${project.project_stage}
+                            </span>
+                        `;
+                        
+                        // Add pulse animation style if it doesn't exist
+                        if (!document.getElementById('pulseAnimation')) {
+                            const styleEl = document.createElement('style');
+                            styleEl.id = 'pulseAnimation';
+                            styleEl.textContent = `
+                                @keyframes pulse {
+                                    0% { transform: scale(1); }
+                                    50% { transform: scale(1.05); }
+                                    100% { transform: scale(1); }
+                                }
+                            `;
+                            document.head.appendChild(styleEl);
+                        }
+                        
+                        // Set manager payout data based on project type
+                        const amount = parseFloat(project.amount);
+                        const projectType = project.project_type.toLowerCase();
+                        
+                        // Set commission rate based on project type
+                        let totalCommissionRate = 0;
+                        if (projectType === 'architecture' || projectType === 'interior') {
+                            totalCommissionRate = 5; // 5% for Architecture and Interior
+                        } else if (projectType === 'construction') {
+                            totalCommissionRate = 3; // 3% for Construction
+                        }
+                        
+                        // Display project type and commission rate
+                        const projectTypeDisplay = document.getElementById('projectTypeDisplay');
+                        projectTypeDisplay.textContent = project.project_type;
+                        
+                        // Set badge color based on project type
+                        if (projectType === 'architecture') {
+                            projectTypeDisplay.className = 'badge bg-primary';
+                        } else if (projectType === 'interior') {
+                            projectTypeDisplay.className = 'badge bg-info';
+                        } else if (projectType === 'construction') {
+                            projectTypeDisplay.className = 'badge bg-success';
+                        }
+                        
+                        // Display individual commission rate
+                        document.getElementById('totalCommissionRate').textContent = `${totalCommissionRate}%`;
+                        
+                        // Filter eligible managers based on project type
+                        let eligibleManagers = [];
+                        if (window.seniorManagers && window.seniorManagers.length > 0) {
+                            if (projectType === 'construction') {
+                                // For Construction projects, exclude Senior Manager (Studio)
+                                eligibleManagers = window.seniorManagers.filter(manager => 
+                                    !manager.role || !manager.role.includes('Studio')
+                                );
+                            } else {
+                                // For Architecture and Interior, include all senior managers
+                                eligibleManagers = window.seniorManagers;
+                            }
+                        }
+                        
+                        // Each manager gets the full commission rate (not divided)
+                        const managersCount = eligibleManagers.length;
+                        const individualPayoutPercent = totalCommissionRate; // Each gets full 5% or 3%
+                        const individualPayoutAmount = amount * (individualPayoutPercent / 100); // Calculate based on full project amount
+                        
+                        // Calculate and display total combined payout amount (all managers)
+                        const totalCombinedPayout = individualPayoutAmount * managersCount;
+                        document.getElementById('totalPayoutAmount').textContent = 
+                            `₹${totalCombinedPayout.toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+                        
+                        // Display managers and their payouts
+                        const managersContainer = document.getElementById('managersContainer');
+                        
+                        if (eligibleManagers.length > 0) {
+                            // Clear previous content
+                            managersContainer.innerHTML = '';
+                            
+                            // Fetch existing payment statuses for this project
+                            const paymentStatusPromises = eligibleManagers.map(manager => {
+                                const formData = new FormData();
+                                formData.append('action', 'get_payment_status');
+                                formData.append('project_id', project.id);
+                                formData.append('manager_id', manager.id);
+                                
+                                return fetch('payouts.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    return {
+                                        managerId: manager.id,
+                                        status: data.success ? data.status : 'pending'
+                                    };
+                                })
+                                .catch(() => {
+                                    return {
+                                        managerId: manager.id,
+                                        status: 'pending'
+                                    };
+                                });
+                            });
+                            
+                            // Wait for all payment status requests to complete
+                            Promise.all(paymentStatusPromises).then(paymentStatuses => {
+                                // Create a map of manager IDs to payment statuses
+                                const paymentStatusMap = {};
+                                paymentStatuses.forEach(item => {
+                                    paymentStatusMap[item.managerId] = item.status;
+                                });
+                                
+                                // Add each eligible manager
+                                eligibleManagers.forEach((manager, index) => {
+                                    const managerCard = document.createElement('div');
+                                    managerCard.className = 'manager-card';
+                                    
+                                    // Get payment status for this manager
+                                    const paymentStatus = paymentStatusMap[manager.id] || 'pending';
+                                
+                                // Get profile image URL or use default profile image
+                                const profileImgUrl = manager.profile_image || 'assets/images/default-profile.png';
+                                
+                                // Log profile image path for debugging
+                                console.log(`Manager ${manager.username} profile image path:`, profileImgUrl);
+                                
+                                // Set role badge color
+                                let roleBadgeClass = 'bg-primary';
+                                if (manager.role && manager.role.includes('Site')) {
+                                    roleBadgeClass = 'bg-success';
+                                } else if (manager.role && manager.role.includes('Studio')) {
+                                    roleBadgeClass = 'bg-info';
+                                }
+                                
+                                managerCard.innerHTML = `
+                                    <div class="manager-info">
+                                        <div class="manager-avatar me-3">
+                                            <img src="${profileImgUrl ? profileImgUrl.startsWith('http') ? profileImgUrl : (profileImgUrl === 'assets/images/default-profile.png' ? profileImgUrl : 'uploads/profile/' + profileImgUrl) : 'assets/images/default-profile.png'}" 
+                                                class="rounded-circle" width="50" height="50" alt="Manager" 
+                                                onerror="this.src='assets/images/default-profile.png'; this.onerror=null;">
+                                        </div>
+                                        <div class="manager-details">
+                                            <div class="fw-bold">${manager.username}</div>
+                                            <div class="small mb-1">
+                                                <span class="badge ${roleBadgeClass} me-1">${manager.role || 'Senior Manager'}</span>
+                                            </div>
+                                            <div class="small text-muted">
+                                                ${manager.designation || 'Senior Manager'} | 
+                                                ${manager.department || 'Management'}
+                                            </div>
+                                            <div class="small fw-bold mt-1">
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-person-badge me-1"></i>
+                                                    ID: ${manager.employee_id || 'N/A'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="payout-info">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="payout-status">
+                                                <span class="badge ${paymentStatus === 'approved' ? 'bg-success' : 'bg-warning'} status-badge" data-manager-id="${manager.id}" data-project-id="${project.id}">
+                                                    <i class="bi ${paymentStatus === 'approved' ? 'bi-check-circle' : 'bi-clock'} me-1"></i>
+                                                    ${paymentStatus === 'approved' ? 'Approved' : 'Pending'}
+                                                </span>
+                                            </div>
+                                            <div class="payout-percent">
+                                                Commission: ${individualPayoutPercent.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <button class="btn btn-sm ${paymentStatus === 'approved' ? 'btn-outline-success' : 'btn-success'} paid-btn" 
+                                                data-manager-id="${manager.id}" 
+                                                data-project-id="${project.id}"
+                                                data-amount="${individualPayoutAmount}"
+                                                data-commission-rate="${individualPayoutPercent}"
+                                                ${paymentStatus === 'approved' ? 'disabled' : ''}>
+                                                <i class="bi ${paymentStatus === 'approved' ? 'bi-check-circle-fill' : 'bi-check-circle'} me-1"></i>
+                                                ${paymentStatus === 'approved' ? 'Paid' : 'Mark as Paid'}
+                                            </button>
+                                            <div class="payout-amount">
+                                                ₹${individualPayoutAmount.toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                managersContainer.appendChild(managerCard);
+                                });
+                            });
+                        } else {
+                            // No eligible managers
+                            managersContainer.innerHTML = `
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-person-x fs-3 d-block mb-2"></i>
+                                    No eligible managers found
+                                </div>
+                            `;
+                        }
+                        
+                        // Format and set dates
+                        const projectDate = new Date(project.project_date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        document.getElementById('viewProjectDate').textContent = projectDate;
+                        
+                        if (project.created_at) {
+                            const createdDate = new Date(project.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            document.getElementById('viewCreatedAt').textContent = createdDate;
+                        } else {
+                            document.getElementById('viewCreatedAt').textContent = 'N/A';
+                        }
+                        
+                        if (project.updated_at) {
+                            const updatedDate = new Date(project.updated_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            document.getElementById('viewUpdatedAt').textContent = updatedDate;
+                        } else {
+                            document.getElementById('viewUpdatedAt').textContent = 'N/A';
+                        }
+                        
+                        // Show modal with animation
+                        const modalElement = document.getElementById('viewProjectModal');
+                        
+                        // Add entrance animation style
+                        modalElement.querySelector('.modal-content').style.transform = 'translateY(-50px)';
+                        modalElement.querySelector('.modal-content').style.opacity = '0';
+                        modalElement.querySelector('.modal-content').style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
+                        
+                        const viewProjectModal = new bootstrap.Modal(modalElement);
+                        viewProjectModal.show();
+                        
+                        // Trigger animation after modal is shown
+                        modalElement.addEventListener('shown.bs.modal', function() {
+                            setTimeout(() => {
+                                modalElement.querySelector('.modal-content').style.transform = 'translateY(0)';
+                                modalElement.querySelector('.modal-content').style.opacity = '1';
+                            }, 50);
+                            
+                            // Add event listeners to all "Mark as Paid" buttons
+                            document.querySelectorAll('.paid-btn').forEach(button => {
+                                button.addEventListener('click', function() {
+                                    const managerId = this.dataset.managerId;
+                                    const projectId = this.dataset.projectId;
+                                    const statusBadge = document.querySelector(`.status-badge[data-manager-id="${managerId}"][data-project-id="${projectId}"]`);
+                                    
+                                    // Get the amount and commission rate from the data attributes
+                                    const amount = parseFloat(this.dataset.amount || 0);
+                                    const commissionRate = parseFloat(this.dataset.commissionRate || 0);
+                                    
+                                    // Send AJAX request to update payment status
+                                    const formData = new FormData();
+                                    formData.append('action', 'update_payment_status');
+                                    formData.append('project_id', projectId);
+                                    formData.append('manager_id', managerId);
+                                    formData.append('amount', amount);
+                                    formData.append('commission_rate', commissionRate);
+                                    formData.append('status', 'approved');
+                                    
+                                    fetch('payouts.php', {
+                                        method: 'POST',
+                                        body: formData
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            // Change status badge
+                                            if (statusBadge) {
+                                                statusBadge.classList.remove('bg-warning');
+                                                statusBadge.classList.add('bg-success');
+                                                statusBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i>Approved';
+                                            }
+                                            
+                                            // Disable the button
+                                            this.disabled = true;
+                                            this.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Paid';
+                                            this.classList.add('btn-outline-success');
+                                            this.classList.remove('btn-success');
+                                            
+                                            // Show success notification
+                                            showNotification(`Payment approved for manager ID: ${managerId}`, 'success');
+                                            
+                                            console.log(`Payment marked as approved for Manager ID: ${managerId}, Project ID: ${projectId}`);
+                                        } else {
+                                            showNotification(data.message || 'Failed to update payment status', 'error');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error updating payment status:', error);
+                                        showNotification('An error occurred while updating the payment status', 'error');
+                                    });
+                                });
+                            });
+                        }, {once: true});
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while fetching project details.', 'error');
+                });
+            };
+            
+            // Custom confirmation dialog
+            const confirmationModal = document.getElementById('confirmationModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            let currentDeleteId = null;
+            let confirmCallback = null;
+            
+            // Function to show confirmation dialog
+            function showConfirmation(message, callback) {
+                const confirmationBody = document.querySelector('.confirmation-body');
+                
+                // Update message if provided and element exists
+                if (message && confirmationBody) {
+                    confirmationBody.textContent = message;
+                }
+                
+                // Store callback
+                confirmCallback = callback;
+                
+                // Show modal
+                confirmationModal.classList.add('show');
+            }
+            
+            // Cancel button handler
+            cancelDeleteBtn.addEventListener('click', function() {
+                confirmationModal.classList.remove('show');
+                currentDeleteId = null;
+                confirmCallback = null;
             });
+            
+            // Confirm button handler
+            confirmDeleteBtn.addEventListener('click', function() {
+                confirmationModal.classList.remove('show');
+                if (typeof confirmCallback === 'function') {
+                    confirmCallback(true);
+                }
+                currentDeleteId = null;
+                confirmCallback = null;
+            });
+            
+            // Close modal when clicking outside
+            confirmationModal.addEventListener('click', function(e) {
+                if (e.target === confirmationModal) {
+                    confirmationModal.classList.remove('show');
+                    currentDeleteId = null;
+                    confirmCallback = null;
+                }
+            });
+            
+            // Add call to update overview cards when deleting a project
+            function deleteProjectAndUpdateUI(id) {
+                deleteProjectById(id);
+                // Update overview cards after deletion
+                setTimeout(() => {
+                    updateOverviewCards();
+                }, 500);
+            }
+            
+            window.deleteProject = function(id) {
+                // Ensure the confirmation modal exists in the DOM
+                if (!document.getElementById('confirmationModal')) {
+                    console.error('Confirmation modal not found in the DOM');
+                    // Fallback to browser confirm if our modal isn't available
+                    if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+                        deleteProjectAndUpdateUI(id);
+                    }
+                    return;
+                }
+                
+                currentDeleteId = id;
+                showConfirmation('Are you sure you want to delete this project? This action cannot be undone.', function(confirmed) {
+                    if (confirmed) {
+                        deleteProjectAndUpdateUI(id);
+                    }
+                });
+            };
+            
+            // Function to handle the actual project deletion
+            function deleteProjectById(id) {
+                // Send AJAX request to delete project
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('id', id);
+                
+                fetch('payouts.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove project from array
+                        projectData = projectData.filter(project => project.id != id);
+                        
+                        // Update table
+                        updateProjectTable();
+                        
+                        showNotification(data.message, 'success');
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while deleting the project.', 'error');
+                });
+            }
         });
     </script>
 </body>

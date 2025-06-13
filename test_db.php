@@ -1,62 +1,93 @@
 <?php
-// Test database connectivity
-require_once 'config/db_connect.php';
+// Enable error reporting
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Check if connection is successful
-echo "Database connection: " . ($conn ? "Success" : "Failed") . "<br>";
+echo "<h1>Database Connection Test</h1>";
 
-// Check attendance table structure
-$result = $conn->query('SHOW COLUMNS FROM attendance');
-if ($result) {
-    echo "<h3>Attendance Table Structure:</h3>";
-    echo "<table border='1'>";
-    echo "<tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
-    
-    while($row = $result->fetch_assoc()) {
-        echo "<tr>";
-        echo "<td>" . $row['Field'] . "</td>";
-        echo "<td>" . $row['Type'] . "</td>";
-        echo "<td>" . $row['Null'] . "</td>";
-        echo "<td>" . $row['Key'] . "</td>";
-        echo "<td>" . $row['Default'] . "</td>";
-        echo "<td>" . $row['Extra'] . "</td>";
-        echo "</tr>";
-    }
-    
-    echo "</table>";
-} else {
-    echo "Error checking table structure: " . $conn->error;
-}
+try {
+    // Database connection parameters
+    $host = 'localhost';
+    $dbname = 'crm';
+    $username = 'root';
+    $password = '';
 
-// Check recent attendance records
-$records_result = $conn->query('SELECT * FROM attendance ORDER BY id DESC LIMIT 5');
-if ($records_result) {
-    echo "<h3>Recent Attendance Records:</h3>";
-    echo "<table border='1'>";
+    // Create PDO connection
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        $username,
+        $password,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false
+        ]
+    );
     
-    // Table headers
-    echo "<tr>";
-    $field_info = $records_result->fetch_fields();
-    foreach ($field_info as $field) {
-        echo "<th>" . $field->name . "</th>";
-    }
-    echo "</tr>";
+    echo "<p style='color:green'>Database connection successful!</p>";
     
-    // Table data
-    while($record = $records_result->fetch_assoc()) {
-        echo "<tr>";
-        foreach ($record as $key => $value) {
-            if ($key == 'punch_in_photo' || $key == 'punch_out_photo') {
-                echo "<td>" . (empty($value) ? "NULL" : "[PHOTO: $value]") . "</td>";
-            } else {
-                echo "<td>" . $value . "</td>";
-            }
+    // Check if project_payouts table exists
+    $stmt = $pdo->query("SHOW TABLES LIKE 'project_payouts'");
+    if ($stmt->rowCount() > 0) {
+        echo "<p style='color:green'>project_payouts table exists!</p>";
+        
+        // Check table structure
+        $stmt = $pdo->query("DESCRIBE project_payouts");
+        echo "<h2>Table Structure:</h2>";
+        echo "<pre>";
+        while ($row = $stmt->fetch()) {
+            print_r($row);
         }
-        echo "</tr>";
+        echo "</pre>";
+        
+        // Try to insert a test record
+        $stmt = $pdo->prepare("
+            INSERT INTO project_payouts (
+                project_name, 
+                project_type, 
+                client_name, 
+                project_date, 
+                amount, 
+                payment_mode, 
+                project_stage
+            ) VALUES (
+                'Test Project',
+                'Architecture',
+                'Test Client',
+                '2023-06-12',
+                1000.00,
+                'Cash',
+                'Stage 1'
+            )
+        ");
+        
+        if ($stmt->execute()) {
+            $id = $pdo->lastInsertId();
+            echo "<p style='color:green'>Test record inserted successfully with ID: $id</p>";
+            
+            // Retrieve the record
+            $stmt = $pdo->prepare("SELECT * FROM project_payouts WHERE id = ?");
+            $stmt->execute([$id]);
+            $record = $stmt->fetch();
+            
+            echo "<h2>Retrieved Record:</h2>";
+            echo "<pre>";
+            print_r($record);
+            echo "</pre>";
+            
+            // Clean up - delete the test record
+            $stmt = $pdo->prepare("DELETE FROM project_payouts WHERE id = ?");
+            $stmt->execute([$id]);
+            echo "<p style='color:green'>Test record deleted successfully</p>";
+        } else {
+            echo "<p style='color:red'>Failed to insert test record</p>";
+        }
+    } else {
+        echo "<p style='color:red'>project_payouts table does not exist!</p>";
     }
     
-    echo "</table>";
-} else {
-    echo "Error checking records: " . $conn->error;
+} catch (PDOException $e) {
+    echo "<p style='color:red'>Database error: " . $e->getMessage() . "</p>";
 }
 ?> 

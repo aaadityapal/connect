@@ -1,0 +1,9 @@
+[14-Jun-2025 15:58:57 Europe/Berlin] Payment request received - Manager ID: 11, Project ID: 13, Amount: 2000
+[14-Jun-2025 15:58:57 Europe/Berlin] Transaction started
+[14-Jun-2025 15:58:57 Europe/Berlin] Calculating remaining amount - Current: 0.00, Payment: 2000, New: 0
+[14-Jun-2025 15:58:57 Europe/Berlin] Project updated successfully - ID: 13, New remaining: 0
+[14-Jun-2025 15:58:57 Europe/Berlin] Payment record inserted - ID: 3
+[14-Jun-2025 15:58:57 Europe/Berlin] Transaction committed successfully
+[14-Jun-2025 15:58:57 Europe/Berlin] Payment request received - Manager ID: 11, Project ID: 13, Amount: 2000
+[14-Jun-2025 15:58:57 Europe/Berlin] Transaction started
+[14-Jun-2025 15:58:57 Europe/Berlin] Duplicate payment detected - aborting

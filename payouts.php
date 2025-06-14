@@ -1,103 +1,26 @@
 <?php
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check if user is logged in and has HR role
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'HR') {
+    // Redirect to login page with error message
+    $_SESSION['error'] = "Access denied. Only HR personnel can access this page.";
+    header("Location: login.php");
+    exit();
+}
+
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Check for required files
-$requiredFiles = [
-    'config/db_connect.php' => file_exists(__DIR__ . '/config/db_connect.php'),
-    'includes/project_payout_functions.php' => file_exists(__DIR__ . '/includes/project_payout_functions.php'),
-    'includes/manager_payment_functions.php' => file_exists(__DIR__ . '/includes/manager_payment_functions.php')
-];
-
 // Include database connection
 require_once __DIR__ . '/config/db_connect.php';
 require_once __DIR__ . '/includes/project_payout_functions.php';
 require_once __DIR__ . '/includes/manager_payment_functions.php';
-
-// Test database connection
-$dbConnectionStatus = "Unknown";
-try {
-    if (isset($pdo)) {
-        $pdo->query("SELECT 1");
-        $dbConnectionStatus = "Connected successfully";
-        
-        // Check if required tables exist
-        $tables = ['project_payouts', 'manager_payments', 'users'];
-        $missingTables = [];
-        
-        foreach ($tables as $table) {
-            try {
-                $stmt = $pdo->query("SELECT 1 FROM $table LIMIT 1");
-                $stmt->execute();
-            } catch (PDOException $e) {
-                $missingTables[] = $table;
-            }
-        }
-        
-        if (!empty($missingTables)) {
-            $dbConnectionStatus = "Connected, but missing tables: " . implode(", ", $missingTables);
-        }
-    } else {
-        $dbConnectionStatus = "PDO object not available";
-    }
-} catch (PDOException $e) {
-    $dbConnectionStatus = "Connection failed: " . $e->getMessage();
-}
-
-// Function to create sample manager payments if none exist
-function createSampleManagerPayments($pdo) {
-    try {
-        // First check if we have any records
-        $stmt = $pdo->query("SELECT COUNT(*) FROM manager_payments");
-        $count = $stmt->fetchColumn();
-        
-        if ($count == 0 && isset($_GET['create_sample_data'])) {
-            // Get project payouts
-            $stmt = $pdo->query("SELECT id, amount, project_type FROM project_payouts LIMIT 10");
-            $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Get senior managers
-            $stmt = $pdo->query("SELECT id FROM users WHERE (role = 'Senior Manager' OR role = 'Senior Manager (Site)' OR role = 'Senior Manager (Studio)') AND status = 'active'");
-            $managers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            if (count($projects) > 0 && count($managers) > 0) {
-                // Insert sample data
-                $stmt = $pdo->prepare("INSERT INTO manager_payments 
-                    (project_id, manager_id, amount, commission_rate, payment_status, created_at, updated_at) 
-                    VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-                
-                $inserted = 0;
-                foreach ($projects as $project) {
-                    foreach ($managers as $manager) {
-                        // Calculate commission based on project type
-                        $commissionRate = ($project['project_type'] == 'Construction') ? 3 : 5;
-                        $amount = $project['amount'] * ($commissionRate / 100);
-                        
-                        // Randomly set some as approved and some as pending
-                        $status = (rand(0, 1) == 1) ? 'approved' : 'pending';
-                        
-                        $stmt->execute([
-                            $project['id'],
-                            $manager['id'],
-                            $amount,
-                            $commissionRate,
-                            $status
-                        ]);
-                        $inserted++;
-                    }
-                }
-                
-                return "Created $inserted sample manager payment records.";
-            }
-            return "No projects or managers found to create sample data.";
-        }
-        return null;
-    } catch (PDOException $e) {
-        return "Error creating sample data: " . $e->getMessage();
-    }
-}
 
 // Function to get all manager payments
 function getAllManagerPayments($pdo) {
@@ -220,9 +143,6 @@ $paymentStatistics = [
 ];
 $managerPaymentSummary = [];
 
-// Check if we need to create sample data
-$sampleDataMessage = createSampleManagerPayments($pdo);
-
 try {
     // Get all project payouts
     $projectPayouts = getAllProjectPayouts($pdo);
@@ -240,36 +160,9 @@ try {
     
     // Get manager payment summary
     $managerPaymentSummary = getManagerPaymentSummary($pdo);
-    
-    // Debug information - will be shown at the top of the page
-    $debugInfo = [
-        'DB Connection' => $dbConnectionStatus,
-        'Required Files' => $requiredFiles,
-        'Required Functions' => [
-            'getAllProjectPayouts' => function_exists('getAllProjectPayouts') ? 'Available' : 'Missing',
-            'getAllManagerPayments' => function_exists('getAllManagerPayments') ? 'Available' : 'Missing',
-            'getManagerPaymentsByManagerId' => function_exists('getManagerPaymentsByManagerId') ? 'Available' : 'Missing',
-            'getManagerPaymentSummary' => function_exists('getManagerPaymentSummary') ? 'Available' : 'Missing',
-            'getPaymentStatistics' => function_exists('getPaymentStatistics') ? 'Available' : 'Missing'
-        ],
-        'Project Payouts Count' => count($projectPayouts),
-        'Senior Managers Count' => count($seniorManagers),
-        'Manager Payments Count' => count($managerPayments),
-        'Payment Statistics' => $paymentStatistics ? 'Available' : 'Not Available',
-        'Manager Payment Summary Count' => count($managerPaymentSummary)
-    ];
 } catch (Exception $e) {
     // Log the error but continue with empty arrays
     error_log("Error fetching data: " . $e->getMessage());
-    
-    // Debug information - will show the error
-    $debugInfo = [
-        'DB Connection' => 'Failed',
-        'Error Message' => $e->getMessage(),
-        'Error Code' => $e->getCode(),
-        'Error File' => $e->getFile(),
-        'Error Line' => $e->getLine()
-    ];
 }
 
 // Handle AJAX requests
@@ -1220,51 +1113,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     <!-- Main Content Section -->
     <div class="main-content" id="mainContent">
-        <?php if (isset($debugInfo)): ?>
-        <div class="alert alert-info mb-3">
-            <h5>Debug Information</h5>
-            <pre><?php print_r($debugInfo); ?></pre>
-            <p>PHP Version: <?php echo phpversion(); ?></p>
-            <p>Server: <?php echo $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'; ?></p>
-            
-            <h5>Data Sample</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>Project Payouts (First 3)</h6>
-                    <pre><?php print_r(array_slice($projectPayouts, 0, 3)); ?></pre>
-                </div>
-                <div class="col-md-6">
-                    <h6>Senior Managers</h6>
-                    <pre><?php print_r($seniorManagers); ?></pre>
-                </div>
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <h1>Manager Payouts</h1>
+                <span class="badge bg-primary" style="font-size: 0.8rem;">
+                    <i class="bi bi-shield-lock me-1"></i>HR Access Only
+                </span>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <h6>Payment Statistics</h6>
-                    <pre><?php print_r($paymentStatistics); ?></pre>
-                </div>
-            </div>
-            
-            <div class="alert alert-warning">
-                <strong>Issue Detected:</strong> The manager_payments table appears to be empty (0 records). 
-                This is why you're seeing zeros in the dashboard.
-                
-                <?php if ($sampleDataMessage): ?>
-                    <div class="mt-2 alert alert-success">
-                        <?php echo $sampleDataMessage; ?> Please refresh the page to see the data.
-                    </div>
-                <?php else: ?>
-                    <div class="mt-3">
-                        <a href="?create_sample_data=1" class="btn btn-primary">Create Sample Data</a>
-                        <small class="text-muted ms-2">Click this button to generate sample manager payment records</small>
-                    </div>
-                <?php endif; ?>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary btn-sm" id="refreshDataBtn">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+                </button>
             </div>
         </div>
-        <?php endif; ?>
         
-        <div class="page-header">
-            <h1>Manager Payouts</h1>
+        <!-- Filter Section -->
+        <div class="card mb-4 border shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h2 class="card-title mb-0">Filter Options</h2>
+                <button class="btn btn-sm btn-outline-secondary" id="resetFiltersBtn">
+                    <i class="bi bi-x-circle me-1"></i> Reset Filters
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="projectTypeFilter" class="form-label">Project Type</label>
+                        <select class="form-select form-select-sm" id="projectTypeFilter">
+                            <option value="all" selected>All Types</option>
+                            <option value="Architecture">Architecture</option>
+                            <option value="Interior">Interior</option>
+                            <option value="Construction">Construction</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="dateRangeFilter" class="form-label">Date Range</label>
+                        <div class="d-flex gap-2">
+                            <div class="flex-grow-1">
+                                <input type="date" class="form-control form-control-sm" id="startDateFilter" placeholder="From">
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="date" class="form-control form-control-sm" id="endDateFilter" placeholder="To">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="paymentStatusFilter" class="form-label">Payment Status</label>
+                        <select class="form-select form-select-sm" id="paymentStatusFilter">
+                            <option value="all" selected>All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="remaining">With Remaining Amount</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="managerFilter" class="form-label">Senior Manager</label>
+                        <select class="form-select form-select-sm" id="managerFilter">
+                            <option value="all" selected>All Managers</option>
+                            <!-- Manager options will be populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div class="row custom-date-range" style="display: none;">
+                    <div class="col-md-3 mb-3">
+                        <label for="startDateFilter" class="form-label">Start Date</label>
+                        <input type="date" class="form-control form-control-sm" id="startDateFilter">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="endDateFilter" class="form-label">End Date</label>
+                        <input type="date" class="form-control form-control-sm" id="endDateFilter">
+                    </div>
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                        <button class="btn btn-sm btn-primary" id="applyCustomDateBtn">
+                            <i class="bi bi-check-circle me-1"></i> Apply Date Range
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Quick Overview Section -->
@@ -1431,9 +1356,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">Project-Based Manager Payouts</h2>
-                <button type="button" class="btn-custom-primary" id="addProjectBtn">
-                    <i class="bi bi-plus-circle"></i> Add Project Data
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn-custom-primary" id="addProjectBtn">
+                        <i class="bi bi-plus-circle"></i> Add Project Data
+                    </button>
+                    <button type="button" class="btn-custom-primary" id="companyStatsBtn">
+                        <i class="bi bi-bar-chart-fill"></i> Company Stats
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <!-- Manager Payouts content will go here -->
@@ -2179,50 +2109,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             let projectData = [];
             
             try {
-                // Debug data loading
-                console.log('Debugging data loading from PHP to JavaScript:');
-                
                 // Try to parse the PHP JSON data
-                const phpDataRaw = '<?php echo addslashes(json_encode($projectPayouts, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
-                console.log('Raw project payouts data:', phpDataRaw);
-                const phpData = JSON.parse(phpDataRaw);
+                const phpData = <?php echo json_encode($projectPayouts, JSON_NUMERIC_CHECK) ?? '[]'; ?>;
                 if (Array.isArray(phpData)) {
                     projectData = phpData;
-                    console.log('Project data loaded:', phpData.length, 'items');
-                } else {
-                    console.error('Project data is not an array:', phpData);
                 }
                 
                 // Get senior managers data
-                const seniorManagersRaw = '<?php echo addslashes(json_encode($seniorManagers, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
-                console.log('Raw senior managers data:', seniorManagersRaw);
-                const seniorManagersData = JSON.parse(seniorManagersRaw);
+                const seniorManagersData = <?php echo json_encode($seniorManagers, JSON_NUMERIC_CHECK) ?? '[]'; ?>;
                 window.seniorManagers = seniorManagersData;
                 console.log('Senior Managers loaded:', seniorManagersData.length);
                 
                 // Get manager payments data
-                const managerPaymentsRaw = '<?php echo addslashes(json_encode($managerPayments, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
-                console.log('Raw manager payments data:', managerPaymentsRaw);
-                const managerPaymentsData = JSON.parse(managerPaymentsRaw);
+                const managerPaymentsData = <?php echo json_encode($managerPayments, JSON_NUMERIC_CHECK) ?? '[]'; ?>;
                 window.managerPayments = managerPaymentsData;
                 console.log('Manager Payments loaded:', managerPaymentsData.length);
                 
                 // Get payment statistics
-                const paymentStatisticsRaw = '<?php echo addslashes(json_encode($paymentStatistics, JSON_NUMERIC_CHECK)) ?? '{}'; ?>';
-                console.log('Raw payment statistics data:', paymentStatisticsRaw);
-                const paymentStatisticsData = JSON.parse(paymentStatisticsRaw);
+                const paymentStatisticsData = <?php echo json_encode($paymentStatistics, JSON_NUMERIC_CHECK) ?? '{}'; ?>;
                 window.paymentStatistics = paymentStatisticsData;
-                console.log('Payment Statistics loaded:', paymentStatisticsData);
                 
                 // Get manager payment summary
-                const managerPaymentSummaryRaw = '<?php echo addslashes(json_encode($managerPaymentSummary, JSON_NUMERIC_CHECK)) ?? '[]'; ?>';
-                console.log('Raw manager payment summary data:', managerPaymentSummaryRaw);
-                const managerPaymentSummaryData = JSON.parse(managerPaymentSummaryRaw);
+                const managerPaymentSummaryData = <?php echo json_encode($managerPaymentSummary, JSON_NUMERIC_CHECK) ?? '[]'; ?>;
                 window.managerPaymentSummary = managerPaymentSummaryData;
                 console.log('Manager Payment Summary loaded:', managerPaymentSummaryData.length);
             } catch (e) {
                 console.error('Error parsing data:', e);
-                console.error('Error details:', e.message, e.stack);
             }
             
             // Initialize the table with data from the database
@@ -2230,6 +2142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             // Calculate and update overview cards
             updateOverviewCards();
+            
+            // Initialize filters
+            initializeFilters();
             
             // Add event listeners for initial payment mode buttons
             document.querySelectorAll('.add-payment-mode-btn').forEach(btn => {
@@ -2288,6 +2203,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     
                     const addProjectModal = new bootstrap.Modal(document.getElementById('addProjectModal'));
                     addProjectModal.show();
+                });
+            }
+            
+            // Company Stats Button functionality
+            const companyStatsBtn = document.getElementById('companyStatsBtn');
+            if (companyStatsBtn) {
+                companyStatsBtn.addEventListener('click', function() {
+                    window.location.href = 'company_stats.php';
                 });
             }
             
@@ -3400,11 +3323,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             align-items: center;
                             justify-content: center;
                         }
-                        .avatar-text-lg {
-                            font-size: 1.5rem;
-                            font-weight: 600;
-                            color: var(--primary-color);
-                        }
+                                .avatar-text-lg {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        /* Filter section styles */
+        .filter-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 50%;
+            background: var(--warning-color);
+            color: white;
+            min-width: 18px;
+            height: 18px;
+            text-align: center;
+            line-height: 1;
+            font-weight: 700;
+            z-index: 1;
+        }
+        
+        .filter-active {
+            border: 2px solid var(--primary-color) !important;
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.3) !important;
+        }
+        
+        .filter-row {
+            transition: all 0.3s ease;
+        }
+        
+        .custom-date-range {
+            transition: all 0.3s ease;
+        }
                     `;
                     document.head.appendChild(styleEl);
                 }
@@ -3777,8 +3731,391 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
             }
             
+            // Function to initialize filters
+            function initializeFilters() {
+                // Populate manager filter dropdown
+                populateManagerFilter();
+                
+                // Add event listeners for filter changes
+                document.getElementById('projectTypeFilter').addEventListener('change', applyFilters);
+                document.getElementById('startDateFilter').addEventListener('change', applyFilters);
+                document.getElementById('endDateFilter').addEventListener('change', applyFilters);
+                document.getElementById('paymentStatusFilter').addEventListener('change', applyFilters);
+                document.getElementById('managerFilter').addEventListener('change', applyFilters);
+                document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+                document.getElementById('refreshDataBtn').addEventListener('click', refreshData);
+                
+                // Set current date as default end date
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                document.getElementById('endDateFilter').value = formattedDate;
+                
+                // Set default start date as 30 days ago
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+                document.getElementById('startDateFilter').value = thirtyDaysAgo.toISOString().split('T')[0];
+            }
+            
+            // Function to populate manager filter dropdown
+            function populateManagerFilter() {
+                const managerFilter = document.getElementById('managerFilter');
+                
+                // Clear existing options except the first one
+                while (managerFilter.options.length > 1) {
+                    managerFilter.remove(1);
+                }
+                
+                // Add managers from the senior managers array
+                if (window.seniorManagers && window.seniorManagers.length > 0) {
+                    window.seniorManagers.forEach(manager => {
+                        const option = document.createElement('option');
+                        option.value = manager.id;
+                        option.textContent = manager.username;
+                        managerFilter.appendChild(option);
+                    });
+                }
+            }
+            
+            // Function to handle date range change
+            function handleDateRangeChange() {
+                const dateRangeFilter = document.getElementById('dateRangeFilter');
+                const customDateRange = document.querySelector('.custom-date-range');
+                
+                if (dateRangeFilter.value === 'custom') {
+                    customDateRange.style.display = 'flex';
+                } else {
+                    customDateRange.style.display = 'none';
+                    applyFilters(); // Apply filters immediately for non-custom ranges
+                }
+            }
+            
+            // Function to reset all filters
+            function resetFilters() {
+                document.getElementById('projectTypeFilter').value = 'all';
+                document.getElementById('paymentStatusFilter').value = 'all';
+                document.getElementById('managerFilter').value = 'all';
+                
+                // Reset date range to default (last 30 days)
+                const today = new Date();
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+                
+                document.getElementById('startDateFilter').value = thirtyDaysAgo.toISOString().split('T')[0];
+                document.getElementById('endDateFilter').value = today.toISOString().split('T')[0];
+                
+                // Remove active filter styling
+                document.querySelectorAll('.form-select, .form-control').forEach(element => {
+                    element.classList.remove('filter-active');
+                });
+                
+                // Remove filter badge from button
+                const resetBtn = document.getElementById('resetFiltersBtn');
+                const existingBadge = resetBtn.querySelector('.filter-badge');
+                if (existingBadge) {
+                    existingBadge.remove();
+                }
+                
+                // Apply filters (reset to show all)
+                applyFilters();
+                
+                // Show notification
+                showNotification('Filters have been reset', 'info');
+            }
+            
+            // Function to refresh data
+            function refreshData() {
+                // Show loading notification
+                showNotification('Refreshing data...', 'info');
+                
+                // Reload the page to get fresh data from the server
+                location.reload();
+            }
+            
+            // Function to apply filters
+            function applyFilters() {
+                const projectTypeFilter = document.getElementById('projectTypeFilter').value;
+                const startDate = document.getElementById('startDateFilter').value;
+                const endDate = document.getElementById('endDateFilter').value;
+                const paymentStatusFilter = document.getElementById('paymentStatusFilter').value;
+                const managerFilter = document.getElementById('managerFilter').value;
+                
+                // Filter the project data
+                const filteredData = projectData.filter(project => {
+                    // Project type filter
+                    if (projectTypeFilter !== 'all' && project.project_type !== projectTypeFilter) {
+                        return false;
+                    }
+                    
+                    // Date range filter
+                    const projectDate = new Date(project.project_date);
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999); // End of the selected day
+                    
+                    if (projectDate < start || projectDate > end) {
+                        return false;
+                    }
+                    
+                    // Payment status filter
+                    if (paymentStatusFilter !== 'all') {
+                        if (paymentStatusFilter === 'remaining' && parseFloat(project.remaining_amount || 0) <= 0) {
+                            return false;
+                        } else if (paymentStatusFilter === 'pending' || paymentStatusFilter === 'approved') {
+                            // Check if any manager payments for this project match the status
+                            if (!window.managerPayments || window.managerPayments.length === 0) {
+                                return false; // No payment data available
+                            }
+                            
+                            const projectPayments = window.managerPayments.filter(payment => 
+                                payment.project_id == project.id && payment.payment_status === paymentStatusFilter
+                            );
+                            
+                            if (projectPayments.length === 0) {
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    // Manager filter
+                    if (managerFilter !== 'all') {
+                        // Check if this project has payments for the selected manager
+                        if (!window.managerPayments || window.managerPayments.length === 0) {
+                            return false; // No payment data available
+                        }
+                        
+                        const managerPayments = window.managerPayments.filter(payment => 
+                            payment.project_id == project.id && payment.manager_id == managerFilter
+                        );
+                        
+                        if (managerPayments.length === 0) {
+                            return false;
+                        }
+                    }
+                    
+                    // All filters passed
+                    return true;
+                });
+                
+                // Update the table with filtered data
+                updateProjectTableWithData(filteredData);
+                
+                // Update overview cards with filtered data
+                updateOverviewCardsWithData(filteredData);
+                
+                // Show filter applied notification
+                const activeFilters = [
+                    projectTypeFilter !== 'all', 
+                    startDate !== '' || endDate !== '', 
+                    paymentStatusFilter !== 'all', 
+                    managerFilter !== 'all'
+                ];
+                const filterCount = activeFilters.filter(Boolean).length;
+                
+                // Update visual indicators for active filters
+                document.getElementById('projectTypeFilter').classList.toggle('filter-active', projectTypeFilter !== 'all');
+                document.getElementById('startDateFilter').classList.toggle('filter-active', startDate !== '');
+                document.getElementById('endDateFilter').classList.toggle('filter-active', endDate !== '');
+                document.getElementById('paymentStatusFilter').classList.toggle('filter-active', paymentStatusFilter !== 'all');
+                document.getElementById('managerFilter').classList.toggle('filter-active', managerFilter !== 'all');
+                
+                // Update the reset filters button with badge
+                const resetBtn = document.getElementById('resetFiltersBtn');
+                let badgeElement = resetBtn.querySelector('.filter-badge');
+                
+                if (filterCount > 0) {
+                    if (!badgeElement) {
+                        badgeElement = document.createElement('span');
+                        badgeElement.className = 'filter-badge';
+                        resetBtn.style.position = 'relative';
+                        resetBtn.appendChild(badgeElement);
+                    }
+                    badgeElement.textContent = filterCount;
+                    
+                    // Show notification
+                    showNotification(`${filterCount} filter${filterCount > 1 ? 's' : ''} applied. Showing ${filteredData.length} project${filteredData.length !== 1 ? 's' : ''}.`, 'info');
+                } else if (badgeElement) {
+                    badgeElement.remove();
+                }
+            }
+            
+            // Function to update project table with specific data
+            function updateProjectTableWithData(data) {
+                const tableBody = document.getElementById('projectTableBody');
+                
+                // Clear existing table content
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    // Show empty state message
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No projects match the selected filters. Try adjusting your filter criteria.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Add each project to the table
+                data.forEach((project, index) => {
+                    // Format the date
+                    const formattedDate = new Date(project.project_date).toLocaleDateString();
+                    
+                    // Format the amount with currency symbol
+                    const formattedAmount = new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR'
+                    }).format(project.amount);
+                    
+                    // Check for remaining amount
+                    const remainingAmount = parseFloat(project.remaining_amount) || 0;
+                    let remainingAmountHtml = '';
+                    if (remainingAmount > 0) {
+                        const formattedRemainingAmount = new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR'
+                        }).format(remainingAmount);
+                        remainingAmountHtml = `<div class="small text-danger fw-bold mt-1">Remaining: ${formattedRemainingAmount}</div>`;
+                    }
+                    
+                    // Get project type icon
+                    let typeIcon = '';
+                    switch(project.project_type.toLowerCase()) {
+                        case 'architecture':
+                            typeIcon = 'bi-building';
+                            break;
+                        case 'interior':
+                            typeIcon = 'bi-house-door';
+                            break;
+                        case 'construction':
+                            typeIcon = 'bi-bricks';
+                            break;
+                        default:
+                            typeIcon = 'bi-briefcase';
+                    }
+                    
+                    // Create table row
+                    const row = document.createElement('tr');
+                    
+                    // Add activity buttons
+                    const activityButtons = `
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" title="Edit" onclick="editProject(${project.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" title="View Details" onclick="viewProject(${project.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteProject(${project.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Set row content
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${project.project_name}</td>
+                        <td>
+                            <span class="project-type-tag ${project.project_type.toLowerCase()}">
+                                <i class="bi ${typeIcon}"></i>
+                                ${project.project_type}
+                            </span>
+                        </td>
+                        <td>${project.client_name}</td>
+                        <td>${formattedDate}</td>
+                        <td>${formattedAmount}${remainingAmountHtml}</td>
+                        <td>${project.payment_mode}</td>
+                        <td><span class="stage-badge">${project.project_stage}</span></td>
+                        <td>${activityButtons}</td>
+                    `;
+                    
+                    // Add row to table
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Function to update overview cards with filtered data
+            function updateOverviewCardsWithData(filteredData) {
+                // Calculate statistics from filtered data
+                let totalAmount = 0;
+                let architectureAmount = 0;
+                let interiorAmount = 0;
+                let constructionAmount = 0;
+                let totalPendingAmount = 0;
+                let pendingProjectsCount = 0;
+                
+                filteredData.forEach(project => {
+                    const amount = parseFloat(project.amount) || 0;
+                    const remainingAmount = parseFloat(project.remaining_amount) || 0;
+                    
+                    totalAmount += amount;
+                    
+                    // Add to specific category based on project type
+                    switch(project.project_type.toLowerCase()) {
+                        case 'architecture':
+                            architectureAmount += amount;
+                            break;
+                        case 'interior':
+                            interiorAmount += amount;
+                            break;
+                        case 'construction':
+                            constructionAmount += amount;
+                            break;
+                    }
+                    
+                    // Calculate pending amounts
+                    if (remainingAmount > 0) {
+                        totalPendingAmount += remainingAmount;
+                        pendingProjectsCount++;
+                    }
+                });
+                
+                // Format currency values
+                const formatCurrency = (value) => {
+                    return new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        maximumFractionDigits: 2
+                    }).format(value);
+                };
+                
+                // Update card values for project types
+                document.getElementById('totalAmountReceived').textContent = formatCurrency(totalAmount);
+                document.getElementById('architectureAmount').textContent = formatCurrency(architectureAmount);
+                document.getElementById('interiorAmount').textContent = formatCurrency(interiorAmount);
+                document.getElementById('constructionAmount').textContent = formatCurrency(constructionAmount);
+                
+                // Update progress bars for project types
+                if (totalAmount > 0) {
+                    const archProgress = document.querySelector('#architectureAmount').closest('.card').querySelector('.progress-bar');
+                    const intProgress = document.querySelector('#interiorAmount').closest('.card').querySelector('.progress-bar');
+                    const constProgress = document.querySelector('#constructionAmount').closest('.card').querySelector('.progress-bar');
+                    
+                    archProgress.style.width = Math.round((architectureAmount / totalAmount) * 100) + '%';
+                    intProgress.style.width = Math.round((interiorAmount / totalAmount) * 100) + '%';
+                    constProgress.style.width = Math.round((constructionAmount / totalAmount) * 100) + '%';
+                }
+                
+                // Update pending amounts card
+                document.getElementById('totalPendingAmount').textContent = formatCurrency(totalPendingAmount);
+                document.getElementById('pendingProjectsCount').textContent = `${pendingProjectsCount} project${pendingProjectsCount !== 1 ? 's' : ''} pending`;
+                document.getElementById('pendingPercentage').textContent = totalAmount > 0 ? 
+                    Math.round((totalPendingAmount / totalAmount) * 100) + '%' : '0%';
+                
+                // For the remaining cards, we'll use the original data as they depend on manager payments
+                // which would require more complex filtering
+            }
+            
             // Function to update project table
             function updateProjectTable() {
+                updateProjectTableWithData(projectData);
+            }
+            
+            // Function to update project table with original data
+            function updateProjectTableWithOriginalData() {
                 const tableBody = document.getElementById('projectTableBody');
                 
                 // Clear existing table content

@@ -1,2 +1,48 @@
 2025-03-21 11:55:28 - Script accessed
 2025-03-21 11:57:52 - Script accessed
+[14-Jun-2025 15:41:44 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:41:44 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:41:44 Europe/Berlin] Exception: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'manager_id' in 'where clause'
+[14-Jun-2025 15:43:55 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:43:55 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:43:55 Europe/Berlin] Exception: Unknown column 'manager_id' in 'where clause'
+[14-Jun-2025 15:44:46 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:44:46 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:46:37 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:46:37 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:50:21 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:50:21 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:54:41 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:54:41 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:54:52 Europe/Berlin] Role: all, Month: 6, Year: 2025, DateFilter:  AND MONTH(project_date) = 6 AND YEAR(project_date) = 2025
+[14-Jun-2025 15:54:52 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:54:53 Europe/Berlin] Role: all, Month: 6, Year: 2025, DateFilter:  AND MONTH(project_date) = 6 AND YEAR(project_date) = 2025
+[14-Jun-2025 15:54:53 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:54:56 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:54:56 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:55:40 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:55:40 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:58:37 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 15:58:37 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 15:58:58 Europe/Berlin] Role: all, Month: 6, Year: 2025, DateFilter:  AND MONTH(project_date) = 6 AND YEAR(project_date) = 2025
+[14-Jun-2025 15:58:58 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:01:31 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:01:31 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:03:03 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:03:03 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:04:15 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:04:15 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:07:55 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:07:55 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:12:59 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:12:59 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:26:22 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:26:22 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:27:05 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:27:05 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:29:19 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:29:19 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:34:59 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:35:00 Europe/Berlin] DB Connection: Connected
+[14-Jun-2025 16:40:14 Europe/Berlin] Role: all, Month: , Year: , DateFilter: 
+[14-Jun-2025 16:40:14 Europe/Berlin] DB Connection: Connected

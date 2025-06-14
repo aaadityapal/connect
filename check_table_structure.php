@@ -1,78 +1,60 @@
 <?php
 // Include database connection
-require_once 'config/db_connect.php';
+include 'config/db_connect.php';
 
-// Turn on error reporting for this debug file
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Set headers for plain text output
+header('Content-Type: text/plain');
 
-// Check for POST request to keep this secure
-$isPostRequest = ($_SERVER['REQUEST_METHOD'] === 'POST');
+// First check if the table exists
+$tableExistsQuery = "SHOW TABLES LIKE 'project_payouts'";
+$tableExistsResult = $conn->query($tableExistsQuery);
 
-// Set content type to JSON
-header('Content-Type: application/json');
-
-// Function to get table structure
-function getTableStructure($pdo, $tableName) {
-    try {
-        // Check if table exists
-        $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
-        $stmt->execute([$tableName]);
-        $tableExists = $stmt->fetch(PDO::FETCH_NUM);
-        
-        if (!$tableExists) {
-            return [
-                'exists' => false,
-                'message' => "Table '{$tableName}' does not exist"
-            ];
-        }
-        
-        // Get table structure
-        $stmt = $pdo->prepare("DESCRIBE {$tableName}");
-        $stmt->execute();
-        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        return [
-            'exists' => true,
-            'columns' => $columns
-        ];
-    } catch (PDOException $e) {
-        return [
-            'exists' => false,
-            'error' => $e->getMessage()
-        ];
+if ($tableExistsResult && $tableExistsResult->num_rows > 0) {
+    echo "Table 'project_payouts' exists.\n\n";
+    
+    // Query to get table structure
+    $query = "SHOW CREATE TABLE project_payouts";
+    $result = $conn->query($query);
+    
+    if ($result && $row = $result->fetch_assoc()) {
+        echo "Table structure:\n\n";
+        echo $row['Create Table'] . "\n\n";
+    } else {
+        echo "Error getting table structure: " . $conn->error . "\n";
     }
+    
+    // Get all columns
+    $columnsQuery = "SELECT * FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'project_payouts'";
+    $columnsResult = $conn->query($columnsQuery);
+    
+    if ($columnsResult) {
+        echo "Columns in project_payouts table:\n\n";
+        while ($column = $columnsResult->fetch_assoc()) {
+            echo "Column: {$column['COLUMN_NAME']}\n";
+            echo "Type: {$column['COLUMN_TYPE']}\n";
+            echo "Nullable: {$column['IS_NULLABLE']}\n";
+            echo "Default: " . ($column['COLUMN_DEFAULT'] === NULL ? 'NULL' : $column['COLUMN_DEFAULT']) . "\n";
+            echo "----------------------------\n";
+        }
+    } else {
+        echo "Error getting columns: " . $conn->error . "\n";
+    }
+} else {
+    echo "Table 'project_payouts' does not exist.\n";
 }
 
-// Check which related tables exist
-$tablesToCheck = [
-    'project_sub_stages',
-    'project_substages',
-    'project_stages',
-    'projects'
-];
+// Check if manager_id column exists
+$query = "SELECT COLUMN_NAME 
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() 
+          AND TABLE_NAME = 'project_payouts' 
+          AND COLUMN_NAME = 'manager_id'";
+$result = $conn->query($query);
 
-$results = [];
-
-// Only proceed if this is a POST request or if in development
-if ($isPostRequest || (isset($_GET['dev']) && $_GET['dev'] === 'true')) {
-    foreach ($tablesToCheck as $tableName) {
-        $results[$tableName] = getTableStructure($pdo, $tableName);
-    }
-    
-    // Check for any row in project_sub_stages
-    if ($results['project_sub_stages']['exists']) {
-        try {
-            $stmt = $pdo->query("SELECT COUNT(*) as count FROM project_sub_stages");
-            $count = $stmt->fetch(PDO::FETCH_ASSOC);
-            $results['project_sub_stages']['row_count'] = $count['count'];
-        } catch (PDOException $e) {
-            $results['project_sub_stages']['row_count_error'] = $e->getMessage();
-        }
-    }
-    
-    echo json_encode($results, JSON_PRETTY_PRINT);
+echo "\n\nChecking for manager_id column:\n";
+if ($result && $result->num_rows > 0) {
+    echo "manager_id column exists in project_payouts table.";
 } else {
-    echo json_encode(['error' => 'Unauthorized access. Use POST request.']);
+    echo "manager_id column does NOT exist in project_payouts table.";
 }
 ?> 

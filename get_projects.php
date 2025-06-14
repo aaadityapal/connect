@@ -1,33 +1,33 @@
 <?php
-session_start();
-require_once 'config.php';
+// Include database connection
+include 'includes/db_connect.php';
+
+// Set headers for JSON response
+header('Content-Type: application/json');
 
 try {
-    $stmt = $pdo->prepare("
-        SELECT 
-            project_name,
-            id,
-            client_name,
-            father_husband_name,
-            mobile,
-            email,
-            location,
-            project_type,
-            total_cost,
-            assigned_to,
-            created_at,
-            status,
-            archived_date
-        FROM projects 
-        WHERE archived_date IS NULL
-        ORDER BY created_at DESC
-    ");
+    // Query to get projects from the database
+    $query = "SELECT p.id, p.project_name, p.project_type, c.client_name 
+              FROM project_payouts p 
+              LEFT JOIN clients c ON p.client_id = c.id 
+              ORDER BY p.project_name ASC";
     
+    $stmt = $conn->prepare($query);
     $stmt->execute();
+    
+    // Fetch all projects
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // Return projects as JSON
     echo json_encode($projects);
 } catch (PDOException $e) {
-    error_log("Error getting projects: " . $e->getMessage());
-    echo json_encode([]);
-} 
+    // Return error message
+    echo json_encode([
+        'error' => true,
+        'message' => 'Database error: ' . $e->getMessage()
+    ]);
+}
+
+// Close connection
+$conn = null;
+?> 

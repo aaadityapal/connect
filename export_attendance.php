@@ -297,19 +297,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
         :root {
             --primary: #4361ee;
             --primary-light: #eef2ff;
+            --primary-dark: #3a56d4;
             --secondary: #3f37c9;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --warning: #f8961e;
-            --info: #4895ef;
-            --dark: #343a40;
-            --light: #f8f9fa;
-            --border: #e9ecef;
-            --text: #212529;
-            --text-muted: #6c757d;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --info: #3b82f6;
+            --info-light: #eff6ff;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --text: #111827;
+            --text-secondary: #4b5563;
+            --text-light: #6b7280;
             --shadow: rgba(0, 0, 0, 0.05);
             --shadow-hover: rgba(0, 0, 0, 0.1);
+            --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
             --sidebar-width: 280px;
+            --border-radius: 10px;
+            --transition: all 0.3s ease;
         }
 
         * {
@@ -324,6 +333,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
+            min-height: 100vh;
+            font-size: 15px;
         }
 
         /* Sidebar Styles */
@@ -483,84 +494,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
         /* Export Form Styles */
         .export-container {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 35px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-card);
             max-width: 800px;
-            margin: 20px auto;
+            margin: 25px auto;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .export-container:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
         }
 
         .page-header {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
         }
 
         .page-header h1 {
             margin: 0;
-            font-size: 1.8rem;
+            font-size: 1.9rem;
             color: var(--text);
-            font-weight: 600;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.5px;
         }
 
         .page-header i {
             color: var(--primary);
+            font-size: 1.75rem;
         }
 
         .back-link {
             text-decoration: none;
-            color: var(--text);
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
             gap: 8px;
             font-weight: 500;
-            margin-right: 20px;
+            margin-right: 25px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            border: 1px solid var(--border);
+            transition: var(--transition);
         }
 
         .back-link:hover {
             color: var(--primary);
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .back-link i {
+            transition: transform 0.2s ease;
+        }
+
+        .back-link:hover i {
+            transform: translateX(-3px);
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 28px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
+            margin-bottom: 10px;
+            font-weight: 600;
             color: var(--text);
+            font-size: 15px;
         }
 
         .form-control {
             width: 100%;
-            padding: 12px 15px;
+            padding: 14px 16px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            transition: all 0.25s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            background-color: var(--light);
         }
 
         .form-control:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
             outline: none;
         }
 
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234b5563' width='24px' height='24px'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        .option-group {
+            padding: 8px 12px;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
         .btn {
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
+            padding: 14px 28px;
+            border-radius: var(--border-radius);
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            letter-spacing: 0.3px;
         }
 
         .btn-primary {
@@ -569,58 +627,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
         }
 
         .btn-primary:hover {
-            background: var(--secondary);
+            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Alert Styles */
         .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 18px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
         }
 
         .alert-success {
-            background-color: #e6f7e6;
-            color: #166534;
-            border-left: 4px solid #22c55e;
+            background-color: var(--success-light);
+            color: var(--success);
+            border-left: 4px solid var(--success);
         }
 
         .alert-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border-left: 4px solid #ef4444;
+            background-color: var(--danger-light);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert i {
+            font-size: 20px;
         }
 
         .download-link {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
+            gap: 10px;
+            padding: 14px 24px;
             background: var(--success);
             color: white;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: 500;
-            margin-top: 15px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            margin-top: 20px;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .download-link:hover {
-            background: #37b6e3;
+            background: #0da271;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
-        /* Option group styles */
-        .option-group {
-            border-top: 1px solid var(--border);
-            font-weight: bold;
-            color: var(--primary);
+        .download-link i {
+            font-size: 18px;
+        }
+
+        form {
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .export-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 30px;
+            right: 30px;
+            height: 10px;
+            background-color: var(--primary);
+            border-radius: 10px 10px 0 0;
+            opacity: 0.8;
+            display: none;
+        }
+
+        .export-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--info) 100%);
+            display: block;
+        }
+
+        form::after {
+            content: '';
+            display: block;
+            margin-top: 30px;
+            height: 1px;
+            background: var(--border);
+            margin-bottom: 20px;
+        }
+
+        select.form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
         }
     </style>
 </head>

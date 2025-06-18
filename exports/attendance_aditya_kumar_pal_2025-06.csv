@@ -1,0 +1,34 @@
+﻿"Employee Name: aditya kumar pal"
+"Month: June 2025"
+
+Date,Day,Status,"Punch In","Punch Out","Shift Time","Overtime Hours","Weekly Off"
+01-06-2025,Sunday,Present,"08:35 AM","07:00 PM",08:30:00,01:00:00,Yes
+02-06-2025,Monday,,,,08:30:00,00:00:00,No
+03-06-2025,Tuesday,Present,"12:01 PM",,09:00:00,00:00:00,No
+04-06-2025,Wednesday,,,,08:30:00,00:00:00,No
+05-06-2025,Thursday,,,,08:30:00,00:00:00,No
+06-06-2025,Friday,,,,08:30:00,00:00:00,No
+07-06-2025,Saturday,,,,08:30:00,00:00:00,No
+08-06-2025,Sunday,,,,08:30:00,00:00:00,No
+09-06-2025,Monday,,,,08:30:00,00:00:00,No
+10-06-2025,Tuesday,,,,08:30:00,00:00:00,No
+11-06-2025,Wednesday,,,,08:30:00,00:00:00,No
+12-06-2025,Thursday,,,,08:30:00,00:00:00,No
+13-06-2025,Friday,,,,08:30:00,00:00:00,No
+14-06-2025,Saturday,,,,08:30:00,00:00:00,No
+15-06-2025,Sunday,,,,08:30:00,00:00:00,No
+16-06-2025,Monday,,,,08:30:00,00:00:00,No
+17-06-2025,Tuesday,,,,08:30:00,00:00:00,No
+18-06-2025,Wednesday,"Not Recorded",,,,,No
+19-06-2025,Thursday,"Not Recorded",,,,,No
+20-06-2025,Friday,"Not Recorded",,,,,No
+21-06-2025,Saturday,"Not Recorded",,,,,No
+22-06-2025,Sunday,"Not Recorded",,,,,No
+23-06-2025,Monday,"Not Recorded",,,,,No
+24-06-2025,Tuesday,"Not Recorded",,,,,No
+25-06-2025,Wednesday,"Not Recorded",,,,,No
+26-06-2025,Thursday,"Not Recorded",,,,,No
+27-06-2025,Friday,"Not Recorded",,,,,No
+28-06-2025,Saturday,"Not Recorded",,,,,No
+29-06-2025,Sunday,"Not Recorded",,,,,No
+30-06-2025,Monday,"Not Recorded",,,,,No

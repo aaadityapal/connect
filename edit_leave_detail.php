@@ -64,6 +64,11 @@ $leave_types_result = $conn->query($leave_types_query);
             --border-color: #e2e8f0;
             --text-color: #1e293b;
             --sidebar-width: 280px;
+            --transition-normal: all 0.3s ease;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --gradient-primary: linear-gradient(145deg, #3b82f6, #2563eb);
         }
 
         * {
@@ -248,43 +253,271 @@ $leave_types_result = $conn->query($leave_types_query);
             }
         }
 
-        /* Your existing styles */
-        .card {
-            border: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-radius: 12px;
+        /* Enhance page header */
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
             margin-bottom: 1.5rem;
+            color: var(--text-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            letter-spacing: -0.5px;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 3px;
+        }
+
+        /* Card styling */
+        .card {
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            box-shadow: var(--shadow-md);
+            border-radius: 16px;
+            margin-bottom: 1.75rem;
+            transition: var(--transition-normal);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
 
         .card-body {
-            padding: 1.5rem;
+            padding: 1.75rem;
         }
 
+        /* Card headers */
+        .card h5 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Status card */
+        .card.mb-4 {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+        }
+
+        .card.mb-4 .card-body {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Status badges */
+        .badge {
+            padding: 0.5rem 0.85rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .badge-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .badge-warning {
+            background-color: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fdba74;
+        }
+
+        .badge-secondary {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        /* Form controls */
         .form-control {
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
-            padding: 0.75rem;
+            padding: 0.85rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         }
 
         .form-control:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        /* Buttons */
         .btn {
             padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+            background: var(--gradient-primary);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
         }
 
         .btn-primary:hover {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
+            background: linear-gradient(145deg, #2563eb, #1d4ed8);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #10b981, #059669);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(145deg, #059669, #047857);
+            box-shadow: 0 6px 12px rgba(5, 150, 105, 0.25);
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(145deg, #dc2626, #b91c1c);
+            box-shadow: 0 6px 12px rgba(220, 38, 38, 0.25);
+        }
+
+        /* Manager and HR Action cards */
+        .card.mt-4 {
+            margin-top: 2rem;
+        }
+
+        .card.mt-4:nth-of-type(1) .card-body {
+            border-left: 4px solid #0369a1;
+        }
+
+        .card.mt-4:nth-of-type(2) .card-body {
+            border-left: 4px solid #a855f7;
+        }
+
+        /* Add subtle animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* Enhanced styling for select dropdowns, especially Leave Type */
+        select.form-control {
+            height:50px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234b5563' width='24px' height='24px'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        select.form-control:hover {
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
+        select.form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            background-color: white;
+        }
+
+        /* Specifically target the leave type dropdown */
+        #leave_type {
+            font-weight: 500;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        #leave_type option {
+            padding: 10px;
+            font-weight: normal;
+        }
+
+        #leave_type option:first-child {
+            font-weight: 600;
+        }
+
+        /* Add a subtle label enhancement */
+        label[for="leave_type"] {
+            color: #1e40af;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label[for="leave_type"]::before {
+            content: '\f073';
+            font-family: 'Font Awesome 5 Free';
+            color: var(--primary-color);
         }
     </style>
 </head>

@@ -69,7 +69,8 @@ $query = "
         a.punch_in_photo,
         a.punch_out_photo,
         a.address as punch_in_address,
-        a.punch_out_address
+        a.punch_out_address,
+        a.work_report
     FROM attendance a
     JOIN users u ON a.user_id = u.id
     LEFT JOIN user_shifts us ON (
@@ -182,12 +183,14 @@ if ($user_id !== 'all') {
     $short_leaves_available = max(0, 2 - $short_leaves_used);
 }
 
-// Calculate working days (excluding weekends)
+// Calculate working days considering user's weekly offs
 $month_start = date('Y-m-01', strtotime($month));
 $month_end = date('Y-m-t', strtotime($month));
 $current_date = $month_start;
 $weekends = 0;
+$user_weekly_offs = 0;
 
+// Default weekend calculation (Saturday and Sunday)
 while (strtotime($current_date) <= strtotime($month_end)) {
     $day_of_week = date('N', strtotime($current_date));
     if ($day_of_week >= 6) { // 6 and 7 are weekend days (Saturday and Sunday)
@@ -196,7 +199,54 @@ while (strtotime($current_date) <= strtotime($month_end)) {
     $current_date = date('Y-m-d', strtotime($current_date . ' +1 day'));
 }
 
-$working_days = $days_in_month - $weekends;
+// For specific user, get their weekly offs and count occurrences in the month
+if ($user_id !== 'all') {
+    // Get weekly offs for the specific user
+    $weekly_offs_query = "
+        SELECT weekly_offs 
+        FROM user_shifts 
+        WHERE user_id = :user_id 
+        AND effective_from <= :end_date
+        AND (effective_to IS NULL OR effective_to >= :start_date)
+        ORDER BY effective_from DESC 
+        LIMIT 1
+    ";
+    
+    $weekly_offs_stmt = $pdo->prepare($weekly_offs_query);
+    $weekly_offs_stmt->execute([
+        'user_id' => $user_id,
+        'start_date' => $month_start,
+        'end_date' => $month_end
+    ]);
+    
+    $weekly_offs_result = $weekly_offs_stmt->fetch();
+    $weekly_offs = $weekly_offs_result ? $weekly_offs_result['weekly_offs'] : '';
+    
+    if (!empty($weekly_offs)) {
+        $weekly_offs_array = explode(',', $weekly_offs);
+        
+        // Reset and count user's weekly offs in this month
+        $current_date = $month_start;
+        $user_weekly_offs = 0;
+        
+        while (strtotime($current_date) <= strtotime($month_end)) {
+            $day_name = date('l', strtotime($current_date));
+            if (in_array($day_name, $weekly_offs_array)) {
+                $user_weekly_offs++;
+            }
+            $current_date = date('Y-m-d', strtotime($current_date . ' +1 day'));
+        }
+        
+        // For a specific user, use their weekly offs instead of default weekends
+        $working_days = $days_in_month - $user_weekly_offs;
+    } else {
+        // If no weekly offs defined, use the default weekend calculation
+        $working_days = $days_in_month - $weekends;
+    }
+} else {
+    // For all users view, use the default weekend calculation
+    $working_days = $days_in_month - $weekends;
+}
 
 if ($user_id === 'all') {
     // Unique users to check full/zero attendance
@@ -1326,8 +1376,40 @@ function formatDecimalToTime($timeString) {
             max-width: 300px;
         }
         
+        /* Excel Export Button */
+        .excel-export-link {
+            display: inline-block;
+            color: #1D6F42; /* Excel green color */
+            transition: transform 0.2s ease;
+        }
+        
+        .excel-export-link:hover {
+            transform: scale(1.2);
+            color: #2E8555;
+        }
+        
+        /* Work Report Column Styling */
+        .work-report-column {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .work-report-column:hover {
+            white-space: normal;
+            overflow: visible;
+            position: relative;
+            z-index: 1;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 5px;
+            border-radius: 4px;
+            max-width: 300px;
+        }
+        
         @media (max-width: 1200px) {
-            .address-column {
+            .address-column, .work-report-column {
                 max-width: 150px;
             }
         }
@@ -1564,8 +1646,15 @@ function formatDecimalToTime($timeString) {
                         </div>
                         <div class="summary-item">
                             <div class="tooltip">
-                                Number of business days in the month, excluding weekends.<br>
-                                Weekends count: <?php echo $weekends; ?> days
+                                <?php if ($user_id !== 'all' && !empty($weekly_offs)): ?>
+                                    Personalized working days for this employee.<br>
+                                    Total days: <?php echo $days_in_month; ?><br>
+                                    Weekly offs: <?php echo implode(', ', $weekly_offs_array); ?><br>
+                                    Weekly off days this month: <?php echo $user_weekly_offs; ?>
+                                <?php else: ?>
+                                    Number of business days in the month, excluding weekends.<br>
+                                    Weekends count: <?php echo $weekends; ?> days
+                                <?php endif; ?>
                             </div>
                             <div class="icon"><i class="fas fa-business-time"></i></div>
                             <h3>Working Days</h3>
@@ -1766,6 +1855,12 @@ function formatDecimalToTime($timeString) {
                                 <th>Punch Out Address</th>
                                 <th>Working Hours</th>
                                 <th>Overtime</th>
+                                <th>
+                                    Work Report
+                                    <a href="#" id="exportExcel" class="excel-export-link ms-2" title="Export to Excel">
+                                        <i class="fas fa-file-excel"></i>
+                                    </a>
+                                </th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -1897,6 +1992,9 @@ function formatDecimalToTime($timeString) {
                                             echo '-';
                                         }
                                     ?></td>
+                                    <td class="work-report-column" title="<?php echo htmlspecialchars($record['work_report']); ?>">
+                                        <?php echo !empty($record['work_report']) ? htmlspecialchars($record['work_report']) : '-'; ?>
+                                    </td>
                                     <td>
                                         <span class="status-badge <?php echo strtolower($record['status']); ?>">
                                             <?php echo htmlspecialchars($record['status']); ?>
@@ -1927,6 +2025,28 @@ function formatDecimalToTime($timeString) {
                     filterForm.submit();
                 });
             });
+            
+            // Add Excel export functionality
+            const exportButton = document.getElementById('exportExcel');
+            if (exportButton) {
+                exportButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get current month and user_id from the form
+                    const month = document.getElementById('month').value;
+                    const userFilter = document.getElementById('user_filter');
+                    const user_id = userFilter ? userFilter.value : 'all';
+                    
+                    // Get the clicked element's ID to determine which export to run
+                    if (e.currentTarget.id === 'exportExcel') {
+                        // Create export URL with parameters
+                        const exportUrl = `export_work_report.php?month=${month}&user_id=${user_id}`;
+                        
+                        // Navigate to the export URL
+                        window.location.href = exportUrl;
+                    }
+                });
+            }
         });
     </script>
 

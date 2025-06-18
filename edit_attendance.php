@@ -207,9 +207,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Commit transaction
         $conn->commit();
         
-        // Redirect with success message
-        header("Location: salary_overview.php?month=" . $selected_month . "&success=1");
-        exit;
+        // Set a success message
+        $success_message = "Attendance records have been successfully updated.";
+        
+        // Instead of redirecting, we'll stay on the same page
+        // Comment out the redirect:
+        // header("Location: salary_overview.php?month=" . $selected_month . "&success=1");
+        // exit;
 
     } catch (Exception $e) {
         // Rollback transaction on error
@@ -248,6 +252,12 @@ $employee = $stmt->get_result()->fetch_assoc();
 // Add this error handling after fetching employee
 if (!$employee) {
     die("Employee not found. Please check the employee ID and try again.");
+}
+
+// Parse weekly offs into an array for easier display and handling
+$weekly_off_days = [];
+if (!empty($employee['weekly_offs'])) {
+    $weekly_off_days = explode(',', $employee['weekly_offs']);
 }
 
 // Fetch attendance records for the month
@@ -290,6 +300,8 @@ while ($row = $result->fetch_assoc()) {
             --shadow: rgba(0, 0, 0, 0.05);
             --shadow-hover: rgba(0, 0, 0, 0.1);
             --sidebar-width: 280px;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
         }
 
         * {
@@ -304,6 +316,7 @@ while ($row = $result->fetch_assoc()) {
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
         /* Sidebar Styles */
@@ -460,110 +473,206 @@ while ($row = $result->fetch_assoc()) {
             }
         }
 
-        /* Your existing styles */
+        /* Update attendance form styles for better appearance */
         .attendance-form {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             margin: 20px 0;
+            transition: var(--transition);
+            border: 1px solid var(--border);
         }
 
-        .attendance-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .attendance-table th,
-        .attendance-table td {
-            padding: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .attendance-table th {
-            background-color: #f8fafc;
-            font-weight: 600;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-        }
-
-        .status-select {
-            background-color: white;
-        }
-
-        .weekend {
-            background-color: #fff5f5;
-        }
-
-        .today {
-            background-color: #f0f9ff;
-        }
-
+        /* Improve filters container design */
         .filters-container {
             display: flex;
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             align-items: flex-end;
+            background: var(--primary-light);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(67, 97, 238, 0.2);
         }
 
+        /* Make the filter controls more user-friendly */
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         .filter-group label {
             font-weight: 600;
-            color: #333;
+            color: var(--dark);
+            font-size: 14px;
         }
 
         .filter-group select,
         .filter-group input {
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            min-width: 200px;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            min-width: 220px;
+            font-size: 14px;
+            transition: var(--transition);
         }
 
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            outline: none;
+        }
+
+        /* Update the button styles */
         .apply-filters {
-            height: 38px;
-            padding: 0 20px;
+            height: 42px;
+            padding: 0 24px;
             background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .apply-filters:hover {
             background-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .overtime {
+        /* Enhance the table appearance */
+        .attendance-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .attendance-table th {
+            background-color: var(--primary-light);
+            color: var(--dark);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .attendance-table tr {
+            transition: var(--transition);
+        }
+
+        .attendance-table tr:hover {
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+
+        /* Improve the style of the form controls within the table */
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            outline: none;
+        }
+
+        /* Enhance the status select styling */
+        .status-select {
+            background-color: white;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Improve weekend and today highlighting */
+        .weekend {
+            background-color: #FFF9F7; /* Very light pink/peach for weekend days */
+        }
+
+        .weekend:hover {
+            background-color: #FFF0F0;
+        }
+
+        .today {
+            background-color: #f0f7ff;
+        }
+
+        .today:hover {
+            background-color: #e0f0ff;
+        }
+
+        /* Style the Weekly Off indicator more attractively */
+        .weekly-off-indicator {
+            display: block;
+            margin: 5px 0;
+            padding: 6px 10px;
+            background-color: #FFF8DC; /* Cornsilk color similar to the image */
+            color: #8B6914; /* Darker gold text color */
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid #F4E3B2;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            width: 100%;
+        }
+
+        /* Make the weekly-offs-display more visually appealing */
+        .weekly-offs-display {
+            margin-bottom: 25px;
+            padding: 15px 20px;
             background-color: #f8f9fa;
-            cursor: not-allowed;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            font-size: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
+        .weekly-offs-display i {
+            color: var(--primary);
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        /* Improve the button group styling */
         .btn-group {
-            margin-top: 20px;
+            margin-top: 30px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
             justify-content: flex-end;
         }
 
         .btn {
-            padding: 8px 20px;
-            border-radius: 4px;
+            padding: 10px 24px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: var(--transition);
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
@@ -574,6 +683,8 @@ while ($row = $result->fetch_assoc()) {
 
         .btn-primary:hover {
             background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .btn-secondary {
@@ -584,8 +695,11 @@ while ($row = $result->fetch_assoc()) {
 
         .btn-secondary:hover {
             background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        /* Enhance the back button styling */
         .back-btn {
             display: inline-flex;
             align-items: center;
@@ -593,18 +707,169 @@ while ($row = $result->fetch_assoc()) {
             text-decoration: none;
             color: var(--text);
             font-weight: 500;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: var(--transition);
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
         }
 
         .back-btn:hover {
             color: var(--primary);
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .back-btn i {
+            transition: var(--transition);
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-3px);
+        }
+
+        /* Make the section title more attractive */
         .section-title {
-            font-size: 1.5rem;
-            color: var(--text);
+            font-size: 1.75rem;
+            color: var(--dark);
             margin-bottom: 1.5rem;
             font-weight: 600;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        /* Improve checkbox styling */
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        /* Add custom styles for different status options */
+        select.status-select option[value="present"] {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        select.status-select option[value="absent"] {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        select.status-select option[value="leave"] {
+            background-color: #cff4fc;
+            color: #055160;
+        }
+
+        select.status-select option[value="holiday"] {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+
+        /* Add responsive improvements */
+        @media (max-width: 992px) {
+            .filters-container {
+                flex-wrap: wrap;
+            }
+            
+            .filter-group {
+                flex: 1 0 calc(50% - 20px);
+                min-width: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+            
+            .attendance-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        /* Add a specific style for rows with weekly offs */
+        tr.has-weekly-off td:first-child {
+            position: relative; /* For positioning the indicator */
+        }
+
+        /* Add styling for the weekly off checkbox label */
+        .weekly-off-checkbox-label {
+            display: inline-block;
+            font-size: 12px;
+            color: #664d03;
+            margin-left: 5px;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        /* Update the checkbox styling to align with the label */
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        /* Make the weekly off checkbox and label appear more prominently on weekly off days */
+        tr.has-weekly-off .weekly-off-checkbox-label {
+            font-weight: 600;
+            color: #8B6914;
+        }
+
+        /* Update the weekly-off-worked container styling */
+        .weekly-off-worked {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            background-color: #fff9e9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px dashed #f0d78c;
+        }
+
+        /* Update the weekly off checkbox label to be more concise */
+        .weekly-off-checkbox-label {
+            display: inline-block;
+            font-size: 12px;
+            color: #8B6914;
+            margin-left: 5px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        /* Add success alert style */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+        }
+
+        .alert-danger {
+            color: #842029;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
+        }
+
+        .alert-success {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
         }
     </style>
 </head>
@@ -687,6 +952,12 @@ while ($row = $result->fetch_assoc()) {
                 </div>
             <?php endif; ?>
 
+            <?php if (isset($success_message)): ?>
+                <div class="alert alert-success">
+                    <?php echo htmlspecialchars($success_message); ?>
+                </div>
+            <?php endif; ?>
+
             <div class="attendance-form">
                 <!-- Add filters at the top -->
                 <form id="filters-form" method="GET" class="filters-container">
@@ -718,6 +989,13 @@ while ($row = $result->fetch_assoc()) {
                     Edit Attendance - <?php echo htmlspecialchars($employee['username'] ?? 'Unknown Employee'); ?> 
                     (<?php echo date('F Y', strtotime($month_start)); ?>)
                 </h2>
+                
+                <?php if (!empty($weekly_off_days)): ?>
+                <div class="weekly-offs-display">
+                    <i class="bi bi-calendar-x"></i> Weekly Offs: 
+                    <?php echo implode(', ', $weekly_off_days); ?>
+                </div>
+                <?php endif; ?>
 
                 <form method="POST">
                     <table class="attendance-table">
@@ -729,7 +1007,6 @@ while ($row = $result->fetch_assoc()) {
                                 <th>Punch In</th>
                                 <th>Punch Out</th>
                                 <th>Overtime (hrs)</th>
-                                <th>Weekly Off</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -748,15 +1025,31 @@ while ($row = $result->fetch_assoc()) {
                                 <tr class="<?php echo $row_class; ?>">
                                     <td>
                                         <?php echo $current_date->format('d M (D)'); ?>
-                                        <input type="checkbox" 
-                                               name="attendance[<?php echo $date_str; ?>][is_weekly_off]" 
-                                               value="1" 
-                                               <?php echo (isset($record['is_weekly_off']) && $record['is_weekly_off'] == 1) ? 'checked' : ''; ?>
-                                               onchange="markAsModified(this)">
+                                        <?php 
+                                        // Show an indicator if this day is a configured weekly off
+                                        $day_name = $current_date->format('l');
+                                        $is_weekly_off_day = in_array($day_name, $weekly_off_days);
+                                        if ($is_weekly_off_day) {
+                                            echo '<div class="weekly-off-indicator">Weekly Off</div>';
+                                            // Add a class to the row for additional styling
+                                            $row_class .= ' has-weekly-off';
+                                            
+                                            // Only show checkbox for weekly off days
+                                            echo '<div class="weekly-off-worked">';
+                                            echo '<input type="checkbox" 
+                                                  name="attendance[' . $date_str . '][is_weekly_off]" 
+                                                  value="1" 
+                                                  ' . ((isset($record['is_weekly_off']) && $record['is_weekly_off'] == 1) ? 'checked' : '') . '
+                                                  onchange="markAsModified(this)">';
+                                            echo '<span class="weekly-off-checkbox-label">Worked?</span>';
+                                            echo '</div>';
+                                        }
+                                        ?>
                                     </td>
                                     <td>
                                         <input type="hidden" name="attendance[<?php echo $date_str; ?>][modified]" class="modified-flag" value="false">
                                         <select name="attendance[<?php echo $date_str; ?>][status]" class="form-control status-select" onchange="markAsModified(this)">
+                                            <option value="">-- Select Status --</option>
                                             <option value="present" <?php echo ($record && $record['status'] === 'present') ? 'selected' : ''; ?>>Present</option>
                                             <option value="absent" <?php echo ($record && $record['status'] === 'absent') ? 'selected' : ''; ?>>Absent</option>
                                             <option value="leave" <?php echo ($record && $record['status'] === 'leave') ? 'selected' : ''; ?>>Leave</option>

@@ -7,6 +7,9 @@ $selected_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
 $month_start = $selected_month . '-01';
 $month_end = date('Y-m-t', strtotime($month_start));
 
+// Get selected user for filtering
+$selected_user = isset($_GET['user_id']) ? $_GET['user_id'] : 'all';
+
 // First, let's fix the table if needed
 $alter_query = "ALTER TABLE leave_request MODIFY COLUMN id INT AUTO_INCREMENT PRIMARY KEY";
 try {
@@ -44,8 +47,14 @@ INNER JOIN leave_request lr ON u.id = lr.user_id
 LEFT JOIN leave_types lt ON lr.leave_type = lt.id
 WHERE u.deleted_at IS NULL 
 AND u.status = 'active'
-AND lr.status IS NOT NULL
-ORDER BY lr.start_date DESC";
+AND lr.status IS NOT NULL";
+
+// Add user filter if a specific user is selected
+if ($selected_user !== 'all') {
+    $query .= " AND u.id = '$selected_user'";
+}
+
+$query .= " ORDER BY lr.start_date DESC";
 
 $result = $conn->query($query);
 if (!$result) {
@@ -106,6 +115,11 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             --border-color: #e2e8f0;
             --text-color: #1e293b;
             --sidebar-width: 280px;
+            --transition-normal: all 0.3s ease;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --gradient-primary: linear-gradient(145deg, #3b82f6, #2563eb);
         }
 
         * {
@@ -297,26 +311,71 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             align-items: center;
             margin-bottom: 2rem;
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.75rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            transition: var(--transition-normal);
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+        
+        .header:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
 
         h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             color: var(--text-color);
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        h1 i {
+            color: var(--primary-color);
+            font-size: 1.5rem;
         }
 
         .leave-form {
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-normal);
+        }
+        
+        .leave-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+        
+        .leave-form:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
 
         .form-grid {
@@ -368,13 +427,15 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
         }
 
         .btn-primary {
-            background: var(--primary-color);
+            background: var(--gradient-primary);
             color: white;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
         }
 
         .btn-primary:hover {
-            background: var(--secondary-color);
-            transform: translateY(-1px);
+            background: linear-gradient(145deg, #2563eb, #1d4ed8);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
         }
 
         .leave-table {
@@ -382,14 +443,21 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             border-collapse: separate;
             border-spacing: 0;
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-normal);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            margin-top: 1rem;
+        }
+        
+        .leave-table:hover {
+            box-shadow: var(--shadow-lg);
         }
 
         .leave-table th,
         .leave-table td {
-            padding: 1rem 1.5rem;
+            padding: 1.25rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
         }
 
@@ -403,8 +471,12 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             color: #64748b;
         }
 
+        .leave-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
         .leave-table tbody tr:hover {
-            background: #f8fafc;
+            background: #f1f5f9;
         }
 
         .leave-table tbody tr:last-child td {
@@ -412,28 +484,38 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
         }
 
         .status-badge {
-            padding: 0.4rem 0.75rem;
-            border-radius: 9999px;
+            padding: 0.5rem 0.85rem;
+            border-radius: 30px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 0.375rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .status-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .status-pending {
             background: #fff7ed;
             color: #c2410c;
+            border: 1px solid #fdba74;
         }
 
         .status-approved {
             background: #f0fdf4;
             color: #166534;
+            border: 1px solid #86efac;
         }
 
         .status-rejected {
             background: #fef2f2;
             color: #dc2626;
+            border: 1px solid #fca5a5;
         }
 
         .header-controls {
@@ -485,33 +567,38 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
         }
 
         .btn-icon {
-            padding: 0.5rem;
-            border-radius: 6px;
+            padding: 0.6rem;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-edit {
-            background: #f0f9ff;
+            background: #e0f2fe;
             color: #0369a1;
+            border: 1px solid #bae6fd;
         }
 
         .btn-delete {
-            background: #fef2f2;
+            background: #fee2e2;
             color: #dc2626;
+            border: 1px solid #fca5a5;
         }
 
         .btn-approve {
-            background: #f0fdf4;
+            background: #dcfce7;
             color: #166534;
+            border: 1px solid #86efac;
         }
 
         .btn-icon:hover {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
         }
 
         /* Add subtle animations */
@@ -520,8 +607,8 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .leave-form, .leave-table {
-            animation: fadeIn 0.3s ease-out;
+        .leave-form, .leave-table, .table-filters, .header {
+            animation: fadeIn 0.4s ease-out;
         }
 
         /* Leave Balance Panel Styles */
@@ -748,18 +835,66 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
         }
 
         .table-filters {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            padding: 1.75rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             align-items: flex-end;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-normal);
+        }
+        
+        .table-filters::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .table-filters:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
 
         .table-filters .form-group {
-            min-width: 200px;
+            min-width: 220px;
+            position: relative;
+        }
+        
+        .table-filters label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .table-filters label i {
+            color: var(--primary-color);
+        }
+        
+        .table-filters .form-control {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+            border-width: 1px;
+            transition: all 0.25s ease;
+        }
+        
+        .table-filters .form-control:hover {
+            border-color: #cbd5e1;
+        }
+        
+        .table-filters .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
     </style>
 </head>
@@ -952,6 +1087,20 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
                         Filter by Month
                     </label>
                     <input type="month" id="filterMonth" class="form-control" value="<?php echo $selected_month; ?>">
+                </div>
+                <div class="form-group">
+                    <label for="filterUser">
+                        <i class="fas fa-user"></i>
+                        Filter by Employee
+                    </label>
+                    <select id="filterUser" class="form-control">
+                        <option value="all" <?php echo $selected_user === 'all' ? 'selected' : ''; ?>>All Employees</option>
+                        <?php foreach ($users as $user): ?>
+                            <option value="<?php echo htmlspecialchars($user['id']); ?>" <?php echo $selected_user == $user['id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($user['username']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
             </div>
 
@@ -1316,7 +1465,15 @@ $leave_types = $leave_types_result->fetch_all(MYSQLI_ASSOC);
         // Add this to your existing JavaScript
         document.getElementById('filterMonth').addEventListener('change', function() {
             const selectedMonth = this.value;
-            window.location.href = `edit_leave.php?month=${selectedMonth}`;
+            const selectedUser = document.getElementById('filterUser').value;
+            window.location.href = `edit_leave.php?month=${selectedMonth}&user_id=${selectedUser}`;
+        });
+        
+        // Add event listener for user filter
+        document.getElementById('filterUser').addEventListener('change', function() {
+            const selectedMonth = document.getElementById('filterMonth').value;
+            const selectedUser = this.value;
+            window.location.href = `edit_leave.php?month=${selectedMonth}&user_id=${selectedUser}`;
         });
     </script>
 </body>

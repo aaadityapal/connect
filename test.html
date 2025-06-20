@@ -3,592 +3,684 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Test Page | ArchitectsHive</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>3D Visualizer Salary Calculator (Room Pricing)</title>
     <style>
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 40px 0;
-        }
-        .project-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            transition: transform 0.3s ease;
-        }
-        .project-card:hover {
-            transform: translateY(-5px);
-        }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-        }
-        .status-badge {
-            font-size: 0.8rem;
-            padding: 5px 10px;
-            border-radius: 20px;
-        }
-        .progress {
-            height: 10px;
-            border-radius: 5px;
-        }
-        .team-member {
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .team-member img {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-        .btn-link {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
             color: #333;
-            text-decoration: none;
-            width: 80%;
-            text-align: left;
-            font-weight: 500;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        .btn-link:hover {
-            color: #0056b3;
-            text-decoration: none;
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
         }
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
+        
+        .calculator {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        .stages-section .card-header {
-            background: #f8f9fa;
-            border-radius: 5px !important;
+        
+        .form-group {
+            margin-bottom: 20px;
         }
-        .stages-section .card {
-            border: 1px solid rgba(0,0,0,.125);
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
-        .project-search-dropdown {
-            position: absolute;
+        
+        input, select {
             width: 100%;
-            max-height: 200px;
-            overflow-y: auto;
-            background: white;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 1000;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
             display: none;
         }
-        .project-search-item {
-            padding: 8px 12px;
-            cursor: pointer;
+        
+        .results h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        .project-list {
+            margin-top: 20px;
+        }
+        
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
             border-bottom: 1px solid #eee;
         }
-        .project-search-item:hover {
-            background-color: #f8f9fa;
-        }
-        .project-search-item:last-child {
+        
+        .project-item:last-child {
             border-bottom: none;
         }
-        .form-group {
-            position: relative;
+        
+        .total {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #3498db;
+        }
+        
+        .rupee-symbol {
+            font-weight: bold;
+        }
+        
+        .add-project {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .add-project input, .add-project select {
+            flex: 1;
+        }
+        
+        .add-project button {
+            width: auto;
+            background-color: #27ae60;
+        }
+        
+        .add-project button:hover {
+            background-color: #219653;
+        }
+        
+        .project-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .room-details {
+            margin-left: 20px;
+            padding-left: 15px;
+            border-left: 2px solid #ddd;
+        }
+        
+        .room-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .project-type-selector {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .project-type-selector button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 8px;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .project-type-selector button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .room-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .room-inputs input {
+            flex: 2;
+        }
+        
+        .room-inputs input.price {
+            flex: 1;
+        }
+        
+        .add-room-btn {
+            background-color: #9b59b6;
+            width: auto;
+            margin-bottom: 15px;
+        }
+        
+        .add-room-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .room-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .room-preview-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .room-image {
+            margin-left: 10px;
+        }
+        
+        .remove-room-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        #image-preview {
+            margin-top: 10px;
+        }
+        
+        .room-list {
+            max-height: 300px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h1>Project Dashboard</h1>
-            <button class="btn btn-success" data-toggle="modal" data-target="#addProjectModal">
-                <i class="fas fa-plus"></i> Add Project
-            </button>
+    <h1>3D Visualizer Salary Calculator (Room Pricing)</h1>
+    
+    <div class="calculator">
+        <div class="form-group">
+            <label for="visualizer-name">Visualizer Name</label>
+            <input type="text" id="visualizer-name" placeholder="Enter your name">
         </div>
         
-        <!-- Add Project Modal -->
-        <div class="modal fade" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addProjectForm">
-                            <div class="form-group">
-                                <label for="projectName">Project Name</label>
-                                <input type="text" class="form-control" id="projectName" required>
-                                <div id="projectSearchDropdown" class="project-search-dropdown"></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="projectStatus">Status</label>
-                                <select class="form-control" id="projectStatus" required>
-                                    <option value="active">Active</option>
-                                    <option value="planning">In Planning</option>
-                                    <option value="progress">In Progress</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="projectClient">Client</label>
-                                <input type="text" class="form-control" id="projectClient" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="projectLocation">Location</label>
-                                <input type="text" class="form-control" id="projectLocation" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="projectBudget">Budget</label>
-                                <input type="number" class="form-control" id="projectBudget" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="projectProgress">Progress (%)</label>
-                                <input type="number" class="form-control" id="projectProgress" min="0" max="100" required>
-                            </div>
-                            
-                            <!-- Project Stages Section -->
-                            <div class="form-group">
-                                <label>Project Stages</label>
-                                <div id="stagesContainer">
-                                    <!-- Template for a stage -->
-                                    <div class="stage-group mb-4 border p-3 rounded">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="mb-0">Stage 1</h6>
-                                            <button type="button" class="btn btn-danger btn-sm remove-stage">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="text" class="form-control" placeholder="Stage Name" required>
-                                        </div>
-                                        <div class="substages-container">
-                                            <!-- Initial substage container is empty -->
-                                        </div>
-                                        <button type="button" class="btn btn-info btn-sm add-substage mt-2">
-                                            <i class="fas fa-plus"></i> Add Substage
-                                        </button>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-primary mt-2" id="addStage">
-                                    <i class="fas fa-plus"></i> Add Stage
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" form="addProjectForm" class="btn btn-success">Add Project</button>
-                    </div>
-                </div>
+        <div class="form-group">
+            <label for="month">Month</label>
+            <select id="month">
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="year">Year</label>
+            <input type="number" id="year" min="2000" max="2100" value="2023">
+        </div>
+        
+        <h3>Add Projects</h3>
+        
+        <div class="project-type-selector">
+            <button id="single-project-btn" class="active">Single Project</button>
+            <button id="room-project-btn">Room-Based Project</button>
+        </div>
+        
+        <div id="single-project-form">
+            <div class="add-project">
+                <input type="text" id="project-name" placeholder="Project name">
+                <input type="number" id="project-price" placeholder="Price in ₹" min="0">
+                <button id="add-project-btn">Add Project</button>
             </div>
         </div>
         
-        <div class="row">
-            <!-- Project Card 1 -->
-            <div class="col-md-6">
-                <div class="card project-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Luxury Villa Design</h5>
-                        <span class="badge badge-success status-badge">Active</span>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Project ID:</strong> PRJ001</p>
-                        <p><strong>Client:</strong> John Smith</p>
-                        <p><strong>Location:</strong> Beverly Hills</p>
-                        <p><strong>Budget:</strong> $2.5M</p>
-                        <div class="mb-3">
-                            <p class="mb-1"><strong>Progress:</strong> 75%</p>
-                            <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
-                            </div>
-                        </div>
-                        <p><strong>Team:</strong></p>
-                        <div class="team-members mb-3">
-                            <span class="team-member" title="Lead Architect">
-                                <i class="fas fa-user-circle fa-2x text-primary"></i>
-                            </span>
-                            <span class="team-member" title="Designer">
-                                <i class="fas fa-user-circle fa-2x text-success"></i>
-                            </span>
-                            <span class="team-member" title="3D Artist">
-                                <i class="fas fa-user-circle fa-2x text-info"></i>
-                            </span>
-                        </div>
-                        <div class="stages-section">
-                            <p><strong>Project Stages:</strong></p>
-                            <div class="accordion" id="stagesAccordion1">
-                                <!-- Stage 1 -->
-                                <div class="card mb-2">
-                                    <div class="card-header p-2" id="stage1Header">
-                                        <h6 class="mb-0 d-flex justify-content-between align-items-center">
-                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#stage1Collapse">
-                                                Planning Phase
-                                            </button>
-                                            <span class="badge badge-success">Completed</span>
-                                        </h6>
-                                    </div>
-                                    <div id="stage1Collapse" class="collapse" data-parent="#stagesAccordion1">
-                                        <div class="card-body p-2">
-                                            <ul class="list-unstyled mb-0">
-                                                <li><i class="fas fa-check text-success"></i> Initial Consultation</li>
-                                                <li><i class="fas fa-check text-success"></i> Site Analysis</li>
-                                                <li><i class="fas fa-check text-success"></i> Concept Development</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Stage 2 -->
-                                <div class="card mb-2">
-                                    <div class="card-header p-2" id="stage2Header">
-                                        <h6 class="mb-0">
-                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#stage2Collapse">
-                                                Design Development
-                                            </button>
-                                            <span class="badge badge-warning float-right">In Progress</span>
-                                        </h6>
-                                    </div>
-                                    <div id="stage2Collapse" class="collapse" data-parent="#stagesAccordion1">
-                                        <div class="card-body p-2">
-                                            <ul class="list-unstyled mb-0">
-                                                <li><i class="fas fa-check text-success"></i> Schematic Design</li>
-                                                <li><i class="fas fa-spinner text-warning"></i> Design Development</li>
-                                                <li><i class="fas fa-clock text-secondary"></i> Construction Documents</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-sm mt-3">View Details</button>
-                    </div>
-                </div>
+        <div id="room-project-form" class="hidden">
+            <div class="form-group">
+                <input type="text" id="room-project-name" placeholder="Project name">
             </div>
-
-            <!-- Project Card 2 -->
-            <div class="col-md-6">
-                <div class="card project-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Commercial Complex</h5>
-                        <span class="badge badge-warning status-badge">In Planning</span>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Project ID:</strong> PRJ002</p>
-                        <p><strong>Client:</strong> Tech Corp Inc.</p>
-                        <p><strong>Location:</strong> Downtown</p>
-                        <p><strong>Budget:</strong> $5.8M</p>
-                        <div class="mb-3">
-                            <p class="mb-1"><strong>Progress:</strong> 25%</p>
-                            <div class="progress">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 25%"></div>
-                            </div>
-                        </div>
-                        <p><strong>Team:</strong></p>
-                        <div class="team-members mb-3">
-                            <span class="team-member" title="Project Manager">
-                                <i class="fas fa-user-circle fa-2x text-danger"></i>
-                            </span>
-                            <span class="team-member" title="Architect">
-                                <i class="fas fa-user-circle fa-2x text-warning"></i>
-                            </span>
-                        </div>
-                        <div class="stages-section">
-                            <p><strong>Project Stages:</strong></p>
-                            <div class="accordion" id="stagesAccordion2">
-                                <!-- Stage 1 -->
-                                <div class="card mb-2">
-                                    <div class="card-header p-2" id="proj2stage1Header">
-                                        <h6 class="mb-0">
-                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#proj2stage1Collapse">
-                                                Feasibility Study
-                                            </button>
-                                            <span class="badge badge-warning float-right">In Progress</span>
-                                        </h6>
-                                    </div>
-                                    <div id="proj2stage1Collapse" class="collapse" data-parent="#stagesAccordion2">
-                                        <div class="card-body p-2">
-                                            <ul class="list-unstyled mb-0">
-                                                <li><i class="fas fa-check text-success"></i> Market Analysis</li>
-                                                <li><i class="fas fa-spinner text-warning"></i> Financial Modeling</li>
-                                                <li><i class="fas fa-clock text-secondary"></i> Environmental Impact Study</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-sm mt-3">View Details</button>
-                    </div>
-                </div>
+            
+            <div class="room-inputs">
+                <select id="room-type">
+                    <option value="">Select Room Type</option>
+                    <option value="Living Room">Living Room (₹5000)</option>
+                    <option value="Bedroom">Bedroom (₹4000)</option>
+                    <option value="Kitchen">Kitchen (₹4500)</option>
+                    <option value="Bathroom">Bathroom (₹3500)</option>
+                    <option value="Office">Office Space (₹4800)</option>
+                    <option value="Dining">Dining Room (₹4200)</option>
+                </select>
+                <input type="number" id="room-price" placeholder="Price per room in ₹" min="0" class="price" readonly>
+                <input type="number" id="room-revisions" placeholder="Revisions" min="0" max="5" value="2">
             </div>
-
-            <!-- Project Card 3 -->
-            <div class="col-md-6">
-                <div class="card project-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Residential Complex</h5>
-                        <span class="badge badge-info status-badge">In Progress</span>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Project ID:</strong> PRJ003</p>
-                        <p><strong>Client:</strong> Green Living Ltd.</p>
-                        <p><strong>Location:</strong> Suburbia</p>
-                        <p><strong>Budget:</strong> $8.2M</p>
-                        <div class="mb-3">
-                            <p class="mb-1"><strong>Progress:</strong> 45%</p>
-                            <div class="progress">
-                                <div class="progress-bar bg-info" role="progressbar" style="width: 45%"></div>
-                            </div>
-                        </div>
-                        <p><strong>Team:</strong></p>
-                        <div class="team-members mb-3">
-                            <span class="team-member" title="Senior Architect">
-                                <i class="fas fa-user-circle fa-2x text-secondary"></i>
-                            </span>
-                            <span class="team-member" title="Design Team Lead">
-                                <i class="fas fa-user-circle fa-2x text-dark"></i>
-                            </span>
-                        </div>
-                        <button class="btn btn-primary btn-sm">View Details</button>
-                    </div>
-                </div>
+            
+            <div class="form-group">
+                <label for="room-image">Upload 3D Visualization</label>
+                <input type="file" id="room-image" accept="image/*">
+                <div id="image-preview"></div>
+            </div>
+            
+            <div class="form-group">
+                <button id="add-room-btn" class="add-room-btn">Add Room Type</button>
+            </div>
+            
+            <div class="room-preview" id="room-project-preview">
+                <!-- Room preview will appear here -->
+            </div>
+            
+            <div class="form-group">
+                <button id="add-room-project-btn">Add Room Project</button>
+            </div>
+        </div>
+        
+        <div class="project-list-container">
+            <div class="project-list" id="project-list">
+                <!-- Projects will be added here -->
+            </div>
+        </div>
+        
+        <button id="calculate-btn">Calculate Salary</button>
+        
+        <div class="results" id="results">
+            <h2>Salary Summary for <span id="summary-name"></span></h2>
+            <p>Month: <span id="summary-month"></span> <span id="summary-year"></span></p>
+            
+            <div class="project-list" id="summary-projects">
+                <!-- Project summary will be added here -->
+            </div>
+            
+            <div class="total">
+                Total Salary: <span class="rupee-symbol">₹</span><span id="total-salary">0</span>
             </div>
         </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
     <script>
-        $(document).ready(function() {
-            // Project data (in real application, this would come from your backend)
-            const projectsData = {
-                'Luxury Villa Design': {
-                    status: 'active',
-                    client: 'John Smith',
-                    location: 'Beverly Hills',
-                    budget: 2500000,
-                    progress: 75,
-                    stages: [
-                        {
-                            name: 'Planning Phase',
-                            substages: ['Initial Consultation', 'Site Analysis', 'Concept Development']
-                        },
-                        {
-                            name: 'Design Development',
-                            substages: ['Schematic Design', 'Design Development', 'Construction Documents']
-                        }
-                    ]
-                },
-                'Commercial Complex': {
-                    status: 'planning',
-                    client: 'Tech Corp Inc.',
-                    location: 'Downtown',
-                    budget: 5800000,
-                    progress: 25,
-                    stages: [
-                        {
-                            name: 'Feasibility Study',
-                            substages: ['Market Analysis', 'Financial Modeling', 'Environmental Impact Study']
-                        }
-                    ]
-                },
-                'Residential Complex': {
-                    status: 'progress',
-                    client: 'Green Living Ltd.',
-                    location: 'Suburbia',
-                    budget: 8200000,
-                    progress: 45,
-                    stages: [
-                        {
-                            name: 'Initial Planning',
-                            substages: ['Site Survey', 'Requirements Gathering']
-                        }
-                    ]
-                }
-            };
-
-            // Search functionality
-            $('#projectName').on('input', function() {
-                const searchTerm = $(this).val().toLowerCase();
-                const $dropdown = $('#projectSearchDropdown');
+        document.addEventListener('DOMContentLoaded', function() {
+            const projects = [];
+            let currentRoomProject = null;
+            let activeProjectType = 'single'; // 'single' or 'room'
+            
+            // Project type selector
+            document.getElementById('single-project-btn').addEventListener('click', function() {
+                activeProjectType = 'single';
+                document.getElementById('single-project-form').classList.remove('hidden');
+                document.getElementById('room-project-form').classList.add('hidden');
+                document.getElementById('single-project-btn').classList.add('active');
+                document.getElementById('room-project-btn').classList.remove('active');
+            });
+            
+            document.getElementById('room-project-btn').addEventListener('click', function() {
+                activeProjectType = 'room';
+                document.getElementById('single-project-form').classList.add('hidden');
+                document.getElementById('room-project-form').classList.remove('hidden');
+                document.getElementById('single-project-btn').classList.remove('active');
+                document.getElementById('room-project-btn').classList.add('active');
+                currentRoomProject = {
+                    name: '',
+                    rooms: []
+                };
+            });
+            
+            // Add project button click handler (single project)
+            document.getElementById('add-project-btn').addEventListener('click', function() {
+                const projectName = document.getElementById('project-name').value.trim();
+                const projectPrice = parseFloat(document.getElementById('project-price').value);
                 
-                if (searchTerm.length === 0) {
-                    $dropdown.hide();
-                    return;
-                }
-
-                // Filter projects based on search term
-                const matchingProjects = Object.keys(projectsData).filter(projectName => 
-                    projectName.toLowerCase().includes(searchTerm)
-                );
-
-                if (matchingProjects.length > 0) {
-                    // Build dropdown content
-                    const dropdownHtml = matchingProjects.map(projectName => `
-                        <div class="project-search-item" data-project="${projectName}">
-                            ${projectName}
-                        </div>
-                    `).join('');
+                if (projectName && !isNaN(projectPrice)) {
+                    projects.push({
+                        type: 'single',
+                        name: projectName,
+                        price: projectPrice
+                    });
                     
-                    $dropdown.html(dropdownHtml).show();
+                    updateProjectList();
+                    
+                    // Clear input fields
+                    document.getElementById('project-name').value = '';
+                    document.getElementById('project-price').value = '';
                 } else {
-                    $dropdown.hide();
+                    alert('Please enter valid project name and price');
                 }
             });
-
-            // Handle project selection from dropdown
-            $(document).on('click', '.project-search-item', function() {
-                const projectName = $(this).data('project');
-                $('#projectName').val(projectName);
-                $('#projectSearchDropdown').hide();
+            
+            // Update the room type selection to set price automatically
+            document.getElementById('room-type').addEventListener('change', function() {
+                const roomTypeSelect = document.getElementById('room-type');
+                const roomPriceInput = document.getElementById('room-price');
                 
-                // Fetch project data
-                const projectData = projectsData[projectName];
-                if (projectData) {
-                    // Fill in basic project details
-                    $('#projectStatus').val(projectData.status);
-                    $('#projectClient').val(projectData.client);
-                    $('#projectLocation').val(projectData.location);
-                    $('#projectBudget').val(projectData.budget);
-                    $('#projectProgress').val(projectData.progress);
-
-                    // Clear existing stages
-                    $('#stagesContainer').empty();
-
-                    // Add stages and substages
-                    projectData.stages.forEach((stage, index) => {
-                        const stageTemplate = `
-                            <div class="stage-group mb-4 border p-3 rounded">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0">Stage ${index + 1}</h6>
-                                    <button type="button" class="btn btn-danger btn-sm remove-stage">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" class="form-control" placeholder="Stage Name" value="${stage.name}" required>
-                                </div>
-                                <div class="substages-container">
-                                    ${stage.substages.map(substage => `
-                                        <div class="substage-group mb-2">
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" placeholder="Substage Name" value="${substage}" required>
-                                                <div class="input-group-append">
-                                                    <button type="button" class="btn btn-danger remove-substage">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
+                // Set price based on room type selection
+                const prices = {
+                    'Living Room': 5000,
+                    'Bedroom': 4000,
+                    'Kitchen': 4500,
+                    'Bathroom': 3500,
+                    'Office': 4800,
+                    'Dining': 4200
+                };
+                
+                const selectedType = roomTypeSelect.value;
+                roomPriceInput.value = selectedType ? prices[selectedType] : '';
+            });
+            
+            // Handle image upload preview
+            document.getElementById('room-image').addEventListener('change', function(event) {
+                const imagePreview = document.getElementById('image-preview');
+                imagePreview.innerHTML = '';
+                
+                if (event.target.files && event.target.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '200px';
+                        img.style.marginTop = '10px';
+                        imagePreview.appendChild(img);
+                    }
+                    
+                    reader.readAsDataURL(event.target.files[0]);
+                }
+            });
+            
+            // Modify the add room button click handler
+            document.getElementById('add-room-btn').addEventListener('click', function() {
+                if (!currentRoomProject) return;
+                
+                const roomTypeSelect = document.getElementById('room-type');
+                const roomType = roomTypeSelect.value;
+                const roomPrice = parseFloat(document.getElementById('room-price').value);
+                const revisions = parseInt(document.getElementById('room-revisions').value) || 2;
+                const imageInput = document.getElementById('room-image');
+                
+                if (roomType && !isNaN(roomPrice)) {
+                    // Create room object with image if available
+                    const roomData = {
+                        type: roomType,
+                        price: roomPrice,
+                        revisions: revisions,
+                        image: null
+                    };
+                    
+                    // Add image if available
+                    if (imageInput.files && imageInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            roomData.image = e.target.result;
+                            currentRoomProject.rooms.push(roomData);
+                            
+                            // Clear input fields
+                            roomTypeSelect.value = '';
+                            document.getElementById('room-price').value = '';
+                            document.getElementById('room-revisions').value = '2';
+                            imageInput.value = '';
+                            document.getElementById('image-preview').innerHTML = '';
+                            
+                            // Update UI
+                            updateRoomProjectPreview();
+                        };
+                        reader.readAsDataURL(imageInput.files[0]);
+                    } else {
+                        currentRoomProject.rooms.push(roomData);
+                        
+                        // Clear input fields
+                        roomTypeSelect.value = '';
+                        document.getElementById('room-price').value = '';
+                        document.getElementById('room-revisions').value = '2';
+                        
+                        // Update UI
+                        updateRoomProjectPreview();
+                    }
+                } else {
+                    alert('Please select a room type');
+                }
+            });
+            
+            // Add room project button click handler
+            document.getElementById('add-room-project-btn').addEventListener('click', function() {
+                if (!currentRoomProject) return;
+                
+                const projectName = document.getElementById('room-project-name').value.trim();
+                
+                if (projectName && currentRoomProject.rooms.length > 0) {
+                    currentRoomProject.name = projectName;
+                    currentRoomProject.type = 'room';
+                    
+                    // Calculate total price
+                    currentRoomProject.price = currentRoomProject.rooms.reduce((sum, room) => sum + room.price, 0);
+                    
+                    projects.push(JSON.parse(JSON.stringify(currentRoomProject)));
+                    
+                    // Reset for next project
+                    currentRoomProject = {
+                        name: '',
+                        rooms: []
+                    };
+                    document.getElementById('room-project-name').value = '';
+                    updateRoomProjectPreview();
+                    updateProjectList();
+                } else {
+                    alert('Please enter project name and add at least one room type');
+                }
+            });
+            
+            // Calculate salary button click handler
+            document.getElementById('calculate-btn').addEventListener('click', function() {
+                if (projects.length === 0) {
+                    alert('Please add at least one project');
+                    return;
+                }
+                
+                const visualizerName = document.getElementById('visualizer-name').value.trim() || 'Visualizer';
+                const month = document.getElementById('month').value;
+                const year = document.getElementById('year').value;
+                
+                // Update summary
+                document.getElementById('summary-name').textContent = visualizerName;
+                document.getElementById('summary-month').textContent = month;
+                document.getElementById('summary-year').textContent = year;
+                
+                // Calculate total salary
+                const totalSalary = projects.reduce((sum, project) => sum + project.price, 0);
+                
+                // Update project summary
+                const summaryProjects = document.getElementById('summary-projects');
+                summaryProjects.innerHTML = '';
+                
+                projects.forEach(project => {
+                    const projectElement = document.createElement('div');
+                    projectElement.className = 'project-item';
+                    
+                    if (project.type === 'single') {
+                        projectElement.innerHTML = `
+                            <span>${project.name}</span>
+                            <span><span class="rupee-symbol">₹</span>${project.price.toLocaleString('en-IN')}</span>
+                        `;
+                    } else {
+                        // Room-based project
+                        projectElement.innerHTML = `
+                            <div>
+                                <div><strong>${project.name}</strong></div>
+                                <div class="room-details">
+                                    ${project.rooms.map(room => `
+                                        <div class="room-item">
+                                            <span>${room.type}</span>
+                                            <span><span class="rupee-symbol">₹</span>${room.price.toLocaleString('en-IN')}</span>
                                         </div>
                                     `).join('')}
                                 </div>
-                                <button type="button" class="btn btn-info btn-sm add-substage mt-2">
-                                    <i class="fas fa-plus"></i> Add Substage
-                                </button>
+                            </div>
+                            <div>
+                                <span class="rupee-symbol">₹</span>${project.price.toLocaleString('en-IN')}
                             </div>
                         `;
-                        $('#stagesContainer').append(stageTemplate);
-                    });
+                    }
+                    
+                    summaryProjects.appendChild(projectElement);
+                });
+                
+                // Update total
+                document.getElementById('total-salary').textContent = totalSalary.toLocaleString('en-IN');
+                
+                // Show results
+                document.getElementById('results').style.display = 'block';
+            });
+            
+            // Update the project list display
+            function updateProjectList() {
+                const projectList = document.getElementById('project-list');
+                projectList.innerHTML = '';
+                
+                if (projects.length === 0) {
+                    projectList.innerHTML = '<p>No projects added yet</p>';
+                    return;
                 }
-            });
-
-            // Close dropdown when clicking outside
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.form-group').length) {
-                    $('#projectSearchDropdown').hide();
-                }
-            });
-
-            // Add new stage
-            $('#addStage').click(function() {
-                const stageCount = $('.stage-group').length + 1;
-                const stageTemplate = `
-                    <div class="stage-group mb-4 border p-3 rounded">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Stage ${stageCount}</h6>
-                            <button type="button" class="btn btn-danger btn-sm remove-stage">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" class="form-control" placeholder="Stage Name" required>
-                        </div>
-                        <div class="substages-container">
-                            <!-- Initial substage container is empty -->
-                        </div>
-                        <button type="button" class="btn btn-info btn-sm add-substage mt-2">
-                            <i class="fas fa-plus"></i> Add Substage
-                        </button>
-                    </div>
-                `;
-                $('#stagesContainer').append(stageTemplate);
-            });
-
-            // Add new substage
-            $(document).on('click', '.add-substage', function() {
-                const substageTemplate = `
-                    <div class="substage-group mb-2">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Substage Name" required>
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-danger remove-substage">
-                                    <i class="fas fa-minus"></i>
-                                </button>
+                
+                projects.forEach((project, index) => {
+                    const projectElement = document.createElement('div');
+                    projectElement.className = 'project-item';
+                    
+                    if (project.type === 'single') {
+                        projectElement.innerHTML = `
+                            <span>${project.name}</span>
+                            <span>
+                                <span class="rupee-symbol">₹</span>${project.price.toLocaleString('en-IN')}
+                                <button class="remove-btn" data-index="${index}">×</button>
+                            </span>
+                        `;
+                    } else {
+                        // Room-based project
+                        projectElement.innerHTML = `
+                            <div>
+                                <div><strong>${project.name}</strong></div>
+                                <div class="room-details">
+                                    ${project.rooms.map(room => `
+                                        <div class="room-item">
+                                            <span>${room.type}</span>
+                                            <span><span class="rupee-symbol">₹</span>${room.price.toLocaleString('en-IN')}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
-                        </div>
+                            <div>
+                                <span class="rupee-symbol">₹</span>${project.price.toLocaleString('en-IN')}
+                                <button class="remove-btn" data-index="${index}">×</button>
+                            </div>
+                        `;
+                    }
+                    
+                    projectList.appendChild(projectElement);
+                });
+                
+                // Add event listeners to remove buttons
+                document.querySelectorAll('.remove-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        projects.splice(index, 1);
+                        updateProjectList();
+                    });
+                });
+            }
+            
+            // Update the room project preview
+            function updateRoomProjectPreview() {
+                const roomPreview = document.getElementById('room-project-preview');
+                
+                if (!currentRoomProject || currentRoomProject.rooms.length === 0) {
+                    roomPreview.innerHTML = '<p>No rooms added yet</p>';
+                    return;
+                }
+                
+                roomPreview.innerHTML = `
+                    <h4>Current Project: ${currentRoomProject.name || 'Untitled'}</h4>
+                    <div class="room-list">
+                        ${currentRoomProject.rooms.map((room, index) => `
+                            <div class="room-preview-item">
+                                <div class="room-details">
+                                    <strong>${room.type}</strong> - 
+                                    <span class="rupee-symbol">₹</span>${room.price.toLocaleString('en-IN')}
+                                    <div>Revisions: ${room.revisions}</div>
+                                </div>
+                                ${room.image ? `<div class="room-image"><img src="${room.image}" alt="${room.type}" style="max-width:100px;max-height:100px;"></div>` : ''}
+                                <button class="remove-room-btn" data-index="${index}">×</button>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
-                $(this).siblings('.substages-container').append(substageTemplate);
-            });
-
-            // Remove stage
-            $(document).on('click', '.remove-stage', function() {
-                $(this).closest('.stage-group').remove();
-                // Renumber remaining stages
-                $('.stage-group').each(function(index) {
-                    $(this).find('h6').text('Stage ' + (index + 1));
-                });
-            });
-
-            // Remove substage
-            $(document).on('click', '.remove-substage', function() {
-                $(this).closest('.substage-group').remove();
-            });
-
-            // Form submission
-            $('#addProjectForm').on('submit', function(e) {
-                e.preventDefault();
-                // Here you would handle the form submission
-                // Including collecting all stages and substages data
-                const formData = {
-                    name: $('#projectName').val(),
-                    status: $('#projectStatus').val(),
-                    client: $('#projectClient').val(),
-                    location: $('#projectLocation').val(),
-                    budget: $('#projectBudget').val(),
-                    progress: $('#projectProgress').val(),
-                    stages: []
-                };
-
-                $('.stage-group').each(function() {
-                    const stage = {
-                        name: $(this).find('input[placeholder="Stage Name"]').val(),
-                        substages: []
-                    };
-
-                    $(this).find('.substage-group input').each(function() {
-                        stage.substages.push($(this).val());
+                
+                // Add event listeners to remove room buttons
+                document.querySelectorAll('.remove-room-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        currentRoomProject.rooms.splice(index, 1);
+                        updateRoomProjectPreview();
                     });
-
-                    formData.stages.push(stage);
                 });
-
-                console.log('Form Data:', formData);
-                // Here you would typically send this data to your backend
-                $('#addProjectModal').modal('hide');
-            });
+            }
+            
+            // Initialize with empty project list message
+            updateProjectList();
         });
     </script>
 </body>

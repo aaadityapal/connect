@@ -76,7 +76,41 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#photoType').text(photoType === 'in' ? 'Punch In' : 'Punch Out');
         $('#photoAddress').text(photoAddress || 'Address not available'); // Display address
     });
+    
+    // Add custom tooltip for overtime explanation
+    addOvertimeTooltips();
 });
+
+/**
+ * Add tooltips to explain the overtime calculation rule
+ */
+function addOvertimeTooltips() {
+    // Add tooltip to overtime column header
+    const overtimeHeader = document.querySelector('th.hours-column:nth-of-type(8)');
+    if (overtimeHeader) {
+        overtimeHeader.setAttribute('data-toggle', 'tooltip');
+        overtimeHeader.setAttribute('data-placement', 'top');
+        overtimeHeader.setAttribute('title', 'Overtime is counted when working ≥ 1hr 30min beyond shift end time');
+        
+        // Initialize the tooltip
+        if (typeof $ !== 'undefined' && typeof $.fn.tooltip !== 'undefined') {
+            $(overtimeHeader).tooltip();
+        }
+    }
+    
+    // Add tooltip to overtime card
+    const overtimeCard = document.querySelector('.dashboard-card.overview-card .icon-box.bg-info');
+    if (overtimeCard) {
+        overtimeCard.parentElement.setAttribute('data-toggle', 'tooltip');
+        overtimeCard.parentElement.setAttribute('data-placement', 'top');
+        overtimeCard.parentElement.setAttribute('title', 'Overtime is counted when working ≥ 1hr 30min beyond shift end time');
+        
+        // Initialize the tooltip
+        if (typeof $ !== 'undefined' && typeof $.fn.tooltip !== 'undefined') {
+            $(overtimeCard.parentElement).tooltip();
+        }
+    }
+}
 
 /**
  * Toggle the left panel sidebar visibility

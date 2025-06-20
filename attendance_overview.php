@@ -93,10 +93,12 @@ try {
                     u.username, 
                     s.shift_name as shift_name,
                     s.start_time as shift_start,
-                    s.end_time as shift_end
+                    s.end_time as shift_end,
+                    us.weekly_offs
                 FROM attendance a
                 JOIN users u ON a.user_id = u.id
                 LEFT JOIN shifts s ON a.shifts_id = s.id
+                LEFT JOIN user_shifts us ON u.id = us.user_id
                 WHERE a.date BETWEEN :startDate AND :endDate
                 AND a.user_id = :userId
                 ORDER BY a.date DESC";
@@ -108,13 +110,119 @@ try {
             ':userId' => $userId
         ]);
 
-        $attendanceRecords = $stmt->fetchAll();
-
-        // Calculate statistics
-        $totalWorkingDays = count(array_unique(array_column($attendanceRecords, 'date')));
+        $rawAttendanceRecords = $stmt->fetchAll();
+        
+        // Remove duplicate records by grouping by date
+        $attendanceRecords = [];
+        $processedDates = [];
+        
+        foreach ($rawAttendanceRecords as $record) {
+            $recordDate = $record['date'];
+            
+            // Only keep the first occurrence of each date
+            if (!in_array($recordDate, $processedDates)) {
+                $attendanceRecords[] = $record;
+                $processedDates[] = $recordDate;
+            }
+        }
+        
+        // Get user's weekly off day from user_shifts table
+        $weeklyOffDay = isset($attendanceRecords[0]['weekly_offs']) ? $attendanceRecords[0]['weekly_offs'] : null;
+        
+        // Calculate total days in month
+        $totalDaysInMonth = date('t', strtotime($startDate));
+        
+        // Calculate weekly offs in the month
+        $weeklyOffsCount = 0;
+        if ($weeklyOffDay !== null) {
+            // Count occurrences of weekly off day in the month
+            for ($day = 1; $day <= $totalDaysInMonth; $day++) {
+                $date = new DateTime("$year-$month-$day");
+                // weekly_offs column stores the day number directly (e.g., 4 for Tuesday)
+                // Convert to 0-6 format (0 = Sunday, 1 = Monday, etc.)
+                $dayOfWeek = $date->format('w'); // 0 (Sunday) through 6 (Saturday)
+                
+                // In the database: Sunday=4, Monday=5, Tuesday=6, Wednesday=12, etc.
+                // Need to map these values to standard day numbers
+                $dayMapping = [
+                    '4' => 0,  // Sunday
+                    '5' => 1,  // Monday
+                    '6' => 2,  // Tuesday
+                    '12' => 3, // Wednesday
+                    '11' => 0  // Sunday (another value for Sunday from the image)
+                ];
+                
+                // Check if the current day matches the weekly off day
+                if (isset($dayMapping[$weeklyOffDay]) && $dayOfWeek == $dayMapping[$weeklyOffDay]) {
+                    $weeklyOffsCount++;
+                }
+            }
+        }
+        
+        // Calculate actual working days (total days minus weekly offs)
+        $totalWorkingDays = $totalDaysInMonth - $weeklyOffsCount;
+        
+        // Calculate present days (days user was actually present)
         $presentDays = count(array_filter($attendanceRecords, function($record) {
             return $record['status'] == 'Present';
         }));
+        
+        // Calculate overtime locally based on shift end time
+        $totalOvertimeHours = 0;
+        $totalWorkingHours = 0;
+        
+        foreach ($attendanceRecords as $key => $record) {
+            // Calculate total working hours
+            if (!empty($record['working_hours'])) {
+                if (is_numeric($record['working_hours'])) {
+                    $totalWorkingHours += $record['working_hours'];
+                } else if (strpos($record['working_hours'], ':') !== false) {
+                    // Convert HH:MM:SS to hours
+                    $parts = explode(':', $record['working_hours']);
+                    if (count($parts) >= 2) {
+                        $hours = intval($parts[0]);
+                        $minutes = intval($parts[1]) / 60;
+                        $totalWorkingHours += $hours + $minutes;
+                    }
+                }
+            }
+            
+            // Only calculate overtime if both punch_out and shift_end exist
+            if (!empty($record['punch_out']) && !empty($record['shift_end'])) {
+                $punchOut = strtotime($record['punch_out']);
+                $shiftEnd = strtotime($record['shift_end']);
+                
+                // Calculate difference in seconds
+                $diffSeconds = $punchOut - $shiftEnd;
+                
+                // Check if worked at least 1 hour and 30 minutes (5400 seconds) after shift end
+                if ($diffSeconds >= 5400) {
+                    // Convert to hours
+                    $overtimeHours = $diffSeconds / 3600;
+                    
+                    // Round down to nearest half hour
+                    $wholeHours = floor($overtimeHours);
+                    $fractionalPart = $overtimeHours - $wholeHours;
+                    
+                    if ($fractionalPart < 0.5) {
+                        $roundedOvertime = $wholeHours;
+                    } else if ($fractionalPart >= 0.5 && $fractionalPart < 1) {
+                        $roundedOvertime = $wholeHours + 0.5;
+                    } else {
+                        $roundedOvertime = $wholeHours + 1;
+                    }
+                    
+                    $attendanceRecords[$key]['overtime_hours'] = $roundedOvertime;
+                    $totalOvertimeHours += $roundedOvertime;
+                } else {
+                    $attendanceRecords[$key]['overtime_hours'] = 0;
+                }
+            } else {
+                $attendanceRecords[$key]['overtime_hours'] = 0;
+            }
+        }
+
+        // Calculate statistics
         $absentDays = count(array_filter($attendanceRecords, function($record) {
             return $record['status'] == 'Absent';
         }));
@@ -136,8 +244,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Attendance Overview</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Add SheetJS library for Excel export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
@@ -442,11 +549,17 @@ try {
             color: #f39c12 !important;
         }
         
-        .charts-container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
+        .overtime {
+            color: #8e44ad !important;
+        }
+        
+        .attendance-table-container {
+            margin-top: 30px;
             margin-bottom: 30px;
+            overflow-x: auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             width: 100%;
         }
         
@@ -1129,47 +1242,16 @@ try {
                         <p class="present"><?php echo $presentDays; ?></p>
                     </div>
                     <div class="stat-card">
-                        <h3>Absent Days</h3>
-                        <p class="absent"><?php echo $absentDays; ?></p>
+                        <h3>Total Working Hours</h3>
+                        <p><?php echo formatHours($totalWorkingHours); ?></p>
                     </div>
                     <div class="stat-card">
-                        <h3>Late Arrivals</h3>
-                        <p class="late"><?php echo $lateDays; ?></p>
+                        <h3>Total Overtime Hours</h3>
+                        <p class="overtime"><?php echo formatHours($totalOvertimeHours); ?></p>
                     </div>
                 </div>
                 
-                <div class="charts-container">
-                    <div class="chart-card">
-                        <h2>Monthly Attendance Trend</h2>
-                        <div class="chart-container">
-                            <canvas id="attendanceTrendChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h2>Attendance Distribution</h2>
-                        <div class="chart-container">
-                            <canvas id="attendancePieChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="chart-card daily-trend">
-                    <h2>Daily Attendance Pattern</h2>
-                    <div class="chart-container">
-                        <canvas id="dailyPatternChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="bottom-section">
-                    <div class="chart-card">
-                        <h2>Attendance by Weekday</h2>
-                        <div class="chart-container">
-                            <canvas id="weekdayChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Update the attendance table to use real data -->
+                <!-- Attendance Table -->
                 <div class="attendance-table-container">
                     <div class="table-header">
                         <h2>Detailed Attendance Records</h2>
@@ -1276,8 +1358,6 @@ try {
                     yearSelect.value = <?php echo $year; ?>;
                 }
                 
-                renderAllCharts();
-                
                 // Add event listener for filter button
                 const filterBtn = document.getElementById('apply-filters');
                 if (filterBtn) {
@@ -1313,9 +1393,6 @@ try {
                         mainContent.style.width = 'calc(100% - 250px)';
                         showPanelNotification('Panel expanded (Ctrl+B to collapse)');
                     }
-                    
-                    // Resize charts after panel toggle
-                    setTimeout(handleResize, 300);
                 };
                 
                 // Add toggle button click handler
@@ -1409,19 +1486,6 @@ try {
                 window.addEventListener('orientationchange', function() {
                     // Small delay to ensure DOM updates after orientation change
                     setTimeout(function() {
-                        // Re-render charts to fit new dimensions
-                        renderAllCharts();
-                        
-                        // Reset panel state on orientation change to landscape
-                        if (window.innerWidth > window.innerHeight) {
-                            const leftPanel = document.getElementById('leftPanel');
-                            if (window.innerWidth < 896) {
-                                leftPanel.classList.remove('mobile-open');
-                                document.getElementById('overlay').classList.remove('active');
-                                document.getElementById('mainContent').style.marginLeft = '0';
-                            }
-                        }
-                        
                         // Check if scrolling is needed
                         checkPanelScrolling();
                     }, 300);
@@ -1474,367 +1538,7 @@ try {
             }
         });
         
-        function renderAllCharts() {
-            // Check if Chart is available
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded!');
-                return;
-            }
-            
-            // Set default Chart.js options for better mobile experience
-            Chart.defaults.font.size = window.innerWidth < 480 ? 10 : 12;
-            Chart.defaults.responsive = true;
-            Chart.defaults.maintainAspectRatio = false;
-            
-            // Get attendance data from PHP
-            const attendanceData = <?php 
-                // Create arrays for chart data
-                $presentDaysByWeek = [0, 0, 0, 0, 0]; // 5 weeks max
-                $absentDaysByWeek = [0, 0, 0, 0, 0];
-                $lateDaysByWeek = [0, 0, 0, 0, 0];
-                $checkInTimes = [];
-                $checkInByWeekday = [0, 0, 0, 0, 0, 0, 0]; // Sun-Sat
-                $checkInCountByWeekday = [0, 0, 0, 0, 0, 0, 0]; // For calculating averages
-                
-                // Process attendance records
-                foreach ($attendanceRecords as $record) {
-                    $date = new DateTime($record['date']);
-                    $weekOfMonth = ceil($date->format('j') / 7); // 1-5
-                    $weekday = $date->format('w'); // 0-6 (Sun-Sat)
-                    
-                    // Adjust for zero-based array
-                    $weekOfMonth = min($weekOfMonth - 1, 4);
-                    
-                    // Count by status
-                    if ($record['status'] == 'Present') {
-                        $presentDaysByWeek[$weekOfMonth]++;
-                    } else if ($record['status'] == 'Absent') {
-                        $absentDaysByWeek[$weekOfMonth]++;
-                    } else if ($record['status'] == 'Late') {
-                        $lateDaysByWeek[$weekOfMonth]++;
-                    }
-                    
-                    // Process check-in times
-                    if (!empty($record['punch_in'])) {
-                        $punchInTime = new DateTime($record['punch_in']);
-                        $hour = (float)$punchInTime->format('G');
-                        $minute = (float)$punchInTime->format('i') / 60;
-                        $checkInTime = $hour + $minute;
-                        
-                        // Store check-in time for daily pattern
-                        $checkInTimes[$date->format('j')] = $checkInTime;
-                        
-                        // Add to weekday average
-                        $checkInByWeekday[$weekday] += $checkInTime;
-                        $checkInCountByWeekday[$weekday]++;
-                    }
-                }
-                
-                // Calculate averages for weekdays
-                for ($i = 0; $i < 7; $i++) {
-                    if ($checkInCountByWeekday[$i] > 0) {
-                        $checkInByWeekday[$i] = $checkInByWeekday[$i] / $checkInCountByWeekday[$i];
-                    } else {
-                        $checkInByWeekday[$i] = null;
-                    }
-                }
-                
-                // Create JSON data for charts
-                $chartData = [
-                    'presentDaysByWeek' => $presentDaysByWeek,
-                    'absentDaysByWeek' => $absentDaysByWeek,
-                    'lateDaysByWeek' => $lateDaysByWeek,
-                    'checkInTimes' => $checkInTimes,
-                    'checkInByWeekday' => $checkInByWeekday,
-                    'totalPresent' => $presentDays,
-                    'totalAbsent' => $absentDays,
-                    'totalLate' => $lateDays,
-                    'totalWorkingDays' => $totalWorkingDays
-                ];
-                
-                echo json_encode($chartData);
-            ?>;
-            
-            // Render all charts with actual data
-            renderTrendChart(attendanceData);
-            renderPieChart(attendanceData);
-            renderDailyPatternChart(attendanceData);
-            renderWeekdayChart(attendanceData);
-        }
-        
-        function renderTrendChart(attendanceData) {
-            const ctx = document.getElementById('attendanceTrendChart').getContext('2d');
-            
-            // Destroy previous chart instance properly
-            if (window.attendanceTrendChart instanceof Chart) {
-                window.attendanceTrendChart.destroy();
-            }
-            
-            const month = document.getElementById('month').value;
-            const year = document.getElementById('year').value;
-            
-            // Use actual data from PHP
-            const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
-            const presentData = attendanceData.presentDaysByWeek;
-            const absentData = attendanceData.absentDaysByWeek;
-            const lateData = attendanceData.lateDaysByWeek;
-            
-            window.attendanceTrendChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Present',
-                            data: presentData,
-                            backgroundColor: '#2ecc71',
-                            borderColor: '#27ae60',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Absent',
-                            data: absentData,
-                            backgroundColor: '#e74c3c',
-                            borderColor: '#c0392b',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Late',
-                            data: lateData,
-                            backgroundColor: '#f39c12',
-                            borderColor: '#d35400',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Days'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: `Weeks of ${document.getElementById('month').options[month-1].text} ${year}`
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Attendance Trend for ${document.getElementById('month').options[month-1].text} ${year}`
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        }
-                    }
-                }
-            });
-        }
-        
-        function renderPieChart(attendanceData) {
-            const ctx = document.getElementById('attendancePieChart').getContext('2d');
-            
-            if (window.attendancePieChart instanceof Chart) {
-                window.attendancePieChart.destroy();
-            }
-            
-            window.attendancePieChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Present', 'Absent', 'Late', 'Other'],
-                    datasets: [{
-                        data: [
-                            attendanceData.totalPresent,
-                            attendanceData.totalAbsent,
-                            attendanceData.totalLate,
-                            Math.max(0, attendanceData.totalWorkingDays - attendanceData.totalPresent - attendanceData.totalAbsent - attendanceData.totalLate)
-                        ],
-                        backgroundColor: [
-                            '#2ecc71',
-                            '#e74c3c',
-                            '#f39c12',
-                            '#3498db'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Attendance Distribution'
-                        }
-                    }
-                }
-            });
-        }
-        
-        function renderDailyPatternChart(attendanceData) {
-            const ctx = document.getElementById('dailyPatternChart').getContext('2d');
-            
-            if (window.dailyPatternChart instanceof Chart) {
-                window.dailyPatternChart.destroy();
-            }
-            
-            // Process check-in times data
-            const checkInTimes = attendanceData.checkInTimes;
-            const days = [];
-            const times = [];
-            
-            // Sort by day number
-            const sortedDays = Object.keys(checkInTimes).sort((a, b) => parseInt(a) - parseInt(b));
-            
-            sortedDays.forEach(day => {
-                days.push(`Day ${day}`);
-                times.push(checkInTimes[day]);
-            });
-            
-            window.dailyPatternChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: days,
-                    datasets: [{
-                        label: 'Check-in Time (AM)',
-                        data: times,
-                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                        borderColor: 'rgba(52, 152, 219, 1)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 7,
-                            max: 11,
-                            title: {
-                                display: true,
-                                text: 'Time (AM)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ':00';
-                                }
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Days'
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const hours = Math.floor(value);
-                                    const minutes = Math.floor((value - hours) * 60);
-                                    return `Check-in: ${hours}:${minutes.toString().padStart(2, '0')} AM`;
-                                }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Daily Check-in Times'
-                        }
-                    }
-                }
-            });
-        }
-        
-        function renderWeekdayChart(attendanceData) {
-            const ctx = document.getElementById('weekdayChart').getContext('2d');
-            
-            if (window.weekdayChart instanceof Chart) {
-                window.weekdayChart.destroy();
-            }
-            
-            // Use actual weekday data
-            const weekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const checkInData = attendanceData.checkInByWeekday;
-            
-            window.weekdayChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: weekdayLabels,
-                    datasets: [{
-                        label: 'Average Check-in Time',
-                        data: checkInData,
-                        backgroundColor: 'rgba(155, 89, 182, 0.6)',
-                        borderColor: 'rgba(142, 68, 173, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 7,
-                            max: 11,
-                            title: {
-                                display: true,
-                                text: 'Time (AM)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ':00';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    if (value === null) return 'No data';
-                                    const hours = Math.floor(value);
-                                    const minutes = Math.floor((value - hours) * 60);
-                                    return `Avg: ${hours}:${minutes.toString().padStart(2, '0')} AM`;
-                                }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Attendance by Weekday'
-                        }
-                    }
-                }
-            });
-        }
+
 
         // Add this function definition after the togglePanel function
         function showPanelNotification(message) {
@@ -2269,31 +1973,7 @@ try {
                 });
         }
 
-        // Add this function to your JavaScript section
-        function handleResize() {
-            // Resize charts when window size changes
-            if (window.attendanceTrendChart instanceof Chart) {
-                window.attendanceTrendChart.resize();
-            }
-            if (window.attendancePieChart instanceof Chart) {
-                window.attendancePieChart.resize();
-            }
-            if (window.dailyPatternChart instanceof Chart) {
-                window.dailyPatternChart.resize();
-            }
-            if (window.weekdayChart instanceof Chart) {
-                window.weekdayChart.resize();
-            }
-        }
 
-        // Add resize event listener
-        window.addEventListener('resize', function() {
-            // Debounce resize handler
-            clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(function() {
-                handleResize();
-            }, 250);
-        });
 
         // Add this function to display attendance photos in a modal
         function viewAttendancePhoto(photoPath, type, date) {

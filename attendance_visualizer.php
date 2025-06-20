@@ -94,7 +94,8 @@ $total_overtime_hours = 0;
 // Array to store unique dates for counting
 $unique_dates = [];
 
-foreach ($attendance_records as $record) {
+// Process each attendance record to calculate overtime locally
+foreach ($attendance_records as $key => $record) {
     // Count unique dates as present
     if (!in_array($record['date'], $unique_dates)) {
         $unique_dates[] = $record['date'];
@@ -118,19 +119,78 @@ foreach ($attendance_records as $record) {
         $working_hours = $hours + $minutes;
         $total_working_hours += $working_hours;
         
-        // If shift info exists, calculate overtime
-        if (!empty($record['start_time']) && !empty($record['end_time'])) {
-            $shift_start = new DateTime($record['start_time']);
-            $shift_end = new DateTime($record['end_time']);
-            $shift_interval = $shift_start->diff($shift_end);
+        // Calculate overtime locally based on shift end time
+        if (!empty($record['end_time'])) {
+            // Create DateTime objects for the actual punch-out time and the expected shift end time on the same day
+            $actual_end_time = clone $punch_out;
+            $expected_end_time = new DateTime($record['date'] . ' ' . $record['end_time']);
             
-            $shift_hours = $shift_interval->h + ($shift_interval->days * 24);
-            $shift_minutes = $shift_interval->i / 60;
-            $shift_duration = $shift_hours + $shift_minutes;
-            
-            if ($working_hours > $shift_duration) {
-                $total_overtime_hours += ($working_hours - $shift_duration);
+            // Only count as overtime if they punched out after their shift end time
+            if ($actual_end_time > $expected_end_time) {
+                // Calculate how many minutes the user worked beyond their shift end time
+                $overtime_interval = $expected_end_time->diff($actual_end_time);
+                $overtime_minutes = ($overtime_interval->h * 60) + $overtime_interval->i;
+                
+                // Only count as overtime if they worked at least 1 hour and 30 minutes (90 minutes) beyond shift end
+                if ($overtime_minutes >= 90) {
+                    // NEW ROUNDING RULE:
+                    // If overtime is between 1:30 and 2:00, count as 1:30
+                    // If overtime is between 2:00 and 2:30, count as 2:00
+                    // And so on...
+                    
+                    // First, convert to hours and remaining minutes
+                    $overtime_hours = floor($overtime_minutes / 60);
+                    $remaining_minutes = $overtime_minutes % 60;
+                    
+                    // Apply rounding rule
+                    if ($remaining_minutes > 0 && $remaining_minutes < 30) {
+                        // Round down to the nearest half hour
+                        if ($overtime_hours == 1) {
+                            // Special case for 1:01-1:29 -> count as 1:30
+                            $overtime_hours = 1;
+                            $remaining_minutes = 30;
+                        } else {
+                            // For hours >= 2, round down to the exact hour
+                            $remaining_minutes = 0;
+                        }
+                    } elseif ($remaining_minutes >= 30) {
+                        // For minutes >= 30, always count as half hour
+                        $remaining_minutes = 30;
+                    }
+                    
+                    // Recalculate total overtime in hours (for calculations)
+                    $overtime_hours_decimal = $overtime_hours + ($remaining_minutes / 60);
+                    $total_overtime_hours += $overtime_hours_decimal;
+                    
+                    // Format for display: "X hour(s) and Y minute(s)"
+                    $overtime_display = "";
+                    if ($overtime_hours > 0) {
+                        $overtime_display .= $overtime_hours . " hour" . ($overtime_hours > 1 ? "s" : "");
+                        if ($remaining_minutes > 0) {
+                            $overtime_display .= " and ";
+                        }
+                    }
+                    if ($remaining_minutes > 0) {
+                        $overtime_display .= $remaining_minutes . " minute" . ($remaining_minutes > 1 ? "s" : "");
+                    }
+                    
+                    // Store overtime hours in the attendance_records array for display in the table
+                    $attendance_records[$key]['overtime_hours'] = $overtime_display;
+                    $attendance_records[$key]['overtime_hours_decimal'] = $overtime_hours_decimal; // Store decimal value for charts
+                } else {
+                    // No overtime if less than 90 minutes beyond shift end
+                    $attendance_records[$key]['overtime_hours'] = null;
+                    $attendance_records[$key]['overtime_hours_decimal'] = 0;
+                }
+            } else {
+                // No overtime if punched out before shift end
+                $attendance_records[$key]['overtime_hours'] = null;
+                $attendance_records[$key]['overtime_hours_decimal'] = 0;
             }
+        } else {
+            // No overtime if no shift end time available
+            $attendance_records[$key]['overtime_hours'] = null;
+            $attendance_records[$key]['overtime_hours_decimal'] = 0;
         }
     }
     
@@ -188,8 +248,40 @@ $format_hours = function($hours) {
     return sprintf("%02d:%02d", $whole_hours, $minutes);
 };
 
+// Format for display with text
+$format_hours_text = function($hours) {
+    $whole_hours = floor($hours);
+    $minutes = round(($hours - $whole_hours) * 60);
+    
+    // Apply the same rounding rule as individual records
+    if ($minutes > 0 && $minutes < 30) {
+        if ($whole_hours == 1) {
+            // Special case for 1:01-1:29 -> count as 1:30
+            $minutes = 30;
+        } else {
+            // For hours >= 2, round down to the exact hour
+            $minutes = 0;
+        }
+    } elseif ($minutes >= 30) {
+        // For minutes >= 30, always count as half hour
+        $minutes = 30;
+    }
+    
+    $result = "";
+    if ($whole_hours > 0) {
+        $result .= $whole_hours . " hour" . ($whole_hours > 1 ? "s" : "");
+        if ($minutes > 0) {
+            $result .= " and ";
+        }
+    }
+    if ($minutes > 0) {
+        $result .= $minutes . " minute" . ($minutes > 1 ? "s" : "");
+    }
+    return $result;
+};
+
 $formatted_working_hours = $format_hours($total_working_hours);
-$formatted_overtime_hours = $format_hours($total_overtime_hours);
+$formatted_overtime_hours = $format_hours_text($total_overtime_hours);
 ?>
 
 <!DOCTYPE html>
@@ -543,7 +635,7 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                         </div>
                         <div class="overview-details">
                             <h3><?php echo $formatted_overtime_hours; ?></h3>
-                            <p>Overtime Hours</p>
+                            <p>Overtime Hours <i class="fas fa-info-circle" data-toggle="tooltip" title="Counted when working ≥ 1hr 30min beyond shift end. Overtime between 1:30-2:00 is counted as 1:30."></i></p>
                             <div class="progress">
                                 <div class="progress-bar bg-info" role="progressbar" 
                                      style="width: <?php echo ($total_working_hours > 0) ? min(100, ($total_overtime_hours / $total_working_hours) * 100) : 0; ?>%" 
@@ -622,7 +714,7 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                                         <th class="address-column">Punch Out Address</th>
                                         <th class="hours-column">Working Hours</th>
                                         <th class="status-column">Status</th>
-                                        <th class="hours-column">Overtime Hours</th>
+                                        <th class="hours-column">Overtime Hours <i class="fas fa-info-circle" data-toggle="tooltip" title="Counted when working ≥ 1hr 30min beyond shift end. Overtime between 1:30-2:00 is counted as 1:30."></i></th>
                                         <th class="report-column">Work Report <button id="exportWorkReportsBtn" class="btn btn-sm btn-outline-success ml-2" title="Export Work Reports"><i class="fas fa-file-excel"></i></button></th>
                                     </tr>
                                 </thead>
@@ -915,10 +1007,10 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                     $time_parts = explode(':', $record['total_hours']);
                     $hours = intval($time_parts[0]) + (intval($time_parts[1]) / 60);
                     
-                    // Check if overtime_hours exists in the record
+                    // Use our locally calculated overtime hours (decimal value for charts)
                     $overtime = 0;
-                    if (!empty($record['overtime_hours'])) {
-                        $overtime = floatval($record['overtime_hours']);
+                    if (!empty($record['overtime_hours_decimal'])) {
+                        $overtime = floatval($record['overtime_hours_decimal']);
                     }
                     
                     // Regular hours are total hours minus overtime
@@ -1041,7 +1133,7 @@ $formatted_overtime_hours = $format_hours($total_overtime_hours);
                         },
                         title: {
                             display: true,
-                            text: 'Daily Working Hours with Overtime',
+                            text: 'Daily Working Hours with Overtime (≥ 1hr 30min beyond shift)',
                             font: {
                                 size: 16,
                                 weight: 'bold'

@@ -8,6 +8,13 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Check if user has HR role
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'HR') {
+    // Redirect to an access denied page or dashboard
+    header("Location: access_denied.php?message=You must have HR role to access this page");
+    exit;
+}
+
 // Include database connection
 require_once 'config/db_connect.php';
 
@@ -1962,19 +1969,60 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
         <div class="summary-cards">
             <div class="card total">
                 <h3>Total Employees</h3>
-                    <p id="totalEmployees"><?php echo $total_users; ?></p>
+                <p id="totalEmployees"><?php echo $total_users; ?></p>
             </div>
-            <div class="card average">
-                <h3>Average Salary</h3>
-                <p id="avgSalary">$0</p>
+            <div class="card monthly-outstanding" style="border-top: 4px solid #10b981;">
+                <h3>Monthly Outstanding</h3>
+                <p id="monthlyOutstanding">
+                    <?php 
+                        $total_monthly_salary = 0;
+                        foreach ($users as $user) {
+                            $total_monthly_salary += isset($user['monthly_salary']) ? $user['monthly_salary'] : 0;
+                        }
+                        echo '₹' . number_format($total_monthly_salary, 2);
+                    ?>
+                </p>
             </div>
-            <div class="card highest">
-                <h3>Highest Salary</h3>
-                <p id="maxSalary">$0</p>
+            <div class="card" style="border-top: 4px solid #3b82f6;">
+                <h3>Total Overtime</h3>
+                <p id="totalOvertime">
+                    <?php 
+                        $total_overtime_amount = 0;
+                        foreach ($users as $user) {
+                            $total_overtime_amount += isset($user['overtime_amount']) ? $user['overtime_amount'] : 0;
+                        }
+                        echo '₹' . number_format($total_overtime_amount, 2);
+                    ?>
+                </p>
             </div>
-            <div class="card lowest">
-                <h3>Lowest Salary</h3>
-                <p id="minSalary">$0</p>
+            <div class="card" style="border-top: 4px solid #ec4899;">
+                <h3>Total Payable Amount</h3>
+                <p id="totalPayable">
+                    <?php
+                        $total_payable = 0;
+                        foreach ($users as $user) {
+                            // Monthly salary + overtime amount
+                            $monthly_salary = isset($user['monthly_salary']) ? $user['monthly_salary'] : 0;
+                            $overtime_amount = isset($user['overtime_amount']) ? $user['overtime_amount'] : 0;
+                            
+                            // Calculate total payable for this employee
+                            // Adjust for extra days if needed
+                            $extra_days = isset($user['present_days']) && isset($user['working_days_count']) ? 
+                                          $user['present_days'] - $user['working_days_count'] : 0;
+                            
+                            if ($extra_days > 0) {
+                                // Don't include extra days in current month's payable
+                                $daily_salary = isset($user['working_days_count']) && $user['working_days_count'] > 0 ? 
+                                              $user['base_salary'] / $user['working_days_count'] : 0;
+                                $extra_days_salary = $extra_days * $daily_salary;
+                                $monthly_salary = $monthly_salary - $extra_days_salary;
+                            }
+                            
+                            $total_payable += $monthly_salary + $overtime_amount;
+                        }
+                        echo '₹' . number_format($total_payable, 2);
+                    ?>
+                </p>
             </div>
         </div>
             
@@ -2081,19 +2129,19 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                     </form>
                                 </td>
                                 <td>
-                                    <?php echo $user['working_days_count']; ?> days
+                                    <?php echo $user['working_days_count']; ?> 
                                     <?php if (!empty($user['shift_name']) && !empty($user['weekly_offs'])): ?>
                                         <span class="shift-info" title="<?php echo htmlspecialchars($user['shift_name']); ?>: <?php echo date('h:i A', strtotime($user['start_time'])); ?> - <?php echo date('h:i A', strtotime($user['end_time'])); ?> | Weekly Off: <?php echo htmlspecialchars($user['weekly_offs']); ?>">
                                             <i class="bi bi-info-circle"></i>
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $user['present_days']; ?> days
+                                <td><?php echo $user['present_days']; ?> 
                                     <span class="attendance-info" data-user-id="<?php echo $user['id']; ?>" data-username="<?php echo htmlspecialchars($user['username']); ?>" data-month="<?php echo $selected_month; ?>">
                                         <i class="bi bi-info-circle"></i>
                                     </span>
                                 </td>
-                                <td><?php echo $user['late_days']; ?> days
+                                <td><?php echo $user['late_days']; ?> 
                                     <span class="late-info" data-user-id="<?php echo $user['id']; ?>" data-username="<?php echo htmlspecialchars($user['username']); ?>" data-month="<?php echo $selected_month; ?>" data-shift-start="<?php echo date('h:i A', strtotime($user['start_time'] ?? '09:00:00')); ?>">
                                         <i class="bi bi-exclamation-circle text-warning"></i>
                                     </span>

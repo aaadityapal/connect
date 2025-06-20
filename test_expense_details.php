@@ -7,23 +7,53 @@ require_once 'config/db_connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    echo "You need to be logged in to view this page.";
-    exit;
+    echo "You must be logged in to view this page.";
+    exit();
 }
 
-$user_id = $_SESSION['user_id'];
+// Get expense ID from query parameter
+$expenseId = isset($_GET['id']) ? intval($_GET['id']) : null;
 
-// Get the first expense ID for this user
-$stmt = $conn->prepare("SELECT id FROM travel_expenses WHERE user_id = ? LIMIT 1");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
+if (!$expenseId) {
+    echo "Please provide an expense ID using ?id=X in the URL.";
+    exit();
+}
 
-if ($row = $result->fetch_assoc()) {
-    $expense_id = $row['id'];
-} else {
-    echo "No expenses found for this user.";
-    exit;
+// Initialize cURL session
+$ch = curl_init();
+
+// Set cURL options
+curl_setopt($ch, CURLOPT_URL, "http://{$_SERVER['HTTP_HOST']}/hr/get_expense_details.php?id=" . $expenseId);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_COOKIE, session_name() . '=' . session_id());
+
+// Execute the request
+$response = curl_exec($ch);
+
+// Check for errors
+if (curl_errno($ch)) {
+    echo "cURL Error: " . curl_error($ch);
+    exit();
+}
+
+// Close cURL session
+curl_close($ch);
+
+// Display the response
+echo "<h1>Expense Details Test</h1>";
+echo "<h2>Raw Response:</h2>";
+echo "<pre>" . htmlspecialchars($response) . "</pre>";
+
+// Decode and display structured data
+$expenseData = json_decode($response, true);
+echo "<h2>Decoded Data:</h2>";
+echo "<pre>" . print_r($expenseData, true) . "</pre>";
+
+// If there's an error in the response, display it prominently
+if (isset($expenseData['error'])) {
+    echo "<div style='color: red; font-weight: bold;'>";
+    echo "Error: " . htmlspecialchars($expenseData['error']);
+    echo "</div>";
 }
 ?>
 <!DOCTYPE html>
@@ -37,11 +67,11 @@ if ($row = $result->fetch_assoc()) {
 <body>
     <div class="container mt-5">
         <h1>Test Expense Details</h1>
-        <p>Testing expense details for expense ID: <?php echo $expense_id; ?></p>
+        <p>Testing expense details for expense ID: <?php echo $expenseId; ?></p>
         
         <div class="row">
             <div class="col-md-6">
-                <button id="testButton" class="btn btn-primary" data-id="<?php echo $expense_id; ?>">
+                <button id="testButton" class="btn btn-primary" data-id="<?php echo $expenseId; ?>">
                     Test View Expense Details
                 </button>
             </div>

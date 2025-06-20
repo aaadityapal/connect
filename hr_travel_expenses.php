@@ -21,6 +21,7 @@ $filterUser = isset($_GET['user_id']) ? $_GET['user_id'] : '';
 $filterRoleStatus = isset($_GET['role_status']) ? $_GET['role_status'] : '';
 $filterFromDate = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $filterToDate = isset($_GET['to_date']) ? $_GET['to_date'] : '';
+$filterWeek = isset($_GET['week']) ? $_GET['week'] : '';
 
 // Fetch travel expense statistics from database
 try {
@@ -34,11 +35,50 @@ try {
         $baseParams[] = $filterUser;
     }
     
-    // If date range is specified, use that instead of month/year
+    // If date range is specified, use that instead of month/year/week
     if (!empty($filterFromDate) && !empty($filterToDate)) {
         $baseConditions .= " AND travel_date BETWEEN ? AND ?";
         $baseParams[] = $filterFromDate;
         $baseParams[] = $filterToDate;
+    } else if (!empty($filterWeek)) {
+        // Calculate the date range for the selected week
+        $firstDayOfMonth = new DateTime("$filterYear-$filterMonth-01");
+        $firstDayOfWeek = clone $firstDayOfMonth;
+        
+        // Week 1 starts from the first day of month
+        if ($filterWeek == 1) {
+            $lastDayOfWeek = clone $firstDayOfMonth;
+            // Find the first Sunday
+            while ($lastDayOfWeek->format('w') != 0) { // 0 = Sunday
+                $lastDayOfWeek->modify('+1 day');
+            }
+        } else {
+            // For other weeks, calculate start and end dates
+            // Week 2 starts from the day after the first Sunday
+            $weekStart = $firstDayOfMonth;
+            // Find the first Sunday
+            while ($weekStart->format('w') != 0) {
+                $weekStart->modify('+1 day');
+            }
+            // Add days for subsequent weeks
+            $daysToAdd = ($filterWeek - 1) * 7;
+            $firstDayOfWeek = clone $weekStart;
+            $firstDayOfWeek->modify("+1 day"); // Start from Monday after first Sunday
+            $firstDayOfWeek->modify("+" . ($daysToAdd - 7) . " days");
+            
+            $lastDayOfWeek = clone $firstDayOfWeek;
+            $lastDayOfWeek->modify('+6 days'); // End on Sunday
+            
+            // Make sure we don't go past the end of the month
+            $lastDayOfMonth = new DateTime("$filterYear-$filterMonth-" . date('t', strtotime("$filterYear-$filterMonth-01")));
+            if ($lastDayOfWeek > $lastDayOfMonth) {
+                $lastDayOfWeek = clone $lastDayOfMonth;
+            }
+        }
+        
+        $baseConditions .= " AND travel_date BETWEEN ? AND ?";
+        $baseParams[] = $firstDayOfWeek->format('Y-m-d');
+        $baseParams[] = $lastDayOfWeek->format('Y-m-d');
     } else {
         // Add month filter if specified
         if (!empty($filterMonth)) {
@@ -185,11 +225,50 @@ try {
         $params[] = $filterUser;
     }
     
-    // If date range is specified, use that instead of month/year
+    // If date range is specified, use that instead of month/year/week
     if (!empty($filterFromDate) && !empty($filterToDate)) {
         $query .= " AND te.travel_date BETWEEN ? AND ?";
         $params[] = $filterFromDate;
         $params[] = $filterToDate;
+    } else if (!empty($filterWeek)) {
+        // Calculate the date range for the selected week
+        $firstDayOfMonth = new DateTime("$filterYear-$filterMonth-01");
+        $firstDayOfWeek = clone $firstDayOfMonth;
+        
+        // Week 1 starts from the first day of month
+        if ($filterWeek == 1) {
+            $lastDayOfWeek = clone $firstDayOfMonth;
+            // Find the first Sunday
+            while ($lastDayOfWeek->format('w') != 0) { // 0 = Sunday
+                $lastDayOfWeek->modify('+1 day');
+            }
+        } else {
+            // For other weeks, calculate start and end dates
+            // Week 2 starts from the day after the first Sunday
+            $weekStart = $firstDayOfMonth;
+            // Find the first Sunday
+            while ($weekStart->format('w') != 0) {
+                $weekStart->modify('+1 day');
+            }
+            // Add days for subsequent weeks
+            $daysToAdd = ($filterWeek - 1) * 7;
+            $firstDayOfWeek = clone $weekStart;
+            $firstDayOfWeek->modify("+1 day"); // Start from Monday after first Sunday
+            $firstDayOfWeek->modify("+" . ($daysToAdd - 7) . " days");
+            
+            $lastDayOfWeek = clone $firstDayOfWeek;
+            $lastDayOfWeek->modify('+6 days'); // End on Sunday
+            
+            // Make sure we don't go past the end of the month
+            $lastDayOfMonth = new DateTime("$filterYear-$filterMonth-" . date('t', strtotime("$filterYear-$filterMonth-01")));
+            if ($lastDayOfWeek > $lastDayOfMonth) {
+                $lastDayOfWeek = clone $lastDayOfMonth;
+            }
+        }
+        
+        $query .= " AND te.travel_date BETWEEN ? AND ?";
+        $params[] = $firstDayOfWeek->format('Y-m-d');
+        $params[] = $lastDayOfWeek->format('Y-m-d');
     } else {
         // Add month filter if specified
         if (!empty($filterMonth)) {
@@ -3010,6 +3089,51 @@ if (!empty($filterMonth)) {
                 ?>
               </select>
             </div>
+            <div class="filter-item date-filter-group" id="weekFilters" style="<?php echo (!empty($filterFromDate) && !empty($filterToDate)) ? 'display: none;' : ''; ?>">
+              <select name="week" id="weekFilter" class="form-select">
+                <option value="">All Weeks</option>
+                <?php
+                // Calculate number of weeks in the month
+                $firstDayOfMonth = new DateTime("$filterYear-$filterMonth-01");
+                $lastDayOfMonth = new DateTime("$filterYear-$filterMonth-" . date('t', strtotime("$filterYear-$filterMonth-01")));
+                
+                // Find the first Sunday
+                $firstSunday = clone $firstDayOfMonth;
+                while ($firstSunday->format('w') != 0) { // 0 = Sunday
+                    $firstSunday->modify('+1 day');
+                }
+                
+                // Week 1: From 1st day of month to first Sunday
+                $week1End = clone $firstSunday;
+                $week1Start = clone $firstDayOfMonth;
+                $selected = $filterWeek == '1' ? 'selected' : '';
+                echo "<option value=\"1\" $selected>Week 1 (" . $week1Start->format('d') . "-" . $week1End->format('d') . ")</option>";
+                
+                // Calculate remaining weeks
+                $weekStart = clone $firstSunday;
+                $weekStart->modify('+1 day'); // Start from Monday
+                $weekNum = 2;
+                
+                while ($weekStart <= $lastDayOfMonth) {
+                    $weekEnd = clone $weekStart;
+                    $weekEnd->modify('+6 days'); // End on Sunday
+                    
+                    if ($weekEnd > $lastDayOfMonth) {
+                        $weekEnd = clone $lastDayOfMonth;
+                    }
+                    
+                    $selected = $filterWeek == $weekNum ? 'selected' : '';
+                    echo "<option value=\"$weekNum\" $selected>Week $weekNum (" . $weekStart->format('d') . "-" . $weekEnd->format('d') . ")</option>";
+                    
+                    $weekStart->modify('+7 days');
+                    $weekNum++;
+                    
+                    // Limit to 5 weeks maximum
+                    if ($weekNum > 5) break;
+                }
+                ?>
+              </select>
+            </div>
             <div class="filter-item date-filter-group" id="dateRangeFilters" style="<?php echo (!empty($filterFromDate) && !empty($filterToDate)) ? '' : 'display: none;'; ?>">
               <div class="date-range-inputs">
                 <input type="date" id="fromDateFilter" name="from_date" class="form-control" placeholder="From Date" value="<?php echo $filterFromDate; ?>">
@@ -3132,6 +3256,13 @@ if (!empty($filterMonth)) {
           <p>Recent Month Approved</p>
               </div>
     </div>
+      
+      <!-- Pay Expenses Button -->
+      <div class="text-center mt-3">
+        <a href="hr_travel_expenses_pay.php" class="btn btn-primary btn-lg">
+          <i class="bi bi-cash-coin"></i> Pay Expenses
+        </a>
+      </div>
     </div>
 
     <div class="gap-spacer"></div>
@@ -3332,6 +3463,18 @@ if (!empty($filterMonth)) {
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const toggleButton = document.getElementById('sidebarToggle');
+        
+        // Add event listeners for month and year changes to update week options
+        const monthFilter = document.getElementById('monthFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        
+        if (monthFilter && yearFilter) {
+            monthFilter.addEventListener('change', updateWeekOptions);
+            yearFilter.addEventListener('change', updateWeekOptions);
+        }
+        
+        // Initial update of week options
+        updateWeekOptions();
         
         // Check saved state
         const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -4808,10 +4951,11 @@ if (!empty($filterMonth)) {
       }
     }
 
-    // Function to toggle between date range and month/year filters
+    // Function to toggle between date range and month/year/week filters
     function toggleDateFilterType() {
       const monthYearFilters = document.getElementById('monthYearFilters');
       const yearFilters = document.getElementById('yearFilters');
+      const weekFilters = document.getElementById('weekFilters');
       const dateRangeFilters = document.getElementById('dateRangeFilters');
       const toggleBtn = document.getElementById('toggleDateFilter');
       
@@ -4819,8 +4963,9 @@ if (!empty($filterMonth)) {
         // Switch to date range
         monthYearFilters.style.display = 'none';
         yearFilters.style.display = 'none';
+        weekFilters.style.display = 'none';
         dateRangeFilters.style.display = 'block';
-        toggleBtn.innerHTML = '<i class="bi bi-calendar-month"></i> Use Month/Year';
+        toggleBtn.innerHTML = '<i class="bi bi-calendar-month"></i> Use Month/Year/Week';
         
         // Set default date range if empty
         const fromDate = document.getElementById('fromDateFilter');
@@ -4834,9 +4979,10 @@ if (!empty($filterMonth)) {
           toDate.value = lastDay.toISOString().split('T')[0];
         }
       } else {
-        // Switch to month/year
+        // Switch to month/year/week
         monthYearFilters.style.display = 'block';
         yearFilters.style.display = 'block';
+        weekFilters.style.display = 'block';
         dateRangeFilters.style.display = 'none';
         toggleBtn.innerHTML = '<i class="bi bi-calendar-range"></i> Use Date Range';
       }
@@ -4852,10 +4998,21 @@ if (!empty($filterMonth)) {
       let url = 'hr_travel_expenses.php?user_id=' + userId;
       
       if (dateRangeFilters.style.display === 'none') {
-        // Using month/year filters
+        // Using month/year/week filters
         const month = document.getElementById('monthFilter').value;
         const year = document.getElementById('yearFilter').value;
+        const weekFilter = document.getElementById('weekFilter');
+        const week = weekFilter ? weekFilter.value : '';
+        
         url += `&month=${month}&year=${year}`;
+        
+        // Add week filter if selected
+        if (week) {
+          url += `&week=${week}`;
+        } else {
+          // Clear week parameter if no week is selected
+          url += '&week=';
+        }
       } else {
         // Using date range filters
         const fromDate = document.getElementById('fromDateFilter').value;
@@ -4891,10 +5048,21 @@ if (!empty($filterMonth)) {
       // Check which filter type is active
       const dateRangeFilters = document.getElementById('dateRangeFilters');
       if (dateRangeFilters.style.display === 'none') {
-        // Using month/year filters
+        // Using month/year/week filters
         const month = document.getElementById('monthFilter').value;
         const year = document.getElementById('yearFilter').value;
+        const weekFilter = document.getElementById('weekFilter');
+        const week = weekFilter ? weekFilter.value : '';
+        
         exportUrl += `&month=${month}&year=${year}`;
+        
+        // Add week filter if selected
+        if (week) {
+          exportUrl += `&week=${week}`;
+        } else {
+          // Clear week parameter if no week is selected
+          exportUrl += '&week=';
+        }
       } else {
         // Using date range filters
         const fromDate = document.getElementById('fromDateFilter').value;
@@ -4916,6 +5084,77 @@ if (!empty($filterMonth)) {
       window.location.href = exportUrl;
     }
 
+    // Function to update week options based on selected month and year
+    function updateWeekOptions() {
+      const monthFilter = document.getElementById('monthFilter');
+      const yearFilter = document.getElementById('yearFilter');
+      const weekFilter = document.getElementById('weekFilter');
+      
+      if (!monthFilter || !yearFilter || !weekFilter) return;
+      
+      const month = parseInt(monthFilter.value);
+      const year = parseInt(yearFilter.value);
+      const selectedWeek = weekFilter.value;
+      
+      // Clear current options except the first "All Weeks" option
+      while (weekFilter.options.length > 1) {
+        weekFilter.remove(1);
+      }
+      
+      // Calculate the first day of the month and last day of the month
+      const firstDayOfMonth = new Date(year, month - 1, 1);
+      const lastDayOfMonth = new Date(year, month, 0);
+      
+      // Find the first Sunday
+      const firstSunday = new Date(firstDayOfMonth);
+      while (firstSunday.getDay() !== 0) { // 0 = Sunday
+        firstSunday.setDate(firstSunday.getDate() + 1);
+      }
+      
+      // Create Week 1: From 1st day of month to first Sunday
+      const week1Start = new Date(firstDayOfMonth);
+      const week1End = new Date(firstSunday);
+      
+      const option1 = document.createElement('option');
+      option1.value = '1';
+      option1.textContent = `Week 1 (${week1Start.getDate()}-${week1End.getDate()})`;
+      weekFilter.appendChild(option1);
+      
+      // Calculate remaining weeks
+      let weekStart = new Date(firstSunday);
+      weekStart.setDate(weekStart.getDate() + 1); // Start from Monday
+      let weekNum = 2;
+      
+      while (weekStart <= lastDayOfMonth) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6); // End on Sunday
+        
+        const adjustedWeekEnd = new Date(Math.min(weekEnd.getTime(), lastDayOfMonth.getTime()));
+        
+        const option = document.createElement('option');
+        option.value = weekNum.toString();
+        option.textContent = `Week ${weekNum} (${weekStart.getDate()}-${adjustedWeekEnd.getDate()})`;
+        weekFilter.appendChild(option);
+        
+        weekStart.setDate(weekStart.getDate() + 7);
+        weekNum++;
+        
+        // Remove the 5 week limit to ensure all days in the month are covered
+        // Continue until we've passed the last day of the month
+        if (weekStart > lastDayOfMonth) break;
+      }
+      
+      // Restore selected week if it exists in the new options
+      if (selectedWeek) {
+        for (let i = 0; i < weekFilter.options.length; i++) {
+          if (weekFilter.options[i].value === selectedWeek) {
+            weekFilter.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+    
     // Function to handle edit icon click
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('edit-icon')) {

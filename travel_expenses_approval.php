@@ -140,8 +140,11 @@ $offset = ($page - 1) * $records_per_page; // Offset for SQL query
 
 // Get filter parameters from URL
 $search_filter = isset($_GET['search']) ? $_GET['search'] : '';
-$month_filter = isset($_GET['month']) ? intval($_GET['month']) : 0;
-$year_filter = isset($_GET['year']) ? intval($_GET['year']) : 0;
+// Default to current month and year if not specified
+$current_month = date('n');
+$current_year = date('Y');
+$month_filter = isset($_GET['month']) ? intval($_GET['month']) : $current_month;
+$year_filter = isset($_GET['year']) ? intval($_GET['year']) : $current_year;
 $week_filter = isset($_GET['week']) ? intval($_GET['week']) : 0;
 $employee_filter = isset($_GET['employee']) ? intval($_GET['employee']) : 0;
 $status_filter = isset($_GET['status']) ? $_GET['status'] : '';
@@ -185,8 +188,42 @@ if ($year_filter > 0) {
 }
 
 if ($week_filter > 0) {
-    // Filter by week number in the month
-    // Week 1: days 1-7, Week 2: days 8-14, Week 3: days 15-21, Week 4: days 22-28, Week 5: days 29+
+    // Calculate the date range for the selected week
+    if ($month_filter > 0 && $year_filter > 0) {
+        $firstDayOfMonth = new DateTime("$year_filter-$month_filter-01");
+        $firstDayOfWeek = clone $firstDayOfMonth;
+        
+        // Week 1 starts from the first day of month
+        if ($week_filter == 1) {
+            $lastDayOfWeek = clone $firstDayOfMonth;
+            // Find the first Sunday
+            while ($lastDayOfWeek->format('w') != 0) { // 0 = Sunday
+                $lastDayOfWeek->modify('+1 day');
+            }
+        } else {
+            // For other weeks, calculate start and end dates
+            // Week 2 starts from the day after the first Sunday
+            $weekStart = clone $firstDayOfMonth;
+            // Find the first Sunday
+            while ($weekStart->format('w') != 0) {
+                $weekStart->modify('+1 day');
+            }
+            // Add days for subsequent weeks
+            $daysToAdd = ($week_filter - 1) * 7;
+            $firstDayOfWeek = clone $weekStart;
+            $firstDayOfWeek->modify("+1 day"); // Start from Monday after first Sunday
+            $firstDayOfWeek->modify("+" . ($daysToAdd - 7) . " days");
+            
+            $lastDayOfWeek = clone $firstDayOfWeek;
+            $lastDayOfWeek->modify('+6 days'); // End on Sunday
+        }
+        
+        $where_clause .= " AND te.travel_date BETWEEN ? AND ?";
+        $params[] = $firstDayOfWeek->format('Y-m-d');
+        $params[] = $lastDayOfWeek->format('Y-m-d');
+        $param_types .= "ss";
+    } else {
+        // Fallback to old week calculation if month or year not specified
     if ($week_filter == 1) {
         $where_clause .= " AND DAY(te.travel_date) BETWEEN 1 AND 7";
     } else if ($week_filter == 2) {
@@ -197,6 +234,7 @@ if ($week_filter > 0) {
         $where_clause .= " AND DAY(te.travel_date) BETWEEN 22 AND 28";
     } else if ($week_filter == 5) {
         $where_clause .= " AND DAY(te.travel_date) >= 29";
+        }
     }
     
     // If month filter is not set, use current month
@@ -3713,8 +3751,16 @@ function getTransportIcon($mode) {
                             <label for="monthFilter">Month:</label>
                             <select class="filter-dropdown" id="monthFilter">
                                 <option value="">All Months</option>
-                                <?php for($i = 1; $i <= 12; $i++): ?>
-                                    <option value="<?php echo $i; ?>" <?php echo ($month_filter == $i) ? 'selected' : ''; ?>>
+                                <?php 
+                                $current_month = date('n'); // Current month number without leading zeros
+                                for($i = 1; $i <= 12; $i++): 
+                                    // If no month filter is set, default to current month
+                                    $selected = ($month_filter == $i) ? 'selected' : '';
+                                    if (empty($month_filter) && $i == $current_month) {
+                                        $selected = 'selected';
+                                    }
+                                ?>
+                                    <option value="<?php echo $i; ?>" <?php echo $selected; ?>>
                                         <?php echo date('F', mktime(0, 0, 0, $i, 1)); ?>
                                     </option>
                                 <?php endfor; ?>
@@ -3724,11 +3770,66 @@ function getTransportIcon($mode) {
                             <label for="weekFilter">Week:</label>
                             <select class="filter-dropdown" id="weekFilter">
                                 <option value="">All Weeks</option>
-                                <option value="1" <?php echo ($week_filter == 1) ? 'selected' : ''; ?>>Week 1 (1-7)</option>
-                                <option value="2" <?php echo ($week_filter == 2) ? 'selected' : ''; ?>>Week 2 (8-14)</option>
-                                <option value="3" <?php echo ($week_filter == 3) ? 'selected' : ''; ?>>Week 3 (15-21)</option>
-                                <option value="4" <?php echo ($week_filter == 4) ? 'selected' : ''; ?>>Week 4 (22-28)</option>
-                                <option value="5" <?php echo ($week_filter == 5) ? 'selected' : ''; ?>>Week 5 (29+)</option>
+                                <?php
+                                if ($month_filter > 0 && $year_filter > 0) {
+                                    // Calculate number of weeks in the month
+                                    $firstDayOfMonth = new DateTime("$year_filter-$month_filter-01");
+                                    $lastDayOfMonth = new DateTime("$year_filter-$month_filter-" . date('t', strtotime("$year_filter-$month_filter-01")));
+                                    
+                                    // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
+                                    $firstDayOfWeek = (int)$firstDayOfMonth->format('w');
+                                    
+                                    // Find the first Sunday after the first day of the month
+                                    $firstSunday = clone $firstDayOfMonth;
+                                    while ($firstSunday->format('w') != 0) { // 0 = Sunday
+                                        $firstSunday->modify('+1 day');
+                                    }
+                                    
+                                    // Week 1: From 1st day of month to first Sunday
+                                    $week1End = clone $firstSunday;
+                                    $week1Start = clone $firstDayOfMonth;
+                                    $selected = $week_filter == 1 ? 'selected' : '';
+                                    
+                                    // Format the dates for Week 1
+                                    $startDay = $week1Start->format('d');
+                                    $endDay = $week1End->format('d');
+                                    echo "<option value=\"1\" $selected>Week 1 ($startDay-$endDay)</option>";
+                                    
+                                    // Calculate remaining weeks
+                                    $weekStart = clone $firstSunday;
+                                    $weekStart->modify('+1 day'); // Start from Monday after first Sunday
+                                    $weekNum = 2;
+                                    
+                                    while ($weekStart <= $lastDayOfMonth) {
+                                        $weekEnd = clone $weekStart;
+                                        $weekEnd->modify('+6 days'); // End on Sunday
+                                        
+                                        if ($weekEnd > $lastDayOfMonth) {
+                                            $weekEnd = clone $lastDayOfMonth;
+                                        }
+                                        
+                                        $selected = $week_filter == $weekNum ? 'selected' : '';
+                                        
+                                        // Format the dates for this week
+                                        $startDay = $weekStart->format('d');
+                                        $endDay = $weekEnd->format('d');
+                                        echo "<option value=\"$weekNum\" $selected>Week $weekNum ($startDay-$endDay)</option>";
+                                        
+                                        $weekStart->modify('+7 days');
+                                        $weekNum++;
+                                        
+                                        // Limit to 5 weeks maximum
+                                        if ($weekNum > 5) break;
+                                    }
+                                } else {
+                                    // Default static options if month/year not selected - format matches the UI
+                                    echo '<option value="1" ' . ($week_filter == 1 ? 'selected' : '') . '>Week 1 (1-7)</option>';
+                                    echo '<option value="2" ' . ($week_filter == 2 ? 'selected' : '') . '>Week 2 (8-14)</option>';
+                                    echo '<option value="3" ' . ($week_filter == 3 ? 'selected' : '') . '>Week 3 (15-21)</option>';
+                                    echo '<option value="4" ' . ($week_filter == 4 ? 'selected' : '') . '>Week 4 (22-28)</option>';
+                                    echo '<option value="5" ' . ($week_filter == 5 ? 'selected' : '') . '>Week 5 (29+)</option>';
+                                }
+                                ?>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -3738,8 +3839,13 @@ function getTransportIcon($mode) {
                                 <?php 
                                 $currentYear = date('Y');
                                 for($i = $currentYear; $i >= $currentYear - 3; $i--): 
+                                    // If no year filter is set, default to current year
+                                    $selected = ($year_filter == $i) ? 'selected' : '';
+                                    if (empty($year_filter) && $i == $currentYear) {
+                                        $selected = 'selected';
+                                    }
                                 ?>
-                                    <option value="<?php echo $i; ?>" <?php echo ($year_filter == $i) ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $i; ?>" <?php echo $selected; ?>>
                                         <?php echo $i; ?>
                                     </option>
                                 <?php endfor; ?>
@@ -4492,6 +4598,14 @@ function getTransportIcon($mode) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Force update week options based on current month/year selection
+            setTimeout(function() {
+                if (typeof updateWeekOptions === 'function') {
+                    console.log("Updating week options on page load");
+                    updateWeekOptions();
+                }
+            }, 100);
+            
             // Mobile menu functions
             const hamburgerMenu = document.getElementById('hamburgerMenu');
             const leftPanel = document.getElementById('leftPanel');
@@ -4847,7 +4961,42 @@ function getTransportIcon($mode) {
                             }
                             
                             // Week filtering
-                            if (week && showRow) {
+                            if (week && showRow && month && year) {
+                                const weekNum = parseInt(week);
+                                
+                                // Calculate the first day of the month
+                                const firstDayOfMonth = new Date(expenseYear, expenseMonth - 1, 1);
+                                
+                                // Find the first Sunday
+                                const firstSunday = new Date(firstDayOfMonth);
+                                while (firstSunday.getDay() !== 0) { // 0 = Sunday
+                                    firstSunday.setDate(firstSunday.getDate() + 1);
+                                }
+                                
+                                if (weekNum === 1) {
+                                    // Week 1: From 1st day of month to first Sunday
+                                    const week1Start = new Date(firstDayOfMonth);
+                                    const week1End = new Date(firstSunday);
+                                    
+                                    // Check if expense date is in week 1
+                                    if (expenseDate < week1Start || expenseDate > week1End) {
+                                        showRow = false;
+                                    }
+                                } else {
+                                    // For other weeks, calculate start and end dates
+                                    let weekStart = new Date(firstSunday);
+                                    weekStart.setDate(weekStart.getDate() + 1 + (weekNum - 2) * 7); // Start from Monday of the week
+                                    
+                                    let weekEnd = new Date(weekStart);
+                                    weekEnd.setDate(weekEnd.getDate() + 6); // End on Sunday
+                                    
+                                    // Check if expense date is in this week
+                                    if (expenseDate < weekStart || expenseDate > weekEnd) {
+                                        showRow = false;
+                                    }
+                                }
+                            } else if (week && showRow) {
+                                // Fallback to old week calculation if month or year not specified
                                 const weekNum = parseInt(week);
                                 if (weekNum === 1 && (expenseDay < 1 || expenseDay > 7)) {
                                     showRow = false;
@@ -4903,7 +5052,42 @@ function getTransportIcon($mode) {
                             }
                             
                             // Week filtering
-                            if (week && showCard) {
+                            if (week && showCard && month && year) {
+                                const weekNum = parseInt(week);
+                                
+                                // Calculate the first day of the month
+                                const firstDayOfMonth = new Date(expenseYear, expenseMonth - 1, 1);
+                                
+                                // Find the first Sunday
+                                const firstSunday = new Date(firstDayOfMonth);
+                                while (firstSunday.getDay() !== 0) { // 0 = Sunday
+                                    firstSunday.setDate(firstSunday.getDate() + 1);
+                                }
+                                
+                                if (weekNum === 1) {
+                                    // Week 1: From 1st day of month to first Sunday
+                                    const week1Start = new Date(firstDayOfMonth);
+                                    const week1End = new Date(firstSunday);
+                                    
+                                    // Check if expense date is in week 1
+                                    if (expenseDate < week1Start || expenseDate > week1End) {
+                                        showCard = false;
+                                    }
+                                } else {
+                                    // For other weeks, calculate start and end dates
+                                    let weekStart = new Date(firstSunday);
+                                    weekStart.setDate(weekStart.getDate() + 1 + (weekNum - 2) * 7); // Start from Monday of the week
+                                    
+                                    let weekEnd = new Date(weekStart);
+                                    weekEnd.setDate(weekEnd.getDate() + 6); // End on Sunday
+                                    
+                                    // Check if expense date is in this week
+                                    if (expenseDate < weekStart || expenseDate > weekEnd) {
+                                        showCard = false;
+                                    }
+                                }
+                            } else if (week && showCard) {
+                                // Fallback to old week calculation if month or year not specified
                                 const weekNum = parseInt(week);
                                 if (weekNum === 1 && (expenseDay < 1 || expenseDay > 7)) {
                                     showCard = false;
@@ -5670,14 +5854,20 @@ function getTransportIcon($mode) {
         const monthFilter = document.getElementById('monthFilter');
         if (monthFilter) {
             monthFilter.addEventListener('change', function() {
-                applyFiltersWithPagination();
+                console.log("Month changed, updating week options");
+                updateWeekOptions();
+                // Small delay before applying filters to ensure week options are updated
+                setTimeout(() => applyFiltersWithPagination(), 50);
             });
         }
         
         const yearFilter = document.getElementById('yearFilter');
         if (yearFilter) {
             yearFilter.addEventListener('change', function() {
-                applyFiltersWithPagination();
+                console.log("Year changed, updating week options");
+                updateWeekOptions();
+                // Small delay before applying filters to ensure week options are updated
+                setTimeout(() => applyFiltersWithPagination(), 50);
             });
         }
         
@@ -5686,6 +5876,114 @@ function getTransportIcon($mode) {
             weekFilter.addEventListener('change', function() {
                 applyFiltersWithPagination();
             });
+        }
+        
+        // Function to update week options based on selected month and year
+        function updateWeekOptions() {
+            const monthFilter = document.getElementById('monthFilter');
+            const yearFilter = document.getElementById('yearFilter');
+            const weekFilter = document.getElementById('weekFilter');
+            
+            console.log("updateWeekOptions called");
+            
+            if (!monthFilter || !yearFilter || !weekFilter) {
+                console.log("Missing required filter elements");
+                return;
+            }
+            
+            const month = parseInt(monthFilter.value);
+            const year = parseInt(yearFilter.value);
+            const selectedWeek = weekFilter.value;
+            
+            // If month or year not selected, keep default options
+            if (!month || !year) {
+                console.log("Month or year not selected, using default options");
+                
+                // Clear current options except the first "All Weeks" option
+                while (weekFilter.options.length > 1) {
+                    weekFilter.remove(1);
+                }
+                
+                // Add default static options exactly as shown in the UI
+                const defaultOptions = [
+                    { value: '1', text: 'Week 1 (1-7)' },
+                    { value: '2', text: 'Week 2 (8-14)' },
+                    { value: '3', text: 'Week 3 (15-21)' },
+                    { value: '4', text: 'Week 4 (22-28)' },
+                    { value: '5', text: 'Week 5 (29+)' }
+                ];
+                
+                defaultOptions.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.text;
+                    if (selectedWeek === opt.value) {
+                        option.selected = true;
+                    }
+                    weekFilter.appendChild(option);
+                });
+                
+                return;
+            }
+            
+            // Clear current options except the first "All Weeks" option
+            while (weekFilter.options.length > 1) {
+                weekFilter.remove(1);
+            }
+            
+            console.log(`Month ${month} and year ${year} selected, generating dynamic week options`);
+            
+            // Calculate the first day of the month
+            const firstDayOfMonth = new Date(year, month - 1, 1);
+            const lastDayOfMonth = new Date(year, month, 0);
+            
+            // Find the first Sunday
+            const firstSunday = new Date(firstDayOfMonth);
+            while (firstSunday.getDay() !== 0) { // 0 = Sunday
+                firstSunday.setDate(firstSunday.getDate() + 1);
+            }
+            
+            // Create Week 1: From 1st day of month to first Sunday
+            const week1Start = new Date(firstDayOfMonth);
+            const week1End = new Date(firstSunday);
+            
+            const option1 = document.createElement('option');
+            option1.value = '1';
+            option1.textContent = `Week 1 (${week1Start.getDate()}-${week1End.getDate()})`;
+            weekFilter.appendChild(option1);
+            
+            // Calculate remaining weeks
+            let weekStart = new Date(firstSunday);
+            weekStart.setDate(weekStart.getDate() + 1); // Start from Monday
+            let weekNum = 2;
+            
+            while (weekStart <= lastDayOfMonth) {
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6); // End on Sunday
+                
+                const adjustedWeekEnd = new Date(Math.min(weekEnd.getTime(), lastDayOfMonth.getTime()));
+                
+                const option = document.createElement('option');
+                option.value = weekNum.toString();
+                option.textContent = `Week ${weekNum} (${weekStart.getDate()}-${adjustedWeekEnd.getDate()})`;
+                weekFilter.appendChild(option);
+                
+                weekStart.setDate(weekStart.getDate() + 7);
+                weekNum++;
+                
+                // Limit to 5 weeks maximum
+                if (weekNum > 5) break;
+            }
+            
+            // Restore selected week if it exists in the new options
+            if (selectedWeek) {
+                for (let i = 0; i < weekFilter.options.length; i++) {
+                    if (weekFilter.options[i].value === selectedWeek) {
+                        weekFilter.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
         }
         
         const approvalFilter = document.getElementById('approvalFilter');

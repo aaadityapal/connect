@@ -1033,12 +1033,9 @@ try {
                   // Get the first day of the selected month
                   $firstDayOfMonth = new DateTime("$selectedYear-$selectedMonth-01");
                   $daysInMonth = (int)$firstDayOfMonth->format('t');
-                  $lastDayOfMonth = new DateTime("$selectedYear-$selectedMonth-$daysInMonth");
                   
                   // Generate week options with date ranges
                   $currentDay = 1;
-                  $lastProcessedDay = 0;
-                  
                   for ($week = 1; $week <= 6; $week++) {
                     if ($currentDay > $daysInMonth) break;
                     
@@ -1059,9 +1056,13 @@ try {
                       $endDay = $currentDay;
                     }
                     
+                    // Special case for last days of month that don't fit into previous weeks
+                    if ($week == 6 || $endDay == $daysInMonth) {
+                      $endDay = $daysInMonth;
+                    }
+                    
                     $endDate = new DateTime("$selectedYear-$selectedMonth-$endDay");
                     $endDateFormatted = $endDate->format('j');
-                    $lastProcessedDay = $endDay;
                     
                     // Create the date range label
                     $dateRange = "$startDateFormatted-$endDateFormatted";
@@ -1075,16 +1076,6 @@ try {
                     
                     // Move to the next day after this week
                     $currentDay = $endDay + 1;
-                  }
-                  
-                  // Check if we need to add a Week 6 for remaining days
-                  if ($lastProcessedDay < $daysInMonth) {
-                    $startDay = $lastProcessedDay + 1;
-                    $endDay = $daysInMonth;
-                    
-                    echo '<option value="6" '.($selectedWeek == 6 ? 'selected' : '').'>
-                      Week 6 ('.$startDay.'-'.$endDay.')
-                    </option>';
                   }
                   ?>
               </select>
@@ -1110,6 +1101,16 @@ try {
                       echo '<option value="">Error loading users</option>';
                   }
                   ?>
+                </select>
+              </div>
+              
+              <!-- Payment Status Filter -->
+              <div class="col-md-3">
+                <label for="payment_status" class="form-label">Payment Status</label>
+                <select name="payment_status" id="payment_status" class="form-select">
+                  <option value="">All Statuses</option>
+                  <option value="Paid" <?php echo (isset($_GET['payment_status']) && $_GET['payment_status'] == 'Paid') ? 'selected' : ''; ?>>Paid</option>
+                  <option value="Pending" <?php echo (isset($_GET['payment_status']) && $_GET['payment_status'] == 'Pending') ? 'selected' : ''; ?>>Pending</option>
                 </select>
               </div>
               
@@ -1146,6 +1147,7 @@ try {
                     <th>Distance</th>
                     <th>Amount</th>
                     <th>Status</th>
+                    <th>Payment Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -1157,7 +1159,7 @@ try {
                     $query = "SELECT te.*, u.username 
                               FROM travel_expenses te
                               JOIN users u ON te.user_id = u.id
-                              WHERE (te.manager_status = 'Approved' OR te.status = 'Approved')";
+                              WHERE te.status = 'Approved'";
                     
                     $params = [];
                     
@@ -1179,15 +1181,13 @@ try {
                       $params[] = $_GET['year'];
                     }
                     
-                    // Apply week filter
-                    if (isset($_GET['week']) && !empty($_GET['week'])) {
-                      // Use WEEK() function with mode 0 (weeks start on Sunday)
-                      // We need to calculate the week of the month, not the week of the year
-                      $query .= " AND (
-                        WEEK(te.travel_date, 0) - 
-                        WEEK(DATE_FORMAT(te.travel_date, '%Y-%m-01'), 0) + 1
-                      ) = ?";
-                      $params[] = $_GET['week'];
+                    // Apply payment status filter
+                    if (isset($_GET['payment_status']) && !empty($_GET['payment_status'])) {
+                      if ($_GET['payment_status'] == 'Paid') {
+                        $query .= " AND te.payment_status = 'Paid'";
+                      } else if ($_GET['payment_status'] == 'Pending') {
+                        $query .= " AND (te.payment_status IS NULL OR te.payment_status = 'Pending')";
+                      }
                     }
                     
                     // Order by travel date descending
@@ -1201,6 +1201,10 @@ try {
                         $travelDate = date('d M Y', strtotime($expense['travel_date']));
                         $statusClass = 'success';
                         $statusText = 'Approved';
+                        
+                        // Set payment status display
+                        $paymentStatus = $expense['payment_status'] ?? 'Pending';
+                        $paymentStatusClass = $paymentStatus == 'Paid' ? 'success' : 'warning';
                         
                         // Determine which approval was given (manager, accountant, or HR)
                         if ($expense['manager_status'] == 'Approved') {
@@ -1222,12 +1226,13 @@ try {
                                 <td>'.htmlspecialchars($expense['distance']).' km</td>
                                 <td>₹'.number_format($expense['amount'], 2).'</td>
                                 <td><span class="badge bg-'.$statusClass.'">'.($approvedBy ? $statusText.' by '.$approvedBy : $statusText).'</span></td>
+                                <td><span class="badge bg-'.$paymentStatusClass.'">'.$paymentStatus.'</span></td>
                                 <td>
-                                  <button class="btn btn-sm btn-primary" onclick="initiatePayment('.$expense['id'].', \''.$expense['username'].'\', '.$expense['amount'].')">
-                                    <i class="bi bi-credit-card"></i> Pay
+                                  <button class="btn btn-sm btn-success" onclick="markAsPaid('.$expense['id'].', \''.htmlspecialchars($expense['username']).'\', '.$expense['amount'].')">
+                                    <i class="bi bi-check-circle"></i> Paid
                 </button>
                                   <button class="btn btn-sm btn-outline-secondary" onclick="viewDetails('.$expense['id'].')">
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye"></i> View
                 </button>
                                 </td>
                               </tr>';
@@ -1285,6 +1290,39 @@ try {
       <div class="modal-footer">
         <button class="btn-secondary" onclick="closeModal('paymentModal')">Cancel</button>
         <button class="btn-pay" onclick="processPayment()">Process Payment</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Paid Confirmation Modal -->
+  <div id="paidConfirmationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="bi bi-check-circle-fill text-success"></i> Confirm Payment</h4>
+        <span class="close-modal" onclick="closeModal('paidConfirmationModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="expenseId" value="">
+        <p class="mb-3">Are you sure you want to mark this expense as paid?</p>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i> This will record the current date as the payment date.
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <strong class="me-2">Employee:</strong>
+          <span id="confirmEmployee"></span>
+        </div>
+        <div class="form-group mb-3">
+          <label for="amountPaid"><strong>Amount Paid:</strong></label>
+          <input type="number" id="amountPaid" class="form-control" step="0.01" min="0">
+        </div>
+        <div class="d-flex align-items-center">
+          <strong class="me-2">Total Amount:</strong>
+          <span id="confirmAmount" class="text-success fw-bold"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal('paidConfirmationModal')">Cancel</button>
+        <button class="btn-pay" onclick="confirmPaid()">Confirm Payment</button>
       </div>
     </div>
   </div>
@@ -1361,29 +1399,6 @@ try {
       // Click event
       toggleButton.addEventListener('click', toggleSidebar);
 
-      // Enhanced hover effect
-      toggleButton.addEventListener('mouseenter', function() {
-          const isCollapsed = toggleButton.classList.contains('collapsed');
-          const icon = toggleButton.querySelector('.bi');
-          
-          if (!isCollapsed) {
-              icon.style.transform = 'translateX(-3px)';
-          } else {
-              icon.style.transform = 'translateX(3px) rotate(180deg)';
-          }
-      });
-
-      toggleButton.addEventListener('mouseleave', function() {
-          const isCollapsed = toggleButton.classList.contains('collapsed');
-          const icon = toggleButton.querySelector('.bi');
-          
-          if (!isCollapsed) {
-              icon.style.transform = 'none';
-          } else {
-              icon.style.transform = 'rotate(180deg)';
-          }
-      });
-
       // Handle window resize
       function handleResize() {
           if (window.innerWidth <= 768) {
@@ -1403,66 +1418,34 @@ try {
 
       window.addEventListener('resize', handleResize);
 
-      // Handle clicks outside sidebar on mobile
-      document.addEventListener('click', function(event) {
-          if (window.innerWidth <= 768) {
-              const isClickInside = sidebar.contains(event.target) || 
-                                  toggleButton.contains(event.target);
-              
-              if (!isClickInside && !sidebar.classList.contains('collapsed')) {
-                  toggleSidebar();
-              }
-          }
-      });
-
       // Initial check for mobile devices
       handleResize();
     });
 
     // View details function
-    function viewDetails(userId) {
+    function viewDetails(expenseId) {
       // Redirect to detailed view
-      window.location.href = `hr_travel_expenses.php?user_id=${userId}`;
+      window.location.href = `hr_travel_expenses.php?view_expense=${expenseId}`;
     }
 
-    // Payment functions
-    function initiatePayment(userId, employee, amount) {
-      // Set modal values
-      document.getElementById('paymentUserId').value = userId;
-      document.getElementById('paymentEmployee').value = employee;
-      document.getElementById('paymentAmount').value = '₹' + parseFloat(amount).toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
+    // Mark as paid function
+    function markAsPaid(expenseId, employeeName, amount) {
+      document.getElementById('expenseId').value = expenseId;
+      document.getElementById('confirmEmployee').textContent = employeeName;
+      document.getElementById('confirmAmount').textContent = '₹' + parseFloat(amount).toFixed(2);
+      document.getElementById('amountPaid').value = parseFloat(amount).toFixed(2);
       
-      // Clear other fields
-      document.getElementById('paymentReference').value = '';
-      document.getElementById('paymentNotes').value = '';
+      // Show confirmation modal
+      document.getElementById('paidConfirmationModal').style.display = 'block';
+    }
+
+    // Confirm paid function
+    function confirmPaid() {
+      const expenseId = document.getElementById('expenseId').value;
+      const amountPaid = document.getElementById('amountPaid').value;
       
-      // Show modal
-      document.getElementById('paymentModal').style.display = 'block';
-    }
-
-    function payAll() {
-      // Show pay all modal
-      document.getElementById('payAllModal').style.display = 'block';
-    }
-
-    function closeModal(modalId) {
-      // Hide modal
-      document.getElementById(modalId).style.display = 'none';
-    }
-
-    function processPayment() {
-      // Get form values
-      const userId = document.getElementById('paymentUserId').value;
-      const method = document.getElementById('paymentMethod').value;
-      const reference = document.getElementById('paymentReference').value;
-      const notes = document.getElementById('paymentNotes').value;
-      
-      // Validation
-      if (!reference) {
-        showToast('error', 'Please enter a reference number');
+      if (!amountPaid || amountPaid <= 0) {
+        showToast('error', 'Please enter a valid amount paid');
         return;
       }
       
@@ -1471,11 +1454,9 @@ try {
       
       // Create form data
       const formData = new FormData();
-      formData.append('user_id', userId);
-      formData.append('payment_method', method);
-      formData.append('reference', reference);
-      formData.append('notes', notes);
-      formData.append('action', 'single');
+      formData.append('expense_id', expenseId);
+      formData.append('amount_paid', amountPaid);
+      formData.append('action', 'mark_paid');
       
       // Send to server
       fetch('process_expense_payment.php', {
@@ -1486,10 +1467,10 @@ try {
       .then(data => {
         if (data.success) {
           // Show success message
-          showToast('success', data.message || 'Payment processed successfully');
+          showToast('success', data.message || 'Expense marked as paid successfully');
           
           // Close modal
-          closeModal('paymentModal');
+          closeModal('paidConfirmationModal');
           
           // Reload page after a delay
           setTimeout(() => {
@@ -1497,7 +1478,7 @@ try {
           }, 2000);
         } else {
           // Show error message
-          showToast('error', data.error || 'Failed to process payment');
+          showToast('error', data.error || 'Failed to mark expense as paid');
         }
       })
       .catch(error => {
@@ -1506,67 +1487,9 @@ try {
       });
     }
 
-    function processBatchPayment() {
-      // Get form values
-      const method = document.getElementById('batchPaymentMethod').value;
-      const reference = document.getElementById('batchReference').value;
-      const notes = document.getElementById('batchNotes').value;
-      
-      // Validation
-      if (!reference) {
-        showToast('error', 'Please enter a batch reference number');
-        return;
-      }
-      
-      // Show processing toast
-      showToast('info', 'Processing batch payment...');
-      
-      // Create form data
-      const formData = new FormData();
-      formData.append('payment_method', method);
-      formData.append('reference', reference);
-      formData.append('notes', notes);
-      formData.append('action', 'batch');
-      
-      // Get current filters
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('user_id')) {
-        formData.append('filter_user_id', urlParams.get('user_id'));
-      }
-      if (urlParams.has('month')) {
-        formData.append('filter_month', urlParams.get('month'));
-      }
-      if (urlParams.has('year')) {
-        formData.append('filter_year', urlParams.get('year'));
-      }
-      
-      // Send to server
-      fetch('process_expense_payment.php', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Show success message
-          showToast('success', data.message || 'Batch payment processed successfully');
-          
-          // Close modal
-          closeModal('payAllModal');
-          
-          // Reload page after a delay
-          setTimeout(() => {
-            location.reload();
-          }, 2000);
-        } else {
-          // Show error message
-          showToast('error', data.error || 'Failed to process batch payment');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showToast('error', 'An error occurred while processing batch payment');
-      });
+    function closeModal(modalId) {
+      // Hide modal
+      document.getElementById(modalId).style.display = 'none';
     }
 
     // Toast function

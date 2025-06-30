@@ -193,6 +193,57 @@ $stmt_special->execute();
 $special_result = $stmt_special->get_result();
 $special_row = $special_result->fetch_assoc();
 $special_hours = $special_row['special_hours'] ?: 0;
+
+// Function to safely fetch overtime report messages
+function getOvertimeReport($conn, $attendance_id) {
+    // Debug information to help understand the issue
+    $result_message = '';
+    
+    try {
+        // Get all details from this attendance record
+        $attendance_query = "SELECT id, user_id, date, work_report FROM attendance WHERE id = ?";
+        $a_stmt = $conn->prepare($attendance_query);
+        $a_stmt->bind_param("i", $attendance_id);
+        $a_stmt->execute();
+        $a_result = $a_stmt->get_result();
+        $attendance_data = $a_result->fetch_assoc();
+        
+        if (!$attendance_data) {
+            $result_message = "Could not find attendance record: $attendance_id";
+            return $result_message;
+        }
+        
+        // Now try to find notification for this record
+        $notification_query = "SELECT * FROM overtime_notifications WHERE overtime_id = ?";
+        $n_stmt = $conn->prepare($notification_query);
+        
+        if (!$n_stmt) {
+            $result_message = $attendance_data['work_report'];
+            return $result_message;
+        }
+        
+        $n_stmt->bind_param("i", $attendance_id);
+        $n_stmt->execute();
+        $n_result = $n_stmt->get_result();
+        
+        // Found notification
+        if ($n_result && $n_result->num_rows > 0) {
+            $notification = $n_result->fetch_assoc();
+            $result_message = $notification['message'];
+            return $result_message;
+        }
+        
+        // Return work report as fallback
+        $result_message = $attendance_data['work_report'];
+        return $result_message;
+        
+    } catch (Exception $e) {
+        $result_message = "Error retrieving report"; 
+        return $result_message;
+    }
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -1071,7 +1122,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                         <div class="notification success" style="display: block; margin: 0 20px 20px 20px;">
                             <i class="fas fa-check-circle info-icon"></i>
                             <?php echo htmlspecialchars($_GET['message']); ?>
-                        </div>
+                    </div>
                     <?php else: ?>
                         <div class="notification error" style="display: block; margin: 0 20px 20px 20px;">
                             <i class="fas fa-exclamation-circle info-icon"></i>
@@ -1085,7 +1136,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                     <a href="db/setup_overtime_tables.php" style="font-size: 14px; color: #7f8c8d; text-decoration: none;">
                         <i class="fas fa-database"></i> Setup Overtime Tables
                     </a>
-                </div>
+                            </div>
                 <?php endif; ?>
                 
                 <!-- Month/Year Filter Section -->
@@ -1103,7 +1154,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                 }
                                 ?>
                             </select>
-                        </div>
+                            </div>
                         
                         <div class="filter-container">
                             <label for="year" style="margin-bottom: 0;">Year:</label>
@@ -1130,14 +1181,14 @@ $special_hours = $special_row['special_hours'] ?: 0;
                         </a>
                         <?php endif; ?>
                     </form>
-                </div>
+                            </div>
                 
                 <!-- Request Form Modal -->
                 <div id="overtimeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1050; overflow-y: auto;">
                     <div style="position: relative; width: 90%; max-width: 600px; margin: 50px auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                         <div style="position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 22px; color: #95a5a6;" onclick="closeOvertimeModal()">
                             <i class="fas fa-times"></i>
-                        </div>
+                            </div>
                         
                         <h2 style="color: #2c3e50; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; font-size: 24px;">Request Overtime</h2>
                         
@@ -1145,8 +1196,8 @@ $special_hours = $special_row['special_hours'] ?: 0;
                             <div class="form-group">
                                 <label for="overtimeDate" class="required-field">Date</label>
                                 <input type="date" id="overtimeDate" name="date" required class="form-control">
-                            </div>
-                            
+                        </div>
+                        
                             <div class="form-group">
                                 <label for="endTime" class="required-field">Punch Out Time</label>
                                 <input type="time" id="endTime" name="end_time" required class="form-control">
@@ -1167,9 +1218,9 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                 <button type="submit" class="btn" style="background: #3498db; padding: 12px 25px;">Submit Request</button>
                             </div>
                         </form>
-                    </div>
-                </div>
-                
+                            </div>
+                        </div>
+                        
                 <!-- Quick Overview Section -->
                 <div class="overview-section">
                     <div class="section-title" style="background: linear-gradient(135deg, #3498db, #2c3e50); color: white; border: none; display: flex; align-items: center; justify-content: space-between; padding: 15px 25px; border-radius: 10px 10px 0 0;">
@@ -1209,7 +1260,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                             
                             <div class="card-icon" style="background: linear-gradient(135deg, #e67e22, #d35400); color: white; width: 70px; height: 70px; margin-right: 20px; box-shadow: 0 10px 20px rgba(230, 126, 34, 0.3);">
                                 <i class="fas fa-hourglass-half" style="font-size: 28px; color: white;"></i>
-                            </div>
+                    </div>
                             <div class="card-content">
                                 <h3 style="font-size: 16px; color: #7f8c8d; margin-bottom: 8px; font-weight: 500;">Pending Approval</h3>
                                 <p class="card-value" style="font-size: 32px; font-weight: 700; margin: 0; background: linear-gradient(to right, #e67e22, #d35400); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;"><?php echo number_format($pending_overtime, 1); ?></p>
@@ -1217,9 +1268,9 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                     <i class="fas fa-clock" style="color: #e67e22; margin-right: 5px;"></i> 
                                     <span>Hours Awaiting</span>
                                 </p>
-                            </div>
-                        </div>
-                        
+                </div>
+                    </div>
+                    
                         <!-- Card 3: Approved Hours -->
                         <div class="overview-card" style="border-radius: 15px; position: relative; overflow: hidden; padding: 25px 20px; border: none; background: linear-gradient(145deg, #ffffff, #f5f7fa); box-shadow: 5px 5px 15px rgba(0,0,0,0.05), -5px -5px 15px rgba(255,255,255,0.6);">
                             <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(46, 204, 113, 0.05); border-radius: 50%;"></div>
@@ -1236,7 +1287,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                     <span>This Month</span>
                                 </p>
                             </div>
-                        </div>
+                            </div>
                         
                         <!-- Card 4: Overtime Left For Sending Approval -->
                         <div class="overview-card" style="border-radius: 15px; position: relative; overflow: hidden; padding: 25px 20px; border: none; background: linear-gradient(145deg, #ffffff, #f5f7fa); box-shadow: 5px 5px 15px rgba(0,0,0,0.05), -5px -5px 15px rgba(255,255,255,0.6);">
@@ -1245,7 +1296,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                             
                             <div class="card-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; width: 70px; height: 70px; margin-right: 20px; box-shadow: 0 10px 20px rgba(155, 89, 182, 0.3);">
                                 <i class="fas fa-paper-plane" style="font-size: 28px; color: white;"></i>
-                            </div>
+                        </div>
                             <div class="card-content">
                                 <h3 style="font-size: 16px; color: #7f8c8d; margin-bottom: 8px; font-weight: 500;">Overtime Left For Approval</h3>
                                 <?php
@@ -1281,7 +1332,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                     <i class="fas fa-clock" style="color: #9b59b6; margin-right: 5px;"></i> 
                                     <span>Hours Needing Submission</span>
                                 </p>
-                            </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -1300,12 +1351,19 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                     <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">Hours</th>
                                     <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">Shift End Time</th>
                                     <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">Punch Out Time</th>
-                                    <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">Work Report</th>
+                                    <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">
+                                        Work Report
+                                        <i class="fas fa-file-excel" style="margin-left: 5px; color: #27ae60; cursor: pointer;" title="Export Work Reports" onclick="exportWorkReports()"></i>
+                                    </th>
+                                    <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">
+                                        Overtime Report
+                                        <i class="fas fa-file-excel" style="margin-left: 5px; color: #27ae60; cursor: pointer;" title="Export Overtime Reports" onclick="exportOvertimeReports()"></i>
+                                    </th>
                                     <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">Status</th>
                                     <th style="padding: 15px; text-align: left; font-weight: 600; color: #2c3e50;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                                                            <tbody>
                                 <?php 
                                 $status_colors = [
                                     'approved' => ['bg' => '#e8f5e9', 'text' => '#2e7d32'],
@@ -1318,7 +1376,20 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                     $hours = number_format($row['calculated_overtime'], 1);
                                     $shift_end_time = date('h:i A', strtotime($row['shift_end_time'] ?? $shift_end_time));
                                     $punch_out_time = date('h:i A', strtotime($row['punch_out']));
-                                    $work_report = htmlspecialchars(substr($row['work_report'], 0, 100)) . (strlen($row['work_report']) > 100 ? '...' : '');
+                                    
+                                    // Store full report and create truncated version
+                                    $full_work_report = $row['work_report'];
+                                    $work_report = htmlspecialchars(substr($row['work_report'], 0, 30)) . (strlen($row['work_report']) > 30 ? '...' : '');
+                                    
+                                    // Get overtime report with debug info
+                                    $full_overtime_report = getOvertimeReport($conn, $row['id']);
+                                    if (!$full_overtime_report) {
+                                        $full_overtime_report = 'No report available';
+                                        $overtime_report = '<span style="color:#888; font-style:italic;">No report available</span>';
+                                    } else {
+                                        $overtime_report = htmlspecialchars(substr($full_overtime_report, 0, 30)) . (strlen($full_overtime_report) > 30 ? '...' : '');
+                                    }
+                                    
                                     $status = strtolower($row['overtime_status']) ?: 'pending';
                                     $status_display = ucfirst($status);
                                     
@@ -1350,10 +1421,11 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                         <td style=\"padding: 15px; color: #2c3e50; font-weight: 600;\">$hours</td>
                                         <td style=\"padding: 15px; color: #7f8c8d;\">$shift_end_time</td>
                                         <td style=\"padding: 15px; color: #7f8c8d;\">$punch_out_time</td>
-                                        <td style=\"padding: 15px; color: #7f8c8d;\">$work_report</td>
+                                        <td style=\"padding: 15px; color: #7f8c8d; cursor: pointer;\" onclick=\"openWorkReportModal('".htmlspecialchars(addslashes($full_work_report))."')\"><span style=\"color:#4361ee; text-decoration:underline;\">$work_report</span></td>
+                                        <td style=\"padding: 15px; color: #7f8c8d; cursor: pointer;\" onclick=\"openOvertimeReportModal('".htmlspecialchars(addslashes($full_overtime_report))."')\"><span style=\"color:#4361ee; text-decoration:underline;\">$overtime_report</span></td>
                                         <td style=\"padding: 15px;\"><span style=\"background-color: $bg_color; color: $text_color; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;\">$status_display</span></td>
                                         <td style=\"padding: 15px; text-align: center;\">
-                                            <button class=\"action-btn view-btn\" style=\"width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;\" title=\"View Details\" onclick=\"openViewModal('" . $row['id'] . "', '" . $date . "', '" . $hours . "', '" . $shift_end_time . "', '" . $punch_out_time . "', '" . addslashes($work_report) . "', '" . $status_display . "')\">
+                                            <button class=\"action-btn view-btn\" style=\"width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;\" title=\"View Details\" onclick=\"openViewModal('" . $row['id'] . "', '" . $date . "', '" . $hours . "', '" . $shift_end_time . "', '" . $punch_out_time . "', '" . addslashes($full_work_report) . "', '" . $status_display . "')\">
                                                 <i class=\"fas fa-eye\"></i>
                                             </button>
                                             <button class=\"action-btn $send_btn_class\" style=\"width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center;\" title=\"$send_title\" $onclick>
@@ -1366,7 +1438,7 @@ $special_hours = $special_row['special_hours'] ?: 0;
                                 if ($recent_result->num_rows == 0) {
                                     echo "
                                     <tr>
-                                        <td colspan=\"7\" style=\"padding: 30px; text-align: center; color: #7f8c8d;\">
+                                        <td colspan=\"8\" style=\"padding: 30px; text-align: center; color: #7f8c8d;\">
                                             <i class=\"fas fa-info-circle\" style=\"font-size: 24px; margin-bottom: 10px; color: #95a5a6;\"></i>
                                             <p>No overtime records found for this month.</p>
                                         </td>
@@ -1532,6 +1604,101 @@ $special_hours = $special_row['special_hours'] ?: 0;
         function closeViewModal() {
             document.getElementById('viewOvertimeModal').style.display = 'none';
             document.body.style.overflow = 'auto';
+        }
+        
+        // Work Report Modal Functions
+        function openWorkReportModal(workReport) {
+            document.getElementById('fullWorkReportContent').textContent = workReport;
+            document.getElementById('workReportModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeWorkReportModal() {
+            document.getElementById('workReportModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Overtime Report Modal Functions
+        function openOvertimeReportModal(overtimeReport) {
+            document.getElementById('fullOvertimeReportContent').textContent = overtimeReport;
+            document.getElementById('overtimeReportModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeOvertimeReportModal() {
+            document.getElementById('overtimeReportModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Excel Export Functions
+        function exportToExcel(data, filename) {
+            // Format data for Excel
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add headers
+            csvContent += "Date,Day,Report\n";
+            
+            // Add data rows
+            data.forEach(row => {
+                let date = row.date;
+                let day = new Date(row.date).toLocaleDateString('en-US', { weekday: 'long' });
+                let report = row.report.replace(/"/g, '""'); // Escape quotes for CSV
+                
+                csvContent += `"${date}","${day}","${report}"\n`;
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function exportWorkReports() {
+            // Get current date for filename
+            const currentDate = new Date();
+            const formattedDate = currentDate.toISOString().slice(0, 10); // YYYY-MM-DD format
+            
+            // Fetch work reports data from server
+            fetch('export_reports.php?type=work&month=<?php echo $filter_month; ?>&year=<?php echo $filter_year; ?>')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const filename = `Work_Reports_${formattedDate}.csv`;
+                        exportToExcel(data.reports, filename);
+                    } else {
+                        alert('Error exporting work reports: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while exporting work reports');
+                });
+        }
+        
+        function exportOvertimeReports() {
+            // Get current date for filename
+            const currentDate = new Date();
+            const formattedDate = currentDate.toISOString().slice(0, 10); // YYYY-MM-DD format
+            
+            // Fetch overtime reports data from server
+            fetch('export_reports.php?type=overtime&month=<?php echo $filter_month; ?>&year=<?php echo $filter_year; ?>')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const filename = `Overtime_Reports_${formattedDate}.csv`;
+                        exportToExcel(data.reports, filename);
+                    } else {
+                        alert('Error exporting overtime reports: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while exporting overtime reports');
+                });
         }
     </script>
     
@@ -1831,6 +1998,13 @@ $special_hours = $special_row['special_hours'] ?: 0;
                 <form id="sendOvertimeForm" action="send_overtime.php" method="post">
                     <input type="hidden" id="sendOvertimeId" name="overtime_id">
                     
+                    <div class="detail-item" style="margin-bottom: 20px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" name="manager_knew" value="1" style="margin-right: 10px; width: 18px; height: 18px;" required>
+                            <span style="flex: 1;">Did your manager know that you have to do the Overtime?</span>
+                        </label>
+                    </div>
+                    
                     <div class="select-container">
                         <label for="managerSelect">Select Manager:</label>
                         <?php
@@ -1910,8 +2084,8 @@ $special_hours = $special_row['special_hours'] ?: 0;
                     </div>
                     
                     <div class="textarea-container">
-                        <label for="messageText">Message (Optional):</label>
-                        <textarea id="messageText" name="message" placeholder="Add a message to the manager..."></textarea>
+                        <label for="messageText">Overtime Work Report :</label>
+                        <textarea id="messageText" name="message" placeholder="Add a message to the manager..." required></textarea>
                     </div>
                 </form>
             </div>
@@ -1971,6 +2145,48 @@ $special_hours = $special_row['special_hours'] ?: 0;
             
             <div class="modal-footer">
                 <button type="button" onclick="closeViewModal()" class="modal-btn modal-btn-cancel">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Work Report Modal -->
+    <div id="workReportModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">Work Report</h2>
+                <p class="modal-subtitle">Full work report content</p>
+                <button class="modal-close" onclick="closeWorkReportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="work-report-content" id="fullWorkReportContent" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeWorkReportModal()" class="modal-btn modal-btn-cancel">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overtime Report Modal -->
+    <div id="overtimeReportModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">Overtime Report</h2>
+                <p class="modal-subtitle">Full overtime report content</p>
+                <button class="modal-close" onclick="closeOvertimeReportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="work-report-content" id="fullOvertimeReportContent" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeOvertimeReportModal()" class="modal-btn modal-btn-cancel">Close</button>
             </div>
         </div>
     </div>

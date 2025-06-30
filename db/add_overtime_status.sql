@@ -1,0 +1,2 @@
+-- Add overtime_status column to attendance table
+ALTER TABLE `attendance` ADD COLUMN `overtime_status` enum('pending','submitted','approved','rejected') DEFAULT 'pending' COMMENT 'Status of overtime request'; 

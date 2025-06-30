@@ -3017,6 +3017,10 @@ if ($user_data && isset($user_data['shift_id'])) {
                 <i class="fas fa-file-excel"></i>
                 <span class="menu-text">Travel Expenses</span>
             </div>
+            <div class="menu-item" onclick="window.location.href='employee_overtime.php'">
+                <i class="fas fa-clock"></i>
+                <span class="menu-text">Overtime</span>
+            </div>
             <div class="menu-item" onclick="window.location.href='site_expenses.php'">
                 <i class="fas fa-file-excel"></i>
                 <span class="menu-text">Site Excel</span>

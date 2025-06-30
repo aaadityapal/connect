@@ -125,7 +125,22 @@ $query = "SELECT
                 ) * 1800
             )
         ELSE '00:00:00'
-    END as calculated_overtime
+    END as calculated_overtime,
+    CASE
+        WHEN a.punch_in IS NOT NULL 
+            AND s.start_time IS NOT NULL 
+            AND TIME_TO_SEC(a.punch_in) > (TIME_TO_SEC(s.start_time) + 960) -- 900 seconds = 15 minutes
+        THEN 1
+        ELSE 0
+    END as is_late,
+    CASE
+        WHEN a.punch_in IS NOT NULL AND a.punch_out IS NOT NULL
+        THEN TIME_FORMAT(
+            TIMEDIFF(a.punch_out, a.punch_in),
+            '%H:%i'
+        )
+        ELSE NULL
+    END as working_hours
 FROM attendance a
 LEFT JOIN user_shifts us ON a.user_id = us.user_id
     AND a.date >= us.effective_from 
@@ -167,7 +182,7 @@ $adjusted_late_punches = [];
 // First pass - count all late punches
 $result->data_seek(0);
 while ($row = $result->fetch_assoc()) {
-    if ($row['status'] == 'present' && $row['calculated_overtime'] !== '00:00:00') {
+    if ($row['status'] == 'present' && $row['is_late'] == 1) {
         $total_late_punches++;
     }
 }
@@ -186,14 +201,14 @@ while ($row = $result->fetch_assoc()) {
         'shift_start_seconds' => $row['shift_start_seconds'] ?? 0,
         'time_diff_seconds' => isset($row['punch_in_seconds']) && isset($row['shift_start_seconds']) ? 
             ($row['punch_in_seconds'] - $row['shift_start_seconds']) : 0,
-        'is_late_flag' => $row['calculated_overtime'] !== '00:00:00',
+        'is_late_flag' => $row['is_late'] == 1,
         'status' => $row['status'],
         'shift_id' => $row['shift_id']
     ];
 
     if ($row['status'] == 'present') {
         $total_present++;
-        if ($row['calculated_overtime'] !== '00:00:00') {
+        if ($row['is_late'] == 1) {
             // Store every late punch for potential adjustment
             $late_punch_data = [
                 'date' => $row['formatted_date'],
@@ -1511,8 +1526,7 @@ $debug_info = [
             
             // Filter data for the current month/year
             const filteredData = data.filter(item => {
-                const match = item.month === currentMonth && item.year === currentYear;
-                return match;
+                return item.month === currentMonth && item.year === currentYear;
             });
             
             // If no data for this month, try to find closest month with data
@@ -1535,19 +1549,28 @@ $debug_info = [
                 }
             }
             
+            // Count days by status
             let presentDays = 0;
+            let weekendDays = 0;
+            let holidayDays = 0;
+            let leaveDays = 0;
             let totalWorkMinutes = 0;
             let filteredOvertimeMinutes = 0;
+            let workDatesMap = {};
             
+            // First pass: collect all dates and their statuses
             dataToUse.forEach(item => {
-                if (item.status === 'present') {
+                const dateKey = `${item.year}-${item.month}-${item.day}`;
+                workDatesMap[dateKey] = item.status.toLowerCase();
+                
+                if (item.status.includes('present') || item.status === 'late') {
                     presentDays++;
                     
                     // Calculate total work minutes
                     const workMinutes = convertTimeToMinutes(item.hours);
                     totalWorkMinutes += workMinutes;
                     
-                    // Get overtime from the calculated_overtime field
+                    // Get overtime minutes
                     const overtimeMinutes = convertOvertimeToMinutes(item.overtime);
                     
                     // Only count overtime that's 90 minutes (1:30) or more
@@ -1555,11 +1578,24 @@ $debug_info = [
                         filteredOvertimeMinutes += overtimeMinutes;
                     }
                 }
+                else if (item.status.includes('weekend') || item.status.includes('weekly off')) {
+                    weekendDays++;
+                }
+                else if (item.status.includes('holiday')) {
+                    holidayDays++;
+                }
+                else if (item.status.includes('leave') || item.status.includes('sick') || item.status === 'on leave') {
+                    leaveDays++;
+                }
             });
             
-            // Calculate attendance rate
-            const totalDays = dataToUse.length || 1; // Avoid division by zero
-            const attendanceRate = Math.round((presentDays / totalDays) * 100);
+            // Calculate attendance rate - exclude weekends, holidays from total expected days
+            const businessDays = getBusinessDaysInMonth(currentYear, currentMonth);
+            const expectedWorkDays = businessDays - holidayDays; // Exclude holidays from business days
+            
+            // Calculate attendance rate: present days divided by (expected work days minus leave days)
+            const denominator = Math.max(1, expectedWorkDays - leaveDays); // Avoid division by zero
+            const attendanceRate = Math.round((presentDays / denominator) * 100);
             
             // Format hours
             const totalHours = formatMinutesToTime(totalWorkMinutes);
@@ -1576,6 +1612,24 @@ $debug_info = [
                 data: dataToUse,
                 isUsingFallback: isUsingFallback
             };
+        }
+        
+        // Helper function to count business days in a month (Mon-Fri)
+        function getBusinessDaysInMonth(year, month) {
+            const daysInMonth = new Date(year, month, 0).getDate();
+            let businessDays = 0;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dayOfWeek = date.getDay();
+                
+                // 0 = Sunday, 6 = Saturday
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    businessDays++;
+                }
+            }
+            
+            return businessDays;
         }
         
         function convertTimeToMinutes(timeString) {

@@ -85,49 +85,54 @@ $remaining_seconds = 0;
 $overtime_seconds = 0;
 $is_overtime = false;
 
-// Get shift details for the user
-if ($user_data && isset($user_data['shift_id'])) {
-    $shift_query = "SELECT start_time, end_time FROM shifts WHERE id = ?";
-    $shift_stmt = $conn->prepare($shift_query);
-    $shift_stmt->bind_param("i", $user_data['shift_id']);
-    $shift_stmt->execute();
-    $shift_result = $shift_stmt->get_result();
-    $shift_details = $shift_result->fetch_assoc();
-    
-    if ($shift_details && $shift_details['end_time']) {
-        // Get punch in time for today
-        $get_punch_in = "SELECT punch_in FROM attendance WHERE user_id = ? AND date = ? AND punch_out IS NULL";
-        $punch_stmt = $conn->prepare($get_punch_in);
-        $today = date('Y-m-d');
-        $punch_stmt->bind_param("is", $user_id, $today);
-        $punch_stmt->execute();
-        $punch_result = $punch_stmt->get_result();
-        $punch_data = $punch_result->fetch_assoc();
+// Get current shift details from user_shifts table considering effective dates
+$shift_query = "SELECT s.id, s.start_time, s.end_time 
+                FROM user_shifts us
+                JOIN shifts s ON us.shift_id = s.id
+                WHERE us.user_id = ? 
+                AND (us.effective_to IS NULL OR us.effective_to >= CURDATE()) 
+                AND us.effective_from <= CURDATE()
+                ORDER BY us.effective_from DESC 
+                LIMIT 1";
+$shift_stmt = $conn->prepare($shift_query);
+$shift_stmt->bind_param("i", $user_id);
+$shift_stmt->execute();
+$shift_result = $shift_stmt->get_result();
+$shift_details = $shift_result->fetch_assoc();
 
-        // Convert times to timestamps
-        $shift_end = strtotime($today . ' ' . $shift_details['end_time']);
-        $current_time = time();
-        $punch_in_time = $punch_data ? strtotime($today . ' ' . $punch_data['punch_in']) : $current_time;
+if ($shift_details && $shift_details['end_time']) {
+    // Get punch in time for today
+    $get_punch_in = "SELECT punch_in FROM attendance WHERE user_id = ? AND date = ? AND punch_out IS NULL";
+    $punch_stmt = $conn->prepare($get_punch_in);
+    $today = date('Y-m-d');
+    $punch_stmt->bind_param("is", $user_id, $today);
+    $punch_stmt->execute();
+    $punch_result = $punch_stmt->get_result();
+    $punch_data = $punch_result->fetch_assoc();
 
-        // Check if punch in was after shift end
-        if ($punch_in_time > $shift_end) {
-            // If punched in after shift end, overtime starts from punch in time
-            $overtime_seconds = $current_time - $punch_in_time;
+    // Convert times to timestamps
+    $shift_end = strtotime($today . ' ' . $shift_details['end_time']);
+    $current_time = time();
+    $punch_in_time = $punch_data ? strtotime($today . ' ' . $punch_data['punch_in']) : $current_time;
+
+    // Check if punch in was after shift end
+    if ($punch_in_time > $shift_end) {
+        // If punched in after shift end, overtime starts from punch in time
+        $overtime_seconds = $current_time - $punch_in_time;
+        $is_overtime = true;
+        $remaining_seconds = 0;
+    } else {
+        // Normal scenario
+        if ($current_time > $shift_end) {
+            // Calculate overtime
+            $overtime_seconds = $current_time - $shift_end;
             $is_overtime = true;
             $remaining_seconds = 0;
         } else {
-            // Normal scenario
-            if ($current_time > $shift_end) {
-                // Calculate overtime
-                $overtime_seconds = $current_time - $shift_end;
-                $is_overtime = true;
-                $remaining_seconds = 0;
-            } else {
-                // Calculate remaining time
-                $remaining_seconds = $shift_end - $current_time;
-                $is_overtime = false;
-                $overtime_seconds = 0;
-            }
+            // Calculate remaining time
+            $remaining_seconds = $shift_end - $current_time;
+            $is_overtime = false;
+            $overtime_seconds = 0;
         }
     }
 }

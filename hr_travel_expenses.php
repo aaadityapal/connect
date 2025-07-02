@@ -93,29 +93,36 @@ try {
     
     // Add role status filter if specified
     if (!empty($filterRoleStatus)) {
-        $parts = explode('_', $filterRoleStatus);
-        if (count($parts) == 2) {
-            $role = $parts[0]; // hr, manager, accountant, or status
-            $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
-            
-            // Add the appropriate condition based on the role
-            switch ($role) {
-                case 'hr':
-                    $baseConditions .= " AND hr_status = ?";
-                    $baseParams[] = $status;
-                    break;
-                case 'manager':
-                    $baseConditions .= " AND manager_status = ?";
-                    $baseParams[] = $status;
-                    break;
-                case 'accountant':
-                    $baseConditions .= " AND accountant_status = ?";
-                    $baseParams[] = $status;
-                    break;
-                case 'status':
-                    $baseConditions .= " AND status = ?";
-                    $baseParams[] = $status;
-                    break;
+        // Special handling for combined status filters
+        if ($filterRoleStatus == 'approved_paid') {
+            $baseConditions .= " AND status = 'Approved' AND (payment_status = 'Paid' OR payment_status = 'paid')";
+        } else if ($filterRoleStatus == 'approved_unpaid') {
+            $baseConditions .= " AND status = 'Approved' AND (payment_status IS NULL OR payment_status = 'Pending' OR payment_status = 'pending' OR payment_status = '')";
+        } else {
+            $parts = explode('_', $filterRoleStatus);
+            if (count($parts) == 2) {
+                $role = $parts[0]; // hr, manager, accountant, or status
+                $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
+                
+                // Add the appropriate condition based on the role
+                switch ($role) {
+                    case 'hr':
+                        $baseConditions .= " AND hr_status = ?";
+                        $baseParams[] = $status;
+                        break;
+                    case 'manager':
+                        $baseConditions .= " AND manager_status = ?";
+                        $baseParams[] = $status;
+                        break;
+                    case 'accountant':
+                        $baseConditions .= " AND accountant_status = ?";
+                        $baseParams[] = $status;
+                        break;
+                    case 'status':
+                        $baseConditions .= " AND status = ?";
+                        $baseParams[] = $status;
+                        break;
+                }
             }
         }
     }
@@ -211,6 +218,7 @@ try {
             te.manager_status,
             te.accountant_status,
             te.hr_status,
+            te.payment_status,
             u.username as employee,
             u.profile_picture
         FROM travel_expenses te
@@ -283,30 +291,37 @@ try {
     
     // Add role status filter if specified
     if (!empty($filterRoleStatus)) {
-        // Parse the role and status from the filter value (e.g., "hr_approved" => "hr", "Approved")
-        $parts = explode('_', $filterRoleStatus);
-        if (count($parts) == 2) {
-            $role = $parts[0]; // hr, manager, accountant, or status
-            $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
-            
-            // Add the appropriate condition based on the role
-            switch ($role) {
-                case 'hr':
-                    $query .= " AND te.hr_status = ?";
-                    $params[] = $status;
-                    break;
-                case 'manager':
-                    $query .= " AND te.manager_status = ?";
-                    $params[] = $status;
-                    break;
-                case 'accountant':
-                    $query .= " AND te.accountant_status = ?";
-                    $params[] = $status;
-                    break;
-                case 'status':
-                    $query .= " AND te.status = ?";
-                    $params[] = $status;
-                    break;
+        // Special handling for combined status filters
+        if ($filterRoleStatus == 'approved_paid') {
+            $query .= " AND te.status = 'Approved' AND (te.payment_status = 'Paid' OR te.payment_status = 'paid')";
+        } else if ($filterRoleStatus == 'approved_unpaid') {
+            $query .= " AND te.status = 'Approved' AND (te.payment_status IS NULL OR te.payment_status = 'Pending' OR te.payment_status = 'pending' OR te.payment_status = '')";
+        } else {
+            // Parse the role and status from the filter value (e.g., "hr_approved" => "hr", "Approved")
+            $parts = explode('_', $filterRoleStatus);
+            if (count($parts) == 2) {
+                $role = $parts[0]; // hr, manager, accountant, or status
+                $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
+                
+                // Add the appropriate condition based on the role
+                switch ($role) {
+                    case 'hr':
+                        $query .= " AND te.hr_status = ?";
+                        $params[] = $status;
+                        break;
+                    case 'manager':
+                        $query .= " AND te.manager_status = ?";
+                        $params[] = $status;
+                        break;
+                    case 'accountant':
+                        $query .= " AND te.accountant_status = ?";
+                        $params[] = $status;
+                        break;
+                    case 'status':
+                        $query .= " AND te.status = ?";
+                        $params[] = $status;
+                        break;
+                }
             }
         }
     }
@@ -767,7 +782,7 @@ if (!empty($filterMonth)) {
     }
 
     th, td {
-      padding: 15px;
+      padding: 10px 8px;
       text-align: center;
       border-bottom: 1px solid #f0f0f0;
     }
@@ -1262,7 +1277,7 @@ if (!empty($filterMonth)) {
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       max-width: 700px;
       margin: 5vh auto;
-      width: 90%;
+      width: %;
       border: none;
       overflow: hidden;
       animation: modalFadeIn 0.3s ease;
@@ -2544,7 +2559,7 @@ if (!empty($filterMonth)) {
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       max-width: 1100px; /* Increased from 900px */
       margin: 5vh auto;
-      width: 95%;
+      width: 105%;
       border: none;
       overflow: hidden;
       animation: modalSlideIn 0.3s ease-out;
@@ -3149,6 +3164,10 @@ if (!empty($filterMonth)) {
             <div class="filter-item">
               <select name="role_status" id="roleStatusFilter" class="form-select">
                 <option value="">All Statuses</option>
+                <optgroup label="Combined Status">
+                  <option value="approved_paid" <?php echo $filterRoleStatus == 'approved_paid' ? 'selected' : ''; ?>>Approved & Paid</option>
+                  <option value="approved_unpaid" <?php echo $filterRoleStatus == 'approved_unpaid' ? 'selected' : ''; ?>>Approved & Unpaid</option>
+                </optgroup>
                 <optgroup label="Overall Status">
                   <option value="status_approved" <?php echo $filterRoleStatus == 'status_approved' ? 'selected' : ''; ?>>Approved</option>
                   <option value="status_pending" <?php echo $filterRoleStatus == 'status_pending' ? 'selected' : ''; ?>>Pending</option>
@@ -3196,11 +3215,17 @@ if (!empty($filterMonth)) {
           <?php echo $filterText; ?>
           <?php if (!empty($filterRoleStatus)): ?>
             <?php 
-              $parts = explode('_', $filterRoleStatus);
-              if (count($parts) == 2) {
-                $role = ucfirst($parts[0]); // HR, Manager, or Accountant
-                $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
-                echo " | $role Status: $status";
+              if ($filterRoleStatus == 'approved_paid') {
+                echo " | Status: Approved & Paid";
+              } else if ($filterRoleStatus == 'approved_unpaid') {
+                echo " | Status: Approved & Unpaid";
+              } else {
+                $parts = explode('_', $filterRoleStatus);
+                if (count($parts) == 2) {
+                  $role = ucfirst($parts[0]); // HR, Manager, or Accountant
+                  $status = ucfirst($parts[1]); // Approved, Pending, or Rejected
+                  echo " | $role Status: $status";
+                }
               }
             ?>
           <?php endif; ?>
@@ -3287,13 +3312,14 @@ if (!empty($filterMonth)) {
             <th>Accountant</th>
             <th>Manager</th>
             <th>HR</th>
+            <th>Payment Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($groupedExpenses)): ?>
             <tr>
-              <td colspan="10" class="text-center">No expense records found</td>
+              <td colspan="11" class="text-center">No expense records found</td>
             </tr>
           <?php else: ?>
             <?php foreach ($groupedExpenses as $groupKey => $group): ?>
@@ -3340,6 +3366,25 @@ if (!empty($filterMonth)) {
                 </td>
                 <td class="status-cell <?php echo strtolower($firstExpense['hr_status']); ?>">
                   <?php echo htmlspecialchars($firstExpense['hr_status']); ?>
+                </td>
+                <td class="status-cell <?php 
+                    $paymentStatus = $firstExpense['payment_status'] ?? '';
+                    if (strtolower($paymentStatus) == 'paid') {
+                        echo 'approved'; // Use the approved class for green styling
+                    } elseif (strtolower($paymentStatus) == 'pending' || empty($paymentStatus)) {
+                        echo 'rejected'; // Use the rejected class for red styling
+                    } else {
+                        echo strtolower($paymentStatus);
+                    }
+                  ?>">
+                  <?php 
+                    $paymentStatus = $firstExpense['payment_status'] ?? '';
+                    if (strtolower($paymentStatus) == 'pending' || empty($paymentStatus)) {
+                        echo 'Unpaid';
+                    } else {
+                        echo htmlspecialchars($paymentStatus);
+                    }
+                  ?>
                 </td>
                 <td class="action-buttons">
                   <div class="action-btn-group">
@@ -3787,6 +3832,7 @@ if (!empty($filterMonth)) {
                             <th>Amount</th>
                             <th>Status</th>
                             <th>HR Status</th>
+                            <th>Payment Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -3823,6 +3869,15 @@ if (!empty($filterMonth)) {
                     <td>${formattedAmount}</td>
                     <td><span class="status-cell ${expense.status.toLowerCase()}">${expense.status}</span></td>
                     <td><span class="status-cell ${expense.hr_status.toLowerCase()}">${expense.hr_status}</span></td>
+                    <td>
+                      <span class="status-cell ${expense.payment_status?.toLowerCase() === 'paid' ? 'approved' : 
+                                               (!expense.payment_status || expense.payment_status.toLowerCase() === 'pending') ? 'rejected' : 
+                                               expense.payment_status.toLowerCase()}">
+                        ${expense.payment_status?.toLowerCase() === 'paid' ? 'Paid' : 
+                         (!expense.payment_status || expense.payment_status.toLowerCase() === 'pending') ? 'Unpaid' : 
+                         expense.payment_status}
+                      </span>
+                    </td>
                     <td>
                         <div class="action-btn-group">
                             <button class="action-icon approve" title="Accept" onclick="approveRow(this, ${expense.id})" ${expense.status.toLowerCase() !== 'pending' ? 'disabled' : ''}>

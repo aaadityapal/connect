@@ -949,3 +949,69 @@
 2025-06-11 12:32:03 - Processing expense IDs: [19,20]
 2025-06-11 12:32:03 - Updating status field: manager_status to value: approved
 2025-06-11 12:32:03 - Successfully processed 2 out of 2 expenses
+2025-07-02 13:57:01 - Request received in process_expense_action.php
+2025-07-02 13:57:01 - POST data: Array
+(
+    [expense_id] => 23
+    [action] => approve
+    [notes] => sss
+)
+
+2025-07-02 13:57:01 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-07-02 13:57:01 - Processing expense IDs: [23]
+2025-07-02 13:57:01 - Updating status field: hr_status to value: approved
+2025-07-02 13:57:01 - Successfully processed 1 out of 1 expenses
+2025-07-02 13:57:01 - Request received in process_expense_action.php
+2025-07-02 13:57:01 - POST data: Array
+(
+    [expense_id] => 22
+    [action] => approve
+    [notes] => sss
+)
+
+2025-07-02 13:57:01 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-07-02 13:57:01 - Processing expense IDs: [22]
+2025-07-02 13:57:01 - Updating status field: hr_status to value: approved
+2025-07-02 13:57:01 - Successfully processed 1 out of 1 expenses
+2025-07-02 13:57:01 - Request received in process_expense_action.php
+2025-07-02 13:57:01 - POST data: Array
+(
+    [expense_id] => 40
+    [action] => approve
+    [notes] => sss
+)
+
+2025-07-02 13:57:01 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-07-02 13:57:01 - Processing expense IDs: [40]
+2025-07-02 13:57:01 - Updating status field: hr_status to value: approved
+2025-07-02 13:57:01 - Successfully processed 1 out of 1 expenses

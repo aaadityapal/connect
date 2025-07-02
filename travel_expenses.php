@@ -26,7 +26,7 @@ include_once('includes/db_connect.php');
 $user_id = $_SESSION['user_id'];
 
 // Get filter parameters
-$filterMonth = isset($_GET['month']) ? $_GET['month'] : '';
+$filterMonth = isset($_GET['month']) ? $_GET['month'] : date('m');
 $filterYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
 
 // Fetch travel expenses for this user with optional filtering
@@ -77,12 +77,7 @@ foreach ($expenses as $expense) {
 }
 
 // Format the filter period for display
-$filterPeriod = '';
-if (!empty($filterMonth)) {
-    $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
-} else {
-    $filterPeriod = 'All months in ' . $filterYear;
-}
+$filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
 ?>
 
 <!DOCTYPE html>
@@ -843,9 +838,9 @@ if (!empty($filterMonth)) {
                         <button type="submit" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-filter"></i> Filter
                         </button>
-                        <?php if (!empty($filterMonth) || $filterYear != date('Y')): ?>
+                        <?php if ($filterMonth != date('m') || $filterYear != date('Y')): ?>
                         <a href="travel_expenses.php" class="btn btn-sm btn-outline-secondary ml-2">
-                            <i class="fas fa-times"></i> Clear
+                            <i class="fas fa-times"></i> Reset to Current Month
                         </a>
                         <?php endif; ?>
                     </form>
@@ -905,6 +900,15 @@ if (!empty($filterMonth)) {
                                                     <button class="btn btn-sm btn-outline-primary view-expense" data-id="<?php echo $expense['id']; ?>">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
+                                                    <?php if ($expense['status'] !== 'approved'): ?>
+                                                    <button class="btn btn-sm btn-outline-info edit-expense" data-id="<?php echo $expense['id']; ?>">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <?php else: ?>
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Approved expenses cannot be edited">
+                                                        <i class="fas fa-lock"></i>
+                                                    </button>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -964,6 +968,15 @@ if (!empty($filterMonth)) {
                                             <button class="btn btn-sm btn-outline-primary view-expense" data-id="<?php echo $expense['id']; ?>">
                                                 <i class="fas fa-eye"></i> View Details
                                             </button>
+                                            <?php if ($expense['status'] !== 'approved'): ?>
+                                            <button class="btn btn-sm btn-outline-info edit-expense" data-id="<?php echo $expense['id']; ?>">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <?php else: ?>
+                                            <button class="btn btn-sm btn-outline-secondary" disabled title="Approved expenses cannot be edited">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -1225,6 +1238,104 @@ if (!empty($filterMonth)) {
     <div class="bill-image-modal" id="billImageModal">
         <span class="bill-image-modal-close" onclick="closeBillImageModal()">&times;</span>
         <img class="bill-image-modal-content" id="billImageModalContent">
+    </div>
+
+    <!-- Edit Expense Modal -->
+    <div class="modal fade" id="editExpenseModal" tabindex="-1" role="dialog" aria-labelledby="editExpenseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editExpenseModalLabel">Edit Travel Expense</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editExpenseForm">
+                        <input type="hidden" id="editExpenseId">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editPurposeOfVisit">Purpose of Visit<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editPurposeOfVisit" placeholder="Enter purpose" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editModeOfTransport">Mode of Transport<span class="text-danger">*</span></label>
+                                    <select class="form-control" id="editModeOfTransport" required>
+                                        <option value="">Select mode</option>
+                                        <option value="Car">Car</option>
+                                        <option value="Bike">Bike</option>
+                                        <option value="Taxi">Taxi</option>
+                                        <option value="Bus">Bus</option>
+                                        <option value="Train">Train</option>
+                                        <option value="Auto">Auto</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editFromLocation">From<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editFromLocation" placeholder="Starting location" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editToLocation">To<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="editToLocation" placeholder="Destination" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editTravelDate">Date<span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="editTravelDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editApproxDistance">Distance (km)<span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="editApproxDistance" placeholder="Approx distance" min="0" step="0.1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editTotalExpense">Amount (₹)<span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="editTotalExpense" placeholder="Total expense" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editExpenseNotes">Notes</label>
+                            <textarea class="form-control" id="editExpenseNotes" rows="2" placeholder="Additional notes (optional)"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editReceiptFile">Receipt (Leave empty to keep current file)</label>
+                            <input type="file" class="form-control-file" id="editReceiptFile">
+                            <div id="currentFileDisplay" class="mt-2 small"></div>
+                        </div>
+                    </form>
+                    <div class="alert alert-danger mt-3" id="editErrorMessage" style="display: none;"></div>
+                    <div class="alert alert-success mt-3" id="editSuccessMessage" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveEditedExpense">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Files -->
@@ -1694,6 +1805,209 @@ if (!empty($filterMonth)) {
                 document.body.style.overflow = 'auto';
             }
             
+            // Edit expense functionality
+            const editExpenseBtns = document.querySelectorAll('.edit-expense');
+            editExpenseBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const expenseId = this.getAttribute('data-id');
+                    
+                    // Check if closest table row has an approved status
+                    const tableRow = this.closest('tr');
+                    if (tableRow) {
+                        const statusBadge = tableRow.querySelector('.status-approved');
+                        if (statusBadge) {
+                            // Show error message if expense is approved
+                            showNotification('Approved expenses cannot be edited', 'error');
+                            return;
+                        }
+                    }
+                    
+                    // For mobile view
+                    const mobileCard = this.closest('.mobile-expense-card');
+                    if (mobileCard) {
+                        const statusBadge = mobileCard.querySelector('.status-approved');
+                        if (statusBadge) {
+                            // Show error message if expense is approved
+                            showNotification('Approved expenses cannot be edited', 'error');
+                            return;
+                        }
+                    }
+                    
+                    openEditExpenseModal(expenseId);
+                });
+            });
+            
+            /**
+             * Open edit expense modal and populate with data
+             * @param {string} id - The expense ID
+             */
+            function openEditExpenseModal(id) {
+                // Reset form and messages
+                document.getElementById('editExpenseForm').reset();
+                document.getElementById('editErrorMessage').style.display = 'none';
+                document.getElementById('editSuccessMessage').style.display = 'none';
+                document.getElementById('currentFileDisplay').innerHTML = '';
+                
+                // Set the expense ID in the hidden field
+                document.getElementById('editExpenseId').value = id;
+                
+                // Show loading state in modal
+                $('#editExpenseModal').modal('show');
+                
+                // Fetch expense details
+                fetch(`api/get_expense_details_new.php?id=${id}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            populateEditForm(data.expense);
+                        } else {
+                            document.getElementById('editErrorMessage').textContent = data.message || 'Failed to load expense details';
+                            document.getElementById('editErrorMessage').style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('editErrorMessage').textContent = `Failed to load expense details: ${error.message}`;
+                        document.getElementById('editErrorMessage').style.display = 'block';
+                    });
+            }
+            
+            /**
+             * Populate edit form with expense data
+             * @param {Object} expense - The expense object
+             */
+            function populateEditForm(expense) {
+                // Populate form fields
+                document.getElementById('editPurposeOfVisit').value = expense.purpose || '';
+                document.getElementById('editModeOfTransport').value = expense.mode_of_transport || '';
+                document.getElementById('editFromLocation').value = expense.from_location || '';
+                document.getElementById('editToLocation').value = expense.to_location || '';
+                document.getElementById('editApproxDistance').value = expense.distance || '';
+                document.getElementById('editTotalExpense').value = expense.amount || '';
+                document.getElementById('editExpenseNotes').value = expense.notes || '';
+                
+                // Format date for the date input (YYYY-MM-DD)
+                if (expense.travel_date) {
+                    const date = new Date(expense.travel_date);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    document.getElementById('editTravelDate').value = `${year}-${month}-${day}`;
+                }
+                
+                // Display current file information if exists
+                const billFile = expense.bill_file || expense.bill_file_path || expense.receipt || expense.receipt_file || expense.attachment || expense.bill_path;
+                if (billFile) {
+                    const fileDisplay = document.getElementById('currentFileDisplay');
+                    fileDisplay.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-file mr-1"></i> Current file: ${billFile}
+                        </div>
+                    `;
+                }
+            }
+            
+            /**
+             * Save edited expense
+             */
+            document.getElementById('saveEditedExpense').addEventListener('click', function() {
+                // Validate form
+                const form = document.getElementById('editExpenseForm');
+                if (!form.checkValidity()) {
+                    // Trigger browser's native validation UI
+                    form.reportValidity();
+                    return;
+                }
+                
+                // Get form data
+                const expenseId = document.getElementById('editExpenseId').value;
+                const purpose = document.getElementById('editPurposeOfVisit').value;
+                const modeOfTransport = document.getElementById('editModeOfTransport').value;
+                const fromLocation = document.getElementById('editFromLocation').value;
+                const toLocation = document.getElementById('editToLocation').value;
+                const travelDate = document.getElementById('editTravelDate').value;
+                const distance = document.getElementById('editApproxDistance').value;
+                const amount = document.getElementById('editTotalExpense').value;
+                const notes = document.getElementById('editExpenseNotes').value;
+                
+                // Create FormData object for the file upload
+                const formData = new FormData();
+                formData.append('expense_id', expenseId);
+                formData.append('purpose', purpose);
+                formData.append('mode_of_transport', modeOfTransport);
+                formData.append('from_location', fromLocation);
+                formData.append('to_location', toLocation);
+                formData.append('travel_date', travelDate);
+                formData.append('distance', distance);
+                formData.append('amount', amount);
+                formData.append('notes', notes);
+                
+                // Add receipt file if selected
+                const receiptFile = document.getElementById('editReceiptFile').files[0];
+                if (receiptFile) {
+                    formData.append('receipt_file', receiptFile);
+                }
+                
+                // Update button state
+                const saveButton = document.getElementById('saveEditedExpense');
+                const originalButtonText = saveButton.innerHTML;
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                
+                // Hide previous messages
+                document.getElementById('editErrorMessage').style.display = 'none';
+                document.getElementById('editSuccessMessage').style.display = 'none';
+                
+                // Send the update request
+                fetch('api/update_travel_expense.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success message
+                        document.getElementById('editSuccessMessage').textContent = data.message || 'Expense updated successfully';
+                        document.getElementById('editSuccessMessage').style.display = 'block';
+                        
+                        // Close modal after 1.5 seconds and reload page
+                        setTimeout(() => {
+                            $('#editExpenseModal').modal('hide');
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        document.getElementById('editErrorMessage').textContent = data.message || 'Failed to update expense';
+                        document.getElementById('editErrorMessage').style.display = 'block';
+                        
+                        // Reset button state
+                        saveButton.disabled = false;
+                        saveButton.innerHTML = originalButtonText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('editErrorMessage').textContent = `Failed to update expense: ${error.message}`;
+                    document.getElementById('editErrorMessage').style.display = 'block';
+                    
+                    // Reset button state
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = originalButtonText;
+                });
+            });
+            
             // Close modal when clicking outside the image
             window.addEventListener('click', function(event) {
                 const modal = document.getElementById('billImageModal');
@@ -1701,6 +2015,37 @@ if (!empty($filterMonth)) {
                     closeBillImageModal();
                 }
             });
+            
+            /**
+             * Show notification message
+             * @param {string} message - The message to display
+             * @param {string} type - The type of notification (success, error, warning)
+             */
+            function showNotification(message, type = 'success') {
+                // Create notification element if it doesn't exist
+                let notification = document.getElementById('notification');
+                if (!notification) {
+                    notification = document.createElement('div');
+                    notification.id = 'notification';
+                    document.body.appendChild(notification);
+                }
+                
+                // Set content and style based on type
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                
+                // Show notification
+                notification.style.display = 'block';
+                
+                // Auto hide after 4 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                        notification.style.opacity = '1';
+                    }, 300);
+                }, 4000);
+            }
         });
     </script>
 </body>

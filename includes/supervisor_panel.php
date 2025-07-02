@@ -77,9 +77,9 @@
         <span class="menu-text">Attendance Reports</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'weekly_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='weekly_reports.php'">
-        <i class="fas fa-calendar-week"></i>
-        <span class="menu-text">Weekly Reports</span>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'overtime_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='overtime_reports.php'">
+        <i class="fas fa-clock"></i>
+        <span class="menu-text">Overtime Reports</span>
     </div>
     
     <!-- Settings & Personal Section -->

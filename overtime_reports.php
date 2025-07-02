@@ -91,6 +91,21 @@ try {
         ORDER BY us.effective_from DESC
         LIMIT 1
     ");
+    
+    // Query to fetch overtime notification messages
+    $notificationsQuery = $pdo->prepare("
+        SELECT overtime_id, message
+        FROM overtime_notifications
+        WHERE employee_id = :userId
+        ORDER BY created_at DESC
+    ");
+    $notificationsQuery->execute([':userId' => $userId]);
+    $overtimeNotifications = [];
+    
+    // Create a lookup array for easier access by overtime_id
+    while ($notification = $notificationsQuery->fetch(PDO::FETCH_ASSOC)) {
+        $overtimeNotifications[$notification['overtime_id']] = $notification['message'];
+    }
     $shiftQuery->execute([':userId' => $userId, ':startDate' => $startDate, ':endDate' => $endDate]);
     $shiftData = $shiftQuery->fetch();
     
@@ -366,6 +381,28 @@ try {
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         
+        .export-excel {
+            margin-left: 6px;
+            color: #1f7244;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            transition: all 0.2s ease;
+            vertical-align: middle;
+        }
+        
+        .export-excel:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
         td {
             padding: 16px 20px;
             font-size: 14px;
@@ -379,6 +416,30 @@ try {
         
         tr:hover {
             background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .report-text {
+            color: #4461F2;
+            text-decoration: none;
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+        
+        .report-text:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        
+        .report-text::after {
+            content: '\f065';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 10px;
+            margin-left: 5px;
+            opacity: 0.7;
+            vertical-align: super;
         }
         
         .no-records {
@@ -1041,9 +1102,42 @@ try {
             background-color: #f1f5f9;
         }
         
-        .close-send-modal:hover {
+        .close-send-modal:hover,
+        .close-report-modal:hover {
             color: #1e40af;
             background-color: #e2e8f0;
+        }
+        
+        .close-report-modal {
+            font-size: 18px;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+        }
+        
+        .full-report-container {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .full-report-text {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 15px;
+            color: #334155;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid #e2e8f0;
         }
         
         .form-group {
@@ -1091,68 +1185,111 @@ try {
             line-height: 1.6;
         }
         
-        .checkbox-container {
-            margin-top: 30px;
-            margin-bottom: 30px;
-            padding: 20px;
+        .approval-confirmation-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .approval-box {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            background-color: #f8fafc;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            background-color: #f0f7ff;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
         }
         
-        .checkbox-label {
+        .approval-header {
+            background: linear-gradient(135deg, #4461F2, #6366F1);
+            color: white;
+            padding: 8px 15px;
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .approval-checkbox-wrapper {
+            padding: 12px 15px;
+        }
+        
+        .approval-checkbox-label {
             display: flex;
             align-items: center;
-            position: relative;
             cursor: pointer;
-            padding: 5px 0;
+            user-select: none;
+            position: relative;
         }
         
-        .checkbox-label input[type="checkbox"] {
-            opacity: 0;
+        .approval-checkbox-input {
             position: absolute;
-            cursor: pointer;
-            height: 24px;
-            width: 24px;
-            z-index: 1;
+            opacity: 0;
+            height: 0;
+            width: 0;
         }
         
-        .checkbox-custom {
-            width: 24px;
-            height: 24px;
-            background-color: white;
-            border: 2px solid #4461F2;
-            border-radius: 6px;
-            margin-right: 12px;
+        .approval-checkbox {
             position: relative;
-            transition: all 0.2s ease;
             flex-shrink: 0;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4461F2;
+            border-radius: 4px;
+            margin-right: 10px;
+            background-color: white;
+            transition: all 0.2s ease;
         }
         
-        .checkbox-label input[type="checkbox"]:checked ~ .checkbox-custom {
+        .approval-checkbox-icon {
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 18px;
+            height: 18px;
+            fill: white;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.15s ease;
+        }
+        
+        .approval-checkbox-input:checked + .approval-checkbox {
             background-color: #4461F2;
             border-color: #4461F2;
         }
         
-        .checkbox-label input[type="checkbox"]:checked ~ .checkbox-custom:after {
-            content: '';
-            position: absolute;
-            left: 7px;
-            top: 3px;
-            width: 6px;
-            height: 12px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
+        .approval-checkbox-input:checked + .approval-checkbox .approval-checkbox-icon {
+            opacity: 1;
+            transform: scale(1);
         }
         
-        .checkbox-text {
-            font-size: 15px;
+        .approval-checkbox-input:focus + .approval-checkbox {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        /* Shake animation for validation feedback */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+        
+        .approval-text {
+            font-size: 14px;
+            line-height: 1.4;
             color: #334155;
-            line-height: 1.5;
-            font-weight: 500;
+            font-weight: 400;
+            padding-top: 1px;
+        }
+        
+        /* Show error message below the checkbox container */
+        .approval-box .error-message {
+            margin: 0;
+            padding: 0 20px 15px;
         }
         
         .error-message {
@@ -1164,6 +1301,28 @@ try {
         
         .error-message.show {
             display: block;
+        }
+        
+        .success-message {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 25px 0;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .success-message i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .modal-footer {
@@ -1219,33 +1378,6 @@ try {
         
         .modal-submit-btn:active {
             transform: translateY(0);
-        }
-        
-        /* Notification Styles */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            z-index: 3000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: opacity 0.3s ease;
-            max-width: 350px;
-        }
-        
-        .notification.success {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-        
-        .notification.error {
-            background: linear-gradient(135deg, #ef4444, #b91c1c);
-        }
-        
-        .notification.warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
         }
     </style>
 </head>
@@ -1324,25 +1456,26 @@ try {
                 <table>
                     <thead>
                         <tr>
-                            <th title="Date of overtime">Date</th>
-                            <th title="Overtime hours worked">Hours</th>
-                            <th title="Employee's shift end time">Shift End Time</th>
-                            <th title="Actual punch out time">Punch Out Time</th>
-                            <th title="Employee's work report">Work Report</th>
-                            <th title="Current approval status">Status</th>
-                            <th title="Available actions">Actions</th>
+                                                                <th title="Date of overtime">Date</th>
+                                    <th title="Overtime hours worked">Hours</th>
+                                    <th title="Employee's shift end time">Shift End Time</th>
+                                    <th title="Actual punch out time">Punch Out Time</th>
+                                    <th title="Employee's work report">Work Report <a href="javascript:void(0);" class="export-excel" data-type="work" title="Export Work Reports"><i class="fas fa-file-excel"></i></a></th>
+                                    <th title="Message submitted with overtime request">Overtime Report <a href="javascript:void(0);" class="export-excel" data-type="overtime" title="Export Overtime Reports"><i class="fas fa-file-excel"></i></a></th>
+                                    <th title="Current approval status">Status</th>
+                                    <th title="Available actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (isset($error)): ?>
                             <tr>
-                                <td colspan="6">
+                                <td colspan="8">
                                     <div class="no-records"><?php echo $error; ?></div>
                                 </td>
                             </tr>
                         <?php elseif (empty($overtimeRecords)): ?>
                             <tr>
-                                <td colspan="6">
+                                <td colspan="8">
                                     <div class="no-records">No overtime records found for this month.</div>
                                 </td>
                             </tr>
@@ -1353,7 +1486,26 @@ try {
                                     <td><?php echo number_format($record['overtime_hours'], 1); ?></td>
                                     <td><?php echo date('h:i A', strtotime($record['shift_end_time'])); ?></td>
                                     <td><?php echo date('h:i A', strtotime($record['punch_out'])); ?></td>
-                                    <td><?php echo $record['work_report'] ? htmlspecialchars(substr($record['work_report'], 0, 50)) . (strlen($record['work_report']) > 50 ? '...' : '') : 'N/A'; ?></td>
+                                    <td>
+                                        <?php if ($record['work_report']): ?>
+                                            <a href="javascript:void(0);" class="report-text work-report-link" data-id="<?php echo $record['id']; ?>">
+                                                <?php echo htmlspecialchars(substr($record['work_report'], 0, 40)) . (strlen($record['work_report']) > 40 ? '...' : ''); ?>
+                                            </a>
+                                        <?php else: ?>
+                                            N/A
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $message = isset($overtimeNotifications[$record['id']]) ? $overtimeNotifications[$record['id']] : '';
+                                        if ($message): ?>
+                                            <a href="javascript:void(0);" class="report-text overtime-report-link" data-id="<?php echo $record['id']; ?>">
+                                                <?php echo htmlspecialchars(substr($message, 0, 40)) . (strlen($message) > 40 ? '...' : ''); ?>
+                                            </a>
+                                        <?php else: ?>
+                                            N/A
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <?php 
                                         $status = $record['overtime_status'] ?? 'not-submitted';
@@ -1421,9 +1573,36 @@ try {
                         <div class="detail-text" id="modal-report"></div>
                     </div>
                 </div>
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-comment-alt"></i>
+                    </div>
+                    <div class="detail-content">
+                        <span class="detail-label">Overtime Report</span>
+                        <div class="detail-text" id="modal-overtime-message"></div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="modal-close-btn"><i class="fas fa-check"></i> Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Text Modal -->
+    <div id="reportTextModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="report-modal-title"><i class="fas fa-file-alt"></i> Report Details</h2>
+                <span class="close-report-modal"><i class="fas fa-times"></i></span>
+            </div>
+            <div class="modal-body">
+                <div class="full-report-container">
+                    <div class="full-report-text" id="full-report-content"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-close-btn" id="closeReportBtn"><i class="fas fa-check"></i> Close</button>
             </div>
         </div>
     </div>
@@ -1455,13 +1634,22 @@ try {
                     </div>
                 </div>
                 
-                <div class="form-group checkbox-container">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="approvalConfirmation" required>
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-text">I confirm that I have approval for this overtime from my manager</span>
-                    </label>
-                    <div class="error-message" id="checkbox-error">This confirmation is required</div>
+                <div class="form-group approval-confirmation-container">
+                    <div class="approval-box">
+                        <div class="approval-header">Confirmation</div>
+                        <div class="approval-checkbox-wrapper">
+                            <label class="approval-checkbox-label" for="approvalConfirmation">
+                                <input type="checkbox" id="approvalConfirmation" class="approval-checkbox-input" required>
+                                <div class="approval-checkbox">
+                                    <svg class="approval-checkbox-icon" viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"></path>
+                                    </svg>
+                                </div>
+                                <span class="approval-text"></span>
+                            </label>
+                        </div>
+                        <div class="error-message" id="checkbox-error">This confirmation is required</div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -1565,6 +1753,16 @@ try {
                 document.getElementById('monthForm').submit();
             });
             
+            // Store all work reports and overtime messages for quick access
+            const workReports = {};
+            const overtimeReports = <?php echo json_encode($overtimeNotifications ?? []); ?>;
+            
+            <?php if (!empty($overtimeRecords)): ?>
+            <?php foreach ($overtimeRecords as $record): ?>
+                workReports[<?php echo $record['id']; ?>] = <?php echo json_encode($record['work_report'] ?? ''); ?>;
+            <?php endforeach; ?>
+            <?php endif; ?>
+            
             document.getElementById('yearSelect').addEventListener('change', function() {
                 document.getElementById('monthForm').submit();
             });
@@ -1611,6 +1809,9 @@ try {
                         // The dropdown will already have Senior Manager (Site) selected by default from HTML
                         document.getElementById('overtimeDescription').value = record.work_report || '';
                         
+                        // Reset error message visibility
+                        document.getElementById('checkbox-error').style.display = 'none';
+                        
                         // Reset error messages
                         document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
                         
@@ -1644,6 +1845,11 @@ try {
                         document.getElementById('modal-hours').textContent = record.overtime_hours.toFixed(1) + ' hours';
                         document.getElementById('modal-report').textContent = record.work_report || 'No work report submitted';
                         
+                        // Get overtime message from notifications data
+                        const overtimeNotifications = <?php echo json_encode($overtimeNotifications ?? []); ?>;
+                        const overtimeMessage = overtimeNotifications[record.id] || 'No overtime report submitted';
+                        document.getElementById('modal-overtime-message').textContent = overtimeMessage;
+                        
                         // Show the modal
                         detailsModal.style.display = 'block';
                         document.body.style.overflow = 'hidden'; // Prevent scrolling
@@ -1659,9 +1865,22 @@ try {
                 // Check approval confirmation
                 const approvalCheckbox = document.getElementById('approvalConfirmation');
                 if (!approvalCheckbox.checked) {
-                    document.getElementById('checkbox-error').classList.add('show');
+                    const errorMsg = document.getElementById('checkbox-error');
+                    errorMsg.style.display = 'block';
+                    errorMsg.classList.add('show');
+                    
+                    // Add shake animation to the checkbox for better visibility
+                    const checkboxDiv = document.querySelector('.approval-checkbox');
+                    checkboxDiv.classList.add('shake-animation');
+                    
+                    // Remove animation class after it completes
+                    setTimeout(() => {
+                        checkboxDiv.classList.remove('shake-animation');
+                    }, 500);
+                    
                     isValid = false;
                 } else {
+                    document.getElementById('checkbox-error').style.display = 'none';
                     document.getElementById('checkbox-error').classList.remove('show');
                 }
                 
@@ -1685,20 +1904,21 @@ try {
                 
                 // If valid, submit the form
                 if (isValid && currentRecord) {
-                    // Disable the submit button and show loading state
-                    const submitBtn = document.getElementById('submitOvertimeBtn');
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-                    
-                    // Prepare data for submission
+                    // Prepare form data for AJAX submission
                     const formData = new FormData();
-                    formData.append('action', 'submit_overtime');
+                    formData.append('action', 'submit_overtime_notification');
                     formData.append('overtime_id', currentRecord.id);
                     formData.append('manager_id', managerSelect.value);
                     formData.append('message', description.value);
                     
-                    // Send AJAX request
-                    fetch('ajax_handlers/overtime_handler.php', {
+                    // Show loading state
+                    const submitBtn = document.getElementById('submitOvertimeBtn');
+                    const originalBtnText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                    submitBtn.disabled = true;
+                    
+                    // Send AJAX request to save data
+                    fetch('overtime_handler.php', {
                         method: 'POST',
                         body: formData
                     })
@@ -1706,31 +1926,33 @@ try {
                     .then(data => {
                         if (data.success) {
                             // Show success message
-                            showNotification('Overtime request submitted successfully!', 'success');
+                            const successMessage = document.createElement('div');
+                            successMessage.className = 'success-message';
+                            successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Overtime request submitted successfully!';
                             
-                            // Update UI to reflect the new status
-                            const statusCell = document.querySelector(`button[data-id="${currentRecord.id}"]`)
-                                .closest('tr').querySelector('.status-badge');
+                            // Insert above the footer
+                            const modalFooter = document.querySelector('#sendOvertimeModal .modal-footer');
+                            modalFooter.parentNode.insertBefore(successMessage, modalFooter);
                             
-                            if (statusCell) {
-                                statusCell.textContent = 'PENDING';
-                                statusCell.className = 'status-badge status-pending';
-                            }
-                            
-                            // Close the modal
-                            sendModal.style.display = 'none';
-                            document.body.style.overflow = '';
+                            // Close the modal after delay
+                            setTimeout(() => {
+                                sendModal.style.display = 'none';
+                                document.body.style.overflow = '';
+                                // Refresh to update UI
+                                window.location.reload();
+                            }, 1500);
                         } else {
-                            showNotification('Error: ' + (data.message || 'Failed to submit request'), 'error');
+                            // Show error message
+                            alert('Error: ' + (data.message || 'An error occurred'));
+                            submitBtn.innerHTML = originalBtnText;
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
                         }
                     })
                     .catch(error => {
-                        console.error('Error submitting overtime request:', error);
-                        showNotification('Error submitting request. Please try again.', 'error');
+                        console.error('Error submitting overtime notification:', error);
+                        alert('An error occurred while submitting your request. Please try again.');
+                        submitBtn.innerHTML = originalBtnText;
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
                     });
                 }
             });
@@ -1781,35 +2003,126 @@ try {
                         sendModal.style.display = 'none';
                         document.body.style.overflow = '';
                     }
+                    if (reportTextModal.style.display === 'block') {
+                        reportTextModal.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
                 }
             });
             
-            // Function to show notifications
-            function showNotification(message, type) {
-                // Create notification element if it doesn't exist
-                let notification = document.getElementById('notification');
-                if (!notification) {
-                    notification = document.createElement('div');
-                    notification.id = 'notification';
-                    document.body.appendChild(notification);
+            // Handle work report links
+            const workReportLinks = document.querySelectorAll('.work-report-link');
+            const overtimeReportLinks = document.querySelectorAll('.overtime-report-link');
+            const reportTextModal = document.getElementById('reportTextModal');
+            const closeReportModal = document.querySelector('.close-report-modal');
+            const closeReportBtn = document.getElementById('closeReportBtn');
+            
+            // Open work report modal when clicking on work report link
+            workReportLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const reportId = this.getAttribute('data-id');
+                    const reportContent = workReports[reportId] || 'No work report content available';
+                    
+                    // Set modal title and content
+                    document.getElementById('report-modal-title').innerHTML = '<i class="fas fa-file-alt"></i> Work Report Details';
+                    document.getElementById('full-report-content').textContent = reportContent;
+                    
+                    // Show modal
+                    reportTextModal.style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling
+                });
+            });
+            
+            // Open overtime report modal when clicking on overtime report link
+            overtimeReportLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    const reportId = this.getAttribute('data-id');
+                    const reportContent = overtimeReports[reportId] || 'No overtime report content available';
+                    
+                    // Set modal title and content
+                    document.getElementById('report-modal-title').innerHTML = '<i class="fas fa-comment-alt"></i> Overtime Report Details';
+                    document.getElementById('full-report-content').textContent = reportContent;
+                    
+                    // Show modal
+                    reportTextModal.style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling
+                });
+            });
+            
+            // Close report text modal
+            closeReportModal.addEventListener('click', function() {
+                reportTextModal.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            closeReportBtn.addEventListener('click', function() {
+                reportTextModal.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            // Close report modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target == reportTextModal) {
+                    reportTextModal.style.display = 'none';
+                    document.body.style.overflow = '';
                 }
-                
-                // Set content and style based on type
-                notification.textContent = message;
-                notification.className = `notification ${type}`;
-                
-                // Show notification
-                notification.style.display = 'block';
-                
-                // Auto hide after 4 seconds
-                setTimeout(() => {
-                    notification.style.opacity = '0';
+            });
+            
+            // Handle Excel export functionality
+            const exportButtons = document.querySelectorAll('.export-excel');
+            exportButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent triggering the th:hover tooltip
+                    
+                    const exportType = this.getAttribute('data-type');
+                    const month = <?php echo $currentMonth; ?>;
+                    const year = <?php echo $currentYear; ?>;
+                    const userId = <?php echo $userId; ?>;
+                    
+                    // Create loading animation
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    this.style.pointerEvents = 'none';
+                    
+                    // Create the export URL
+                    const exportUrl = `export_overtime_reports.php?type=${exportType}&month=${month}&year=${year}&user_id=${userId}`;
+                    
+                    // Create a temporary link and trigger the download
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = exportUrl;
+                    downloadLink.style.display = 'none';
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Restore the original button after a delay
                     setTimeout(() => {
-                        notification.style.display = 'none';
-                        notification.style.opacity = '1';
-                    }, 300);
-                }, 4000);
-            }
+                        this.innerHTML = originalHTML;
+                        this.style.pointerEvents = '';
+                        
+                        // Show a temporary success message
+                        const thElement = this.closest('th');
+                        const successIcon = document.createElement('span');
+                        successIcon.innerHTML = '<i class="fas fa-check" style="color: #10b981; margin-left: 5px;"></i>';
+                        successIcon.style.opacity = '0';
+                        successIcon.style.transition = 'opacity 0.3s ease';
+                        
+                        thElement.appendChild(successIcon);
+                        
+                        // Fade in and out the success icon
+                        setTimeout(() => {
+                            successIcon.style.opacity = '1';
+                            setTimeout(() => {
+                                successIcon.style.opacity = '0';
+                                setTimeout(() => {
+                                    thElement.removeChild(successIcon);
+                                }, 300);
+                            }, 1500);
+                        }, 10);
+                    }, 1000);
+                });
+            });
         });
     </script>
 </body>

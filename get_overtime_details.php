@@ -1,7 +1,7 @@
 <?php
 session_start();
-// Check if user is logged in and has the correct role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Senior Manager (Studio)') {
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
     // Return error response
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Unauthorized access']);
@@ -18,15 +18,21 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
     exit();
 }
 
-$id = mysqli_real_escape_string($conn, $_GET['id']);
+$id = $_GET['id'];
 
-// Get the overtime details
-$query = "SELECT a.*, u.username, u.designation 
+// Get the overtime details - use prepared statement for security
+$query = "SELECT a.id, a.date, a.punch_in, a.punch_out, a.working_hours, 
+                 a.overtime_hours, a.overtime_status, a.status, a.remarks, 
+                 a.work_report, a.shift_time, a.location, a.modified_by, a.modified_at,
+                 u.username, u.designation 
           FROM attendance a 
           JOIN users u ON a.user_id = u.id 
-          WHERE a.id = '$id'";
+          WHERE a.id = ?";
 
-$result = mysqli_query($conn, $query);
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if (!$result || mysqli_num_rows($result) == 0) {
     header('Content-Type: application/json');
@@ -35,6 +41,9 @@ if (!$result || mysqli_num_rows($result) == 0) {
 }
 
 $overtime_data = mysqli_fetch_assoc($result);
+
+// Debug the raw work report value
+error_log("Raw work_report from database: " . ($overtime_data['work_report'] ?? 'NULL'));
 
 // Format the data for response
 $response = [
@@ -46,14 +55,17 @@ $response = [
     'punch_out' => $overtime_data['punch_out'] ? date('h:i A', strtotime($overtime_data['punch_out'])) : 'N/A',
     'working_hours' => formatHoursValue($overtime_data['working_hours']),
     'overtime_hours' => formatHoursValue($overtime_data['overtime_hours']),
-    'overtime' => $overtime_data['overtime'] ?: 'pending',
+    'calculated_overtime' => formatHoursValue($overtime_data['overtime_hours']),
+    'overtime_status' => $overtime_data['overtime_status'] ?: 'pending',
     'status' => $overtime_data['status'],
     'remarks' => htmlspecialchars($overtime_data['remarks'] ?: ''),
-    'work_report' => htmlspecialchars($overtime_data['work_report'] ?: ''),
+    'work_report' => isset($overtime_data['work_report']) && !empty($overtime_data['work_report']) ? 
+                     htmlspecialchars($overtime_data['work_report']) : 'No work report available',
     'shift_time' => $overtime_data['shift_time'] ?: 'Standard',
+    'shift_end_time' => '18:00:00', // Default shift end time
     'location' => $overtime_data['location'] ?: 'Not recorded',
-    'modified_by' => $overtime_data['modified_by'] ? getUserName($conn, $overtime_data['modified_by']) : '',
-    'modified_at' => $overtime_data['modified_at'] ? date('d M, Y h:i A', strtotime($overtime_data['modified_at'])) : ''
+    'overtime_approved_by' => $overtime_data['modified_by'] ? getUserName($conn, $overtime_data['modified_by']) : '',
+    'overtime_actioned_at' => $overtime_data['modified_at'] ? date('d M, Y h:i A', strtotime($overtime_data['modified_at'])) : ''
 ];
 
 // Function to get username

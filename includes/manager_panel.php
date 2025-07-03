@@ -3,11 +3,13 @@
     <div class="brand-logo">
         <img src="assets/img/company-logo.png" alt="Company Logo" onerror="this.src='data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2230%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%230d1757%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%22%20font-size%3D%2214%22%20fill%3D%22%23ffffff%22%3ECompany%20Logo%3C%2Ftext%3E%3C%2Fsvg%3E'">
     </div>
-    <button class="toggle-btn" id="leftPanelToggleBtn" title="Toggle Panel (Ctrl+B)">
-        <i class="fas fa-chevron-left" id="toggleIcon"></i>
-    </button>
     
     <!-- Main Navigation -->
+    <div class="menu-item" id="leftPanelToggleBtn" style="cursor: pointer;">
+        <i class="fas fa-chevron-right" id="toggleIcon"></i>
+        <span class="menu-text">Dashboard</span>
+    </div>
+    
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_manager_dashboard.php' ? 'active' : ''; ?>" onclick="window.location.href='site_manager_dashboard.php'">
         <i class="fas fa-home"></i>
         <span class="menu-text">Dashboard</span>
@@ -82,9 +84,9 @@
         <span class="menu-text">Reports & Analytics</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'performance_metrics.php' ? 'active' : ''; ?>" onclick="window.location.href='performance_metrics.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'pm_overtime.php' ? 'active' : ''; ?>" onclick="window.location.href='pm_overtime.php'">
         <i class="fas fa-tachometer-alt"></i>
-        <span class="menu-text">Performance Metrics</span>
+        <span class="menu-text">Overtime</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'travel_expenses.php' ? 'active' : ''; ?>" onclick="window.location.href='travel_expenses.php'">

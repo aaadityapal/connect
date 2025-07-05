@@ -86,7 +86,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </a>
                 </li>
                 <li>
-                    <a href="overtime_report.php">
+                    <a href="overtime_reports.php">
                         <i class="fas fa-hourglass-half"></i>
                         <span class="sidebar-text"> Overtime Reports</span>
                     </a>

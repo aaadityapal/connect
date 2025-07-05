@@ -18,9 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $end_time = $_POST['end_time'] ?? '';
     $work_report = $_POST['work_report'] ?? '';
     
+    // Get filter parameters to preserve them in redirects
+    $filter_month = $_POST['filter_month'] ?? date('m');
+    $filter_year = $_POST['filter_year'] ?? date('Y');
+    $filter_params = "month=$filter_month&year=$filter_year";
+    
     // Validate required fields
     if (empty($date) || empty($end_time) || empty($work_report)) {
-        header('Location: employee_overtime.php?success=0&message=Please fill all required fields');
+        header("Location: employee_overtime.php?$filter_params&success=0&message=Please fill all required fields");
         exit();
     }
     
@@ -55,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Check if overtime is at least 1.5 hours (5400 seconds)
     if ($time_diff_seconds < 5400) {
-        header('Location: employee_overtime.php?success=0&message=Overtime must be at least 1.5 hours after your shift end time');
+        header("Location: employee_overtime.php?$filter_params&success=0&message=Overtime must be at least 1.5 hours after your shift end time");
         exit();
     }
     
@@ -77,10 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt->bind_param("ssi", $end_time, $work_report, $row['id']);
         
         if ($update_stmt->execute()) {
-            header('Location: employee_overtime.php?success=1&message=Overtime request updated successfully');
+            header("Location: employee_overtime.php?$filter_params&success=1&message=Overtime request updated successfully");
             exit();
         } else {
-            header('Location: employee_overtime.php?success=0&message=Error updating overtime request');
+            header("Location: employee_overtime.php?$filter_params&success=0&message=Error updating overtime request");
             exit();
         }
     } else {
@@ -90,10 +95,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $insert_stmt->bind_param("isss", $user_id, $date, $end_time, $work_report);
         
         if ($insert_stmt->execute()) {
-            header('Location: employee_overtime.php?success=1&message=Overtime request submitted successfully');
+            header("Location: employee_overtime.php?$filter_params&success=1&message=Overtime request submitted successfully");
             exit();
         } else {
-            header('Location: employee_overtime.php?success=0&message=Error submitting overtime request');
+            header("Location: employee_overtime.php?$filter_params&success=0&message=Error submitting overtime request");
             exit();
         }
     }

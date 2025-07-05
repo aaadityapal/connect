@@ -18,9 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $manager_id = $_POST['manager_id'] ?? '';
     $message = $_POST['message'] ?? '';
     
+    // Get filter parameters to preserve them in redirects
+    $filter_month = $_POST['filter_month'] ?? date('m');
+    $filter_year = $_POST['filter_year'] ?? date('Y');
+    $filter_params = "month=$filter_month&year=$filter_year";
+    
     // Validate required fields
     if (empty($overtime_id) || empty($manager_id)) {
-        header('Location: employee_overtime.php?success=0&message=Missing required information');
+        header("Location: employee_overtime.php?$filter_params&success=0&message=Missing required information");
         exit();
     }
     
@@ -33,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $manager_data = $manager_result->fetch_assoc();
     
     if (!$manager_data) {
-        header('Location: employee_overtime.php?success=0&message=Selected manager not found');
+        header("Location: employee_overtime.php?$filter_params&success=0&message=Selected manager not found");
         exit();
     }
     
@@ -60,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $overtime_data = $overtime_result->fetch_assoc();
     
     if (!$overtime_data) {
-        header('Location: employee_overtime.php?success=0&message=Overtime record not found');
+        header("Location: employee_overtime.php?$filter_params&success=0&message=Overtime record not found");
         exit();
     }
     
@@ -89,8 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Silent catch - column may not exist
     }
     
-    // For now, redirect back with success message
-    header('Location: employee_overtime.php?success=1&message=Overtime report sent successfully to manager');
+    // Redirect back with success message and filter parameters
+    header("Location: employee_overtime.php?$filter_params&success=1&message=Overtime report sent successfully to manager");
     exit();
 } else {
     // If accessed directly without POST data

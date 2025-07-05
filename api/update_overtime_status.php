@@ -59,8 +59,38 @@ if ($status === 'rejected' && empty($reason)) {
     exit;
 }
 
-// Get current user (manager) ID - in a real app, this would come from the session
-$managerId = 1; // Example manager ID
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Get current user (manager) ID from session
+$managerId = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
+
+// Debug log for manager ID
+error_log("Manager ID from session: $managerId");
+
+// If no valid manager ID in session, return error
+if (!$managerId) {
+    echo json_encode(['success' => false, 'message' => 'Not authorized: No valid manager ID']);
+    exit;
+}
+
+// Get manager username for better display
+$managerUsername = isset($_SESSION['username']) ? $_SESSION['username'] : '';
+if (empty($managerUsername) && $managerId > 0) {
+    // Fetch username from database if not in session
+    $managerQuery = "SELECT username FROM users WHERE id = ?";
+    $managerStmt = mysqli_prepare($conn, $managerQuery);
+    mysqli_stmt_bind_param($managerStmt, 'i', $managerId);
+    mysqli_stmt_execute($managerStmt);
+    $managerResult = mysqli_stmt_get_result($managerStmt);
+    if ($managerRow = mysqli_fetch_assoc($managerResult)) {
+        $managerUsername = $managerRow['username'];
+    }
+}
+
+error_log("Manager Username: $managerUsername");
 
 try {
     // Start transaction
@@ -205,7 +235,7 @@ try {
         ? "Your overtime has been approved" 
         : "Your overtime has been rejected";
     
-    $notificationQuery = "INSERT INTO overtime_notification 
+    $notificationQuery = "INSERT INTO overtime_notifications 
                          (overtime_id, employee_id, manager_id, message, status, manager_response, created_at) 
                          VALUES (?, ?, ?, ?, ?, ?, NOW())";
     
@@ -236,7 +266,9 @@ try {
         'data' => [
             'user_id' => $userId,
             'status' => $status,
-            'date' => $date
+            'date' => $date,
+            'manager_id' => $managerId,
+            'manager_username' => $managerUsername
         ]
     ]);
     

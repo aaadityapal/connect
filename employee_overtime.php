@@ -1193,6 +1193,10 @@ function getOvertimeReport($conn, $attendance_id) {
                         <h2 style="color: #2c3e50; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; font-size: 24px;">Request Overtime</h2>
                         
                         <form id="overtimeForm" action="submit_overtime.php" method="post">
+                            <!-- Add hidden fields for month and year filters -->
+                            <input type="hidden" name="filter_month" value="<?php echo $filter_month; ?>">
+                            <input type="hidden" name="filter_year" value="<?php echo $filter_year; ?>">
+                            
                             <div class="form-group">
                                 <label for="overtimeDate" class="required-field">Date</label>
                                 <input type="date" id="overtimeDate" name="date" required class="form-control">
@@ -1997,6 +2001,9 @@ function getOvertimeReport($conn, $attendance_id) {
                 
                 <form id="sendOvertimeForm" action="send_overtime.php" method="post">
                     <input type="hidden" id="sendOvertimeId" name="overtime_id">
+                    <!-- Add hidden fields for month and year filters -->
+                    <input type="hidden" name="filter_month" value="<?php echo $filter_month; ?>">
+                    <input type="hidden" name="filter_year" value="<?php echo $filter_year; ?>">
                     
                     <div class="detail-item" style="margin-bottom: 20px;">
                         <label style="display: flex; align-items: center; cursor: pointer;">

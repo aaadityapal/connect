@@ -1,6 +1,19 @@
 <?php
+// Start session to maintain user authentication
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    // Redirect to login page if not authorized
+    header('Location: login.php');
+    exit();
+}
+
 // Database connection
 require_once 'config/db_connect.php';
+
+// Debug: Log session data for troubleshooting
+error_log("Overtime Reports - Session Data: " . print_r($_SESSION, true));
 
 // Fetch users for Studio view (excluding site roles)
 $studioQuery = "SELECT id, username, position, email, phone_number, designation, department, role, reporting_manager, profile_picture 
@@ -56,9 +69,16 @@ if ($shiftsResult && mysqli_num_rows($shiftsResult) > 0) {
 
 // Fetch attendance data with overtime for all users
 // We'll calculate the actual overtime based on shift end time later
-$attendanceQuery = "SELECT a.*, u.username, u.profile_picture, u.department, u.role
+$attendanceQuery = "SELECT a.*, 
+                   u.username, u.profile_picture, u.department, u.role,
+                   manager.username as manager_username,
+                   a.work_report,
+                   otn.message as overtime_message,
+                   otn.manager_response
                    FROM attendance a
                    JOIN users u ON a.user_id = u.id
+                   LEFT JOIN users manager ON a.overtime_approved_by = manager.id
+                   LEFT JOIN overtime_notifications otn ON a.id = otn.overtime_id
                    WHERE a.punch_out IS NOT NULL
                    ORDER BY a.date DESC";
 $attendanceResult = mysqli_query($conn, $attendanceQuery);
@@ -112,6 +132,11 @@ if ($attendanceResult && mysqli_num_rows($attendanceResult) > 0) {
                         $row['overtime_status'] = 'pending';
                     }
                     
+                    // Use manager username instead of ID if available
+                    if (!empty($row['manager_username'])) {
+                        $row['manager'] = $row['manager_username'];
+                    }
+                    
         $attendanceData[] = $row;
                 }
             }
@@ -157,6 +182,143 @@ mysqli_close($conn);
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Sidebar styles */
+        .dashboard {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            color: #555;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 1px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border: none;
+            color: #555;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed .toggle-btn i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-header {
+            padding: 20px 15px 10px;
+            border-bottom: none;
+        }
+
+        .sidebar-header h3 {
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .sidebar-text {
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar.collapsed .sidebar-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+        }
+
+        .sidebar-menu li {
+            position: relative;
+            margin: 2px 0;
+        }
+
+        .sidebar-menu li.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid #e74c3c;
+        }
+
+        .sidebar-menu li.active a {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #555;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-menu li a:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+            color: #e74c3c;
+        }
+
+        .sidebar-menu li a i {
+            font-size: 18px;
+            min-width: 30px;
+            text-align: center;
+            margin-right: 8px;
+            color: inherit;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logout-btn {
+            color: #e74c3c !important;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed + .main-content {
+            margin-left: 60px;
         }
 
         .app-container {
@@ -847,6 +1009,105 @@ mysqli_close($conn);
             text-decoration: underline;
         }
         
+        /* Work Report styles */
+        .work-report-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            font-size: 0.85rem;
+        }
+        
+        .work-report-cell:hover, .overtime-message-cell:hover {
+            background-color: #e1f0fa;
+            border-color: #3498db;
+        }
+        
+        .overtime-message-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            font-size: 0.85rem;
+        }
+        
+        .no-report {
+            color: #95a5a6;
+            font-style: italic;
+        }
+        
+        .manager-response-text {
+            background-color: #f0f9ff;
+            border-left: 3px solid #3498db;
+        }
+        
+        .work-report-section .reason-header {
+            background-color: #e8f4fd;
+        }
+        
+        .work-report-section .reason-header i {
+            color: #3498db;
+        }
+        
+        /* Work Report Modal Styles */
+        .work-report-modal {
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        .work-report-header {
+            background-color: #f8f9fa;
+            margin: -20px -20px 20px -20px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .work-report-content {
+            padding: 0 0 10px 0;
+        }
+        
+        .report-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.05rem;
+        }
+        
+        .report-text {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .report-text p {
+            margin: 0 0 10px 0;
+            line-height: 1.5;
+        }
+        
+        .report-text p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .no-report-full {
+            color: #95a5a6;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
         /* Pagination styles */
         .pagination {
             display: flex;
@@ -1007,6 +1268,228 @@ mysqli_close($conn);
             background-color: #f8f9fa;
         }
         
+        /* Overtime Details Modal Styles */
+        .details-modal {
+            max-width: 700px;
+            width: 90%;
+        }
+        
+        .details-header h2 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .details-body {
+            padding: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .details-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .employee-section {
+            background-color: #f8f9fa;
+        }
+        
+        .employee-profile {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .details-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .employee-info {
+            margin-left: 20px;
+            flex: 1;
+        }
+        
+        .employee-name {
+            font-size: 1.4rem;
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+        
+        .employee-meta {
+            display: flex;
+            gap: 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .employee-department, .employee-position {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-badge {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .details-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            text-transform: capitalize;
+        }
+        
+        .details-status.pending {
+            background-color: #f39c12;
+        }
+        
+        .details-status.submitted {
+            background-color: #3498db;
+        }
+        
+        .details-status.approved {
+            background-color: #2ecc71;
+        }
+        
+        .details-status.rejected {
+            background-color: #e74c3c;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        
+        .section-title i {
+            color: #3498db;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .detail-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e1f0fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+        
+        .highlight-item {
+            border-left: 4px solid #3498db;
+            background-color: #e1f0fa;
+        }
+        
+        .highlight-item .detail-icon {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .detail-content {
+            flex: 1;
+        }
+        
+        .detail-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .reason-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .reason-header, .note-header {
+            background-color: #e1f0fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .reason-header i, .note-header i {
+            color: #3498db;
+        }
+        
+        .reason-content, .note-content {
+            padding: 15px;
+            color: #2c3e50;
+        }
+        
+        .calculation-note {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .calculation-note .note-header {
+            background-color: #fef5e7;
+        }
+        
+        .calculation-note .note-header i {
+            color: #f39c12;
+        }
+        
+        .note-content p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .details-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+        
         .modal-header h2 {
             margin: 0;
             font-size: 1.4rem;
@@ -1104,6 +1587,42 @@ mysqli_close($conn);
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         
+        /* Responsive styles for details modal */
+        @media (max-width: 768px) {
+            .details-modal {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .employee-profile {
+                flex-direction: column;
+                text-align: center;
+                padding-bottom: 50px;
+            }
+            
+            .employee-info {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+            
+            .employee-meta {
+                justify-content: center;
+            }
+            
+            .status-badge {
+                position: absolute;
+                right: auto;
+                top: auto;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         @media (max-width: 375px) {
             .app-container {
                 padding: 0.8rem;
@@ -1182,158 +1701,274 @@ mysqli_close($conn);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <div class="page-header">
-            <h1 class="page-title">
-                <i class="fas fa-clock"></i> Overtime Approval
-            </h1>
-            <button class="btn btn-primary">
-                <i class="fas fa-plus"></i> New Request
-            </button>
-        </div>
+    <div class="dashboard">
+        <div class="sidebar" id="sidebar">
+            <div class="toggle-btn" id="toggle-btn">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-text">MAIN</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="real.php">
+                        <i class="fas fa-home" style="color: #e74c3c;"></i>
+                        <span class="sidebar-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="sidebar-text">Leaves</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-users"></i>
+                        <span class="sidebar-text">Employees</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-briefcase"></i>
+                        <span class="sidebar-text">Projects</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-text">ANALYTICS</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="#">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="sidebar-text">Employee Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="work_report.php">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="sidebar-text">Work Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="attendance_report.php">
+                        <i class="far fa-clock"></i>
+                        <span class="sidebar-text">Attendance Reports</span>
+                    </a>
+                </li>
+                <li class="active">
+                    <a href="overtime_reports.php">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span class="sidebar-text">Overtime Reports</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-header">
+                <h3 class="sidebar-text">SETTINGS</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="manager_profile.php">
+                        <i class="fas fa-user"></i>
+                        <span class="sidebar-text">Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-bell"></i>
+                        <span class="sidebar-text">Notifications</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="manager_settings.php">
+                        <i class="fas fa-cog"></i>
+                        <span class="sidebar-text">Settings</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reset_password.php">
+                        <i class="fas fa-lock"></i>
+                        <span class="sidebar-text">Reset Password</span>
+                    </a>
+                </li>
+            </ul>
 
-        <div class="filter-container">
-            <div class="filter-header">
-                <h2 class="filter-title">
-                    <i class="fas fa-filter"></i> Filter Options
-                </h2>
-            </div>
-            <div class="filter-form">
-                <div class="form-group">
-                    <label class="form-label">User</label>
-                    <select class="form-select" id="filter-user">
-                        <option value="">All Users</option>
-                        <!-- Will be populated dynamically -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="filter-status">
-                        <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="submitted">Submitted</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Month</label>
-                    <select class="form-select" id="filter-month">
-                        <option value="">All Months</option>
-                        <option value="January">January</option>
-                        <option value="February">February</option>
-                        <option value="March">March</option>
-                        <option value="April">April</option>
-                        <option value="May">May</option>
-                        <option value="June">June</option>
-                        <option value="July">July</option>
-                        <option value="August">August</option>
-                        <option value="September">September</option>
-                        <option value="October">October</option>
-                        <option value="November">November</option>
-                        <option value="December">December</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Year</label>
-                    <select class="form-select" id="filter-year">
-                        <option value="">All Years</option>
-                        <!-- Will be populated dynamically -->
-                    </select>
-                </div>
-                <div class="form-group filter-buttons">
-                    <button class="btn btn-filter" id="apply-filters">
-                        <i class="fas fa-search"></i> Filter
-                    </button>
-                    <button class="btn btn-reset" id="reset-filters">
-                        <i class="fas fa-undo"></i> Reset
-                    </button>
-                </div>
-            </div>
-            <div id="filter-message" class="filter-message" style="display: none; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 6px; text-align: center; color: #777;">
-                <span id="filter-message-icon"><i class="fas fa-info-circle"></i></span> <span id="filter-message-text"></span>
+            <!-- Add logout at the end of sidebar -->
+            <div class="sidebar-footer">
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="logout.php" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="sidebar-text">Logout</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
+        
+        <div class="main-content">
+            <div class="app-container">
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="fas fa-clock"></i> Overtime Approval
+                    </h1>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Request
+                    </button>
+                </div>
 
-        <div class="overview-container">
-            <h2 class="section-title overview">
-                <i class="fas fa-tachometer-alt"></i> Quick Overview of Overtime <span style="font-size: 0.9rem; color: #777; font-weight: normal;">(1.5+ hours)</span>
-            </h2>
-        <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-icon" style="background-color: #3498db;">
-                        <i class="fas fa-clock"></i>
+                <div class="filter-container">
+                    <div class="filter-header">
+                        <h2 class="filter-title">
+                            <i class="fas fa-filter"></i> Filter Options
+                        </h2>
+                    </div>
+                    <div class="filter-form">
+                        <div class="form-group">
+                            <label class="form-label">User</label>
+                            <select class="form-select" id="filter-user">
+                                <option value="">All Users</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="filter-status">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="submitted">Submitted</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Month</label>
+                            <select class="form-select" id="filter-month">
+                                <option value="">All Months</option>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Year</label>
+                            <select class="form-select" id="filter-year">
+                                <option value="">All Years</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group filter-buttons">
+                            <button class="btn btn-filter" id="apply-filters">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                            <button class="btn btn-reset" id="reset-filters">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                    <div id="filter-message" class="filter-message" style="display: none; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 6px; text-align: center; color: #777;">
+                        <span id="filter-message-icon"><i class="fas fa-info-circle"></i></span> <span id="filter-message-text"></span>
+                    </div>
+                </div>
+
+                <div class="overview-container">
+                    <h2 class="section-title overview">
+                        <i class="fas fa-tachometer-alt"></i> Quick Overview of Overtime <span style="font-size: 0.9rem; color: #777; font-weight: normal;">(1.5+ hours)</span>
+                    </h2>
+                <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: #3498db;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>39</h3>
+                                <p>Total Overtime Hours</p>
+                            </div>
+                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>12</h3>
+                                <p>Pending Overtime</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon approved">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>24</h3>
+                                <p>Approved Overtime</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                            <div class="stat-icon" style="background-color: #9b59b6;">
+                                <i class="fas fa-dollar-sign"></i>
                     </div>
                     <div class="stat-info">
-                        <h3>39</h3>
-                        <p>Total Overtime Hours</p>
-                    </div>
-                </div>
-            <div class="stat-card">
-                <div class="stat-icon pending">
-                    <i class="fas fa-hourglass-half"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>12</h3>
-                        <p>Pending Overtime</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon approved">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-info">
-                    <h3>24</h3>
-                        <p>Approved Overtime</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                    <div class="stat-icon" style="background-color: #9b59b6;">
-                        <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="stat-info">
-                        <h3>$1,950</h3>
-                        <p>Total Amount</p>
+                            <h3>$1,950</h3>
+                            <p>Total Amount</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="details-container">
-            <div class="details-header">
-                <h2 class="details-title">
-                    <i class="fas fa-list-alt"></i> Overtime Details <span style="font-size: 0.8rem; color: #777; font-weight: normal;">(minimum 1.5 hours)</span>
-        </h2>
-                <div class="toggle-container">
-                    <span class="toggle-label">Studio</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox">
-                        <span class="toggle-slider">
-                            <span class="toggle-text left">Studio</span>
-                            <span class="toggle-text right">Site</span>
-                        </span>
-                    </label>
-                    <span class="toggle-label">Site</span>
-                    </div>
-                    </div>
-            <div class="table-responsive">
-                <table class="overtime-table">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Date</th>
-                            <th>Shift End Time</th>
-                            <th>Punch Out Time</th>
-                            <th>Overtime Hours</th>
-                            <th>Status</th>
-                            <th>Approved By</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Table content will be populated by JavaScript -->
-                    </tbody>
-                </table>
+            <div class="details-container">
+                <div class="details-header">
+                    <h2 class="details-title">
+                        <i class="fas fa-list-alt"></i> Overtime Details <span style="font-size: 0.8rem; color: #777; font-weight: normal;">(minimum 1.5 hours)</span>
+            </h2>
+                    <div class="toggle-container">
+                        <span class="toggle-label">Studio</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider">
+                                <span class="toggle-text left">Studio</span>
+                                <span class="toggle-text right">Site</span>
+                            </span>
+                        </label>
+                        <span class="toggle-label">Site</span>
+                        </div>
+                        </div>
+                <div class="table-responsive">
+                    <table class="overtime-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Date</th>
+                                <th>Shift End Time</th>
+                                <th>Punch Out Time</th>
+                                <th>Overtime Hours</th>
+                                <th>Work Report</th>
+                                <th>Overtime Report</th>
+                                <th>Status</th>
+                                <th>Approved By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Table content will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -1412,9 +2047,226 @@ mysqli_close($conn);
             </div>
         </div>
     </div>
+    
+    <!-- Overtime Message Modal -->
+    <div id="overtimeMessageModal" class="modal">
+        <div class="modal-content work-report-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-comment-dots" style="color: #3498db;"></i> Overtime Report</h2>
+                <span class="close" onclick="closeModal('overtimeMessageModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="work-report-header">
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-user"></i> Employee:</span>
+                        <span class="info-value" id="overtimeMessageUserName"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-calendar"></i> Date:</span>
+                        <span class="info-value" id="overtimeMessageDate"></span>
+                    </div>
+                </div>
+                <div class="work-report-content">
+                    <div class="report-label">System Message:</div>
+                    <div id="overtimeMessageContent" class="report-text"></div>
+                    
+                    <div id="managerResponseSection" style="margin-top: 20px; display: none;">
+                        <div class="report-label">Manager Response:</div>
+                        <div id="managerResponseContent" class="report-text manager-response-text"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('overtimeMessageModal')">
+                    <i class="fas fa-check"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Work Report Modal -->
+    <div id="workReportModal" class="modal">
+        <div class="modal-content work-report-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt" style="color: #3498db;"></i> Work Report</h2>
+                <span class="close" onclick="closeModal('workReportModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="work-report-header">
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-user"></i> Employee:</span>
+                        <span class="info-value" id="workReportUserName"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-calendar"></i> Date:</span>
+                        <span class="info-value" id="workReportDate"></span>
+                    </div>
+                </div>
+                <div class="work-report-content">
+                    <div class="report-label">Report Content:</div>
+                    <div id="workReportContent" class="report-text"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('workReportModal')">
+                    <i class="fas fa-check"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overtime Details Modal -->
+    <div id="overtimeDetailsModal" class="modal">
+        <div class="modal-content details-modal">
+            <div class="modal-header details-header">
+                <h2><i class="fas fa-info-circle" style="color: #3498db;"></i> Overtime Details</h2>
+                <span class="close" onclick="closeModal('overtimeDetailsModal')">&times;</span>
+            </div>
+            <div class="modal-body details-body">
+                <!-- Employee Info Section -->
+                <div class="details-section employee-section">
+                    <div class="employee-profile">
+                        <img id="detailsUserAvatar" src="assets/default-avatar.png" alt="Employee" class="details-avatar">
+                        <div class="employee-info">
+                            <h3 id="detailsUserName" class="employee-name">Employee Name</h3>
+                            <div class="employee-meta">
+                                <span class="employee-department">
+                                    <i class="fas fa-building"></i> 
+                                    <span id="detailsUserDepartment">Department</span>
+                                </span>
+                                <span class="employee-position">
+                                    <i class="fas fa-id-badge"></i> 
+                                    <span id="detailsUserPosition">Position</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="status-badge">
+                            <span id="detailsStatus" class="details-status pending">Pending</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Overtime Details Section -->
+                <div class="details-section overtime-details-section">
+                    <h3 class="section-title"><i class="fas fa-clock"></i> Overtime Information</h3>
+                    
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-icon"><i class="fas fa-calendar-day"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Date</div>
+                                <div id="detailsDate" class="detail-value">March 15, 2025</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon"><i class="fas fa-user-clock"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Shift</div>
+                                <div id="detailsShift" class="detail-value">Regular (9AM-6PM)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon"><i class="fas fa-sign-out-alt"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Shift End Time</div>
+                                <div id="detailsShiftEnd" class="detail-value">6:00 PM</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon"><i class="fas fa-door-open"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Punch Out Time</div>
+                                <div id="detailsPunchOut" class="detail-value">8:30 PM</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item highlight-item">
+                            <div class="detail-icon"><i class="fas fa-hourglass-half"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Overtime Hours</div>
+                                <div id="detailsOvertimeHours" class="detail-value">2.5 hours</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-icon"><i class="fas fa-user-check"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Approved/Rejected By</div>
+                                <div id="detailsManagerInfo" class="detail-value">N/A</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="detailsWorkReportSection" class="reason-section work-report-section" style="display: none;">
+                        <div class="reason-header">
+                            <i class="fas fa-file-alt"></i> Work Report
+                        </div>
+                        <div id="detailsWorkReport" class="reason-content">
+                            Work report will appear here.
+                        </div>
+                    </div>
+                    
+                    <div id="detailsOvertimeMessageSection" class="reason-section overtime-message-section" style="display: none;">
+                        <div class="reason-header">
+                            <i class="fas fa-comment-dots"></i> Overtime Report
+                        </div>
+                        <div id="detailsOvertimeMessage" class="reason-content">
+                            Overtime message will appear here.
+                        </div>
+                        <div id="detailsManagerResponseDiv" style="margin-top: 10px; display: none;">
+                            <div class="reason-header" style="background-color: #e8f4fd;">
+                                <i class="fas fa-reply"></i> Manager Response
+                            </div>
+                            <div id="detailsManagerResponse" class="reason-content manager-response-text">
+                                Manager response will appear here.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="detailsReasonSection" class="reason-section" style="display: none;">
+                        <div class="reason-header">
+                            <i class="fas fa-comment-alt"></i> Reason
+                        </div>
+                        <div id="detailsReason" class="reason-content">
+                            Reason text will appear here.
+                        </div>
+                    </div>
+                    
+                    <div class="calculation-note">
+                        <div class="note-header">
+                            <i class="fas fa-calculator"></i> Calculation Method
+                        </div>
+                        <div class="note-content">
+                            <p>Overtime is calculated based on time worked after shift end time.</p>
+                            <p>Hours are rounded down to nearest half-hour (e.g., 2.7 hours becomes 2.5 hours).</p>
+                            <p>Minimum qualifying overtime is 1.5 hours.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer details-footer">
+                <button class="btn btn-primary" onclick="closeModal('overtimeDetailsModal')">
+                    <i class="fas fa-check"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle functionality
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggle-btn');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                });
+            }
+            
             // DOM elements
             const filterUserSelect = document.getElementById('filter-user');
             const filterStatusSelect = document.getElementById('filter-status');
@@ -1507,8 +2359,11 @@ mysqli_close($conn);
                         rawHours: record.calculated_overtime || record.overtime_hours || 0, // Raw hours for calculations
                         profile_picture: record.profile_picture,
                         status: status,
-                        manager: record.overtime_approved_by || record.modified_by,
-                        actioned_at: record.overtime_actioned_at
+                        manager: record.manager || record.manager_username || 'N/A',
+                        actioned_at: record.overtime_actioned_at,
+                        work_report: record.work_report || 'No report submitted',
+                        overtime_message: record.overtime_message || 'No message available',
+                        manager_response: record.manager_response || ''
                     };
                 });
             }
@@ -1886,9 +2741,11 @@ mysqli_close($conn);
                     
                     // Format approval info
                     let approvalInfo = 'N/A';
-                    if (item.manager) {
+                    
+                    // Only show manager info for approved or rejected statuses
+                    if ((item.status === 'approved' || item.status === 'rejected') && item.manager) {
                         approvalInfo = item.manager;
-                    if (item.actioned_at) {
+                        if (item.actioned_at) {
                             const actionDate = new Date(item.actioned_at);
                             if (!isNaN(actionDate.getTime())) {
                                 approvalInfo += ` on ${actionDate.toLocaleDateString()}`;
@@ -1903,6 +2760,24 @@ mysqli_close($conn);
                         <td>${item.shiftEnd}</td>
                         <td>${item.punchOut}</td>
                         <td>${item.hours}</td>
+                        <td>
+                            <div class="work-report-cell" title="Click to view full report" onclick="viewWorkReport('${item.username}', '${item.date}', ${JSON.stringify(item.work_report).replace(/"/g, '&quot;')})">
+                                ${item.work_report && item.work_report !== 'No report submitted' 
+                                    ? item.work_report.length > 30 
+                                        ? item.work_report.substring(0, 30) + '...' 
+                                        : item.work_report
+                                    : '<span class="no-report">No report</span>'}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="overtime-message-cell" title="Click to view details" onclick="viewOvertimeMessage('${item.username}', '${item.date}', ${JSON.stringify(item.overtime_message).replace(/"/g, '&quot;')}, ${JSON.stringify(item.manager_response).replace(/"/g, '&quot;')})">
+                                ${item.overtime_message && item.overtime_message !== 'No message available' 
+                                    ? item.overtime_message.length > 30 
+                                        ? item.overtime_message.substring(0, 30) + '...' 
+                                        : item.overtime_message
+                                    : '<span class="no-report">No message</span>'}
+                            </div>
+                        </td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
                         <td>${approvalInfo}</td>
                         <td>
@@ -2135,6 +3010,63 @@ mysqli_close($conn);
                 // Note: We don't need to call applyFilters() here as it's called in the AJAX success callback
             };
             
+            window.viewOvertimeMessage = function(username, date, message, managerResponse) {
+                console.log(`Viewing overtime message for ${username} on ${date}`);
+                
+                // Set the values in the modal
+                document.getElementById('overtimeMessageUserName').textContent = username;
+                document.getElementById('overtimeMessageDate').textContent = date;
+                
+                // Set the message content
+                const messageContent = document.getElementById('overtimeMessageContent');
+                if (message && message !== 'No message available') {
+                    messageContent.textContent = message;
+                } else {
+                    messageContent.innerHTML = '<p class="no-report-full">No overtime message is available.</p>';
+                }
+                
+                // Set the manager response if available
+                const responseSection = document.getElementById('managerResponseSection');
+                const responseContent = document.getElementById('managerResponseContent');
+                
+                if (managerResponse && managerResponse.trim() !== '') {
+                    responseContent.textContent = managerResponse;
+                    responseSection.style.display = 'block';
+                } else {
+                    responseSection.style.display = 'none';
+                }
+                
+                // Show the modal
+                document.getElementById('overtimeMessageModal').style.display = 'block';
+            };
+            
+            window.viewWorkReport = function(username, date, workReport) {
+                console.log(`Viewing work report for ${username} on ${date}`);
+                
+                // Set the values in the modal
+                document.getElementById('workReportUserName').textContent = username;
+                document.getElementById('workReportDate').textContent = date;
+                
+                // Set the work report content
+                const reportContent = document.getElementById('workReportContent');
+                if (workReport && workReport !== 'No report submitted') {
+                    // Format the text with paragraphs
+                    const formattedReport = workReport
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0)
+                        .map(line => `<p>${line}</p>`)
+                        .join('');
+                    
+                    reportContent.innerHTML = formattedReport;
+                } else {
+                    reportContent.innerHTML = '<p class="no-report-full">No work report was submitted for this overtime.</p>';
+                }
+                
+                // Show the modal
+                document.getElementById('workReportModal').style.display = 'block';
+            };
+            
             window.viewDetails = function(userId) {
                 console.log(`Viewing details for user ID: ${userId}`);
                 
@@ -2149,30 +3081,83 @@ mysqli_close($conn);
                 }
                 
                 if (userRecord) {
-                    // In a real app, you would show a modal with more details
-                    let userDetails = `User: ${userRecord.username}\n`;
-                    userDetails += `Department: ${userRecord.department || 'N/A'}\n`;
-                    userDetails += `Position: ${userRecord.position || 'N/A'}\n`;
-                    userDetails += `Date: ${userRecord.date}\n`;
-                    userDetails += `Shift: ${userRecord.shift_name || 'Default'}\n`;
-                    userDetails += `Shift End: ${userRecord.shiftEnd}\n`;
-                    userDetails += `Punch Out: ${userRecord.punchOut}\n`;
-                    userDetails += `Overtime Hours: ${userRecord.hours}\n`;
-                    userDetails += `Calculation: Based on shift end time ${userRecord.shiftEnd} (rounded down to nearest half-hour)\n`;
-                    userDetails += `Note: Overtime is 0 if punch-out time is before shift end time\n`;
-                    userDetails += `Status: ${userRecord.status || 'Pending'}\n`;
+                    // Get the details modal
+                    const detailsModal = document.getElementById('overtimeDetailsModal');
                     
-                    if (userRecord.manager) {
-                        userDetails += `Approved/Rejected By: ${userRecord.manager}\n`;
+                    // Set user details in the modal
+                    document.getElementById('detailsUserName').textContent = userRecord.username;
+                    document.getElementById('detailsUserAvatar').src = userRecord.profile_picture || 'assets/default-avatar.png';
+                    document.getElementById('detailsUserAvatar').alt = userRecord.username;
+                    document.getElementById('detailsUserDepartment').textContent = userRecord.department || 'N/A';
+                    document.getElementById('detailsUserPosition').textContent = userRecord.position || 'N/A';
+                    document.getElementById('detailsDate').textContent = userRecord.date;
+                    document.getElementById('detailsShift').textContent = userRecord.shift_name || 'Default';
+                    document.getElementById('detailsShiftEnd').textContent = userRecord.shiftEnd;
+                    document.getElementById('detailsPunchOut').textContent = userRecord.punchOut;
+                    document.getElementById('detailsOvertimeHours').textContent = userRecord.hours;
+                    
+                    // Set status with appropriate class
+                    const statusElement = document.getElementById('detailsStatus');
+                    statusElement.textContent = userRecord.status.charAt(0).toUpperCase() + userRecord.status.slice(1);
+                    statusElement.className = 'details-status ' + userRecord.status;
+                    
+                    // Set manager info
+                    const managerInfoElement = document.getElementById('detailsManagerInfo');
+                    if (userRecord.status === 'approved' || userRecord.status === 'rejected') {
+                        if (userRecord.manager) {
+                            let managerInfo = userRecord.manager;
+                            if (userRecord.actioned_at) {
+                                const date = new Date(userRecord.actioned_at);
+                                managerInfo += ` on ${date.toLocaleDateString()}`;
+                            }
+                            managerInfoElement.textContent = managerInfo;
+                        } else {
+                            managerInfoElement.textContent = 'N/A';
+                        }
+                    } else {
+                        managerInfoElement.textContent = 'N/A';
                     }
                     
-                    if (userRecord.actioned_at) {
-                        const date = new Date(userRecord.actioned_at);
-                        userDetails += `Action Date: ${date.toLocaleDateString()}\n`;
+                    // Show or hide reason section based on status
+                    const reasonSection = document.getElementById('detailsReasonSection');
+                    if (userRecord.reason) {
+                        document.getElementById('detailsReason').textContent = userRecord.reason;
+                        reasonSection.style.display = 'block';
+                    } else {
+                        reasonSection.style.display = 'none';
                     }
                     
-                    alert(`Overtime Details:\n${userDetails}`);
+                    // Show work report if available
+                    const workReportSection = document.getElementById('detailsWorkReportSection');
+                    if (userRecord.work_report && userRecord.work_report !== 'No report submitted') {
+                        document.getElementById('detailsWorkReport').textContent = userRecord.work_report;
+                        workReportSection.style.display = 'block';
+                    } else {
+                        workReportSection.style.display = 'none';
+                    }
+                    
+                    // Show overtime message if available
+                    const overtimeMessageSection = document.getElementById('detailsOvertimeMessageSection');
+                    if (userRecord.overtime_message && userRecord.overtime_message !== 'No message available') {
+                        document.getElementById('detailsOvertimeMessage').textContent = userRecord.overtime_message;
+                        overtimeMessageSection.style.display = 'block';
+                        
+                        // Show manager response if available
+                        const managerResponseDiv = document.getElementById('detailsManagerResponseDiv');
+                        if (userRecord.manager_response && userRecord.manager_response.trim() !== '') {
+                            document.getElementById('detailsManagerResponse').textContent = userRecord.manager_response;
+                            managerResponseDiv.style.display = 'block';
+                        } else {
+                            managerResponseDiv.style.display = 'none';
+                        }
+                    } else {
+                        overtimeMessageSection.style.display = 'none';
+                    }
+                    
+                    // Show the modal
+                    detailsModal.style.display = 'block';
                 } else {
+                    // Fallback if record not found
                     alert(`No details found for user ID: ${userId}`);
                 }
             };
@@ -2181,7 +3166,8 @@ mysqli_close($conn);
              * Update a user's status in both data arrays
              */
             function updateUserStatus(userId, newStatus, reason = '', date = '', hours = '', rowId = '') {
-                const currentUser = 'Current User'; // In a real app, get the logged-in user
+                // Get the current user from session
+                const currentUser = '<?php echo isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"]) : "System"; ?>';
                 const now = new Date().toISOString();
                 
                 console.log(`Updating status for user ${userId}, status: ${newStatus}, rowId: ${rowId}`);
@@ -2217,12 +3203,16 @@ mysqli_close($conn);
                             // Update UI with success message
                             showFilterMessage(response.message || `Overtime ${newStatus} successfully!`, 'success');
                             
-                                                    // Update local data arrays for UI
-                        updateLocalData(userId, newStatus, currentUser, now, reason);
-                        
-                        // Immediately update the UI without reloading data
-                        console.log('Instantly updating UI after status change');
-                        updateUIWithoutReload(userId, newStatus, currentUser, rowId);
+                            // Use manager username from response if available
+                            const managerUsername = response.data && response.data.manager_username ? 
+                                response.data.manager_username : currentUser;
+                            
+                            // Update local data arrays for UI
+                            updateLocalData(userId, newStatus, managerUsername, now, reason);
+                            
+                            // Immediately update the UI without reloading data
+                            console.log('Instantly updating UI after status change');
+                            updateUIWithoutReload(userId, newStatus, managerUsername, rowId);
                         } else {
                             // Show error message
                             showFilterMessage('Error: ' + (response && response.message ? response.message : 'Unknown error'), 'error');
@@ -2237,12 +3227,15 @@ mysqli_close($conn);
                         // Show error message
                         showFilterMessage('Error: ' + error, 'error');
                         
+                        // Use session username for consistency
+                        const managerUsername = '<?php echo isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"]) : "System"; ?>';
+                        
                         // Still update local data for demo purposes
-                        updateLocalData(userId, newStatus, currentUser, now, reason);
+                        updateLocalData(userId, newStatus, managerUsername, now, reason);
                         
                         // Immediately update the UI without reloading data
                         console.log('Instantly updating UI after status change (error fallback)');
-                        updateUIWithoutReload(userId, newStatus, currentUser, rowId);
+                        updateUIWithoutReload(userId, newStatus, managerUsername, rowId);
                     }
                 });
             }
@@ -2260,9 +3253,17 @@ mysqli_close($conn);
                         // Force the status update
                         studioData[i].status = newStatus;
                         studioData[i].overtime_status = newStatus; // Add this to ensure the status is updated
-                        studioData[i].manager = currentUser;
-                        studioData[i].actioned_at = timestamp;
-                        if (reason) studioData[i].reason = reason;
+                        
+                        // Only store manager info for approved or rejected statuses
+                        if (newStatus === 'approved' || newStatus === 'rejected') {
+                            studioData[i].manager = currentUser;
+                            studioData[i].actioned_at = timestamp;
+                            if (reason) studioData[i].reason = reason;
+                        } else {
+                            studioData[i].manager = null;
+                            studioData[i].actioned_at = null;
+                            studioData[i].reason = null;
+                        }
                         updated = true;
                         break;
                     }
@@ -2275,9 +3276,17 @@ mysqli_close($conn);
                         // Force the status update
                         siteData[i].status = newStatus;
                         siteData[i].overtime_status = newStatus; // Add this to ensure the status is updated
-                        siteData[i].manager = currentUser;
-                        siteData[i].actioned_at = timestamp;
-                        if (reason) siteData[i].reason = reason;
+                        
+                        // Only store manager info for approved or rejected statuses
+                        if (newStatus === 'approved' || newStatus === 'rejected') {
+                            siteData[i].manager = currentUser;
+                            siteData[i].actioned_at = timestamp;
+                            if (reason) siteData[i].reason = reason;
+                        } else {
+                            siteData[i].manager = null;
+                            siteData[i].actioned_at = null;
+                            siteData[i].reason = null;
+                        }
                         updated = true;
                         break;
                     }
@@ -2297,9 +3306,17 @@ mysqli_close($conn);
                             // Force the status update
                             studioData[i].status = newStatus;
                             studioData[i].overtime_status = newStatus; // Add this to ensure the status is updated
-                            studioData[i].manager = currentUser;
-                            studioData[i].actioned_at = timestamp;
-                            if (reason) studioData[i].reason = reason;
+                            
+                            // Only store manager info for approved or rejected statuses
+                            if (newStatus === 'approved' || newStatus === 'rejected') {
+                                studioData[i].manager = currentUser;
+                                studioData[i].actioned_at = timestamp;
+                                if (reason) studioData[i].reason = reason;
+                            } else {
+                                studioData[i].manager = null;
+                                studioData[i].actioned_at = null;
+                                studioData[i].reason = null;
+                            }
                             found = true;
                             break;
                         }
@@ -2313,9 +3330,17 @@ mysqli_close($conn);
                                 // Force the status update
                                 siteData[i].status = newStatus;
                                 siteData[i].overtime_status = newStatus; // Add this to ensure the status is updated
-                                siteData[i].manager = currentUser;
-                                siteData[i].actioned_at = timestamp;
-                                if (reason) siteData[i].reason = reason;
+                                
+                                // Only store manager info for approved or rejected statuses
+                                if (newStatus === 'approved' || newStatus === 'rejected') {
+                                    siteData[i].manager = currentUser;
+                                    siteData[i].actioned_at = timestamp;
+                                    if (reason) siteData[i].reason = reason;
+                                } else {
+                                    siteData[i].manager = null;
+                                    siteData[i].actioned_at = null;
+                                    siteData[i].reason = null;
+                                }
                                 found = true;
                                 break;
                             }
@@ -2338,6 +3363,31 @@ mysqli_close($conn);
          */
         function updateUIWithoutReload(userId, newStatus, managerName, rowId = '') {
             console.log(`Direct UI update for user ${userId} to status ${newStatus}, rowId: ${rowId}`);
+            
+            // Use the actual manager name from session if available
+            const currentManagerName = '<?php echo isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"]) : "System"; ?>';
+            managerName = currentManagerName || managerName;
+            
+            // Determine column indices by analyzing the table header
+            const headerCells = document.querySelectorAll('.overtime-table thead th');
+            let statusColumnIndex = 8; // Default values if header analysis fails
+            let managerColumnIndex = 9;
+            let actionsColumnIndex = 10;
+            
+            // Find the correct column indices by header text
+            for (let i = 0; i < headerCells.length; i++) {
+                const headerText = headerCells[i].textContent.trim().toLowerCase();
+                if (headerText === 'status') {
+                    statusColumnIndex = i + 1; // +1 because nth-child is 1-based
+                    console.log('Found status column at index:', statusColumnIndex);
+                } else if (headerText === 'approved by') {
+                    managerColumnIndex = i + 1;
+                    console.log('Found manager column at index:', managerColumnIndex);
+                } else if (headerText === 'actions') {
+                    actionsColumnIndex = i + 1;
+                    console.log('Found actions column at index:', actionsColumnIndex);
+                }
+            }
             
             // Find the table row for this user
             const tableRows = document.querySelectorAll('.overtime-table tbody tr');
@@ -2424,7 +3474,7 @@ mysqli_close($conn);
                 console.log('Updating specific row for user', userId);
                 
                 // Update the status cell
-                const statusCell = targetRow.querySelector('td:nth-child(6)');
+                const statusCell = targetRow.querySelector(`td:nth-child(${statusColumnIndex})`);
                 if (statusCell) {
                     // Determine status display
                     let statusClass = 'pending';
@@ -2442,25 +3492,47 @@ mysqli_close($conn);
                     }
                     
                     statusCell.innerHTML = `<span class="status ${statusClass}">${statusText}</span>`;
+                    console.log('Status cell updated to:', statusText);
                 }
                 
                 // Update the manager cell
-                const managerCell = targetRow.querySelector('td:nth-child(7)');
+                const managerCell = targetRow.querySelector(`td:nth-child(${managerColumnIndex})`);
                 if (managerCell) {
                     const now = new Date();
                     const dateStr = now.toLocaleDateString();
-                    managerCell.textContent = `${managerName} on ${dateStr}`;
+                    
+                    // Only show manager name for approved or rejected statuses
+                    if (newStatus === 'approved' || newStatus === 'rejected') {
+                        managerCell.textContent = `${managerName} on ${dateStr}`;
+                    } else {
+                        managerCell.textContent = 'N/A';
+                    }
+                    console.log('Manager cell updated to:', managerCell.textContent);
                 }
                 
                 // Remove action buttons
-                const actionsCell = targetRow.querySelector('td:nth-child(8)');
+                const actionsCell = targetRow.querySelector(`td:nth-child(${actionsColumnIndex})`);
                 if (actionsCell) {
+                    console.log('Updating actions cell for status:', newStatus);
+                    
+                    // Clear all existing buttons first
+                    actionsCell.innerHTML = '';
+                    
                     // Keep only the view button
-                    const viewButton = actionsCell.querySelector('.btn-icon.view');
+                    const viewButton = targetRow.querySelector('.btn-icon.view');
                     if (viewButton) {
-                        actionsCell.innerHTML = '';
                         actionsCell.appendChild(viewButton.cloneNode(true));
+                    } else {
+                        // Create a new view button if it doesn't exist
+                        const newViewButton = document.createElement('button');
+                        newViewButton.className = 'btn-icon view';
+                        newViewButton.title = 'View Details';
+                        newViewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                        newViewButton.onclick = function() { viewDetails(userId); };
+                        actionsCell.appendChild(newViewButton);
                     }
+                    
+                    console.log('Actions cell updated:', actionsCell.innerHTML);
                 }
                 
                 rowUpdated = true;
@@ -2487,7 +3559,7 @@ mysqli_close($conn);
                         console.log('Found matching row in table, updating status display');
                         
                         // Update the status cell
-                        const statusCell = row.querySelector('td:nth-child(6)');
+                        const statusCell = row.querySelector(`td:nth-child(${statusColumnIndex})`);
                         if (statusCell) {
                             // Determine status display
                             let statusClass = 'pending';
@@ -2505,25 +3577,47 @@ mysqli_close($conn);
                             }
                             
                             statusCell.innerHTML = `<span class="status ${statusClass}">${statusText}</span>`;
+                            console.log('Fallback: Status cell updated to:', statusText);
                         }
                         
                         // Update the manager cell
-                        const managerCell = row.querySelector('td:nth-child(7)');
+                        const managerCell = row.querySelector(`td:nth-child(${managerColumnIndex})`);
                         if (managerCell) {
                             const now = new Date();
                             const dateStr = now.toLocaleDateString();
-                            managerCell.textContent = `${managerName} on ${dateStr}`;
+                            
+                            // Only show manager name for approved or rejected statuses
+                            if (newStatus === 'approved' || newStatus === 'rejected') {
+                                managerCell.textContent = `${managerName} on ${dateStr}`;
+                            } else {
+                                managerCell.textContent = 'N/A';
+                            }
+                            console.log('Fallback: Manager cell updated to:', managerCell.textContent);
                         }
                         
                         // Remove action buttons
-                        const actionsCell = row.querySelector('td:nth-child(8)');
+                        const actionsCell = row.querySelector(`td:nth-child(${actionsColumnIndex})`);
                         if (actionsCell) {
+                            console.log('Updating actions cell in fallback for status:', newStatus);
+                            
+                            // Clear all existing buttons first
+                            actionsCell.innerHTML = '';
+                            
                             // Keep only the view button
-                            const viewButton = actionsCell.querySelector('.btn-icon.view');
+                            const viewButton = row.querySelector('.btn-icon.view');
                             if (viewButton) {
-                                actionsCell.innerHTML = '';
                                 actionsCell.appendChild(viewButton.cloneNode(true));
+                            } else {
+                                // Create a new view button if it doesn't exist
+                                const newViewButton = document.createElement('button');
+                                newViewButton.className = 'btn-icon view';
+                                newViewButton.title = 'View Details';
+                                newViewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                                newViewButton.onclick = function() { viewDetails(userId); };
+                                actionsCell.appendChild(newViewButton);
                             }
+                            
+                            console.log('Actions cell updated in fallback:', actionsCell.innerHTML);
                         }
                         
                         rowUpdated = true;

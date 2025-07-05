@@ -77,7 +77,7 @@
         <span class="menu-text">Attendance Reports</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'overtime_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='overtime_reports.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'supervisors_overtime.php' ? 'active' : ''; ?>" onclick="window.location.href='supervisors_overtime.php'">
         <i class="fas fa-clock"></i>
         <span class="menu-text">Overtime Reports</span>
     </div>

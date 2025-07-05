@@ -24,9 +24,11 @@ $id = $_GET['id'];
 $query = "SELECT a.id, a.date, a.punch_in, a.punch_out, a.working_hours, 
                  a.overtime_hours, a.overtime_status, a.status, a.remarks, 
                  a.work_report, a.shift_time, a.location, a.modified_by, a.modified_at,
-                 u.username, u.designation 
+                 u.username, u.designation,
+                 on_table.message as overtime_report
           FROM attendance a 
           JOIN users u ON a.user_id = u.id 
+          LEFT JOIN overtime_notifications on_table ON a.id = on_table.overtime_id
           WHERE a.id = ?";
 
 $stmt = $conn->prepare($query);
@@ -65,7 +67,8 @@ $response = [
     'shift_end_time' => '18:00:00', // Default shift end time
     'location' => $overtime_data['location'] ?: 'Not recorded',
     'overtime_approved_by' => $overtime_data['modified_by'] ? getUserName($conn, $overtime_data['modified_by']) : '',
-    'overtime_actioned_at' => $overtime_data['modified_at'] ? date('d M, Y h:i A', strtotime($overtime_data['modified_at'])) : ''
+    'overtime_actioned_at' => $overtime_data['modified_at'] ? date('d M, Y h:i A', strtotime($overtime_data['modified_at'])) : '',
+    'overtime_report' => htmlspecialchars($overtime_data['overtime_report'] ?: '')
 ];
 
 // Function to get username

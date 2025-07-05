@@ -32,6 +32,7 @@ function convertOvertimeToDecimal($overtime) {
 // Only counts as overtime if user worked at least 1.5 hours after shift end
 function calculateOvertime($shiftEndTime, $punchOutTime) {
     if (empty($shiftEndTime) || empty($punchOutTime)) {
+        error_log("calculateOvertime: Empty shift end time or punch out time");
         return 0;
     }
     
@@ -39,20 +40,25 @@ function calculateOvertime($shiftEndTime, $punchOutTime) {
     $shiftEnd = strtotime("1970-01-01 " . $shiftEndTime);
     $punchOut = strtotime("1970-01-01 " . $punchOutTime);
     
-    // If punch out time is earlier than shift end time, it might be next day
-    if ($punchOut < $shiftEnd) {
-        $punchOut = strtotime("1970-01-02 " . $punchOutTime);
+    // If punch out time is earlier than shift end time, return 0 (no overtime)
+    if ($punchOut <= $shiftEnd) {
+        error_log("calculateOvertime: Punch out time ($punchOutTime) is before or equal to shift end time ($shiftEndTime). No overtime.");
+        return 0;
     }
     
     // Calculate time difference in seconds
     $diffSeconds = $punchOut - $shiftEnd;
+    error_log("calculateOvertime: Shift End: $shiftEndTime, Punch Out: $punchOutTime, Diff Seconds: $diffSeconds");
     
     // Check if worked at least 1.5 hours (5400 seconds) after shift end
     if ($diffSeconds >= 5400) {
         // Calculate overtime in hours, rounded down to nearest 30 min (0.5 hour)
-        return floor($diffSeconds / 1800) * 0.5;
+        $overtimeHours = floor($diffSeconds / 1800) * 0.5;
+        error_log("calculateOvertime: Calculated overtime hours: $overtimeHours");
+        return $overtimeHours;
     }
     
+    error_log("calculateOvertime: Difference less than 1.5 hours, no overtime");
     return 0;
 }
 
@@ -91,13 +97,15 @@ $shift_stmt->close();
 // Prepare query to fetch overtime data for the selected month
 // Query to get all attendance records for the selected month with overtime
 $query = "SELECT 
-            a.id, a.user_id, a.date, a.overtime_hours, a.overtime_status, a.punch_out, a.work_report
+            a.id, a.user_id, a.date, a.overtime_hours, a.overtime_status, a.punch_out, a.work_report,
+            on_table.message as overtime_report
           FROM 
             attendance a
+          LEFT JOIN
+            overtime_notifications on_table ON a.id = on_table.overtime_id
           WHERE 
             a.date BETWEEN ? AND ? 
-            AND a.overtime_hours IS NOT NULL 
-            AND a.overtime_hours != '00:00:00'";
+            AND a.punch_out IS NOT NULL";
 
 // Add user filter if logged in
 if (isset($_SESSION['user_id'])) {
@@ -124,16 +132,28 @@ if ($result && $result->num_rows > 0) {
         // Add the single shift end time to each record
         $row['shift_end_time'] = $single_shift_time;
         
+        // Skip records where punch out is before shift end time
+        $punchOutTime = strtotime("1970-01-01 " . $row['punch_out']);
+        $shiftEndTime = strtotime("1970-01-01 " . $single_shift_time);
+        
+        if ($punchOutTime <= $shiftEndTime) {
+            error_log("Skipping record ID: " . $row['id'] . " - Punch out before shift end");
+            continue;
+        }
+        
         // Calculate overtime hours based on shift end time and punch out time
         $calculatedOvertime = calculateOvertime($single_shift_time, $row['punch_out']);
         
         // Skip records with zero overtime
         if ($calculatedOvertime <= 0) {
+            error_log("Skipping record ID: " . $row['id'] . " - No overtime calculated");
             continue;
         }
         
+        error_log("Processing overtime for record ID: " . $row['id'] . ", Date: " . $row['date'] . ", Calculated: " . $calculatedOvertime);
+        
         // Store both the original and calculated overtime
-        $row['original_overtime'] = $row['overtime_hours'];
+        $row['original_overtime'] = $row['overtime_hours'] ?? '00:00:00';
         $row['calculated_overtime'] = number_format($calculatedOvertime, 1);
         
         // Use calculated overtime for totals
@@ -154,6 +174,9 @@ if ($result && $result->num_rows > 0) {
         $overtimeData[] = $row;
     }
 }
+
+// Log the number of records found
+error_log("Total overtime records found: " . count($overtimeData));
 
 // Close statement
 $stmt->close();
@@ -985,8 +1008,23 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
                       ?>
                     </td>
                     <td>
-                      <!-- Overtime Report column - Empty for now, will be populated later -->
-                      <span class="text-muted">Not available</span>
+                      <!-- Overtime Report column - Show data from overtime_notifications table -->
+                      <?php
+                        $overtime_report = isset($record['overtime_report']) && !empty($record['overtime_report']) ? 
+                                          $record['overtime_report'] : 'Not available';
+                        
+                        if ($overtime_report !== 'Not available') {
+                          $short_overtime_report = strlen($overtime_report) > 30 ? 
+                                                 htmlspecialchars(substr($overtime_report, 0, 30)) . '...' : 
+                                                 htmlspecialchars($overtime_report);
+                          
+                          echo "<span class='report-preview' title='Click to view full report' 
+                                onclick='showOvertimeReportModal(\"" . addslashes(htmlspecialchars($overtime_report)) . "\")'>
+                                $short_overtime_report</span>";
+                        } else {
+                          echo "<span class='text-muted'>$overtime_report</span>";
+                        }
+                      ?>
                     </td>
                     <td>
                       <?php 
@@ -1223,6 +1261,37 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
             <div class="modal-body">
               <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef; white-space: pre-wrap; max-height: 300px; overflow-y: auto;">
                 ${workReport}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+    
+    // Function to show overtime report modal
+    function showOvertimeReportModal(overtimeReport) {
+      const modal = document.createElement('div');
+      modal.className = 'modal fade show';
+      modal.style.display = 'block';
+      modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      
+      modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">Overtime Report</h5>
+              <button type="button" class="close text-white" onclick="this.closest('.modal').remove()">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef; white-space: pre-wrap; max-height: 300px; overflow-y: auto;">
+                ${overtimeReport}
               </div>
             </div>
             <div class="modal-footer">
@@ -1492,10 +1561,20 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
         .then(response => response.json())
         .then(managers => {
           let managerOptions = '';
+          let siteManagerId = null;
           
           if (managers && managers.length > 0) {
             managers.forEach(manager => {
-              managerOptions += `<option value="${manager.id}">${manager.username} (${manager.role})</option>`;
+              // Check if this manager has the "Senior Manager (Site)" role
+              const isSiteManager = manager.role === 'Senior Manager (Site)';
+              
+              // If we find a site manager, store their ID
+              if (isSiteManager && !siteManagerId) {
+                siteManagerId = manager.id;
+              }
+              
+              // Create the option element with selected attribute if it's a site manager
+              managerOptions += `<option value="${manager.id}" ${isSiteManager ? 'selected' : ''}>${manager.username} (${manager.role})</option>`;
             });
           } else {
             managerOptions = '<option value="">No managers available</option>';
@@ -1552,7 +1631,6 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
                          <i class="fas fa-user-tie mr-1"></i> <strong>Send To:</strong>
                        </label>
                        <select class="form-control form-control-lg" id="managerSelect" name="manager_id" required>
-                         <option value="">-- Select a manager --</option>
                          ${managerOptions}
                        </select>
                        <small class="form-text text-muted">Your overtime report will be sent to this manager for approval</small>
@@ -1701,6 +1779,13 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
       // Get form data
       const formData = new FormData(form);
       
+      // Add the action parameter for the overtime_handler.php
+      formData.append('action', 'submit_overtime');
+      
+      // Rename fields to match what the handler expects
+      const overtimeDescription = formData.get('work_report');
+      formData.append('overtimeDescription', overtimeDescription);
+      
       // Show loading state
       const submitBtn = document.querySelector('.modal-footer .btn-primary');
       const cancelBtn = document.querySelector('.modal-footer .btn-outline-secondary');
@@ -1718,13 +1803,14 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
       loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
       loadingOverlay.style.zIndex = '10';
       
-      // Send the form data
-      fetch('submit_overtime_report.php', {
+      // Send the form data to the overtime handler
+      fetch('ajax_handlers/overtime_handler.php', {
         method: 'POST',
         body: formData
       })
       .then(response => response.json())
       .then(data => {
+        console.log('Overtime submission response:', data);
         if (data.success) {
           // Create success overlay
           const modalBody = document.querySelector('.modal-body');
@@ -1878,7 +1964,7 @@ error_log("Generated month name: $monthName from month number: $selectedMonth");
               <div class="overtime-report-section" style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
                 <div style="font-weight: 600; margin-bottom: 10px; color: #333;">Overtime Report:</div>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef; white-space: pre-wrap; color: #6c757d;">
-                  Not available
+                  ${data.overtime_report || 'No overtime report available.'}
                 </div>
               </div>
             </div>

@@ -2369,6 +2369,18 @@ mysqli_close($conn);
                     let status = 'pending';
                     if (record.overtime_status) {
                         status = record.overtime_status.toLowerCase();
+                        // Make sure we're using the correct status values
+                        console.log('Original status from DB:', status);
+                        
+                        // Validate and normalize status values
+                        if (status === 'approved' || status === 'rejected' || status === 'submitted' || status === 'pending') {
+                            // These are valid statuses, keep them as is
+                            console.log('Using valid status:', status);
+                        } else {
+                            // For any other values, default to pending
+                            console.warn(`Found invalid status value: ${status}, defaulting to 'pending'`);
+                            status = 'pending';
+                        }
                     }
                     
                     return {
@@ -3298,9 +3310,15 @@ mysqli_close($conn);
                 for (let i = 0; i < studioData.length; i++) {
                     if (studioData[i].id == userId) {
                         console.log(`Found user in studioData, updating status from ${studioData[i].status} to ${newStatus}`);
-                        // Force the status update
+                        // Force the status update - use direct assignment to ensure it's updated
                         studioData[i].status = newStatus;
-                        studioData[i].overtime_status = newStatus; // Add this to ensure the status is updated
+                        studioData[i].overtime_status = newStatus; 
+                        
+                        // Force a refresh of the object to ensure changes are recognized
+                        // Preserve the original overtime_message when updating the object
+                        const originalMessage = studioData[i].overtime_message;
+                        studioData[i] = {...studioData[i], status: newStatus, overtime_status: newStatus};
+                        studioData[i].overtime_message = originalMessage; // Ensure message is preserved
                         
                         // Only store manager info for approved or rejected statuses
                         if (newStatus === 'approved' || newStatus === 'rejected') {
@@ -3313,6 +3331,9 @@ mysqli_close($conn);
                             studioData[i].reason = null;
                         }
                         updated = true;
+                        
+                        // Debug log to verify the update
+                        console.log('Updated studio record:', studioData[i]);
                         break;
                     }
                 }
@@ -3321,9 +3342,15 @@ mysqli_close($conn);
                 for (let i = 0; i < siteData.length; i++) {
                     if (siteData[i].id == userId) {
                         console.log(`Found user in siteData, updating status from ${siteData[i].status} to ${newStatus}`);
-                        // Force the status update
+                        // Force the status update - use direct assignment to ensure it's updated
                         siteData[i].status = newStatus;
-                        siteData[i].overtime_status = newStatus; // Add this to ensure the status is updated
+                        siteData[i].overtime_status = newStatus;
+                        
+                        // Force a refresh of the object to ensure changes are recognized
+                        // Preserve the original overtime_message when updating the object
+                        const originalMessage = siteData[i].overtime_message;
+                        siteData[i] = {...siteData[i], status: newStatus, overtime_status: newStatus};
+                        siteData[i].overtime_message = originalMessage; // Ensure message is preserved
                         
                         // Only store manager info for approved or rejected statuses
                         if (newStatus === 'approved' || newStatus === 'rejected') {
@@ -3336,6 +3363,9 @@ mysqli_close($conn);
                             siteData[i].reason = null;
                         }
                         updated = true;
+                        
+                        // Debug log to verify the update
+                        console.log('Updated site record:', siteData[i]);
                         break;
                     }
                 }
@@ -3351,9 +3381,15 @@ mysqli_close($conn);
                     for (let i = 0; i < studioData.length; i++) {
                         if (studioData[i].id == userId) {
                             console.log(`Found user in studioData by ID only, updating status to ${newStatus}`);
-                            // Force the status update
+                            // Force the status update - use direct assignment to ensure it's updated
                             studioData[i].status = newStatus;
-                            studioData[i].overtime_status = newStatus; // Add this to ensure the status is updated
+                            studioData[i].overtime_status = newStatus;
+                            
+                            // Force a refresh of the object to ensure changes are recognized
+                            // Preserve the original overtime_message when updating the object
+                            const originalMessage = studioData[i].overtime_message;
+                            studioData[i] = {...studioData[i], status: newStatus, overtime_status: newStatus};
+                            studioData[i].overtime_message = originalMessage; // Ensure message is preserved
                             
                             // Only store manager info for approved or rejected statuses
                             if (newStatus === 'approved' || newStatus === 'rejected') {
@@ -3366,6 +3402,9 @@ mysqli_close($conn);
                                 studioData[i].reason = null;
                             }
                             found = true;
+                            
+                            // Debug log to verify the update
+                            console.log('Updated studio record (fallback):', studioData[i]);
                             break;
                         }
                     }
@@ -3375,9 +3414,15 @@ mysqli_close($conn);
                         for (let i = 0; i < siteData.length; i++) {
                             if (siteData[i].id == userId) {
                                 console.log(`Found user in siteData by ID only, updating status to ${newStatus}`);
-                                // Force the status update
+                                // Force the status update - use direct assignment to ensure it's updated
                                 siteData[i].status = newStatus;
-                                siteData[i].overtime_status = newStatus; // Add this to ensure the status is updated
+                                siteData[i].overtime_status = newStatus;
+                                
+                                // Force a refresh of the object to ensure changes are recognized
+                                // Preserve the original overtime_message when updating the object
+                                const originalMessage = siteData[i].overtime_message;
+                                siteData[i] = {...siteData[i], status: newStatus, overtime_status: newStatus};
+                                siteData[i].overtime_message = originalMessage; // Ensure message is preserved
                                 
                                 // Only store manager info for approved or rejected statuses
                                 if (newStatus === 'approved' || newStatus === 'rejected') {
@@ -3390,6 +3435,9 @@ mysqli_close($conn);
                                     siteData[i].reason = null;
                                 }
                                 found = true;
+                                
+                                // Debug log to verify the update
+                                console.log('Updated site record (fallback):', siteData[i]);
                                 break;
                             }
                         }
@@ -3400,9 +3448,9 @@ mysqli_close($conn);
                     }
                 }
                 
-                            // Debugging: Log the first few items in each dataset to verify updates
-            console.log('Sample studioData after update:', studioData.slice(0, 3));
-            console.log('Sample siteData after update:', siteData.slice(0, 3));
+                // Debugging: Log the first few items in each dataset to verify updates
+                console.log('Sample studioData after update:', studioData.slice(0, 3));
+                console.log('Sample siteData after update:', siteData.slice(0, 3));
         }
         
         /**
@@ -3414,7 +3462,7 @@ mysqli_close($conn);
             
             // Use the actual manager name from session if available
             const currentManagerName = '<?php echo isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"]) : "System"; ?>';
-            managerName = currentManagerName || managerName;
+            managerName = managerName || currentManagerName;
             
             // Determine column indices by analyzing the table header
             const headerCells = document.querySelectorAll('.overtime-table thead th');
@@ -3539,8 +3587,16 @@ mysqli_close($conn);
                         statusText = 'Submitted';
                     }
                     
+                    // Force update the status display
                     statusCell.innerHTML = `<span class="status ${statusClass}">${statusText}</span>`;
                     console.log('Status cell updated to:', statusText);
+                    
+                    // Add a visual indicator that the status has changed
+                    statusCell.style.transition = 'background-color 0.5s ease';
+                    statusCell.style.backgroundColor = '#e8f7e8';  // Light green highlight
+                    setTimeout(() => {
+                        statusCell.style.backgroundColor = '';
+                    }, 2000);
                 }
                 
                 // Update the manager cell
@@ -3567,23 +3623,20 @@ mysqli_close($conn);
                     actionsCell.innerHTML = '';
                     
                     // Keep only the view button
-                    const viewButton = targetRow.querySelector('.btn-icon.view');
-                    if (viewButton) {
-                        actionsCell.appendChild(viewButton.cloneNode(true));
-                    } else {
-                        // Create a new view button if it doesn't exist
-                        const newViewButton = document.createElement('button');
-                        newViewButton.className = 'btn-icon view';
-                        newViewButton.title = 'View Details';
-                        newViewButton.innerHTML = '<i class="fas fa-eye"></i>';
-                        newViewButton.onclick = function() { viewDetails(userId); };
-                        actionsCell.appendChild(newViewButton);
-                    }
+                    const viewButton = document.createElement('button');
+                    viewButton.className = 'btn-icon view';
+                    viewButton.title = 'View Details';
+                    viewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                    viewButton.onclick = function() { viewDetails(userId); };
+                    actionsCell.appendChild(viewButton);
                     
                     console.log('Actions cell updated:', actionsCell.innerHTML);
                 }
                 
                 rowUpdated = true;
+                
+                // Update the data in memory to ensure it stays consistent
+                updateDataInMemory(userId, targetDate, newStatus, managerName);
             } else {
                 // Fallback to the old method if we couldn't find the specific row
                 console.log('Could not find specific row, falling back to user ID search');
@@ -3624,8 +3677,16 @@ mysqli_close($conn);
                                 statusText = 'Submitted';
                             }
                             
+                            // Force update the status display
                             statusCell.innerHTML = `<span class="status ${statusClass}">${statusText}</span>`;
                             console.log('Fallback: Status cell updated to:', statusText);
+                            
+                            // Add a visual indicator that the status has changed
+                            statusCell.style.transition = 'background-color 0.5s ease';
+                            statusCell.style.backgroundColor = '#e8f7e8';  // Light green highlight
+                            setTimeout(() => {
+                                statusCell.style.backgroundColor = '';
+                            }, 2000);
                         }
                         
                         // Update the manager cell
@@ -3652,18 +3713,12 @@ mysqli_close($conn);
                             actionsCell.innerHTML = '';
                             
                             // Keep only the view button
-                            const viewButton = row.querySelector('.btn-icon.view');
-                            if (viewButton) {
-                                actionsCell.appendChild(viewButton.cloneNode(true));
-                            } else {
-                                // Create a new view button if it doesn't exist
-                                const newViewButton = document.createElement('button');
-                                newViewButton.className = 'btn-icon view';
-                                newViewButton.title = 'View Details';
-                                newViewButton.innerHTML = '<i class="fas fa-eye"></i>';
-                                newViewButton.onclick = function() { viewDetails(userId); };
-                                actionsCell.appendChild(newViewButton);
-                            }
+                            const viewButton = document.createElement('button');
+                            viewButton.className = 'btn-icon view';
+                            viewButton.title = 'View Details';
+                            viewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                            viewButton.onclick = function() { viewDetails(userId); };
+                            actionsCell.appendChild(viewButton);
                             
                             console.log('Actions cell updated in fallback:', actionsCell.innerHTML);
                         }
@@ -3713,6 +3768,59 @@ mysqli_close($conn);
             statElements[2].textContent = approvedCount;
             
             console.log('Stats updated: Pending =', pendingCount, 'Approved =', approvedCount);
+        }
+        
+        /**
+         * Update the in-memory data to ensure consistency
+         */
+        function updateDataInMemory(userId, date, newStatus, managerName) {
+            console.log(`Updating in-memory data for user ${userId} on date ${date} to status ${newStatus}`);
+            
+            // Update in studioData
+            for (let i = 0; i < studioData.length; i++) {
+                                    if (studioData[i].id == userId && (!date || studioData[i].date.includes(date))) {
+                        console.log(`Found user in studioData, updating status from ${studioData[i].status} to ${newStatus}`);
+                        // Save the original message before updating
+                        const originalMessage = studioData[i].overtime_message;
+                        console.log(`Preserving original message: ${originalMessage}`);
+                        
+                        studioData[i].status = newStatus;
+                        studioData[i].overtime_status = newStatus;
+                        
+                        // Ensure we don't overwrite the message
+                        studioData[i].overtime_message = originalMessage;
+                        
+                        if (newStatus === 'approved' || newStatus === 'rejected') {
+                            studioData[i].manager = managerName;
+                            studioData[i].actioned_at = new Date().toISOString();
+                        }
+                    }
+            }
+            
+            // Update in siteData
+            for (let i = 0; i < siteData.length; i++) {
+                                    if (siteData[i].id == userId && (!date || siteData[i].date.includes(date))) {
+                        console.log(`Found user in siteData, updating status from ${siteData[i].status} to ${newStatus}`);
+                        // Save the original message before updating
+                        const originalMessage = siteData[i].overtime_message;
+                        console.log(`Preserving original message: ${originalMessage}`);
+                        
+                        siteData[i].status = newStatus;
+                        siteData[i].overtime_status = newStatus;
+                        
+                        // Ensure we don't overwrite the message
+                        siteData[i].overtime_message = originalMessage;
+                        
+                        if (newStatus === 'approved' || newStatus === 'rejected') {
+                            siteData[i].manager = managerName;
+                            siteData[i].actioned_at = new Date().toISOString();
+                        }
+                    }
+            }
+            
+            // Debug: Log the updated data
+            console.log('Updated studioData sample:', studioData.slice(0, 2));
+            console.log('Updated siteData sample:', siteData.slice(0, 2));
         }
         });
     </script>

@@ -141,6 +141,9 @@ if ($attendanceResult && mysqli_num_rows($attendanceResult) > 0) {
                         $row['overtime_status'] = 'pending';
                     }
                     
+                    // Debug: Log the status to help troubleshoot
+                    error_log("Overtime status for user {$row['user_id']}: " . $row['overtime_status']);
+                    
                     // Use manager username instead of ID if available
                     if (!empty($row['manager_username'])) {
                         $row['manager'] = $row['manager_username'];

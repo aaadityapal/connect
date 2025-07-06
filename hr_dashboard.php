@@ -2726,9 +2726,9 @@ try {
                 <i class="bi bi-car-front-fill"></i>
                 Travel Expenses
             </a>
-            <a href="generate_agreement.php" class="nav-link">
-                <i class="bi bi-chevron-contract"></i>
-                Contracts
+            <a href="hr_overtime_approval.php" class="nav-link">
+                <i class="bi bi-clock"></i>
+                Overtime Approval
             </a>
             <a href="hr_password_reset.php" class="nav-link">
                 <i class="bi bi-key-fill"></i>

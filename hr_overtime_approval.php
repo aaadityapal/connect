@@ -9,9 +9,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Check if user has Senior Manager (Studio) role
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Senior Manager (Studio)') {
-    // Redirect to unauthorized page if not Senior Manager (Studio)
+// Check if user has HR role
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'HR') {
+    // Redirect to dashboard if not HR role
     header('Location: permission_denied.php');
     exit();
 }
@@ -198,134 +198,167 @@ mysqli_close($conn);
             min-height: 100vh;
         }
 
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --secondary: #7C3AED;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --dark: #111827;
+            --gray: #6B7280;
+            --light: #F3F4F6;
+            --sidebar-width: 280px;
+        }
+
+        /* Modern Sidebar */
         .sidebar {
-            width: 250px;
-            background-color: #ffffff;
-            color: #555;
+            width: var(--sidebar-width);
+            background: white;
             height: 100vh;
             position: fixed;
-            left: 0;
             top: 0;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            z-index: 100;
-            box-shadow: 1px 0 10px rgba(0, 0, 0, 0.1);
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar.collapsed {
-            width: 60px;
+            transform: translateX(-100%);
         }
 
-        .toggle-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.05);
-            border: none;
-            color: #555;
-            width: 30px;
-            height: 30px;
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease, width 0.3s ease;
+            padding: 2rem;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
-        .sidebar.collapsed .toggle-btn i {
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar.collapsed .bi {
             transform: rotate(180deg);
         }
 
-        .sidebar-header {
-            padding: 20px 15px 10px;
-            border-bottom: none;
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
         }
 
-        .sidebar-header h3 {
-            color: #888;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0;
-        }
-
-        .sidebar-text {
-            transition: opacity 0.3s ease;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sidebar.collapsed .sidebar-text {
-            opacity: 0;
-            width: 0;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-        }
-
-        .sidebar-menu li {
-            position: relative;
-            margin: 2px 0;
-        }
-
-        .sidebar-menu li.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid #e74c3c;
-        }
-
-        .sidebar-menu li.active a {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-
-        .sidebar-menu li a {
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
             display: flex;
             align-items: center;
-            padding: 12px 15px;
+            gap: 0.75rem;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
             text-decoration: none;
-            color: #555;
-            transition: all 0.3s ease;
-            font-size: 0.95rem;
         }
 
-        .sidebar-menu li a:hover {
-            background-color: rgba(0, 0, 0, 0.03);
-            color: #e74c3c;
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
         }
 
-        .sidebar-menu li a i {
-            font-size: 18px;
-            min-width: 30px;
-            text-align: center;
-            margin-right: 8px;
-            color: inherit;
+        .nav-link i {
+            margin-right: 0.75rem;
         }
 
-        .sidebar-footer {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        /* Logout button styles */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
         }
 
-        .logout-btn {
-            color: #e74c3c !important;
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
         }
 
-        .main-content {
+        /* Update nav container to allow for margin-top: auto on logout */
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px); /* Adjust based on your logo height */
+        }
+
+        /* Main Content */
+        .app-container {
             flex: 1;
-            margin-left: 250px;
-            transition: margin-left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            max-width: 100%;
+            margin: 0 auto;
+            width: 100%;
         }
-
-        .sidebar.collapsed + .main-content {
-            margin-left: 60px;
+        
+        .main-content.expanded {
+            margin-left: 0;
+            width: 100%;
         }
 
         .app-container {
@@ -1013,7 +1046,7 @@ mysqli_close($conn);
         }
         
         .file-link:hover {
-            text-decoration: underline;
+            color: #2980b9;
         }
         
         /* Work Report styles */
@@ -1705,122 +1738,80 @@ mysqli_close($conn);
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="dashboard">
         <div class="sidebar" id="sidebar">
-            <div class="toggle-btn" id="toggle-btn">
-                <i class="fas fa-chevron-left"></i>
-            </div>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">MAIN</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="real.php">
-                        <i class="fas fa-home" style="color: #e74c3c;"></i>
-                        <span class="sidebar-text">Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span class="sidebar-text">Leaves</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-users"></i>
-                        <span class="sidebar-text">Employees</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-briefcase"></i>
-                        <span class="sidebar-text">Projects</span>
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">ANALYTICS</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="#">
-                        <i class="fas fa-chart-line"></i>
-                        <span class="sidebar-text">Employee Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="work_report.php">
-                        <i class="fas fa-file-alt"></i>
-                        <span class="sidebar-text">Work Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="attendance_report.php">
-                        <i class="far fa-clock"></i>
-                        <span class="sidebar-text">Attendance Reports</span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="overtime_reports.php">
-                        <i class="fas fa-hourglass-half"></i>
-                        <span class="sidebar-text">Overtime Reports</span>
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">SETTINGS</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="manager_profile.php">
-                        <i class="fas fa-user"></i>
-                        <span class="sidebar-text">Profile</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-bell"></i>
-                        <span class="sidebar-text">Notifications</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="manager_settings.php">
-                        <i class="fas fa-cog"></i>
-                        <span class="sidebar-text">Settings</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="reset_password.php">
-                        <i class="fas fa-lock"></i>
-                        <span class="sidebar-text">Reset Password</span>
-                    </a>
-                </li>
-            </ul>
-
-            <!-- Add logout at the end of sidebar -->
-            <div class="sidebar-footer">
-                <ul class="sidebar-menu">
-                    <li>
-                        <a href="logout.php" class="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span class="sidebar-text">Logout</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
         </div>
         
-        <div class="main-content">
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="payouts.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Manager Payouts
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="construction_site_overview.php" class="nav-link">
+                <i class="bi bi-briefcase-fill"></i>
+                Recruitment
+            </a>
+            <a href="hr_travel_expenses.php" class="nav-link">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
+            </a>
+            <a href="hr_overtime_approval.php" class="nav-link active">
+                <i class="bi bi-clock"></i>
+                Overtime Approval
+            </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Added Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Add this button after the sidebar div -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+        
+        <div class="main-content" id="mainContent">
             <div class="app-container">
                 <div class="page-header">
                     <h1 class="page-title">
@@ -3675,5 +3666,117 @@ mysqli_close($conn);
         }
         });
     </script>
+    
+    <!-- Add sidebar toggle functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - initializing sidebar toggle');
+        
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleButton = document.getElementById('sidebarToggle');
+        
+        console.log('Elements found:', {
+            sidebar: sidebar ? 'Found' : 'Not found',
+            mainContent: mainContent ? 'Found' : 'Not found',
+            toggleButton: toggleButton ? 'Found' : 'Not found'
+        });
+        
+        // Check saved state
+        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        console.log('Saved sidebar state:', sidebarCollapsed ? 'Collapsed' : 'Expanded');
+        
+        if (sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('expanded');
+            toggleButton.classList.add('collapsed');
+            console.log('Applied collapsed state from localStorage');
+        }
+
+        // Toggle function
+        function toggleSidebar() {
+            console.log('Toggle button clicked');
+            console.log('Before toggle - Sidebar collapsed:', sidebar.classList.contains('collapsed'));
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            toggleButton.classList.toggle('collapsed');
+            
+            console.log('After toggle - Sidebar collapsed:', sidebar.classList.contains('collapsed'));
+            
+            // Save state
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            console.log('Saved new state to localStorage');
+        }
+
+        // Click event
+        if (toggleButton) {
+            console.log('Adding click event listener to toggle button');
+            toggleButton.addEventListener('click', function(e) {
+                console.log('Toggle button click detected');
+                e.preventDefault();
+                toggleSidebar();
+            });
+        } else {
+            console.error('Toggle button not found - cannot add click listener');
+        }
+
+        // Enhanced hover effect
+        toggleButton.addEventListener('mouseenter', function() {
+            const isCollapsed = toggleButton.classList.contains('collapsed');
+            const icon = toggleButton.querySelector('.bi');
+            
+            if (!isCollapsed) {
+                icon.style.transform = 'translateX(-3px)';
+            } else {
+                icon.style.transform = 'translateX(3px) rotate(180deg)';
+            }
+        });
+
+        toggleButton.addEventListener('mouseleave', function() {
+            const isCollapsed = toggleButton.classList.contains('collapsed');
+            const icon = toggleButton.querySelector('.bi');
+            
+            if (!isCollapsed) {
+                icon.style.transform = 'none';
+            } else {
+                icon.style.transform = 'rotate(180deg)';
+            }
+        });
+
+        // Handle window resize
+        function handleResize() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                toggleButton.classList.add('collapsed');
+            } else {
+                // Restore saved state on desktop
+                const savedState = localStorage.getItem('sidebarCollapsed');
+                if (savedState === null || savedState === 'false') {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    toggleButton.classList.remove('collapsed');
+                }
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        // Handle clicks outside sidebar on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768) {
+                const isClickInside = sidebar.contains(event.target) || 
+                                    toggleButton.contains(event.target);
+                
+                if (!isClickInside && !sidebar.classList.contains('collapsed')) {
+                    toggleSidebar();
+                }
+            }
+        });
+
+        // Initial check for mobile devices
+        handleResize();
+    });
 </body>
 </html>

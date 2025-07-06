@@ -1120,6 +1120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Purchase Executive" <?php echo $employee['role'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
                                 <option value="Sales" <?php echo $employee['role'] === 'Sales' ? 'selected' : ''; ?>>Sales</option>
                                 <option value="Purchase" <?php echo $employee['role'] === 'Purchase' ? 'selected' : ''; ?>>Purchase</option>
+                                <option value="Social Media Marketing" <?php echo $employee['role'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
+                                <option value="Graphic Designer" <?php echo $employee['role'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
                             </select>
                         </div>
                     </div>
@@ -1139,6 +1141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Developer" <?php echo $employee['position'] === 'Developer' ? 'selected' : ''; ?>>Developer</option>
                                 <option value="Designer" <?php echo $employee['position'] === 'Designer' ? 'selected' : ''; ?>>Designer</option>
                                 <option value="Administrator" <?php echo $employee['position'] === 'Administrator' ? 'selected' : ''; ?>>Administrator</option>
+                                <option value="Graphic Designer" <?php echo $employee['position'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
+                                <option value="Social Media Marketing" <?php echo $employee['position'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
                                 <option value="Other" <?php echo $employee['position'] === 'Other' ? 'selected' : ''; ?>>Other</option>
                             </select>
                         </div>
@@ -1171,6 +1175,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <option value="Purchase Manager" <?php echo $employee['designation'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
                                 <option value="Purchase Executive" <?php echo $employee['designation'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
                                 <option value="Sales Executive" <?php echo $employee['designation'] === 'Sales Executive' ? 'selected' : ''; ?>>Sales Executive</option>
+                                <option value="Graphic Designer" <?php echo $employee['designation'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
+                                <option value="Social Media Marketing" <?php echo $employee['designation'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
                                 <option value="Other" <?php echo $employee['designation'] === 'Other' ? 'selected' : ''; ?>>Other</option>
                             </select>
                         </div>

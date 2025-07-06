@@ -25,7 +25,7 @@ error_log("Overtime Reports - Session Data: " . print_r($_SESSION, true));
 // Fetch users for Studio view (excluding site roles)
 $studioQuery = "SELECT id, username, position, email, phone_number, designation, department, role, reporting_manager, profile_picture 
                 FROM users 
-                WHERE role NOT IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales') 
+                WHERE role NOT IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales', 'Graphic Designer', 'Social Media Marketing') 
                 AND deleted_at IS NULL 
                 AND status = 'active'
                 ORDER BY username";
@@ -41,7 +41,7 @@ if ($studioResult && mysqli_num_rows($studioResult) > 0) {
 // Fetch users for Site view (only site roles)
 $siteQuery = "SELECT id, username, position, email, phone_number, designation, department, role, reporting_manager, profile_picture 
               FROM users 
-              WHERE role IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales') 
+              WHERE role IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales', 'Graphic Designer', 'Social Media Marketing') 
               AND deleted_at IS NULL 
               AND status = 'active'
               ORDER BY username";
@@ -87,6 +87,8 @@ $attendanceQuery = "SELECT a.*,
                    LEFT JOIN users manager ON a.overtime_approved_by = manager.id
                    LEFT JOIN overtime_notifications otn ON a.id = otn.overtime_id
                    WHERE a.punch_out IS NOT NULL
+                   AND (a.overtime_status IS NULL OR a.overtime_status != 'rejected')
+                   GROUP BY a.id
                    ORDER BY a.date DESC";
 $attendanceResult = mysqli_query($conn, $attendanceQuery);
 $attendanceData = [];
@@ -1712,15 +1714,6 @@ mysqli_close($conn);
                                 <p>Approved Overtime</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                            <div class="stat-icon" style="background-color: #9b59b6;">
-                                <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <div class="stat-info">
-                            <h3>$1,950</h3>
-                            <p>Total Amount</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1792,6 +1785,20 @@ mysqli_close($conn);
                     <label for="approveReason">Reason for Approval (optional):</label>
                     <textarea id="approveReason" class="form-textarea" rows="3" placeholder="Enter reason for approval..."></textarea>
                 </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <div style="margin-bottom: 10px; font-weight: 600; color: #e74c3c;">Mandatory Confirmations:</div>
+                    <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+                        <input type="checkbox" id="approveCheck1" style="margin-top: 3px; margin-right: 10px;" required>
+                        <label for="approveCheck1">Have you given the Conceqt to your subordinated for overtime ?</label>
+                    </div>
+                    <div style="display: flex; align-items: flex-start;">
+                        <input type="checkbox" id="approveCheck2" style="margin-top: 3px; margin-right: 10px;" required>
+                        <label for="approveCheck2">Is this time eligible for OT as per company policy ?</label>
+                    </div>
+                    <div id="approveCheckError" class="error-message" style="display: none; color: #e74c3c; margin-top: 5px;">
+                        Please confirm both statements before approving.
+                    </div>
+                </div>
                 <input type="hidden" id="approveUserId" value="">
                 <input type="hidden" id="approveRowId" value="">
             </div>
@@ -1829,6 +1836,20 @@ mysqli_close($conn);
                     <textarea id="rejectReason" class="form-textarea" rows="3" placeholder="Enter reason for rejection..." required></textarea>
                     <div id="rejectReasonError" class="error-message" style="display: none; color: #e74c3c; margin-top: 5px;">
                         Please provide a reason for rejection.
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <div style="margin-bottom: 10px; font-weight: 600; color: #e74c3c;">Mandatory Confirmations:</div>
+                    <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+                        <input type="checkbox" id="rejectCheck1" style="margin-top: 3px; margin-right: 10px;" required>
+                        <label for="rejectCheck1">Have you given the Conceqt to your subordinated for overtime ?</label>
+                    </div>
+                    <div style="display: flex; align-items: flex-start;">
+                        <input type="checkbox" id="rejectCheck2" style="margin-top: 3px; margin-right: 10px;" required>
+                        <label for="rejectCheck2">Is this time eligible for OT as per company policy ?</label>
+                    </div>
+                    <div id="rejectCheckError" class="error-message" style="display: none; color: #e74c3c; margin-top: 5px;">
+                        Please confirm both statements before rejecting.
                     </div>
                 </div>
                 <input type="hidden" id="rejectUserId" value="">
@@ -2184,14 +2205,19 @@ mysqli_close($conn);
              * Initialize the view with current data
              */
             function initializeView() {
-                // Set up the initial data view (studio by default)
-                const currentData = getCurrentDataset();
-                
-                // Populate filter dropdowns
-                populateFilterDropdowns(currentData);
-                
-                // Set default filter values to current month/year
-                setDefaultFilterValues();
+                            // Set toggle to Site by default
+            if (locationToggle) {
+                locationToggle.checked = true;
+            }
+            
+            // Set up the initial data view (site by default)
+            const currentData = getCurrentDataset();
+            
+            // Populate filter dropdowns
+            populateFilterDropdowns(currentData);
+            
+            // Set default filter values to current month/year
+            setDefaultFilterValues();
                 
                 // Load initial data
                 applyFilters();
@@ -2649,14 +2675,13 @@ mysqli_close($conn);
             function updateStats(data) {
                 // Get stat elements
                 const statElements = document.querySelectorAll('.stat-info h3');
-                if (!statElements || statElements.length < 4) return;
+                if (!statElements || statElements.length < 3) return;
                 
                 if (!data || data.length === 0) {
                     // Reset stats to zero
                     statElements[0].textContent = '0';
                     statElements[1].textContent = '0';
                     statElements[2].textContent = '0';
-                    statElements[3].textContent = '$0';
                     return;
                 }
                 
@@ -2692,15 +2717,10 @@ mysqli_close($conn);
                     }
                 });
                 
-                // Calculate total amount (simplified calculation for demo)
-                const hourlyRate = 50; // Assuming $50 per hour
-                const totalAmount = totalHours * hourlyRate;
-                
                 // Update the stats display
                 statElements[0].textContent = totalHours.toFixed(1);
                 statElements[1].textContent = pendingCount;
                 statElements[2].textContent = approvedCount;
-                statElements[3].textContent = '$' + totalAmount.toFixed(0);
             }
             
             // Expose these functions to the global scope for action buttons
@@ -2711,6 +2731,11 @@ mysqli_close($conn);
                 document.getElementById('approveDate').textContent = date;
                 document.getElementById('approveHours').textContent = hours;
                 document.getElementById('approveReason').value = '';
+                
+                // Reset checkboxes and error message
+                document.getElementById('approveCheck1').checked = false;
+                document.getElementById('approveCheck2').checked = false;
+                document.getElementById('approveCheckError').style.display = 'none';
                 
                 // Store the row identifier for more precise updates
                 document.getElementById('approveRowId').value = `${userId}_${date}`;
@@ -2725,6 +2750,11 @@ mysqli_close($conn);
                 document.getElementById('rejectHours').textContent = hours;
                 document.getElementById('rejectReason').value = '';
                 document.getElementById('rejectReasonError').style.display = 'none';
+                
+                // Reset checkboxes and error message
+                document.getElementById('rejectCheck1').checked = false;
+                document.getElementById('rejectCheck2').checked = false;
+                document.getElementById('rejectCheckError').style.display = 'none';
                 
                 // Store the row identifier for more precise updates
                 document.getElementById('rejectRowId').value = `${userId}_${date}`;
@@ -2747,6 +2777,14 @@ mysqli_close($conn);
                 const userId = document.getElementById('approveUserId').value;
                 const reason = document.getElementById('approveReason').value;
                 const rowId = document.getElementById('approveRowId').value;
+                const check1 = document.getElementById('approveCheck1').checked;
+                const check2 = document.getElementById('approveCheck2').checked;
+                
+                // Validate that both checkboxes are checked
+                if (!check1 || !check2) {
+                    document.getElementById('approveCheckError').style.display = 'block';
+                    return;
+                }
                 
                 console.log(`Approving overtime for user ID: ${userId} with reason: ${reason}, row ID: ${rowId}`);
                 
@@ -2770,10 +2808,18 @@ mysqli_close($conn);
                 const userId = document.getElementById('rejectUserId').value;
                 const reason = document.getElementById('rejectReason').value;
                 const rowId = document.getElementById('rejectRowId').value;
+                const check1 = document.getElementById('rejectCheck1').checked;
+                const check2 = document.getElementById('rejectCheck2').checked;
                 
                 // Validate reason is provided for rejection
                 if (!reason.trim()) {
                     document.getElementById('rejectReasonError').style.display = 'block';
+                    return;
+                }
+                
+                // Validate that both checkboxes are checked
+                if (!check1 || !check2) {
+                    document.getElementById('rejectCheckError').style.display = 'block';
                     return;
                 }
                 
@@ -3428,7 +3474,7 @@ mysqli_close($conn);
         function updateStatsAfterStatusChange(newStatus) {
             // Get stat elements
             const statElements = document.querySelectorAll('.stat-info h3');
-            if (!statElements || statElements.length < 4) return;
+            if (!statElements || statElements.length < 3) return;
             
             // Get current values
             const totalHours = parseFloat(statElements[0].textContent) || 0;

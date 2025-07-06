@@ -3,7 +3,7 @@
  * API Endpoint: Update Overtime Status
  * 
  * This API updates the overtime status in the attendance table
- * and creates a notification in the overtime_notification table.
+ * and creates/updates a notification in the overtime_notifications table.
  * 
  * Required POST parameters:
  * - user_id: ID of the employee
@@ -208,7 +208,7 @@ try {
                        AND (date = ? OR (MONTH(date) = ? AND YEAR(date) = ? AND overtime_status = ?))
                        ORDER BY date DESC LIMIT 1";
     $attendanceStmt = mysqli_prepare($conn, $attendanceQuery);
-    $submittedStatus = "submitted";
+    $submittedStatus = $status; // Changed from "submitted" to use the current status
     mysqli_stmt_bind_param($attendanceStmt, 'isiis', $userId, $formattedDate, $month, $year, $submittedStatus);
     mysqli_stmt_execute($attendanceStmt);
     $attendanceResult = mysqli_stmt_get_result($attendanceStmt);
@@ -230,30 +230,63 @@ try {
         error_log("Found attendance ID: $overtimeId");
     }
     
-    // 2. Create notification in overtime_notification table
+    // 2. Check if notification already exists and update it instead of creating a new one
+    $checkNotificationQuery = "SELECT id FROM overtime_notifications WHERE overtime_id = ? LIMIT 1";
+    $checkNotificationStmt = mysqli_prepare($conn, $checkNotificationQuery);
+    mysqli_stmt_bind_param($checkNotificationStmt, 'i', $overtimeId);
+    mysqli_stmt_execute($checkNotificationStmt);
+    $checkNotificationResult = mysqli_stmt_get_result($checkNotificationStmt);
+    
     $message = $status === 'approved' 
         ? "Your overtime has been approved" 
         : "Your overtime has been rejected";
     
-    $notificationQuery = "INSERT INTO overtime_notifications 
-                         (overtime_id, employee_id, manager_id, message, status, manager_response, created_at) 
-                         VALUES (?, ?, ?, ?, ?, ?, NOW())";
-    
-    $notificationStmt = mysqli_prepare($conn, $notificationQuery);
-    mysqli_stmt_bind_param(
-        $notificationStmt, 
-        'iiisss', 
-        $overtimeId, 
-        $userId, 
-        $managerId, 
-        $message, 
-        $status, 
-        $reason
-    );
-    $notificationResult = mysqli_stmt_execute($notificationStmt);
+    if ($existingNotification = mysqli_fetch_assoc($checkNotificationResult)) {
+        // Update existing notification
+        $notificationId = $existingNotification['id'];
+        error_log("Found existing notification ID: $notificationId - updating instead of creating new");
+        
+        $updateNotificationQuery = "UPDATE overtime_notifications 
+                                  SET manager_id = ?, 
+                                      message = ?, 
+                                      status = ?, 
+                                      manager_response = ?,
+                                      created_at = NOW() 
+                                  WHERE id = ?";
+        
+        $updateNotificationStmt = mysqli_prepare($conn, $updateNotificationQuery);
+        mysqli_stmt_bind_param(
+            $updateNotificationStmt, 
+            'isssi', 
+            $managerId, 
+            $message, 
+            $status, 
+            $reason,
+            $notificationId
+        );
+        $notificationResult = mysqli_stmt_execute($updateNotificationStmt);
+    } else {
+        // Create new notification if none exists
+        $notificationQuery = "INSERT INTO overtime_notifications 
+                           (overtime_id, employee_id, manager_id, message, status, manager_response, created_at) 
+                           VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        
+        $notificationStmt = mysqli_prepare($conn, $notificationQuery);
+        mysqli_stmt_bind_param(
+            $notificationStmt, 
+            'iiisss', 
+            $overtimeId, 
+            $userId, 
+            $managerId, 
+            $message, 
+            $status, 
+            $reason
+        );
+        $notificationResult = mysqli_stmt_execute($notificationStmt);
+    }
     
     if (!$notificationResult) {
-        throw new Exception("Failed to create notification: " . mysqli_error($conn));
+        throw new Exception("Failed to update notification: " . mysqli_error($conn));
     }
     
     // Commit transaction

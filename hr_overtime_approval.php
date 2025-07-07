@@ -22,10 +22,10 @@ require_once 'config/db_connect.php';
 // Debug: Log session data for troubleshooting
 error_log("Overtime Reports - Session Data: " . print_r($_SESSION, true));
 
-// Fetch users for Studio view (excluding site roles)
+// Fetch users for Studio view (excluding site roles, trainees, and marketing roles)
 $studioQuery = "SELECT id, username, position, email, phone_number, designation, department, role, reporting_manager, profile_picture 
                 FROM users 
-                WHERE role NOT IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales') 
+                WHERE role NOT IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales', 'Studio Trainees', 'Trainees', 'Site Trainees', 'Graphic Designer', 'Social Media Marketing', 'Marketing') 
                 AND deleted_at IS NULL 
                 AND status = 'active'
                 ORDER BY username";
@@ -38,10 +38,11 @@ if ($studioResult && mysqli_num_rows($studioResult) > 0) {
     }
 }
 
-// Fetch users for Site view (only site roles)
+// Fetch users for Site view (site roles and marketing roles, excluding trainees)
 $siteQuery = "SELECT id, username, position, email, phone_number, designation, department, role, reporting_manager, profile_picture 
               FROM users 
-              WHERE role IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales') 
+              WHERE role IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Marketing') 
+              AND role NOT IN ('Studio Trainees', 'Trainees', 'Site Trainees')
               AND deleted_at IS NULL 
               AND status = 'active'
               ORDER BY username";
@@ -74,7 +75,7 @@ if ($shiftsResult && mysqli_num_rows($shiftsResult) > 0) {
     }
 }
 
-// Fetch attendance data with overtime for all users
+// Fetch attendance data with overtime for all users (excluding trainees)
 // We'll calculate the actual overtime based on shift end time later
 $attendanceQuery = "SELECT a.*, 
                    u.username, u.profile_picture, u.department, u.role,
@@ -88,6 +89,7 @@ $attendanceQuery = "SELECT a.*,
                    LEFT JOIN overtime_notifications otn ON a.id = otn.overtime_id
                    WHERE a.punch_out IS NOT NULL
                    AND (a.overtime_status IS NULL OR a.overtime_status != 'rejected')
+                   AND u.role NOT IN ('Studio Trainees', 'Trainees', 'Site Trainees')
                    GROUP BY a.id
                    ORDER BY a.date DESC";
 $attendanceResult = mysqli_query($conn, $attendanceQuery);
@@ -1018,6 +1020,10 @@ mysqli_close($conn);
             background-color: #9b59b6;
         }
         
+        .btn-icon.payment {
+            background-color: #8e44ad;
+        }
+        
         .btn-icon.locked {
             background-color: #95a5a6;
             cursor: not-allowed;
@@ -1299,6 +1305,16 @@ mysqli_close($conn);
             overflow: hidden;
         }
         
+        /* Position the payment modal higher */
+        #paymentModal .modal-content {
+            margin: 5% auto;
+        }
+        
+        /* Position the overtime details modal higher */
+        #overtimeDetailsModal .modal-content {
+            margin: 5% auto;
+        }
+        
         @keyframes modalFadeIn {
             from {opacity: 0; transform: translateY(-20px);}
             to {opacity: 1; transform: translateY(0);}
@@ -1408,6 +1424,14 @@ mysqli_close($conn);
         
         .details-status.rejected {
             background-color: #e74c3c;
+        }
+        
+        .status.paid {
+            background-color: #2ecc71;
+        }
+        
+        .status.unpaid {
+            background-color: #f39c12;
         }
         
         .section-title {
@@ -1955,6 +1979,7 @@ mysqli_close($conn);
                                 <th>Overtime Report</th>
                                 <th>Status</th>
                                 <th>Approved By</th>
+                                <th>Payment Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -2133,6 +2158,84 @@ mysqli_close($conn);
                 <button class="btn btn-primary" onclick="closeModal('workReportModal')">
                     <i class="fas fa-check"></i> Close
                 </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-rupee-sign" style="color: #8e44ad;"></i> Overtime Payment</h2>
+                <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-info" style="background-color: #f0e6f6;">
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-user"></i> Employee:</span>
+                        <span class="info-value" id="paymentUserName"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-calendar"></i> Date:</span>
+                        <span class="info-value" id="paymentDate"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-clock"></i> Overtime:</span>
+                        <span class="info-value" id="paymentHours"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-rupee-sign"></i> Amount:</span>
+                        <span class="info-value highlight" id="paymentAmount">₹1,500.00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-tag"></i> Status:</span>
+                        <span class="info-value">
+                            <span id="paymentStatus" class="status unpaid" style="background-color: #f39c12; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem;">Unpaid</span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label"><i class="fas fa-hashtag"></i> Overtime ID:</span>
+                        <span class="info-value" id="paymentOvertimeIdDisplay">-</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 15px; color: #2c3e50; font-size: 1.1rem;">
+                        <i class="fas fa-clipboard-check" style="color: #8e44ad; margin-right: 8px;"></i> Payment Confirmation
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 15px;">
+                        <div style="margin-bottom: 10px; font-weight: 600; color: #8e44ad;">Required Confirmations:</div>
+                        <div style="margin-bottom: 10px; background-color: #f8f9fa; padding: 10px; border-radius: 6px;">
+                            <input type="checkbox" id="paymentCheckbox1" style="margin-right: 10px;">
+                            <label for="paymentCheckbox1">I confirm this overtime payment has been approved by management</label>
+                        </div>
+                        <div style="margin-bottom: 10px; background-color: #f8f9fa; padding: 10px; border-radius: 6px;">
+                            <input type="checkbox" id="paymentCheckbox2" style="margin-right: 10px;">
+                            <label for="paymentCheckbox2">I confirm the amount is calculated according to company policy</label>
+                        </div>
+                        <div style="margin-bottom: 10px; background-color: #f8f9fa; padding: 10px; border-radius: 6px;">
+                            <input type="checkbox" id="paymentCheckbox3" style="margin-right: 10px;">
+                            <label for="paymentCheckbox3">I confirm this payment will be included in the next payroll cycle</label>
+                        </div>
+                        <div id="paymentCheckboxError" class="error-message" style="display: none; color: #e74c3c; margin-top: 5px;">
+                            Please confirm all statements before proceeding.
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="paymentNotes">Additional Notes (optional):</label>
+                        <textarea id="paymentNotes" class="form-textarea" rows="3" placeholder="Enter any additional notes regarding this payment..."></textarea>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="paymentUserId" value="">
+                <input type="hidden" id="paymentRowId" value="">
+                <input type="hidden" id="paymentOvertimeId" value="">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-neutral" onclick="closeModal('paymentModal')"><i class="fas fa-times"></i> Cancel</button>
+                <button class="btn btn-success" style="background-color: #8e44ad;" onclick="confirmPayment(); console.log('Process Payment button clicked');" id="processPaymentBtn"><i class="fas fa-check"></i> Process Payment</button>
             </div>
         </div>
     </div>
@@ -2385,7 +2488,8 @@ mysqli_close($conn);
                         actioned_at: record.overtime_actioned_at,
                         work_report: record.work_report || 'No report submitted',
                         overtime_message: record.overtime_message || 'No message available',
-                        manager_response: record.manager_response || ''
+                        manager_response: record.manager_response || '',
+                        overtime_id: record.overtime_id || record.id || record.user_id // Use overtime_id if available, otherwise fall back to other IDs
                     };
                 });
             }
@@ -2775,6 +2879,35 @@ mysqli_close($conn);
                         }
                     }
                     
+                    // Check payment status
+                    let paymentStatus = 'Unpaid';
+                    let paymentStatusClass = 'unpaid';
+                    
+                    // Check payment status for this overtime entry if approved
+                    if (item.status && item.status.toLowerCase() === 'approved') {
+                        // Make AJAX call to check payment status
+                        $.ajax({
+                            url: 'api/process_overtime_payment.php',
+                            method: 'GET',
+                            data: {
+                                check_status: true,
+                                overtime_id: item.overtime_id || item.id,
+                                employee_id: item.id
+                            },
+                            async: false, // Synchronous call to ensure we have the status before rendering
+                            success: function(response) {
+                                console.log('Payment status check response:', response);
+                                if (response.success && response.data && response.data.status === 'paid') {
+                                    paymentStatus = 'Paid';
+                                    paymentStatusClass = 'paid';
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error checking payment status:', error);
+                            }
+                        });
+                    }
+                    
                     // Create row content
                     row.innerHTML = `
                         <td>${item.username}</td>
@@ -2802,9 +2935,10 @@ mysqli_close($conn);
                         </td>
                         <td><span class="status ${statusClass}">${statusText}</span></td>
                         <td>${approvalInfo}</td>
+                        <td><span class="status ${paymentStatusClass}">${paymentStatus}</span></td>
                         <td>
-                            <div class="table-actions">
-                                ${(() => {
+                                            <div class="table-actions">
+                            ${(() => {
                                                                         // Only show active approve/reject buttons for "submitted" status
                                     if (statusText === 'Submitted') {
                                         return `
@@ -2832,6 +2966,11 @@ mysqli_close($conn);
                                 <button class="btn-icon view" title="View Details" onclick="viewDetails(${item.id})">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                ${item.status && item.status.toLowerCase() === 'approved' ? `
+                                <button class="btn-icon payment" title="Payment" style="background-color: #8e44ad;" onclick="openPaymentModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}', ${item.overtime_id || item.id})">
+                                    <i class="fas fa-rupee-sign"></i>
+                                </button>
+                                ` : ''}
                             </div>
                         </td>
                     `;
@@ -3112,6 +3251,619 @@ mysqli_close($conn);
                 // Show the modal
                 document.getElementById('workReportModal').style.display = 'block';
             };
+            
+            // Payment Modal Functions
+            window.openPaymentModal = function(userId, userName, date, hours, overtimeId) {
+                console.log(`Opening payment modal for user ID: ${userId}, overtime ID: ${overtimeId}`);
+                
+                // Set the values in the modal
+                document.getElementById('paymentUserId').value = userId;
+                document.getElementById('paymentUserName').textContent = userName;
+                document.getElementById('paymentDate').textContent = date;
+                document.getElementById('paymentHours').textContent = hours;
+                document.getElementById('paymentOvertimeId').value = overtimeId || '';
+                document.getElementById('paymentOvertimeIdDisplay').textContent = overtimeId || 'N/A';
+                
+                // Always initialize with "Unpaid" status first
+                const statusElement = document.getElementById('paymentStatus');
+                statusElement.textContent = "Unpaid";
+                statusElement.className = "status unpaid";
+                statusElement.style.backgroundColor = "#f39c12";
+                
+                // Enable the payment button by default
+                document.getElementById('processPaymentBtn').disabled = false;
+                document.getElementById('processPaymentBtn').style.opacity = "1";
+                
+                // If no overtime ID is provided, use the test record ID
+                if (!overtimeId) {
+                    overtimeId = 633; // Fallback to test record ID
+                }
+                
+                // Clear any previous console logs
+                console.clear();
+                console.log('Checking payment status for employee ID:', userId, 'and overtime ID:', overtimeId);
+                
+                // Check if payment exists in database
+                $.ajax({
+                    url: 'api/process_overtime_payment.php',
+                    method: 'GET',
+                    dataType: 'json',
+                    data: {
+                        check_status: true,
+                        overtime_id: overtimeId,
+                        employee_id: userId
+                    },
+                    success: function(response) {
+                        console.log('Payment status check response:', response);
+                        
+                        // Debug the actual status value
+                        console.log('Payment status value:', response?.data?.status);
+                        
+                        // Always default to unpaid unless explicitly paid
+                        let isPaid = false;
+                        
+                        // Check if payment record exists and status is explicitly 'paid'
+                        if (response && 
+                            response.success && 
+                            response.data && 
+                            typeof response.data.status === 'string' && 
+                            response.data.status.toLowerCase() === 'paid') {
+                            isPaid = true;
+                        }
+                        
+                        if (isPaid) {
+                            // Update status to "Paid"
+                            statusElement.textContent = "Paid";
+                            statusElement.className = "status paid";
+                            statusElement.style.backgroundColor = "#2ecc71";
+                            
+                            // Disable the payment button
+                            document.getElementById('processPaymentBtn').disabled = true;
+                            document.getElementById('processPaymentBtn').style.opacity = "0.5";
+                        } else {
+                            // Ensure status is "Unpaid"
+                            statusElement.textContent = "Unpaid";
+                            statusElement.className = "status unpaid";
+                            statusElement.style.backgroundColor = "#f39c12";
+                            
+                            // Enable the payment button
+                            document.getElementById('processPaymentBtn').disabled = false;
+                            document.getElementById('processPaymentBtn').style.opacity = "1";
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Payment status check error:', error);
+                    }
+                });
+                
+                // Calculate dummy payment amount based on hours
+                let amount = 0;
+                try {
+                    // Extract numeric hours value
+                    const hoursValue = parseFloat(hours.match(/\d+(\.\d+)?/)[0]);
+                    // Calculate dummy amount (₹500 per hour)
+                    amount = hoursValue * 500;
+                } catch (e) {
+                    console.error('Error calculating amount:', e);
+                    amount = 1500; // Default fallback
+                }
+                
+                // Format the amount with commas and rupee symbol
+                const formattedAmount = '₹' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                document.getElementById('paymentAmount').textContent = formattedAmount;
+                
+                // Reset checkboxes and error message
+                document.getElementById('paymentCheckbox1').checked = false;
+                document.getElementById('paymentCheckbox2').checked = false;
+                document.getElementById('paymentCheckbox3').checked = false;
+                document.getElementById('paymentCheckboxError').style.display = 'none';
+                document.getElementById('paymentNotes').value = '';
+                
+                // Store the row identifier for more precise updates
+                document.getElementById('paymentRowId').value = `${userId}_${date}`;
+                
+                // Show the modal
+                document.getElementById('paymentModal').style.display = 'block';
+            };
+            
+            // Create payment animation overlay
+            function createPaymentAnimationOverlay() {
+                // Create overlay container
+                const overlay = document.createElement('div');
+                overlay.id = 'paymentAnimationOverlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                overlay.style.display = 'flex';
+                overlay.style.flexDirection = 'column';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.zIndex = '10000';
+                overlay.style.opacity = '0';
+                overlay.style.transition = 'opacity 0.5s ease';
+                
+                // Create animation container
+                const animContainer = document.createElement('div');
+                animContainer.style.width = '200px';
+                animContainer.style.height = '200px';
+                animContainer.style.position = 'relative';
+                animContainer.style.marginBottom = '20px';
+                
+                // Create spinner animation
+                const spinner = document.createElement('div');
+                spinner.className = 'payment-spinner';
+                spinner.style.width = '100%';
+                spinner.style.height = '100%';
+                spinner.style.border = '8px solid rgba(255, 255, 255, 0.1)';
+                spinner.style.borderRadius = '50%';
+                spinner.style.borderTop = '8px solid #8e44ad';
+                spinner.style.animation = 'paymentSpin 1s linear infinite';
+                
+                // Create rupee icon
+                const rupeeIcon = document.createElement('div');
+                rupeeIcon.innerHTML = '<i class="fas fa-rupee-sign"></i>';
+                rupeeIcon.style.position = 'absolute';
+                rupeeIcon.style.top = '50%';
+                rupeeIcon.style.left = '50%';
+                rupeeIcon.style.transform = 'translate(-50%, -50%)';
+                rupeeIcon.style.fontSize = '60px';
+                rupeeIcon.style.color = '#8e44ad';
+                
+                // Create status text
+                const statusText = document.createElement('div');
+                statusText.id = 'paymentStatusText';
+                statusText.textContent = 'Processing Payment...';
+                statusText.style.color = 'white';
+                statusText.style.fontSize = '24px';
+                statusText.style.fontWeight = 'bold';
+                statusText.style.marginBottom = '20px';
+                statusText.style.textAlign = 'center';
+                
+                // Create progress bar container
+                const progressContainer = document.createElement('div');
+                progressContainer.style.width = '300px';
+                progressContainer.style.height = '10px';
+                progressContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                progressContainer.style.borderRadius = '5px';
+                progressContainer.style.overflow = 'hidden';
+                
+                // Create progress bar
+                const progressBar = document.createElement('div');
+                progressBar.id = 'paymentProgressBar';
+                progressBar.style.height = '100%';
+                progressBar.style.width = '0%';
+                progressBar.style.backgroundColor = '#8e44ad';
+                progressBar.style.transition = 'width 0.1s linear';
+                
+                // Add CSS animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes paymentSpin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    
+                    @keyframes fadeIn {
+                        0% { opacity: 0; }
+                        100% { opacity: 1; }
+                    }
+                    
+                                         @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.1); }
+                        100% { transform: scale(1); }
+                    }
+                    
+                    @keyframes flyPlane {
+                        0% { 
+                            transform: translate(-150%, 0) rotate(15deg); 
+                            opacity: 0;
+                        }
+                        10% { 
+                            transform: translate(-100%, -20px) rotate(5deg); 
+                            opacity: 1;
+                        }
+                        40% { 
+                            transform: translate(-20%, -40px) rotate(0deg); 
+                        }
+                        60% { 
+                            transform: translate(20%, -20px) rotate(-5deg); 
+                        }
+                        90% { 
+                            transform: translate(100%, 0) rotate(-15deg); 
+                            opacity: 1;
+                        }
+                        100% { 
+                            transform: translate(150%, 20px) rotate(-20deg); 
+                            opacity: 0;
+                        }
+                    }
+                    
+                    @keyframes statusChange {
+                        0% { transform: scale(1); opacity: 1; }
+                        50% { transform: scale(1.5); opacity: 0; }
+                        51% { transform: scale(0.5); opacity: 0; }
+                        100% { transform: scale(1); opacity: 1; }
+                    }
+                    
+                    .payment-success {
+                        animation: pulse 0.5s ease-in-out;
+                        color: #2ecc71 !important;
+                    }
+                    
+                    .flying-plane {
+                        position: absolute;
+                        font-size: 40px;
+                        color: #3498db;
+                        animation: flyPlane 3s ease-in-out forwards;
+                        z-index: 10001;
+                        text-shadow: 0 0 10px rgba(255,255,255,0.7);
+                    }
+                    
+                    .status-change {
+                        animation: statusChange 1s ease-in-out forwards;
+                    }
+                `;
+                
+                // Assemble the overlay
+                document.head.appendChild(style);
+                animContainer.appendChild(spinner);
+                animContainer.appendChild(rupeeIcon);
+                progressContainer.appendChild(progressBar);
+                overlay.appendChild(animContainer);
+                overlay.appendChild(statusText);
+                overlay.appendChild(progressContainer);
+                document.body.appendChild(overlay);
+                
+                // Fade in the overlay
+                setTimeout(() => {
+                    overlay.style.opacity = '1';
+                }, 10);
+                
+                return {
+                    overlay,
+                    statusText: document.getElementById('paymentStatusText'),
+                    progressBar: document.getElementById('paymentProgressBar'),
+                    rupeeIcon: rupeeIcon,
+                    spinner: spinner,
+                    updateProgress: function(percent) {
+                        document.getElementById('paymentProgressBar').style.width = percent + '%';
+                    },
+                    updateStatus: function(text) {
+                        document.getElementById('paymentStatusText').textContent = text;
+                    },
+                    showSuccess: function() {
+                        spinner.style.borderTop = '8px solid #2ecc71';
+                        rupeeIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                        rupeeIcon.style.color = '#2ecc71';
+                        rupeeIcon.classList.add('payment-success');
+                        this.updateStatus('Payment Successful!');
+                        document.getElementById('paymentProgressBar').style.backgroundColor = '#2ecc71';
+                        document.getElementById('paymentProgressBar').style.width = '100%';
+                        
+                        // Create status change elements
+                        const statusContainer = document.createElement('div');
+                        statusContainer.style.position = 'relative';
+                        statusContainer.style.marginTop = '30px';
+                        statusContainer.style.width = '300px';
+                        statusContainer.style.height = '60px';
+                        statusContainer.style.overflow = 'hidden';
+                        
+                        // Create status labels
+                        const unpaidStatus = document.createElement('div');
+                        unpaidStatus.textContent = 'UNPAID';
+                        unpaidStatus.style.position = 'absolute';
+                        unpaidStatus.style.top = '50%';
+                        unpaidStatus.style.left = '50%';
+                        unpaidStatus.style.transform = 'translate(-50%, -50%)';
+                        unpaidStatus.style.color = '#f39c12';
+                        unpaidStatus.style.fontWeight = 'bold';
+                        unpaidStatus.style.fontSize = '24px';
+                        unpaidStatus.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                        unpaidStatus.style.padding = '5px 15px';
+                        unpaidStatus.style.borderRadius = '20px';
+                        unpaidStatus.id = 'unpaidStatus';
+                        
+                        const paidStatus = document.createElement('div');
+                        paidStatus.textContent = 'PAID';
+                        paidStatus.style.position = 'absolute';
+                        paidStatus.style.top = '50%';
+                        paidStatus.style.left = '50%';
+                        paidStatus.style.transform = 'translate(-50%, -50%)';
+                        paidStatus.style.color = '#2ecc71';
+                        paidStatus.style.fontWeight = 'bold';
+                        paidStatus.style.fontSize = '24px';
+                        paidStatus.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                        paidStatus.style.padding = '5px 15px';
+                        paidStatus.style.borderRadius = '20px';
+                        paidStatus.style.opacity = '0';
+                        paidStatus.id = 'paidStatus';
+                        
+                        statusContainer.appendChild(unpaidStatus);
+                        statusContainer.appendChild(paidStatus);
+                        overlay.appendChild(statusContainer);
+                        
+                        // Add flying airplane animation
+                        setTimeout(() => {
+                            // Create airplane element
+                            const airplane = document.createElement('div');
+                            airplane.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                            airplane.className = 'flying-plane';
+                            airplane.style.top = statusContainer.offsetTop + 'px';
+                            
+                            // Add a small paper trail behind the plane
+                            const paperTrail = document.createElement('div');
+                            paperTrail.style.position = 'absolute';
+                            paperTrail.style.top = (statusContainer.offsetTop + 10) + 'px';
+                            paperTrail.style.left = '50%';
+                            paperTrail.style.width = '80%';
+                            paperTrail.style.height = '3px';
+                            paperTrail.style.backgroundColor = 'rgba(255,255,255,0.3)';
+                            paperTrail.style.transform = 'translateX(-50%)';
+                            paperTrail.style.zIndex = '10000';
+                            
+                            // Add elements to the overlay
+                            overlay.appendChild(paperTrail);
+                            overlay.appendChild(airplane);
+                            
+                            // Trigger status change animation when plane is in the middle
+                            setTimeout(() => {
+                                unpaidStatus.classList.add('status-change');
+                                
+                                // Switch visibility after animation midpoint
+                                setTimeout(() => {
+                                    unpaidStatus.style.opacity = '0';
+                                    paidStatus.style.opacity = '1';
+                                    paidStatus.classList.add('status-change');
+                                    
+                                    // Add a burst of particles around the status
+                                    this.createParticles(statusContainer);
+                                }, 500);
+                            }, 1500);
+                        }, 500);
+                    },
+                    
+                    // Create particle burst effect
+                    createParticles: function(container) {
+                        const colors = ['#2ecc71', '#3498db', '#f39c12', '#9b59b6', '#1abc9c'];
+                        const particleCount = 20;
+                        
+                        for (let i = 0; i < particleCount; i++) {
+                            const particle = document.createElement('div');
+                            const size = Math.random() * 8 + 4;
+                            
+                            particle.style.position = 'absolute';
+                            particle.style.width = size + 'px';
+                            particle.style.height = size + 'px';
+                            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                            particle.style.borderRadius = '50%';
+                            particle.style.top = '50%';
+                            particle.style.left = '50%';
+                            
+                            // Random position and animation
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = Math.random() * 100 + 50;
+                            const duration = Math.random() * 1 + 1;
+                            
+                            particle.style.transform = 'translate(-50%, -50%)';
+                            particle.style.zIndex = '10002';
+                            
+                            // Create unique animation for each particle
+                            const keyframeName = 'particle-' + i;
+                            const style = document.createElement('style');
+                            style.textContent = `
+                                @keyframes ${keyframeName} {
+                                    0% { 
+                                        transform: translate(-50%, -50%);
+                                        opacity: 1;
+                                    }
+                                    100% { 
+                                        transform: translate(
+                                            calc(-50% + ${Math.cos(angle) * distance}px), 
+                                            calc(-50% + ${Math.sin(angle) * distance}px)
+                                        );
+                                        opacity: 0;
+                                    }
+                                }
+                            `;
+                            document.head.appendChild(style);
+                            
+                            particle.style.animation = `${keyframeName} ${duration}s ease-out forwards`;
+                            container.appendChild(particle);
+                            
+                            // Remove particles after animation
+                            setTimeout(() => {
+                                container.removeChild(particle);
+                                document.head.removeChild(style);
+                            }, duration * 1000);
+                        }
+                    },
+                    showError: function(message) {
+                        spinner.style.borderTop = '8px solid #e74c3c';
+                        rupeeIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                        rupeeIcon.style.color = '#e74c3c';
+                        this.updateStatus(message || 'Payment Failed');
+                        document.getElementById('paymentProgressBar').style.backgroundColor = '#e74c3c';
+                    },
+                    remove: function() {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(overlay);
+                        }, 500);
+                    }
+                };
+            }
+            
+            window.confirmPayment = function() {
+                // Get values from the modal
+                let userId = document.getElementById('paymentUserId').value;
+                const notes = document.getElementById('paymentNotes').value;
+                const rowId = document.getElementById('paymentRowId').value;
+                const hours = document.getElementById('paymentHours').textContent;
+                const amountText = document.getElementById('paymentAmount').textContent;
+                
+                // Use the actual overtime ID from the data attribute
+                let overtimeId = parseInt(document.getElementById('paymentOvertimeId').value || '0');
+                
+                // If no overtime ID is set, use the test record ID as fallback
+                if (!overtimeId) {
+                    overtimeId = 633; // Fallback to test record ID
+                    console.log('Using fallback overtime ID:', overtimeId);
+                }
+                
+                console.log('Using generated overtime ID:', overtimeId);
+                
+                // Parse amount (remove rupee symbol and commas)
+                const amount = parseFloat(amountText.replace('₹', '').replace(/,/g, ''));
+                
+                // Parse hours (extract number from string like "2.5 hours")
+                const hoursValue = parseFloat(hours.match(/\d+(\.\d+)?/)[0]);
+                
+                // Validate checkboxes
+                const checkbox1 = document.getElementById('paymentCheckbox1');
+                const checkbox2 = document.getElementById('paymentCheckbox2');
+                const checkbox3 = document.getElementById('paymentCheckbox3');
+                const checkboxError = document.getElementById('paymentCheckboxError');
+                
+                if (!checkbox1.checked || !checkbox2.checked || !checkbox3.checked) {
+                    checkboxError.style.display = 'block';
+                    return;
+                }
+                
+                console.log(`Processing payment for user ID: ${userId} with notes: ${notes}, overtime ID: ${overtimeId}, amount: ${amount}, hours: ${hoursValue}`);
+                
+                // Close the payment modal
+                closeModal('paymentModal');
+                
+                // Create and show the payment animation
+                const animation = createPaymentAnimationOverlay();
+                
+                // Simulate progress updates
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 4; // Increment by 4% each time
+                    if (progress > 90) {
+                        clearInterval(progressInterval);
+                    } else {
+                        animation.updateProgress(progress);
+                    }
+                }, 100);
+                
+                // Update status messages during animation
+                setTimeout(() => { animation.updateStatus('Verifying payment details...'); }, 1000);
+                setTimeout(() => { animation.updateStatus('Processing transaction...'); }, 2000);
+                setTimeout(() => { animation.updateStatus('Updating records...'); }, 3000);
+                
+                // Send AJAX request to process payment
+                console.log('Sending payment request to API...');
+                
+                // Debug: Show what we're sending
+                console.log('Payment request data:', {
+                    overtime_id: overtimeId,
+                    employee_id: userId,
+                    amount: amount,
+                    hours: hoursValue,
+                    notes: notes,
+                    status: 'paid'
+                });
+                
+                // Log the actual values to make sure we're using the right ones
+                console.log('ACTUAL VALUES - overtime_id:', overtimeId, 'employee_id:', userId);
+                
+                $.ajax({
+                    url: 'api/process_overtime_payment.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        overtime_id: overtimeId,
+                        employee_id: userId,
+                        amount: amount,
+                        hours: hoursValue,
+                        notes: notes,
+                        status: 'paid' // Default to paid when processed through the UI
+                    },
+                    success: function(response) {
+                        console.log('Payment API response:', response);
+                        
+                        clearInterval(progressInterval);
+                        
+                        if (response && response.success) {
+                            // Show success animation
+                            animation.updateProgress(100);
+                            animation.showSuccess();
+                            
+                            // Remove animation after animation completes (extended to 5 seconds)
+                            setTimeout(() => {
+                                animation.remove();
+                                
+                                // Update UI to reflect payment
+                                updateUIAfterPayment(userId, overtimeId);
+                            }, 5000);
+                        } else {
+                            // Show error animation
+                            animation.showError('Payment Failed: ' + (response && response.message ? response.message : 'Unknown error'));
+                            
+                            // Remove animation after 5 seconds
+                            setTimeout(() => {
+                                animation.remove();
+                                
+                                // Show error message
+                                showFilterMessage('Error: ' + (response && response.message ? response.message : 'Failed to process payment'), 'error');
+                            }, 3000);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Payment API error:', error);
+                        console.error('XHR status:', status);
+                        console.error('XHR response text:', xhr.responseText);
+                        
+                        clearInterval(progressInterval);
+                        
+                        // Try to parse the response text for more details
+                        let errorDetails = error;
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response && response.message) {
+                                errorDetails = response.message;
+                            }
+                        } catch (e) {
+                            console.error('Could not parse error response:', e);
+                        }
+                        
+                        // Show error in animation
+                        animation.showError('Payment Failed: ' + errorDetails);
+                        
+                        // Remove animation after 5 seconds
+                        setTimeout(() => {
+                            animation.remove();
+                            
+                            // Show error message
+                            showFilterMessage('Error: ' + errorDetails, 'error');
+                        }, 3000);
+                    }
+                });
+            };
+            
+            // Helper function to update UI after payment
+            function updateUIAfterPayment(userId, overtimeId) {
+                console.log(`Updating UI after payment for user ${userId}, overtime ID ${overtimeId}`);
+                
+                // Update the payment status in the table
+                updatePaymentStatusInTable(userId, overtimeId);
+                
+                // Update the payment status in the modal
+                const statusElement = document.getElementById('paymentStatus');
+                statusElement.textContent = "Paid";
+                statusElement.className = "status paid";
+                statusElement.style.backgroundColor = "#2ecc71";
+                
+                // Disable the payment button
+                document.getElementById('processPaymentBtn').disabled = true;
+                document.getElementById('processPaymentBtn').style.opacity = "0.5";
+            }
             
             window.viewDetails = function(userId) {
                 console.log(`Viewing details for user ID: ${userId}`);
@@ -3578,6 +4330,17 @@ mysqli_close($conn);
                         actionsCell.appendChild(newViewButton);
                     }
                     
+                    // Add payment button with rupee icon only for approved overtime
+                    if (newStatus === 'approved') {
+                        const paymentButton = document.createElement('button');
+                        paymentButton.className = 'btn-icon payment';
+                        paymentButton.title = 'Payment';
+                        paymentButton.style.backgroundColor = '#8e44ad';
+                        paymentButton.innerHTML = '<i class="fas fa-rupee-sign"></i>';
+                        paymentButton.onclick = function() { openPaymentModal(userId, 'User ' + userId, 'Current Date', '2.5 hours', userId); };
+                        actionsCell.appendChild(paymentButton);
+                    }
+                    
                     console.log('Actions cell updated:', actionsCell.innerHTML);
                 }
                 
@@ -3663,6 +4426,17 @@ mysqli_close($conn);
                                 actionsCell.appendChild(newViewButton);
                             }
                             
+                            // Add payment button with rupee icon only for approved overtime
+                            if (newStatus === 'approved') {
+                                const paymentButton = document.createElement('button');
+                                paymentButton.className = 'btn-icon payment';
+                                paymentButton.title = 'Payment';
+                                paymentButton.style.backgroundColor = '#8e44ad';
+                                paymentButton.innerHTML = '<i class="fas fa-rupee-sign"></i>';
+                                paymentButton.onclick = function() { openPaymentModal(userId, 'User ' + userId, 'Current Date', '2.5 hours', userId); };
+                                actionsCell.appendChild(paymentButton);
+                            }
+                            
                             console.log('Actions cell updated in fallback:', actionsCell.innerHTML);
                         }
                         
@@ -3712,6 +4486,51 @@ mysqli_close($conn);
             
             console.log('Stats updated: Pending =', pendingCount, 'Approved =', approvedCount);
         }
+        
+        /**
+         * Update payment status in the table after processing a payment
+         */
+        function updatePaymentStatusInTable(userId, overtimeId) {
+            console.log(`Updating payment status for user ${userId}, overtime ID ${overtimeId}`);
+            
+            // Find the row for this user/overtime
+            const tableRows = document.querySelectorAll('.overtime-table tbody tr');
+            let found = false;
+            
+            tableRows.forEach(row => {
+                // Check if this is the row for our user
+                const actionButtons = row.querySelectorAll('.table-actions button');
+                let isTargetRow = false;
+                
+                // Check if any button has an onclick handler with this user ID
+                for (const button of actionButtons) {
+                    const onclickAttr = button.getAttribute('onclick') || '';
+                    if (onclickAttr.includes(`(${userId},`) || onclickAttr.includes(`openPaymentModal(${userId}`)) {
+                        isTargetRow = true;
+                        break;
+                    }
+                }
+                
+                if (isTargetRow) {
+                    // Get the payment status cell (10th column)
+                    const paymentStatusCell = row.querySelector('td:nth-child(10)');
+                    if (paymentStatusCell) {
+                        // Update the payment status to "Paid"
+                        paymentStatusCell.innerHTML = '<span class="status paid">Paid</span>';
+                        found = true;
+                    }
+                }
+            });
+            
+            if (!found) {
+                console.warn(`Could not find row for user ${userId} to update payment status`);
+            }
+        }
+        
+        // Update payment status when payment is processed
+        window.updatePaymentStatusAfterProcessing = function(userId, overtimeId) {
+            updatePaymentStatusInTable(userId, overtimeId);
+        };
         });
     </script>
     

@@ -186,8 +186,11 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Overtime Dashboard - <?php echo $monthName . ' ' . $currentYear; ?></title>
+    <link rel="shortcut icon" href="images/logo.png" type="image/png">
+    <link rel="icon" href="images/logo.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="css/supervisor/dashboard.css">
+    
     <style>
         * {
             margin: 0;
@@ -1619,6 +1622,11 @@ try {
                         // Reset error messages
                         document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
                         
+                        // Reset submit button to original state (ensure it's not in "Submitting..." state)
+                        const submitBtn = document.getElementById('submitOvertimeBtn');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+                        
                         // Show the modal
                         sendModal.style.display = 'block';
                         document.body.style.overflow = 'hidden'; // Prevent scrolling
@@ -1713,27 +1721,39 @@ try {
                             // Show success message
                             showNotification('Overtime request submitted successfully!', 'success');
                             
-                            // Update UI to reflect the new status
-                            const statusCell = document.querySelector(`button[data-id="${currentRecord.id}"]`)
-                                .closest('tr').querySelector('.status-badge');
+                            // Instead of manually updating the UI, reload the page content while preserving filters
+                            const currentMonth = document.getElementById('monthSelect').value;
+                            const currentYear = document.getElementById('yearSelect').value;
                             
-                            if (statusCell) {
-                                statusCell.textContent = 'SUBMITTED';
-                                statusCell.className = 'status-badge status-submitted';
-                                
-                                // Also update the data in the overtimeData array to keep it in sync
-                                const recordIndex = overtimeData.findIndex(record => record.id == currentRecord.id);
-                                if (recordIndex !== -1) {
-                                    overtimeData[recordIndex].overtime_status = 'submitted';
-                                }
-                                
-                                // Update the stats in the dashboard
-                                updateOverviewStats();
-                            }
+                            // Create URL with current filters
+                            const url = `supervisors_overtime.php?month=${currentMonth}&year=${currentYear}`;
                             
-                            // Close the modal
-                            sendModal.style.display = 'none';
-                            document.body.style.overflow = '';
+                            // Fetch the updated page content
+                            fetch(url)
+                                .then(response => response.text())
+                                .then(html => {
+                                    // Create a temporary element to parse the HTML
+                                    const tempDiv = document.createElement('div');
+                                    tempDiv.innerHTML = html;
+                                    
+                                    // Extract the main content
+                                    const newContent = tempDiv.querySelector('.main-content').innerHTML;
+                                    
+                                    // Update just the main content area
+                                    document.getElementById('mainContent').innerHTML = newContent;
+                                    
+                                    // Reattach event listeners to the new elements
+                                    reattachEventListeners();
+                                    
+                                    // Close the modal
+                                    sendModal.style.display = 'none';
+                                    document.body.style.overflow = '';
+                                })
+                                .catch(error => {
+                                    console.error('Error refreshing page content:', error);
+                                    // Fallback to full page reload if the partial refresh fails
+                                    window.location.href = url;
+                                });
                         } else {
                             showNotification('Error: ' + (data.message || 'Failed to submit request'), 'error');
                             submitBtn.disabled = false;
@@ -1825,33 +1845,151 @@ try {
                 }, 4000);
             }
 
-            // Function to update the overview stats based on current data
-            function updateOverviewStats() {
-                // Get all overtime records from the table
-                let totalHours = 0;
-                let pendingHours = 0;
-                let approvedHours = 0;
-                let notSubmittedHours = 0;
+            // Function to reattach event listeners after content refresh
+            function reattachEventListeners() {
+                // Month selector change event
+                document.getElementById('monthSelect').addEventListener('change', function() {
+                    document.getElementById('monthForm').submit();
+                });
                 
-                // Use the overtimeData array to calculate stats
-                overtimeData.forEach(record => {
-                    const hours = parseFloat(record.overtime_hours);
-                    totalHours += hours;
-                    
-                    if (record.overtime_status === 'submitted') {
-                        pendingHours += hours;
-                    } else if (record.overtime_status === 'approved') {
-                        approvedHours += hours;
-                    } else if (!record.overtime_status || record.overtime_status === 'not-submitted') {
-                        notSubmittedHours += hours;
+                document.getElementById('yearSelect').addEventListener('change', function() {
+                    document.getElementById('monthForm').submit();
+                });
+                
+                // Action button handlers
+                const sendButtons = document.querySelectorAll('.send-btn');
+                const viewButtons = document.querySelectorAll('.view-btn');
+                
+                // Reset submit button state to original
+                const submitBtn = document.getElementById('submitOvertimeBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+                }
+                
+                sendButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const recordId = parseInt(this.getAttribute('data-id'));
+                        
+                        // Find the overtime record with the matching ID
+                        const record = overtimeData.find(record => record.id == recordId);
+                        currentRecord = record;
+                        
+                        if (record) {
+                            // Format the date
+                            const date = new Date(record.date);
+                            const formattedDate = date.toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            
+                            // Populate modal with record data
+                            document.getElementById('send-modal-date').textContent = formattedDate;
+                            document.getElementById('send-modal-hours').textContent = record.overtime_hours.toFixed(1) + ' hours';
+                            
+                            // Reset form values
+                            document.getElementById('approvalConfirmation').checked = false;
+                            // The dropdown will already have Senior Manager (Site) selected by default from HTML
+                            document.getElementById('overtimeDescription').value = record.work_report || '';
+                            
+                            // Reset error messages
+                            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+                            
+                            // Reset submit button to original state (ensure it's not in "Submitting..." state)
+                            const submitBtn = document.getElementById('submitOvertimeBtn');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+                            
+                            // Show the modal
+                            sendModal.style.display = 'block';
+                            document.body.style.overflow = 'hidden'; // Prevent scrolling
+                        }
+                    });
+                });
+                
+                viewButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const recordId = parseInt(this.getAttribute('data-id'));
+                        
+                        // Find the overtime record with the matching ID
+                        const record = overtimeData.find(record => record.id == recordId);
+                        
+                        if (record) {
+                            // Format the date
+                            const date = new Date(record.date);
+                            const formattedDate = date.toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            
+                            // Populate modal with record data
+                            document.getElementById('modal-date').textContent = formattedDate;
+                            document.getElementById('modal-hours').textContent = record.overtime_hours.toFixed(1) + ' hours';
+                            document.getElementById('modal-report').textContent = record.work_report || 'No work report submitted';
+                            
+                            // Show the modal
+                            detailsModal.style.display = 'block';
+                            document.body.style.overflow = 'hidden'; // Prevent scrolling
+                        }
+                    });
+                });
+                
+                // Update the overtimeData array with the latest data
+                updateOvertimeData();
+            }
+            
+            // Function to update the overtimeData array after page refresh
+            function updateOvertimeData() {
+                // Extract overtime data from the table rows
+                const tableRows = document.querySelectorAll('table tbody tr');
+                const newOvertimeData = [];
+                
+                tableRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length > 0) {
+                        const sendButton = row.querySelector('.send-btn');
+                        if (sendButton) {
+                            const id = parseInt(sendButton.getAttribute('data-id'));
+                            const date = cells[0].textContent;
+                            const overtime_hours = parseFloat(cells[1].textContent);
+                            const shift_end_time = cells[2].textContent;
+                            const punch_out = cells[3].textContent;
+                            const work_report = cells[4].textContent === 'N/A' ? '' : cells[4].textContent;
+                            
+                            // Get status from badge class
+                            const statusBadge = cells[5].querySelector('.status-badge');
+                            let overtime_status = 'not-submitted';
+                            if (statusBadge) {
+                                if (statusBadge.classList.contains('status-pending')) overtime_status = 'pending';
+                                else if (statusBadge.classList.contains('status-submitted')) overtime_status = 'submitted';
+                                else if (statusBadge.classList.contains('status-approved')) overtime_status = 'approved';
+                                else if (statusBadge.classList.contains('status-rejected')) overtime_status = 'rejected';
+                            }
+                            
+                            newOvertimeData.push({
+                                id,
+                                date,
+                                overtime_hours,
+                                shift_end_time,
+                                punch_out,
+                                work_report,
+                                overtime_status
+                            });
+                        }
                     }
                 });
                 
-                // Update the stats in the UI
-                document.getElementById('total-hours').textContent = totalHours.toFixed(1);
-                document.getElementById('pending-approval').textContent = pendingHours.toFixed(1);
-                document.getElementById('approved-hours').textContent = approvedHours.toFixed(1);
-                document.getElementById('not-submitted').textContent = notSubmittedHours.toFixed(1);
+                // Update the global overtimeData array
+                if (newOvertimeData.length > 0) {
+                    overtimeData.length = 0; // Clear the array
+                    newOvertimeData.forEach(record => overtimeData.push(record));
+                }
             }
         });
     </script>

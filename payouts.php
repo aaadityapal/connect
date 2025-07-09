@@ -187,6 +187,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     'remaining_amount' => $_POST['remaining_amount'] ?? 0
                 ];
                 
+                // Handle multiple payment details if provided
+                if (isset($_POST['has_multiple_payments']) && $_POST['has_multiple_payments'] == '1') {
+                    $data['payment_details'] = [];
+                    
+                    // Get the payment details arrays
+                    $paymentDates = $_POST['payment_dates'] ?? [];
+                    $paymentAmounts = $_POST['payment_amounts'] ?? [];
+                    $paymentModes = $_POST['payment_modes'] ?? [];
+                    
+                    // Process each payment detail
+                    for ($i = 0; $i < count($paymentDates); $i++) {
+                        if (isset($paymentDates[$i]) && isset($paymentAmounts[$i]) && isset($paymentModes[$i])) {
+                            $data['payment_details'][] = [
+                                'date' => $paymentDates[$i],
+                                'amount' => $paymentAmounts[$i],
+                                'mode' => $paymentModes[$i]
+                            ];
+                        }
+                    }
+                }
+                
                 $id = addProjectPayout($pdo, $data);
                 if ($id) {
                     $data['id'] = $id;
@@ -227,6 +248,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     'project_stage' => $_POST['project_stage'] ?? '',
                     'remaining_amount' => $_POST['remaining_amount'] ?? 0
                 ];
+                
+                // Handle multiple payment details if provided
+                if (isset($_POST['has_multiple_payments']) && $_POST['has_multiple_payments'] == '1') {
+                    $data['payment_details'] = [];
+                    
+                    // Get the payment details arrays
+                    $paymentDates = $_POST['payment_dates'] ?? [];
+                    $paymentAmounts = $_POST['payment_amounts'] ?? [];
+                    $paymentModes = $_POST['payment_modes'] ?? [];
+                    
+                    // Process each payment detail
+                    for ($i = 0; $i < count($paymentDates); $i++) {
+                        if (isset($paymentDates[$i]) && isset($paymentAmounts[$i]) && isset($paymentModes[$i])) {
+                            $data['payment_details'][] = [
+                                'date' => $paymentDates[$i],
+                                'amount' => $paymentAmounts[$i],
+                                'mode' => $paymentModes[$i]
+                            ];
+                        }
+                    }
+                }
                 
                 error_log("Updating project ID: $id with data: " . print_r($data, true));
                 
@@ -1505,6 +1547,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                                     <i class="bi bi-credit-card text-primary me-2"></i>
                                                     Payment Modes
                                                 </label>
+                                    <div class="mb-2">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableMultiplePayments_0" name="enableMultiplePayments_0">
+                                            <label class="form-check-label" for="enableMultiplePayments_0">Enable multiple payment dates</label>
+                                        </div>
+                                    </div>
+                                    <div id="singlePaymentMode_0">
                                                 <div class="payment-modes-container" id="paymentModesContainer_0">
                                                     <div class="payment-mode-entry mb-2">
                                                         <div class="d-flex gap-2">
@@ -1528,6 +1577,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                                 <button type="button" class="btn btn-sm btn-outline-primary mt-2 add-payment-mode-btn" data-stage-index="0">
                                                     <i class="bi bi-plus-circle me-1"></i>Add Payment Mode
                                                 </button>
+                                    </div>
+                                    <div id="multiplePaymentMode_0" style="display:none;">
+                                        <div class="payment-details-container" id="paymentDetailsContainer_0">
+                                            <div class="payment-detail-entry mb-3 p-2 border rounded">
+                                                <div class="row mb-2">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">Payment Date</label>
+                                                        <input type="date" class="form-control form-control-sm payment-date" name="payment_dates[]">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">Amount</label>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text">₹</span>
+                                                            <input type="number" class="form-control payment-detail-amount" name="payment_amounts[]" min="0" step="0.01" placeholder="Amount">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row align-items-end">
+                                                    <div class="col-md-10">
+                                                        <label class="form-label small">Payment Mode</label>
+                                                        <select class="form-select form-select-sm payment-detail-mode" name="payment_modes[]">
+                                                            <option value="" selected disabled>Select Payment Mode</option>
+                                                            <option value="UPI">UPI</option>
+                                                            <option value="Net Banking">Net Banking</option>
+                                                            <option value="Credit Card">Credit Card</option>
+                                                            <option value="Debit Card">Debit Card</option>
+                                                            <option value="Cash">Cash</option>
+                                                            <option value="Cheque">Cheque</option>
+                                                            <option value="Bank Transfer">Bank Transfer</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-payment-detail-btn">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2 add-payment-detail-btn" data-stage-index="0">
+                                            <i class="bi bi-plus-circle me-1"></i>Add Payment Detail
+                                        </button>
+                                        <input type="hidden" name="has_multiple_payments" value="1">
+                                    </div>
                                             </div>
                                             
                                             <div class="col-md-6 mb-3">
@@ -1863,6 +1956,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     </div>
                                     <div class="col-md-9">
                                         <div id="viewPaymentMode">-</div>
+                                        <div id="viewMultiplePayments" class="mt-3" style="display:none;">
+                                            <h6 class="text-muted mb-2">Detailed Payment Information</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-bordered">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th>Amount</th>
+                                                            <th>Payment Mode</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="viewPaymentDetailsBody">
+                                                        <!-- Payment details will be populated here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                         </div>
@@ -2163,6 +2273,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 });
             });
             
+            // Add event listeners for multiple payment mode toggle
+            document.querySelectorAll('[id^="enableMultiplePayments_"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const stageIndex = this.id.split('_')[1];
+                    const singlePaymentMode = document.getElementById(`singlePaymentMode_${stageIndex}`);
+                    const multiplePaymentMode = document.getElementById(`multiplePaymentMode_${stageIndex}`);
+                    
+                    if (this.checked) {
+                        singlePaymentMode.style.display = 'none';
+                        multiplePaymentMode.style.display = 'block';
+                    } else {
+                        singlePaymentMode.style.display = 'block';
+                        multiplePaymentMode.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Add event listeners for adding payment details
+            document.querySelectorAll('.add-payment-detail-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    addPaymentDetail(this.dataset.stageIndex);
+                });
+            });
+            
+            // Add event listeners for removing payment details
+            document.querySelectorAll('.remove-payment-detail-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.payment-detail-entry').remove();
+                    updateMultiplePaymentTotal();
+                });
+            });
+            
+            // Add event listeners for payment detail amount changes
+            document.querySelectorAll('.payment-detail-amount').forEach(input => {
+                input.addEventListener('input', updateMultiplePaymentTotal);
+            });
+            
             // Add event listeners for remaining amount toggles
             document.querySelectorAll('.has-remaining-amount').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
@@ -2273,6 +2420,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     <i class="bi bi-credit-card text-primary me-2"></i>
                                     Payment Modes
                                 </label>
+                                <div class="mb-2">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enableMultiplePayments_${newStageIndex}" name="enableMultiplePayments_${newStageIndex}">
+                                        <label class="form-check-label" for="enableMultiplePayments_${newStageIndex}">Enable multiple payment dates</label>
+                                    </div>
+                                </div>
+                                <div id="singlePaymentMode_${newStageIndex}">
                                 <div class="payment-modes-container" id="paymentModesContainer_${newStageIndex}">
                                     <div class="payment-mode-entry mb-2">
                                         <div class="d-flex gap-2">
@@ -2296,6 +2450,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 <button type="button" class="btn btn-sm btn-outline-primary mt-2 add-payment-mode-btn" data-stage-index="${newStageIndex}">
                                     <i class="bi bi-plus-circle me-1"></i>Add Payment Mode
                                 </button>
+                                </div>
+                                <div id="multiplePaymentMode_${newStageIndex}" style="display:none;">
+                                    <div class="payment-details-container" id="paymentDetailsContainer_${newStageIndex}">
+                                        <div class="payment-detail-entry mb-3 p-2 border rounded">
+                                            <div class="row mb-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label small">Payment Date</label>
+                                                    <input type="date" class="form-control form-control-sm payment-date" name="payment_dates[]">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small">Amount</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text">₹</span>
+                                                        <input type="number" class="form-control payment-detail-amount" name="payment_amounts[]" min="0" step="0.01" placeholder="Amount">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row align-items-end">
+                                                <div class="col-md-10">
+                                                    <label class="form-label small">Payment Mode</label>
+                                                    <select class="form-select form-select-sm payment-detail-mode" name="payment_modes[]">
+                                                        <option value="" selected disabled>Select Payment Mode</option>
+                                                        <option value="UPI">UPI</option>
+                                                        <option value="Net Banking">Net Banking</option>
+                                                        <option value="Credit Card">Credit Card</option>
+                                                        <option value="Debit Card">Debit Card</option>
+                                                        <option value="Cash">Cash</option>
+                                                        <option value="Cheque">Cheque</option>
+                                                        <option value="Bank Transfer">Bank Transfer</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-payment-detail-btn">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2 add-payment-detail-btn" data-stage-index="${newStageIndex}">
+                                        <i class="bi bi-plus-circle me-1"></i>Add Payment Detail
+                                    </button>
+                                    <input type="hidden" name="has_multiple_payments" value="1">
+                                </div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
@@ -2362,6 +2560,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                              addPaymentMode(this.dataset.stageIndex);
                          });
                      }
+                     
+                     // Add event listener for multiple payment mode toggle
+                     const multiplePaymentsCheckbox = stageElement.querySelector(`#enableMultiplePayments_${newStageIndex}`);
+                     if (multiplePaymentsCheckbox) {
+                         multiplePaymentsCheckbox.addEventListener('change', function() {
+                             const stageIndex = this.id.split('_')[1];
+                             const singlePaymentMode = document.getElementById(`singlePaymentMode_${stageIndex}`);
+                             const multiplePaymentMode = document.getElementById(`multiplePaymentMode_${stageIndex}`);
+                             
+                             if (this.checked) {
+                                 singlePaymentMode.style.display = 'none';
+                                 multiplePaymentMode.style.display = 'block';
+                             } else {
+                                 singlePaymentMode.style.display = 'block';
+                                 multiplePaymentMode.style.display = 'none';
+                             }
+                         });
+                     }
+                     
+                     // Add event listener for "Add Payment Detail" button
+                     const addPaymentDetailBtn = stageElement.querySelector('.add-payment-detail-btn');
+                     if (addPaymentDetailBtn) {
+                         addPaymentDetailBtn.addEventListener('click', function() {
+                             addPaymentDetail(this.dataset.stageIndex);
+                         });
+                     }
+                     
+                     // Add event listeners for removing payment details
+                     const removePaymentDetailBtns = stageElement.querySelectorAll('.remove-payment-detail-btn');
+                     removePaymentDetailBtns.forEach(btn => {
+                         btn.addEventListener('click', function() {
+                             this.closest('.payment-detail-entry').remove();
+                             updateMultiplePaymentTotal();
+                         });
+                     });
+                     
+                     // Add event listeners for payment detail amount changes
+                     const paymentDetailAmounts = stageElement.querySelectorAll('.payment-detail-amount');
+                     paymentDetailAmounts.forEach(input => {
+                         input.addEventListener('input', updateMultiplePaymentTotal);
+                     });
                      
                      // Add event listener for remaining amount toggle
                      const remainingAmountCheckbox = stageElement.querySelector('.has-remaining-amount');
@@ -2439,6 +2678,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 
                 // Update total amount
                 updateTotalAmount(stageIndex);
+            }
+            
+            // Function to add a new payment detail entry
+            function addPaymentDetail(stageIndex) {
+                const container = document.getElementById(`paymentDetailsContainer_${stageIndex}`);
+                if (!container) return;
+                
+                // Create new payment detail entry
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'payment-detail-entry mb-3 p-2 border rounded';
+                
+                // Create content
+                entryDiv.innerHTML = `
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label small">Payment Date</label>
+                            <input type="date" class="form-control form-control-sm payment-date" name="payment_dates[]">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Amount</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control payment-detail-amount" name="payment_amounts[]" min="0" step="0.01" placeholder="Amount">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row align-items-end">
+                        <div class="col-md-10">
+                            <label class="form-label small">Payment Mode</label>
+                            <select class="form-select form-select-sm payment-detail-mode" name="payment_modes[]">
+                                <option value="" selected disabled>Select Payment Mode</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Net Banking">Net Banking</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-payment-detail-btn">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to container
+                container.appendChild(entryDiv);
+                
+                // Add event listener for remove button
+                const removeBtn = entryDiv.querySelector('.remove-payment-detail-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        entryDiv.remove();
+                        updateMultiplePaymentTotal();
+                    });
+                }
+                
+                // Add event listener for amount changes
+                const amountInput = entryDiv.querySelector('.payment-detail-amount');
+                if (amountInput) {
+                    amountInput.addEventListener('input', updateMultiplePaymentTotal);
+                }
+            }
+            
+            // Function to update the total from multiple payment details
+            function updateMultiplePaymentTotal() {
+                // Get all payment detail amount inputs
+                const amountInputs = document.querySelectorAll('.payment-detail-amount');
+                
+                // Calculate total
+                let total = 0;
+                amountInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    total += value;
+                });
+                
+                // Update all amount fields for stages with multiple payments
+                document.querySelectorAll('[id^="enableMultiplePayments_"]').forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const stageIndex = checkbox.id.split('_')[1];
+                        const amountField = document.getElementById(`amount_${stageIndex}`);
+                        if (amountField) {
+                            amountField.value = total.toFixed(2);
+                        }
+                    }
+                });
             }
             
             // Function to update the total amount for a stage
@@ -2627,6 +2955,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 formData.append('payment_mode', paymentModes.join(', '));
                                 formData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
                                 
+                                // Check if multiple payments are enabled
+                                const enableMultiplePayments = document.getElementById(`enableMultiplePayments_${stageIndex}`);
+                                if (enableMultiplePayments && enableMultiplePayments.checked) {
+                                    formData.append('has_multiple_payments', '1');
+                                    
+                                    // Get all payment details
+                                    const paymentDetailsContainer = document.getElementById(`paymentDetailsContainer_${stageIndex}`);
+                                    const paymentDateInputs = paymentDetailsContainer.querySelectorAll('.payment-date');
+                                    const paymentAmountInputs = paymentDetailsContainer.querySelectorAll('.payment-detail-amount');
+                                    const paymentModeSelects = paymentDetailsContainer.querySelectorAll('.payment-detail-mode');
+                                    
+                                    // Debug log
+                                    console.log(`Payment details found: ${paymentDateInputs.length} dates, ${paymentAmountInputs.length} amounts, ${paymentModeSelects.length} modes`);
+                                    
+                                    // Add each payment detail
+                                    paymentDateInputs.forEach((dateInput, i) => {
+                                        if (dateInput && paymentAmountInputs[i] && paymentModeSelects[i]) {
+                                            formData.append('payment_dates[]', dateInput.value);
+                                            formData.append('payment_amounts[]', paymentAmountInputs[i].value);
+                                            formData.append('payment_modes[]', paymentModeSelects[i].value);
+                                            
+                                            // Debug log
+                                            console.log(`Payment detail ${i+1}: Date=${dateInput.value}, Amount=${paymentAmountInputs[i].value}, Mode=${paymentModeSelects[i].value}`);
+                                        }
+                                    });
+                                }
+                                
                                 // Send AJAX request for update
                                 fetch('payouts.php', {
                                     method: 'POST',
@@ -2759,8 +3114,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 formData.append('payment_mode', paymentModes.join(', '));
                                 formData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
                                 
+                                // Check if multiple payments are enabled
+                                const enableMultiplePayments = document.getElementById(`enableMultiplePayments_${stageIndex}`);
+                                if (enableMultiplePayments && enableMultiplePayments.checked) {
+                                    formData.append('has_multiple_payments', '1');
+                                    
+                                    // Get all payment details
+                                    const paymentDetailsContainer = document.getElementById(`paymentDetailsContainer_${stageIndex}`);
+                                    const paymentDateInputs = paymentDetailsContainer.querySelectorAll('.payment-date');
+                                    const paymentAmountInputs = paymentDetailsContainer.querySelectorAll('.payment-detail-amount');
+                                    const paymentModeSelects = paymentDetailsContainer.querySelectorAll('.payment-detail-mode');
+                                    
+                                    // Debug log
+                                    console.log(`Payment details found: ${paymentDateInputs.length} dates, ${paymentAmountInputs.length} amounts, ${paymentModeSelects.length} modes`);
+                                    
+                                    // Add each payment detail
+                                    paymentDateInputs.forEach((dateInput, i) => {
+                                        if (dateInput && paymentAmountInputs[i] && paymentModeSelects[i]) {
+                                            formData.append('payment_dates[]', dateInput.value);
+                                            formData.append('payment_amounts[]', paymentAmountInputs[i].value);
+                                            formData.append('payment_modes[]', paymentModeSelects[i].value);
+                                            
+                                            // Debug log
+                                            console.log(`Payment detail ${i+1}: Date=${dateInput.value}, Amount=${paymentAmountInputs[i].value}, Mode=${paymentModeSelects[i].value}`);
+                                        }
+                                    });
+                                }
+                                
                                 // Send AJAX request for update
-                                updateProject(formData);
+                                fetch('payouts.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Update existing project in the array
+                                        const index = projectData.findIndex(p => p.id == projectId);
+                                        if (index !== -1) {
+                                            projectData[index] = data.project;
+                                        }
+                                        
+                                        // Reset the button to "Save" mode
+                                        const saveProjectBtn = document.getElementById('saveProjectBtn');
+                                        saveProjectBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Project';
+                                        saveProjectBtn.dataset.mode = 'add';
+                                        delete saveProjectBtn.dataset.id;
+                                        
+                                        // Reset modal title
+                                        document.getElementById('addProjectModalLabel').innerHTML = 
+                                            '<i class="bi bi-folder-plus text-primary me-2"></i> Add New Project Data';
+                                        
+                                        // Update the table
+                                        updateProjectTable();
+                                        
+                                        // Reset form
+                                        document.getElementById('addProjectForm').reset();
+                                        
+                                        // Close modal
+                                        const addProjectModal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+                                        addProjectModal.hide();
+                                        
+                                        // Remove any lingering backdrops
+                                        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                                            backdrop.remove();
+                                        });
+                                        
+                                        // Show success notification
+                                        showNotification(data.message, 'success');
+                                    } else {
+                                        showNotification(data.message, 'error');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showNotification('An error occurred while updating the project.', 'error');
+                                });
                             }
                         } else {
                             // For add mode, process all stages
@@ -2803,6 +3232,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 
                                 formData.append('payment_mode', paymentModes.join(', '));
                                 formData.append('project_stage', document.getElementById(`projectStage_${stageIndex}`).value);
+                                
+                                // Check if multiple payments are enabled
+                                const enableMultiplePayments = document.getElementById(`enableMultiplePayments_${stageIndex}`);
+                                if (enableMultiplePayments && enableMultiplePayments.checked) {
+                                    formData.append('has_multiple_payments', '1');
+                                    
+                                    // Get all payment details
+                                    const paymentDetailsContainer = document.getElementById(`paymentDetailsContainer_${stageIndex}`);
+                                    const paymentDateInputs = paymentDetailsContainer.querySelectorAll('.payment-date');
+                                    const paymentAmountInputs = paymentDetailsContainer.querySelectorAll('.payment-detail-amount');
+                                    const paymentModeSelects = paymentDetailsContainer.querySelectorAll('.payment-detail-mode');
+                                    
+                                    // Debug log
+                                    console.log(`Payment details found: ${paymentDateInputs.length} dates, ${paymentAmountInputs.length} amounts, ${paymentModeSelects.length} modes`);
+                                    
+                                    // Add each payment detail
+                                    paymentDateInputs.forEach((dateInput, i) => {
+                                        if (dateInput && paymentAmountInputs[i] && paymentModeSelects[i]) {
+                                            formData.append('payment_dates[]', dateInput.value);
+                                            formData.append('payment_amounts[]', paymentAmountInputs[i].value);
+                                            formData.append('payment_modes[]', paymentModeSelects[i].value);
+                                            
+                                            // Debug log
+                                            console.log(`Payment detail ${i+1}: Date=${dateInput.value}, Amount=${paymentAmountInputs[i].value}, Mode=${paymentModeSelects[i].value}`);
+                                        }
+                                    });
+                                }
                                 
                                 // Send AJAX request
                                 fetch('payouts.php', {
@@ -4379,7 +4835,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 if (input) input.value = remainingAmount;
                             }
                             
-                            // Handle payment modes
+                            // Check if project has multiple payment details
+                            if (data.project.has_multiple_payments && data.project.payment_details && data.project.payment_details.length > 0) {
+                                console.log('Project has multiple payment details:', data.project.payment_details);
+                                
+                                // Enable multiple payment mode
+                                const enableMultiplePaymentsCheckbox = document.getElementById('enableMultiplePayments_0');
+                                if (enableMultiplePaymentsCheckbox) {
+                                    enableMultiplePaymentsCheckbox.checked = true;
+                                    
+                                    // Show multiple payment mode container and hide single payment mode container
+                                    const singlePaymentMode = document.getElementById('singlePaymentMode_0');
+                                    const multiplePaymentMode = document.getElementById('multiplePaymentMode_0');
+                                    if (singlePaymentMode && multiplePaymentMode) {
+                                        singlePaymentMode.style.display = 'none';
+                                        multiplePaymentMode.style.display = 'block';
+                                    }
+                                    
+                                    // Clear existing payment details
+                                    const paymentDetailsContainer = document.getElementById('paymentDetailsContainer_0');
+                                    if (paymentDetailsContainer) {
+                                        paymentDetailsContainer.innerHTML = '';
+                                        
+                                        // Add each payment detail
+                                        data.project.payment_details.forEach((detail, index) => {
+                                            const entryDiv = document.createElement('div');
+                                            entryDiv.className = 'payment-detail-entry mb-3 p-2 border rounded';
+                                            
+                                            // Format the date for input
+                                            const paymentDate = new Date(detail.payment_date);
+                                            const formattedDate = paymentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                                            
+                                            entryDiv.innerHTML = `
+                                                <div class="row mb-2">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">Payment Date</label>
+                                                        <input type="date" class="form-control form-control-sm payment-date" name="payment_dates[]" value="${formattedDate}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">Amount</label>
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text">₹</span>
+                                                            <input type="number" class="form-control payment-detail-amount" name="payment_amounts[]" min="0" step="0.01" placeholder="Amount" value="${detail.payment_amount}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row align-items-end">
+                                                    <div class="col-md-10">
+                                                        <label class="form-label small">Payment Mode</label>
+                                                        <select class="form-select form-select-sm payment-detail-mode" name="payment_modes[]">
+                                                            <option value="" disabled>Select Payment Mode</option>
+                                                            <option value="UPI" ${detail.payment_mode === 'UPI' ? 'selected' : ''}>UPI</option>
+                                                            <option value="Net Banking" ${detail.payment_mode === 'Net Banking' ? 'selected' : ''}>Net Banking</option>
+                                                            <option value="Credit Card" ${detail.payment_mode === 'Credit Card' ? 'selected' : ''}>Credit Card</option>
+                                                            <option value="Debit Card" ${detail.payment_mode === 'Debit Card' ? 'selected' : ''}>Debit Card</option>
+                                                            <option value="Cash" ${detail.payment_mode === 'Cash' ? 'selected' : ''}>Cash</option>
+                                                            <option value="Cheque" ${detail.payment_mode === 'Cheque' ? 'selected' : ''}>Cheque</option>
+                                                            <option value="Bank Transfer" ${detail.payment_mode === 'Bank Transfer' ? 'selected' : ''}>Bank Transfer</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        ${index > 0 ? `
+                                                        <button type="button" class="btn btn-sm btn-outline-danger remove-payment-detail-btn">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                            `;
+                                            
+                                            // Add to container
+                                            paymentDetailsContainer.appendChild(entryDiv);
+                                            
+                                            // Add event listener for remove button
+                                            const removeBtn = entryDiv.querySelector('.remove-payment-detail-btn');
+                                            if (removeBtn) {
+                                                removeBtn.addEventListener('click', function() {
+                                                    entryDiv.remove();
+                                                    updateMultiplePaymentTotal();
+                                                });
+                                            }
+                                            
+                                            // Add event listener for amount changes
+                                            const amountInput = entryDiv.querySelector('.payment-detail-amount');
+                                            if (amountInput) {
+                                                amountInput.addEventListener('input', updateMultiplePaymentTotal);
+                                            }
+                                        });
+                                        
+                                        // Update the total amount
+                                        updateMultiplePaymentTotal();
+                                    }
+                                }
+                            } else {
+                                // Handle regular payment modes
                             const paymentModesContainer = document.getElementById('paymentModesContainer_0');
                             if (paymentModesContainer) {
                                 // Clear existing payment modes
@@ -4458,6 +5007,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                         });
                                     }
                                 });
+                            }
                             }
                             
                             // Change save button to update
@@ -4572,6 +5122,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         
                         // Set payment mode(s)
                         const paymentModeEl = document.getElementById('viewPaymentMode');
+                        const viewMultiplePayments = document.getElementById('viewMultiplePayments');
+                        const viewPaymentDetailsBody = document.getElementById('viewPaymentDetailsBody');
+                        
+                        // Check if project has multiple payments
+                        if (project.has_multiple_payments && project.payment_details && project.payment_details.length > 0) {
+                            // Show multiple payments section
+                            viewMultiplePayments.style.display = 'block';
+                            
+                            // Clear previous details
+                            viewPaymentDetailsBody.innerHTML = '';
+                            
+                            // Add each payment detail
+                            project.payment_details.forEach(detail => {
+                                const row = document.createElement('tr');
+                                
+                                // Format the date
+                                const paymentDate = new Date(detail.payment_date);
+                                const formattedDate = paymentDate.toLocaleDateString('en-IN', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                });
+                                
+                                // Format the amount
+                                const formattedAmount = new Intl.NumberFormat('en-IN', {
+                                    style: 'currency',
+                                    currency: 'INR'
+                                }).format(detail.payment_amount);
+                                
+                                // Create mode badge
+                                let badgeClass = 'bg-secondary';
+                                if (detail.payment_mode === 'UPI') badgeClass = 'bg-success';
+                                if (detail.payment_mode === 'Cash') badgeClass = 'bg-warning text-dark';
+                                if (detail.payment_mode === 'Credit Card' || detail.payment_mode === 'Debit Card') badgeClass = 'bg-info';
+                                if (detail.payment_mode === 'Bank Transfer') badgeClass = 'bg-primary';
+                                if (detail.payment_mode === 'Cheque') badgeClass = 'bg-danger';
+                                
+                                row.innerHTML = `
+                                    <td>${formattedDate}</td>
+                                    <td>${formattedAmount}</td>
+                                    <td><span class="badge ${badgeClass}">${detail.payment_mode}</span></td>
+                                `;
+                                viewPaymentDetailsBody.appendChild(row);
+                            });
+                            
+                            // Update the main payment mode text
+                            paymentModeEl.innerHTML = `
+                                <div class="alert alert-info p-2 d-flex align-items-center" role="alert">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <div>Multiple payment modes (see details below)</div>
+                                </div>
+                            `;
+                        } else {
+                            // Hide multiple payments section
+                            viewMultiplePayments.style.display = 'none';
+                            
                         const paymentModeString = project.payment_mode;
                         
                         if (paymentModeString.includes(',')) {
@@ -4644,6 +5250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 `;
                             } else {
                                 paymentModeEl.textContent = modeString;
+                                }
                             }
                         }
                         

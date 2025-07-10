@@ -1,0 +1,74 @@
+[2025-07-10 11:53:24] Payment processing started
+[2025-07-10 11:53:24] Database connection included
+[2025-07-10 11:53:24] POST request received: Array
+(
+    [manager_id] => 1
+    [manager_name] => Rachana Pal
+    [manager_type] => Senior Manager (Site)
+    [payment_amount] => 20000
+    [project_name] => ikyhtgrfedws
+    [project_type] => construction
+    [client_name] => yikutjrthgrfe
+    [payment_date] => 2025-07-10
+    [project_stage] => 1
+    [payment_mode] => cash
+    [payment_reference] => 
+    [custom_payment_amount] => 20000
+)
+
+[2025-07-10 11:53:24] Extracted form data: Array
+(
+    [managerId] => 1
+    [managerName] => Rachana Pal
+    [managerType] => Senior Manager (Site)
+    [projectName] => ikyhtgrfedws
+    [projectType] => construction
+    [clientName] => yikutjrthgrfe
+    [projectStage] => 1
+    [paymentDate] => 2025-07-10
+    [paymentAmount] => 20000
+    [paymentMode] => cash
+    [userId] => 2
+)
+
+[2025-07-10 11:53:24] Starting transaction
+[2025-07-10 11:53:24] Found project ID: 1752069526
+[2025-07-10 11:53:24] Preparing insert statement
+[2025-07-10 11:53:24] Binding parameters
+[2025-07-10 11:54:42] Payment processing started
+[2025-07-10 11:54:42] Database connection included
+[2025-07-10 11:54:42] POST request received: Array
+(
+    [manager_id] => 1
+    [manager_name] => Rachana Pal
+    [manager_type] => Senior Manager (Site)
+    [payment_amount] => 20000
+    [project_name] => ikyhtgrfedws
+    [project_type] => construction
+    [client_name] => yikutjrthgrfe
+    [payment_date] => 2025-07-10
+    [project_stage] => 1
+    [payment_mode] => cash
+    [payment_reference] => 
+    [custom_payment_amount] => 20000
+)
+
+[2025-07-10 11:54:42] Extracted form data: Array
+(
+    [managerId] => 1
+    [managerName] => Rachana Pal
+    [managerType] => Senior Manager (Site)
+    [projectName] => ikyhtgrfedws
+    [projectType] => construction
+    [clientName] => yikutjrthgrfe
+    [projectStage] => 1
+    [paymentDate] => 2025-07-10
+    [paymentAmount] => 20000
+    [paymentMode] => cash
+    [userId] => 2
+)
+
+[2025-07-10 11:54:42] Starting transaction
+[2025-07-10 11:54:42] Found project ID: 1752069526
+[2025-07-10 11:54:42] Preparing insert statement
+[2025-07-10 11:54:42] Binding parameters

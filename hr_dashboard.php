@@ -392,6 +392,8 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
     
     <!-- Add these if they're not already present -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -2709,6 +2711,10 @@ try {
             <a href="manager_payouts.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>
                 Manager Payouts
+            </a>
+            <a href="company_analytics_dashboard.php" class="nav-link">
+                <i class="bi bi-graph-up"></i>
+                Company Stats
             </a>
             <a href="salary_overview.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>

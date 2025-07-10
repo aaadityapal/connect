@@ -38,6 +38,33 @@ try {
         }
     }
     
+    // Group projects with the same name
+    $projectGroups = [];
+    foreach ($transactions as $transaction) {
+        $projectName = $transaction['project_name'];
+        
+        if (!isset($projectGroups[$projectName])) {
+            $projectGroups[$projectName] = [
+                'first_transaction' => $transaction,
+                'stages' => [$transaction],
+                'count' => 1
+            ];
+        } else {
+            $projectGroups[$projectName]['stages'][] = $transaction;
+            $projectGroups[$projectName]['count']++;
+        }
+    }
+    
+    // Prepare the grouped transactions array for display
+    $groupedTransactions = [];
+    foreach ($projectGroups as $projectName => $group) {
+        $groupedTransactions[] = [
+            'transaction' => $group['first_transaction'],
+            'additional_stages' => $group['count'] > 1 ? $group['count'] - 1 : 0,
+            'all_stages' => $group['stages']
+        ];
+    }
+    
     // Get summary data for the overview cards
     $summaryQuery = "SELECT 
                     SUM(e.payment_amount) as total_amount,
@@ -83,6 +110,8 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
     
     <style>
         :root {
@@ -456,6 +485,55 @@ try {
         .reset-btn:hover {
             background-color: #f0f0f0;
         }
+        
+        .reset-btn.btn-animated {
+            background-color: #e8f4ff;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+        
+        /* Active filter styling */
+        .filter-select:not([value=""]), 
+.filter-input:not(:placeholder-shown) {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.2);
+}
+
+/* Enhanced styling for active filters */
+.filter-select:not([value=""]) {
+    background-color: rgba(79, 70, 229, 0.05);
+    font-weight: 500;
+}
+
+/* Highlight the active client filter */
+#filterClientName:not([value=""]) {
+    background-color: rgba(79, 70, 229, 0.1);
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
+    font-weight: bold;
+}
+        
+        /* Filter count badge */
+        .filter-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background-color: #4F46E5;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            margin-left: 8px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.2s ease;
+        }
+        
+        .filter-count.active {
+            opacity: 1;
+            transform: scale(1);
+        }
 
         .filter-row {
             display: flex;
@@ -547,6 +625,15 @@ try {
         
         .data-table tr:hover {
             background-color: #f5f7fa;
+        }
+        
+        .data-table tr.highlight-row {
+            background-color: rgba(79, 70, 229, 0.05);
+            transition: background-color 0.3s ease;
+        }
+        
+        .data-table tr.highlight-row:hover {
+            background-color: rgba(79, 70, 229, 0.1);
         }
         
         .status-badge {
@@ -805,6 +892,10 @@ try {
                 <i class="bi bi-cash-coin"></i>
                 Manager Payouts
             </a>
+            <a href="company_analytics_dashboard.php" class="nav-link">
+                <i class="bi bi-graph-up"></i>
+                Company Stats
+            </a>
             <a href="salary_overview.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>
                 Salary
@@ -914,22 +1005,24 @@ try {
         <hr>
         
         <div class="filter-section">
-            <div class="filter-header">
-                <div class="filter-title">Filter Options</div>
-                <button class="reset-btn">
-                    <span>⟳</span> Reset Filters
-                </button>
-            </div>
+                <div class="filter-header">
+        <div class="filter-title">
+            Filter Options
+            <span class="filter-count" id="activeFilterCount">0</span>
+        </div>
+        <button class="reset-btn">
+            <span>⟳</span> Reset Filters
+        </button>
+    </div>
             
             <div class="filter-row">
                 <div class="filter-group">
-                    <label class="filter-label">Project Type</label>
-                    <select class="filter-select">
-                        <option>All Types</option>
-                        <option>Residential</option>
-                        <option>Commercial</option>
-                        <option>Industrial</option>
-                        <option>Infrastructure</option>
+                    <label class="filter-label" for="filterProjectType">Project Type</label>
+                    <select class="filter-select" id="filterProjectType">
+                        <option value="">All Types</option>
+                        <option value="architecture">Architecture</option>
+                        <option value="interior">Interior</option>
+                        <option value="construction">Construction</option>
                     </select>
                 </div>
                 
@@ -937,31 +1030,46 @@ try {
                     <label class="filter-label">Date Range</label>
                     <div class="date-inputs">
                         <div class="date-input">
-                            <input type="date" class="filter-input" value="2025-06-09">
+                            <input type="date" class="filter-input" id="filterStartDate" value="2025-06-09">
                         </div>
                         <div class="date-input">
-                            <input type="date" class="filter-input" value="2025-07-09">
+                            <input type="date" class="filter-input" id="filterEndDate" value="2025-07-09">
                         </div>
                     </div>
                 </div>
                 
                 <div class="filter-group">
-                    <label class="filter-label">Payment Status</label>
-                    <select class="filter-select">
-                        <option>All Statuses</option>
-                        <option>Paid</option>
-                        <option>Pending</option>
-                        <option>Overdue</option>
+                    <label class="filter-label" for="filterClientName">Client Name</label>
+                    <select class="filter-select" id="filterClientName">
+                        <option value="">All Clients</option>
+                        <?php
+                        // Fetch unique client names from database
+                        $clientQuery = "SELECT DISTINCT client_name FROM hrm_project_stage_payment_transactions ORDER BY client_name";
+                        try {
+                            $clientStmt = $conn->prepare($clientQuery);
+                            $clientStmt->execute();
+                            $clientResult = $clientStmt->get_result();
+                            
+                            while ($client = $clientResult->fetch_assoc()) {
+                                $clientName = htmlspecialchars(trim($client['client_name']));
+                                if (!empty($clientName)) {
+                                    echo '<option value="' . $clientName . '">' . $clientName . '</option>';
+                                }
+                            }
+                        } catch (Exception $e) {
+                            error_log("Error fetching client names: " . $e->getMessage());
+                        }
+                        ?>
                     </select>
                 </div>
                 
                 <div class="filter-group">
-                    <label class="filter-label">Senior Manager</label>
-                    <select class="filter-select">
-                        <option>All Managers</option>
-                        <option>John Smith</option>
-                        <option>Sarah Johnson</option>
-                        <option>Michael Brown</option>
+                    <label class="filter-label" for="filterManager">Senior Manager</label>
+                    <select class="filter-select" id="filterManager">
+                        <option value="">All Managers</option>
+                        <option value="John Smith">John Smith</option>
+                        <option value="Sarah Johnson">Sarah Johnson</option>
+                        <option value="Michael Brown">Michael Brown</option>
                     </select>
                 </div>
             </div>
@@ -1051,11 +1159,18 @@ try {
         
         <!-- Data Table -->
         <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-            <h3 class="text-primary fw-bold d-flex align-items-center m-0">
-                <i class="bi bi-receipt me-2"></i>
-                Project Payment Transactions
-                <span class="badge bg-primary-subtle text-primary ms-2 fs-6"><?php echo count($transactions); ?> Records</span>
-            </h3>
+                    <h3 class="text-primary fw-bold d-flex align-items-center m-0">
+            <i class="bi bi-receipt me-2"></i>
+            Project Payment Transactions
+            <span class="badge bg-primary-subtle text-primary ms-2 fs-6"><?php echo count($transactions); ?> Records</span>
+            <div id="activeClientFilter" class="ms-3 d-none">
+                <span class="badge bg-info text-white">
+                    <i class="bi bi-funnel-fill me-1"></i>
+                    Client Filter: <span id="activeClientName"></span>
+                    <button type="button" class="btn-close btn-close-white ms-2" aria-label="Clear filter" id="clearClientFilter" style="font-size: 0.6rem;"></button>
+                </span>
+            </div>
+        </h3>
             <div class="d-flex gap-2">
                 <button class="btn btn-success d-flex align-items-center gap-1">
                     <i class="bi bi-plus-circle"></i>
@@ -1082,11 +1197,19 @@ try {
                 </tr>
             </thead>
             <tbody>
-                <?php if (count($transactions) > 0): ?>
-                    <?php foreach ($transactions as $index => $transaction): ?>
+                <?php if (count($groupedTransactions) > 0): ?>
+                    <?php foreach ($groupedTransactions as $index => $group): ?>
+                        <?php $transaction = $group['transaction']; ?>
                         <tr>
                             <td><?php echo $index + 1; ?></td>
-                            <td><?php echo htmlspecialchars($transaction['project_name']); ?></td>
+                            <td>
+                                <?php echo htmlspecialchars($transaction['project_name']); ?>
+                                <?php if ($group['additional_stages'] > 0): ?>
+                                    <a href="#" class="ms-2 badge bg-info text-decoration-none view-stages" data-project-name="<?php echo htmlspecialchars($transaction['project_name']); ?>" data-bs-toggle="modal" data-bs-target="#projectStagesModal">
+                                        +<?php echo $group['additional_stages']; ?> more stages
+                                    </a>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <span class="badge bg-primary">
                                     <i class="bi bi-building"></i> 
@@ -1102,7 +1225,7 @@ try {
                                 <div class="btn-group">
                                     <button class="btn btn-sm btn-outline-primary edit-btn" data-transaction-id="<?php echo $transaction['transaction_id']; ?>"><i class="bi bi-pencil"></i></button>
                                     <button class="btn btn-sm btn-outline-info view-btn" data-transaction-id="<?php echo $transaction['transaction_id']; ?>" data-project-id="<?php echo $transaction['project_id'] ?? 0; ?>"><i class="bi bi-eye"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-transaction-id="<?php echo $transaction['transaction_id']; ?>"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -1453,7 +1576,100 @@ try {
             </div>
         </div>
     </div>
-
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="deleteTransactionId">
+                    <p>Are you sure you want to delete this project stage?</p>
+                    <p class="fw-bold text-danger mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="bi bi-trash me-1"></i> Delete Stage
+                    </button>
+                </div>
+                
+                <!-- Delete Success Alert -->
+                <div class="alert alert-success alert-dismissible fade d-none" id="deleteSuccessAlert" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Project stage deleted successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
+                <!-- Delete Error Alert -->
+                <div class="alert alert-danger alert-dismissible fade d-none" id="deleteErrorAlert" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span id="deleteErrorMessage">An error occurred while deleting.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        </div>
+    
+    <!-- Project Stages Modal -->
+    <div class="modal fade" id="projectStagesModal" tabindex="-1" aria-labelledby="projectStagesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="projectStagesModalLabel"><i class="bi bi-layers me-2"></i><span id="projectStagesTitle"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center" id="stagesSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading project stages...</p>
+                    </div>
+                    
+                    <div class="table-responsive" id="stagesTableContainer" style="display: none;">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Stage</th>
+                                    <th>Date</th>
+                                    <th>Client Name</th>
+                                    <th>Amount</th>
+                                    <th>Payment Details</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectStagesTableBody">
+                                <!-- Stages will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-danger d-none" id="stagesErrorMessage">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Error loading project stages.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-between w-100">
+                        <div>
+                            <span class="text-muted" id="stagesCount">0 stages</span>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="printAllStages">
+                                <i class="bi bi-printer me-1"></i> Print All Stages
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1466,6 +1682,544 @@ try {
         var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
+        
+        // Filter functionality
+        const filterProjectType = document.getElementById('filterProjectType');
+        const filterStartDate = document.getElementById('filterStartDate');
+        const filterEndDate = document.getElementById('filterEndDate');
+        const filterClientName = document.getElementById('filterClientName');
+        const filterManager = document.getElementById('filterManager');
+        const resetFilterBtn = document.querySelector('.reset-btn');
+        const tableRows = document.querySelectorAll('.data-table tbody tr');
+        const activeFilterCount = document.getElementById('activeFilterCount');
+        
+        // Function to filter table data
+        function filterTable() {
+            console.log("Filter function triggered");
+            
+            const projectTypeValue = filterProjectType.value.toLowerCase();
+            const startDate = filterStartDate.value ? new Date(filterStartDate.value) : null;
+            const endDate = filterEndDate.value ? new Date(filterEndDate.value) : null;
+            const clientNameValue = filterClientName.value;
+            const selectedClientText = clientNameValue ? 
+                filterClientName.options[filterClientName.selectedIndex].text : '';
+            const managerValue = filterManager.value.toLowerCase();
+            
+            console.log("Filter values:", {
+                projectType: projectTypeValue,
+                startDate: filterStartDate.value,
+                endDate: filterEndDate.value,
+                clientValue: clientNameValue,
+                clientText: selectedClientText,
+                manager: managerValue
+            });
+            
+            // Update client filter indicator
+            const activeClientFilter = document.getElementById('activeClientFilter');
+            const activeClientName = document.getElementById('activeClientName');
+            
+            if (clientNameValue) {
+                activeClientFilter.classList.remove('d-none');
+                activeClientName.textContent = selectedClientText;
+            } else {
+                activeClientFilter.classList.add('d-none');
+            }
+            
+            // Update active filter count
+            updateFilterCount();
+            
+            let hasVisibleRows = false;
+            
+            // Loop through all table rows
+            tableRows.forEach(row => {
+                // Skip the "no records" row if it exists
+                // Skip rows that don't have standard structure (like "no records" rows)
+                if (row.cells.length === 1 || row.cells.length < 4 || row.className === 'no-results-message') {
+                    return;
+                }
+                
+                // Get cell values for filtering
+                const projectType = row.cells[2].textContent.trim().toLowerCase();
+                const projectDate = row.cells[4].textContent.trim();
+                const rowDate = convertDateFormat(projectDate);
+                const paymentAmount = parseFloat(row.cells[5].textContent.replace(/[₹,]/g, '')) || 0;
+                const clientName = row.cells[3].textContent.trim().toLowerCase();
+                
+                // Default visibility is true
+                let isVisible = true;
+                
+                // Filter by project type
+                if (projectTypeValue && !projectType.includes(projectTypeValue)) {
+                    isVisible = false;
+                }
+                
+                // Filter by date range
+                if (startDate && endDate) {
+                    const dateToCheck = new Date(rowDate);
+                    if (dateToCheck < startDate || dateToCheck > endDate) {
+                        isVisible = false;
+                    }
+                }
+                
+                // Filter by client name
+                if (clientNameValue) {
+                    // Get the client name from the table row (4th column - index 3)
+                    const rowClientText = row.cells[3].textContent.trim();
+                    
+                    // Get the selected client name from the dropdown
+                    const selectedClientText = filterClientName.options[filterClientName.selectedIndex].text;
+                    
+                    // Compare exact match (case insensitive)
+                    const isMatch = rowClientText.toLowerCase() === selectedClientText.toLowerCase();
+                    
+                    console.log(`Row ${row.cells[0].textContent} comparison:`, {
+                        rowClient: rowClientText,
+                        selectedClient: selectedClientText,
+                        match: isMatch
+                    });
+                    
+                    // Only show matching rows
+                    if (!isMatch) {
+                        isVisible = false;
+                    } else {
+                        // Highlight matching rows
+                        row.classList.add('highlight-row');
+                    }
+                } else {
+                    // No client filter active, remove highlighting
+                    row.classList.remove('highlight-row');
+                }
+                
+                // Filter by manager
+                if (managerValue && !clientName.includes(managerValue.toLowerCase())) {
+                    isVisible = false;
+                }
+                
+                // Set row visibility
+                row.style.display = isVisible ? '' : 'none';
+                
+                // Track if we have any visible rows
+                if (isVisible) {
+                    hasVisibleRows = true;
+                }
+            });
+            
+            // Show "no results" message if all rows are filtered out
+            showNoResultsMessage(hasVisibleRows);
+        }
+        
+        // Helper function to convert date format from DD/MM/YYYY to YYYY-MM-DD
+        function convertDateFormat(dateString) {
+            if (!dateString) return '';
+            
+            // Check if the date is already in YYYY-MM-DD format
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateString;
+            }
+            
+            const parts = dateString.split('/');
+            if (parts.length !== 3) return '';
+            
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+        
+        // Function to show "no results" message
+        function showNoResultsMessage(hasVisibleRows) {
+            // Remove existing no results message if it exists
+            const existingMessage = document.querySelector('.no-results-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // If no visible rows, add a message
+            if (!hasVisibleRows) {
+                const tableBody = document.querySelector('.data-table tbody');
+                const noResultsRow = document.createElement('tr');
+                noResultsRow.className = 'no-results-message';
+                noResultsRow.innerHTML = `
+                    <td colspan="9" class="text-center py-4">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="bi bi-search text-muted" style="font-size: 2.5rem;"></i>
+                            <h5 class="mt-3 mb-1">No matching records found</h5>
+                            <p class="text-muted">Try adjusting your filters or reset filters to see all records</p>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(noResultsRow);
+            }
+        }
+        
+        // Add event listeners to filter controls
+        filterProjectType.addEventListener('change', filterTable);
+        filterStartDate.addEventListener('change', filterTable);
+        filterEndDate.addEventListener('change', filterTable);
+        filterClientName.addEventListener('change', filterTable);
+        filterManager.addEventListener('change', filterTable);
+        
+        // Reset filters button
+        resetFilterBtn.addEventListener('click', function() {
+            // Reset all filter values
+            filterProjectType.value = '';
+            filterStartDate.value = '2025-06-09';
+            filterEndDate.value = '2025-07-09';
+            filterClientName.value = '';
+            filterManager.value = '';
+            
+            // Reset table to show all rows
+            tableRows.forEach(row => {
+                row.style.display = '';
+            });
+            
+            // Remove no results message if it exists
+            const existingMessage = document.querySelector('.no-results-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Show toast notification
+            showToast('Filters have been reset', 'info');
+            
+            // Add animation to indicate reset
+            resetFilterBtn.classList.add('btn-animated');
+            setTimeout(() => {
+                resetFilterBtn.classList.remove('btn-animated');
+            }, 500);
+        });
+        
+        // Add input event listeners for more responsive filtering
+        filterProjectType.addEventListener('input', filterTable);
+        filterStartDate.addEventListener('input', filterTable);
+        filterEndDate.addEventListener('input', filterTable);
+        filterClientName.addEventListener('input', filterTable);
+        filterClientName.addEventListener('change', filterTable); // Add change event for dropdown selection
+        filterManager.addEventListener('input', filterTable);
+        
+        // Function to update active filter count badge
+        function updateFilterCount() {
+            let count = 0;
+            
+            if (filterProjectType.value) count++;
+            if (filterClientName.value) count++;
+            if (filterManager.value) count++;
+            
+            // For date range, only count if different from default values
+            const defaultStartDate = '2025-06-09';
+            const defaultEndDate = '2025-07-09';
+            
+            if (filterStartDate.value && filterStartDate.value !== defaultStartDate) count++;
+            if (filterEndDate.value && filterEndDate.value !== defaultEndDate) count++;
+            
+            // Update badge
+            activeFilterCount.textContent = count;
+            
+            if (count > 0) {
+                activeFilterCount.classList.add('active');
+            } else {
+                activeFilterCount.classList.remove('active');
+            }
+            
+            // Show notification if filtering by client
+            if (filterClientName.value) {
+                // Count visible rows to display in notification
+                const visibleRows = Array.from(tableRows).filter(row => 
+                    window.getComputedStyle(row).display !== 'none' && 
+                    row.className !== 'no-results-message'
+                ).length;
+                
+                if (visibleRows > 0) {
+                    showToast(`Showing ${visibleRows} projects for client: ${filterClientName.options[filterClientName.selectedIndex].text}`, 'info');
+                }
+            }
+            
+            return count;
+        }
+        
+        // Initialize filter count on page load
+        updateFilterCount();
+        
+        // Apply filters on page load if any are set
+        if (filterClientName.value || filterProjectType.value || filterManager.value) {
+            console.log("Initial filter values detected, applying filters on load");
+            filterTable();
+        }
+        
+        // Add event listener for the clear client filter button
+        document.getElementById('clearClientFilter').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent event bubbling
+            filterClientName.value = '';
+            filterTable();
+            showToast('Client filter cleared', 'info');
+        });
+        
+        // Project Stages Modal Functionality
+        const projectStagesModal = document.getElementById('projectStagesModal');
+        const viewStagesLinks = document.querySelectorAll('.view-stages');
+        
+        // Global variable to store project data
+        let currentProjectData = null;
+        
+        // Store the project stages data
+        const projectStagesData = <?php echo json_encode($projectGroups); ?>;
+        
+        // Add event listeners to "view stages" links
+        viewStagesLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const projectName = this.getAttribute('data-project-name');
+                showProjectStages(projectName);
+            });
+        });
+        
+        // Function to show project stages
+        function showProjectStages(projectName) {
+            // Set modal title
+            document.getElementById('projectStagesTitle').textContent = projectName;
+            
+            // Show spinner, hide table and error message
+            document.getElementById('stagesSpinner').style.display = 'block';
+            document.getElementById('stagesTableContainer').style.display = 'none';
+            document.getElementById('stagesErrorMessage').classList.add('d-none');
+            
+            // Get project data from the stored array
+            if (projectStagesData[projectName]) {
+                const stages = projectStagesData[projectName].stages;
+                currentProjectData = stages;
+                
+                // Set stages count
+                document.getElementById('stagesCount').textContent = `${stages.length} stages`;
+                
+                // Clear previous content
+                const tableBody = document.getElementById('projectStagesTableBody');
+                tableBody.innerHTML = '';
+                
+                // Add stages to table
+                stages.forEach((stage, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <span class="badge bg-primary">Stage ${stage.stage_number}</span>
+                        </td>
+                        <td>${new Date(stage.stage_date).toLocaleDateString()}</td>
+                        <td>${stage.client_name}</td>
+                        <td>${formatCurrency(stage.total_paid_amount || 0)}</td>
+                        <td>
+                            <small class="text-muted">${stage.payment_details || 'No payment details'}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary edit-btn-modal" data-transaction-id="${stage.transaction_id}"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-info view-btn-modal" data-transaction-id="${stage.transaction_id}" data-project-id="${stage.project_id || 0}"><i class="bi bi-eye"></i></button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn-modal" data-transaction-id="${stage.transaction_id}"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // Hide spinner, show table
+                document.getElementById('stagesSpinner').style.display = 'none';
+                document.getElementById('stagesTableContainer').style.display = 'block';
+                
+                // Add event listeners to the buttons in the modal
+                addModalButtonListeners();
+                
+            } else {
+                // Error case - should not happen if data is properly stored
+                document.getElementById('stagesSpinner').style.display = 'none';
+                document.getElementById('stagesErrorMessage').classList.remove('d-none');
+                document.getElementById('stagesErrorMessage').textContent = 'Error: Project data not found.';
+            }
+        }
+        
+        // Add event listeners to buttons in the modal
+        function addModalButtonListeners() {
+            // View buttons in modal
+            document.querySelectorAll('.view-btn-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const transactionId = this.getAttribute('data-transaction-id');
+                    const projectId = this.getAttribute('data-project-id');
+                    
+                    // Close the stages modal first
+                    const stagesModalInstance = bootstrap.Modal.getInstance(projectStagesModal);
+                    stagesModalInstance.hide();
+                    
+                    // Then show the view modal
+                    setTimeout(() => {
+                        viewProjectDetails(transactionId, projectId);
+                    }, 500);
+                });
+            });
+            
+            // Edit buttons in modal
+            document.querySelectorAll('.edit-btn-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const transactionId = this.getAttribute('data-transaction-id');
+                    
+                    // Close the stages modal first
+                    const stagesModalInstance = bootstrap.Modal.getInstance(projectStagesModal);
+                    stagesModalInstance.hide();
+                    
+                    // Then fetch project details for editing
+                    setTimeout(() => {
+                        fetchProjectDetails(transactionId);
+                    }, 500);
+                });
+            });
+            
+            // Delete buttons in modal
+            document.querySelectorAll('.delete-btn-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const transactionId = this.getAttribute('data-transaction-id');
+                    
+                    // Close the stages modal first
+                    const stagesModalInstance = bootstrap.Modal.getInstance(projectStagesModal);
+                    stagesModalInstance.hide();
+                    
+                    // Then show the delete confirmation modal
+                    setTimeout(() => {
+                        document.getElementById('deleteTransactionId').value = transactionId;
+                        const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                        deleteModal.show();
+                    }, 500);
+                });
+            });
+        }
+        
+        // Print all stages functionality
+        document.getElementById('printAllStages').addEventListener('click', function() {
+            if (currentProjectData) {
+                printAllProjectStages(currentProjectData);
+            }
+        });
+        
+        // Function to print all stages of a project
+        function printAllProjectStages(stages) {
+            if (!stages || !stages.length) return;
+            
+            // Get project name from the first stage
+            const projectName = stages[0].project_name;
+            const clientName = stages[0].client_name;
+            
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            
+            // Calculate project totals
+            let totalPaid = 0;
+            stages.forEach(stage => {
+                if (stage.total_paid_amount) {
+                    totalPaid += parseFloat(stage.total_paid_amount);
+                }
+            });
+            
+            // Build HTML content for print
+            const printContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>All Stages - ${projectName}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.5; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .project-info { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+                        .project-info h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+                        .info-row { display: flex; margin-bottom: 10px; }
+                        .info-label { font-weight: bold; width: 150px; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .stage-heading { background-color: #f8f9fa; padding: 10px; margin: 15px 0 5px 0; border-radius: 5px; font-weight: bold; }
+                        .summary { margin-top: 30px; border-top: 2px solid #333; padding-top: 15px; }
+                        .text-right { text-align: right; }
+                        .company-footer { margin-top: 50px; text-align: center; font-size: 0.9em; color: #666; }
+                        @media print { 
+                            body { margin: 0.5cm; } 
+                            .no-print { display: none; }
+                            button { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Project Stages Report</h1>
+                        <p>Date: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="project-info">
+                        <h2>Project Information</h2>
+                        <div class="info-row">
+                            <div class="info-label">Project Name:</div>
+                            <div>${projectName}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Client Name:</div>
+                            <div>${clientName}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Total Stages:</div>
+                            <div>${stages.length}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Total Amount Paid:</div>
+                            <div>${formatCurrency(totalPaid)}</div>
+                        </div>
+                    </div>
+                    
+                    <h2>All Project Stages</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Payment Details</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${stages.map(stage => `
+                                <tr>
+                                    <td>Stage ${stage.stage_number}</td>
+                                    <td>${new Date(stage.stage_date).toLocaleDateString()}</td>
+                                    <td>${formatCurrency(stage.total_paid_amount || 0)}</td>
+                                    <td>${stage.payment_details || 'No payment details'}</td>
+                                    <td>${stage.stage_notes || '-'}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="background-color: #f8f9fa; font-weight: bold;">
+                                <td colspan="2">Total</td>
+                                <td>${formatCurrency(totalPaid)}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="company-footer">
+                        <p>This is a computer-generated document. No signature is required.</p>
+                        <p>© ${new Date().getFullYear()} Your Company Name. All rights reserved.</p>
+                    </div>
+                    
+                    <div class="no-print" style="text-align: center; margin-top: 30px;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Print Report
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Write to the new window and print
+            printWindow.document.open();
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Give it a moment to load before triggering print
+            setTimeout(() => {
+                printWindow.focus();
+                // printWindow.print(); // Auto-print is optional
+            }, 500);
+        }
         
         // Function to show toast notification
         function showToast(message, type = 'success') {
@@ -3150,6 +3904,130 @@ try {
 
         // Initial check for mobile devices
         handleResize();
+
+        // Edit form submission handler
+        // ... existing code ...
+        
+        // Delete Project Stage Functionality
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+        
+        // Add event listeners to all delete buttons
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const transactionId = this.getAttribute('data-transaction-id');
+                showDeleteConfirmation(transactionId);
+            });
+        });
+        
+        // Function to show delete confirmation modal
+        function showDeleteConfirmation(transactionId) {
+            // Set the transaction ID in the hidden input
+            document.getElementById('deleteTransactionId').value = transactionId;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(deleteConfirmModal);
+            modal.show();
+            
+            // Hide any existing alerts
+            const deleteSuccessAlert = document.getElementById('deleteSuccessAlert');
+            const deleteErrorAlert = document.getElementById('deleteErrorAlert');
+            
+            if (deleteSuccessAlert) deleteSuccessAlert.classList.add('d-none');
+            if (deleteErrorAlert) deleteErrorAlert.classList.add('d-none');
+        }
+        
+        // Handle confirm delete button click
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                const transactionId = document.getElementById('deleteTransactionId').value;
+                
+                // Show loading state
+                const originalBtnText = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Deleting...';
+                this.disabled = true;
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('transaction_id', transactionId);
+                
+                // Send AJAX request
+                fetch('ajax_handlers/delete_project_stage.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Reset button state
+                    this.innerHTML = originalBtnText;
+                    this.disabled = false;
+                    
+                    if (data.success) {
+                        // Show success message
+                        const deleteSuccessAlert = document.getElementById('deleteSuccessAlert');
+                        if (deleteSuccessAlert) {
+                            deleteSuccessAlert.classList.remove('d-none');
+                            deleteSuccessAlert.classList.add('show');
+                        }
+                        
+                        // Show toast notification
+                        showToast(data.message);
+                        
+                        // Close modal and reload page after a delay
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(deleteConfirmModal);
+                            if (modal) {
+                                modal.hide();
+                            }
+                            
+                            // Reload the page to show updated data
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        const errorMessage = document.getElementById('deleteErrorMessage');
+                        if (errorMessage) {
+                            errorMessage.textContent = data.message || 'An error occurred while deleting.';
+                        }
+                        
+                        const deleteErrorAlert = document.getElementById('deleteErrorAlert');
+                        if (deleteErrorAlert) {
+                            deleteErrorAlert.classList.remove('d-none');
+                            deleteErrorAlert.classList.add('show');
+                        }
+                        
+                        // Show toast notification
+                        showToast(data.message || 'Failed to delete project stage', 'error');
+                    }
+                })
+                .catch(error => {
+                    // Reset button state
+                    this.innerHTML = originalBtnText;
+                    this.disabled = false;
+                    
+                    // Show error message
+                    const errorMessage = document.getElementById('deleteErrorMessage');
+                    if (errorMessage) {
+                        errorMessage.textContent = 'Error: ' + error.message;
+                    }
+                    
+                    const deleteErrorAlert = document.getElementById('deleteErrorAlert');
+                    if (deleteErrorAlert) {
+                        deleteErrorAlert.classList.remove('d-none');
+                        deleteErrorAlert.classList.add('show');
+                    }
+                    
+                    // Show toast notification
+                    showToast('Error deleting project stage: ' + error.message, 'error');
+                });
+            });
+        }
     });
     </script>
 </body>

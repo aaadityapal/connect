@@ -3046,6 +3046,9 @@ if ($shift_details && $shift_details['end_time']) {
     </script>
 </head>
 <body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>" data-user-id="<?php echo htmlspecialchars($_SESSION['user_id'] ?? ''); ?>">
+    <!-- Include Update Modal -->
+    <?php include 'update_modal.php'; ?>
+    
     <div class="dashboard-container">
         <div class="left-panel" id="leftPanel">
             <div class="brand-logo" style="padding: 20px 25px; margin-bottom: 20px;">

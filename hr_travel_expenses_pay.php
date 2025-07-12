@@ -1135,10 +1135,16 @@ try {
             </h5>
           </div>
           <div class="card-body">
+            <div class="mb-3">
+              <button id="markSelectedPaidBtn" class="btn btn-success" disabled>
+                <i class="bi bi-check2-all"></i> Mark Selected as Paid
+              </button>
+            </div>
             <div class="table-responsive">
               <table class="table table-hover table-striped">
                 <thead class="table-light">
                   <tr>
+                    <th><input type="checkbox" id="selectAll" class="form-check-input"> Select</th>
                     <th>Employee</th>
                     <th>Purpose</th>
                     <th>Travel Date</th>
@@ -1218,6 +1224,7 @@ try {
                         }
                         
                         echo '<tr>
+                                <td><input type="checkbox" class="form-check-input expense-checkbox" data-id="'.$expense['id'].'" data-employee="'.htmlspecialchars($expense['username']).'" data-amount="'.$expense['amount'].'"></td>
                                 <td>'.htmlspecialchars($expense['username']).'</td>
                                 <td>'.htmlspecialchars($expense['purpose']).'</td>
                                 <td>'.$travelDate.'</td>
@@ -1326,6 +1333,45 @@ try {
       </div>
     </div>
   </div>
+  
+  <!-- Multiple Expenses Payment Modal -->
+  <div id="multiplePaymentModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="bi bi-check2-all text-success"></i> Mark Multiple Expenses as Paid</h4>
+        <span class="close-modal" onclick="closeModal('multiplePaymentModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">You are about to mark <span id="selectedExpensesCount" class="fw-bold">0</span> expenses as paid.</p>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i> This will record the current date as the payment date for all selected expenses.
+        </div>
+        
+        <div class="selected-expenses-summary mb-3">
+          <h5>Selected Expenses</h5>
+          <div id="selectedExpensesList" class="list-group mb-3">
+            <!-- Selected expenses will be listed here -->
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <strong>Total Amount:</strong>
+            <span id="totalSelectedAmount" class="text-success fw-bold">₹0.00</span>
+          </div>
+        </div>
+        
+        <div class="form-group mb-3">
+          <label for="batchPaymentReference"><strong>Payment Reference:</strong></label>
+          <input type="text" id="batchPaymentReference" class="form-control" placeholder="Enter payment reference/transaction ID">
+        </div>
+        
+        <!-- Payment reference field is sufficient -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal('multiplePaymentModal')">Cancel</button>
+        <button class="btn-pay" onclick="confirmMultiplePaid()">Confirm All Payments</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Pay All Modal -->
   <div id="payAllModal" class="modal">
@@ -1372,6 +1418,9 @@ try {
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Track selected expenses
+    let selectedExpenses = [];
+    
     // Sidebar Toggle
     document.addEventListener('DOMContentLoaded', function() {
       const sidebar = document.getElementById('sidebar');
@@ -1420,6 +1469,9 @@ try {
 
       // Initial check for mobile devices
       handleResize();
+      
+      // Initialize checkbox functionality
+      initCheckboxes();
     });
 
     // View details function
@@ -1463,7 +1515,25 @@ try {
         method: 'POST',
         body: formData
       })
-      .then(response => response.json())
+      .then(response => {
+        // First check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Try to parse as text first to debug any issues
+        return response.text().then(text => {
+          console.log('Raw server response:', text);
+          
+          // Try to parse as JSON
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.error('JSON parse error:', e);
+            throw new Error('Invalid JSON response from server: ' + text);
+          }
+        });
+      })
       .then(data => {
         if (data.success) {
           // Show success message
@@ -1483,7 +1553,7 @@ try {
       })
       .catch(error => {
         console.error('Error:', error);
-        showToast('error', 'An error occurred while processing payment');
+        showToast('error', 'An error occurred while processing payment: ' + error.message);
       });
     }
 
@@ -1493,6 +1563,208 @@ try {
     }
 
     // Toast function
+    // Initialize checkbox functionality
+    function initCheckboxes() {
+      // Select All checkbox
+      const selectAllCheckbox = document.getElementById('selectAll');
+      const expenseCheckboxes = document.querySelectorAll('.expense-checkbox');
+      const markSelectedPaidBtn = document.getElementById('markSelectedPaidBtn');
+      
+      // Add event listener to "Select All" checkbox
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+          const isChecked = this.checked;
+          
+          // Update all checkboxes
+          expenseCheckboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+            
+            // Update selected expenses array
+            const expenseId = checkbox.dataset.id;
+            const employee = checkbox.dataset.employee;
+            const amount = parseFloat(checkbox.dataset.amount);
+            
+            if (isChecked) {
+              // Add to selected expenses if not already there
+              if (!selectedExpenses.some(exp => exp.id === parseInt(expenseId, 10))) {
+                selectedExpenses.push({
+                  id: parseInt(expenseId, 10),
+                  employee: employee,
+                  amount: amount
+                });
+              }
+            } else {
+              // Remove from selected expenses - ensure ID comparison is numeric
+              selectedExpenses = selectedExpenses.filter(exp => exp.id !== parseInt(expenseId, 10));
+            }
+          });
+          
+          // Update button state
+          updateSelectedButton();
+        });
+      }
+      
+      // Add event listeners to individual checkboxes
+      expenseCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const expenseId = this.dataset.id;
+          const employee = this.dataset.employee;
+          const amount = parseFloat(this.dataset.amount);
+          
+          if (this.checked) {
+            // Add to selected expenses - ensure ID is treated as a number
+            selectedExpenses.push({
+              id: parseInt(expenseId, 10),
+              employee: employee,
+              amount: amount
+            });
+          } else {
+            // Remove from selected expenses - ensure ID comparison is numeric
+            selectedExpenses = selectedExpenses.filter(exp => exp.id !== parseInt(expenseId, 10));
+            
+            // Uncheck "Select All" if any individual checkbox is unchecked
+            if (selectAllCheckbox) {
+              selectAllCheckbox.checked = false;
+            }
+          }
+          
+          // Update button state
+          updateSelectedButton();
+        });
+      });
+      
+      // Add event listener to "Mark Selected as Paid" button
+      if (markSelectedPaidBtn) {
+        markSelectedPaidBtn.addEventListener('click', function() {
+          showMultiplePaymentModal();
+        });
+      }
+    }
+    
+    // Update the "Mark Selected as Paid" button state
+    function updateSelectedButton() {
+      const markSelectedPaidBtn = document.getElementById('markSelectedPaidBtn');
+      
+      if (markSelectedPaidBtn) {
+        if (selectedExpenses.length > 0) {
+          markSelectedPaidBtn.removeAttribute('disabled');
+          markSelectedPaidBtn.innerHTML = `<i class="bi bi-check2-all"></i> Mark Selected as Paid (${selectedExpenses.length})`;
+        } else {
+          markSelectedPaidBtn.setAttribute('disabled', 'disabled');
+          markSelectedPaidBtn.innerHTML = `<i class="bi bi-check2-all"></i> Mark Selected as Paid`;
+        }
+      }
+    }
+    
+    // Show the multiple payment modal
+    function showMultiplePaymentModal() {
+      // Update the modal content
+      document.getElementById('selectedExpensesCount').textContent = selectedExpenses.length;
+      
+      // Calculate total amount
+      const totalAmount = selectedExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+      document.getElementById('totalSelectedAmount').textContent = '₹' + totalAmount.toFixed(2);
+      
+      // Generate the list of selected expenses
+      const selectedExpensesList = document.getElementById('selectedExpensesList');
+      selectedExpensesList.innerHTML = '';
+      
+      selectedExpenses.forEach(expense => {
+        const listItem = document.createElement('div');
+        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+          <div>
+            <strong>${expense.employee}</strong>
+            <span class="badge bg-primary rounded-pill ms-2">ID: ${expense.id}</span>
+          </div>
+          <span class="text-success">₹${parseFloat(expense.amount).toFixed(2)}</span>
+        `;
+        selectedExpensesList.appendChild(listItem);
+      });
+      
+      // Show the modal
+      document.getElementById('multiplePaymentModal').style.display = 'block';
+    }
+    
+    // Process multiple payments
+    function confirmMultiplePaid() {
+      if (selectedExpenses.length === 0) {
+        showToast('error', 'No expenses selected');
+        return;
+      }
+      
+      // Get payment reference
+      const paymentReference = document.getElementById('batchPaymentReference').value;
+      
+      // Show processing toast
+      showToast('info', 'Processing multiple payments...');
+      
+      // Create form data
+      const formData = new FormData();
+      
+      // Fix: Ensure we're sending a proper JSON string of just the IDs
+      // Make sure IDs are converted to numbers to avoid string issues
+      const expenseIds = selectedExpenses.map(exp => parseInt(exp.id, 10));
+      
+      // Use a simpler approach - send as a plain string
+      formData.append('expense_ids', JSON.stringify(expenseIds));
+      formData.append('payment_reference', paymentReference || 'Batch payment');
+      formData.append('action', 'mark_multiple_paid');
+      
+      // For debugging - log what we're sending
+      console.log('Sending expense IDs:', expenseIds);
+      console.log('JSON string:', JSON.stringify(expenseIds));
+      
+      // Send to server
+      fetch('process_expense_payment.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        // First check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Try to parse as text first to debug any issues
+        return response.text().then(text => {
+          console.log('Raw server response:', text);
+          
+          // Try to parse as JSON
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.error('JSON parse error:', e);
+            throw new Error('Invalid JSON response from server: ' + text);
+          }
+        });
+      })
+      .then(data => {
+        if (data.success) {
+          // Show success message
+          showToast('success', data.message || `${selectedExpenses.length} expenses marked as paid successfully`);
+          
+          // Close modal
+          closeModal('multiplePaymentModal');
+          
+          // Clear selected expenses
+          selectedExpenses = [];
+          
+          // Reload page after a delay
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } else {
+          // Show error message
+          showToast('error', data.error || 'Failed to mark expenses as paid');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred while processing payments: ' + error.message);
+      });
+    }
+
     function showToast(type, message) {
       const toastContainer = document.getElementById('toastContainer');
       

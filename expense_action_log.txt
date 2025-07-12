@@ -1015,3 +1015,67 @@
 2025-07-02 13:57:01 - Processing expense IDs: [40]
 2025-07-02 13:57:01 - Updating status field: hr_status to value: approved
 2025-07-02 13:57:01 - Successfully processed 1 out of 1 expenses
+2025-07-12 11:21:41 - Request received in process_expense_action.php
+2025-07-12 11:21:41 - POST data: Array
+(
+    [expense_id] => 41
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-12 11:21:41 - SESSION data: Array
+(
+    [user_id] => 33
+    [username] => Bhuvnesh Sharma
+    [role] => Purchase Manager
+    [unique_id] => PM001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_33_1749044394.jpg
+)
+
+2025-07-12 11:21:41 - Processing expense IDs: [41]
+2025-07-12 11:21:41 - Updating status field: accountant_status to value: approved
+2025-07-12 11:21:41 - Successfully processed 1 out of 1 expenses
+2025-07-12 11:22:02 - Request received in process_expense_action.php
+2025-07-12 11:22:02 - POST data: Array
+(
+    [expense_id] => 41
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-12 11:22:02 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_11_1750411458.jpeg
+)
+
+2025-07-12 11:22:02 - Processing expense IDs: [41]
+2025-07-12 11:22:02 - Updating status field: manager_status to value: approved
+2025-07-12 11:22:02 - Successfully processed 1 out of 1 expenses
+2025-07-12 11:22:35 - Request received in process_expense_action.php
+2025-07-12 11:22:35 - POST data: Array
+(
+    [expense_id] => 41
+    [action] => approve
+    [notes] => ee
+)
+
+2025-07-12 11:22:35 - SESSION data: Array
+(
+    [user_id] => 2
+    [username] => Gunjan Sehgal
+    [role] => HR
+    [unique_id] => HR001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_67f12788f2c7d.jpg
+    [avatar] => 676e5805148ee.png
+)
+
+2025-07-12 11:22:35 - Processing expense IDs: [41]
+2025-07-12 11:22:35 - Updating status field: hr_status to value: approved
+2025-07-12 11:22:35 - Successfully processed 1 out of 1 expenses

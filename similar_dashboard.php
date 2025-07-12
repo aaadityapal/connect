@@ -2116,6 +2116,58 @@ if ($shift_details && $shift_details['end_time']) {
         .punch-out-form, .work-report-summary {
             animation: slideIn 0.3s ease-out;
         }
+        
+        /* Geofence error styling */
+        .geofence-error {
+            padding: 15px;
+            background-color: #fff5f5;
+            border-left: 4px solid #f56565;
+            border-radius: 6px;
+            margin: 10px 0;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .geofence-error p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .geofence-error p strong {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+        
+        /* Distance indicator styling */
+        .office-distance {
+            margin: 8px 0;
+        }
+        
+        .office-distance .label {
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        
+        .office-distance .value {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .distance-close {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .distance-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        
+        .distance-far {
+            background-color: #fed7d7;
+            color: #822727;
+        }
 
         /* Enhanced Punch Out Form Styles */
         .punch-out-popup {
@@ -3172,6 +3224,11 @@ if ($shift_details && $shift_details['end_time']) {
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Time Calendar Widget Section -->
+            <div class="time-calendar-section">
+                <?php include 'components/dashboard_widgets/recent_time_widget.php'; ?>
             </div>
 
            <!-- Task Overview Section -->
@@ -5432,10 +5489,40 @@ if ($shift_details && $shift_details['end_time']) {
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    // Location successfully obtained, now show camera
+                    // Location successfully obtained
                     const latitude = position.coords.latitude;
                     const longitude = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
+                    
+                    // Office geo-fence coordinates
+                    const officeLat = 28.636941;
+                    const officeLng = 77.302690;
+                    const maxDistance = 50; // meters
+                    
+                    // Calculate distance from office
+                    const distance = calculateDistance(latitude, longitude, officeLat, officeLng);
+                    const isWithinGeofence = distance <= maxDistance;
+                    
+                    // Log for debugging
+                    console.log(`User location: Lat ${latitude}, Long ${longitude}, Distance from office: ${distance.toFixed(2)}m`);
+                    
+                    if (!isWithinGeofence) {
+                        // User is outside the geo-fence
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Outside Office Range',
+                            html: `
+                                <div class="geofence-error">
+                                    <p>You appear to be outside the office area.</p>
+                                    <p>Your distance from office: <strong>${distance.toFixed(2)} meters</strong></p>
+                                    <p>Maximum allowed distance: <strong>${maxDistance} meters</strong></p>
+                                    <p>Please ensure you are within the office premises to punch in.</p>
+                                </div>
+                            `,
+                            confirmButtonText: 'Understand'
+                        });
+                        return;
+                    }
                     
                     // Get address from coordinates using reverse geocoding
                     const getAddressFromCoordinates = (lat, lng) => {
@@ -5479,6 +5566,12 @@ if ($shift_details && $shift_details['end_time']) {
                                         <span class="label">Accuracy:</span>
                                         <span class="value ${accuracy <= 20 ? 'accuracy-high' : accuracy <= 100 ? 'accuracy-medium' : 'accuracy-low'}">
                                             ${accuracy.toFixed(1)} meters
+                                        </span>
+                                    </div>
+                                    <div class="office-distance">
+                                        <span class="label">Distance from Office:</span>
+                                        <span class="value ${distance <= 50 ? 'distance-close' : distance <= 100 ? 'distance-medium' : 'distance-far'}">
+                                            ${distance.toFixed(1)} meters
                                         </span>
                                     </div>
                                     <div class="address">
@@ -5674,6 +5767,36 @@ if ($shift_details && $shift_details['end_time']) {
                     const longitude = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
                     
+                    // Office geo-fence coordinates
+                    const officeLat = 28.636941;
+                    const officeLng = 77.302690;
+                    const maxDistance = 100; // meters
+                    
+                    // Calculate distance from office
+                    const distance = calculateDistance(latitude, longitude, officeLat, officeLng);
+                    const isWithinGeofence = distance <= maxDistance;
+                    
+                    // Log for debugging
+                    console.log(`User location: Lat ${latitude}, Long ${longitude}, Distance from office: ${distance.toFixed(2)}m`);
+                    
+                    if (!isWithinGeofence) {
+                        // User is outside the geo-fence
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Outside Office Range',
+                            html: `
+                                <div class="geofence-error">
+                                    <p>You appear to be outside the office area.</p>
+                                    <p>Your distance from office: <strong>${distance.toFixed(2)} meters</strong></p>
+                                    <p>Maximum allowed distance: <strong>${maxDistance} meters</strong></p>
+                                    <p>Please ensure you are within the office premises to punch out.</p>
+                                </div>
+                            `,
+                            confirmButtonText: 'Understand'
+                        });
+                        return;
+                    }
+                    
                     // Store location info for comparison
                     console.log(`Punch out location: Lat ${latitude}, Long ${longitude}, Accuracy ${accuracy}m`);
                     
@@ -5719,6 +5842,12 @@ if ($shift_details && $shift_details['end_time']) {
                                         <span class="label">Accuracy:</span>
                                         <span class="value ${accuracy <= 20 ? 'accuracy-high' : accuracy <= 100 ? 'accuracy-medium' : 'accuracy-low'}">
                                             ${accuracy.toFixed(1)} meters
+                                        </span>
+                                    </div>
+                                    <div class="office-distance">
+                                        <span class="label">Distance from Office:</span>
+                                        <span class="value ${distance <= 50 ? 'distance-close' : distance <= 100 ? 'distance-medium' : 'distance-far'}">
+                                            ${distance.toFixed(1)} meters
                                         </span>
                                     </div>
                                     <div class="address">
@@ -6086,6 +6215,23 @@ if ($shift_details && $shift_details['end_time']) {
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
+        }
+        
+        // Function to calculate distance between two points using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180; // φ, λ in radians
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c; // in meters
+
+            return d;
         }
 
         function searchUsers(query) {

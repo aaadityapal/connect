@@ -2724,9 +2724,9 @@ try {
                 <i class="bi bi-calendar-check-fill"></i>
                 Leave Request
             </a>
-            <a href="construction_site_overview.php" class="nav-link">
-                <i class="bi bi-briefcase-fill"></i>
-                Recruitment
+            <a href="admin/manage_geofence_locations.php" class="nav-link">
+                <i class="bi bi-map"></i>
+                Geofence Locations
             </a>
             <a href="hr_travel_expenses.php" class="nav-link">
                 <i class="bi bi-car-front-fill"></i>

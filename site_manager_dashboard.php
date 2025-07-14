@@ -1159,12 +1159,55 @@ if ($currentHour < 12) {
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .location-item:hover {
+            background-color: rgba(0, 0, 0, 0.03);
         }
 
         .location-item i {
             color: #0d6efd;
             width: 20px;
             text-align: center;
+        }
+        
+        .location-item.success i {
+            color: #28a745;
+        }
+        
+        .location-item.warning i {
+            color: #ffc107;
+        }
+        
+        .location-item.danger i {
+            color: #dc3545;
+        }
+        
+        /* Outside Location Reason Container */
+        .outside-location-reason {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .outside-location-reason label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #856404;
+        }
+        
+        .word-count-display {
+            font-size: 12px;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 5px;
         }
         
         /* Shift Info Styles */
@@ -1294,7 +1337,7 @@ if ($currentHour < 12) {
                 <h3 class="camera-title" id="cameraTitle">Take Selfie for Punch In</h3>
                 <button class="close-camera-btn" id="closeCameraBtn">
                     <i class="fas fa-times"></i>
-    </button>
+            </button>
             </div>
             <div class="camera-body">
                 <div class="video-container" id="videoContainer">
@@ -1321,6 +1364,11 @@ if ($currentHour < 12) {
                             <i class="fas fa-map"></i>
                             <span>Address: --</span>
                         </div>
+                        <!-- Add geofence status -->
+                        <div class="location-item" id="geofenceStatus">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>Checking location boundaries...</span>
+                        </div>
                     </div>
                 </div>
                 <div class="shift-info-container" style="margin-top: 15px; background-color: #f8f9fa; border-radius: 8px; padding: 12px;">
@@ -1340,10 +1388,81 @@ if ($currentHour < 12) {
                         </div>
                     </div>
                 </div>
-                <div class="work-report-container" id="workReportContainer" style="display: none; margin-top: 15px;">
-                    <h4><i class="fas fa-clipboard-list"></i> Work Report</h4>
-                    <textarea id="workReportText" class="form-control" rows="3" placeholder="Please summarize what you worked on today..."></textarea>
-                </div>
+                        <!-- Outside location reason container -->
+        <div class="outside-location-reason" id="outsideLocationReasonContainer" style="display: none; margin-top: 15px;">
+            <label for="outsideLocationReason">Please provide a reason for being outside assigned location:</label>
+            <textarea id="outsideLocationReason" class="form-control" rows="3" placeholder="Enter reason here..."></textarea>
+            <div id="outsideLocationWordCount" class="word-count-display">Words: 0 (minimum 5)</div>
+        </div>
+        <script>
+            // Initialize word counter when the document is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                const outsideLocationReason = document.getElementById('outsideLocationReason');
+                const outsideLocationWordCount = document.getElementById('outsideLocationWordCount');
+                
+                if (outsideLocationReason && outsideLocationWordCount) {
+                    outsideLocationReason.addEventListener('input', function() {
+                        updateWordCount(this, outsideLocationWordCount);
+                    });
+                }
+            });
+            
+            // Function to update word count
+            function updateWordCount(textarea, displayElement) {
+                if (!textarea || !displayElement) return;
+                
+                const text = textarea.value.trim();
+                // Split by whitespace and filter out empty strings
+                const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+                
+                // Update the display
+                displayElement.textContent = `Words: ${wordCount} (minimum 5)`;
+                
+                // Change color based on word count
+                if (wordCount < 5) {
+                    displayElement.style.color = '#dc3545'; // Red for less than minimum
+                } else {
+                    displayElement.style.color = '#28a745'; // Green for meeting minimum
+                }
+            }
+        </script>
+                        <div class="work-report-container" id="workReportContainer" style="display: none; margin-top: 15px;">
+            <h4><i class="fas fa-clipboard-list"></i> Work Report</h4>
+            <textarea id="workReportText" class="form-control" rows="3" placeholder="Please summarize what you worked on today..."></textarea>
+            <div id="workReportWordCount" class="word-count-display">Words: 0 (minimum 20)</div>
+        </div>
+        <script>
+            // Initialize work report word counter when the document is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                const workReportText = document.getElementById('workReportText');
+                const workReportWordCount = document.getElementById('workReportWordCount');
+                
+                if (workReportText && workReportWordCount) {
+                    workReportText.addEventListener('input', function() {
+                        updateWorkReportWordCount(this, workReportWordCount);
+                    });
+                }
+            });
+            
+            // Function to update work report word count
+            function updateWorkReportWordCount(textarea, displayElement) {
+                if (!textarea || !displayElement) return;
+                
+                const text = textarea.value.trim();
+                // Split by whitespace and filter out empty strings
+                const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+                
+                // Update the display
+                displayElement.textContent = `Words: ${wordCount} (minimum 20)`;
+                
+                // Change color based on word count
+                if (wordCount < 20) {
+                    displayElement.style.color = '#dc3545'; // Red for less than minimum
+                } else {
+                    displayElement.style.color = '#28a745'; // Green for meeting minimum
+                }
+            }
+        </script>
                 <div class="camera-controls">
                     <button class="camera-btn camera-btn-primary" id="captureBtn">
                         <i class="fas fa-camera"></i> Capture Photo
@@ -1357,7 +1476,7 @@ if ($currentHour < 12) {
                 </div>
             </div>
         </div>
-            </div>
+    </div>
 
     <div class="main-container">
         <!-- Include left panel -->
@@ -2381,6 +2500,9 @@ if ($currentHour < 12) {
         const locationStatus = document.getElementById('locationStatus');
         const locationCoords = document.getElementById('locationCoords');
         const locationAddress = document.getElementById('locationAddress');
+        const geofenceStatus = document.getElementById('geofenceStatus');
+        const outsideLocationReasonContainer = document.getElementById('outsideLocationReasonContainer');
+        const outsideLocationReason = document.getElementById('outsideLocationReason');
         const workReportContainer = document.getElementById('workReportContainer');
         const workReportText = document.getElementById('workReportText');
         const shiftName = document.getElementById('shiftName');
@@ -2396,6 +2518,11 @@ if ($currentHour < 12) {
         let capturedPhotoData = null;
         let userLocation = null;
         let userShiftInfo = null;
+        
+        // Geofence variables
+        let geofenceLocations = [];
+        let isWithinGeofence = false;
+        let closestLocationName = "";
         
         // Initialize components when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -2437,6 +2564,9 @@ if ($currentHour < 12) {
             
             // Get user location
             getUserLocation();
+            
+            // Fetch geofence locations
+            fetchGeofenceLocations();
         });
         
         // Close camera button click handler
@@ -2478,6 +2608,33 @@ if ($currentHour < 12) {
                     workReportText.focus();
                     return;
                 }
+                
+                // Check if work report has at least 20 words
+                const workText = workReportText.value.trim();
+                const workReportWordCount = workText ? workText.split(/\s+/).filter(word => word.length > 0).length : 0;
+                if (workReportWordCount < 20) {
+                    showNotification('Please provide a more detailed work report (minimum 20 words)', 'warning');
+                    workReportText.focus();
+                    return;
+                }
+            }
+            
+            // Check if outside location reason is provided when outside geofence
+            if (!isWithinGeofence && outsideLocationReasonContainer.style.display !== 'none') {
+                if (!outsideLocationReason.value.trim()) {
+                    showNotification('Please provide a reason for being outside the assigned location', 'warning');
+                    outsideLocationReason.focus();
+                    return;
+                }
+                
+                // Check if reason has at least 5 words
+                const text = outsideLocationReason.value.trim();
+                const reasonWordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+                if (reasonWordCount < 5) {
+                    showNotification('Please provide a more detailed reason (minimum 5 words)', 'warning');
+                    outsideLocationReason.focus();
+                    return;
+                }
             }
             
             // Set button to loading state
@@ -2507,6 +2664,22 @@ if ($currentHour < 12) {
                 if (userLocation.address) {
                     formData.append('address', userLocation.address);
                 }
+                
+                // Add geofence information - using column names exactly as in the database
+                formData.append('within_geofence', isWithinGeofence ? '1' : '0');
+                // Also send as is_within_geofence for backward compatibility
+                formData.append('is_within_geofence', isWithinGeofence ? '1' : '0');
+                formData.append('closest_location', closestLocationName || '');
+                
+                // Add geofence ID if available
+                if (userLocation.geofenceId) {
+                    formData.append('geofence_id', userLocation.geofenceId);
+                }
+                
+                // Add distance from geofence if available
+                if (typeof userLocation.distanceFromGeofence !== 'undefined') {
+                    formData.append('distance_from_geofence', userLocation.distanceFromGeofence);
+                }
             } else {
                 // Show error and return if no location data
                 showNotification('Location data is required. Please allow location access.', 'error');
@@ -2518,6 +2691,19 @@ if ($currentHour < 12) {
             // Add work report for punch out
             if (isPunchedIn && workReportText.value.trim()) {
                 formData.append('work_report', workReportText.value.trim());
+                // Also send as punch_out_work_report for newer implementations
+                formData.append('punch_out_work_report', workReportText.value.trim());
+            }
+            
+            // Add outside location reason if not within geofence - using specific column names for punch in vs punch out
+            if (!isWithinGeofence && outsideLocationReason.value.trim()) {
+                if (isPunchedIn) {
+                    // This is a punch out, so use punch_out_outside_reason
+                    formData.append('punch_out_outside_reason', outsideLocationReason.value.trim());
+                } else {
+                    // This is a punch in, so use punch_in_outside_reason
+                    formData.append('punch_in_outside_reason', outsideLocationReason.value.trim());
+                }
             }
             
             // Add shift information if available
@@ -2651,6 +2837,8 @@ if ($currentHour < 12) {
             confirmPunchBtn.style.display = 'none';
             workReportContainer.style.display = 'none';
             workReportText.value = '';
+            outsideLocationReasonContainer.style.display = 'none';
+            outsideLocationReason.value = '';
             
             // Reset data
             capturedPhotoData = null;
@@ -2765,6 +2953,11 @@ if ($currentHour < 12) {
                     
                     // Get address from coordinates
                     getAddressFromCoordinates(position.coords.latitude, position.coords.longitude);
+                    
+                    // Check if within geofence
+                    if (geofenceLocations.length > 0) {
+                        checkGeofence(position.coords.latitude, position.coords.longitude);
+                    }
                 },
                 // Error callback
                 function(error) {
@@ -2786,6 +2979,8 @@ if ($currentHour < 12) {
                     locationStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMessage}`;
                     locationCoords.innerHTML = '<i class="fas fa-compass"></i> Coordinates: Not available';
                     locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Not available';
+                    geofenceStatus.innerHTML = '<i class="fas fa-map-marked-alt"></i> Location check failed';
+                    geofenceStatus.style.color = '#dc3545'; // Red color
                 },
                 // Options
                 {
@@ -2830,6 +3025,127 @@ if ($currentHour < 12) {
                 console.error('Error fetching address:', error);
                 locationAddress.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Address: Error retrieving address';
             });
+        }
+        
+        /**
+         * Fetches geofence locations from the server
+         */
+        function fetchGeofenceLocations() {
+            geofenceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading geofence data...';
+            
+            fetch('api/get_geofence_locations.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        geofenceLocations = data.locations;
+                        console.log('Geofence locations loaded:', geofenceLocations);
+                        
+                        // If we already have location data, check geofence
+                        if (userLocation && userLocation.latitude && userLocation.longitude) {
+                            checkGeofence(userLocation.latitude, userLocation.longitude);
+                        }
+                    } else {
+                        throw new Error(data.message || 'Failed to load geofence locations');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading geofence locations:', error);
+                    geofenceStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Could not load location boundaries';
+                    geofenceStatus.style.color = '#dc3545'; // Red color for error
+                });
+        }
+        
+        /**
+         * Checks if the user's location is within any geofence
+         */
+        function checkGeofence(latitude, longitude) {
+            geofenceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking location boundaries...';
+            
+            // If no geofence locations available yet, try to fetch them
+            if (geofenceLocations.length === 0) {
+                fetchGeofenceLocations();
+                return;
+            }
+            
+            let minDistance = Infinity;
+            let closestLocation = null;
+            
+            // Check distance to each geofence location
+            geofenceLocations.forEach(location => {
+                const distance = calculateDistance(
+                    latitude, 
+                    longitude, 
+                    parseFloat(location.latitude), 
+                    parseFloat(location.longitude)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestLocation = location;
+                }
+            });
+            
+            // If we found a closest location
+            if (closestLocation) {
+                closestLocationName = closestLocation.name;
+                const locationRadius = parseInt(closestLocation.radius);
+                
+                // Store geofence ID if available
+                if (closestLocation.id) {
+                    userLocation.geofenceId = closestLocation.id;
+                }
+                
+                // Check if within radius
+                if (minDistance <= locationRadius) {
+                    isWithinGeofence = true;
+                    geofenceStatus.innerHTML = `<i class="fas fa-check-circle"></i> Within ${closestLocation.name} (${Math.round(minDistance)}m from center)`;
+                    geofenceStatus.style.color = '#28a745'; // Green color for success
+                    
+                    // Hide outside location reason container
+                    outsideLocationReasonContainer.style.display = 'none';
+                    
+                    userLocation.distanceFromGeofence = 0; // Inside geofence, so distance is 0
+                } else {
+                    isWithinGeofence = false;
+                    geofenceStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Outside ${closestLocation.name} (${Math.round(minDistance)}m from center)`;
+                    geofenceStatus.style.color = '#dc3545'; // Red color for error
+                    
+                    // Show outside location reason container
+                    outsideLocationReasonContainer.style.display = 'block';
+                    
+                    userLocation.distanceFromGeofence = Math.round(minDistance - locationRadius); // Distance beyond the geofence boundary
+                }
+            } else {
+                isWithinGeofence = false;
+                geofenceStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No registered locations found';
+                geofenceStatus.style.color = '#ffc107'; // Yellow/warning color
+                
+                // Show outside location reason container
+                outsideLocationReasonContainer.style.display = 'block';
+            }
+        }
+        
+        /**
+         * Calculates the distance between two coordinates in meters using the Haversine formula
+         */
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            
+            return R * c; // Distance in meters
         }
         
         /**

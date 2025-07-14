@@ -198,8 +198,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 punch_in_latitude, 
                 punch_in_longitude, 
                 punch_in_accuracy,
-                shifts_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                shifts_id,
+                within_geofence,
+                geofence_id,
+                distance_from_geofence,
+                punch_in_outside_reason
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             $insert_stmt = $conn->prepare($insert_query);
             
@@ -210,8 +214,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $status = 'present';
             
+            // Get geofence data
+            $within_geofence = isset($_POST['within_geofence']) ? intval($_POST['within_geofence']) : 0;
+            $geofence_id = isset($_POST['geofence_id']) ? intval($_POST['geofence_id']) : null;
+            $distance_from_geofence = isset($_POST['distance_from_geofence']) ? intval($_POST['distance_from_geofence']) : 0;
+            $punch_in_outside_reason = isset($_POST['punch_in_outside_reason']) ? $_POST['punch_in_outside_reason'] : null;
+
+            // Log geofence data for debugging
+            error_log("Punch In Geofence Data - within_geofence: $within_geofence, geofence_id: " . ($geofence_id ?? 'NULL') . ", distance: $distance_from_geofence, reason: " . ($punch_in_outside_reason ? 'provided' : 'not provided'));
+
+            // Validate geofence data
+            if (!is_numeric($within_geofence)) {
+                error_log("Invalid within_geofence value: " . print_r($_POST['within_geofence'], true));
+                $within_geofence = 0;
+            }
+
+            if ($geofence_id !== null && !is_numeric($geofence_id)) {
+                error_log("Invalid geofence_id value: " . print_r($_POST['geofence_id'], true));
+                $geofence_id = null;
+            }
+            
             $insert_stmt->bind_param(
-                "isssssssssssssssi",
+                "isssssssssssssssiiiis",
                 $user_id,
                 $current_date,
                 $current_time,
@@ -228,7 +252,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $latitude,
                 $longitude,
                 $accuracy,
-                $shift_id
+                $shift_id,
+                $within_geofence,
+                $geofence_id,
+                $distance_from_geofence,
+                $punch_in_outside_reason
             );
             
             if ($insert_stmt->execute()) {
@@ -332,7 +360,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 working_hours = ?, 
                 overtime_hours = ?,
                 work_report = ?, 
-                modified_at = ?
+                modified_at = ?,
+                within_geofence = ?,
+                geofence_id = ?,
+                distance_from_geofence = ?,
+                punch_out_outside_reason = ?
                 WHERE user_id = ? AND date = ?";
             
             $update_stmt = $conn->prepare($update_query);
@@ -342,13 +374,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            // Debug - log the values
-            error_log("Punch Out Debug - Values: time=$current_time, photo=$photo_filename, lat=$latitude, lng=$longitude, acc=$accuracy, addr=$address, wh=$working_hours_formatted, wh_decimal=$working_hours_decimal, oh=$overtime_hours_formatted, oh_decimal=$overtime_hours_decimal, wr=" . substr($work_report, 0, 50) . "..., dt=$current_datetime, uid=$user_id, date=$current_date, shift_id=" . ($shift_id ?? 'NULL'));
+            // Get geofence data for punch out
+            $within_geofence = isset($_POST['within_geofence']) ? intval($_POST['within_geofence']) : 0;
+            $geofence_id = isset($_POST['geofence_id']) ? intval($_POST['geofence_id']) : null;
+            $distance_from_geofence = isset($_POST['distance_from_geofence']) ? intval($_POST['distance_from_geofence']) : 0;
+            $punch_out_outside_reason = isset($_POST['punch_out_outside_reason']) ? $_POST['punch_out_outside_reason'] : null;
+
+            // Log geofence data for debugging
+            error_log("Punch Out Geofence Data - within_geofence: $within_geofence, geofence_id: " . ($geofence_id ?? 'NULL') . ", distance: $distance_from_geofence, reason: " . ($punch_out_outside_reason ? 'provided' : 'not provided'));
+
+            // Debug - log all values
+            error_log("Punch Out Debug - Values: time=$current_time, photo=$photo_filename, lat=$latitude, lng=$longitude, acc=$accuracy, addr=$address, wh=$working_hours_formatted, wh_decimal=$working_hours_decimal, oh=$overtime_hours_formatted, oh_decimal=$overtime_hours_decimal, wr=" . substr($work_report, 0, 50) . "..., dt=$current_datetime, uid=$user_id, date=$current_date, shift_id=" . ($shift_id ?? 'NULL') . ", within_geofence=$within_geofence, geofence_id=" . ($geofence_id ?? 'NULL') . ", distance=$distance_from_geofence");
+
+            // Validate geofence data
+            if (!is_numeric($within_geofence)) {
+                error_log("Invalid within_geofence value: " . print_r($_POST['within_geofence'], true));
+                $within_geofence = 0;
+            }
+
+            if ($geofence_id !== null && !is_numeric($geofence_id)) {
+                error_log("Invalid geofence_id value: " . print_r($_POST['geofence_id'], true));
+                $geofence_id = null;
+            }
             
             // Fix the parameter binding to match the SQL query
             // s=string, d=double, i=integer
             $update_stmt->bind_param(
-                "ssddssddssis",
+                "ssddssddssiissis",
                 $current_time,
                 $photo_filename,
                 $latitude,
@@ -359,6 +411,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $overtime_hours_formatted,
                 $work_report,
                 $current_datetime,
+                $within_geofence,
+                $geofence_id,
+                $distance_from_geofence,
+                $punch_out_outside_reason,
                 $user_id,
                 $current_date
             );

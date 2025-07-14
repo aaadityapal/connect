@@ -1156,10 +1156,43 @@ if (isset($_SESSION['user_id'])) {
                                         <button id="punchButton" class="btn btn-success punch-button" style="display: none;">
                                             <i class="fas fa-sign-in-alt"></i> Punch In
                                         </button>
-                                        <!-- Keep the Punch In 2 button with improved styling -->
-                                        <button id="supervisorCameraBtn" class="btn btn-primary supervisor-camera-button" style="border-radius: 50px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
-                                            <i class="fas fa-camera"></i> Punch In
-                                        </button>
+                                        <!-- Remove the Punch In 2 button -->
+                                        <?php
+                                        // Check if user has already punched in today but not punched out
+                                        $punch_status_query = "SELECT id FROM attendance WHERE user_id = ? AND date = CURDATE() AND punch_in IS NOT NULL AND punch_out IS NULL";
+                                        $punch_stmt = $conn->prepare($punch_status_query);
+                                        $punch_stmt->bind_param("i", $_SESSION['user_id']);
+                                        $punch_stmt->execute();
+                                        $punch_result = $punch_stmt->get_result();
+                                        $has_punched_in = $punch_result->num_rows > 0;
+                                        $punch_stmt->close();
+                                        
+                                        // Check if user has already completed a full punch cycle today (both in and out)
+                                        $completed_cycle_query = "SELECT id FROM attendance WHERE user_id = ? AND date = CURDATE() AND punch_in IS NOT NULL AND punch_out IS NOT NULL";
+                                        $completed_stmt = $conn->prepare($completed_cycle_query);
+                                        $completed_stmt->bind_param("i", $_SESSION['user_id']);
+                                        $completed_stmt->execute();
+                                        $completed_result = $completed_stmt->get_result();
+                                        $has_completed_cycle = $completed_result->num_rows > 0;
+                                        $completed_stmt->close();
+                                        
+                                        if ($has_punched_in) {
+                                            // User has punched in but not out - show Punch Out button
+                                            echo '<button id="comeOutBtn" class="btn btn-danger" style="border-radius: 50px; margin-left: 10px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
+                                                <i class="fas fa-sign-out-alt"></i> Punch Out
+                                            </button>';
+                                        } elseif ($has_completed_cycle) {
+                                            // User has completed a full cycle - show Completed button (disabled)
+                                            echo '<button disabled class="btn btn-secondary" style="border-radius: 50px; margin-left: 10px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); opacity: 0.8;">
+                                                <i class="fas fa-check-circle"></i> Completed
+                                            </button>';
+                                        } else {
+                                            // User has not punched in or has completed punch cycle - show Punch In button
+                                            echo '<button id="comeInBtn" class="btn btn-success" style="border-radius: 50px; margin-left: 10px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
+                                                <i class="fas fa-sign-in-alt"></i> Punch In
+                                            </button>';
+                                        }
+                                        ?>
                                     </div>
                                 </div>
                             </div>
@@ -1872,6 +1905,7 @@ if (isset($_SESSION['user_id'])) {
     <script src="js/supervisor/greeting-section.js"></script>
     <script src="js/supervisor/travel-expense-modal.js"></script>
     <script src="js/supervisor/supervisor-camera-module.js"></script>
+    <script src="js/supervisor/come_in_module.js?v=<?php echo time(); ?>"></script>
 
     
     <!-- Override native alerts for calendar messages -->
@@ -3290,5 +3324,8 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
     </div>
+    
+    <!-- Include Come In Modal -->
+    <?php include 'modals/come_in_modal.php'; ?>
 </body>
 </html> 

@@ -13,6 +13,16 @@ $response = array(
     'message' => 'An error occurred'
 );
 
+// Debug mode - set to true to include debug info in response
+$debug_mode = true;
+if ($debug_mode) {
+    $response['debug'] = array(
+        'post_data' => $_POST,
+        'request_method' => $_SERVER['REQUEST_METHOD'],
+        'timestamp' => date('Y-m-d H:i:s')
+    );
+}
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'User not authenticated';
@@ -36,12 +46,41 @@ $user_id = $_SESSION['user_id'];
 // Get form data
 $latitude = isset($_POST['latitude']) ? floatval($_POST['latitude']) : 0;
 $longitude = isset($_POST['longitude']) ? floatval($_POST['longitude']) : 0;
-$within_geofence = isset($_POST['within_geofence']) ? intval($_POST['within_geofence']) : 0;
+
+// Check for both parameter naming conventions (within_geofence and is_within_geofence)
+$within_geofence = 0;
+if (isset($_POST['within_geofence'])) {
+    $within_geofence = intval($_POST['within_geofence']);
+} elseif (isset($_POST['is_within_geofence'])) {
+    $within_geofence = $_POST['is_within_geofence'] == '1' ? 1 : 0;
+}
+
 $distance_from_geofence = isset($_POST['distance_from_geofence']) ? floatval($_POST['distance_from_geofence']) : 0;
 $address = isset($_POST['address']) ? $_POST['address'] : '';
 $ip_address = isset($_POST['ip_address']) ? $_POST['ip_address'] : '';
 $device_info = isset($_POST['device_info']) ? $_POST['device_info'] : '';
 $geofence_id = isset($_POST['geofence_id']) ? intval($_POST['geofence_id']) : 0;
+
+// For Come In functionality - get geofence ID from closest location name
+if (isset($_POST['action']) && $_POST['action'] == 'come_in' && isset($_POST['closest_location']) && !empty($_POST['closest_location'])) {
+    $closest_location = $_POST['closest_location'];
+    
+    // Look up geofence ID from location name
+    try {
+        $geofence_query = "SELECT id FROM geofence_locations WHERE name = ? LIMIT 1";
+        $stmt_geo = $conn->prepare($geofence_query);
+        $stmt_geo->bind_param('s', $closest_location);
+        $stmt_geo->execute();
+        $geo_result = $stmt_geo->get_result();
+        if ($geo_result->num_rows > 0) {
+            $geo_row = $geo_result->fetch_assoc();
+            $geofence_id = $geo_row['id'];
+        }
+        $stmt_geo->close();
+    } catch (Exception $e) {
+        error_log("Error looking up geofence ID: " . $e->getMessage());
+    }
+}
 
 // Add outside location reason if provided
 $punch_in_outside_reason = null;
@@ -286,8 +325,26 @@ try {
             
             $response['success'] = true;
             $response['message'] = 'Punch in recorded successfully';
+            
+            // Add debug info about the inserted data
+            if ($debug_mode) {
+                $response['debug']['inserted_data'] = array(
+                    'user_id' => $user_id,
+                    'date' => $current_date,
+                    'time' => $current_time,
+                    'within_geofence' => $within_geofence,
+                    'distance_from_geofence' => $distance_from_geofence,
+                    'geofence_id' => $geofence_id
+                );
+            }
         } else {
             $response['message'] = 'Failed to record punch in: ' . $stmt->error;
+            
+            // Add debug info about the error
+            if ($debug_mode) {
+                $response['debug']['sql_error'] = $stmt->error;
+                $response['debug']['sql_errno'] = $stmt->errno;
+            }
         }
     }
     

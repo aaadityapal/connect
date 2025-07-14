@@ -188,7 +188,12 @@ try {
         $leave_query = "SELECT lr.leave_type, lt.name as leave_name, lt.color_code, lt.max_days,
                                SUM(CASE 
                                    WHEN lr.duration_type = 'half_day' THEN 0.5 
-                                   ELSE DATEDIFF(lr.end_date, lr.start_date) + 1 
+                                   ELSE 
+                                      LEAST(DATEDIFF(
+                                          LEAST(lr.end_date, ?), 
+                                          GREATEST(lr.start_date, ?)
+                                      ) + 1, 
+                                      DATEDIFF(?, ?) + 1)
                                END) as total_days
                         FROM leave_request lr
                         LEFT JOIN leave_types lt ON lr.leave_type = lt.id
@@ -205,6 +210,10 @@ try {
                         
         $leave_stmt = $pdo->prepare($leave_query);
         $leave_stmt->execute([
+            $month_end, // For LEAST(lr.end_date, ?)
+            $month_start, // For GREATEST(lr.start_date, ?)
+            $month_end, // For DATEDIFF(?, ?)
+            $month_start, // For DATEDIFF(?, ?)
             $user['id'], 
             $month_start, $month_end, 
             $month_start, $month_end,

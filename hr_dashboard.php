@@ -3874,9 +3874,9 @@ try {
                         <i class="bi bi-people"></i>
                     </div>
                     <div class="stat-content">
-                        <h4>Labour Present</h4>
-                        <div class="stat-numbers">45</div>
-                        <div class="stat-label">Present today</div>
+                        <h4>Labour Attendance</h4>
+                        
+                        <div class="stat-label">Fetching Data...</div>
                         <button class="view-details-btn" data-site-type="labour">View Details</button>
                     </div>
                         </div>

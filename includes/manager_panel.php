@@ -65,9 +65,9 @@
         <span class="menu-text">Resource Management</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'workforce_overview.php' ? 'active' : ''; ?>" onclick="window.location.href='workforce_overview.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'manager_labour_attendance.php' ? 'active' : ''; ?>" onclick="window.location.href='manager_labour_attendance.php'">
         <i class="fas fa-users"></i>
-        <span class="menu-text">Workforce Overview</span>
+        <span class="menu-text">Labour Attendance</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'materials_management.php' ? 'active' : ''; ?>" onclick="window.location.href='materials_management.php'">

@@ -89,3 +89,58 @@ CREATE TABLE IF NOT EXISTS `sv_event_beverages` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
+
+-- Create company labours table if it doesn't exist
+CREATE TABLE IF NOT EXISTS `sv_company_labours` (
+    `company_labour_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `event_id` INT NOT NULL,
+    `labour_name` VARCHAR(255) NOT NULL,
+    `contact_number` VARCHAR(20),
+    `sequence_number` INT,
+    `is_deleted` TINYINT(1) DEFAULT 0,
+    `created_by` INT,
+    `updated_by` INT,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `morning_attendance` ENUM('present', 'absent', 'late') DEFAULT NULL,
+    `evening_attendance` ENUM('present', 'absent', 'late') DEFAULT NULL,
+    `attendance_date` DATE,
+    `daily_wage` DECIMAL(10,2) DEFAULT 0,
+    FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create vendor labours table if it doesn't exist
+CREATE TABLE IF NOT EXISTS `sv_vendor_labours` (
+    `labour_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `vendor_id` INT NOT NULL,
+    `labour_name` VARCHAR(255) NOT NULL,
+    `contact_number` VARCHAR(20),
+    `sequence_number` INT,
+    `is_deleted` TINYINT(1) DEFAULT 0,
+    `created_by` INT,
+    `updated_by` INT,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `morning_attendance` ENUM('present', 'absent', 'late') DEFAULT NULL,
+    `evening_attendance` ENUM('present', 'absent', 'late') DEFAULT NULL,
+    `attendance_date` DATE,
+    `wage_rate` DECIMAL(10,2) DEFAULT 0,
+    FOREIGN KEY (`vendor_id`) REFERENCES `sv_event_vendors`(`vendor_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create event vendors table if it doesn't exist
+CREATE TABLE IF NOT EXISTS `sv_event_vendors` (
+    `vendor_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `event_id` INT NOT NULL,
+    `vendor_name` VARCHAR(255) NOT NULL,
+    `vendor_type` VARCHAR(100),
+    `contact_person` VARCHAR(255),
+    `contact_number` VARCHAR(20),
+    `sequence_number` INT,
+    `is_deleted` TINYINT(1) DEFAULT 0,
+    `created_by` INT,
+    `updated_by` INT,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (`event_id`) REFERENCES `sv_calendar_events`(`event_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 

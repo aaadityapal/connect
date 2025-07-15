@@ -199,6 +199,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const siteType = this.getAttribute('data-site-type');
             const selectedSite = siteFilter.value;
             
+            // Redirect to labour_attendance.php for labour type
+            if (siteType === 'labour') {
+                window.location.href = 'labour_attendance.php';
+                return;
+            }
+            
             // For total labour, fetch data first
             if (siteType === 'total') {
                 fetchLabourData(selectedSite).then(data => {

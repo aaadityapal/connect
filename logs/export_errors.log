@@ -1,0 +1,74 @@
+[2025-07-15 11:14:58] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 11:14:58] Database connection included
+[2025-07-15 11:14:58] Session started
+[2025-07-15 11:14:58] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 11:14:58] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 11:14:58] Simple Excel template created
+[2025-07-15 11:14:58] Excel headers set
+[2025-07-15 11:14:58] Excel output completed successfully
+[2025-07-15 11:15:09] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 11:15:09] Database connection included
+[2025-07-15 11:15:09] Session started
+[2025-07-15 11:15:09] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 11:15:09] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 11:15:09] Simple Excel template created
+[2025-07-15 11:15:09] Excel headers set
+[2025-07-15 11:15:09] Excel output completed successfully
+[2025-07-15 11:17:50] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 11:17:50] Database connection included
+[2025-07-15 11:17:50] Session started
+[2025-07-15 11:17:50] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 11:17:50] Company labours fetched: 9
+[2025-07-15 11:17:50] Vendor labours fetched: 9
+[2025-07-15 11:17:50] Combined labours: 18
+[2025-07-15 11:17:50] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 11:17:50] Excel template created with 18 records
+[2025-07-15 11:17:50] Excel headers set
+[2025-07-15 11:17:50] Excel output completed successfully
+[2025-07-15 11:20:00] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 11:20:00] Database connection included
+[2025-07-15 11:20:00] Session started
+[2025-07-15 11:20:00] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 11:20:00] Company labours fetched: 9
+[2025-07-15 11:20:00] Vendor labours fetched: 9
+[2025-07-15 11:20:00] Combined labours: 18
+[2025-07-15 11:20:00] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 11:20:00] Excel template created with 18 records
+[2025-07-15 11:20:00] Excel headers set
+[2025-07-15 11:20:00] Excel output completed successfully
+[2025-07-15 12:21:55] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 12:21:55] Database connection included
+[2025-07-15 12:21:55] Session started
+[2025-07-15 12:21:55] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 12:21:55] Company labours fetched: 9
+[2025-07-15 12:21:55] Vendor labours fetched: 9
+[2025-07-15 12:21:55] Combined labours: 18
+[2025-07-15 12:21:55] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 12:21:55] Export completed successfully
+[2025-07-15 12:27:28] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 12:27:28] Database connection included
+[2025-07-15 12:27:28] Session started
+[2025-07-15 12:27:28] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 12:27:28] Company labours fetched: 9
+[2025-07-15 12:27:28] Vendor labours fetched: 9
+[2025-07-15 12:27:28] Combined labours: 18
+[2025-07-15 12:27:28] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 12:27:28] Export completed successfully
+[2025-07-15 12:33:39] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 12:33:39] Database connection included
+[2025-07-15 12:33:39] Session started
+[2025-07-15 12:33:39] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 12:33:39] Company labours fetched: 9
+[2025-07-15 12:33:39] Vendor labours fetched: 9
+[2025-07-15 12:33:39] Combined labours: 18
+[2025-07-15 12:33:39] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 12:33:39] Export completed successfully
+[2025-07-15 12:40:23] Export started - Recording parameters: {"from_date":"2025-05-08","to_date":"2025-07-15","status":"all","event_id":"0","vendor_id":"0","labour_type":"all"}
+[2025-07-15 12:40:23] Database connection included
+[2025-07-15 12:40:23] Session started
+[2025-07-15 12:40:23] Filters initialized: from=2025-05-08, to=2025-07-15, status=all, event=0, vendor=0, type=all
+[2025-07-15 12:40:23] Company labours fetched: 9
+[2025-07-15 12:40:23] Vendor labours fetched: 9
+[2025-07-15 12:40:23] Combined labours: 18
+[2025-07-15 12:40:23] Filename set: labour_attendance_08-May-2025_to_15-Jul-2025
+[2025-07-15 12:40:23] Export completed successfully

@@ -128,7 +128,9 @@ function createModalElements() {
                                     <option value="Construction Site At Jasola">Construction Site At Jasola</option>
                                     <option value="Construction Site At Faridabad Sector 91">Construction Site At Faridabad Sector 91</option>
                                     <option value="Construction Site At Ballabgarh">Construction Site At Ballabgarh</option>
-                                    <option value="Construction Site At Sector 53">Construction Site At Sector 53</option>
+                                    <option value="Construction Site At Sector 53">Construction Site At Sector 53</option> 
+                                    <option value="Construction Site At Supertech Oxford">Construction Site At Supertech Oxford</option>
+                                    <option value="Construction Site At Sector 14">Construction Site At Sector 14</option>
                                     <option value="custom">Custom Title</option>
                                 </select>
                                 <input type="text" id="custom-event-title" name="custom-event-title" class="add-event-form-control" 

@@ -43,6 +43,10 @@ const EVENT_TYPES = [
     { value: 'construction-site-dilshad-garden', label: 'Construction Site At Dilshad Garden' },
     { value: 'construction-site-jasola', label: 'Construction Site At Jasola' },
     { value: 'construction-site-faridabad-sector-91', label: 'Construction Site At Faridabad Sector 91' },
+    { value: 'construction-site-ballabgarh', label: 'Construction Site At Ballabgarh' },
+    { value: 'construction-site-sector-53', label: 'Construction Site At Sector 53' },
+    { value: 'construction-site-supertech-oxford', label: 'Construction Site At Supertech Oxford' },
+    { value: 'construction-site-sector-14', label: 'Construction Site At Sector 14' },
     { value: 'custom', label: 'Custom Title' }
 ];
 

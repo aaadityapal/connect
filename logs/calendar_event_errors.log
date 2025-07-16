@@ -1124,3 +1124,26 @@ Stack trace:
 [07-Jun-2025 13:56:15 Asia/Kolkata] 2025-06-07 13:56:15 - Vendor created successfully - {"vendor_id":"40"}
 [07-Jun-2025 13:56:15 Asia/Kolkata] 2025-06-07 13:56:15 - Transaction committed successfully
 [07-Jun-2025 13:56:15 Asia/Kolkata] 2025-06-07 13:56:15 - Save process completed successfully - {"event_id":"76"}
+[15-Jul-2025 14:33:50 Europe/Berlin] 2025-07-15 14:33:50 - Starting calendar event save process
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Database connection included
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Session started - {"user_id":30}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Started database transaction
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Processing event data - {"title":"Construction Site At Faridabad Sector 91","date":"2025-07-01","user_id":30}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Event created successfully - {"event_id":"77"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Processing work progress entries - {"count":1}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Processing work progress entry - {"number":1,"category":"structural","type":"columns","done":"yes"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Work progress entry saved successfully - {"work_id":"18","number":1}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Processing work media files - {"work_id":"18","count":2}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Created work-specific media directory - {"directory":"..\/uploads\/calendar_events\/work_progress_media\/work_18\/"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Processing work media file - {"work_id":"18","file_name":"banner.jpg","file_type":"image\/jpeg","file_size":9456411}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - File upload type check - {"file_type":"image\/jpeg","allowed":true}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - File uploaded successfully - {"original_name":"banner_1752582830_3794.jpg","saved_as":"68764aae45072_1752582830.jpg","file_type":"image\/jpeg","file_size":9456411,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_18\/68764aae45072_1752582830.jpg"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_18\/68764aae45072_1752582830.jpg","filename":"banner_1752582830_3794.jpg","original_name":"banner.jpg"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Work media record saved to database - {"media_id":"27"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Processing work media file - {"work_id":"18","file_name":"ample.mp4","file_type":"video\/mp4","file_size":13927646}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - File upload type check - {"file_type":"video\/mp4","allowed":true}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - File uploaded successfully - {"original_name":"ample_1752582830_8761.mp4","saved_as":"68764aae45a8b_1752582830.mp4","file_type":"video\/mp4","file_size":13927646,"path":"..\/uploads\/calendar_events\/work_progress_media\/work_18\/68764aae45a8b_1752582830.mp4"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Work media file uploaded - {"path":"..\/uploads\/calendar_events\/work_progress_media\/work_18\/68764aae45a8b_1752582830.mp4","filename":"ample_1752582830_8761.mp4","original_name":"ample.mp4"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Work media record saved to database - {"media_id":"28"}
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Transaction committed successfully
+[15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Save process completed successfully - {"event_id":"77"}

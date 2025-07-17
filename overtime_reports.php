@@ -81,7 +81,8 @@ $attendanceQuery = "SELECT a.*,
                    manager.username as manager_username,
                    a.work_report,
                    otn.message as overtime_message,
-                   otn.manager_response
+                   otn.manager_response,
+                   otn.created_at as submitted_on
                    FROM attendance a
                    JOIN users u ON a.user_id = u.id
                    LEFT JOIN users manager ON a.overtime_approved_by = manager.id
@@ -1055,6 +1056,17 @@ mysqli_close($conn);
             font-style: italic;
         }
         
+        .submission-date {
+            font-size: 0.85rem;
+            color: #555;
+            white-space: nowrap;
+            background-color: #f8f9fa;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            display: inline-block;
+        }
+        
         .manager-response-text {
             background-color: #f0f9ff;
             border-left: 3px solid #3498db;
@@ -1935,7 +1947,7 @@ mysqli_close($conn);
                 <div class="details-header">
                     <h2 class="details-title">
                         <i class="fas fa-list-alt"></i> Overtime Details <span style="font-size: 0.8rem; color: #777; font-weight: normal;">(minimum 1.5 hours)</span>
-            </h2>
+                    </h2>
                     <div class="toggle-container">
                         <span class="toggle-label">Studio</span>
                         <label class="toggle-switch">
@@ -1946,8 +1958,14 @@ mysqli_close($conn);
                             </span>
                         </label>
                         <span class="toggle-label">Site</span>
-                        </div>
-                        </div>
+                    </div>
+                </div>
+                
+                <!-- Permission notice for site overtime -->
+                <div id="sitePermissionNotice" class="permission-notice" style="display: none; margin-bottom: 15px; padding: 10px 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; color: #856404; border-radius: 4px;">
+                    <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                    <span>You can view all overtime records, but you can only approve/reject overtime for studio employees.</span>
+                </div>
                 <div class="table-responsive">
                     <table class="overtime-table">
                         <thead>
@@ -1957,6 +1975,7 @@ mysqli_close($conn);
                                 <th>Shift End Time</th>
                                 <th>Punch Out Time</th>
                                 <th>Overtime Hours</th>
+                                <th>Submitted On</th>
                                 <th>Work Report</th>
                                 <th>Overtime Report</th>
                                 <th>Status</th>
@@ -2220,6 +2239,14 @@ mysqli_close($conn);
                         </div>
                         
                         <div class="detail-item">
+                            <div class="detail-icon"><i class="fas fa-calendar-check"></i></div>
+                            <div class="detail-content">
+                                <div class="detail-label">Submitted On</div>
+                                <div id="detailsSubmittedOn" class="detail-value">N/A</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
                             <div class="detail-icon"><i class="fas fa-user-check"></i></div>
                             <div class="detail-content">
                                 <div class="detail-label">Approved/Rejected By</div>
@@ -2403,7 +2430,8 @@ mysqli_close($conn);
                         actioned_at: record.overtime_actioned_at,
                         work_report: record.work_report || 'No report submitted',
                         overtime_message: record.overtime_message || 'No message available',
-                        manager_response: record.manager_response || ''
+                        manager_response: record.manager_response || '',
+                        submitted_on: record.submitted_on || ''
                     };
                 });
             }
@@ -2448,6 +2476,12 @@ mysqli_close($conn);
                 // Set default filter values to current month/year
                 setDefaultFilterValues();
                 
+                // Initialize permission notice visibility
+                const permissionNotice = document.getElementById('sitePermissionNotice');
+                if (permissionNotice && locationToggle) {
+                    permissionNotice.style.display = locationToggle.checked ? 'block' : 'none';
+                }
+                
                 // Load initial data
                 applyFilters();
             }
@@ -2462,6 +2496,12 @@ mysqli_close($conn);
                         // Update filters for the new dataset
                         const currentData = getCurrentDataset();
                         populateFilterDropdowns(currentData);
+                        
+                        // Show/hide permission notice based on toggle state
+                        const permissionNotice = document.getElementById('sitePermissionNotice');
+                        if (permissionNotice) {
+                            permissionNotice.style.display = this.checked ? 'block' : 'none';
+                        }
                         
                         // Apply filters with the new dataset
                         applyFilters();
@@ -2636,6 +2676,25 @@ mysqli_close($conn);
             }
             
             /**
+             * Format submission date for display
+             */
+            function formatSubmissionDate(dateString) {
+                if (!dateString) return 'N/A';
+                
+                try {
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) {
+                        return 'N/A';
+                    }
+                    
+                    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                } catch (e) {
+                    console.error('Error formatting submission date:', e);
+                    return 'N/A';
+                }
+            }
+            
+            /**
              * Apply filters to the data and update the UI
              */
             function applyFilters() {
@@ -2801,6 +2860,9 @@ mysqli_close($conn);
                         <td>${item.punchOut}</td>
                         <td>${item.hours}</td>
                         <td>
+                            <div class="submission-date">${formatSubmissionDate(item.submitted_on)}</div>
+                        </td>
+                        <td>
                             <div class="work-report-cell" title="Click to view full report" onclick="viewWorkReport('${item.username}', '${item.date}', ${JSON.stringify(item.work_report).replace(/"/g, '&quot;')})">
                                 ${item.work_report && item.work_report !== 'No report submitted' 
                                     ? item.work_report.length > 30 
@@ -2823,10 +2885,13 @@ mysqli_close($conn);
                         <td>
                             <div class="table-actions">
                                 ${(() => {
-                                                                        // Only show active approve/reject buttons for "submitted" status
-                                    if (statusText === 'Submitted') {
+                                    // Check if viewing site data - Senior Manager (Studio) should not see approve/reject buttons for site users
+                                    const isViewingSiteData = locationToggle && locationToggle.checked;
+                                    
+                                    // Only show active approve/reject buttons for "submitted" status AND when viewing studio data
+                                    if (statusText === 'Submitted' && !isViewingSiteData) {
                                         return `
-                                                                                        <button class="btn-icon approve" title="Approve" onclick="openApproveModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
+                                            <button class="btn-icon approve" title="Approve" onclick="openApproveModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                             <button class="btn-icon reject" title="Reject" onclick="openRejectModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
@@ -2834,10 +2899,18 @@ mysqli_close($conn);
                                             </button>
                                         `;
                                     } 
-                                    // Show locked button with tooltip for "pending" status
-                                    else if (statusText === 'Pending') {
+                                    // Show locked button with tooltip for "pending" status when viewing studio data
+                                    else if (statusText === 'Pending' && !isViewingSiteData) {
                                         return `
                                             <button class="btn-icon locked" title="Cannot approve: Status must be 'Submitted' first">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                        `;
+                                    }
+                                    // For site data or other statuses, don't show approval buttons
+                                    else if (isViewingSiteData && (statusText === 'Submitted' || statusText === 'Pending')) {
+                                        return `
+                                            <button class="btn-icon locked" title="You can only approve/reject studio overtime">
                                                 <i class="fas fa-lock"></i>
                                             </button>
                                         `;
@@ -3155,6 +3228,7 @@ mysqli_close($conn);
                     document.getElementById('detailsShiftEnd').textContent = userRecord.shiftEnd;
                     document.getElementById('detailsPunchOut').textContent = userRecord.punchOut;
                     document.getElementById('detailsOvertimeHours').textContent = userRecord.hours;
+                    document.getElementById('detailsSubmittedOn').textContent = formatSubmissionDate(userRecord.submitted_on);
                     
                     // Set status with appropriate class
                     const statusElement = document.getElementById('detailsStatus');
@@ -3468,7 +3542,8 @@ mysqli_close($conn);
             const headerCells = document.querySelectorAll('.overtime-table thead th');
             let statusColumnIndex = 8; // Default values if header analysis fails
             let managerColumnIndex = 9;
-            let actionsColumnIndex = 10;
+            let submittedOnColumnIndex = 10;
+            let actionsColumnIndex = 11;
             
             // Find the correct column indices by header text
             for (let i = 0; i < headerCells.length; i++) {

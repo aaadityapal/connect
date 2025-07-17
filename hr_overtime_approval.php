@@ -82,7 +82,8 @@ $attendanceQuery = "SELECT a.*,
                    manager.username as manager_username,
                    a.work_report,
                    otn.message as overtime_message,
-                   otn.manager_response
+                   otn.manager_response,
+                   otn.created_at as submitted_on
                    FROM attendance a
                    JOIN users u ON a.user_id = u.id
                    LEFT JOIN users manager ON a.overtime_approved_by = manager.id
@@ -1104,6 +1105,17 @@ mysqli_close($conn);
         
         .work-report-section .reason-header {
             background-color: #e8f4fd;
+        }
+        
+        .submission-date {
+            font-size: 0.85rem;
+            color: #555;
+            white-space: nowrap;
+            background-color: #f8f9fa;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            display: inline-block;
         }
         
         .work-report-section .reason-header i {
@@ -2134,6 +2146,7 @@ mysqli_close($conn);
                                 <th>Shift End Time</th>
                                 <th>Punch Out Time</th>
                                 <th>Overtime Hours</th>
+                                <th>Submitted On</th>
                                 <th>Work Report</th>
                                 <th>Overtime Report</th>
                                 <th>Status</th>
@@ -2721,6 +2734,7 @@ mysqli_close($conn);
                         work_report: record.work_report || 'No report submitted',
                         overtime_message: record.overtime_message || 'No message available',
                         manager_response: record.manager_response || '',
+                        submitted_on: record.submitted_on || '',
                         overtime_id: record.overtime_id || record.id || record.user_id // Use overtime_id if available, otherwise fall back to other IDs
                     };
                 });
@@ -3140,6 +3154,19 @@ mysqli_close($conn);
                         });
                     }
                     
+                    // Format submission date if available
+                    let submittedDate = 'N/A';
+                    if (item.submitted_on) {
+                        try {
+                            const submitDate = new Date(item.submitted_on);
+                            if (!isNaN(submitDate.getTime())) {
+                                submittedDate = submitDate.toLocaleDateString() + ' ' + submitDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            }
+                        } catch (e) {
+                            console.error('Error formatting submission date:', e);
+                        }
+                    }
+                    
                     // Create row content
                     row.innerHTML = `
                         <td>${item.username}</td>
@@ -3147,6 +3174,7 @@ mysqli_close($conn);
                         <td>${item.shiftEnd}</td>
                         <td>${item.punchOut}</td>
                         <td>${item.hours}</td>
+                        <td><span class="submission-date">${submittedDate}</span></td>
                         <td>
                             <div class="work-report-cell" title="Click to view full report" onclick="viewWorkReport('${item.username}', '${item.date}', ${JSON.stringify(item.work_report).replace(/"/g, '&quot;')})">
                                 ${item.work_report && item.work_report !== 'No report submitted' 
@@ -4938,10 +4966,10 @@ mysqli_close($conn);
             <body>
                 <table border="1" cellpadding="5" cellspacing="0" width="100%">
                     <tr>
-                        <td colspan="10" class="title">Overtime Details Report</td>
+                        <td colspan="11" class="title">Overtime Details Report</td>
                     </tr>
                     <tr>
-                        <td colspan="10" class="subtitle">Generated on: ${new Date().toLocaleDateString()}</td>
+                        <td colspan="11" class="subtitle">Generated on: ${new Date().toLocaleDateString()}</td>
                     </tr>
                     <tr>
                         <td colspan="5" class="color-coding">
@@ -4950,7 +4978,7 @@ mysqli_close($conn);
                                     <span style="margin-top: 3px;"><b>Approval Status:</b> <span class="status-pending"> Pending</span> | <span class="status-submitted">🔵 Submitted</span></span>     
                             </div>
                         </td>
-                        <td colspan="5" class="summary-table">
+                        <td colspan="6" class="summary-table">
                             <table border="1" cellpadding="2" cellspacing="0" width="100%" style="border: 1px solid #3a86ff; font-size: 9pt;">
                                 <tr>
                                     <th style="background-color: #4cc9f0; text-align: center; font-size: 9pt; padding: 4px;">Location</th>
@@ -4976,7 +5004,7 @@ mysqli_close($conn);
             if (studioDataFiltered.length > 0) {
                 html += `
                     <tr>
-                        <td colspan="10" class="section-title">STUDIO OVERTIME DETAILS</td>
+                        <td colspan="11" class="section-title">STUDIO OVERTIME DETAILS</td>
                     </tr>
                     <tr>
                         <td class="header">Username</td>
@@ -4986,6 +5014,7 @@ mysqli_close($conn);
                         <td class="header">Overtime Hours</td>
                         <td class="header">Work Report</td>
                         <td class="header">Overtime Report</td>
+                        <td class="header">Submitted On</td>
                         <td class="header">Status</td>
                         <td class="header">Approved By</td>
                         <td class="header">Payment Status</td>
@@ -5016,6 +5045,7 @@ mysqli_close($conn);
                         <td>${item.hours}</td>
                         <td>${stripHtml(item.work_report || 'No report')}</td>
                         <td>${stripHtml(item.overtime_message || 'No message')}</td>
+                        <td>${formatSubmissionDate(item.submitted_on)}</td>
                         <td>${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
                         <td>${item.manager || 'N/A'}</td>
                         <td class="${statusCellClass}">${paymentStatus}</td>
@@ -5027,7 +5057,7 @@ mysqli_close($conn);
             if (siteDataFiltered.length > 0) {
                 html += `
                     <tr>
-                        <td colspan="10" class="section-title">SITE OVERTIME DETAILS</td>
+                        <td colspan="11" class="section-title">SITE OVERTIME DETAILS</td>
                     </tr>
                     <tr>
                         <td class="header">Username</td>
@@ -5037,6 +5067,7 @@ mysqli_close($conn);
                         <td class="header">Overtime Hours</td>
                         <td class="header">Work Report</td>
                         <td class="header">Overtime Report</td>
+                        <td class="header">Submitted On</td>
                         <td class="header">Status</td>
                         <td class="header">Approved By</td>
                         <td class="header">Payment Status</td>
@@ -5067,6 +5098,7 @@ mysqli_close($conn);
                         <td>${item.hours}</td>
                         <td>${stripHtml(item.work_report || 'No report')}</td>
                         <td>${stripHtml(item.overtime_message || 'No message')}</td>
+                        <td>${formatSubmissionDate(item.submitted_on)}</td>
                         <td>${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
                         <td>${item.manager || 'N/A'}</td>
                         <td class="${statusCellClass}">${paymentStatus}</td>
@@ -5136,6 +5168,25 @@ mysqli_close($conn);
             setTimeout(() => {
                 hideFilterMessage();
             }, 3000);
+        }
+        
+        /**
+         * Format submission date for display
+         */
+        function formatSubmissionDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return 'N/A';
+                }
+                
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                console.error('Error formatting submission date:', e);
+                return 'N/A';
+            }
         }
         
         /**

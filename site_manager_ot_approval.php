@@ -81,7 +81,8 @@ $attendanceQuery = "SELECT a.*,
                    manager.username as manager_username,
                    a.work_report,
                    otn.message as overtime_message,
-                   otn.manager_response
+                   otn.manager_response,
+                   otn.created_at as submitted_on
                    FROM attendance a
                    JOIN users u ON a.user_id = u.id
                    LEFT JOIN users manager ON a.overtime_approved_by = manager.id
@@ -942,6 +943,17 @@ mysqli_close($conn);
             font-style: italic;
         }
         
+        .submission-date {
+            font-size: 0.85rem;
+            color: #555;
+            white-space: nowrap;
+            background-color: #f8f9fa;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            display: inline-block;
+        }
+        
         .manager-response-text {
             background-color: #f0f9ff;
             border-left: 3px solid #3498db;
@@ -1724,7 +1736,7 @@ mysqli_close($conn);
                 <div class="details-header">
                     <h2 class="details-title">
                         <i class="fas fa-list-alt"></i> Overtime Details <span style="font-size: 0.8rem; color: #777; font-weight: normal;">(minimum 1.5 hours)</span>
-            </h2>
+                    </h2>
                     <div class="toggle-container">
                         <span class="toggle-label">Studio</span>
                         <label class="toggle-switch">
@@ -1735,8 +1747,15 @@ mysqli_close($conn);
                             </span>
                         </label>
                         <span class="toggle-label">Site</span>
-                        </div>
-                        </div>
+                    </div>
+                </div>
+                
+                <?php if ($_SESSION['role'] === 'Senior Manager (Site)'): ?>
+                <div id="permission-notice" class="permission-notice" style="display: none; margin-bottom: 15px; padding: 10px 15px; background-color: #f8f9fa; border-left: 4px solid #f39c12; border-radius: 4px;">
+                    <i class="fas fa-info-circle" style="color: #f39c12; margin-right: 8px;"></i>
+                    <span>You can view all overtime records, but can only approve/reject overtime for site users.</span>
+                </div>
+                <?php endif; ?>
                 <div class="table-responsive">
                     <table class="overtime-table">
                         <thead>
@@ -1746,6 +1765,7 @@ mysqli_close($conn);
                                 <th>Shift End Time</th>
                                 <th>Punch Out Time</th>
                                 <th>Overtime Hours</th>
+                                <th>Submitted On</th>
                                 <th>Work Report</th>
                                 <th>Overtime Report</th>
                                 <th>Status</th>
@@ -2172,7 +2192,8 @@ mysqli_close($conn);
                         actioned_at: record.overtime_actioned_at,
                         work_report: record.work_report || 'No report submitted',
                         overtime_message: record.overtime_message || 'No message available',
-                        manager_response: record.manager_response || ''
+                        manager_response: record.manager_response || '',
+                        submitted_on: record.submitted_on || ''
                     };
                 });
             }
@@ -2208,19 +2229,26 @@ mysqli_close($conn);
              * Initialize the view with current data
              */
             function initializeView() {
-                            // Set toggle to Site by default
-            if (locationToggle) {
-                locationToggle.checked = true;
-            }
-            
-            // Set up the initial data view (site by default)
-            const currentData = getCurrentDataset();
-            
-            // Populate filter dropdowns
-            populateFilterDropdowns(currentData);
-            
-            // Set default filter values to current month/year
-            setDefaultFilterValues();
+                // Set toggle to Site by default
+                if (locationToggle) {
+                    locationToggle.checked = true;
+                }
+                
+                // Set up the initial data view (site by default)
+                const currentData = getCurrentDataset();
+                
+                // Populate filter dropdowns
+                populateFilterDropdowns(currentData);
+                
+                // Set default filter values to current month/year
+                setDefaultFilterValues();
+                
+                // Initialize permission notice visibility (hidden by default since we start with site view)
+                const permissionNotice = document.getElementById('permission-notice');
+                const currentRole = '<?php echo isset($_SESSION["role"]) ? $_SESSION["role"] : ""; ?>';
+                if (permissionNotice && currentRole === 'Senior Manager (Site)') {
+                    permissionNotice.style.display = 'none'; // Hide initially since we start with site view
+                }
                 
                 // Load initial data
                 applyFilters();
@@ -2239,6 +2267,14 @@ mysqli_close($conn);
                         
                         // Apply filters with the new dataset
                         applyFilters();
+                        
+                        // Show/hide permission notice for Senior Manager (Site)
+                        const permissionNotice = document.getElementById('permission-notice');
+                        const currentRole = '<?php echo isset($_SESSION["role"]) ? $_SESSION["role"] : ""; ?>';
+                        if (permissionNotice && currentRole === 'Senior Manager (Site)') {
+                            // Show notice when viewing studio data, hide when viewing site data
+                            permissionNotice.style.display = this.checked ? 'none' : 'block';
+                        }
                     });
                 }
                 
@@ -2567,6 +2603,19 @@ mysqli_close($conn);
                         }
                     }
                     
+                    // Format submission date if available
+                    let submittedDate = 'N/A';
+                    if (item.submitted_on) {
+                        try {
+                            const submitDate = new Date(item.submitted_on);
+                            if (!isNaN(submitDate.getTime())) {
+                                submittedDate = submitDate.toLocaleDateString() + ' ' + submitDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            }
+                        } catch (e) {
+                            console.error('Error formatting submission date:', e);
+                        }
+                    }
+                    
                     // Create row content
                     row.innerHTML = `
                         <td>${item.username}</td>
@@ -2574,6 +2623,7 @@ mysqli_close($conn);
                         <td>${item.shiftEnd}</td>
                         <td>${item.punchOut}</td>
                         <td>${item.hours}</td>
+                        <td><span class="submission-date">${submittedDate}</span></td>
                         <td>
                             <div class="work-report-cell" title="Click to view full report" onclick="viewWorkReport('${item.username}', '${item.date}', ${JSON.stringify(item.work_report).replace(/"/g, '&quot;')})">
                                 ${item.work_report && item.work_report !== 'No report submitted' 
@@ -2597,10 +2647,20 @@ mysqli_close($conn);
                         <td>
                             <div class="table-actions">
                                 ${(() => {
-                                                                        // Only show active approve/reject buttons for "submitted" status
+                                    // Check if this is a studio user
+                                    const isStudioUser = !locationToggle || !locationToggle.checked;
+                                    const currentRole = '<?php echo isset($_SESSION["role"]) ? $_SESSION["role"] : ""; ?>';
+                                    const isSeniorManagerSite = currentRole === 'Senior Manager (Site)';
+                                    
+                                    // If Senior Manager (Site) is viewing studio users, don't show approve/reject buttons
+                                    if (isStudioUser && isSeniorManagerSite) {
+                                        return '';
+                                    }
+                                    
+                                    // Only show active approve/reject buttons for "submitted" status
                                     if (statusText === 'Submitted') {
                                         return `
-                                                                                        <button class="btn-icon approve" title="Approve" onclick="openApproveModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
+                                            <button class="btn-icon approve" title="Approve" onclick="openApproveModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                             <button class="btn-icon reject" title="Reject" onclick="openRejectModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
@@ -3204,9 +3264,9 @@ mysqli_close($conn);
             
             // Determine column indices by analyzing the table header
             const headerCells = document.querySelectorAll('.overtime-table thead th');
-            let statusColumnIndex = 8; // Default values if header analysis fails
-            let managerColumnIndex = 9;
-            let actionsColumnIndex = 10;
+            let statusColumnIndex = 9; // Default values if header analysis fails (updated for new column)
+            let managerColumnIndex = 10; // Updated for new column
+            let actionsColumnIndex = 11; // Updated for new column
             
             // Find the correct column indices by header text
             for (let i = 0; i < headerCells.length; i++) {

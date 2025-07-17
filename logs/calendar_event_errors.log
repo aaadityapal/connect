@@ -1147,3 +1147,26 @@ Stack trace:
 [15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Work media record saved to database - {"media_id":"28"}
 [15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Transaction committed successfully
 [15-Jul-2025 18:03:50 Asia/Kolkata] 2025-07-15 18:03:50 - Save process completed successfully - {"event_id":"77"}
+[16-Jul-2025 13:27:20 Europe/Berlin] 2025-07-16 13:27:20 - Starting calendar event save process
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Database connection included
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Session started - {"user_id":1}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Started database transaction
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing event data - {"title":"Construction Site At Sector 80","date":"2025-07-02","user_id":1}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Event created successfully - {"event_id":"78"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing vendors - {"count":1}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing vendor - {"index":1,"type":"material","name":"test"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Vendor created successfully - {"vendor_id":"41"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing materials - {"vendor_id":"41","count":1}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing material - {"material_key":"material_1_1"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Material data - {"material_key":"material_1_1","remarks":"5t5","amount":"100"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Material created successfully - {"material_id":"25"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing material image - {"material_key":"material_1_1","file_name":"image-not-found.png","file_size":13132}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - File upload type check - {"file_type":"image\/png","allowed":true}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - File uploaded successfully - {"original_name":"image-not-found.png","saved_as":"68778c985712e_1752665240.png","file_type":"image\/png","file_size":13132,"path":"..\/uploads\/calendar_events\/material_images\/68778c985712e_1752665240.png"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Material image uploaded - {"path":"..\/uploads\/calendar_events\/material_images\/68778c985712e_1752665240.png"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Material image saved to database
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing beverages - {"count":1}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Processing beverage - {"number":1,"type":"iuytr","name":"uyt","amount":"200"}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Beverage saved successfully - {"beverage_id":"8","number":1}
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Transaction committed successfully
+[16-Jul-2025 16:57:20 Asia/Kolkata] 2025-07-16 16:57:20 - Save process completed successfully - {"event_id":"78"}

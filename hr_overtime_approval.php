@@ -1765,12 +1765,168 @@ mysqli_close($conn);
                 font-size: 0.8rem;
             }
         }
+
+        .btn-export {
+            background-color: #27ae60;
+            color: white;
+            box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-export:hover {
+            background-color: #219653;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(39, 174, 96, 0.3);
+        }
+        
+        /* Screen Loader Styles */
+        .screen-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .screen-loader.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loader-spinner {
+            width: 70px;
+            height: 70px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 6px solid #3498db;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+        
+        .toast {
+            background-color: white;
+            color: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            animation: slideIn 0.3s forwards, fadeOut 0.3s 4.7s forwards;
+            min-width: 300px;
+        }
+        
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(120%); }
+        }
+        
+        .toast-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 16px;
+        }
+        
+        .toast-message {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .toast.success {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .toast.success .toast-icon {
+            color: #2ecc71;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .toast.error .toast-icon {
+            color: #e74c3c;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #3498db;
+        }
+        
+        .toast.info .toast-icon {
+            color: #3498db;
+        }
+        
+        .toast.warning {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .toast.warning .toast-icon {
+            color: #f39c12;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- No external libraries needed for HTML-based Excel export -->
 </head>
 <body>
+    <!-- Screen Loader -->
+    <div class="screen-loader" id="screenLoader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Processing your request...</div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
     <div class="dashboard">
         <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
@@ -1906,6 +2062,9 @@ mysqli_close($conn);
                             </button>
                             <button class="btn btn-reset" id="reset-filters">
                                 <i class="fas fa-undo"></i> Reset
+                            </button>
+                            <button class="btn btn-export" id="export-excel" style="background-color: #27ae60; color: white;">
+                                <i class="fas fa-file-excel"></i> Export Excel
                             </button>
                         </div>
                     </div>
@@ -2381,6 +2540,78 @@ mysqli_close($conn);
     </div>
 
     <script>
+        /**
+         * Show screen loader with optional custom message
+         */
+        function showScreenLoader(message) {
+            const loader = document.getElementById('screenLoader');
+            const loaderText = loader.querySelector('.loader-text');
+            
+            if (message) {
+                loaderText.textContent = message;
+            } else {
+                loaderText.textContent = 'Processing your request...';
+            }
+            
+            loader.classList.add('active');
+        }
+        
+        /**
+         * Hide screen loader
+         */
+        function hideScreenLoader() {
+            const loader = document.getElementById('screenLoader');
+            loader.classList.remove('active');
+        }
+        
+        /**
+         * Show toast notification
+         * @param {string} message - The message to display
+         * @param {string} type - The type of toast: 'success', 'error', 'info', 'warning'
+         * @param {string} title - Optional title for the toast
+         */
+        function showToast(message, type = 'info', title = '') {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            // Set default titles based on type if not provided
+            if (!title) {
+                switch(type) {
+                    case 'success': title = 'Success'; break;
+                    case 'error': title = 'Error'; break;
+                    case 'warning': title = 'Warning'; break;
+                    default: title = 'Information'; break;
+                }
+            }
+            
+            // Set icon based on type
+            let icon = '';
+            switch(type) {
+                case 'success': icon = '<i class="fas fa-check-circle"></i>'; break;
+                case 'error': icon = '<i class="fas fa-exclamation-circle"></i>'; break;
+                case 'warning': icon = '<i class="fas fa-exclamation-triangle"></i>'; break;
+                default: icon = '<i class="fas fa-info-circle"></i>'; break;
+            }
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            
+            // Add to container
+            toastContainer.appendChild(toast);
+            
+            // Remove toast after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Sidebar toggle functionality
             const sidebar = document.getElementById('sidebar');
@@ -2399,6 +2630,7 @@ mysqli_close($conn);
             const filterYearSelect = document.getElementById('filter-year');
             const applyFiltersBtn = document.getElementById('apply-filters');
             const resetFiltersBtn = document.getElementById('reset-filters');
+            const exportExcelBtn = document.getElementById('export-excel');
             const locationToggle = document.querySelector('.toggle-switch input');
             const filterMessageContainer = document.getElementById('filter-message');
             const filterMessageText = document.getElementById('filter-message-text');
@@ -3810,8 +4042,11 @@ mysqli_close($conn);
                             setTimeout(() => {
                                 animation.remove();
                                 
-                                // Show error message
-                                showFilterMessage('Error: ' + (response && response.message ? response.message : 'Failed to process payment'), 'error');
+                                                        // Show error message
+                        showFilterMessage('Error: ' + (response && response.message ? response.message : 'Failed to process payment'), 'error');
+                        
+                        // Show error toast
+                        showToast(response && response.message ? response.message : 'Unknown error occurred', 'error', 'Payment Processing Failed');
                             }, 3000);
                         }
                     },
@@ -3833,7 +4068,7 @@ mysqli_close($conn);
                             console.error('Could not parse error response:', e);
                         }
                         
-                        // Show error in animation
+                                                // Show error in animation
                         animation.showError('Payment Failed: ' + errorDetails);
                         
                         // Remove animation after 5 seconds
@@ -3842,6 +4077,9 @@ mysqli_close($conn);
                             
                             // Show error message
                             showFilterMessage('Error: ' + errorDetails, 'error');
+                            
+                            // Show error toast
+                            showToast(errorDetails, 'error', 'Payment Processing Failed');
                         }, 3000);
                     }
                 });
@@ -4531,6 +4769,503 @@ mysqli_close($conn);
         window.updatePaymentStatusAfterProcessing = function(userId, overtimeId) {
             updatePaymentStatusInTable(userId, overtimeId);
         };
+
+        // Export to Excel functionality
+        if (exportExcelBtn) {
+            exportExcelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                exportToExcel();
+            });
+        }
+
+        /**
+         * Export the current filtered data to Excel
+         */
+        function exportToExcel() {
+            // Show loading message
+            showFilterMessage('Preparing Excel export...', 'loading');
+            
+            // Show toast notification
+            showToast('Your Excel file is being generated. Please wait...', 'info', 'Excel Export');
+            
+            // Show screen loader
+            showScreenLoader();
+            
+            // Get current filtered data
+            const userFilter = filterUserSelect ? filterUserSelect.value : '';
+            const statusFilter = filterStatusSelect ? filterStatusSelect.value.toLowerCase() : '';
+            const monthFilter = filterMonthSelect ? filterMonthSelect.value : '';
+            const yearFilter = filterYearSelect ? filterYearSelect.value : '';
+            
+            // Get current dataset
+            const isStudioView = !locationToggle || !locationToggle.checked;
+            const studioDataFiltered = filterDataset(studioData, userFilter, statusFilter, monthFilter, yearFilter);
+            const siteDataFiltered = filterDataset(siteData, userFilter, statusFilter, monthFilter, yearFilter);
+            
+            // Check if we have data to export
+            if (studioDataFiltered.length === 0 && siteDataFiltered.length === 0) {
+                showFilterMessage('No data to export', 'error');
+                setTimeout(() => {
+                    hideFilterMessage();
+                }, 3000);
+                return;
+            }
+            
+            // Generate HTML for Excel
+            let html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                <!--[if gte mso 9]>
+                <xml>
+                    <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                                <x:Name>Overtime Details</x:Name>
+                                <x:WorksheetOptions>
+                                    <x:DisplayGridlines/>
+                                    <x:AutoFilter/>
+                                </x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                    </x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 9pt;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 100%;
+                        border: 2px solid #4361ee;
+                    }
+                    td, th {
+                        vertical-align: middle;
+                        padding: 6px;
+                        border: 1px solid #bdc3c7;
+                        text-align: left;
+                        font-size: 9pt;
+                    }
+                    .title {
+                        background-color: #3a0ca3;
+                        color: white;
+                        font-weight: bold;
+                        font-size: 14pt;
+                        text-align: center;
+                        padding: 10px;
+                        border: 2px solid #3a0ca3;
+                    }
+                    .section-title {
+                        background-color: #4361ee;
+                        color: white;
+                        font-weight: bold;
+                        font-size: 11pt;
+                        text-align: center;
+                        padding: 8px;
+                    }
+                    .subtitle {
+                        background-color: #f8f9fa;
+                        font-weight: bold;
+                        padding: 8px;
+                        border: 1px solid #bdc3c7;
+                        font-size: 10pt;
+                    }
+                    .header {
+                        background-color: #4cc9f0;
+                        color: #000000;
+                        font-weight: bold;
+                        border: 1px solid #3a86ff;
+                        text-align: center;
+                        white-space: nowrap;
+                        font-size: 9pt;
+                    }
+                    .color-coding {
+                        background-color: #f8f9fa;
+                        padding: 6px;
+                        font-size: 9pt;
+                    }
+                    .status-paid {
+                        background-color: #00FF00;
+                        color: #000000;
+                        font-weight: bold;
+                    }
+                    .status-unpaid {
+                        background-color: #FFCCCC;
+                        color: #000000;
+                        font-weight: bold;
+                    }
+                    .status-pending {
+                        color: #000000;
+                        font-weight: bold;
+                        background-color: #FFFF99; /* Yellow */
+                    }
+                    .status-submitted {
+                        color: #000000;
+                        font-weight: bold;
+                        background-color: #99CCFF; /* Light blue */
+                    }
+                    .status-approved {
+                        color: #06d6a0;
+                        font-weight: bold;
+                        background-color: #e8fff3;
+                    }
+                    .status-rejected {
+                        color: #e63946;
+                        font-weight: bold;
+                        background-color: #ffeeee;
+                    }
+                    .status-cell-paid {
+                        background-color: #008800;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                    }
+                    .status-cell-unpaid {
+                        background-color: #FF6666;
+                        color: #FFFFFF;
+                        font-weight: bold;
+                    }
+                    .date-cell {
+                        white-space: nowrap;
+                        font-weight: 500;
+                    }
+                    .name-cell {
+                        font-weight: 500;
+                    }
+                </style>
+            </head>
+            <body>
+                <table border="1" cellpadding="5" cellspacing="0" width="100%">
+                    <tr>
+                        <td colspan="10" class="title">Overtime Details Report</td>
+                    </tr>
+                    <tr>
+                        <td colspan="10" class="subtitle">Generated on: ${new Date().toLocaleDateString()}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="color-coding">
+                            <div style="display: flex; justify-content: center; flex-direction: column; text-align: center;">
+                               <span><b>Payment Status:</b> <span class="status-paid">🟢 Paid</span> | <span class="status-unpaid"> 🔴Unpaid</span></span>
+                                    <span style="margin-top: 3px;"><b>Approval Status:</b> <span class="status-pending"> Pending</span> | <span class="status-submitted">🔵 Submitted</span></span>     
+                            </div>
+                        </td>
+                        <td colspan="5" class="summary-table">
+                            <table border="1" cellpadding="2" cellspacing="0" width="100%" style="border: 1px solid #3a86ff; font-size: 9pt;">
+                                <tr>
+                                    <th style="background-color: #4cc9f0; text-align: center; font-size: 9pt; padding: 4px;">Location</th>
+                                    <th style="background-color: #4cc9f0; text-align: center; font-size: 9pt; padding: 4px;">Total Overtime Hours</th>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; text-align: center; font-size: 9pt; padding: 3px;">Studio</td>
+                                    <td style="text-align: center; font-size: 9pt; padding: 3px;" id="studio-hours"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; text-align: center; font-size: 9pt; padding: 3px;">Site</td>
+                                    <td style="text-align: center; font-size: 9pt; padding: 3px;" id="site-hours"></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; text-align: center; background-color: #e9ecef; font-size: 9pt; padding: 3px;">Total</td>
+                                    <td style="text-align: center; background-color: #e9ecef; font-weight: bold; font-size: 9pt; padding: 3px;" id="total-hours"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>`;
+            
+            // Add Studio data if available
+            if (studioDataFiltered.length > 0) {
+                html += `
+                    <tr>
+                        <td colspan="10" class="section-title">STUDIO OVERTIME DETAILS</td>
+                    </tr>
+                    <tr>
+                        <td class="header">Username</td>
+                        <td class="header">Date</td>
+                        <td class="header">Shift End Time</td>
+                        <td class="header">Punch Out Time</td>
+                        <td class="header">Overtime Hours</td>
+                        <td class="header">Work Report</td>
+                        <td class="header">Overtime Report</td>
+                        <td class="header">Status</td>
+                        <td class="header">Approved By</td>
+                        <td class="header">Payment Status</td>
+                    </tr>`;
+                
+                // Add data rows for studio
+                studioDataFiltered.forEach(item => {
+                    const paymentStatus = getPaymentStatus(item);
+                    let rowClass = '';
+                    
+                    // Set row class based on status and payment status
+                    if (item.status.toLowerCase() === 'pending') {
+                        rowClass = 'status-pending';
+                    } else if (item.status.toLowerCase() === 'submitted') {
+                        rowClass = 'status-submitted';
+                    } else if (item.status.toLowerCase() === 'approved') {
+                        rowClass = paymentStatus === 'Paid' ? 'status-paid' : 'status-unpaid';
+                    }
+                    
+                    const statusCellClass = paymentStatus === 'Paid' ? 'status-cell-paid' : 'status-cell-unpaid';
+                    
+                    html += `
+                    <tr class="${rowClass}">
+                        <td class="name-cell">${item.username}</td>
+                        <td class="date-cell">${item.date}</td>
+                        <td>${item.shiftEnd}</td>
+                        <td>${item.punchOut}</td>
+                        <td>${item.hours}</td>
+                        <td>${stripHtml(item.work_report || 'No report')}</td>
+                        <td>${stripHtml(item.overtime_message || 'No message')}</td>
+                        <td>${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
+                        <td>${item.manager || 'N/A'}</td>
+                        <td class="${statusCellClass}">${paymentStatus}</td>
+                    </tr>`;
+                });
+            }
+            
+            // Add Site data if available
+            if (siteDataFiltered.length > 0) {
+                html += `
+                    <tr>
+                        <td colspan="10" class="section-title">SITE OVERTIME DETAILS</td>
+                    </tr>
+                    <tr>
+                        <td class="header">Username</td>
+                        <td class="header">Date</td>
+                        <td class="header">Shift End Time</td>
+                        <td class="header">Punch Out Time</td>
+                        <td class="header">Overtime Hours</td>
+                        <td class="header">Work Report</td>
+                        <td class="header">Overtime Report</td>
+                        <td class="header">Status</td>
+                        <td class="header">Approved By</td>
+                        <td class="header">Payment Status</td>
+                    </tr>`;
+                
+                // Add data rows for site
+                siteDataFiltered.forEach(item => {
+                    const paymentStatus = getPaymentStatus(item);
+                    let rowClass = '';
+                    
+                    // Set row class based on status and payment status
+                    if (item.status.toLowerCase() === 'pending') {
+                        rowClass = 'status-pending';
+                    } else if (item.status.toLowerCase() === 'submitted') {
+                        rowClass = 'status-submitted';
+                    } else if (item.status.toLowerCase() === 'approved') {
+                        rowClass = paymentStatus === 'Paid' ? 'status-paid' : 'status-unpaid';
+                    }
+                    
+                    const statusCellClass = paymentStatus === 'Paid' ? 'status-cell-paid' : 'status-cell-unpaid';
+                    
+                    html += `
+                    <tr class="${rowClass}">
+                        <td class="name-cell">${item.username}</td>
+                        <td class="date-cell">${item.date}</td>
+                        <td>${item.shiftEnd}</td>
+                        <td>${item.punchOut}</td>
+                        <td>${item.hours}</td>
+                        <td>${stripHtml(item.work_report || 'No report')}</td>
+                        <td>${stripHtml(item.overtime_message || 'No message')}</td>
+                        <td>${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
+                        <td>${item.manager || 'N/A'}</td>
+                        <td class="${statusCellClass}">${paymentStatus}</td>
+                    </tr>`;
+                });
+            }
+            
+            // Calculate total overtime hours
+            let studioTotalHours = 0;
+            let siteTotalHours = 0;
+            
+            // Calculate studio hours
+            studioDataFiltered.forEach(item => {
+                // Extract numeric value from hours string (e.g. "2.5 hours" -> 2.5)
+                const hoursMatch = item.hours.match(/(\d+(\.\d+)?)/);
+                if (hoursMatch && hoursMatch[1]) {
+                    studioTotalHours += parseFloat(hoursMatch[1]);
+                }
+            });
+            
+            // Calculate site hours
+            siteDataFiltered.forEach(item => {
+                const hoursMatch = item.hours.match(/(\d+(\.\d+)?)/);
+                if (hoursMatch && hoursMatch[1]) {
+                    siteTotalHours += parseFloat(hoursMatch[1]);
+                }
+            });
+            
+            // Format the hours to 1 decimal place
+            const formattedStudioHours = studioTotalHours.toFixed(1);
+            const formattedSiteHours = siteTotalHours.toFixed(1);
+            const formattedTotalHours = (studioTotalHours + siteTotalHours).toFixed(1);
+            
+            // Update the summary table in the HTML
+            html = html.replace('id="studio-hours"', `id="studio-hours">${formattedStudioHours}`);
+            html = html.replace('id="site-hours"', `id="site-hours">${formattedSiteHours}`);
+            html = html.replace('id="total-hours"', `id="total-hours">${formattedTotalHours}`);
+            
+            // Close the HTML document
+            html += '</table></body></html>';
+            
+            // Generate file name with date
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const fileName = `overtime_report_${dateStr}.xls`;
+            
+            // Create a Blob and download the file
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Hide screen loader
+            hideScreenLoader();
+            
+            // Show success message
+            showFilterMessage('Excel export successful!', 'success');
+            
+            // Show success toast
+            showToast('Your Excel file has been downloaded successfully!', 'success', 'Excel Export Complete');
+            
+            setTimeout(() => {
+                hideFilterMessage();
+            }, 3000);
+        }
+        
+        /**
+         * Filter a dataset based on the provided filters
+         */
+        function filterDataset(data, userFilter, statusFilter, monthFilter, yearFilter) {
+            return data.filter(item => {
+                // Ensure minimum overtime requirement (1.5 hours)
+                const overtimeHours = parseFloat(item.rawHours) || 0;
+                if (overtimeHours < 1.5) {
+                    return false;
+                }
+                
+                // User filter
+                if (userFilter && item.username !== userFilter) {
+                    return false;
+                }
+                
+                // Status filter
+                if (statusFilter && item.status.toLowerCase() !== statusFilter) {
+                    return false;
+                }
+                
+                // Date filters
+                if (monthFilter || yearFilter) {
+                    try {
+                        // Parse the date (use rawDate if available)
+                        const dateStr = item.rawDate || item.date;
+                        const date = new Date(dateStr);
+                        
+                        if (isNaN(date.getTime())) {
+                            return false;
+                        }
+                        
+                        // Month filter
+                        if (monthFilter) {
+                            const month = date.toLocaleString('en-US', { month: 'long' });
+                            if (month !== monthFilter) {
+                                return false;
+                            }
+                        }
+                        
+                        // Year filter
+                        if (yearFilter) {
+                            const year = date.getFullYear().toString();
+                            if (year !== yearFilter) {
+                                return false;
+                            }
+                        }
+                    } catch (e) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+        }
+        
+                    /**
+             * Get payment status for an item
+             */
+            function getPaymentStatus(item) {
+                // Check if the item is approved
+                if (item.status && item.status.toLowerCase() === 'approved') {
+                    // Check if the payment status is already set
+                    if (item.paymentStatus) {
+                        return item.paymentStatus;
+                    }
+                    
+                    // Check for payment status in the UI
+                    // Look for payment status in the DOM for this item
+                    const tableRows = document.querySelectorAll('.overtime-table tbody tr');
+                    for (const row of tableRows) {
+                        // Find the row that matches this item
+                        const usernameCell = row.querySelector('td:first-child');
+                        const dateCell = row.querySelector('td:nth-child(2)');
+                        
+                        if (usernameCell && dateCell && 
+                            usernameCell.textContent === item.username && 
+                            dateCell.textContent === item.date) {
+                            
+                            // Check the payment status cell
+                            const paymentStatusCell = row.querySelector('td:nth-child(10) .status');
+                            if (paymentStatusCell && paymentStatusCell.textContent.trim() === 'Paid') {
+                                return 'Paid';
+                            }
+                            break;
+                        }
+                    }
+                    
+                    // If we're here, we couldn't find a matching row or it's not paid
+                    // Make an AJAX call to check payment status
+                    try {
+                        // Synchronous AJAX call to ensure we have the status before continuing
+                        let paymentStatus = 'Unpaid';
+                        $.ajax({
+                            url: 'api/process_overtime_payment.php',
+                            method: 'GET',
+                            data: {
+                                check_status: true,
+                                overtime_id: item.overtime_id || item.id,
+                                employee_id: item.id
+                            },
+                            async: false, // Synchronous call to ensure we have the status
+                            success: function(response) {
+                                if (response.success && response.data && response.data.status === 'paid') {
+                                    paymentStatus = 'Paid';
+                                    // Cache the result for future use
+                                    item.paymentStatus = 'Paid';
+                                }
+                            }
+                        });
+                        return paymentStatus;
+                    } catch (e) {
+                        console.error('Error checking payment status:', e);
+                        return 'Unpaid';
+                    }
+                }
+                return 'N/A';
+            }
+        
+        /**
+         * Strip HTML tags from a string
+         */
+        function stripHtml(html) {
+            if (!html) return '';
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
         });
     </script>
     

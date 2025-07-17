@@ -81,11 +81,9 @@ class EnhancedEventViewModal {
             const eventId = document.getElementById('enhancedViewContent').getAttribute('data-event-id');
             if (eventId) {
                 this.hideModal();
-                // Call the edit function - this will now use our new modal
+                // Call the edit function if it exists globally
                 if (typeof editEvent === 'function') {
                     editEvent(eventId);
-                } else if (typeof openEventEditModal === 'function') {
-                    openEventEditModal(eventId);
                 } else {
                     console.error('Edit function is not defined');
                 }
@@ -1397,7 +1395,7 @@ function playVideo(videoUrl) {
     let pathsToTry = [videoUrl];
     
     // Check if this is potentially a calendar events video based on the filename pattern
-    if (filename.includes('1747307273') || filename.includes('1747309896') || filename.includes('174912804')) {
+    if (filename.includes('1747307273') || filename.includes('1747309896')) {
         // Extract work_id or inventory_id from the URL if possible
         let itemId = '8'; // Default to work_8 if can't extract
         
@@ -1412,7 +1410,7 @@ function playVideo(videoUrl) {
             pathsToTry.push(`uploads/calendar_events/work_progress_media/work_${itemId}/${filename}`);
             
             // Add other common patterns
-            for (let i = 1; i <= 15; i++) { // Increased from 10 to 15
+            for (let i = 1; i <= 10; i++) {
                 pathsToTry.push(`uploads/calendar_events/work_progress_media/work_${i}/${filename}`);
             }
             
@@ -1444,25 +1442,11 @@ function playVideo(videoUrl) {
                 pathsToTry.unshift(`uploads/calendar_events/work_progress_media/work_${i}/6825cb048b42ac_1747309896.mp4`);
             }
             pathsToTry.push('test_video.php?file=' + filename); // Try the PHP video server as fallback
-        } else if (filename === '6841936e5d999_174912804.mp4') {
-            // Handle the specific video from the error message
-            pathsToTry = []; // Clear existing paths
-            // Try all possible locations for this specific file
-            pathsToTry.push(`video_stream.php?file=${filename}`); // Try streaming handler first
-            pathsToTry.push(`work_progress_video.php?file=${filename}`);
-            pathsToTry.push(`test_video.php?file=${filename}`);
-            for (let i = 1; i <= 20; i++) { // Try all possible work folders
-                pathsToTry.push(`uploads/calendar_events/work_progress_media/work_${i}/${filename}`);
-            }
-            pathsToTry.push(`uploads/work_progress/${filename}`);
-            pathsToTry.push(`uploads/videos/${filename}`);
-            pathsToTry.push(videoUrl); // Original URL as last resort
         }
     }
     
-    // General fallbacks for all videos
-    pathsToTry.push(`video_stream.php?file=${filename}`); // Generic video streaming handler
-    pathsToTry.push(`test_video.php?file=${filename}`); // PHP fallback
+    // Add PHP fallback for all videos
+    pathsToTry.push('test_video.php?file=' + filename);
     
     // Keep track of the current path index for the retry button
     let currentPathIndex = 0;
@@ -1513,48 +1497,36 @@ function playVideo(videoUrl) {
         videoPlayer.style.display = 'none';
         videoErrorDisplay.style.display = 'flex';
         videoErrorTitle.textContent = 'Error Loading Video';
-        videoErrorText.textContent = `Could not load video: ${filename}. Please try again later or download the video instead.`;
+        videoErrorText.textContent = `Could not load video: ${filename}. Please try again later or contact support.`;
         videoCaption.innerHTML = `<span style="color: #e74c3c;">Error: Could not load video: ${filename}</span>`;
-        
-        // Add download option to the retry button
-        videoRetryButton.innerHTML = '<i class="fas fa-download"></i> Download Video';
-        videoRetryButton.style.display = 'inline-block';
-        
-        // Change retry button to download button
-        videoRetryButton.onclick = function() {
-            // Create a download link for the video
-            let downloadUrl;
-            
-            // Try to determine the best URL for download
-            if (filename.includes('174912804')) {
-                // For the specific problematic video
-                downloadUrl = `work_progress_video.php?file=${filename}&download=1`;
-            } else if (videoUrl.includes('work_progress')) {
-                downloadUrl = `work_progress_video.php?file=${filename}&download=1`;
-            } else {
-                downloadUrl = `test_video.php?file=${filename}&download=1`;
-            }
-            
-            // Create and trigger download
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = filename;
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-            }, 100);
-            
-            // Update button text after clicking
-            videoRetryButton.innerHTML = '<i class="fas fa-check"></i> Download Started';
-            videoRetryButton.disabled = true;
-            setTimeout(() => {
-                videoRetryButton.innerHTML = '<i class="fas fa-download"></i> Download Video';
-                videoRetryButton.disabled = false;
-            }, 3000);
-        };
     }
+    
+    // Set up retry button to try a different source
+    videoRetryButton.onclick = function() {
+        // Determine best fallback based on context
+        let fallbackSrc;
+        
+        if (videoUrl.includes('work_progress')) {
+            // For work progress videos, use the specialized handler
+            fallbackSrc = `work_progress_video.php?file=${filename}`;
+        } else {
+            // For other videos, use the general handler
+            fallbackSrc = `test_video.php?file=${filename}`;
+        }
+        
+        // Try the fallback
+        videoPlayer.src = fallbackSrc;
+        videoPlayer.style.display = 'block';
+        videoErrorDisplay.style.display = 'none';
+        videoCaption.textContent = `Trying alternative source for ${filename}...`;
+        
+        // If that fails too, show final error
+        videoPlayer.onerror = function() {
+            showVideoError(filename);
+            videoErrorText.textContent = `All attempts to load video have failed. The video may be missing or corrupted.`;
+            videoRetryButton.style.display = 'none'; // Hide retry button after final attempt
+        };
+    };
     
     // Show the modal
     videoModal.style.display = 'flex';

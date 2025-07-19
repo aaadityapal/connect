@@ -294,12 +294,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /**
      * Updates the word count display for a textarea with 5-word minimum
+     * Now with special character filtering
      */
     function updateWordCount(textarea, displayElement) {
         if (!textarea || !displayElement) return;
         
         const text = textarea.value.trim();
-        const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+        // Filter out special characters and keep only valid words
+        const wordCount = text ? text.split(/\s+/)
+            .filter(word => word.length > 0)
+            .filter(word => /^[a-zA-Z0-9\u0900-\u097F]+$/.test(word)) // Allow alphanumeric and Hindi characters
+            .length : 0;
         
         // Update the display
         displayElement.textContent = `Words: ${wordCount} (minimum 5)`;
@@ -314,12 +319,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /**
      * Updates the word count display for work report with 20-word minimum
+     * Now with special character filtering
      */
     function updateWorkReportWordCount(textarea, displayElement) {
         if (!textarea || !displayElement) return;
         
         const text = textarea.value.trim();
-        const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+        // Filter out special characters and keep only valid words
+        const wordCount = text ? text.split(/\s+/)
+            .filter(word => word.length > 0)
+            .filter(word => /^[a-zA-Z0-9\u0900-\u097F]+$/.test(word)) // Allow alphanumeric and Hindi characters
+            .length : 0;
         
         // Update the display
         displayElement.textContent = `Words: ${wordCount} (minimum 20)`;
@@ -502,10 +512,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Check if reason has at least 5 words
-            const wordCount = workReportInput.split(/\s+/).filter(word => word.length > 0).length;
+            // Check if reason has at least 5 valid words (excluding special characters)
+            const wordCount = workReportInput.split(/\s+/)
+                .filter(word => word.length > 0)
+                .filter(word => /^[a-zA-Z0-9\u0900-\u097F]+$/.test(word)) // Allow alphanumeric and Hindi characters
+                .length;
+                
             if (wordCount < 5) {
-                showNotification('More Details Needed', 'Please provide a more detailed reason (minimum 5 words)', 'warning');
+                showNotification('More Details Needed', 'Please provide a more detailed reason (minimum 5 words). Special characters are not counted as words.', 'warning');
                 if (outsideLocationReason) outsideLocationReason.focus();
                 return;
             }
@@ -519,10 +533,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Check if work report has at least 20 words (updated from 5)
-            const wordCount = workReportInput.split(/\s+/).filter(word => word.length > 0).length;
+            // Check if work report has at least 20 valid words (excluding special characters)
+            const wordCount = workReportInput.split(/\s+/)
+                .filter(word => word.length > 0)
+                .filter(word => /^[a-zA-Z0-9\u0900-\u097F]+$/.test(word)) // Allow alphanumeric and Hindi characters
+                .length;
+                
             if (wordCount < 20) {
-                showNotification('More Details Needed', 'Please provide a more detailed work summary (minimum 20 words)', 'warning');
+                showNotification('More Details Needed', 'Please provide a more detailed work summary (minimum 20 words). Special characters are not counted as words.', 'warning');
                 if (outsideLocationReason) outsideLocationReason.focus();
                 return;
             }
@@ -535,10 +553,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Check if outside geofence reason has at least 5 words
-                const outsideReasonWordCount = outsideGeofenceReason.split(/\s+/).filter(word => word.length > 0).length;
+                // Check if outside geofence reason has at least 5 valid words (excluding special characters)
+                const outsideReasonWordCount = outsideGeofenceReason.split(/\s+/)
+                    .filter(word => word.length > 0)
+                    .filter(word => /^[a-zA-Z0-9\u0900-\u097F]+$/.test(word)) // Allow alphanumeric and Hindi characters
+                    .length;
+                    
                 if (outsideReasonWordCount < 5) {
-                    showNotification('More Details Needed', 'Please provide a more detailed explanation for being outside the location (minimum 5 words)', 'warning');
+                    showNotification('More Details Needed', 'Please provide a more detailed explanation for being outside the location (minimum 5 words). Special characters are not counted as words.', 'warning');
                     outsideGeofenceTextarea.focus();
                     return;
                 }

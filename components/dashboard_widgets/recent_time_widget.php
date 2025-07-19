@@ -413,6 +413,7 @@ if (empty($user_geofence_locations)) {
                     </div>
                     <textarea id="outsideReason" class="outside-reason-input" maxlength="100" placeholder="Enter reason for outside location (required)"></textarea>
                     <div class="word-counter"><span id="wordCount">0</span>/15 words</div>
+                    <div class="reason-note"><i class="fas fa-info-circle"></i> Note: Special characters alone won't be counted as words.</div>
                 </div>
             </div>
 
@@ -424,6 +425,7 @@ if (empty($user_geofence_locations)) {
                 </div>
                 <textarea id="workReport" class="work-report-input" maxlength="500" placeholder="Describe tasks completed, progress made, and challenges faced today..."></textarea>
                 <div class="word-counter"><span id="reportWordCount">0</span>/20 words minimum</div>
+                <div class="reason-note"><i class="fas fa-info-circle"></i> Note: Special characters alone won't be counted as words.</div>
             </div>
         </div>
         <div class="punch-modal-footer">
@@ -1047,6 +1049,58 @@ if (empty($user_geofence_locations)) {
     
     .word-counter {
         font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .word-counter {
+        font-size: 14px;
+        padding: 6px 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        position: absolute;
+        right: 15px;
+        bottom: -12px;
+        margin: 0;
+        font-weight: 500;
+    }
+    
+    .word-counter.insufficient {
+        background-color: rgba(244, 67, 54, 0.15);
+        color: #d32f2f;
+        font-weight: 600;
+    }
+    
+    /* Responsive styles for work report on small screens */
+    .work-report-container, .outside-reason-container {
+        padding: 8px;
+        padding-bottom: 20px; /* Add extra padding at bottom for the note */
+    }
+    
+    .report-header span, .reason-header span {
+        font-size: 13px;
+    }
+    
+    .work-report-input, .outside-reason-input {
+        min-height: 60px;
+        font-size: 14px;
+    }
+    
+    .word-counter {
+        font-size: 11px;
+    }
+    
+    .reason-note {
+        font-size: 11px;
+        margin-top: 16px;
+        text-align: center;
+        justify-content: center;
+    }
+    
+    /* Specific styling for work report container's reason note */
+    .work-report-container .reason-note {
+        margin-top: 20px;
     }
 }
 
@@ -1967,6 +2021,7 @@ if (empty($user_geofence_locations)) {
     border-radius: 8px;
     animation: fadeIn 0.3s;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative; /* Added for proper positioning of elements */
 }
 
 .report-header {
@@ -2192,6 +2247,87 @@ if (empty($user_geofence_locations)) {
     
     .word-counter {
         font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .word-counter {
+        font-size: 14px;
+        padding: 6px 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        position: absolute;
+        right: 15px;
+        bottom: -12px;
+        margin: 0;
+        font-weight: 500;
+    }
+    
+    .word-counter.insufficient {
+        background-color: rgba(244, 67, 54, 0.15);
+        color: #d32f2f;
+        font-weight: 600;
+    }
+    
+    /* Responsive styles for work report on small screens */
+    .work-report-container, .outside-reason-container {
+        padding: 8px;
+    }
+    
+    .report-header span, .reason-header span {
+        font-size: 13px;
+    }
+    
+    .work-report-input, .outside-reason-input {
+        min-height: 60px;
+        font-size: 14px;
+    }
+    
+    .word-counter {
+        font-size: 11px;
+    }
+    
+    .reason-note {
+        font-size: 11px;
+        margin-top: 16px;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+.word-counter.exceeded {
+    color: #f44336;
+    font-weight: bold;
+}
+
+.reason-note {
+    font-size: 12px;
+    color: #777;
+    margin-top: 8px;
+    padding-left: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.reason-note i {
+    color: #ff9800;
+    font-size: 14px;
+}
+
+.submit-punch-btn.outside-with-reason {
+    background-color: #ff9800;
+}
+
+.submit-punch-btn.outside-with-reason:hover:not([disabled]) {
+    background-color: #f57c00;
+}
+
+@media (max-width: 768px) {
+    .punch-modal-content {
+        width: 95%;
+        margin: 5% auto;
     }
 }
 </style>
@@ -2562,14 +2698,14 @@ if (empty($user_geofence_locations)) {
             }
             
             // For punch out, validate work report
-            if (!isPunchIn) {
+                            if (!isPunchIn) {
                 const workReportContainer = document.getElementById('workReportContainer');
                 if (workReportContainer && workReportContainer.style.display !== 'none') {
                     workReport = document.getElementById('workReport').value.trim();
                     const reportWordCount = countWords(workReport);
                     
                     if (reportWordCount < 20) {
-                        alert("Please provide a work report with at least 20 words.");
+                        alert("Please provide a work report with at least 20 words. Note that special characters alone won't be counted as words.");
                         return;
                     }
                 }
@@ -2748,8 +2884,11 @@ if (empty($user_geofence_locations)) {
             // Remove extra spaces and split by whitespace
             const words = text.trim().split(/\s+/);
             
-            // Filter out empty entries
-            return words.filter(word => word.length > 0).length;
+            // Filter out empty entries and entries that contain only special characters
+            return words.filter(word => {
+                // Keep only if the word contains at least one alphanumeric character
+                return word.length > 0 && /[a-zA-Z0-9]/.test(word);
+            }).length;
         }
         
         // Function to show success message

@@ -1,44 +1,89 @@
 <?php
-// Set headers to allow CORS
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
+/**
+ * Server-side proxy for OpenStreetMap Nominatim API
+ * This avoids CORS issues when making requests from the browser
+ */
 
-// Get coordinates from query parameters
-$latitude = isset($_GET['lat']) ? floatval($_GET['lat']) : null;
-$longitude = isset($_GET['lng']) ? floatval($_GET['lng']) : null;
+// Set headers to allow CORS from our domain and specify JSON response
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *'); // In production, replace * with your domain
 
-// Check if coordinates are valid
-if ($latitude === null || $longitude === null) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid coordinates']);
+// Check if latitude and longitude parameters are provided
+if (!isset($_GET['lat']) || !isset($_GET['lon'])) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Missing latitude or longitude parameters'
+    ]);
     exit;
 }
 
-// Make the request to OpenStreetMap Nominatim API from the server side
-$url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$latitude}&lon={$longitude}&zoom=18&addressdetails=1";
+// Get and validate coordinates
+$latitude = floatval($_GET['lat']);
+$longitude = floatval($_GET['lon']);
 
-// Set user agent as required by Nominatim usage policy
-$options = [
-    'http' => [
-        'header' => "User-Agent: HR System Geocoder/1.0\r\n",
-        'method' => 'GET'
-    ]
-];
-
-$context = stream_context_create($options);
-$response = file_get_contents($url, false, $context);
-
-if ($response === false) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to get address', 'address' => 'Unknown location']);
+// Validate coordinate ranges
+if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid coordinates'
+    ]);
     exit;
 }
 
+// Prepare the Nominatim API URL
+$url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$latitude}&lon={$longitude}&zoom=18";
+
+// Initialize cURL session
+$ch = curl_init();
+
+// Set cURL options
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_USERAGENT, 'HR Attendance System'); // Required by Nominatim usage policy
+curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Set timeout to 10 seconds
+
+// Execute cURL request
+$response = curl_exec($ch);
+
+// Check for cURL errors
+if (curl_errno($ch)) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error connecting to geocoding service: ' . curl_error($ch)
+    ]);
+    curl_close($ch);
+    exit;
+}
+
+// Get HTTP status code
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+// Check if request was successful
+if ($httpCode !== 200) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Geocoding service returned error code: ' . $httpCode
+    ]);
+    exit;
+}
+
+// Parse the JSON response
 $data = json_decode($response, true);
 
-if (isset($data['display_name'])) {
-    echo json_encode(['address' => $data['display_name']]);
+// Check if parsing was successful and display_name exists
+if ($data && isset($data['display_name'])) {
+    echo json_encode([
+        'status' => 'success',
+        'address' => $data['display_name'],
+        'lat' => $latitude,
+        'lon' => $longitude
+    ]);
 } else {
-    echo json_encode(['address' => 'Unknown location']);
-}
-?> 
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Could not determine address from coordinates',
+        'lat' => $latitude,
+        'lon' => $longitude
+    ]);
+} 

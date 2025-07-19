@@ -1408,23 +1408,26 @@ if ($currentHour < 12) {
             });
             
             // Function to update word count
-            function updateWordCount(textarea, displayElement) {
-                if (!textarea || !displayElement) return;
-                
-                const text = textarea.value.trim();
-                // Split by whitespace and filter out empty strings
-                const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
-                
-                // Update the display
-                displayElement.textContent = `Words: ${wordCount} (minimum 5)`;
-                
-                // Change color based on word count
-                if (wordCount < 5) {
-                    displayElement.style.color = '#dc3545'; // Red for less than minimum
-                } else {
-                    displayElement.style.color = '#28a745'; // Green for meeting minimum
-                }
-            }
+function updateWordCount(textarea, displayElement) {
+    if (!textarea || !displayElement) return;
+    
+    const text = textarea.value.trim();
+    // Split by whitespace, filter out empty strings and strings with only special characters
+    const wordCount = text ? text.split(/\s+/)
+        .filter(word => word.length > 0)
+        .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
+        .length : 0;
+    
+    // Update the display
+    displayElement.textContent = `Words: ${wordCount} (minimum 5)`;
+    
+    // Change color based on word count
+    if (wordCount < 5) {
+        displayElement.style.color = '#dc3545'; // Red for less than minimum
+    } else {
+        displayElement.style.color = '#28a745'; // Green for meeting minimum
+    }
+}
         </script>
                         <div class="work-report-container" id="workReportContainer" style="display: none; margin-top: 15px;">
             <h4><i class="fas fa-clipboard-list"></i> Work Report</h4>
@@ -1445,23 +1448,26 @@ if ($currentHour < 12) {
             });
             
             // Function to update work report word count
-            function updateWorkReportWordCount(textarea, displayElement) {
-                if (!textarea || !displayElement) return;
-                
-                const text = textarea.value.trim();
-                // Split by whitespace and filter out empty strings
-                const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
-                
-                // Update the display
-                displayElement.textContent = `Words: ${wordCount} (minimum 20)`;
-                
-                // Change color based on word count
-                if (wordCount < 20) {
-                    displayElement.style.color = '#dc3545'; // Red for less than minimum
-                } else {
-                    displayElement.style.color = '#28a745'; // Green for meeting minimum
-                }
-            }
+function updateWorkReportWordCount(textarea, displayElement) {
+    if (!textarea || !displayElement) return;
+    
+    const text = textarea.value.trim();
+    // Split by whitespace, filter out empty strings and strings with only special characters
+    const wordCount = text ? text.split(/\s+/)
+        .filter(word => word.length > 0)
+        .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
+        .length : 0;
+    
+    // Update the display
+    displayElement.textContent = `Words: ${wordCount} (minimum 20)`;
+    
+    // Change color based on word count
+    if (wordCount < 20) {
+        displayElement.style.color = '#dc3545'; // Red for less than minimum
+    } else {
+        displayElement.style.color = '#28a745'; // Green for meeting minimum
+    }
+}
         </script>
                 <div class="camera-controls">
                     <button class="camera-btn camera-btn-primary" id="captureBtn">
@@ -2611,9 +2617,13 @@ if ($currentHour < 12) {
                 
                 // Check if work report has at least 20 words
                 const workText = workReportText.value.trim();
-                const workReportWordCount = workText ? workText.split(/\s+/).filter(word => word.length > 0).length : 0;
+                const workReportWordCount = workText ? workText.split(/\s+/)
+                    .filter(word => word.length > 0)
+                    .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
+                    .length : 0;
+                    
                 if (workReportWordCount < 20) {
-                    showNotification('Please provide a more detailed work report (minimum 20 words)', 'warning');
+                    showNotification('Please provide a more detailed work report (minimum 20 valid words)', 'warning');
                     workReportText.focus();
                     return;
                 }
@@ -2629,9 +2639,13 @@ if ($currentHour < 12) {
                 
                 // Check if reason has at least 5 words
                 const text = outsideLocationReason.value.trim();
-                const reasonWordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+                const reasonWordCount = text ? text.split(/\s+/)
+                    .filter(word => word.length > 0)
+                    .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
+                    .length : 0;
+                    
                 if (reasonWordCount < 5) {
-                    showNotification('Please provide a more detailed reason (minimum 5 words)', 'warning');
+                    showNotification('Please provide a more detailed reason (minimum 5 valid words)', 'warning');
                     outsideLocationReason.focus();
                     return;
                 }
@@ -2998,15 +3012,10 @@ if ($currentHour < 12) {
             // Update status
             locationAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting address...';
             
-            // Use Nominatim API for reverse geocoding
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`;
+            // Use our server-side proxy to avoid CORS issues
+            const url = `ajax_handlers/get_address.php?lat=${latitude}&lon=${longitude}`;
             
-            fetch(url, {
-                headers: {
-                    'Accept': 'application/json',
-                    'User-Agent': 'HR Attendance System'
-                }
-            })
+            fetch(url)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -3014,9 +3023,9 @@ if ($currentHour < 12) {
                 return response.json();
             })
             .then(data => {
-                if (data.display_name) {
-                    locationAddress.innerHTML = `<i class="fas fa-map"></i> Address: ${data.display_name}`;
-                    userLocation.address = data.display_name;
+                if (data.status === 'success' && data.address) {
+                    locationAddress.innerHTML = `<i class="fas fa-map"></i> Address: ${data.address}`;
+                    userLocation.address = data.address;
                 } else {
                     locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Could not determine address';
                 }

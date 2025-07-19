@@ -70,10 +70,31 @@ try {
 // Get the site manager's name from session
 $siteManagerName = isset($_SESSION['username']) ? $_SESSION['username'] : "Site Manager";
 
-// Calculate total expenses
+// Calculate total expenses and paid amount
 $totalAmount = 0;
+$totalPaidAmount = 0;
 foreach ($expenses as $expense) {
     $totalAmount += $expense['amount'];
+    
+    // Check if expense is paid
+    $is_paid = false;
+    foreach ($expense as $key => $value) {
+        if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+            ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+            $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+            $value == '1' || $value == 1 || $value === true)) {
+            $is_paid = true;
+            
+            // Check if there's a paid_amount field
+            if (isset($expense['paid_amount']) && is_numeric($expense['paid_amount'])) {
+                $totalPaidAmount += $expense['paid_amount'];
+            } else {
+                // If no specific paid amount, use the full amount
+                $totalPaidAmount += $expense['amount'];
+            }
+            break;
+        }
+    }
 }
 
 // Format the filter period for display
@@ -544,6 +565,16 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
             color: #e74c3c;
         }
         
+        .paid-value {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .remaining-value {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
         .back-button {
             margin-right: 10px;
         }
@@ -589,6 +620,28 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
         .status-rejected {
             background-color: rgba(231, 76, 60, 0.1);
             color: #e74c3c;
+        }
+        
+        .payment-status-paid {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+            white-space: nowrap;
+        }
+        
+        .payment-status-unpaid {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: rgba(155, 89, 182, 0.1);
+            color: #8e44ad;
+            white-space: nowrap;
         }
         
         /* Responsive styles */
@@ -867,6 +920,7 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                                             <th>Distance</th>
                                             <th>Amount</th>
                                             <th>Status</th>
+                                            <th>Payment Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -895,6 +949,37 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                                                     <span class="status-indicator <?php echo $statusClass; ?>">
                                                         <?php echo $statusText; ?>
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    <?php 
+                                                    // Check if expense is paid
+                                                    $is_paid = false;
+                                                    $paid_amount = 0;
+                                                    
+                                                    foreach ($expense as $key => $value) {
+                                                        if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+                                                            ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                                                            $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                                                            $value == '1' || $value == 1 || $value === true)) {
+                                                            $is_paid = true;
+                                                            
+                                                            // Check if there's a paid_amount field
+                                                            if (isset($expense['paid_amount']) && is_numeric($expense['paid_amount'])) {
+                                                                $paid_amount = $expense['paid_amount'];
+                                                            } else {
+                                                                // If no specific paid amount, use the full amount
+                                                                $paid_amount = $expense['amount'];
+                                                            }
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    if ($is_paid) {
+                                                        echo '<span class="payment-status-paid">Paid: ₹' . number_format($paid_amount, 2) . '</span>';
+                                                    } else {
+                                                        echo '<span class="payment-status-unpaid">Not Paid</span>';
+                                                    }
+                                                    ?>
                                                 </td>
                                                 <td>
                                                     <button class="btn btn-sm btn-outline-primary view-expense" data-id="<?php echo $expense['id']; ?>">
@@ -952,6 +1037,40 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                                             <div class="mobile-expense-row">
                                                 <div class="mobile-expense-label">Distance:</div>
                                                 <div class="mobile-expense-value"><?php echo $expense['distance']; ?> km</div>
+                                            </div>
+                                            <div class="mobile-expense-row">
+                                                <div class="mobile-expense-label">Payment:</div>
+                                                <div class="mobile-expense-value">
+                                                    <?php 
+                                                    // Check if expense is paid
+                                                    $is_paid = false;
+                                                    $paid_amount = 0;
+                                                    
+                                                    foreach ($expense as $key => $value) {
+                                                        if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+                                                            ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                                                            $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                                                            $value == '1' || $value == 1 || $value === true)) {
+                                                            $is_paid = true;
+                                                            
+                                                            // Check if there's a paid_amount field
+                                                            if (isset($expense['paid_amount']) && is_numeric($expense['paid_amount'])) {
+                                                                $paid_amount = $expense['paid_amount'];
+                                                            } else {
+                                                                // If no specific paid amount, use the full amount
+                                                                $paid_amount = $expense['amount'];
+                                                            }
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    if ($is_paid) {
+                                                        echo '<span class="payment-status-paid">Paid: ₹' . number_format($paid_amount, 2) . '</span>';
+                                                    } else {
+                                                        echo '<span class="payment-status-unpaid">Not Paid</span>';
+                                                    }
+                                                    ?>
+                                                </div>
                                             </div>
                                         </div>
                                         
@@ -1068,6 +1187,14 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                         <div class="summary-stat">
                             <span class="summary-label">Last Month</span>
                             <span class="summary-value">₹<?php echo number_format($lastMonth, 2); ?></span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-label">Total Paid</span>
+                            <span class="summary-value paid-value">₹<?php echo number_format($totalPaidAmount, 2); ?></span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-label">Remaining</span>
+                            <span class="summary-value remaining-value">₹<?php echo number_format($totalAmount - $totalPaidAmount, 2); ?></span>
                         </div>
                         <div class="summary-stat summary-total">
                             <span class="summary-label">Total Amount</span>
@@ -1614,6 +1741,42 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
             }
             
             /**
+             * Get HTML for payment status display
+             * @param {Object} expense - The expense object
+             * @returns {string} - HTML for payment status
+             */
+            function getPaymentStatusHTML(expense) {
+                // Check if expense is paid
+                let isPaid = false;
+                let paidAmount = 0;
+                
+                // Check various payment status indicators
+                for (const key in expense) {
+                    if ((key.toLowerCase().includes('pay') || key.toLowerCase().includes('paid')) && 
+                        (expense[key] === 'paid' || expense[key] === 'Paid' || expense[key] === 'PAID' ||
+                         expense[key] === 'yes' || expense[key] === 'Yes' || expense[key] === 'YES' ||
+                         expense[key] === '1' || expense[key] === 1 || expense[key] === true)) {
+                        isPaid = true;
+                        
+                        // Check if there's a paid_amount field
+                        if (expense.paid_amount && !isNaN(parseFloat(expense.paid_amount))) {
+                            paidAmount = parseFloat(expense.paid_amount);
+                        } else {
+                            // If no specific paid amount, use the full amount
+                            paidAmount = parseFloat(expense.amount);
+                        }
+                        break;
+                    }
+                }
+                
+                if (isPaid) {
+                    return `<span class="payment-status-paid">Paid: ₹${paidAmount.toFixed(2)}</span>`;
+                } else {
+                    return '<span class="payment-status-unpaid">Not Paid</span>';
+                }
+            }
+            
+            /**
              * Display expense details in the modal
              * @param {Object} expense - The expense object
              */
@@ -1679,6 +1842,13 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                             <div class="col-md-4">
                                 <strong>Amount:</strong> 
                                 <span class="expense-amount">₹${parseFloat(expense.amount).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Payment Status:</strong> 
+                                ${getPaymentStatusHTML(expense)}
                             </div>
                         </div>
                         

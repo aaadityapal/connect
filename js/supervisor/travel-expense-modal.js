@@ -56,6 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const expenseInput = document.getElementById('totalExpense');
     const notesInput = document.getElementById('expenseNotes');
     
+    // Set max date to today to prevent future dates
+    const today = new Date();
+    const todayFormatted = formatDateForDB(today);
+    dateInput.setAttribute('max', todayFormatted);
+    
+    // Set min date to 15 days ago to prevent older dates
+    const fifteenDaysAgo = new Date();
+    fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+    const fifteenDaysAgoFormatted = formatDateForDB(fifteenDaysAgo);
+    dateInput.setAttribute('min', fifteenDaysAgoFormatted);
+    
     // Add visual indicator for read-only fields
     expenseInput.addEventListener('focus', function() {
         if (this.readOnly) {
@@ -249,6 +260,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set default date to today
     dateInput.value = formatDateForDB(new Date());
     
+    // Add date input change event to prevent future dates
+    dateInput.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time part for proper comparison
+        selectedDate.setHours(0, 0, 0, 0); // Reset time part for proper comparison
+        
+        // Check for future dates - allow today's date
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        if (selectedDate >= tomorrow) {
+            showNotification('Future dates are not allowed for travel expenses', 'error');
+            this.value = formatDateForDB(today);
+            return;
+        }
+        
+        // Check for dates older than 15 days
+        const fifteenDaysAgo = new Date();
+        fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+        fifteenDaysAgo.setHours(0, 0, 0, 0); // Reset time part for proper comparison
+        
+        if (selectedDate < fifteenDaysAgo) {
+            showNotification('You can only submit expenses for the past 15 days', 'error');
+            this.value = formatDateForDB(fifteenDaysAgo);
+        }
+    });
+    
     // Open modal when button is clicked
     addTravelExpenseBtn.addEventListener('click', function(e) {
         e.preventDefault(); // Prevent default link behavior
@@ -356,7 +395,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Invalid date', 'error');
                     isValid = false;
                 } else {
-                    markValid(dateInput);
+                    // Check if it's a future date
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset time part for proper comparison
+                    date.setHours(0, 0, 0, 0); // Reset time part for proper comparison
+                    
+                    // Allow today's date, but not future dates
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    
+                    if (date >= tomorrow) {
+                        markInvalid(dateInput);
+                        showNotification('Future dates are not allowed for travel expenses', 'error');
+                        isValid = false;
+                    } else {
+                        // Check if date is older than 15 days
+                        const fifteenDaysAgo = new Date();
+                        fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+                        fifteenDaysAgo.setHours(0, 0, 0, 0); // Reset time part for proper comparison
+                        
+                        if (date < fifteenDaysAgo) {
+                            markInvalid(dateInput);
+                            showNotification('You can only submit expenses for the past 15 days', 'error');
+                            isValid = false;
+                        } else {
+                            markValid(dateInput);
+                        }
+                    }
                 }
             }
         }

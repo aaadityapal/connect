@@ -30,25 +30,27 @@ $params = array($user_id);
 $types = "i";
 
 if ($status_filter != 'all') {
-    $query .= " AND status = ?";
-    $params[] = $status_filter;
-    $types .= "s";
+    // Handle combined status filters
+    if ($status_filter == 'approved-paid') {
+        $query .= " AND status = 'approved'";
+        // We'll filter for paid items in PHP after fetching
+    } elseif ($status_filter == 'approved-not-paid') {
+        $query .= " AND status = 'approved'";
+        // We'll filter for non-paid items in PHP after fetching
+    } elseif ($status_filter == 'pending-paid') {
+        $query .= " AND status = 'pending'";
+        // We'll filter for pre-paid items in PHP after fetching
+    } else {
+        // Regular status filter
+        $query .= " AND status = ?";
+        $params[] = $status_filter;
+        $types .= "s";
+    }
 }
 
-// If month filter is set and not empty, it takes precedence over date range
-if (!empty($month_filter)) {
-    $month_start = date('Y-m-01', strtotime($month_filter));
-    $month_end = date('Y-m-t', strtotime($month_filter));
-    $query .= " AND travel_date BETWEEN ? AND ?";
-    $params[] = $month_start;
-    $params[] = $month_end;
-    $types .= "ss";
-    
-    // If month filter is active, set date_from and date_to for the form
-    if (empty($date_from)) $date_from = $month_start;
-    if (empty($date_to)) $date_to = $month_end;
-} else {
-    // Otherwise use date range if provided
+// Check if date range is provided
+if (!empty($date_from) || !empty($date_to)) {
+    // Date range filter takes precedence when explicitly provided
     if (!empty($date_from)) {
         $query .= " AND travel_date >= ?";
         $params[] = $date_from;
@@ -60,6 +62,18 @@ if (!empty($month_filter)) {
         $params[] = $date_to;
         $types .= "s";
     }
+} else if (!empty($month_filter)) {
+    // Use month filter only if date range is not provided
+    $month_start = date('Y-m-01', strtotime($month_filter));
+    $month_end = date('Y-m-t', strtotime($month_filter));
+    $query .= " AND travel_date BETWEEN ? AND ?";
+    $params[] = $month_start;
+    $params[] = $month_end;
+    $types .= "ss";
+    
+    // Set date_from and date_to for the form to show the selected month range
+    $date_from = $month_start;
+    $date_to = $month_end;
 }
 
 $query .= " ORDER BY travel_date DESC, id DESC";
@@ -80,6 +94,35 @@ if ($stmt) {
     $stmt->close();
 }
 
+// Post-processing for combined status filters
+if ($status_filter == 'approved-paid' || $status_filter == 'approved-not-paid' || $status_filter == 'pending-paid') {
+    $filtered_expenses = [];
+    
+    foreach ($expenses as $expense) {
+        // Check if expense is paid
+        $is_paid = false;
+        foreach ($expense as $key => $value) {
+            if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+                ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                $value == '1' || $value == 1 || $value === true)) {
+                $is_paid = true;
+                break;
+            }
+        }
+        
+        // Filter based on combined status
+        if (($status_filter == 'approved-paid' && $expense['status'] == 'approved' && $is_paid) ||
+            ($status_filter == 'approved-not-paid' && $expense['status'] == 'approved' && !$is_paid) ||
+            ($status_filter == 'pending-paid' && $expense['status'] == 'pending' && $is_paid)) {
+            $filtered_expenses[] = $expense;
+        }
+    }
+    
+    // Replace the expenses array with our filtered version
+    $expenses = $filtered_expenses;
+}
+
 // Group expenses by date
 $grouped_expenses = [];
 foreach ($expenses as $expense) {
@@ -96,6 +139,7 @@ $total_amount = 0;
 $approved_amount = 0;
 $pending_amount = 0;
 $rejected_amount = 0;
+$paid_amount = 0; // New variable for paid amount
 
 foreach ($expenses as $expense) {
     $total_amount += $expense['amount'];
@@ -106,6 +150,28 @@ foreach ($expenses as $expense) {
         $pending_amount += $expense['amount'];
     } elseif ($expense['status'] == 'rejected') {
         $rejected_amount += $expense['amount'];
+    }
+    
+    // Check for payment status in a more robust way
+    $is_paid = false;
+    
+    // Look for any column that might indicate payment status
+    foreach ($expense as $key => $value) {
+        // If column name contains 'pay' or 'paid'
+        if (strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) {
+            // Check for values that might indicate "paid"
+            if ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                $value == '1' || $value == 1 || $value === true) {
+                $is_paid = true;
+                break;
+            }
+        }
+    }
+    
+    // If explicitly marked as paid or if approved expenses should be considered paid
+    if ($is_paid || ($expense['status'] == 'approved' && isset($_GET['consider_approved_as_paid']) && $_GET['consider_approved_as_paid'] == '1')) {
+        $paid_amount += $expense['amount'];
     }
 }
 
@@ -288,6 +354,63 @@ function generateMonthOptions($selected_month) {
             color: #f44336;
         }
         
+        .status-paid {
+            background-color: #e0f2f1;
+            color: #009688;
+            margin-left: 5px;
+        }
+        
+        .status-not-paid {
+            background-color: #f3e5f5;
+            color: #9c27b0;
+            margin-left: 5px;
+        }
+        
+        .expense-combined-status {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-left: 5px;
+        }
+        
+        .status-approved-paid {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #81c784;
+        }
+        
+        .status-approved-not-paid {
+            background-color: #e8f5e9;
+            color: #f57c00;
+            border: 1px solid #a5d6a7;
+        }
+        
+        .status-pending-paid {
+            background-color: #fff8e1;
+            color: #1976d2;
+            border: 1px solid #ffecb3;
+        }
+        
+        .status-pending {
+            background-color: #fff8e1;
+            color: #ff9800;
+        }
+        
+        .status-rejected-paid {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ef9a9a;
+        }
+        
+        .status-rejected {
+            background-color: #ffebee;
+            color: #f44336;
+        }
+        
         .expense-amount {
             font-weight: 700;
             color: #6a11cb;
@@ -370,6 +493,10 @@ function generateMonthOptions($selected_month) {
         
         .rejected-amount {
             color: #f44336;
+        }
+        
+        .paid-amount {
+            color: #009688;
         }
         
         .filters-section {
@@ -1024,6 +1151,10 @@ function generateMonthOptions($selected_month) {
                                 <div class="stat-label">Rejected Amount</div>
                                 <div class="stat-value rejected-amount">₹<?php echo number_format($rejected_amount, 2); ?></div>
                             </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Paid Amount</div>
+                                <div class="stat-value paid-amount">₹<?php echo number_format($paid_amount, 2); ?></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1042,6 +1173,9 @@ function generateMonthOptions($selected_month) {
                                     <option value="pending" <?php echo $status_filter == 'pending' ? 'selected' : ''; ?>>Pending</option>
                                     <option value="approved" <?php echo $status_filter == 'approved' ? 'selected' : ''; ?>>Approved</option>
                                     <option value="rejected" <?php echo $status_filter == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                                    <option value="approved-paid" <?php echo $status_filter == 'approved-paid' ? 'selected' : ''; ?>>Approved & Paid</option>
+                                    <option value="approved-not-paid" <?php echo $status_filter == 'approved-not-paid' ? 'selected' : ''; ?>>Approved, Not Paid</option>
+                                    <option value="pending-paid" <?php echo $status_filter == 'pending-paid' ? 'selected' : ''; ?>>Pending, Prepaid</option>
                                 </select>
                             </div>
                             <div class="col-md-3 mb-3">
@@ -1111,12 +1245,50 @@ function generateMonthOptions($selected_month) {
                                     <!-- First expense is always shown -->
                                     <div class="expense-item">
                                         <div class="expense-item-header">
-                                            <h6 class="expense-purpose">
-                                                <?php echo htmlspecialchars($first_expense['purpose']); ?>
-                                                <span class="expense-status status-<?php echo $first_expense['status']; ?>">
-                                                    <?php echo ucfirst($first_expense['status']); ?>
-                                                </span>
-                                            </h6>
+                                                                            <h6 class="expense-purpose">
+                                    <?php echo htmlspecialchars($first_expense['purpose']); ?>
+                                    <?php
+                                    // Check if expense is paid
+                                    $is_paid = false;
+                                    foreach ($first_expense as $key => $value) {
+                                        if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+                                            ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                                            $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                                            $value == '1' || $value == 1 || $value === true)) {
+                                            $is_paid = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Determine combined status
+                                    $status = $first_expense['status'];
+                                    $combined_status = '';
+                                    $combined_status_class = '';
+                                    
+                                    if ($status == 'approved' && $is_paid) {
+                                        $combined_status = 'Approved & Paid';
+                                        $combined_status_class = 'status-approved-paid';
+                                    } elseif ($status == 'approved' && !$is_paid) {
+                                        $combined_status = 'Approved, Not Paid';
+                                        $combined_status_class = 'status-approved-not-paid';
+                                    } elseif ($status == 'pending' && $is_paid) {
+                                        $combined_status = 'Pending, Prepaid';
+                                        $combined_status_class = 'status-pending-paid';
+                                    } elseif ($status == 'pending' && !$is_paid) {
+                                        $combined_status = 'Pending';
+                                        $combined_status_class = 'status-pending';
+                                    } elseif ($status == 'rejected' && $is_paid) {
+                                        $combined_status = 'Rejected, Refund Due';
+                                        $combined_status_class = 'status-rejected-paid';
+                                    } elseif ($status == 'rejected' && !$is_paid) {
+                                        $combined_status = 'Rejected';
+                                        $combined_status_class = 'status-rejected';
+                                    }
+                                    ?>
+                                    <span class="expense-combined-status <?php echo $combined_status_class; ?>">
+                                        <?php echo $combined_status; ?>
+                                    </span>
+                                </h6>
                                         </div>
                                         <div class="expense-details">
                                             <div class="detail-item">
@@ -1255,11 +1427,49 @@ function generateMonthOptions($selected_month) {
                                                     <div class="grouped-expense-view-content" id="groupedViewContent-<?php echo $expense['id']; ?>">
                                                         <div class="expense-item-header">
                                                             <h6 class="expense-purpose">
-                                                                <span class="expense-serial">#<?php echo $index + 1; ?></span>
-                                                                <?php echo htmlspecialchars($expense['purpose']); ?>
-                                                                <span class="expense-status status-<?php echo $expense['status']; ?>">
-                                                                    <?php echo ucfirst($expense['status']); ?>
-                                                                </span>
+                                                                                                                <span class="expense-serial">#<?php echo $index + 1; ?></span>
+                                                <?php echo htmlspecialchars($expense['purpose']); ?>
+                                                <?php
+                                                // Check if expense is paid
+                                                $is_paid = false;
+                                                foreach ($expense as $key => $value) {
+                                                    if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+                                                        ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                                                        $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                                                        $value == '1' || $value == 1 || $value === true)) {
+                                                        $is_paid = true;
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                // Determine combined status
+                                                $status = $expense['status'];
+                                                $combined_status = '';
+                                                $combined_status_class = '';
+                                                
+                                                if ($status == 'approved' && $is_paid) {
+                                                    $combined_status = 'Approved & Paid';
+                                                    $combined_status_class = 'status-approved-paid';
+                                                } elseif ($status == 'approved' && !$is_paid) {
+                                                    $combined_status = 'Approved, Not Paid';
+                                                    $combined_status_class = 'status-approved-not-paid';
+                                                } elseif ($status == 'pending' && $is_paid) {
+                                                    $combined_status = 'Pending, Prepaid';
+                                                    $combined_status_class = 'status-pending-paid';
+                                                } elseif ($status == 'pending' && !$is_paid) {
+                                                    $combined_status = 'Pending';
+                                                    $combined_status_class = 'status-pending';
+                                                } elseif ($status == 'rejected' && $is_paid) {
+                                                    $combined_status = 'Rejected, Refund Due';
+                                                    $combined_status_class = 'status-rejected-paid';
+                                                } elseif ($status == 'rejected' && !$is_paid) {
+                                                    $combined_status = 'Rejected';
+                                                    $combined_status_class = 'status-rejected';
+                                                }
+                                                ?>
+                                                <span class="expense-combined-status <?php echo $combined_status_class; ?>">
+                                                    <?php echo $combined_status; ?>
+                                                </span>
                                                             </h6>
                                                         </div>
                                                         <div class="expense-details">
@@ -1444,8 +1654,46 @@ function generateMonthOptions($selected_month) {
                         <div class="expense-detail-header">
                             <h4 class="expense-detail-purpose"><?php echo htmlspecialchars($expense['purpose']); ?></h4>
                             <div class="expense-detail-meta">
-                                <span class="expense-status status-<?php echo $expense['status']; ?>">
-                                    <?php echo ucfirst($expense['status']); ?>
+                                <?php
+                                // Check if expense is paid
+                                $is_paid = false;
+                                foreach ($expense as $key => $value) {
+                                    if ((strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) &&
+                                        ($value == 'paid' || $value == 'Paid' || $value == 'PAID' || 
+                                        $value == 'yes' || $value == 'Yes' || $value == 'YES' ||
+                                        $value == '1' || $value == 1 || $value === true)) {
+                                        $is_paid = true;
+                                        break;
+                                    }
+                                }
+                                
+                                // Determine combined status
+                                $status = $expense['status'];
+                                $combined_status = '';
+                                $combined_status_class = '';
+                                
+                                if ($status == 'approved' && $is_paid) {
+                                    $combined_status = 'Approved & Paid';
+                                    $combined_status_class = 'status-approved-paid';
+                                } elseif ($status == 'approved' && !$is_paid) {
+                                    $combined_status = 'Approved, Not Paid';
+                                    $combined_status_class = 'status-approved-not-paid';
+                                } elseif ($status == 'pending' && $is_paid) {
+                                    $combined_status = 'Pending, Prepaid';
+                                    $combined_status_class = 'status-pending-paid';
+                                } elseif ($status == 'pending' && !$is_paid) {
+                                    $combined_status = 'Pending';
+                                    $combined_status_class = 'status-pending';
+                                } elseif ($status == 'rejected' && $is_paid) {
+                                    $combined_status = 'Rejected, Refund Due';
+                                    $combined_status_class = 'status-rejected-paid';
+                                } elseif ($status == 'rejected' && !$is_paid) {
+                                    $combined_status = 'Rejected';
+                                    $combined_status_class = 'status-rejected';
+                                }
+                                ?>
+                                <span class="expense-combined-status <?php echo $combined_status_class; ?>">
+                                    <?php echo $combined_status; ?>
                                 </span>
                                 <span class="expense-detail-date">
                                     <i class="far fa-calendar-alt"></i> <?php echo date('F d, Y', strtotime($expense['travel_date'])); ?>
@@ -1694,6 +1942,40 @@ function generateMonthOptions($selected_month) {
     <div id="debugPanel" style="position: fixed; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: #fff; padding: 10px; max-width: 400px; max-height: 300px; overflow: auto; z-index: 9999; display: none;">
         <h5>Debug Info</h5>
         <div id="debugContent"></div>
+        <?php if (isset($_GET['debug']) && $_GET['debug'] == '1'): ?>
+        <div>
+            <h6>Payment Status Debug:</h6>
+            <pre><?php 
+                echo "<strong>Database Column Check:</strong>\n";
+                // Check which payment status column exists
+                if ($expenses && count($expenses) > 0) {
+                    $first_expense = $expenses[0];
+                    echo "Available columns: ";
+                    foreach (array_keys($first_expense) as $key) {
+                        echo $key . ", ";
+                    }
+                    echo "\n\n";
+                }
+                
+                echo "<strong>Expense Details:</strong>\n";
+                foreach ($expenses as $idx => $exp) {
+                    echo "Expense #" . $idx . ": ";
+                    echo "Amount: " . $exp['amount'] . ", ";
+                    echo "Status: " . $exp['status'] . ", ";
+                    
+                    // Check for payment status related columns
+                    foreach ($exp as $key => $value) {
+                        if (strpos(strtolower($key), 'pay') !== false || strpos(strtolower($key), 'paid') !== false) {
+                            echo $key . ": " . $value . ", ";
+                        }
+                    }
+                    
+                    echo "\n";
+                }
+                echo "\nTotal Paid Amount: " . $paid_amount;
+            ?></pre>
+        </div>
+        <?php endif; ?>
     </div>
     
     <!-- Include JS files -->
@@ -1823,6 +2105,22 @@ function generateMonthOptions($selected_month) {
             
             // Initialize tooltips
             $('[data-toggle="tooltip"]').tooltip();
+            
+            // Handle filter interactions
+            $('#month').change(function() {
+                // If a month is selected, clear date range fields
+                if ($(this).val() !== '') {
+                    $('#date_from').val('');
+                    $('#date_to').val('');
+                }
+            });
+            
+            // If date range is set, clear month selection
+            $('#date_from, #date_to').change(function() {
+                if ($('#date_from').val() || $('#date_to').val()) {
+                    $('#month').val('');
+                }
+            });
             
             // Edit button in details modal
             document.querySelectorAll('.edit-from-details').forEach(button => {

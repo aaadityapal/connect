@@ -91,6 +91,12 @@ error_log("Session Data: " . print_r($_SESSION, true));
                         <span class="sidebar-text"> Overtime Reports</span>
                     </a>
                 </li>
+                <li>
+                    <a href="travel_report.php">
+                        <i class="fas fa-plane"></i>
+                        <span class="sidebar-text"> Travel Reports</span>
+                    </a>
+                </li>
                 
             </ul>
             

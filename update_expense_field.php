@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Check if user has the correct role
-$allowed_roles = ['Senior Manager (Site)', 'Admin', 'HR Manager', 'Purchase Manager', 'HR'];
+$allowed_roles = ['Senior Manager (Site)', 'Admin', 'HR Manager', 'Purchase Manager', 'HR', 'Senior Manager (Studio)'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     // Return error response
     header('Content-Type: application/json');

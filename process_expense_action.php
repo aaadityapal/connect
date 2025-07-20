@@ -16,7 +16,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Check if user has the correct role
-$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'Accountant', 'HR Manager', 'HR'];
+$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'Accountant', 'HR Manager', 'HR', 'Senior Manager (Studio)'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'Permission denied']);
@@ -85,7 +85,7 @@ try {
     $status_field = '';
     $reason_field = '';
     
-    if ($role === 'Senior Manager (Site)') {
+    if ($role === 'Senior Manager (Site)' || $role === 'Senior Manager (Studio)') {
         $status_field = 'manager_status';
         $reason_field = 'manager_reason';
     } elseif ($role === 'Purchase Manager' || $role === 'Accountant') {

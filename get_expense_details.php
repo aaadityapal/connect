@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Include database connection
-require_once 'config/db_connect.php';
+require_once 'includes/db_connect.php'; // Updated path to match project structure
 
 // Check if expense ID is provided
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {

@@ -1079,3 +1079,147 @@
 2025-07-12 11:22:35 - Processing expense IDs: [41]
 2025-07-12 11:22:35 - Updating status field: hr_status to value: approved
 2025-07-12 11:22:35 - Successfully processed 1 out of 1 expenses
+2025-07-19 15:30:29 - Request received in process_expense_action.php
+2025-07-19 15:30:29 - POST data: Array
+(
+    [expense_id] => 44
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-19 15:30:29 - SESSION data: Array
+(
+    [user_id] => 11
+    [username] => Rachana Pal
+    [role] => Senior Manager (Site)
+    [unique_id] => SMS002
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/profile_11_1750411458.jpeg
+)
+
+2025-07-19 15:30:29 - Processing expense IDs: [44]
+2025-07-19 15:30:29 - Updating status field: manager_status to value: approved
+2025-07-19 15:30:29 - Successfully processed 1 out of 1 expenses
+2025-07-19 15:30:51 - Request received in process_expense_action.php
+2025-07-19 15:30:51 - POST data: Array
+(
+    [expense_id] => 45
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-19 15:30:51 - SESSION data: Array
+(
+    [user_id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [unique_id] => SMS001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/1744021852_Untitled1.jpg
+)
+
+2025-07-19 15:30:51 - Processing expense IDs: [45]
+2025-07-19 15:30:51 - Error: Role not configured for expense approval
+2025-07-19 15:41:08 - Request received in process_expense_action.php
+2025-07-19 15:41:08 - POST data: Array
+(
+    [expense_id] => 45
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-19 15:41:08 - SESSION data: Array
+(
+    [user_id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [unique_id] => SMS001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/1744021852_Untitled1.jpg
+)
+
+2025-07-19 15:41:08 - Processing expense IDs: [45]
+2025-07-19 15:41:08 - Error: Role not configured for expense approval
+2025-07-19 15:42:43 - Request received in process_expense_action.php
+2025-07-19 15:42:43 - POST data: Array
+(
+    [expense_id] => 45
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-19 15:42:43 - SESSION data: Array
+(
+    [user_id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [unique_id] => SMS001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/1744021852_Untitled1.jpg
+)
+
+2025-07-19 15:42:43 - Processing expense IDs: [45]
+2025-07-19 15:42:43 - Error: Role not configured for expense approval
+2025-07-19 15:43:00 - Request received in process_expense_action.php
+2025-07-19 15:43:00 - POST data: Array
+(
+    [expense_id] => 45
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-19 15:43:00 - SESSION data: Array
+(
+    [user_id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [unique_id] => SMS001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/1744021852_Untitled1.jpg
+)
+
+2025-07-19 15:43:00 - Processing expense IDs: [45]
+2025-07-19 15:43:00 - Error: Role not configured for expense approval
+2025-07-19 15:48:17 - Request received in process_expense_action.php
+2025-07-19 15:48:17 - POST data: Array
+(
+    [expense_id] => 45
+    [action_type] => approve
+    [notes] => 
+)
+
+2025-07-19 15:48:17 - SESSION data: Array
+(
+    [user_id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [unique_id] => SMS001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/1744021852_Untitled1.jpg
+)
+
+2025-07-19 15:48:17 - Processing expense IDs: [45]
+2025-07-19 15:48:17 - Updating status field: manager_status to value: approved
+2025-07-19 15:48:17 - Successfully processed 1 out of 1 expenses
+2025-07-19 15:53:22 - Request received in process_expense_action.php
+2025-07-19 15:53:22 - POST data: Array
+(
+    [expense_id] => 32
+    [action_type] => approve
+    [notes] => 
+    [all_expense_ids] => [32,35]
+)
+
+2025-07-19 15:53:22 - SESSION data: Array
+(
+    [user_id] => 3
+    [username] => Yojna Sharma
+    [role] => Senior Manager (Studio)
+    [unique_id] => SMS001
+    [employee_id] => 
+    [profile_picture] => uploads/profile_pictures/1744021852_Untitled1.jpg
+)
+
+2025-07-19 15:53:22 - Processing expense IDs: [32,35]
+2025-07-19 15:53:22 - Updating status field: manager_status to value: approved
+2025-07-19 15:53:22 - Successfully processed 2 out of 2 expenses

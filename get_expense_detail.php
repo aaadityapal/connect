@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Check if user has the appropriate role
-$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'Accountant', 'HR'];
+$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'Accountant', 'HR', 'Senior Manager (Studio)'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     echo '<div class="alert alert-danger m-4">Unauthorized access</div>';
     exit;

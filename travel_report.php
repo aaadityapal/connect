@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Check if user has the correct role
-$allowed_roles = ['Senior Manager (Site)'];
+$allowed_roles = ['Senior Manager (Site)', 'Senior Manager (Studio)'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
     // Redirect to appropriate page based on role
     $_SESSION['error'] = "You don't have permission to access this page";
@@ -150,8 +150,18 @@ $employee_filter = isset($_GET['employee']) ? intval($_GET['employee']) : 0;
 $status_filter = isset($_GET['status']) ? $_GET['status'] : '';
 $approval_filter = isset($_GET['approval']) ? $_GET['approval'] : '';
 
+// Define excluded roles
+$excluded_roles = [
+    'Site Coordinator',
+    'Site Supervisor',
+    'Purchase Manager',
+    'Social Media Marketing',
+    'Graphic Designer',
+    'Sales'
+];
+
 // Build WHERE clause for filtering
-$where_clause = "1=1"; // Changed from "te.status = 'pending'" to show all expenses
+$where_clause = "u.role NOT IN ('" . implode("','", $excluded_roles) . "')"; // Exclude specified roles
 $params = [];
 $param_types = "";
 
@@ -288,9 +298,7 @@ if (!empty($approval_filter)) {
 
 try {
     // Count filtered expenses for pagination
-    $count_query = "SELECT COUNT(*) as total FROM travel_expenses te 
-                    JOIN users u ON te.user_id = u.id 
-                    WHERE {$where_clause} AND u.role IN ('Site Coordinator', 'Site Supervisor', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing and Sales')";
+    $count_query = "SELECT COUNT(*) as total FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$where_clause}";
     $stmt = $conn->prepare($count_query);
     
     if (!empty($params)) {
@@ -309,11 +317,11 @@ try {
     
     // Fetch filtered expenses with pagination
     $query = "
-        SELECT te.*, u.username, u.unique_id as employee_id, u.profile_picture,
-               te.manager_status, te.accountant_status, te.hr_status, u.role
+        SELECT te.*, u.username, u.unique_id as employee_id, u.profile_picture, u.role,
+               te.manager_status, te.accountant_status, te.hr_status
         FROM travel_expenses te
         JOIN users u ON te.user_id = u.id
-        WHERE {$where_clause} AND u.role IN ('Site Coordinator', 'Site Supervisor', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing and Sales')
+        WHERE {$where_clause}
         ORDER BY te.travel_date DESC
         LIMIT ? OFFSET ?
     ";
@@ -354,15 +362,19 @@ $monthlyAmount = 0;
 $averageAmount = 0;
 
 try {
-    // Create base WHERE clauses for the cards, which will include the employee filter if selected
+    // Create base WHERE clauses for the cards, which will include the employee filter and role exclusions
     $employee_where = $employee_filter > 0 ? "te.user_id = $employee_filter AND " : "";
-    $role_filter = "u.role IN ('Site Coordinator', 'Site Supervisor', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing and Sales') AND ";
+    $excluded_roles_list = "'" . implode("','", $excluded_roles) . "'";
+    $role_where = "u.role NOT IN ({$excluded_roles_list}) AND ";
     
     // Log the filter being applied for debugging
     error_log("Applied employee filter: " . ($employee_filter > 0 ? $employee_filter : "None"));
+    error_log("Excluded roles: " . implode(", ", $excluded_roles));
     
     // Count pending expenses
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$role_filter}{$employee_where}te.status = 'pending'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$role_where}{$employee_where}te.status = 'pending'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -370,7 +382,9 @@ try {
     }
     
     // Count approved expenses
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$role_filter}{$employee_where}te.status = 'approved'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$role_where}{$employee_where}te.status = 'approved'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -378,7 +392,9 @@ try {
     }
     
     // Count rejected expenses
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$role_filter}{$employee_where}te.status = 'rejected'");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$role_where}{$employee_where}te.status = 'rejected'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -386,7 +402,9 @@ try {
     }
     
     // Calculate total amount
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$role_filter}{$employee_where}te.status = 'pending'");
+    $stmt = $conn->prepare("SELECT SUM(te.amount) as total FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$role_where}{$employee_where}te.status = 'pending'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -394,7 +412,9 @@ try {
     }
     
     // Calculate total approved amount
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$role_filter}{$employee_where}te.status = 'approved'");
+    $stmt = $conn->prepare("SELECT SUM(te.amount) as total FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$role_where}{$employee_where}te.status = 'approved'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -402,7 +422,9 @@ try {
     }
     
     // Calculate total rejected amount
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$role_filter}{$employee_where}te.status = 'rejected'");
+    $stmt = $conn->prepare("SELECT SUM(te.amount) as total FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$role_where}{$employee_where}te.status = 'rejected'");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -412,8 +434,10 @@ try {
     // Calculate current month's total amount
     $currentMonth = date('m');
     $currentYear = date('Y');
-    $monthWhere = "{$role_filter}{$employee_where}MONTH(te.travel_date) = ? AND YEAR(te.travel_date) = ?";
-    $stmt = $conn->prepare("SELECT SUM(amount) as total FROM travel_expenses te JOIN users u ON te.user_id = u.id WHERE {$monthWhere}");
+    $monthWhere = "{$role_where}{$employee_where}MONTH(te.travel_date) = ? AND YEAR(te.travel_date) = ?";
+    $stmt = $conn->prepare("SELECT SUM(te.amount) as total FROM travel_expenses te 
+                           JOIN users u ON te.user_id = u.id 
+                           WHERE {$monthWhere}");
     $stmt->bind_param("ss", $currentMonth, $currentYear);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -422,8 +446,8 @@ try {
     }
     
     // Calculate average expense amount
-    $avgWhere = "JOIN users u ON te.user_id = u.id WHERE {$role_filter}" . ($employee_filter > 0 ? "te.user_id = $employee_filter" : "1=1");
-    $stmt = $conn->prepare("SELECT AVG(amount) as average FROM travel_expenses te {$avgWhere}");
+    $avgWhere = "JOIN users u ON te.user_id = u.id WHERE {$role_where}" . ($employee_filter > 0 ? "te.user_id = $employee_filter" : "1=1");
+    $stmt = $conn->prepare("SELECT AVG(te.amount) as average FROM travel_expenses te {$avgWhere}");
     $stmt->execute();
     $result = $stmt->get_result();
     if ($row = $result->fetch_assoc()) {
@@ -471,6 +495,9 @@ function getTransportIcon($mode) {
     <title>Travel Expenses Approval | Corporate Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Add jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -522,13 +549,218 @@ function getTransportIcon($mode) {
             overflow-y: auto;
             height: 100vh;
             box-sizing: border-box;
-            margin-left: 250px; /* Match the width of the left panel */
+            margin-left: 250px; /* Match the width of the sidebar */
             position: relative;
             transition: margin-left 0.3s;
         }
 
         .main-content.expanded {
             margin-left: 70px;
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            width: 250px;
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            border-right: 1px solid #e0e0e0;
+            /* Hide scrollbar */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: visible !important;
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .toggle-btn {
+            position: absolute;
+            top: 10px;
+            right: -15px;
+            width: 30px;
+            height: 30px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            color: #666;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        
+        .toggle-btn:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.1);
+        }
+        
+        .sidebar.collapsed .toggle-btn {
+            display: flex !important;
+            opacity: 1 !important;
+            right: -15px !important;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        .sidebar-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.collapsed .sidebar-header {
+            padding: 20px 0 10px;
+            text-align: center;
+        }
+        
+        .sidebar-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #444;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #444;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            font-size: 18px;
+            min-width: 25px;
+            text-align: center;
+        }
+        
+        .sidebar-menu li:hover a {
+            background-color: #f5f5f5;
+        }
+        
+        .sidebar-menu li.active {
+            position: relative;
+        }
+        
+        .sidebar-menu li.active a {
+            background-color: #f9f9f9;
+            color: #ff3e3e;
+            border-left: 3px solid #ff3e3e;
+            font-weight: 500;
+        }
+        
+        .sidebar-menu li.active a i {
+            color: #ff3e3e;
+        }
+        
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            position: sticky;
+            bottom: 0;
+            background: #ffffff;
+            width: 100%;
+            margin-bottom: 0;
+        }
+        
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            color: #ff3e3e !important;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .logout-btn i {
+            margin-right: 10px;
+            font-size: 18px;
+            min-width: 25px;
+            text-align: center;
+        }
+        
+        /* Collapsed sidebar styles */
+        .sidebar.collapsed .sidebar-text,
+        .sidebar.collapsed .sidebar-header {
+            display: none;
+        }
+        
+        .sidebar.collapsed .sidebar-menu li a {
+            padding: 12px 0;
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed .sidebar-menu li a i {
+            margin-right: 0;
+            font-size: 20px;
+        }
+        
+        .sidebar.collapsed .logout-btn .sidebar-text {
+            display: none;
+        }
+        
+        .sidebar.collapsed .logout-btn {
+            justify-content: center;
+        }
+        
+        .sidebar.collapsed .logout-btn i {
+            margin-right: 0;
         }
         
         /* Left panel responsive styles */
@@ -3604,15 +3836,15 @@ function getTransportIcon($mode) {
     <script>
         // Define togglePanel function globally and early
         window.togglePanel = function() {
-            const leftPanel = document.getElementById('leftPanel');
+            const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
-            const toggleIcon = document.getElementById('toggleIcon');
+            const toggleIcon = document.querySelector('#toggle-btn i');
             
-            if (leftPanel && mainContent && toggleIcon) {
-                leftPanel.classList.toggle('collapsed');
+            if (sidebar && mainContent && toggleIcon) {
+                sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
                 
-                if (leftPanel.classList.contains('collapsed')) {
+                if (sidebar.classList.contains('collapsed')) {
                     toggleIcon.classList.remove('fa-chevron-left');
                     toggleIcon.classList.add('fa-chevron-right');
                     mainContent.style.marginLeft = '70px';
@@ -3627,6 +3859,33 @@ function getTransportIcon($mode) {
                 console.error('One or more elements required for togglePanel not found');
             }
         };
+        
+        // Add event listener for sidebar toggle button
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    window.togglePanel();
+                });
+            }
+            
+            // Mobile menu toggle
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            if (hamburgerMenu && sidebar && overlay) {
+                hamburgerMenu.addEventListener('click', function() {
+                    sidebar.classList.add('mobile-open');
+                    overlay.classList.add('active');
+                });
+                
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('active');
+                });
+            }
+        });
         
         // Handle profile image loading errors
         function handleProfileImageError(img) {
@@ -3649,8 +3908,124 @@ function getTransportIcon($mode) {
 </head>
 <body>
     <div class="main-container">
-        <!-- Include left panel -->
-        <?php include_once('includes/manager_panel.php'); ?>
+        <!-- Left panel sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="toggle-btn" id="toggle-btn">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="sidebar-header">MAIN</div>
+                    
+                    <ul class="sidebar-menu">
+                        <li>
+                            <a href="real.php">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span class="sidebar-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-calendar-check"></i>
+                                <span class="sidebar-text">Leaves</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-users"></i>
+                                <span class="sidebar-text">Employees</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-box"></i>
+                                <span class="sidebar-text">Projects</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-header">ANALYTICS</div>
+                    
+                    <ul class="sidebar-menu">
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-chart-line"></i>
+                                <span class="sidebar-text">Employee Reports</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="work_report.php">
+                                <i class="fas fa-file-invoice"></i>
+                                <span class="sidebar-text">Work Reports</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="attendance_report.php">
+                                <i class="fas fa-clock"></i>
+                                <span class="sidebar-text">Attendance Reports</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="overtime_reports.php">
+                                <i class="fas fa-hourglass-half"></i>
+                                <span class="sidebar-text">Overtime Reports</span>
+                            </a>
+                        </li>
+                        <li class="active">
+                            <a href="travel_report.php">
+                                <i class="fas fa-plane"></i>
+                                <span class="sidebar-text">Travel Reports</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-header">SETTINGS</div>
+                    
+                    <ul class="sidebar-menu">
+                        <li>
+                            <a href="manager_profile.php">
+                                <i class="fas fa-user"></i>
+                                <span class="sidebar-text">Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-bell"></i>
+                                <span class="sidebar-text">Notifications</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="manager_settings.php">
+                                <i class="fas fa-cog"></i>
+                                <span class="sidebar-text">Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="reset_password.php">
+                                <i class="fas fa-lock"></i>
+                                <span class="sidebar-text">Reset Password</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Add logout at the end of sidebar -->
+            <div class="sidebar-footer">
+                <a href="logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="sidebar-text">Logout</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Toast container for notifications -->
+        <div class="toast-container"></div>
         
         <!-- Overlay for mobile menu -->
         <div class="overlay" id="overlay"></div>
@@ -3720,11 +4095,12 @@ function getTransportIcon($mode) {
                             <select class="filter-dropdown" id="employeeFilter">
                                 <option value="">All Employees</option>
                                 <?php
-                                // Fetch unique employees who have submitted expenses and have the specified roles
+                                // Fetch unique employees who have submitted expenses (excluding specified roles)
                                 try {
+                                    $excluded_roles_list = "'" . implode("','", $excluded_roles) . "'";
                                     $stmt = $conn->prepare("SELECT DISTINCT u.id, u.username FROM users u 
                                                            JOIN travel_expenses te ON u.id = te.user_id 
-                                                           WHERE u.role IN ('Site Coordinator', 'Site Supervisor', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing', 'Sales')
+                                                           WHERE u.role NOT IN ({$excluded_roles_list})
                                                            ORDER BY u.username");
                                     $stmt->execute();
                                     $employees = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -4596,10 +4972,8 @@ function getTransportIcon($mode) {
         </div>
     </div>
 
-    <!-- JavaScript Files -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- JavaScript Files already included in the head section -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Force update week options based on current month/year selection
@@ -4641,10 +5015,13 @@ function getTransportIcon($mode) {
             
             // Check if we should enable scrolling based on screen height
             function checkPanelScrolling() {
-                if (window.innerHeight < 700 || window.innerWidth <= 768) {
-                    leftPanel.classList.add('needs-scrolling');
-                } else {
-                    leftPanel.classList.remove('needs-scrolling');
+                // Check if leftPanel exists before trying to access its properties
+                if (leftPanel) {
+                    if (window.innerHeight < 700 || window.innerWidth <= 768) {
+                        leftPanel.classList.add('needs-scrolling');
+                    } else {
+                        leftPanel.classList.remove('needs-scrolling');
+                    }
                 }
             }
             
@@ -4795,7 +5172,8 @@ function getTransportIcon($mode) {
             // Function to show expense details
             function showExpenseDetails(expenseId, allIds) {
                 // Show modal
-                $('#expenseDetailsModal').modal('show');
+                const detailsModal = $('#expenseDetailsModal');
+                detailsModal.modal('show');
                 
                 // Clear previous content and show loading spinner
                 $('#expenseDetailsContent').html(`
@@ -4808,6 +5186,7 @@ function getTransportIcon($mode) {
                 `);
                 
                 // Fetch expense details from server
+                
                 $.ajax({
                     url: 'get_expense_details.php',
                     type: 'GET',
@@ -4830,7 +5209,7 @@ function getTransportIcon($mode) {
             }
             
             // Function to process expense actions
-            function processExpenseAction(expenseId, action, notes, allExpenseIds = null) {
+            function processExpenseAction(expenseId, action, notes, allIds = null) {
                 // Create FormData
                 const formData = new FormData();
                 formData.append('expense_id', expenseId);
@@ -4838,14 +5217,14 @@ function getTransportIcon($mode) {
                 formData.append('notes', notes);
                 
                 // Add all expense IDs if available for batch processing
-                if (allExpenseIds && allExpenseIds.length > 1) {
-                    formData.append('all_expense_ids', JSON.stringify(allExpenseIds));
+                if (allIds && allIds.length > 1) {
+                    formData.append('all_expense_ids', JSON.stringify(allIds));
                 }
                 
                 // Show processing toast notification
                 const processingToast = showToast(
                     'Processing', 
-                    `${allExpenseIds && allExpenseIds.length > 1 ? 'Expenses are' : 'Expense is'} being processed...`, 
+                    `${allIds && allIds.length > 1 ? 'Expenses are' : 'Expense is'} being processed...`, 
                     'info'
                 );
                 
@@ -4868,7 +5247,7 @@ function getTransportIcon($mode) {
                         // Show success message
                         showToast(
                             'Success', 
-                            `${allExpenseIds && allExpenseIds.length > 1 ? 'Expenses' : 'Expense'} ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 
+                            `${allIds && allIds.length > 1 ? 'Expenses' : 'Expense'} ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, 
                             'success'
                         );
                         
@@ -4877,8 +5256,8 @@ function getTransportIcon($mode) {
                             window.location.reload();
                         }, 1500);
                     } else {
-                        // Show error message
-                        showToast('Error', data.message || 'An unknown error occurred', 'error');
+                        // Show error message with specific error from server if available
+                        showToast('Error', data.error || 'An unknown error occurred', 'error');
                     }
                 })
                 .catch(error => {
@@ -5441,82 +5820,7 @@ function getTransportIcon($mode) {
                 approvalModal.modal('show');
             }
             
-            /**
-             * Process expense approval/rejection
-             */
-            function processExpenseAction(expenseId, action, notes, allExpenseIds = null) {
-                // Create form data
-                const formData = new FormData();
-                formData.append('expense_id', expenseId);
-                formData.append('action_type', action);
-                formData.append('notes', notes);
-                
-                // Add all expense IDs if available for batch processing
-                if (allExpenseIds && allExpenseIds.length > 1) {
-                    formData.append('all_expense_ids', JSON.stringify(allExpenseIds));
-                }
-                
-                // Use a single endpoint for all processing
-                const endpoint = 'process_expense_action.php';
-                
-                // Show processing toast notification
-                const processingToast = showToast(
-                    'Processing', 
-                    `${allExpenseIds && allExpenseIds.length > 1 ? 'Expenses are' : 'Expense is'} being processed...`, 
-                    'info'
-                );
-                
-                // Send to server
-                fetch(endpoint, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Show success message
-                        showToast(
-                            'Success', 
-                            `${allExpenseIds && allExpenseIds.length > 1 ? 'Expenses' : 'Expense'} ${action === 'approve' ? 'approved' : 'rejected'} successfully!`, 
-                            'success'
-                        );
-                        
-                        // Remove processing toast
-                        if (typeof processingToast !== 'undefined') {
-                            closeToast(processingToast);
-                        }
-                        
-                        // Reload the page to reflect changes after a short delay
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    } else {
-                        // Show error message
-                        showToast('Error', data.error || 'Unknown error occurred', 'error');
-                        
-                        // Remove processing toast
-                        if (typeof processingToast !== 'undefined') {
-                            closeToast(processingToast);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error processing action:', error);
-                    
-                    // Show error message
-                    showToast('Error', 'An error occurred while processing your request. Please try again.', 'error');
-                    
-                    // Remove processing toast
-                    if (typeof processingToast !== 'undefined') {
-                        closeToast(processingToast);
-                    }
-                });
-            }
+            // processExpenseAction function is already defined above
             
             // Clear all filters button
             const clearAllFiltersBtn = document.getElementById('clearAllFiltersBtn');
@@ -6241,8 +6545,7 @@ function getTransportIcon($mode) {
         }
     </script>
 
-    <!-- Toast container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Toast container already defined above -->
 
     <!-- Add this before the closing </body> tag -->
     

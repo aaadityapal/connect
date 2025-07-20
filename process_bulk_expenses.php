@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Check if user has the appropriate role
-$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'HR'];
+$allowed_roles = ['Senior Manager (Site)', 'Purchase Manager', 'HR', 'Senior Manager (Studio)'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
@@ -48,7 +48,7 @@ $user_role = $_SESSION['role'];
 $status_field = '';
 
 // Determine which status field to update based on user role
-if (strpos($user_role, 'Manager') !== false) {
+if (strpos($user_role, 'Manager') !== false || $user_role === 'Senior Manager (Studio)') {
     $status_field = 'manager_status';
 } elseif ($user_role === 'HR') {
     $status_field = 'hr_status';
@@ -100,7 +100,7 @@ try {
     $reason_field = '';
     
     // Determine which reason field to update
-    if (strpos($user_role, 'Manager') !== false) {
+    if (strpos($user_role, 'Manager') !== false || $user_role === 'Senior Manager (Studio)') {
         $reason_field = 'manager_reason';
     } elseif ($user_role === 'HR') {
         $reason_field = 'hr_reason';

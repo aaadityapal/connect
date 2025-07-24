@@ -143,6 +143,45 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
+// After the existing attendance check code, before setting $is_punched_in
+// Around line 105-110, after checking punch in/punch out status:
+
+// Get approval status if attendance exists
+$attendance_status = null;
+$approval_status = null;
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $current_date = date('Y-m-d');
+    
+    // Check attendance status and approval status
+    $status_query = "SELECT 
+                        id, 
+                        punch_in, 
+                        punch_out, 
+                        approval_status 
+                     FROM attendance 
+                     WHERE user_id = ? AND date = ?";
+    $stmt = $conn->prepare($status_query);
+    if ($stmt) {
+        $stmt->bind_param("is", $user_id, $current_date);
+        $stmt->execute();
+        $status_result = $stmt->get_result();
+        
+        if ($status_result->num_rows > 0) {
+            $status_row = $status_result->fetch_assoc();
+            $approval_status = $status_row['approval_status'];
+            
+            if (!empty($status_row['punch_in']) && empty($status_row['punch_out'])) {
+                $attendance_status = 'punched_in';
+            } elseif (!empty($status_row['punch_in']) && !empty($status_row['punch_out'])) {
+                $attendance_status = 'completed';
+            }
+        }
+    }
+}
+
+// Keep the existing $is_punched_in and $already_completed variables for compatibility
+
 // Near the top of the file, after setting up time variables and before checking punch status
 
 // Get user's shift information
@@ -311,11 +350,31 @@ if (empty($user_geofence_locations)) {
     <!-- User Avatar and Punch-In Button Container -->
     <div class="user-controls-container">
         <!-- Punch-In Button -->
-        <button id="punchInButton" class="punch-in-button <?php echo $greeting_class; ?> <?php echo $is_punched_in ? 'punched-in' : ''; ?> <?php echo $attendance_completed ? 'completed' : ''; ?>" 
+        <button id="punchInButton" class="punch-in-button <?php echo $greeting_class; ?> <?php echo $is_punched_in ? 'punched-in' : ''; ?> <?php echo $attendance_completed ? 'completed' : ''; ?>"
             data-status="<?php echo $is_punched_in ? 'punched-in' : 'not-punched-in'; ?>"
+            data-approval="<?php echo $approval_status; ?>"
             <?php echo $attendance_completed ? 'disabled' : ''; ?>>
-            <i class="<?php echo $is_punched_in ? 'fas fa-sign-out-alt' : ($attendance_completed ? 'fas fa-check-circle' : 'fas fa-fingerprint'); ?>"></i>
-            <span><?php echo $is_punched_in ? 'Punch Out' : ($attendance_completed ? 'Completed' : 'Punch In'); ?></span>
+            <?php if ($approval_status == 'pending'): ?>
+                <span class="approval-badge">Attendance Pending</span>
+            <?php endif; ?>
+            <i class="<?php 
+                if ($is_punched_in) {
+                    echo 'fas fa-sign-out-alt';
+                } else if ($attendance_completed) {
+                    echo 'fas fa-check-circle';
+                } else {
+                    echo 'fas fa-fingerprint';
+                }
+            ?>"></i>
+            <span><?php 
+                if ($is_punched_in) {
+                    echo 'Punch Out';
+                } else if ($attendance_completed) {
+                    echo 'Completed';
+                } else {
+                    echo 'Punch In';
+                }
+            ?></span>
         </button>
         
         <!-- User Avatar with Dropdown Menu -->
@@ -2330,6 +2389,75 @@ if (empty($user_geofence_locations)) {
         margin: 5% auto;
     }
 }
+
+/* Add after .punch-in-button.completed styles in the CSS section */
+.punch-in-button.pending-approval {
+    background: linear-gradient(145deg, #FFA726, #FF8F00);
+    box-shadow: 0 3px 10px rgba(255, 152, 0, 0.2);
+    cursor: not-allowed;
+    animation: pulse-pending 2s infinite ease-in-out;
+}
+
+.punch-in-button.pending-approval:hover {
+    transform: none;
+    box-shadow: 0 3px 10px rgba(255, 152, 0, 0.2);
+}
+
+.punch-in-button.pending-approval i {
+    animation: spin-pending 2s infinite linear;
+}
+
+@keyframes pulse-pending {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+@keyframes spin-pending {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Add after .punch-in-button.pending-approval styles in the CSS section */
+.approval-badge {
+    position: absolute;
+    top: -12px;
+    right: -3px;
+    background: linear-gradient(145deg, #2c3e50, #1a1a1a);
+    color: white;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    animation: pulse-badge 2s infinite ease-in-out;
+    z-index: 2;
+    white-space: nowrap;
+    line-height: 1;
+    border: 1px solid rgba(255,255,255,0.7);
+    letter-spacing: 0.3px;
+}
+
+@keyframes pulse-badge {
+    0% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.9; }
+}
+
+/* Make the punch button position relative to properly position the badge */
+.punch-in-button {
+    position: relative;
+    overflow: visible !important;
+}
+
+@media (max-width: 480px) {
+    .approval-badge {
+        top: -10px;
+        right: -2px;
+        font-size: 8px;
+        padding: 2px 6px;
+    }
+}
 </style>
 
 <!-- Add JavaScript for live time update, avatar dropdown, and punch-in button -->
@@ -2757,7 +2885,18 @@ if (empty($user_geofence_locations)) {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                // Clone the response so we can both read as text and still parse as JSON
+                return response.clone().text().then(text => {
+                    try {
+                        // Try to parse the response as JSON
+                        return JSON.parse(text);
+                    } catch (parseError) {
+                        // If parsing fails, throw an error
+                        throw new Error(`Failed to parse response as JSON`);
+                    }
+                });
+            })
             .then(data => {
                 if (data.success) {
                     // Show success message in the modal
@@ -2768,7 +2907,6 @@ if (empty($user_geofence_locations)) {
                 }
             })
             .catch(error => {
-                console.error("Error submitting punch: ", error);
                 showErrorMessage("Error submitting punch. Please try again.");
             });
         });
@@ -2926,6 +3064,20 @@ if (empty($user_geofence_locations)) {
                 }
             }
             
+            // Check if the attendance requires approval (outside geofence)
+            const requiresApproval = !withinGeofence;
+            
+            // Add manager approval notification if outside geofence
+            let approvalMessage = '';
+            if (requiresApproval) {
+                approvalMessage = `
+                    <div class="approval-message">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Your attendance has been sent to your manager for approval because you punched ${isPunchIn ? 'in' : 'out'} outside the geolocation. If approved, it will be counted as present.</p>
+                    </div>
+                `;
+            }
+            
             successContainer.innerHTML = `
                 <div class="success-animation">
                     <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -2934,11 +3086,52 @@ if (empty($user_geofence_locations)) {
                     </svg>
                 </div>
                 <h2 class="success-title">${isPunchIn ? 'Punch In Successful!' : 'Punch Out Successful!'}</h2>
+                ${approvalMessage}
                 <p class="success-time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                 <p class="success-date">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 ${overtimeInfo}
                 <button class="success-close-btn">Close</button>
             `;
+            
+            // Add CSS for approval message
+            const style = document.createElement('style');
+            style.textContent = `
+                .approval-message {
+                    background-color: #fff3e0;
+                    border-left: 4px solid #ff9800;
+                    border-radius: 4px;
+                    padding: 12px 15px;
+                    margin: 15px 0;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                }
+                
+                .approval-message i {
+                    color: #ff9800;
+                    font-size: 20px;
+                    margin-top: 2px;
+                }
+                
+                .approval-message p {
+                    margin: 0;
+                    font-size: 14px;
+                    line-height: 1.5;
+                    color: #333;
+                    text-align: left;
+                }
+                
+                @media (max-width: 480px) {
+                    .approval-message {
+                        padding: 10px;
+                    }
+                    
+                    .approval-message p {
+                        font-size: 13px;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
             
             // Insert after the header
             const modalHeader = document.querySelector('.punch-modal-header');
@@ -2955,13 +3148,46 @@ if (empty($user_geofence_locations)) {
                 }
             }
             
+            // Update the punch button immediately without waiting for page refresh
+            if (isPunchIn) {
+                // Update the button to show "Punch Out" after punch in
+                let buttonContent = '';
+                
+                // Add approval badge if outside geofence
+                if (requiresApproval) {
+                    buttonContent += '<span class="approval-badge">Attendance Pending</span>';
+                    punchButton.setAttribute('data-approval', 'pending');
+                }
+                
+                buttonContent += '<i class="fas fa-sign-out-alt"></i><span>Punch Out</span>';
+                punchButton.innerHTML = buttonContent;
+                punchButton.classList.add('punched-in');
+                punchButton.setAttribute('data-status', 'punched-in');
+            } else {
+                // Update the button to show "Completed" after punch out
+                let buttonContent = '';
+                
+                // Add approval badge if outside geofence
+                if (requiresApproval) {
+                    buttonContent += '<span class="approval-badge">Attendance Pending</span>';
+                    punchButton.setAttribute('data-approval', 'pending');
+                }
+                
+                buttonContent += '<i class="fas fa-check-circle"></i><span>Completed</span>';
+                punchButton.innerHTML = buttonContent;
+                punchButton.classList.remove('punched-in');
+                punchButton.classList.add('completed');
+                punchButton.setAttribute('data-status', 'completed');
+                punchButton.disabled = true;
+            }
+            
             // Add event listener to close button
             document.querySelector('.success-close-btn').addEventListener('click', function() {
                 window.closeModal();
             });
             
-            // Auto close after 5 seconds
-            setTimeout(window.closeModal, 5000);
+            // Auto close after 7 seconds
+            setTimeout(window.closeModal, 7000);
         }
         
         // Function to show error message
@@ -2990,6 +3216,123 @@ if (empty($user_geofence_locations)) {
             document.querySelector('.error-close-btn').addEventListener('click', function() {
                 window.closeModal();
             });
+        }
+
+        // Update live time every second
+        function updateLiveTime() {
+            // Create a new date object for current time
+            const now = new Date();
+            
+            // Use server timezone (IST) directly from PHP
+            // No need to add 5.5 hours if server is already in IST
+            const serverHour = <?php echo (int)date('H'); ?>;
+            const serverMinute = <?php echo (int)date('i'); ?>;
+            const serverSecond = <?php echo (int)date('s'); ?>;
+            
+            // For client-side display, calculate current time based on server time
+            // and elapsed seconds since page load
+            const clientDate = new Date();
+            const elapsedSeconds = Math.floor((clientDate - window.pageLoadTime) / 1000);
+            
+            // Add elapsed seconds to server time
+            let totalSeconds = serverSecond + elapsedSeconds;
+            let totalMinutes = serverMinute + Math.floor(totalSeconds / 60);
+            let totalHours = serverHour + Math.floor(totalMinutes / 60);
+            
+            // Normalize values
+            const seconds = totalSeconds % 60;
+            const minutes = totalMinutes % 60;
+            const hours = totalHours % 24;
+            
+            // Format for display (12-hour format)
+            const displayHours = hours % 12 || 12;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            // Update the time display
+            const timeElement = document.getElementById('live-time');
+            if (timeElement) {
+                timeElement.textContent = `${displayHours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+            }
+        }
+
+        // Update shift timer countdown or overtime
+        function updateShiftTimer() {
+            const timerElement = document.getElementById('shiftTimer');
+            if (!timerElement) return;
+            
+            const isOvertime = timerElement.getAttribute('data-is-overtime') === 'true';
+            const timerValueElement = document.getElementById('timerValue');
+            if (!timerValueElement) return;
+            
+            // Get current timer value
+            const timeValues = timerValueElement.textContent.split(':').map(Number);
+            let hours = timeValues[0];
+            let minutes = timeValues[1];
+            let seconds = timeValues[2];
+            
+            if (isOvertime) {
+                // For overtime, increment the timer
+                seconds++;
+                if (seconds >= 60) {
+                    seconds = 0;
+                    minutes++;
+                    if (minutes >= 60) {
+                        minutes = 0;
+                        hours++;
+                    }
+                }
+            } else {
+                // For countdown, decrement the timer
+                seconds--;
+                if (seconds < 0) {
+                    seconds = 59;
+                    minutes--;
+                    if (minutes < 0) {
+                        minutes = 59;
+                        hours--;
+                        if (hours < 0) {
+                            // Time's up, switch to overtime mode
+                            timerElement.setAttribute('data-is-overtime', 'true');
+                            timerElement.classList.add('overtime');
+                            
+                            // Change label
+                            const timerLabelElement = timerElement.querySelector('.timer-label');
+                            if (timerLabelElement) {
+                                timerLabelElement.textContent = 'Overtime:';
+                            }
+                            
+                            hours = 0;
+                            minutes = 0;
+                            seconds = 0;
+                        }
+                    }
+                }
+            }
+            
+            // Update timer display
+            timerValueElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Store page load time for accurate time calculation
+        window.pageLoadTime = new Date();
+
+        // Initialize time update
+        updateLiveTime();
+
+        // Set intervals to update time and timer
+        setInterval(updateLiveTime, 1000);
+
+        // Only set up timer interval if the shift timer exists
+        if (document.getElementById('shiftTimer')) {
+            window.timerInterval = setInterval(updateShiftTimer, 1000);
+        }
+
+        // Function to refresh the widget (for the refresh button)
+        function refreshCompactTimeWidget() {
+            updateLiveTime();
+            if (document.getElementById('shiftTimer')) {
+                updateShiftTimer();
+            }
         }
     });
 </script> 

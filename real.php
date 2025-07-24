@@ -86,6 +86,12 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </a>
                 </li>
                 <li>
+                    <a href="attendance_approval.php">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="sidebar-text"> Attendance Approval</span>
+                    </a>
+                </li>
+                <li>
                     <a href="overtime_reports.php">
                         <i class="fas fa-hourglass-half"></i>
                         <span class="sidebar-text"> Overtime Reports</span>

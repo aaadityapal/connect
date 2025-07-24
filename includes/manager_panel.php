@@ -37,6 +37,10 @@
         <i class="fas fa-clock"></i>
         <span class="menu-text">Overtime Approval</span>
     </div>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'attendance_approval.php' ? 'active' : ''; ?>" onclick="window.location.href='attendance_approval.php'">
+        <i class="fas fa-calendar-check"></i>
+        <span class="menu-text">Attendance Approval</span>
+    </div>
     
     <!-- Site Supervision Section -->
     <div class="menu-item section-start">

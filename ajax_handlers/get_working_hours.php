@@ -53,13 +53,13 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
 }
 
 // Get punch-in and punch-out times from database
-$query = "SELECT punch_in, punch_out FROM attendance 
+$query = "SELECT id, punch_in, punch_out FROM attendance 
           WHERE user_id = ? AND date = ? 
           ORDER BY id DESC LIMIT 1";
 
 $stmt = $conn->prepare($query);
 if (!$stmt) {
-    echo json_encode([
+    echo json_encode([ 
         'success' => false,
         'message' => 'Database error: ' . $conn->error
     ]);
@@ -79,6 +79,7 @@ if ($result->num_rows === 0) {
 }
 
 $row = $result->fetch_assoc();
+$attendance_id = $row['id'];
 $punch_in = $row['punch_in'];
 $punch_out = $row['punch_out'];
 
@@ -179,7 +180,8 @@ try {
         'overtime_hours' => $overtime_hours,
         'shift_end_time' => $shift_end_time,
         'shift_name' => $shift_name,
-        'note' => $note
+        'note' => $note,
+        'attendance_id' => $attendance_id // Add this line
     ]);
 } catch (Exception $e) {
     echo json_encode([

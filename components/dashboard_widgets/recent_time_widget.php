@@ -2760,7 +2760,7 @@ if (empty($user_geofence_locations)) {
             }
             
             // Use our own server-side proxy to avoid CORS issues
-            fetch(`ajax_handlers/get_address.php?lat=${userLatitude}&lng=${userLongitude}`)
+            fetch(`ajax_handlers/get_address.php?lat=${userLatitude}&lon=${userLongitude}`)
                 .then(response => response.json())
                 .then(data => {
                     locationAddress.textContent = `Address: ${data.address}`;
@@ -3134,7 +3134,7 @@ if (empty($user_geofence_locations)) {
                         if (sendButton) {
                             sendButton.addEventListener('click', function(e) {
                                 e.preventDefault();
-                                sendOvertimeRequest(data.overtime_hours, data.shift_end_time);
+                                sendOvertimeRequest(data.attendance_id); // Pass the correct attendance_id
                             });
                         }
                     }, 100);
@@ -3377,7 +3377,7 @@ if (empty($user_geofence_locations)) {
             });
             
             // Auto close after 7 seconds
-            setTimeout(window.closeModal, 7000);
+            setTimeout(window.closeModal, 70000);
         }
         
         // Function to show error message
@@ -3539,45 +3539,49 @@ if (empty($user_geofence_locations)) {
     }
     
     // Function to send overtime request
-    async function sendOvertimeRequest(overtimeHours, shiftEndTime) {
+    async function sendOvertimeRequest(overtimeId) {
         try {
             const sendButton = document.getElementById('sendOvertimeRequest');
             if (sendButton) {
-                // Show loading state
                 sendButton.disabled = true;
                 sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             }
-            
+
+            const userId = <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>;
+            const message = "Requesting overtime approval for today.";
+
+            if (!userId || !overtimeId) {
+                throw new Error('Missing required parameters for overtime request.');
+            }
+
+            const params = new URLSearchParams();
+            params.append('user_id', userId);
+            params.append('overtime_id', overtimeId);
+            params.append('message', message);
+
             const response = await fetch('ajax_handlers/submit_overtime_request.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'user_id=' + <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?> + 
-                      '&date=' + new Date().toISOString().split('T')[0] +
-                      '&overtime_hours=' + overtimeHours +
-                      '&shift_end_time=' + shiftEndTime
+                body: params.toString()
             });
-            
+
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
-                // Show success message
                 if (sendButton) {
                     sendButton.innerHTML = '<i class="fas fa-check"></i> Request Sent';
                     sendButton.classList.add('request-sent');
                 }
             } else {
-                // Show error
                 if (sendButton) {
                     sendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed';
                     sendButton.classList.add('request-failed');
-                    
-                    // Reset after 3 seconds
                     setTimeout(() => {
                         sendButton.disabled = false;
                         sendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Try Again';
@@ -3588,8 +3592,6 @@ if (empty($user_geofence_locations)) {
             }
         } catch (error) {
             console.error('Error sending overtime request:', error);
-            
-            // Reset button
             const sendButton = document.getElementById('sendOvertimeRequest');
             if (sendButton) {
                 sendButton.disabled = false;

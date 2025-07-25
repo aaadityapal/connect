@@ -149,6 +149,7 @@ if (isset($_SESSION['user_id'])) {
 // Get approval status if attendance exists
 $attendance_status = null;
 $approval_status = null;
+$punch_in_time = null; // Add this line to store punch in time
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
     $current_date = date('Y-m-d');
@@ -170,6 +171,7 @@ if (isset($_SESSION['user_id'])) {
         if ($status_result->num_rows > 0) {
             $status_row = $status_result->fetch_assoc();
             $approval_status = $status_row['approval_status'];
+            $punch_in_time = $status_row['punch_in']; // Store punch in time
             
             if (!empty($status_row['punch_in']) && empty($status_row['punch_out'])) {
                 $attendance_status = 'punched_in';
@@ -3078,6 +3080,7 @@ if (empty($user_geofence_locations)) {
                 `;
             }
             
+                // Create success container HTML first
             successContainer.innerHTML = `
                 <div class="success-animation">
                     <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -3090,10 +3093,63 @@ if (empty($user_geofence_locations)) {
                 <p class="success-time">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                 <p class="success-date">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 ${overtimeInfo}
+        <div id="working-hours-container"></div>
                 <button class="success-close-btn">Close</button>
             `;
             
-            // Add CSS for approval message
+            // For punch out, fetch and show working hours
+        if (!isPunchIn) {
+            // We'll fetch this from the server
+            fetchWorkingHours().then(data => {
+                if (data) {
+                    // Create working hours info
+                    let workingHoursInfo = `
+                        <div class="working-hours-info">
+                            <i class="fas fa-clock"></i>
+                            <span>Total working hours: ${data.working_hours}</span>
+                            <span class="hours-format">(HH:MM:SS)</span>
+                        </div>
+                    `;
+                
+                // Add overtime section if available
+                if (data.has_overtime) {
+                    workingHoursInfo += `
+                        <div class="overtime-info-box">
+                            <div class="overtime-header">
+                                <i class="fas fa-business-time"></i>
+                                <span>Overtime Detected</span>
+                            </div>
+                            <div class="overtime-details">
+                                <p>You worked <strong>${data.overtime_hours}</strong> beyond your shift end time (${data.shift_name}: ends at ${formatTime(data.shift_end_time)}).</p>
+                            </div>
+                            <button id="sendOvertimeRequest" class="send-overtime-btn">
+                                <i class="fas fa-paper-plane"></i> Send Overtime Request
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add event listener for the send button after a short delay to ensure DOM is ready
+                    setTimeout(() => {
+                        const sendButton = document.getElementById('sendOvertimeRequest');
+                        if (sendButton) {
+                            sendButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                sendOvertimeRequest(data.overtime_hours, data.shift_end_time);
+                            });
+                        }
+                    }, 100);
+                }
+                
+                // Insert into the placeholder
+                const container = document.getElementById('working-hours-container');
+                if (container) {
+                    container.innerHTML = workingHoursInfo;
+                }
+            }
+        });
+    }
+            
+                // Add CSS for approval message and working hours
             const style = document.createElement('style');
             style.textContent = `
                 .approval-message {
@@ -3120,15 +3176,149 @@ if (empty($user_geofence_locations)) {
                     color: #333;
                     text-align: left;
                 }
+        
+        .working-hours-info {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+            padding: 12px 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .working-hours-info i {
+            color: #4caf50;
+            font-size: 20px;
+        }
+        
+        .working-hours-info span {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        
+        .working-hours-info .hours-format {
+            font-size: 12px;
+            font-weight: normal;
+            color: #689f38;
+            margin-left: 5px;
+            opacity: 0.8;
+        }
+        
+        /* Overtime styles */
+        .overtime-info-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .overtime-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .overtime-header i {
+            color: #ff9800;
+            font-size: 20px;
+        }
+        
+        .overtime-header span {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e65100;
+        }
+        
+        .overtime-details {
+            margin-bottom: 15px;
+        }
+        
+        .overtime-details p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+        
+        .overtime-details strong {
+            color: #e65100;
+            font-weight: 600;
+        }
+        
+        .send-overtime-btn {
+            background: linear-gradient(145deg, #ff9800, #f57c00);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .send-overtime-btn:hover {
+            background: linear-gradient(145deg, #f57c00, #ef6c00);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .send-overtime-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .send-overtime-btn.request-sent {
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            cursor: default;
+        }
+        
+        .send-overtime-btn.request-failed {
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+        }
                 
                 @media (max-width: 480px) {
-                    .approval-message {
+            .overtime-header i {
+                font-size: 18px;
+            }
+            
+            .overtime-header span {
+                font-size: 15px;
+            }
+            
+            .overtime-details p {
+                font-size: 13px;
+            }
+            
+            .send-overtime-btn {
+                width: 100%;
+                justify-content: center;
                         padding: 10px;
                     }
+        }
+        
+        @media (max-width: 480px) {
+            .approval-message, .working-hours-info {
+                padding: 10px;
+            }
                     
-                    .approval-message p {
+            .approval-message p, .working-hours-info span {
                         font-size: 13px;
                     }
+            
+            .working-hours-info i {
+                font-size: 18px;
+            }
                 }
             `;
             document.head.appendChild(style);
@@ -3335,4 +3525,107 @@ if (empty($user_geofence_locations)) {
             }
         }
     });
+
+    // Format time from 24h to 12h format
+    function formatTime(timeString) {
+        if (!timeString) return '';
+        
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        
+        return `${hour12}:${minutes} ${ampm}`;
+    }
+    
+    // Function to send overtime request
+    async function sendOvertimeRequest(overtimeHours, shiftEndTime) {
+        try {
+            const sendButton = document.getElementById('sendOvertimeRequest');
+            if (sendButton) {
+                // Show loading state
+                sendButton.disabled = true;
+                sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            }
+            
+            const response = await fetch('ajax_handlers/submit_overtime_request.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'user_id=' + <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?> + 
+                      '&date=' + new Date().toISOString().split('T')[0] +
+                      '&overtime_hours=' + overtimeHours +
+                      '&shift_end_time=' + shiftEndTime
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message
+                if (sendButton) {
+                    sendButton.innerHTML = '<i class="fas fa-check"></i> Request Sent';
+                    sendButton.classList.add('request-sent');
+                }
+            } else {
+                // Show error
+                if (sendButton) {
+                    sendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed';
+                    sendButton.classList.add('request-failed');
+                    
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        sendButton.disabled = false;
+                        sendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Try Again';
+                        sendButton.classList.remove('request-failed');
+                    }, 3000);
+                }
+                console.error('Error sending overtime request:', data.message);
+            }
+        } catch (error) {
+            console.error('Error sending overtime request:', error);
+            
+            // Reset button
+            const sendButton = document.getElementById('sendOvertimeRequest');
+            if (sendButton) {
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Try Again';
+                sendButton.classList.add('request-failed');
+            }
+        }
+    }
+    
+    // Add this function to fetch working hours from the server
+    async function fetchWorkingHours() {
+        try {
+            const response = await fetch('ajax_handlers/get_working_hours.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'user_id=' + <?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?> + 
+                      '&date=' + new Date().toISOString().split('T')[0]
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                return data; // Return the entire data object instead of just working_hours
+            } else {
+                console.error('Error fetching working hours:', data.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching working hours:', error);
+            return null;
+        }
+    }
 </script> 

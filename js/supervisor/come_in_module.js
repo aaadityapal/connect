@@ -643,17 +643,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (data.success) {
-                // Show success message based on action
-                if (comeInAction === 'come_in') {
-                    showNotification('Success', 'Punch In Recorded successfully!', 'success', () => {
-                        // Refresh the page to update the button state
-                        window.location.reload();
-                    });
+                // Show appropriate message based on geofence status and action
+                if (!isWithinGeofence) {
+                    // For attendance outside geofence - show pending approval message
+                    if (comeInAction === 'come_in') {
+                        showNotification('Pending Approval', 'Your punch in has been recorded but requires manager approval as you are outside the assigned location.', 'warning', () => {
+                            // Refresh the page to update the button state
+                            window.location.reload();
+                        });
+                    } else {
+                        showNotification('Pending Approval', 'Your punch out has been recorded but requires manager approval as you are outside the assigned location.', 'warning', () => {
+                            // Refresh the page to update the button state
+                            window.location.reload();
+                        });
+                    }
                 } else {
-                    showNotification('Success', 'Punch Out recorded successfully! Your attendance for today is now complete.', 'success', () => {
-                        // Refresh the page to update the button state
-                        window.location.reload();
-                    });
+                    // For attendance within geofence - show regular success message
+                    if (comeInAction === 'come_in') {
+                        showNotification('Success', 'Punch In Recorded successfully!', 'success', () => {
+                            // Refresh the page to update the button state
+                            window.location.reload();
+                        });
+                    } else {
+                        showNotification('Success', 'Punch Out recorded successfully! Your attendance for today is now complete.', 'success', () => {
+                            // Refresh the page to update the button state
+                            window.location.reload();
+                        });
+                    }
                 }
                 
                 // Close the modal

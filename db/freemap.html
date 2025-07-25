@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geoapify Location & Distance App</title>
+    <!-- Leaflet CSS (for map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-box {
+            margin-bottom: 10px;
+        }
+        input {
+            width: 70%;
+            padding: 8px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .distance-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Location Search & Distance Calculator</h1>
+    
+    <div class="search-box">
+        <input type="text" id="location1" placeholder="Enter Location 1 (e.g., Paris)">
+        <button onclick="searchLocation(1)">Search</button>
+    </div>
+    
+    <div class="search-box">
+        <input type="text" id="location2" placeholder="Enter Location 2 (e.g., Berlin)">
+        <button onclick="searchLocation(2)">Search</button>
+    </div>
+    
+    <div class="distance-result" id="distanceResult">
+        Distance will appear here.
+    </div>
+    
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // Geoapify API Key (replace with yours)
+        const geoapifyKey = "449f8a2e34a0486a90fbd4f0fb708e8c";
+        let markers = [];
+
+        // Search locations using Geoapify Geocoding API
+        function searchLocation(locNum) {
+            const query = document.getElementById(`location${locNum}`).value;
+            fetch(`https://api.geoapify.com/v1/geocode/search?text=${query}&apiKey=${geoapifyKey}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.features.length === 0) {
+                        alert("Location not found!");
+                        return;
+                    }
+                    
+                    const coords = data.features[0].geometry.coordinates;
+                    const placeName = data.features[0].properties.formatted;
+                    
+                    // Remove old marker
+                    if (markers[locNum]) map.removeLayer(markers[locNum]);
+                    
+                    // Add new marker
+                    markers[locNum] = L.marker([coords[1], coords[0]])
+                        .addTo(map)
+                        .bindPopup(`<b>Location ${locNum}</b><br>${placeName}`)
+                        .openPopup();
+                    
+                    // Update map view
+                    map.setView([coords[1], coords[0]], 10);
+                    
+                    // Calculate distance if both markers exist
+                    if (markers[1] && markers[2]) calculateDistance();
+                });
+        }
+
+        // Calculate distance using Geoapify Routing API
+        function calculateDistance() {
+            const point1 = markers[1].getLatLng();
+            const point2 = markers[2].getLatLng();
+            
+            fetch(`https://api.geoapify.com/v1/routing?waypoints=${point1.lat},${point1.lng}|${point2.lat},${point2.lng}&mode=drive&apiKey=${geoapifyKey}`)
+                .then(res => res.json())
+                .then(data => {
+                    const distance = (data.features[0].properties.distance / 1000).toFixed(2); // km
+                    const time = (data.features[0].properties.time / 60).toFixed(0); // minutes
+                    
+                    document.getElementById('distanceResult').innerHTML = `
+                        <strong>Driving Distance:</strong> ${distance} km<br>
+                        <strong>Estimated Time:</strong> ${time} minutes
+                    `;
+                    
+                    // Draw the route on the map
+                    L.geoJSON(data.features[0], {
+                        style: { color: '#4CAF50', weight: 5 }
+                    }).addTo(map);
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,55 +1,86 @@
 /* Greeting Section Styles */
 .greeting-section {
-    background: linear-gradient(to right, #ffffff, #f8f9fa);
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
     border-left: 4px solid #3498db;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    padding: 20px 24px;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.03);
     transition: all 0.3s ease;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .greeting-section:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    transform: translateY(-3px);
 }
 
 .greeting-text {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
     color: #2c3e50;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
 }
 
 #greeting-icon {
     color: #f39c12;
-    margin-right: 8px;
+    margin-right: 10px;
     transition: color 0.3s ease;
+    font-size: 1.3rem;
+    vertical-align: middle;
 }
 
 .greeting-name {
     color: #3498db;
+    position: relative;
+    display: inline-block;
+}
+
+.greeting-name::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: rgba(52, 152, 219, 0.3);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.greeting-section:hover .greeting-name::after {
+    transform: scaleX(1);
 }
 
 .greeting-small-time {
-    font-size: 0.85rem;
-    color: #95a5a6;
+    font-size: 0.8rem;
+    color: #7f8c8d;
     display: flex;
     align-items: center;
-    margin-top: 5px;
+    margin-top: 4px;
+    letter-spacing: 0.2px;
 }
 
 .greeting-small-time i {
     color: #3498db;
-    margin-right: 5px;
+    margin-right: 6px;
+    opacity: 0.8;
+    font-size: 0.75rem;
 }
 
 .greeting-small-time #small-current-time,
 .greeting-small-time #small-current-date {
     font-weight: 500;
+    color: #5a6a7a;
 }
 
 .greeting-small-separator {
-    margin: 0 10px;
+    margin: 0 8px;
     color: #bdc3c7;
 }
 
@@ -57,37 +88,41 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(52, 152, 219, 0.1);
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(52, 152, 219, 0.08);
     position: relative;
 }
 
 .greeting-actions > div:last-child {
     position: relative;
-    padding-bottom: 25px;
+    padding-bottom: 0;
 }
 
 /* Shift time remaining styles */
 .shift-time-remaining {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #7f8c8d;
     display: flex;
     align-items: center;
     flex-direction: column;
     position: relative;
-    padding-bottom: 25px;
+    padding-bottom: 0;
 }
 
 .shift-time-remaining i {
     color: #e74c3c;
-    margin-right: 6px;
-    font-size: 1rem;
+    margin-right: 8px;
+    font-size: 0.9rem;
 }
 
 .shift-time-remaining .time-display {
     display: flex;
     align-items: center;
+    background-color: rgba(231, 76, 60, 0.05);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border-left: 3px solid rgba(231, 76, 60, 0.5);
 }
 
 #shift-remaining-time {
@@ -97,24 +132,105 @@
 
 /* Shift info moved under timer */
 .shift-info {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #2196F3;
     font-weight: 500;
     white-space: nowrap;
-    margin-top: 8px;
-    position: absolute;
-    width: 100%;
+    margin-top: 6px;
     text-align: center;
-    bottom: 0;
 }
 
 .shift-info::before {
     content: '';
     display: block;
-    width: 60%;
+    width: 40%;
     height: 1px;
-    background-color: rgba(33, 150, 243, 0.2);
+    background-color: rgba(33, 150, 243, 0.15);
     margin: 4px auto 6px;
+}
+
+/* Action badges container */
+.action-badges-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+/* Button container for multiple buttons */
+.buttons-container {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Punch button container */
+.punch-button-container {
+    position: relative;
+    text-align: center;
+    margin-top: 0;
+    flex: 1;
+}
+
+/* Site button container */
+.site-button-container {
+    position: relative;
+    text-align: center;
+    margin-top: 0;
+    flex: 1;
+}
+
+/* Punch button styles */
+.punch-button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 140px;
+    letter-spacing: 0.3px;
+    border: none;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+/* Site button styles */
+.site-button {
+    padding: 8px 16px;
+    border-radius: 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 140px;
+    letter-spacing: 0.3px;
+    border: none;
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.site-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.site-button.btn-secondary {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    cursor: default;
+}
+
+.site-button.btn-secondary:hover {
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.punch-button i,
+.site-button i {
+    margin-right: 8px;
 }
 
 /* Overtime timer styles */
@@ -210,60 +326,101 @@
     }
 }
 
+/* Punch button styles */
 .punch-button {
     padding: 8px 16px;
-    border-radius: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     font-weight: 500;
     min-width: 140px;
+    letter-spacing: 0.3px;
+    border: none;
+    font-size: 0.9rem;
 }
 
 .punch-button i {
-    margin-right: 6px;
+    margin-right: 8px;
 }
 
 .punch-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 /* Status indicator for punch button */
 .punch-button.btn-success {
-    background-color: #2ecc71;
-    border-color: #27ae60;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
 }
 
 .punch-button.btn-danger {
-    background-color: #e74c3c;
-    border-color: #c0392b;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
 }
 
 .punch-button.btn-secondary {
-    background-color: #7f8c8d;
-    border-color: #95a5a6;
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
     cursor: default;
 }
 
 .punch-button.btn-secondary:hover {
     transform: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
 }
 
-/* Punch button container to keep original arrangement */
+/* Punch button container */
 .punch-button-container {
     position: relative;
     text-align: center;
+    margin-top: 0;
 }
 
-/* Punch time display styles */
+/* Hide the punch time display */
 .punch-time {
+    display: none;
+}
+
+/* User's Pending Badge Styles */
+.user-pending-badge {
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.pending-badge {
+    display: flex;
+    align-items: center;
+    background-color: rgba(248, 215, 218, 0.6);
+    border-left: 3px solid #dc3545;
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    animation: pulse-red 2s infinite;
+    font-size: 0.75rem;
+    justify-content: center;
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.pending-badge i {
+    color: #dc3545;
     font-size: 0.8rem;
-    color: #7f8c8d;
-    margin-top: 4px;
+    margin-right: 6px;
+}
+
+.pending-badge .badge-text {
     font-weight: 500;
-    white-space: nowrap;
-    font-style: italic;
+    color: #721c24;
+    font-size: 0.75rem;
+    letter-spacing: 0.2px;
 }
 
 /* Camera Container Styles */
@@ -507,45 +664,134 @@
 /* Media queries for responsive design */
 @media (max-width: 768px) {
     .greeting-section {
-        padding: 20px;
-    }
-    
-    .greeting-text {
-        font-size: 1.5rem;
-    }
-    
-    .greeting-actions {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .shift-time-remaining {
-        margin-bottom: 12px;
-    }
-    
-    .punch-button {
-        width: 100%;
-    }
-}
-
-@media (max-width: 576px) {
-    .greeting-section {
-        padding: 15px;
+        padding: 16px 20px;
     }
     
     .greeting-text {
         font-size: 1.3rem;
     }
     
-    .greeting-small-time {
-        font-size: 0.8rem;
+    #greeting-icon {
+        font-size: 1.1rem;
     }
     
-    .greeting-small-separator {
-        margin: 0 8px;
+    .greeting-small-time {
+        font-size: 0.75rem;
+    }
+    
+    .greeting-actions {
+        margin-top: 12px;
+        padding-top: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
     
     .shift-time-remaining {
+        width: 100%;
+    }
+    
+    .shift-time-remaining .time-display {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .action-badges-container {
+        width: 100%;
+    }
+    
+    .buttons-container {
+        flex-direction: row;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .punch-button-container,
+    .site-button-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .greeting-section {
+        padding: 12px 16px;
+        border-radius: 10px;
+    }
+    
+    .greeting-text {
+        font-size: 1.15rem;
+        margin-bottom: 2px;
+    }
+    
+    #greeting-icon {
+        font-size: 1rem;
+        margin-right: 8px;
+    }
+    
+    .greeting-small-time {
+        font-size: 0.7rem;
+        margin-top: 2px;
+    }
+    
+    .greeting-small-time i {
+        font-size: 0.7rem;
+    }
+    
+    .greeting-small-separator {
+        margin: 0 5px;
+    }
+    
+    .greeting-actions {
+        margin-top: 10px;
+        padding-top: 10px;
+        gap: 8px;
+    }
+    
+    .shift-time-remaining {
+        font-size: 0.75rem;
+    }
+    
+    .shift-time-remaining i {
         font-size: 0.8rem;
+    }
+    
+    .shift-time-remaining .time-display {
+        padding: 4px 10px;
+    }
+    
+    .shift-info {
+        font-size: 0.65rem;
+        margin-top: 4px;
+    }
+    
+    .buttons-container {
+        gap: 8px;
+    }
+    
+    .punch-button,
+    .site-button {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        min-width: auto;
+    }
+    
+    .punch-button i,
+    .site-button i {
+        margin-right: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .pending-badge {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+    }
+    
+    .pending-badge i {
+        font-size: 0.75rem;
+        margin-right: 4px;
+    }
+    
+    .pending-badge .badge-text {
+        font-size: 0.7rem;
     }
 } 

@@ -39,6 +39,47 @@ if (isset($_SESSION['user_id'])) {
         error_log("Error fetching username: " . $e->getMessage());
     }
 }
+
+// Determine Site In/Out button state
+$site_action = 'site_in';
+$site_action_label = 'Site In';
+$site_action_icon = 'fa-sign-in-alt';
+if (isset($_SESSION['user_id'])) {
+    $today = date('Y-m-d');
+    $stmt = $conn->prepare("SELECT action FROM site_in_out_logs WHERE user_id = ? AND DATE(timestamp) = ? ORDER BY timestamp DESC LIMIT 1");
+    $stmt->bind_param('is', $_SESSION['user_id'], $today);
+    $stmt->execute();
+    $stmt->bind_result($last_action);
+    if ($stmt->fetch()) {
+        if ($last_action === 'site_in') {
+            $site_action = 'site_out';
+            $site_action_label = 'Site Out';
+            $site_action_icon = 'fa-sign-out-alt';
+        } else {
+            $site_action = 'site_in';
+            $site_action_label = 'Site In';
+            $site_action_icon = 'fa-sign-in-alt';
+        }
+    }
+    $stmt->close();
+}
+
+// Determine if Site In/Out button should be enabled
+$site_button_disabled = true;
+if (isset($_SESSION['user_id'])) {
+    $today = date('Y-m-d');
+    // Check punch in/out status
+    $punch_stmt = $conn->prepare("SELECT punch_in, punch_out FROM attendance WHERE user_id = ? AND date = ?");
+    $punch_stmt->bind_param('is', $_SESSION['user_id'], $today);
+    $punch_stmt->execute();
+    $punch_stmt->bind_result($punch_in, $punch_out);
+    if ($punch_stmt->fetch()) {
+        if ($punch_in && !$punch_out) {
+            $site_button_disabled = false; // Only enable if punched in and not yet punched out
+        }
+    }
+    $punch_stmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1115,6 +1156,201 @@ if (isset($_SESSION['user_id'])) {
                 font-size: 0.85rem;
             }
         }
+        
+        .punch-button-container {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        /* Attendance Approval Badge Styles */
+        .attendance-approval-badge {
+            margin-top: 15px;
+        }
+        
+        .approval-badge-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .approval-badge {
+            display: flex;
+            align-items: center;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .approval-badge:hover {
+            background-color: #fff8e1;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .approval-badge i {
+            color: #ffc107;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+        
+        .badge-text {
+            font-weight: 500;
+            color: #856404;
+            margin-right: 10px;
+        }
+        
+        .badge-count {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            min-width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 0 6px;
+        }
+        
+        /* User's Pending Attendance Badge Styles */
+        .user-pending-badge {
+            margin-top: 15px;
+            margin-left: 10px;
+        }
+        
+        .pending-badge {
+            display: flex;
+            align-items: center;
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 8px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: pulse-red 2s infinite;
+        }
+        
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+        
+        .pending-badge i {
+            color: #dc3545;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+        
+        .pending-badge .badge-text {
+            font-weight: 500;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .greeting-text {
+                font-size: 1.2rem;
+            }
+        }
+        
+        .greeting-actions {
+            margin-top: 15px;
+        }
+        
+        .action-badges-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-top: 10px;
+            gap: 10px;  /* Add gap between elements in the container */
+        }
+        
+        .punch-button-container {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        /* User's Pending Attendance Badge Styles */
+        .user-pending-badge {
+            margin-bottom: 5px;
+        }
+        
+        .pending-badge {
+            display: flex;
+            align-items: center;
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 4px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: pulse-red 2s infinite;
+            font-size: 0.8rem;
+        }
+        
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+        
+        .pending-badge i {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-right: 6px;
+        }
+        
+        .pending-badge .badge-text {
+            font-weight: 500;
+            color: #721c24;
+            font-size: 0.8rem;
+        }
+        
+        /* Mobile responsive styles for punch buttons */
+        @media (max-width: 576px) {
+            .punch-button-container button {
+                padding: 6px 15px !important;
+                font-size: 0.9rem;
+                width: 100%;
+                margin-left: 0 !important;
+            }
+            
+            .action-badges-container {
+                width: 100%;
+            }
+            
+            .user-pending-badge {
+                width: 100%;
+            }
+            
+            .pending-badge {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .greeting-text {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1151,49 +1387,134 @@ if (isset($_SESSION['user_id'])) {
                                         </div>
                                         <!-- Shift info will be inserted here by JavaScript -->
                                     </div>
-                                    <div class="punch-button-container">
-                                        <!-- Hide the original button with CSS but keep it in the DOM -->
-                                        <button id="punchButton" class="btn btn-success punch-button" style="display: none;">
-                                            <i class="fas fa-sign-in-alt"></i> Punch In
-                                        </button>
-                                        <!-- Remove the Punch In 2 button -->
+                                    
+                                    <div class="action-badges-container">
+                                        <!-- User's Pending Attendance Badge -->
                                         <?php
-                                        // Check if user has already punched in today but not punched out
-                                        $punch_status_query = "SELECT id FROM attendance WHERE user_id = ? AND date = CURDATE() AND punch_in IS NOT NULL AND punch_out IS NULL";
-                                        $punch_stmt = $conn->prepare($punch_status_query);
-                                        $punch_stmt->bind_param("i", $_SESSION['user_id']);
-                                        $punch_stmt->execute();
-                                        $punch_result = $punch_stmt->get_result();
-                                        $has_punched_in = $punch_result->num_rows > 0;
-                                        $punch_stmt->close();
+                                        // Check if the current user has any pending attendance approvals
+                                        $user_pending_query = "SELECT COUNT(*) as pending_count FROM attendance 
+                                                             WHERE user_id = ? AND approval_status = 'pending'";
+                                        $user_pending_stmt = $conn->prepare($user_pending_query);
+                                        $user_pending_stmt->bind_param("i", $_SESSION['user_id']);
+                                        $user_pending_stmt->execute();
+                                        $user_pending_result = $user_pending_stmt->get_result();
+                                        $user_pending_row = $user_pending_result->fetch_assoc();
+                                        $user_pending_count = $user_pending_row['pending_count'];
                                         
-                                        // Check if user has already completed a full punch cycle today (both in and out)
-                                        $completed_cycle_query = "SELECT id FROM attendance WHERE user_id = ? AND date = CURDATE() AND punch_in IS NOT NULL AND punch_out IS NOT NULL";
-                                        $completed_stmt = $conn->prepare($completed_cycle_query);
-                                        $completed_stmt->bind_param("i", $_SESSION['user_id']);
-                                        $completed_stmt->execute();
-                                        $completed_result = $completed_stmt->get_result();
-                                        $has_completed_cycle = $completed_result->num_rows > 0;
-                                        $completed_stmt->close();
-                                        
-                                        if ($has_punched_in) {
-                                            // User has punched in but not out - show Punch Out button
-                                            echo '<button id="comeOutBtn" class="btn btn-danger" style="border-radius: 50px; margin-left: 10px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
-                                                <i class="fas fa-sign-out-alt"></i> Punch Out
-                                            </button>';
-                                        } elseif ($has_completed_cycle) {
-                                            // User has completed a full cycle - show Completed button (disabled)
-                                            echo '<button disabled class="btn btn-secondary" style="border-radius: 50px; margin-left: 10px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); opacity: 0.8;">
-                                                <i class="fas fa-check-circle"></i> Completed
-                                            </button>';
-                                        } else {
-                                            // User has not punched in or has completed punch cycle - show Punch In button
-                                            echo '<button id="comeInBtn" class="btn btn-success" style="border-radius: 50px; margin-left: 10px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
-                                                <i class="fas fa-sign-in-alt"></i> Punch In
-                                            </button>';
-                                        }
+                                        if ($user_pending_count > 0):
                                         ?>
+                                        <div class="user-pending-badge">
+                                            <div class="pending-badge">
+                                                <i class="fas fa-clock"></i>
+                                                <span class="badge-text">Attendance Pending</span>
+                                            </div>
+                                        </div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="buttons-container">
+                                            <!-- Punch Button Container -->
+                                            <div class="punch-button-container">
+                                                <!-- Hide the original button with CSS but keep it in the DOM -->
+                                                <button id="punchButton" class="btn btn-success punch-button" style="display: none;">
+                                                    <i class="fas fa-sign-in-alt"></i> Punch In
+                                                </button>
+                                                <!-- Remove the Punch In 2 button -->
+                                                <?php
+                                                // Check if user has already punched in today but not punched out
+                                                $punch_status_query = "SELECT id FROM attendance WHERE user_id = ? AND date = CURDATE() AND punch_in IS NOT NULL AND punch_out IS NULL";
+                                                $punch_stmt = $conn->prepare($punch_status_query);
+                                                $punch_stmt->bind_param("i", $_SESSION['user_id']);
+                                                $punch_stmt->execute();
+                                                $punch_result = $punch_stmt->get_result();
+                                                $has_punched_in = $punch_result->num_rows > 0;
+                                                $punch_stmt->close();
+                                                
+                                                // Check if user has already completed a full punch cycle today (both in and out)
+                                                $completed_cycle_query = "SELECT id FROM attendance WHERE user_id = ? AND date = CURDATE() AND punch_in IS NOT NULL AND punch_out IS NOT NULL";
+                                                $completed_stmt = $conn->prepare($completed_cycle_query);
+                                                $completed_stmt->bind_param("i", $_SESSION['user_id']);
+                                                $completed_stmt->execute();
+                                                $completed_result = $completed_stmt->get_result();
+                                                $has_completed_cycle = $completed_result->num_rows > 0;
+                                                $completed_stmt->close();
+                                                
+                                                if ($has_punched_in) {
+                                                    // User has punched in but not out - show Punch Out button
+                                                    echo '<button id="comeOutBtn" class="btn btn-danger" style="width: 100%; border-radius: 18px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
+                                                        <i class="fas fa-sign-out-alt"></i> Punch Out
+                                                    </button>';
+                                                } elseif ($has_completed_cycle) {
+                                                    // User has completed a full cycle - show Completed button (disabled)
+                                                    echo '<button disabled class="btn btn-secondary" style="width: 100%; border-radius: 18px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); opacity: 0.8;">
+                                                        <i class="fas fa-check-circle"></i> Completed
+                                                    </button>';
+                                                } else {
+                                                    // User has not punched in or has completed punch cycle - show Punch In button
+                                                    echo '<button id="comeInBtn" class="btn btn-success" style="width: 100%; border-radius: 18px; padding: 8px 20px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease;">
+                                                        <i class="fas fa-sign-in-alt"></i> Punch In
+                                                    </button>';
+                                                }
+                                                ?>
+                                            </div>
+                                            
+                                            <!-- Site In/Out Button Container -->
+                                            <div class="site-button-container">
+                                                <button id="siteInOutBtn" class="site-button" data-action="<?php echo $site_action; ?>" <?php echo $site_button_disabled ? 'disabled' : ''; ?>>
+                                                    <?php if ($site_button_disabled): ?>
+                                                        <i class="fas fa-lock"></i> Site In/Out Locked
+                                                    <?php else: ?>
+                                                        <i class="fas <?php echo $site_action_icon; ?>"></i> <?php echo $site_action_label; ?>
+                                                    <?php endif; ?>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+                                    
+                                    <!-- Manager Approval Badge -->
+                                    <?php
+                                    // Check if user is a manager or has approval permissions
+                                    $show_approval_badge = false;
+                                    $pending_count = 0;
+                                    
+                                    if (isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['manager', 'admin', 'supervisor'])) {
+                                        // Query to get count of pending attendance approvals
+                                        $approval_query = "SELECT COUNT(*) as pending_count FROM attendance 
+                                                         WHERE approval_status = 'pending'";
+                                        
+                                        // For non-admin roles, only show records assigned to this manager
+                                        if (strtolower($_SESSION['role']) !== 'admin') {
+                                            $approval_query .= " AND EXISTS (
+                                                SELECT 1 FROM users 
+                                                WHERE users.id = attendance.user_id 
+                                                AND users.manager_id = ?
+                                            )";
+                                            
+                                            $stmt = $conn->prepare($approval_query);
+                                            $stmt->bind_param('i', $_SESSION['user_id']);
+                                        } else {
+                                            $stmt = $conn->prepare($approval_query);
+                                        }
+                                        
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+                                        $row = $result->fetch_assoc();
+                                        
+                                        $pending_count = $row['pending_count'];
+                                        $show_approval_badge = ($pending_count > 0);
+                                    }
+                                    
+                                    if ($show_approval_badge):
+                                    ?>
+                                    <div class="attendance-approval-badge">
+                                        <a href="attendance_approval.php" class="approval-badge-link">
+                                            <div class="approval-badge">
+                                                <i class="fas fa-clipboard-check"></i>
+                                                <span class="badge-text">Attendance Approval</span>
+                                                <span class="badge-count"><?php echo $pending_count; ?></span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -2029,9 +2350,8 @@ if (isset($_SESSION['user_id'])) {
                                 button.classList.add('btn-danger');
                                 button.innerHTML = '<i class="fas fa-sign-out-alt"></i> Punch Out <span class="punch-button-status status-in"></span>';
                                 
-                                // Add punch time indicator
-                                punchTimeElem.innerHTML = 'Since: ' + currentTime;
-                                button.parentElement.appendChild(punchTimeElem);
+                                // Don't add punch time indicator
+                                // Removed "Since punch in time" display
                                 
                                 // Show toast notification
                                 showToast('Punched in successfully', 'success', 'Punch time recorded: ' + currentTime);
@@ -3327,5 +3647,81 @@ if (isset($_SESSION['user_id'])) {
     
     <!-- Include Come In Modal -->
     <?php include 'modals/come_in_modal.php'; ?>
+
+    <!-- Add JavaScript for Site In/Out button functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const siteInOutBtn = document.getElementById('siteInOutBtn');
+        if (siteInOutBtn) {
+            siteInOutBtn.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    showToast('Error', 'danger', 'Geolocation is not supported by your browser.');
+                    return;
+                }
+                siteInOutBtn.disabled = true;
+                siteInOutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    // Optional: Reverse geocode to get address
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'User-Agent': 'HR Attendance System'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        let address = typeof data.display_name === 'string' ? data.display_name : '';
+                        // Use the button's data-action attribute
+                        let action = siteInOutBtn.getAttribute('data-action');
+                        // Prepare data
+                        const formData = new FormData();
+                        formData.append('action', action);
+                        formData.append('latitude', latitude);
+                        formData.append('longitude', longitude);
+                        formData.append('address', address);
+                        formData.append('device_info', navigator.userAgent);
+                        fetch('ajax_handlers/site_in_out.php', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'Accept': 'application/json' }
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.status === 'success') {
+                                showToast('Success', 'success', res.message + '<br><small>Location: ' + (address ? address : 'Unknown') + '</small>');
+                                setTimeout(() => { window.location.reload(); }, 1200);
+                            } else {
+                                showToast('Error', 'danger', res.message);
+                                siteInOutBtn.disabled = false;
+                                siteInOutBtn.innerHTML = action === 'site_in'
+                                    ? '<i class="fas fa-sign-in-alt"></i> Site In'
+                                    : '<i class="fas fa-sign-out-alt"></i> Site Out';
+                            }
+                        })
+                        .catch(err => {
+                            showToast('Error', 'danger', 'Failed to record site in/out.');
+                            siteInOutBtn.disabled = false;
+                            siteInOutBtn.innerHTML = action === 'site_in'
+                                ? '<i class="fas fa-sign-in-alt"></i> Site In'
+                                : '<i class="fas fa-sign-out-alt"></i> Site Out';
+                        });
+                    })
+                    .catch(() => {
+                        showToast('Error', 'danger', 'Could not get address.');
+                        siteInOutBtn.disabled = false;
+                        siteInOutBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Site In/Out';
+                    });
+                }, function(error) {
+                    showToast('Error', 'danger', 'Could not get location: ' + error.message);
+                    siteInOutBtn.disabled = false;
+                    siteInOutBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Site In/Out';
+                }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+            });
+        }
+    });
+    </script>
 </body>
 </html> 

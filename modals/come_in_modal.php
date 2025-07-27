@@ -41,6 +41,10 @@
         <div class="come-in-modal-footer">
             <button id="comeInRetakeBtn" class="btn btn-secondary" style="display: none;">Retake</button>
             <button id="comeInSaveBtn" class="btn btn-success" style="display: none;">Confirm</button>
+            <!-- Add new overtime button -->
+            <button id="submitOvertimeBtn" class="btn btn-warning" style="display: none;">
+                <i class="fas fa-clock"></i> Submit Overtime
+            </button>
         </div>
     </div>
 </div>
@@ -237,4 +241,21 @@
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
-</style> 
+
+/* Add new styles for overtime button */
+#submitOvertimeBtn {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 8px 15px;
+    transition: background-color 0.3s ease;
+}
+
+#submitOvertimeBtn:hover {
+    background-color: #e0a800;
+}
+
+#submitOvertimeBtn i {
+    margin-right: 5px;
+}
+</style>

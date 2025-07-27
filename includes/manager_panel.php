@@ -41,6 +41,10 @@
         <i class="fas fa-calendar-check"></i>
         <span class="menu-text">Attendance Approval</span>
     </div>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_in_out_logs.php' ? 'active' : ''; ?>" onclick="window.location.href='site_in_out_logs.php'">
+        <i class="fas fa-calendar-check"></i>
+        <span class="menu-text">Site In/Out Logs</span>
+    </div>
     
     <!-- Site Supervision Section -->
     <div class="menu-item section-start">

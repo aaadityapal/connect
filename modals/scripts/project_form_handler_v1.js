@@ -1846,7 +1846,7 @@ function handleProjectTitleInput(input) {
     const value = input.value.trim().toLowerCase();
     
     console.log('Input value:', value);
-    console.log('Global projects:', globalProjects);
+    console.log('Global projects count:', globalProjects.length);
     
     // Clear suggestions if input is empty
     if (!value) {
@@ -1857,19 +1857,49 @@ function handleProjectTitleInput(input) {
     
     // Filter matching projects
     const matches = globalProjects.filter(project => {
+        if (!project.title) {
+            console.warn('Project with missing title found:', project);
+            return false;
+        }
+        
         const title = project.title.toLowerCase();
         const isMatch = title.includes(value);
-        console.log(`Checking project "${project.title}": ${isMatch}`);
+        
+        // Log only for debugging specific projects
+        if (value.length > 3) {
+            console.log(`Checking project "${project.title}" (ID: ${project.id}): ${isMatch}`);
+        }
+        
         return isMatch;
     });
     
-    console.log('Matches found:', matches);
+    console.log('Matches found:', matches.length);
     
     if (matches.length > 0) {
-        // Debug log
-        console.log('Matching projects:', matches);
+        // Sort matches by relevance (exact matches first, then by recency)
+        const sortedMatches = [...matches].sort((a, b) => {
+            // Exact matches first
+            const aExact = a.title.toLowerCase() === value;
+            const bExact = b.title.toLowerCase() === value;
+            
+            if (aExact && !bExact) return -1;
+            if (!aExact && bExact) return 1;
+            
+            // Then by how close the match is to the start of the title
+            const aIndex = a.title.toLowerCase().indexOf(value);
+            const bIndex = b.title.toLowerCase().indexOf(value);
+            
+            if (aIndex !== bIndex) return aIndex - bIndex;
+            
+            // Finally by recency (assuming ID is sequential)
+            return parseInt(b.id) - parseInt(a.id);
+        });
         
-        suggestionsContainer.innerHTML = matches.map(project => `
+        // Display the matches (limit to 15 for performance)
+        const displayMatches = sortedMatches.slice(0, 15);
+        console.log('Displaying top matches:', displayMatches);
+        
+        suggestionsContainer.innerHTML = displayMatches.map(project => `
             <div class="suggestion-item" 
                  data-project-id="${project.id}" 
                  onclick="selectProject('${project.id}')">
@@ -2193,13 +2223,36 @@ function handleInput(e) {
     }
 
     // Filter matching projects
-    const matches = globalProjects.filter(project => 
-        project.title.toLowerCase().includes(value)
-    );
+    const matches = globalProjects.filter(project => {
+        if (!project.title) return false;
+        return project.title.toLowerCase().includes(value);
+    });
 
     // Show suggestions
     if (matches.length > 0) {
-        suggestionsContainer.innerHTML = matches.map(project => `
+        // Sort matches by relevance (exact matches first, then by recency)
+        const sortedMatches = [...matches].sort((a, b) => {
+            // Exact matches first
+            const aExact = a.title.toLowerCase() === value;
+            const bExact = b.title.toLowerCase() === value;
+            
+            if (aExact && !bExact) return -1;
+            if (!aExact && bExact) return 1;
+            
+            // Then by how close the match is to the start of the title
+            const aIndex = a.title.toLowerCase().indexOf(value);
+            const bIndex = b.title.toLowerCase().indexOf(value);
+            
+            if (aIndex !== bIndex) return aIndex - bIndex;
+            
+            // Finally by recency (assuming ID is sequential)
+            return parseInt(b.id) - parseInt(a.id);
+        });
+        
+        // Display the matches (limit to 15 for performance)
+        const displayMatches = sortedMatches.slice(0, 15);
+        
+        suggestionsContainer.innerHTML = displayMatches.map(project => `
             <div class="suggestion-item" 
                  data-project-id="${project.id}" 
                  onclick="selectProject('${project.id}')">

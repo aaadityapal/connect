@@ -6,13 +6,16 @@ let currentEmojiCategory = 'smileys';
 let emojis = {};
 let searchResults = [];
 let currentSearchIndex = -1;
+const MESSAGE_CHECK_FREQUENCY = 3000; // Check for new messages every 3 seconds
+let processedMessageIds = new Set(); // Track processed message IDs
 
-// Function to fetch users
+// Function to fetch users with Active status
 function fetchChatUsers() {
     fetch('fetch_chat_users.php')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Only Active status users are returned from the backend
                 chatUsers = data.users;
                 updateUsersList(chatUsers);
             } else {
@@ -38,6 +41,7 @@ function updateUsersList(users) {
 
     usersList.innerHTML = '';
 
+    // Only Active users are displayed here as they are filtered by the backend
     users.forEach(user => {
         console.log('Processing user:', user); // Log each user being processed
         const userItem = `
@@ -1518,6 +1522,16 @@ function displayMessages(messages) {
     const messagesContainer = document.querySelector('.chat-messages');
     messagesContainer.innerHTML = '';
     
+    if (!messages || messages.length === 0) {
+        messagesContainer.innerHTML = '<div class="no-messages">No messages yet. Start a conversation!</div>';
+        return;
+    }
+    
+    // Add all message IDs to the processed set
+    messages.forEach(message => {
+        processedMessageIds.add(message.id);
+    });
+    
     messages.forEach(message => {
         const isOwn = message.sender_id === parseInt(document.body.dataset.userId);
         const messageElement = createMessageElement(message, isOwn);
@@ -1656,15 +1670,22 @@ document.querySelector('.message-input').addEventListener('keypress', function(e
 
 // Function to start checking for new messages
 function startMessageChecking() {
+    console.log('Starting real-time message checking');
+    // Clear any existing interval
+    if (messageCheckInterval) {
+        clearInterval(messageCheckInterval);
+    }
+    
     // Check immediately
     checkNewMessages();
     
-    // Then check every 3 seconds
-    messageCheckInterval = setInterval(checkNewMessages, 3000);
+    // Then check every MESSAGE_CHECK_FREQUENCY milliseconds
+    messageCheckInterval = setInterval(checkNewMessages, MESSAGE_CHECK_FREQUENCY);
 }
 
 // Function to stop checking for new messages
 function stopMessageChecking() {
+    console.log('Stopping message checking');
     if (messageCheckInterval) {
         clearInterval(messageCheckInterval);
         messageCheckInterval = null;
@@ -1675,16 +1696,39 @@ function stopMessageChecking() {
 function checkNewMessages() {
     if (!lastCheckTime) return;
 
-    fetch(`check_new_messages.php?last_check=${encodeURIComponent(lastCheckTime)}`)
-        .then(response => response.json())
+    // Get the highest message ID we've processed
+    let lastMessageId = 0;
+    processedMessageIds.forEach(id => {
+        const numId = parseInt(id);
+        if (!isNaN(numId) && numId > lastMessageId) {
+            lastMessageId = numId;
+        }
+    });
+
+    fetch(`check_new_messages.php?last_check=${encodeURIComponent(lastCheckTime)}&last_message_id=${lastMessageId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Update last check time
                 lastCheckTime = data.timestamp;
+                console.log('Checked for new messages at:', lastCheckTime);
 
-                // If there are new messages and chat is open with the sender
-                if (data.new_messages && data.new_messages.length > 0) {
-                    handleNewMessages(data.new_messages);
+                // Filter out already processed messages
+                const newMessages = data.new_messages ? data.new_messages.filter(msg => !processedMessageIds.has(msg.id)) : [];
+                
+                if (newMessages.length > 0) {
+                    console.log('New messages received:', newMessages.length);
+                    
+                    // Add new message IDs to processed set
+                    newMessages.forEach(msg => processedMessageIds.add(msg.id));
+                    
+                    // Handle the new messages
+                    handleNewMessages(newMessages);
                 }
 
                 // Update unread counts
@@ -1692,6 +1736,8 @@ function checkNewMessages() {
                     updateUnreadCounts(data.unread_counts);
                     updateTotalUnreadCount();
                 }
+            } else {
+                console.error('Error checking messages:', data.error);
             }
         })
         .catch(error => console.error('Error checking messages:', error));
@@ -1703,11 +1749,18 @@ function handleNewMessages(newMessages) {
 
     const chatMessages = document.querySelector('.chat-messages');
     const isAtBottom = chatMessages && 
-        (chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight);
+        (chatMessages.scrollHeight - chatMessages.scrollTop <= chatMessages.clientHeight + 100);
 
     newMessages.forEach(message => {
+        // Skip if this message has already been processed
+        if (document.querySelector(`.message[data-message-id="${message.id}"]`)) {
+            console.log('Skipping already displayed message:', message.id);
+            return;
+        }
+        
         // If chat is open with this sender, add message to chat
-        if (currentChatUser && message.sender_id === currentChatUser.id) {
+        if (currentChatUser && message.sender_id === parseInt(currentChatUser.id)) {
+            console.log('Adding new message to current chat:', message);
             const messageElement = createMessageElement(message, false);
             if (chatMessages) {
                 chatMessages.appendChild(messageElement);
@@ -1812,9 +1865,9 @@ function toggleChatInterface() {
         document.querySelector('.chat-users-list').style.display = 'block';
         document.querySelector('.chat-conversation').style.display = 'none';
         fetchChatUsers();
-        startMessageChecking();
+        startMessageChecking(); // Start real-time message checking
     } else {
-        stopMessageChecking();
+        stopMessageChecking(); // Stop checking when chat is closed
     }
 }
 
@@ -2457,6 +2510,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendButton = document.querySelector('.send-button');
     const messageInput = document.querySelector('.message-input');
     const fileInput = document.querySelector('#file-input');
+    const chatBubbleButton = document.querySelector('.chat-bubble-button');
 
     // Add event listeners only if elements exist
     if (sendButton) {
@@ -2474,11 +2528,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
     }
+    
+    if (chatBubbleButton) {
+        chatBubbleButton.addEventListener('click', toggleChatInterface);
+    }
 
     // Initialize chat interface
     const chatInterface = document.querySelector('.floating-chat-interface');
     if (chatInterface) {
         fetchChatUsers(); // Initial fetch of users
+        
+        // If chat interface is already active, start message checking
+        if (chatInterface.classList.contains('active')) {
+            startMessageChecking();
+        }
     }
 
     // Initialize other event listeners

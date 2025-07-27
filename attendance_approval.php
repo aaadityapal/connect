@@ -3,391 +3,645 @@ require_once 'config/db_connect.php';
 require_once 'includes/auth_check.php';
 require_once 'includes/role_check.php';
 
-// Check if user has manager role
-checkUserRole(['admin', 'manager']);
+// Initialize variables
+$error = null;
+$success = null;
+$attendance = null;
 
-// Get attendance ID from URL parameter
-$attendance_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// Check if user has required role - ensure exact role string matching
+checkUserRole(['admin', 'manager', 'senior manager (site)', 'senior manager (studio)', 'hr']);
 
-// Process approval/rejection
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = isset($_POST['action']) ? $_POST['action'] : '';
-    $comments = isset($_POST['comments']) ? $_POST['comments'] : '';
+// Get attendance ID from URL parameter with validation
+$attendance_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$attendance_id) {
+    header("Location: index.php?error=" . urlencode('Invalid attendance record ID'));
+    exit;
+}
+
+try {
+    // Get attendance details with all necessary joins
+    $sql = "SELECT 
+            a.*,
+            u.username,
+            u.employee_id,
+            u.designation,
+            u.department,
+            u.reporting_manager,
+            CONCAT(u.first_name, ' ', u.last_name) as employee_name,
+            u.manager_id as employee_manager_id,
+            m.username as manager_username,
+            CONCAT(m.first_name, ' ', m.last_name) as manager_name,
+            s.name as shift_name,
+            s.start_time as shift_start,
+            s.end_time as shift_end
+            FROM attendance a 
+            JOIN users u ON a.user_id = u.id 
+            LEFT JOIN users m ON a.manager_id = m.id
+            LEFT JOIN shifts s ON a.shifts_id = s.id
+            WHERE a.id = ?";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $attendance_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    if ($action === 'approve' || $action === 'reject') {
-        $status = ($action === 'approve') ? 'approved' : 'rejected';
+    if ($result->num_rows === 0) {
+        header("Location: index.php?error=" . urlencode('Attendance record not found'));
+        exit;
+    }
+    
+    $attendance = $result->fetch_assoc();
+    
+    // Debug user role and authorization
+    // echo "User Role: " . $_SESSION['role'] . "<br>";
+    // echo "Employee Manager ID: " . $attendance['employee_manager_id'] . "<br>";
+    // echo "User ID: " . $_SESSION['user_id'] . "<br>";
+    // echo "Reporting Manager: " . $attendance['reporting_manager'] . "<br>";
+    
+    // Check authorization - Fix for senior manager roles
+    $is_authorized = (
+        strtolower($_SESSION['role']) === 'admin' || 
+        strtolower($_SESSION['role']) === 'hr' ||
+        strtolower($_SESSION['role']) === 'senior manager (site)' ||
+        strtolower($_SESSION['role']) === 'senior manager (studio)' ||
+        $attendance['employee_manager_id'] == $_SESSION['user_id'] ||
+        $attendance['reporting_manager'] == $_SESSION['user_id']
+    );
+    
+    if (!$is_authorized) {
+        header("Location: index.php?error=" . urlencode('You are not authorized to view this record'));
+        exit;
+    }
+    
+    // Handle form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
+        $comments = filter_input(INPUT_POST, 'comments', FILTER_SANITIZE_STRING);
+        $overtime_status = filter_input(INPUT_POST, 'overtime_status', FILTER_SANITIZE_STRING);
         
-        // Update attendance record
-        $sql = "UPDATE attendance SET 
-                approval_status = ?, 
-                manager_id = ?, 
-                approval_timestamp = NOW(), 
-                manager_comments = ? 
-                WHERE id = ?";
+        if (!in_array($action, ['approve', 'reject'])) {
+            throw new Exception('Invalid action specified');
+        }
         
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('sisi', $status, $_SESSION['user_id'], $comments, $attendance_id);
+        // Start transaction
+        $conn->begin_transaction();
         
-        if ($stmt->execute()) {
-            // Mark notification as read
-            $update_notification = "UPDATE notifications SET 
-                                   is_read = 1, 
-                                   read_at = NOW() 
-                                   WHERE type = 'attendance_approval' 
-                                   AND link LIKE ?";
+        try {
+            $status = ($action === 'approve') ? 'approved' : 'rejected';
             
-            $link_pattern = "%attendance_approval.php?id=$attendance_id%";
-            $notify_stmt = $conn->prepare($update_notification);
-            $notify_stmt->bind_param('s', $link_pattern);
-            $notify_stmt->execute();
+            // Update attendance record
+            $update_sql = "UPDATE attendance SET 
+                          approval_status = ?,
+                          manager_id = ?,
+                          approval_timestamp = NOW(),
+                          manager_comments = ?,
+                          overtime_status = ?,
+                          overtime_approved_by = ?,
+                          overtime_actioned_at = NOW(),
+                          modified_by = ?,
+                          modified_at = NOW()
+                          WHERE id = ? AND approval_status = 'pending'";
             
-            // Get employee details for notification
-            $user_query = "SELECT a.user_id, CONCAT(u.first_name, ' ', u.last_name) as manager_name 
-                          FROM attendance a 
-                          JOIN users u ON u.id = ? 
-                          WHERE a.id = ?";
+            $update_stmt = $conn->prepare($update_sql);
+            $update_stmt->bind_param(
+                'sisssii', 
+                $status, 
+                $_SESSION['user_id'], 
+                $comments, 
+                $overtime_status,
+                $_SESSION['user_id'],
+                $_SESSION['user_id'],
+                $attendance_id
+            );
             
-            $user_stmt = $conn->prepare($user_query);
-            $user_stmt->bind_param('ii', $_SESSION['user_id'], $attendance_id);
-            $user_stmt->execute();
-            $user_result = $user_stmt->get_result();
-            
-            if ($user_row = $user_result->fetch_assoc()) {
-                $employee_id = $user_row['user_id'];
-                $manager_name = $user_row['manager_name'];
-                
-                // Create notification for employee
-                $notification_sql = "INSERT INTO notifications (
-                    user_id, 
-                    title, 
-                    content, 
-                    link, 
-                    type, 
-                    created_at
-                ) VALUES (?, ?, ?, ?, ?, NOW())";
-                
-                $notification_title = "Attendance " . ucfirst($status);
-                $notification_content = "Your attendance has been " . $status . " by " . $manager_name . ".";
-                if (!empty($comments)) {
-                    $notification_content .= " Comments: " . $comments;
-                }
-                $notification_link = "attendance_details.php?id=$attendance_id";
-                $notification_type = "attendance_" . $status;
-                
-                $notification_stmt = $conn->prepare($notification_sql);
-                $notification_stmt->bind_param(
-                    'issss',
-                    $employee_id,
-                    $notification_title,
-                    $notification_content,
-                    $notification_link,
-                    $notification_type
-                );
-                
-                $notification_stmt->execute();
+            if (!$update_stmt->execute() || $update_stmt->affected_rows === 0) {
+                throw new Exception('Failed to update attendance record or record already processed');
             }
             
-            // Set success message
-            $success_message = "Attendance has been " . ucfirst($status) . " successfully.";
-        } else {
-            $error_message = "Error updating attendance record: " . $conn->error;
+            // Create notification for employee
+            $notification_title = "Attendance " . ucfirst($status);
+            $notification_content = "Your attendance for " . date('d M Y', strtotime($attendance['date'])) . 
+                                  " has been {$status} by {$_SESSION['user_name']}";
+            
+            if (!empty($comments)) {
+                $notification_content .= ". Comments: {$comments}";
+            }
+            
+            if ($overtime_status) {
+                $notification_content .= ". Overtime status: " . ucfirst($overtime_status);
+            }
+            
+            $notify_sql = "INSERT INTO notifications (
+                user_id, title, content, link, type, created_at
+            ) VALUES (?, ?, ?, ?, ?, NOW())";
+            
+            $notification_link = "view_attendance.php?id=" . $attendance_id;
+            $notification_type = "attendance_" . $status;
+            
+            $notify_stmt = $conn->prepare($notify_sql);
+            $notify_stmt->bind_param(
+                'issss',
+                $attendance['user_id'],
+                $notification_title,
+                $notification_content,
+                $notification_link,
+                $notification_type
+            );
+            
+            if (!$notify_stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
+            
+            // Mark existing notification as read
+            $mark_read_sql = "UPDATE notifications SET 
+                             is_read = 1,
+                             read_at = NOW()
+                             WHERE type = 'attendance_approval'
+                             AND link LIKE ?";
+            
+            $link_pattern = "%attendance_approval.php?id=$attendance_id%";
+            $mark_read_stmt = $conn->prepare($mark_read_sql);
+            $mark_read_stmt->bind_param('s', $link_pattern);
+            $mark_read_stmt->execute();
+            
+            // Commit transaction
+            $conn->commit();
+            $success = "Attendance has been " . ucfirst($status) . " successfully";
+            
+            // Refresh attendance data
+            $stmt->execute();
+            $attendance = $stmt->get_result()->fetch_assoc();
+            
+        } catch (Exception $e) {
+            $conn->rollback();
+            $error = $e->getMessage();
         }
     }
+    
+} catch (Exception $e) {
+    $error = $e->getMessage();
 }
 
-// Get attendance details
-$sql = "SELECT a.*, 
-        CONCAT(u.first_name, ' ', u.last_name) as employee_name,
-        u.employee_id as employee_code
-        FROM attendance a 
-        JOIN users u ON a.user_id = u.id 
-        WHERE a.id = ?";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('i', $attendance_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    // Attendance record not found
-    header("Location: index.php");
-    exit;
-}
-
-$attendance = $result->fetch_assoc();
-
-// Check if this manager is authorized to approve this attendance
-$manager_check_sql = "SELECT manager_id FROM users WHERE id = ?";
-$manager_check_stmt = $conn->prepare($manager_check_sql);
-$manager_check_stmt->bind_param('i', $attendance['user_id']);
-$manager_check_stmt->execute();
-$manager_result = $manager_check_stmt->get_result();
-$manager_row = $manager_result->fetch_assoc();
-
-$is_authorized = false;
-if ($_SESSION['role'] === 'admin' || $manager_row['manager_id'] === $_SESSION['user_id']) {
-    $is_authorized = true;
-}
-
-// If not authorized, redirect
-if (!$is_authorized) {
-    header("Location: index.php");
-    exit;
-}
-
-// Page title
+// Set page title and include header
 $page_title = "Attendance Approval";
 include 'includes/header.php';
 ?>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4>Attendance Approval Request</h4>
+<!-- Main Content -->
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            
+            <!-- Alerts -->
+            <?php if ($error): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($error); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+            <?php endif; ?>
+            
+            <?php if ($success): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?php echo htmlspecialchars($success); ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Main Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Attendance Approval Request
+                    </h5>
+                    <div>
+                        <span class="badge bg-light text-primary me-2">
+                            Date: <?php echo date('d M Y', strtotime($attendance['date'])); ?>
+                        </span>
+                        <span class="badge bg-light text-primary">
+                            ID: <?php echo htmlspecialchars($attendance_id); ?>
+                        </span>
+                    </div>
+                </div>
+                
                 <div class="card-body">
-                    <?php if (isset($success_message)): ?>
-                        <div class="alert alert-success">
-                            <?php echo $success_message; ?>
-                        </div>
-                    <?php endif; ?>
+                    <!-- Status Banner -->
+                    <?php
+                    $status_classes = [
+                        'pending' => 'alert-warning',
+                        'approved' => 'alert-success',
+                        'rejected' => 'alert-danger'
+                    ];
+                    $status_icons = [
+                        'pending' => 'fas fa-clock',
+                        'approved' => 'fas fa-check-circle',
+                        'rejected' => 'fas fa-times-circle'
+                    ];
+                    $status = $attendance['approval_status'];
+                    ?>
                     
-                    <?php if (isset($error_message)): ?>
-                        <div class="alert alert-danger">
-                            <?php echo $error_message; ?>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($attendance['approval_status'] === 'pending'): ?>
-                        <div class="alert alert-warning">
-                            <strong>Pending Approval:</strong> This attendance record was submitted outside the assigned location and requires your approval.
-                        </div>
-                    <?php elseif ($attendance['approval_status'] === 'approved'): ?>
-                        <div class="alert alert-success">
-                            <strong>Approved:</strong> This attendance record has been approved.
-                        </div>
-                    <?php elseif ($attendance['approval_status'] === 'rejected'): ?>
-                        <div class="alert alert-danger">
-                            <strong>Rejected:</strong> This attendance record has been rejected.
-                        </div>
-                    <?php endif; ?>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Employee Information</h5>
-                            <table class="table table-bordered">
-                                <tr>
-                                    <th>Employee Name</th>
-                                    <td><?php echo htmlspecialchars($attendance['employee_name']); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>Employee ID</th>
-                                    <td><?php echo htmlspecialchars($attendance['employee_code']); ?></td>
-                                </tr>
-                                <tr>
-                                    <th>Date</th>
-                                    <td><?php echo date('d M Y', strtotime($attendance['punch_in'])); ?></td>
-                                </tr>
-                            </table>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h5>Attendance Status</h5>
-                            <table class="table table-bordered">
-                                <tr>
-                                    <th>Punch In Time</th>
-                                    <td><?php echo date('h:i A', strtotime($attendance['punch_in'])); ?></td>
-                                </tr>
-                                <?php if ($attendance['punch_out']): ?>
-                                <tr>
-                                    <th>Punch Out Time</th>
-                                    <td><?php echo date('h:i A', strtotime($attendance['punch_out'])); ?></td>
-                                </tr>
-                                <?php endif; ?>
-                                <tr>
-                                    <th>Status</th>
-                                    <td>
-                                        <?php if ($attendance['approval_status'] === 'pending'): ?>
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                        <?php elseif ($attendance['approval_status'] === 'approved'): ?>
-                                            <span class="badge bg-success">Approved</span>
-                                        <?php elseif ($attendance['approval_status'] === 'rejected'): ?>
-                                            <span class="badge bg-danger">Rejected</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            </table>
+                    <div class="alert <?php echo $status_classes[$status]; ?> d-flex align-items-center">
+                        <i class="<?php echo $status_icons[$status]; ?> me-2"></i>
+                        <div>
+                            <strong><?php echo ucfirst($status); ?>:</strong>
+                            <?php
+                            switch($status) {
+                                case 'pending':
+                                    echo 'This attendance record requires your approval';
+                                    break;
+                                case 'approved':
+                                    echo 'This attendance record has been approved';
+                                    break;
+                                case 'rejected':
+                                    echo 'This attendance record has been rejected';
+                                    break;
+                            }
+                            ?>
                         </div>
                     </div>
                     
-                    <div class="row mt-4">
+                    <!-- Employee & Attendance Info -->
+                    <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0">Punch In Details</h5>
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user me-2"></i>
+                                        Employee Information
+                                    </h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="text-center mb-3">
-                                        <img src="uploads/attendance/<?php echo htmlspecialchars($attendance['punch_in_photo']); ?>" 
-                                             class="img-fluid rounded" style="max-height: 300px;" 
-                                             alt="Punch In Photo">
-                                    </div>
-                                    
-                                    <table class="table table-bordered">
-                                        <tr>
-                                            <th>Location</th>
-                                            <td><?php echo htmlspecialchars($attendance['punch_in_location_name'] ?: 'Unknown'); ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Within Geofence</th>
-                                            <td>
-                                                <?php if ($attendance['punch_in_within_geofence']): ?>
-                                                    <span class="badge bg-success">Yes</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-danger">No</span>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                        <?php if (!$attendance['punch_in_within_geofence']): ?>
-                                        <tr>
-                                            <th>Distance from Location</th>
-                                            <td><?php echo htmlspecialchars($attendance['punch_in_distance_from_geofence'] ?: 'Unknown'); ?> meters</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Address</th>
-                                            <td><?php echo htmlspecialchars($attendance['punch_in_address']); ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Reason for Outside Location</th>
-                                            <td><?php echo nl2br(htmlspecialchars($attendance['punch_in_outside_reason'])); ?></td>
-                                        </tr>
-                                        <?php endif; ?>
-                                    </table>
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">Name</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($attendance['employee_name']); ?></dd>
+                                        
+                                        <dt class="col-sm-4">Employee ID</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($attendance['employee_id']); ?></dd>
+                                        
+                                        <dt class="col-sm-4">Department</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($attendance['department']); ?></dd>
+                                        
+                                        <dt class="col-sm-4">Designation</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($attendance['designation']); ?></dd>
+                                        
+                                        <dt class="col-sm-4">Reporting To</dt>
+                                        <dd class="col-sm-8"><?php echo htmlspecialchars($attendance['reporting_manager']); ?></dd>
+                                    </dl>
                                 </div>
                             </div>
                         </div>
                         
-                        <?php if ($attendance['punch_out']): ?>
                         <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="mb-0">Punch Out Details</h5>
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-calendar-check me-2"></i>
+                                        Attendance Details
+                                    </h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="text-center mb-3">
-                                        <img src="uploads/attendance/<?php echo htmlspecialchars($attendance['punch_out_photo']); ?>" 
-                                             class="img-fluid rounded" style="max-height: 300px;" 
-                                             alt="Punch Out Photo">
-                                    </div>
-                                    
-                                    <table class="table table-bordered">
-                                        <tr>
-                                            <th>Location</th>
-                                            <td><?php echo htmlspecialchars($attendance['punch_out_location_name'] ?: 'Unknown'); ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Within Geofence</th>
-                                            <td>
-                                                <?php if ($attendance['punch_out_within_geofence']): ?>
-                                                    <span class="badge bg-success">Yes</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-danger">No</span>
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">Shift</dt>
+                                        <dd class="col-sm-8">
+                                            <?php 
+                                            if ($attendance['shift_name']) {
+                                                echo htmlspecialchars($attendance['shift_name']) . ' (' . 
+                                                     date('h:i A', strtotime($attendance['shift_start'])) . ' - ' .
+                                                     date('h:i A', strtotime($attendance['shift_end'])) . ')';
+                                            } else {
+                                                echo 'Not assigned';
+                                            }
+                                            ?>
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">Punch In</dt>
+                                        <dd class="col-sm-8">
+                                            <?php echo date('h:i A', strtotime($attendance['punch_in'])); ?>
+                                            <?php if ($attendance['is_weekly_off']): ?>
+                                                <span class="badge bg-info ms-2">Weekly Off</span>
+                                            <?php endif; ?>
+                                        </dd>
+                                        
+                                        <?php if ($attendance['punch_out']): ?>
+                                            <dt class="col-sm-4">Punch Out</dt>
+                                            <dd class="col-sm-8">
+                                                <?php echo date('h:i A', strtotime($attendance['punch_out'])); ?>
+                                                <?php if ($attendance['auto_punch_out']): ?>
+                                                    <span class="badge bg-warning ms-2">Auto Punch Out</span>
                                                 <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                        <?php if (!$attendance['punch_out_within_geofence']): ?>
-                                        <tr>
-                                            <th>Distance from Location</th>
-                                            <td><?php echo htmlspecialchars($attendance['punch_out_distance_from_geofence'] ?: 'Unknown'); ?> meters</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Address</th>
-                                            <td><?php echo htmlspecialchars($attendance['punch_out_address']); ?></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Reason for Outside Location</th>
-                                            <td><?php echo nl2br(htmlspecialchars($attendance['punch_out_outside_reason'])); ?></td>
-                                        </tr>
+                                            </dd>
+                                            
+                                            <dt class="col-sm-4">Working Hours</dt>
+                                            <dd class="col-sm-8">
+                                                <?php echo $attendance['working_hours']; ?> hrs
+                                            </dd>
+                                            
+                                            <?php if ($attendance['overtime_hours']): ?>
+                                                <dt class="col-sm-4">Overtime</dt>
+                                                <dd class="col-sm-8">
+                                                    <?php echo $attendance['overtime_hours']; ?> hrs
+                                                    <?php if ($attendance['overtime_reason']): ?>
+                                                        <i class="fas fa-info-circle ms-2" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="<?php echo htmlspecialchars($attendance['overtime_reason']); ?>">
+                                                        </i>
+                                                    <?php endif; ?>
+                                                </dd>
+                                            <?php endif; ?>
                                         <?php endif; ?>
-                                        <tr>
-                                            <th>Work Report</th>
-                                            <td><?php echo nl2br(htmlspecialchars($attendance['work_report'])); ?></td>
-                                        </tr>
-                                    </table>
+                                        
+                                        <?php if ($attendance['remarks']): ?>
+                                            <dt class="col-sm-4">Remarks</dt>
+                                            <dd class="col-sm-8"><?php echo nl2br(htmlspecialchars($attendance['remarks'])); ?></dd>
+                                        <?php endif; ?>
+                                    </dl>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Punch Details -->
+                    <div class="row g-4">
+                        <!-- Punch In Details -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Punch In Details
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <?php if ($attendance['punch_in_photo']): ?>
+                                        <div class="text-center mb-3">
+                                            <img src="uploads/attendance/<?php echo htmlspecialchars($attendance['punch_in_photo']); ?>"
+                                                 class="img-fluid rounded"
+                                                 style="max-height: 300px;"
+                                                 alt="Punch In Photo">
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered mb-0">
+                                            <tr>
+                                                <th style="width: 40%">Location Status</th>
+                                                <td>
+                                                    <?php if ($attendance['within_geofence']): ?>
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle me-1"></i>
+                                                            Within Geofence
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                                            Outside Geofence
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                            
+                                            <tr>
+                                                <th>Location</th>
+                                                <td>
+                                                    <?php echo htmlspecialchars($attendance['location']); ?>
+                                                    <?php if ($attendance['latitude'] && $attendance['longitude']): ?>
+                                                        <a href="https://www.google.com/maps?q=<?php echo $attendance['latitude']; ?>,<?php echo $attendance['longitude']; ?>"
+                                                           target="_blank"
+                                                           class="btn btn-sm btn-outline-primary ms-2">
+                                                            <i class="fas fa-map-marker-alt"></i>
+                                                            View Map
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                            
+                                            <?php if (!$attendance['within_geofence']): ?>
+                                                <tr>
+                                                    <th>Distance</th>
+                                                    <td>
+                                                        <?php echo number_format($attendance['distance_from_geofence'], 2); ?> meters
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <th>Address</th>
+                                                    <td><?php echo htmlspecialchars($attendance['address']); ?></td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <th>Reason</th>
+                                                    <td><?php echo nl2br(htmlspecialchars($attendance['punch_in_outside_reason'])); ?></td>
+                                                </tr>
+                                            <?php endif; ?>
+                                            
+                                            <tr>
+                                                <th>Device Info</th>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        <?php echo htmlspecialchars($attendance['device_info']); ?>
+                                                        <br>
+                                                        IP: <?php echo htmlspecialchars($attendance['ip_address']); ?>
+                                                    </small>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Punch Out Details -->
+                        <?php if ($attendance['punch_out']): ?>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-sign-out-alt me-2"></i>
+                                            Punch Out Details
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <?php if ($attendance['punch_out_photo']): ?>
+                                            <div class="text-center mb-3">
+                                                <img src="uploads/attendance/<?php echo htmlspecialchars($attendance['punch_out_photo']); ?>"
+                                                     class="img-fluid rounded"
+                                                     style="max-height: 300px;"
+                                                     alt="Punch Out Photo">
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered mb-0">
+                                                <tr>
+                                                    <th style="width: 40%">Location Status</th>
+                                                    <td>
+                                                        <?php if ($attendance['within_geofence']): ?>
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check-circle me-1"></i>
+                                                                Within Geofence
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                                Outside Geofence
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <th>Location</th>
+                                                    <td>
+                                                        <?php if ($attendance['punch_out_latitude'] && $attendance['punch_out_longitude']): ?>
+                                                            <a href="https://www.google.com/maps?q=<?php echo $attendance['punch_out_latitude']; ?>,<?php echo $attendance['punch_out_longitude']; ?>"
+                                                               target="_blank"
+                                                               class="btn btn-sm btn-outline-primary ms-2">
+                                                                <i class="fas fa-map-marker-alt"></i>
+                                                                View Map
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <?php if (!$attendance['within_geofence']): ?>
+                                                    <tr>
+                                                        <th>Distance</th>
+                                                        <td>
+                                                            <?php echo number_format($attendance['distance_from_geofence'], 2); ?> meters
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <th>Address</th>
+                                                        <td><?php echo htmlspecialchars($attendance['punch_out_address']); ?></td>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <th>Reason</th>
+                                                        <td><?php echo nl2br(htmlspecialchars($attendance['punch_out_outside_reason'])); ?></td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                                
+                                                <?php if ($attendance['work_report']): ?>
+                                                    <tr>
+                                                        <th>Work Report</th>
+                                                        <td><?php echo nl2br(htmlspecialchars($attendance['work_report'])); ?></td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         <?php endif; ?>
                     </div>
                     
+                    <!-- Approval Section -->
                     <?php if ($attendance['approval_status'] === 'pending'): ?>
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0">Approval Decision</h5>
-                                </div>
-                                <div class="card-body">
-                                    <form method="post" action="">
-                                        <div class="form-group mb-3">
-                                            <label for="comments">Comments (optional):</label>
-                                            <textarea name="comments" id="comments" class="form-control" rows="3"></textarea>
+                        <div class="card mt-4">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-check-double me-2"></i>
+                                    Approval Decision
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" id="approvalForm" class="needs-validation" novalidate>
+                                    <div class="mb-3">
+                                        <label for="comments" class="form-label">Comments (optional)</label>
+                                        <textarea name="comments" id="comments" class="form-control" rows="3"
+                                                  placeholder="Enter any comments about your decision..."></textarea>
+                                    </div>
+                                    
+                                    <?php if ($attendance['overtime_hours'] > 0): ?>
+                                        <div class="mb-3">
+                                            <label class="form-label">Overtime Status</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="overtime_status" 
+                                                       id="overtime_approved" value="approved" required>
+                                                <label class="form-check-label" for="overtime_approved">
+                                                    Approve Overtime
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="overtime_status" 
+                                                       id="overtime_rejected" value="rejected" required>
+                                                <label class="form-check-label" for="overtime_rejected">
+                                                    Reject Overtime
+                                                </label>
+                                            </div>
                                         </div>
+                                    <?php endif; ?>
+                                    
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <button type="submit" name="action" value="approve" 
+                                                class="btn btn-success btn-lg" 
+                                                onclick="return confirm('Are you sure you want to approve this attendance?')">
+                                            <i class="fas fa-check me-2"></i>
+                                            Approve
+                                        </button>
                                         
-                                        <div class="d-flex justify-content-between">
-                                            <button type="submit" name="action" value="approve" class="btn btn-success">
-                                                <i class="fas fa-check"></i> Approve
-                                            </button>
-                                            <button type="submit" name="action" value="reject" class="btn btn-danger">
-                                                <i class="fas fa-times"></i> Reject
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+                                        <button type="submit" name="action" value="reject" 
+                                                class="btn btn-danger btn-lg"
+                                                onclick="return confirm('Are you sure you want to reject this attendance?')">
+                                            <i class="fas fa-times me-2"></i>
+                                            Reject
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    </div>
                     <?php else: ?>
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header bg-secondary text-white">
-                                    <h5 class="mb-0">Manager Decision</h5>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table table-bordered">
-                                        <tr>
-                                            <th>Decision</th>
-                                            <td>
-                                                <?php if ($attendance['approval_status'] === 'approved'): ?>
-                                                    <span class="badge bg-success">Approved</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <th>Decision Time</th>
-                                            <td><?php echo date('d M Y h:i A', strtotime($attendance['approval_timestamp'])); ?></td>
-                                        </tr>
-                                        <?php if (!empty($attendance['manager_comments'])): ?>
-                                        <tr>
-                                            <th>Comments</th>
-                                            <td><?php echo nl2br(htmlspecialchars($attendance['manager_comments'])); ?></td>
-                                        </tr>
-                                        <?php endif; ?>
-                                    </table>
-                                </div>
+                        <!-- Decision Details -->
+                        <div class="card mt-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Decision Details
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">Status</dt>
+                                    <dd class="col-sm-9">
+                                        <span class="badge bg-<?php echo $status === 'approved' ? 'success' : 'danger'; ?>">
+                                            <?php echo ucfirst($status); ?>
+                                        </span>
+                                    </dd>
+                                    
+                                    <dt class="col-sm-3">Decided By</dt>
+                                    <dd class="col-sm-9"><?php echo htmlspecialchars($attendance['manager_name']); ?></dd>
+                                    
+                                    <dt class="col-sm-3">Decision Time</dt>
+                                    <dd class="col-sm-9">
+                                        <?php echo date('d M Y h:i A', strtotime($attendance['approval_timestamp'])); ?>
+                                    </dd>
+                                    
+                                    <?php if ($attendance['overtime_hours'] > 0): ?>
+                                        <dt class="col-sm-3">Overtime Status</dt>
+                                        <dd class="col-sm-9">
+                                            <span class="badge bg-<?php echo $attendance['overtime_status'] === 'approved' ? 'success' : 'danger'; ?>">
+                                                <?php echo ucfirst($attendance['overtime_status']); ?>
+                                            </span>
+                                        </dd>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($attendance['manager_comments'])): ?>
+                                        <dt class="col-sm-3">Comments</dt>
+                                        <dd class="col-sm-9">
+                                            <?php echo nl2br(htmlspecialchars($attendance['manager_comments'])); ?>
+                                        </dd>
+                                    <?php endif; ?>
+                                </dl>
                             </div>
                         </div>
-                    </div>
                     <?php endif; ?>
                     
+                    <!-- Back Button -->
                     <div class="mt-4">
                         <a href="javascript:history.back()" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back
                         </a>
                     </div>
                 </div>
@@ -395,5 +649,28 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- Custom Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.getElementById('approvalForm');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 
 <?php include 'includes/footer.php'; ?> 

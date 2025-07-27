@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 $current_user_id = $_SESSION['user_id'];
 
 try {
-    // Fetch all users except the current user
+    // Fetch all users except the current user and only with Active status
     $query = "SELECT 
         id,
         username,
@@ -19,6 +19,7 @@ try {
         status
     FROM users 
     WHERE id != ? 
+    AND status = 'Active'
     AND deleted_at IS NULL 
     ORDER BY username ASC";
 

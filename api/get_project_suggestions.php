@@ -31,7 +31,7 @@ try {
     LEFT JOIN users u ON p.assigned_to = u.id
     WHERE p.deleted_at IS NULL
     ORDER BY p.created_at DESC
-    LIMIT 20";
+    LIMIT 500";
     
     $stmt = $pdo->prepare($query);
     $stmt->execute();

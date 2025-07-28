@@ -203,6 +203,11 @@ try {
             $punch_in_outside_reason = $_POST['outside_location_reason'];
         }
     }
+    
+    // For explicit action=come_in with outside_location_reason
+    if (isset($_POST['action']) && $_POST['action'] == 'come_in' && isset($_POST['outside_location_reason']) && !empty($_POST['outside_location_reason'])) {
+        $punch_in_outside_reason = $_POST['outside_location_reason'];
+    }
 
     // Determine approval status based on geofence
     $approval_status = ($within_geofence == 1) ? 'approved' : 'pending';
@@ -503,8 +508,16 @@ try {
             
             $accuracy = 0; // Default value if not provided
             
+
+            
             $stmt = $conn->prepare($insert_query);
-            $stmt->bind_param('isssddisdsssissi', 
+            
+            // Ensure punch_in_outside_reason is properly passed as a string
+            if (is_null($punch_in_outside_reason)) {
+                $punch_in_outside_reason = '';
+            }
+            
+            $stmt->bind_param('isssddisdssssisi', 
                 $user_id, 
                 $current_date, 
                 $current_time, 
@@ -517,7 +530,7 @@ try {
                 $distance_from_geofence,
                 $ip_address,
                 $device_info,
-                $punch_in_outside_reason,
+                $punch_in_outside_reason, // Changed from 's' to 's' to ensure it's treated as string
                 $geofence_id,
                 $approval_status,
                 $manager_id

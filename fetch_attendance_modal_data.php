@@ -33,7 +33,9 @@ try {
                 u.reporting_manager,
                 g.name as geofence_name,
                 g.address as geofence_address,
-                g.radius as geofence_radius
+                g.radius as geofence_radius,
+                g.latitude as geofence_latitude,
+                g.longitude as geofence_longitude
             FROM attendance a
             LEFT JOIN users u ON a.user_id = u.id
             LEFT JOIN geofence_locations g ON a.geofence_id = g.id
@@ -66,13 +68,22 @@ try {
         }
         
         // Determine geofence status for punch in
-        $attendance['punch_in_geofence_status'] = !empty($attendance['within_geofence']) && $attendance['within_geofence'] == 1 ? 
-            'Within Geofence' : 'Outside Geofence';
+        // For punch-in, we need to check if punch_in_outside_reason exists
+        // If it exists, the user was outside geofence, otherwise they were inside
+        if (!empty($attendance['punch_in_outside_reason'])) {
+            $attendance['punch_in_geofence_status'] = 'Outside Geofence';
+        } else {
+            $attendance['punch_in_geofence_status'] = 'Within Geofence';
+        }
             
         // Determine geofence status for punch out
-        // Assuming punch_out has its own geofence status field, if not we'll use the same as punch in
-        $attendance['punch_out_geofence_status'] = !empty($attendance['within_geofence']) && $attendance['within_geofence'] == 1 ? 
-            'Within Geofence' : 'Outside Geofence';
+        // For punch-out, we need to check if punch_out_outside_reason exists
+        // If it exists, the user was outside geofence, otherwise they were inside
+        if (!empty($attendance['punch_out_outside_reason'])) {
+            $attendance['punch_out_geofence_status'] = 'Outside Geofence';
+        } else {
+            $attendance['punch_out_geofence_status'] = 'Within Geofence';
+        }
         
         $response['success'] = true;
         $response['data'] = $attendance;

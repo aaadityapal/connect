@@ -11,10 +11,15 @@ $error = null;
 $success = null;
 $attendance_records = [];
 
+// Set default date range to current month if not provided
+$current_month_start = date('Y-m-01'); // First day of current month
+$current_month_end = date('Y-m-t');    // Last day of current month
+
 // Get filter values
-$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
-$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
+$date_from = isset($_GET['date_from']) && !empty($_GET['date_from']) ? $_GET['date_from'] : $current_month_start;
+$date_to = isset($_GET['date_to']) && !empty($_GET['date_to']) ? $_GET['date_to'] : $current_month_end;
 $role_filter = isset($_GET['role']) ? $_GET['role'] : '';
+$status_filter = isset($_GET['status']) ? $_GET['status'] : 'pending';
 
 try {
     // Base query
@@ -32,9 +37,13 @@ try {
             u.role
             FROM attendance a 
             JOIN users u ON a.user_id = u.id 
-            WHERE a.approval_status = 'pending'
-            AND u.role IN ('Site Coordinator', 'Site Supervisor', 'Purchase Manager', 
+            WHERE u.role IN ('Site Coordinator', 'Site Supervisor', 'Purchase Manager', 
                          'Social Media Marketing', 'Graphic Designer')";
+    
+    // Add status filter
+    if (!empty($status_filter)) {
+        $sql .= " AND a.approval_status = ?";
+    }
 
     // Add date filters if provided
     if (!empty($date_from)) {
@@ -57,6 +66,12 @@ try {
     if ($stmt) {
         $types = '';
         $params = array();
+        
+        // Add status filter parameter
+        if (!empty($status_filter)) {
+            $types .= 's';
+            $params[] = $status_filter;
+        }
 
         if (!empty($date_from)) {
             $types .= 's';
@@ -111,17 +126,22 @@ function getUniqueRoles($conn) {
 
 $unique_roles = getUniqueRoles($conn);
 ?>
+<?php include 'includes/manager_panel.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Attendance Records</title>
+    <title>Attendance Records</title>
     
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -463,6 +483,76 @@ $unique_roles = getUniqueRoles($conn);
                 display: none;
             }
         }
+        
+        .attendance-details-card {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .punch-photo-placeholder {
+            height: 150px;
+            background-color: #f8f9fa;
+            border: 1px dashed #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+        
+        .punch-photo-placeholder i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .punch-photo {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .location-status .badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+        }
+        
+        /* Add styles for the map containers */
+        .location-map {
+            height: 200px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 15px;
+        }
+        
+        /* Style for geofence circle */
+        .geofence-circle {
+            stroke: #28a745;
+            stroke-opacity: 0.8;
+            stroke-width: 2;
+            fill: #28a745;
+            fill-opacity: 0.1;
+        }
+        
+        /* Style for user marker */
+        .user-location-marker {
+            color: #dc3545;
+        }
+        
+        /* Blur effect styles */
+        .modal-backdrop.blur {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        body.modal-open-with-blur .container-fluid:not(.modal) {
+            filter: blur(5px);
+            transition: filter 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -488,7 +578,17 @@ $unique_roles = getUniqueRoles($conn);
                 <div class="card-header py-2 px-3">
                     <h5 class="mb-0">
                         <i class="fas fa-clock me-2"></i>
-                        Pending Attendance Records
+                        <?php 
+                        if ($status_filter === 'pending') {
+                            echo 'Pending Attendance Records';
+                        } elseif ($status_filter === 'approved') {
+                            echo 'Approved Attendance Records';
+                        } elseif ($status_filter === 'rejected') {
+                            echo 'Rejected Attendance Records';
+                        } else {
+                            echo 'All Attendance Records';
+                        }
+                        ?>
                     </h5>
                 </div>
 
@@ -525,6 +625,16 @@ $unique_roles = getUniqueRoles($conn);
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                                <div class="filter-group">
+                                    <label for="statusFilter">
+                                        <i class="fas fa-filter me-1"></i> Status
+                                    </label>
+                                    <select id="statusFilter" name="status" class="form-select">
+                                        <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                        <option value="approved" <?php echo $status_filter === 'approved' ? 'selected' : ''; ?>>Approved</option>
+                                        <option value="rejected" <?php echo $status_filter === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="filter-buttons">
                                 <button type="submit" class="btn btn-primary btn-filter" id="applyFilters">
@@ -540,7 +650,7 @@ $unique_roles = getUniqueRoles($conn);
                     <?php if (empty($attendance_records)): ?>
                         <div class="alert alert-info d-flex align-items-center">
                             <i class="fas fa-info-circle me-2"></i>
-                            <div>No pending attendance records found.</div>
+                            <div>No attendance records found.</div>
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
@@ -589,9 +699,25 @@ $unique_roles = getUniqueRoles($conn);
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <span class="badge bg-warning text-dark">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    Pending
+                                                <span class="badge <?php 
+                                                    if ($record['approval_status'] === 'pending') {
+                                                        echo 'bg-warning text-dark';
+                                                    } elseif ($record['approval_status'] === 'approved') {
+                                                        echo 'bg-success';
+                                                    } else {
+                                                        echo 'bg-danger';
+                                                    }
+                                                ?>">
+                                                    <i class="fas <?php 
+                                                        if ($record['approval_status'] === 'pending') {
+                                                            echo 'fa-clock';
+                                                        } elseif ($record['approval_status'] === 'approved') {
+                                                            echo 'fa-check-circle';
+                                                        } else {
+                                                            echo 'fa-times-circle';
+                                                        }
+                                                    ?> me-1"></i>
+                                                    <?php echo ucfirst($record['approval_status']); ?>
                                                 </span>
                                             </td>
                                             <td class="actions-cell">
@@ -602,6 +728,7 @@ $unique_roles = getUniqueRoles($conn);
                                                    data-attendance-id="<?php echo $record['id']; ?>">
                                                     <i class="fas fa-eye icon-view"></i>
                                                 </a>
+                                                    <?php if ($record['approval_status'] === 'pending'): ?>
                                                     <a href="attendance_approval.php?id=<?php echo $record['id']; ?>&action=approve" 
                                                        class="action-btn action-btn-approve" 
                                                        data-bs-toggle="tooltip" title="Approve">
@@ -612,6 +739,7 @@ $unique_roles = getUniqueRoles($conn);
                                                        data-bs-toggle="tooltip" title="Reject">
                                                         <i class="fas fa-times icon-reject"></i>
                                                     </a>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -628,9 +756,23 @@ $unique_roles = getUniqueRoles($conn);
 
 <!-- Required Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Function to initialize Leaflet maps
+    function initMaps() {
+        // This function will be called when the page loads
+        console.log('Maps initialized');
+    }
+    
+    // Function to initialize a specific map (legacy function, kept for compatibility)
+    function initMap(elementId, coordinatesStr, title) {
+        console.log('Legacy map initialization called');
+    }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<!-- Google Maps API -->
+<!-- No Google Maps API needed as we're using Leaflet -->
 
 <!-- Initialize DataTable -->
 <script>
@@ -647,7 +789,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize DataTable with improved styling
     var table = $('.table').DataTable({
         order: [[3, 'desc'], [4, 'desc']],
-        pageLength: 25,
+        pageLength: 30,
         responsive: true,
         dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex"f>>t<"d-flex justify-content-between align-items-center mt-3"<"text-muted"i><"d-flex"p>>',
         language: {
@@ -696,15 +838,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission
     $('#filterForm').on('submit', function(e) {
         e.preventDefault();
-        var formData = new URLSearchParams(new FormData(this)).toString();
+        var formData = new FormData(this);
+        var queryString = new URLSearchParams(formData).toString();
         showLoading();
-        window.location.href = 'pending_attendance.php?' + formData;
+        window.location.href = 'pending_attendance.php?' + queryString;
     });
 
     // Reset filters
-    $('#resetFilters').on('click', function() {
+    $('#resetFilters').on('click', function(e) {
+        e.preventDefault();
+        // Reset form fields to defaults
+        $('#dateFrom').val('<?php echo $current_month_start; ?>');
+        $('#dateTo').val('<?php echo $current_month_end; ?>');
+        $('#roleFilter').val('');
+        $('#statusFilter').val('pending');
+        
+        // Submit the form with default values
+        var formData = new FormData($('#filterForm')[0]);
+        formData.set('date_from', '<?php echo $current_month_start; ?>');
+        formData.set('date_to', '<?php echo $current_month_end; ?>');
+        formData.delete('role');
+        var queryString = new URLSearchParams(formData).toString();
+        
         showLoading();
-        window.location.href = 'pending_attendance.php';
+        window.location.href = 'pending_attendance.php?' + queryString;
     });
 
     // Show loading indicator
@@ -872,7 +1029,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                     
                                     <p class="mb-1 text-muted small mt-3">Address</p>
                                     <p class="mb-0" id="modal-punch-in-address">-</p>
+                                    
+                                    <!-- Add coordinates display -->
+                                    <p class="mb-1 text-muted small mt-3">Coordinates</p>
+                                    <p class="mb-0" id="modal-punch-in-coordinates">-</p>
                                 </div>
+                            </div>
+                            
+                            <!-- Add map container for punch in location -->
+                            <div class="mt-3">
+                                <p class="mb-1 text-muted small">Location Map</p>
+                                <div id="punch-in-map" class="location-map"></div>
                             </div>
                             
                             <div id="punch-in-outside-reason-container" class="mt-2 d-none">
@@ -916,7 +1083,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                     
                                     <p class="mb-1 text-muted small mt-3">Address</p>
                                     <p class="mb-0" id="modal-punch-out-address">-</p>
+                                    
+                                    <!-- Add coordinates display -->
+                                    <p class="mb-1 text-muted small mt-3">Coordinates</p>
+                                    <p class="mb-0" id="modal-punch-out-coordinates">-</p>
                                 </div>
+                            </div>
+                            
+                            <!-- Add map container for punch out location -->
+                            <div class="mt-3">
+                                <p class="mb-1 text-muted small">Location Map</p>
+                                <div id="punch-out-map" class="location-map"></div>
                             </div>
                             
                             <div id="punch-out-outside-reason-container" class="mt-2 d-none">
@@ -937,9 +1114,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="modal-footer">
-                <a href="#" id="viewFullDetailsBtn" class="btn btn-primary">
-                    <i class="fas fa-external-link-alt me-1"></i> View Full Details
-                </a>
+                <button type="button" id="acceptAttendanceBtn" class="btn btn-success">
+                    <i class="fas fa-check me-1"></i> Accept
+                </button>
+                <button type="button" id="rejectAttendanceBtn" class="btn btn-danger">
+                    <i class="fas fa-times me-1"></i> Reject
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i> Close
                 </button>
@@ -948,42 +1128,144 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- Attendance Action Modal -->
+<div class="modal fade" id="attendanceActionModal" tabindex="-1" aria-labelledby="attendanceActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 px-4 py-3" id="actionModalHeader">
+                <h5 class="modal-title fw-bold" id="attendanceActionModalLabel">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    <span id="actionModalTitle">Confirm Action</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <div class="alert d-flex align-items-center mb-4" id="actionAlertBox">
+                    <i class="fas fa-info-circle me-3 fs-5"></i>
+                    <div id="actionAlertText">Please review your decision before confirming.</div>
+                </div>
+                
+                <form id="attendanceActionForm">
+                    <input type="hidden" id="actionAttendanceId" name="attendance_id" value="">
+                    <input type="hidden" id="actionType" name="action" value="">
+                    
+                    <div class="mb-4">
+                        <label for="actionComments" class="form-label fw-medium">Comments</label>
+                        <textarea class="form-control border-2" 
+                                id="actionComments" 
+                                name="comments" 
+                                rows="4" 
+                                placeholder="Enter your comments or reason for this action..."
+                                style="border-radius: 8px; resize: none;"></textarea>
+                        <div class="invalid-feedback" id="commentsError">
+                            Please provide a reason for rejecting this attendance record.
+                        </div>
+                        <div class="form-text text-muted mt-2" id="commentsHelp">
+                            <i class="fas fa-lightbulb me-1"></i> 
+                            <span id="commentHelpText">Add any relevant information about your decision.</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex justify-content-between">
+                <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn px-4 py-2" id="confirmActionBtn">
+                    <i class="fas me-2" id="confirmBtnIcon"></i>
+                    <span id="confirmBtnText">Confirm</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add custom styles for the modal -->
 <style>
-    .punch-photo-placeholder {
-        width: 100%;
-        height: 150px;
-        background-color: #f8f9fa;
-        border: 1px dashed #dee2e6;
+    /* Enhanced Modal Styles */
+    .modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    #actionModalHeader.approve-header {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    #actionModalHeader.reject-header {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    #actionAlertBox.alert-approve {
+        background-color: rgba(25, 135, 84, 0.08);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.2);
         border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: #adb5bd;
     }
     
-    .punch-photo-placeholder i {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
-    
-    .punch-photo {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
+    #actionAlertBox.alert-reject {
+        background-color: rgba(220, 53, 69, 0.08);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.2);
         border-radius: 8px;
-        border: 1px solid #dee2e6;
     }
     
-    .location-status .badge {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.6rem;
+    #confirmActionBtn.btn-confirm-approve {
+        background-color: #198754;
+        color: white;
+        box-shadow: 0 2px 6px rgba(25, 135, 84, 0.3);
+        transition: all 0.2s ease;
+    }
+    
+    #confirmActionBtn.btn-confirm-approve:hover {
+        background-color: #157347;
+        box-shadow: 0 4px 8px rgba(25, 135, 84, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    #confirmActionBtn.btn-confirm-reject {
+        background-color: #dc3545;
+        color: white;
+        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+        transition: all 0.2s ease;
+    }
+    
+    #confirmActionBtn.btn-confirm-reject:hover {
+        background-color: #bb2d3b;
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border-color: #86b7fe;
+    }
+    
+    /* Blur effect styles - enhanced */
+    .modal-backdrop.blur {
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    
+    body.modal-open-with-blur .container-fluid:not(.modal) {
+        filter: blur(6px);
+        transition: filter 0.3s ease;
+    }
+    
+    /* Animation for modal */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+    }
+    
+    .modal.fade.show .modal-dialog {
+        transform: none;
     }
 </style>
 
 <script>
-
     // Handle view button click to open modal with attendance details
     $(document).on('click', '.action-btn-view', function(e) {
         e.preventDefault();
@@ -998,6 +1280,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading and hide content
         $('#modalLoading').removeClass('d-none');
         $('#modalContent').addClass('d-none');
+        
+        // Initialize map variables
+        let punchInMap = null;
+        let punchOutMap = null;
+        let punchInMarker = null;
+        let punchOutMarker = null;
+        let punchInGeofenceCircle = null;
+        let punchOutGeofenceCircle = null;
         
         // Fetch attendance details
         fetch(`fetch_attendance_modal_data.php?id=${attendanceId}`)
@@ -1045,6 +1335,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     $('#modal-punch-in-address').text(attendance.address || '-');
                     $('#modal-device-info').text(attendance.device_info || '-');
                     
+                    // Add coordinates display for punch in
+                    if (attendance.latitude && attendance.longitude) {
+                        $('#modal-punch-in-coordinates').text(`${attendance.latitude}, ${attendance.longitude}`);
+                        
+                        // Initialize punch in map
+                        if (!punchInMap) {
+                            punchInMap = L.map('punch-in-map').setView([attendance.latitude, attendance.longitude], 15);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; OpenStreetMap contributors'
+                            }).addTo(punchInMap);
+                            
+                            // Add user location marker
+                            punchInMarker = L.marker([attendance.latitude, attendance.longitude], {
+                                title: 'Punch In Location'
+                            }).addTo(punchInMap);
+                            
+                            // Add geofence circle if geofence data is available
+                            if (attendance.geofence_latitude && attendance.geofence_longitude && attendance.geofence_radius) {
+                                punchInGeofenceCircle = L.circle([attendance.geofence_latitude, attendance.geofence_longitude], {
+                                    radius: attendance.geofence_radius,
+                                    className: 'geofence-circle'
+                                }).addTo(punchInMap);
+                                
+                                // Adjust map view to show both marker and geofence
+                                const bounds = L.latLngBounds(
+                                    [attendance.latitude, attendance.longitude],
+                                    [attendance.geofence_latitude, attendance.geofence_longitude]
+                                );
+                                punchInMap.fitBounds(bounds.pad(0.3));
+                            }
+                        }
+                    }
+                    
                     // Populate punch out details if available
                     if (attendance.punch_out) {
                         $('#punch-out-details-card').removeClass('d-none');
@@ -1067,12 +1390,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         $('#modal-punch-out-distance').text(attendance.distance_from_geofence ? `${attendance.distance_from_geofence} meters` : '-');
                         $('#modal-punch-out-address').text(attendance.punch_out_address || '-');
                         $('#modal-work-report').text(attendance.work_report || 'No work report submitted');
+                        
+                        // Add coordinates display for punch out
+                        if (attendance.punch_out_latitude && attendance.punch_out_longitude) {
+                            $('#modal-punch-out-coordinates').text(`${attendance.punch_out_latitude}, ${attendance.punch_out_longitude}`);
+                            
+                            // Initialize punch out map
+                            if (!punchOutMap) {
+                                punchOutMap = L.map('punch-out-map').setView([attendance.punch_out_latitude, attendance.punch_out_longitude], 15);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                    attribution: '&copy; OpenStreetMap contributors'
+                                }).addTo(punchOutMap);
+                                
+                                // Add user location marker
+                                punchOutMarker = L.marker([attendance.punch_out_latitude, attendance.punch_out_longitude], {
+                                    title: 'Punch Out Location'
+                                }).addTo(punchOutMap);
+                                
+                                // Add geofence circle if geofence data is available
+                                if (attendance.geofence_latitude && attendance.geofence_longitude && attendance.geofence_radius) {
+                                    punchOutGeofenceCircle = L.circle([attendance.geofence_latitude, attendance.geofence_longitude], {
+                                        radius: attendance.geofence_radius,
+                                        className: 'geofence-circle'
+                                    }).addTo(punchOutMap);
+                                    
+                                    // Adjust map view to show both marker and geofence
+                                    const bounds = L.latLngBounds(
+                                        [attendance.punch_out_latitude, attendance.punch_out_longitude],
+                                        [attendance.geofence_latitude, attendance.geofence_longitude]
+                                    );
+                                    punchOutMap.fitBounds(bounds.pad(0.3));
+                                }
+                            }
+                        }
                     } else {
                         $('#punch-out-details-card').addClass('d-none');
                     }
                     
-                    // Set the full details link
-                    $('#viewFullDetailsBtn').attr('href', `attendance_approval.php?id=${attendanceId}`);
+                    // Set up Accept and Reject buttons with the attendance ID
+                    $('#acceptAttendanceBtn').data('attendance-id', attendanceId);
+                    $('#rejectAttendanceBtn').data('attendance-id', attendanceId);
                 } else {
                     // Show error message
                     $('#modalContent').html(`
@@ -1095,7 +1452,168 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching attendance details:', error);
             });
     });
-
+    
+    // Handle modal hidden event to properly clean up maps
+    $('#attendanceDetailsModal').on('hidden.bs.modal', function () {
+        // Clean up maps when modal is closed
+        if (window.punchInMap) {
+            window.punchInMap.remove();
+            window.punchInMap = null;
+        }
+        if (window.punchOutMap) {
+            window.punchOutMap.remove();
+            window.punchOutMap = null;
+        }
+    });
+    
+    // Handle Accept button click
+    $(document).on('click', '#acceptAttendanceBtn', function() {
+        const attendanceId = $(this).data('attendance-id');
+        
+        // Set values in the action modal
+        $('#actionAttendanceId').val(attendanceId);
+        $('#actionType').val('approve');
+        $('#actionModalTitle').text('Confirm Approval');
+        $('#actionComments').attr('placeholder', 'Enter any comments about this approval (optional)...');
+        $('#commentHelpText').text('Optional: Add any relevant information about your approval.');
+        
+        // Update styling for approval
+        $('#actionModalHeader').removeClass('reject-header').addClass('approve-header');
+        $('#actionAlertBox').removeClass('alert-reject').addClass('alert-approve');
+        $('#actionAlertText').html('<strong>You are about to approve this attendance record.</strong> The employee will be notified of your decision.');
+        
+        // Update confirm button
+        $('#confirmActionBtn').removeClass('btn-confirm-reject').addClass('btn-confirm-approve');
+        $('#confirmBtnIcon').removeClass('fa-times-circle').addClass('fa-check-circle');
+        $('#confirmBtnText').text('Approve');
+        
+        // Reset validation state
+        $('#actionComments').removeClass('is-invalid');
+        
+        // Add blur effect to background
+        $('body').addClass('modal-open-with-blur');
+        $('.modal-backdrop').addClass('blur');
+        
+        // Show the action modal
+        const actionModal = new bootstrap.Modal(document.getElementById('attendanceActionModal'));
+        actionModal.show();
+    });
+    
+    // Handle Reject button click
+    $(document).on('click', '#rejectAttendanceBtn', function() {
+        const attendanceId = $(this).data('attendance-id');
+        
+        // Set values in the action modal
+        $('#actionAttendanceId').val(attendanceId);
+        $('#actionType').val('reject');
+        $('#actionModalTitle').text('Confirm Rejection');
+        $('#actionComments').attr('placeholder', 'Please provide a reason for rejecting this attendance record...');
+        $('#commentHelpText').text('Required: Explain why this attendance record is being rejected.');
+        
+        // Update styling for rejection
+        $('#actionModalHeader').removeClass('approve-header').addClass('reject-header');
+        $('#actionAlertBox').removeClass('alert-approve').addClass('alert-reject');
+        $('#actionAlertText').html('<strong>You are about to reject this attendance record.</strong> The employee will be notified of your decision.');
+        
+        // Update confirm button
+        $('#confirmActionBtn').removeClass('btn-confirm-approve').addClass('btn-confirm-reject');
+        $('#confirmBtnIcon').removeClass('fa-check-circle').addClass('fa-times-circle');
+        $('#confirmBtnText').text('Reject');
+        
+        // Reset validation state
+        $('#actionComments').removeClass('is-invalid');
+        
+        // Add blur effect to background
+        $('body').addClass('modal-open-with-blur');
+        $('.modal-backdrop').addClass('blur');
+        
+        // Show the action modal
+        const actionModal = new bootstrap.Modal(document.getElementById('attendanceActionModal'));
+        actionModal.show();
+    });
+    
+    // Remove blur effect when modal is closed
+    $('#attendanceActionModal').on('hidden.bs.modal', function () {
+        $('body').removeClass('modal-open-with-blur');
+        $('.modal-backdrop').removeClass('blur');
+    });
+    
+    // Add handler for the confirm action button
+    $(document).on('click', '#confirmActionBtn', function() {
+        const attendanceId = $('#actionAttendanceId').val();
+        const action = $('#actionType').val();
+        const comments = $('#actionComments').val();
+        
+        // Validate comments for rejection (required for rejection)
+        if (action === 'reject' && comments.trim() === '') {
+            $('#actionComments').addClass('is-invalid');
+            $('#commentsError').show();
+            return;
+        }
+        
+        // Visual feedback - disable button and show loading state
+        const originalBtnHtml = $(this).html();
+        $(this).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...');
+        $(this).prop('disabled', true);
+        
+        // Send request to server
+        fetch('approve_attendance.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `attendance_id=${attendanceId}&action=${action}&comments=${encodeURIComponent(comments)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close both modals
+                bootstrap.Modal.getInstance(document.getElementById('attendanceActionModal')).hide();
+                bootstrap.Modal.getInstance(document.getElementById('attendanceDetailsModal')).hide();
+                
+                // Show success message with toast notification
+                const toastHTML = `
+                    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                        <div class="toast align-items-center text-white bg-${action === 'approve' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="fas fa-${action === 'approve' ? 'check-circle' : 'times-circle'} me-2"></i>
+                                    Attendance record ${action === 'approve' ? 'approved' : 'rejected'} successfully!
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('body').append(toastHTML);
+                const toastElement = document.querySelector('.toast');
+                const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+                toast.show();
+                
+                // Reload the page after toast is shown
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                // Reset button state
+                $(this).html(originalBtnHtml);
+                $(this).prop('disabled', false);
+                
+                // Show error message
+                alert('Error: ' + (data.message || `Failed to ${action} attendance record`));
+            }
+        })
+        .catch(error => {
+            // Reset button state
+            $(this).html(originalBtnHtml);
+            $(this).prop('disabled', false);
+            
+            console.error(`Error ${action}ing attendance:`, error);
+            alert(`An error occurred while ${action}ing the attendance record.`);
+        });
+    });
 </script>
+
 </body>
 </html>

@@ -55,7 +55,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="projects.php">
                         <i class="fas fa-box"></i>
                         <span class="sidebar-text">Projects</span>
                     </a>

@@ -1,0 +1,1492 @@
+2025-07-30 11:11:42 - Request received
+POST data: Array
+(
+    [expense_id] => 619
+    [purpose] => cscs
+    [from_location] => scscs
+    [to_location] => scscs
+    [travel_date] => 2025-07-23
+    [mode_of_transport] => Car
+    [distance] => 50
+    [amount] => 500.00
+    [notes] => dwwd
+    [user_id] => 33
+)
+
+FILES data: Array
+(
+    [bill_file] => Array
+        (
+            [name] => 
+            [full_path] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+Extracted data: purpose=cscs, from=scscs, to=scscs, mode=Car, date=2025-07-23, distance=50, amount=500
+Transaction started
+2025-07-30 11:14:41 - Request received
+POST data: Array
+(
+    [expense_id] => 617
+    [purpose] => efef
+    [from_location] => dd
+    [to_location] => ee
+    [travel_date] => 2025-07-23
+    [mode_of_transport] => Bike
+    [distance] => 33
+    [amount] => 115.50
+    [notes] => fef
+    [user_id] => 33
+)
+
+FILES data: Array
+(
+    [bill_file] => Array
+        (
+            [name] => 
+            [full_path] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+Table columns: Array
+(
+    [0] => id
+    [1] => user_id
+    [2] => purpose
+    [3] => mode_of_transport
+    [4] => from_location
+    [5] => to_location
+    [6] => travel_date
+    [7] => distance
+    [8] => amount
+    [9] => notes
+    [10] => status
+    [11] => created_at
+    [12] => updated_at
+    [13] => bill_file_path
+    [14] => updated_by
+    [15] => manager_reason
+    [16] => accountant_reason
+    [17] => hr_reason
+    [18] => manager_status
+    [19] => accountant_status
+    [20] => hr_status
+    [21] => payment_status
+    [22] => paid_on_date
+    [23] => paid_by
+    [24] => amount_paid
+    [25] => payment_reference
+)
+
+Extracted data: purpose=efef, from=dd, to=ee, mode=Bike, date=2025-07-23, distance=33, amount=115.5
+Transaction started
+2025-07-30 11:16:17 - Request received
+POST data: Array
+(
+    [expense_id] => 617
+    [purpose] => efef
+    [from_location] => dd
+    [to_location] => ee
+    [travel_date] => 2025-07-23
+    [mode_of_transport] => Bike
+    [distance] => 40
+    [amount] => 140.00
+    [notes] => fef
+    [user_id] => 33
+)
+
+FILES data: Array
+(
+    [bill_file] => Array
+        (
+            [name] => 
+            [full_path] => 
+            [type] => 
+            [tmp_name] => 
+            [error] => 4
+            [size] => 0
+        )
+
+)
+
+Table columns: Array
+(
+    [0] => id
+    [1] => user_id
+    [2] => purpose
+    [3] => mode_of_transport
+    [4] => from_location
+    [5] => to_location
+    [6] => travel_date
+    [7] => distance
+    [8] => amount
+    [9] => notes
+    [10] => status
+    [11] => created_at
+    [12] => updated_at
+    [13] => bill_file_path
+    [14] => updated_by
+    [15] => manager_reason
+    [16] => accountant_reason
+    [17] => hr_reason
+    [18] => manager_status
+    [19] => accountant_status
+    [20] => hr_status
+    [21] => payment_status
+    [22] => paid_on_date
+    [23] => paid_by
+    [24] => amount_paid
+    [25] => payment_reference
+)
+
+Extracted data: purpose=efef, from=dd, to=ee, mode=Bike, date=2025-07-23, distance=40, amount=140
+Transaction started
+2025-07-30 13:07:45 - Confirming distance for user 33 on 2025-07-30: 20 km by Bhuvnesh Sharma
+2025-07-30 13:07:45 - Updated 1 records
+2025-07-30 13:36:07 - Confirming distance for user 33 on 2025-07-30: 2 km by Bhuvnesh Sharma
+2025-07-30 13:36:07 - Updated 1 records
+2025-07-30 13:36:29 - Confirming distance for user 33 on 2025-07-30: 20 km by Bhuvnesh Sharma
+2025-07-30 13:36:29 - Updated 1 records
+2025-07-30 13:52:07 - Confirming distance for user 1 on 2025-07-23: 384 km by Bhuvnesh Sharma
+2025-07-30 13:52:07 - Updated 3 records
+2025-07-30 13:57:31 - Confirming distance for user 36 on 2025-07-21: 52 km by Bhuvnesh Sharma
+2025-07-30 13:57:31 - Updated 6 records
+2025-07-30 13:57:55 - Confirming distance for user 33 on 2025-07-27: 10 km by Bhuvnesh Sharma
+2025-07-30 13:57:55 - Updated 1 records
+2025-07-30 14:19:29 - Confirming distance for user 41 on 2025-07-21: 34 km by Bhuvnesh Sharma
+2025-07-30 14:19:29 - Updated 2 records
+2025-07-30 14:55:22 - Confirming distance for user 39 on 2025-07-21: 3 km by Bhuvnesh Sharma
+2025-07-30 14:55:22 - Updated 1 records
+2025-07-30 15:06:30 - Confirming distance for user 37 on 2025-07-21: 35 km by Bhuvnesh Sharma
+2025-07-30 15:06:30 - Updated 2 records
+2025-07-30 15:06:49 - Confirming distance for user 41 on 2025-07-20: 43 km by Bhuvnesh Sharma
+2025-07-30 15:06:49 - Updated 2 records
+2025-07-30 15:15:39 - Rejecting expenses for user 51 on 2025-07-20 by Bhuvnesh Sharma. Reason: Distance mismatch: Confirmed distance (60 km) is less than claimed distance (64.8 km)
+2025-07-30 15:15:39 - Rejected 3 expense records
+2025-07-30 15:17:03 - Confirming distance for user 36 on 2025-07-19: 42 km by Bhuvnesh Sharma
+2025-07-30 15:17:03 - Updated 9 records
+2025-07-30 15:17:21 - Rejecting expenses for user 52 on 2025-07-19 by Bhuvnesh Sharma. Reason: Distance mismatch: Confirmed distance (40 km) is less than claimed distance (43 km)
+2025-07-30 15:17:21 - Rejected 5 expense records
+2025-07-30 15:23:14 - Rejecting expenses for user 1 on 2025-07-19 by Bhuvnesh Sharma. Reason: Distance mismatch: Confirmed distance (20 km) is less than claimed distance (24 km)
+2025-07-30 15:23:14 - User role: Purchase Manager - Updating accountant_status
+2025-07-30 15:23:14 - Rejected 2 expense records
+2025-07-31 08:39:05 - Confirming distance for user 41 on 2025-07-19: 15 km by Bhuvnesh Sharma
+2025-07-31 08:39:05 - Updated 2 records
+2025-07-31 08:45:25 - Confirming distance for user 39 on 2025-07-19: 7 km by Bhuvnesh Sharma
+2025-07-31 08:45:25 - Updated 1 records
+2025-07-31 08:59:53 - Confirming distance for user 52 on 2025-07-17: 36 km by Bhuvnesh Sharma
+2025-07-31 08:59:53 - Updated 4 records
+2025-07-31 09:04:19 - Confirming distance for user 41 on 2025-07-17: 30 km by Bhuvnesh Sharma
+2025-07-31 09:04:19 - Updated 4 records
+2025-07-31 09:13:34 - Confirming distance for user 52 on 2025-07-16: 65 km by Bhuvnesh Sharma
+2025-07-31 09:13:34 - Updated 6 records
+2025-07-31 09:19:01 - Confirming distance for user 36 on 2025-07-15: 52.4 km by Bhuvnesh Sharma
+2025-07-31 09:19:01 - Updated 3 records
+2025-07-31 09:22:51 - Confirming distance for user 52 on 2025-07-15: 20 km by Bhuvnesh Sharma
+2025-07-31 09:22:51 - Updated 3 records
+2025-07-31 09:41:35 - Confirming distance for user 42 on 2025-07-14: 11 km by Bhuvnesh Sharma
+2025-07-31 09:41:35 - Updated 18 records
+2025-07-31 09:42:45 - Confirming distance for user 52 on 2025-07-14: 50 km by Bhuvnesh Sharma
+2025-07-31 09:42:45 - Updated 3 records
+2025-07-31 09:43:28 - Confirming distance for user 52 on 2025-07-14: 30 km by Bhuvnesh Sharma
+2025-07-31 09:43:28 - Updated 3 records
+2025-07-31 09:44:36 - Confirming distance for user 42 on 2025-07-14: 44 km by Bhuvnesh Sharma
+2025-07-31 09:44:36 - Updated 18 records
+2025-07-31 11:58:36 - Confirming distance for user 42 on 2025-07-13: 63 km by Bhuvnesh Sharma
+2025-07-31 11:58:36 - Updated 6 records
+2025-07-31 11:58:50 - Confirming distance for user 42 on 2025-07-13: 30 km by Bhuvnesh Sharma
+2025-07-31 11:58:50 - Updated 6 records
+2025-07-31 12:13:35 - Confirming distance for user 36 on 2025-07-12: 20 km by Bhuvnesh Sharma
+2025-07-31 12:13:35 - Updated 2 records
+2025-07-31 12:13:48 - Confirming distance for user 36 on 2025-07-12: 15 km by Bhuvnesh Sharma
+2025-07-31 12:13:48 - Updated 2 records
+2025-07-31 12:15:06 - Confirming distance for user 36 on 2025-07-14: 50 km by Bhuvnesh Sharma
+2025-07-31 12:15:06 - Updated 6 records
+2025-07-31 12:15:18 - Confirming distance for user 36 on 2025-07-14: 36 km by Bhuvnesh Sharma
+2025-07-31 12:15:18 - Updated 6 records
+2025-07-31 13:35:14 - Checking distance for user 1 on 2025-07-23: entered 384 km
+2025-07-31 13:35:14 - Database confirmed distance: 384 km, matches: true
+2025-07-31 13:42:47 - Checking distance for user 1 on 2025-07-23: entered 384 km
+2025-07-31 13:42:47 - Database confirmed distance: 384 km, matches: true
+2025-07-31 13:42:47 - Updated 3 records with HR verification data
+2025-07-31 13:45:41 - Checking distance for user 1 on 2025-07-23: entered 384 km
+2025-07-31 13:45:41 - Database confirmed distance: 384 km, matches: true
+2025-07-31 13:45:41 - Updated 3 records with HR verification data
+2025-07-31 13:58:19 - Checking distance for user 1 on 2025-07-23: entered 384 km
+2025-07-31 13:58:19 - Database confirmed distance: 384 km, matches: true
+2025-07-31 13:58:19 - Updated 3 records with HR verification data
+2025-07-31 14:01:26 - Checking distance for user 36 on 2025-07-21: entered 52 km
+2025-07-31 14:01:26 - Database confirmed distance: 52 km, matches: true
+2025-07-31 14:01:26 - Updated 6 records with HR verification data
+2025-07-31 14:15:41 - Checking distance for user 36 on 2025-07-19: entered 43 km
+2025-07-31 14:15:41 - Database confirmed distance: 42 km, matches: false
+2025-07-31 14:15:45 - Checking distance for user 36 on 2025-07-19: entered 42 km
+2025-07-31 14:15:45 - Database confirmed distance: 42 km, matches: true
+2025-07-31 14:15:45 - Updated 9 records with HR verification data
+2025-07-31 14:41:22 - Checking distance for user 39 on 2025-07-17: entered 35 km
+2025-07-31 14:41:22 - HR entering distance first: 35 km
+2025-07-31 14:41:22 - HR saving verification: 35 km
+2025-07-31 14:41:22 - Updated 1 records with HR verification data
+2025-07-31 14:55:30 - Confirming distance for user 39 on 2025-07-17: 35 km by Bhuvnesh Sharma
+2025-07-31 14:55:30 - Updated 1 records
+2025-07-31 14:58:58 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:58:58 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:58:58 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:58:58 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:58:58 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:58:58 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:58:58 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:58:58 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:58:58 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:58:58 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:59:11 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:59:11 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:59:11 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:59:11 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:59:11 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:59:11 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:59:11 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:59:11 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:59:11 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 14:59:11 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 14:59:24 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:24 - PM entering distance first:  km
+2025-07-31 14:59:24 - PM saving verification:  km
+2025-07-31 14:59:24 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:24 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:24 - PM entering distance first:  km
+2025-07-31 14:59:24 - PM saving verification:  km
+2025-07-31 14:59:24 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:24 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:24 - PM entering distance first:  km
+2025-07-31 14:59:24 - PM saving verification:  km
+2025-07-31 14:59:24 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:24 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:24 - PM entering distance first:  km
+2025-07-31 14:59:24 - PM saving verification:  km
+2025-07-31 14:59:24 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:25 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:25 - PM entering distance first:  km
+2025-07-31 14:59:25 - PM saving verification:  km
+2025-07-31 14:59:25 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:43 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:43 - PM entering distance first:  km
+2025-07-31 14:59:43 - PM saving verification:  km
+2025-07-31 14:59:43 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:43 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:43 - PM entering distance first:  km
+2025-07-31 14:59:43 - PM saving verification:  km
+2025-07-31 14:59:43 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:43 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:43 - PM entering distance first:  km
+2025-07-31 14:59:43 - PM saving verification:  km
+2025-07-31 14:59:43 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:43 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:43 - PM entering distance first:  km
+2025-07-31 14:59:43 - PM saving verification:  km
+2025-07-31 14:59:43 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:43 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:43 - PM entering distance first:  km
+2025-07-31 14:59:43 - PM saving verification:  km
+2025-07-31 14:59:43 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 14:59:53 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:53 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:53 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:53 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 14:59:53 - Checking distance for user 41 on 2025-07-17: entered  km
+2025-07-31 15:00:54 - Retrieving distance data for user 41 on 2025-07-17
+2025-07-31 15:00:54 - Retrieving distance data for user 41 on 2025-07-17
+2025-07-31 15:00:54 - Retrieving distance data for user 41 on 2025-07-17
+2025-07-31 15:00:54 - Retrieving distance data for user 41 on 2025-07-17
+2025-07-31 15:00:54 - Retrieving distance data for user 41 on 2025-07-17
+2025-07-31 15:02:13 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:02:13 - PM entering distance first: 0 km
+2025-07-31 15:02:13 - PM saving verification: 0 km
+2025-07-31 15:02:13 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:02:13 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:02:13 - PM entering distance first: 0 km
+2025-07-31 15:02:13 - PM saving verification: 0 km
+2025-07-31 15:02:13 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:02:13 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:02:13 - PM entering distance first: 0 km
+2025-07-31 15:02:13 - PM saving verification: 0 km
+2025-07-31 15:02:13 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:02:13 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:02:13 - PM entering distance first: 0 km
+2025-07-31 15:02:13 - PM saving verification: 0 km
+2025-07-31 15:02:13 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:02:13 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:02:13 - PM entering distance first: 0 km
+2025-07-31 15:02:13 - PM saving verification: 0 km
+2025-07-31 15:02:13 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:02:26 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:02:26 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:02:26 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:02:26 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:02:26 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:02:26 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:02:26 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:02:26 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:02:26 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:02:26 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:03:03 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:03:03 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:03:03 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:03:03 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:03:03 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:03:03 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:03:03 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:03:03 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:03:03 - Checking distance for user 39 on 2025-07-17: entered 0 km
+2025-07-31 15:03:03 - PM checking against HR distance: 35 km, matches: false
+2025-07-31 15:03:16 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:03:16 - PM entering distance first: 0 km
+2025-07-31 15:03:16 - PM saving verification: 0 km
+2025-07-31 15:03:16 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:03:16 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:03:16 - PM entering distance first: 0 km
+2025-07-31 15:03:16 - PM saving verification: 0 km
+2025-07-31 15:03:16 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:03:16 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:03:16 - PM entering distance first: 0 km
+2025-07-31 15:03:16 - PM saving verification: 0 km
+2025-07-31 15:03:16 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:03:16 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:03:16 - PM entering distance first: 0 km
+2025-07-31 15:03:16 - PM saving verification: 0 km
+2025-07-31 15:03:16 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:03:16 - Checking distance for user 41 on 2025-07-17: entered 0 km
+2025-07-31 15:03:16 - PM entering distance first: 0 km
+2025-07-31 15:03:16 - PM saving verification: 0 km
+2025-07-31 15:03:16 - ERROR: Database error saving HR verification: SQLSTATE[HY093]: Invalid parameter number
+2025-07-31 15:04:37 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:04:37 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:04:37 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:04:37 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:04:37 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:05:32 - Checking distance for user 36 on 2025-07-16: entered 25 km
+2025-07-31 15:05:32 - HR entering distance first: 25 km
+2025-07-31 15:05:32 - HR saving verification: 25 km
+2025-07-31 15:05:32 - Updated 4 records with HR verification data
+2025-07-31 15:06:27 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:06:27 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:06:27 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:06:27 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:06:27 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:34 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:34 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:34 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:34 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:34 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:09:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:10 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:10 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:10 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:10 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:10 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:18 - Fetching distance data for user 36 on 2025-07-21
+2025-07-31 15:11:18 - Fetching distance data for user 36 on 2025-07-21
+2025-07-31 15:11:18 - Fetching distance data for user 36 on 2025-07-21
+2025-07-31 15:11:18 - Fetching distance data for user 36 on 2025-07-21
+2025-07-31 15:11:33 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:33 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:33 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:33 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:11:33 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:18 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:18 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:18 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:18 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:18 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:36 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:36 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:36 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:36 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:12:36 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:01 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:01 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:01 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:01 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:01 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:16:39 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:20:11 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:20:11 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:20:11 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:20:11 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:20:11 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:21:55 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:21:55 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:21:55 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:21:55 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:21:55 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:21:59 - Confirming distance for user 36 on 2025-07-16: 25 km by Bhuvnesh Sharma
+2025-07-31 15:21:59 - Updated 4 records
+2025-07-31 15:21:59 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:08 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:08 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:08 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:08 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:08 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:38 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:38 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:38 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:38 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:38 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:59 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:59 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:59 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:59 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:22:59 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:23:03 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:23:03 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:23:03 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:23:03 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:23:03 - Fetching distance data for user 36 on 2025-07-16
+2025-07-31 15:23:08 - Fetching distance data for user 39 on 2025-07-17
+2025-07-31 15:23:08 - Fetching distance data for user 39 on 2025-07-17
+2025-07-31 15:23:08 - Fetching distance data for user 39 on 2025-07-17
+2025-07-31 15:23:08 - Fetching distance data for user 39 on 2025-07-17
+2025-07-31 15:23:08 - Fetching distance data for user 39 on 2025-07-17
+2025-07-31 15:23:13 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:14 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:14 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:14 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:14 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:25 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:25 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:25 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:25 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:23:25 - Fetching distance data for user 41 on 2025-07-17
+2025-07-31 15:26:09 - Checking distance for user 51 on 2025-07-17: entered 25 km
+2025-07-31 15:26:09 - HR entering distance first: 25 km
+2025-07-31 15:26:09 - HR saving verification: 25 km
+2025-07-31 15:26:10 - Updated 2 records with HR verification data
+2025-07-31 15:26:18 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:18 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:18 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:18 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:18 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:22 - Confirming distance for user 51 on 2025-07-17: 25 km by Bhuvnesh Sharma
+2025-07-31 15:26:22 - Updated 2 records
+2025-07-31 15:26:22 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:27 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:27 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:27 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:27 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:26:27 - Fetching distance data for user 51 on 2025-07-17
+2025-07-31 15:27:19 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:19 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:19 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:19 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:46 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:46 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:46 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:27:46 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:28:14 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:28:14 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:28:14 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:28:14 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:28:20 - Confirming distance for user 51 on 2025-07-16: 25 km by Bhuvnesh Sharma
+2025-07-31 15:28:20 - Updated 3 records
+2025-07-31 15:28:20 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:29:23 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:29:24 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:29:24 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:29:24 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:34:00 - Checking distance for user 52 on 2025-07-16: entered 65 km
+2025-07-31 15:34:00 - HR checking against PM distance: 65 km, matches: true
+2025-07-31 15:34:00 - HR saving verification: 65 km
+2025-07-31 15:34:00 - Updated 6 records with HR verification data
+2025-07-31 15:35:35 - Checking distance for user 51 on 2025-07-16: entered 25 km
+2025-07-31 15:35:35 - HR checking against PM distance: 25 km, matches: true
+2025-07-31 15:35:35 - HR saving verification: 25 km
+2025-07-31 15:35:35 - Updated 3 records with HR verification data
+2025-07-31 15:36:21 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:21 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:21 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:21 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:59 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:59 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:59 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:36:59 - Fetching distance data for user 52 on 2025-07-16
+2025-07-31 15:37:02 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:37:02 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:37:02 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:37:02 - Fetching distance data for user 51 on 2025-07-16
+2025-07-31 15:38:26 - Fetching distance data for user 33 on 2025-07-15
+2025-07-31 15:38:26 - Fetching distance data for user 33 on 2025-07-15
+2025-07-31 15:38:26 - Fetching distance data for user 33 on 2025-07-15
+2025-07-31 15:38:26 - Fetching distance data for user 33 on 2025-07-15
+2025-07-31 15:38:26 - Fetching distance data for user 33 on 2025-07-15
+2025-07-31 15:38:44 - Confirming distance for user 33 on 2025-07-15: 23 km by Bhuvnesh Sharma
+2025-07-31 15:38:44 - Updated 3 records
+2025-07-31 15:38:44 - Fetching distance data for user 33 on 2025-07-15
+2025-07-31 15:44:42 - Checking distance for user 52 on 2025-07-15: entered 20 km
+2025-07-31 15:44:42 - HR checking against PM distance: 20 km, matches: true
+2025-07-31 15:44:42 - HR saving verification: 20 km
+2025-07-31 15:44:42 - Updated 3 records with HR verification data
+2025-07-31 15:54:59 - Checking distance for user 36 on 2025-07-15: entered 60 km
+2025-07-31 15:54:59 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:55:05 - Checking distance for user 36 on 2025-07-15: entered 60 km
+2025-07-31 15:55:05 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:55:18 - Checking distance for user 36 on 2025-07-15: entered 69 km
+2025-07-31 15:55:18 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:56:18 - Checking distance for user 36 on 2025-07-15: entered 60 km
+2025-07-31 15:56:18 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:57:10 - Checking distance for user 36 on 2025-07-15: entered 60 km
+2025-07-31 15:57:10 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:57:19 - Checking distance for user 36 on 2025-07-15: entered 53 km
+2025-07-31 15:57:19 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:57:24 - Checking distance for user 36 on 2025-07-15: entered 53 km
+2025-07-31 15:57:24 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 15:57:27 - Checking distance for user 36 on 2025-07-15: entered 55 km
+2025-07-31 15:57:27 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 16:03:13 - Checking distance for user 36 on 2025-07-15: entered 69 km
+2025-07-31 16:03:13 - Total distance calculated from expenses: 52.4 km
+2025-07-31 16:03:13 - HR checking against PM distance: 52.4 km, matches: false
+2025-07-31 16:03:47 - Checking distance for user 36 on 2025-07-20: entered 40 km
+2025-07-31 16:03:47 - Total distance calculated from expenses: 40 km
+2025-07-31 16:03:47 - HR checking against total distance: 40 km, matches: true
+2025-07-31 16:03:47 - HR saving verification: 40 km
+2025-07-31 16:03:47 - Updated 2 records with HR verification data
+2025-07-31 16:04:20 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:20 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:20 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:20 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:20 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:20 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:23 - Confirming distance for user 36 on 2025-07-20: 40 km by Bhuvnesh Sharma
+2025-07-31 16:04:23 - Updated 2 records
+2025-07-31 16:04:23 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:28 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:28 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:28 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:28 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:28 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:28 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:32 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:32 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:33 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:33 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:33 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:04:33 - Fetching distance data for user 36 on 2025-07-20
+2025-07-31 16:06:02 - Fetching distance data for user 52 on 2025-07-15
+2025-07-31 16:06:02 - Fetching distance data for user 52 on 2025-07-15
+2025-07-31 16:06:02 - Fetching distance data for user 52 on 2025-07-15
+2025-07-31 16:06:02 - Fetching distance data for user 52 on 2025-07-15
+2025-07-31 16:06:06 - Fetching distance data for user 41 on 2025-07-15
+2025-07-31 16:06:06 - Fetching distance data for user 41 on 2025-07-15
+2025-07-31 16:06:06 - Fetching distance data for user 41 on 2025-07-15
+2025-07-31 16:06:06 - Fetching distance data for user 41 on 2025-07-15
+2025-07-31 16:06:24 - Confirming distance for user 41 on 2025-07-15: 60 km by Bhuvnesh Sharma
+2025-07-31 16:06:24 - Updated 3 records
+2025-07-31 16:06:24 - Fetching distance data for user 41 on 2025-07-15
+2025-07-31 16:06:34 - Checking distance for user 41 on 2025-07-15: entered 60 km
+2025-07-31 16:06:34 - Total distance calculated from expenses: 57 km
+2025-07-31 16:06:34 - HR checking against PM distance: 60 km, matches: true
+2025-07-31 16:06:34 - HR saving verification: 60 km
+2025-07-31 16:06:34 - Updated 3 records with HR verification data
+2025-07-31 16:07:04 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:04 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:04 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:04 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:07 - Confirming distance for user 39 on 2025-07-15: 8 km by Bhuvnesh Sharma
+2025-07-31 16:07:07 - Updated 1 records
+2025-07-31 16:07:07 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:16 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:16 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:16 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:16 - Fetching distance data for user 39 on 2025-07-15
+2025-07-31 16:07:34 - Checking distance for user 39 on 2025-07-15: entered 10 km
+2025-07-31 16:07:34 - Total distance calculated from expenses: 5 km
+2025-07-31 16:07:34 - HR checking against PM distance: 8 km, matches: false
+2025-07-31 16:07:50 - Checking distance for user 39 on 2025-07-15: entered 6 km
+2025-07-31 16:07:50 - Total distance calculated from expenses: 5 km
+2025-07-31 16:07:50 - HR checking against PM distance: 8 km, matches: false
+2025-07-31 16:07:56 - Checking distance for user 39 on 2025-07-15: entered 8 km
+2025-07-31 16:07:56 - Total distance calculated from expenses: 5 km
+2025-07-31 16:07:56 - HR checking against PM distance: 8 km, matches: true
+2025-07-31 16:07:56 - HR saving verification: 8 km
+2025-07-31 16:07:56 - Updated 1 records with HR verification data
+2025-07-31 16:08:49 - Checking distance for user 36 on 2025-07-14: entered 60 km
+2025-07-31 16:08:49 - Total distance calculated from expenses: 90 km
+2025-07-31 16:08:49 - HR checking against PM distance: 36 km, matches: false
+2025-07-31 16:08:55 - Checking distance for user 36 on 2025-07-14: entered 55 km
+2025-07-31 16:08:55 - Total distance calculated from expenses: 90 km
+2025-07-31 16:08:55 - HR checking against PM distance: 36 km, matches: false
+2025-07-31 16:09:23 - Fetching distance data for user 36 on 2025-07-14
+2025-07-31 16:09:23 - Fetching distance data for user 36 on 2025-07-14
+2025-07-31 16:09:23 - Fetching distance data for user 36 on 2025-07-14
+2025-07-31 16:09:23 - Fetching distance data for user 36 on 2025-07-14
+2025-07-31 16:10:41 - Checking distance for user 50 on 2025-07-14: entered 46 km
+2025-07-31 16:10:41 - Total distance calculated from expenses: 46 km
+2025-07-31 16:10:41 - HR checking against total distance: 46 km, matches: true
+2025-07-31 16:10:41 - HR saving verification: 46 km
+2025-07-31 16:10:41 - Updated 2 records with HR verification data
+2025-07-31 16:10:57 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:10:57 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:10:57 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:10:57 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:10:57 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:11:05 - Confirming distance for user 50 on 2025-07-14: 48 km by Bhuvnesh Sharma
+2025-07-31 16:11:05 - Updated 2 records
+2025-07-31 16:11:05 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:11:15 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:11:15 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:11:15 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:11:15 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:11:16 - Fetching distance data for user 50 on 2025-07-14
+2025-07-31 16:20:03 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:03 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:03 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:03 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:03 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:10 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:10 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:10 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:10 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:10 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:14 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:14 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:14 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:14 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:14 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:31 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:40 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:40 - Fetching distance data for user 42 on 2025-07-14
+2025-07-31 16:20:46 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:20:46 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:22:19 - Checking distance for user 41 on 2025-07-14: entered 66 km
+2025-07-31 16:22:19 - Total distance calculated from expenses: 41.3 km
+2025-07-31 16:22:19 - HR checking against total distance: 41.3 km, matches: false
+2025-07-31 16:22:45 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:22:45 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:23:00 - Checking distance for user 41 on 2025-07-14: entered 42 km
+2025-07-31 16:23:00 - Total distance calculated from expenses: 41.3 km
+2025-07-31 16:23:00 - HR checking against total distance: 41.3 km, matches: false
+2025-07-31 16:23:09 - Checking distance for user 41 on 2025-07-14: entered 50 km
+2025-07-31 16:23:09 - Total distance calculated from expenses: 41.3 km
+2025-07-31 16:23:09 - HR checking against total distance: 41.3 km, matches: false
+2025-07-31 16:23:21 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:23:21 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:23:35 - Confirming distance for user 41 on 2025-07-14: 50 km by Bhuvnesh Sharma
+2025-07-31 16:23:35 - Updated 3 records
+2025-07-31 16:23:35 - Fetching distance data for user 41 on 2025-07-14
+2025-07-31 16:23:52 - Checking distance for user 41 on 2025-07-14: entered 50 km
+2025-07-31 16:23:52 - Total distance calculated from expenses: 41.3 km
+2025-07-31 16:23:52 - HR checking against PM distance: 50 km, matches: true
+2025-07-31 16:23:52 - HR saving verification: 50 km
+2025-07-31 16:23:52 - Updated 3 records with HR verification data
+2025-07-31 16:24:04 - Checking distance for user 42 on 2025-07-14: entered 44 km
+2025-07-31 16:24:04 - Total distance calculated from expenses: 84 km
+2025-07-31 16:24:04 - HR checking against PM distance: 44 km, matches: true
+2025-07-31 16:24:04 - HR saving verification: 44 km
+2025-07-31 16:24:04 - Updated 18 records with HR verification data
+2025-07-31 16:24:28 - Checking distance for user 36 on 2025-07-13: entered 26 km
+2025-07-31 16:24:28 - Total distance calculated from expenses: 25.8 km
+2025-07-31 16:24:28 - HR checking against total distance: 25.8 km, matches: false
+2025-07-31 16:24:37 - Checking distance for user 36 on 2025-07-13: entered 23 km
+2025-07-31 16:24:37 - Total distance calculated from expenses: 25.8 km
+2025-07-31 16:24:37 - HR checking against total distance: 25.8 km, matches: false
+2025-07-31 16:24:43 - Checking distance for user 36 on 2025-07-13: entered 30 km
+2025-07-31 16:24:43 - Total distance calculated from expenses: 25.8 km
+2025-07-31 16:24:43 - HR checking against total distance: 25.8 km, matches: false
+2025-07-31 16:24:49 - Checking distance for user 36 on 2025-07-13: entered 26 km
+2025-07-31 16:24:49 - Total distance calculated from expenses: 25.8 km
+2025-07-31 16:24:49 - HR checking against total distance: 25.8 km, matches: false
+2025-08-01 08:34:01 - Checking distance for user 36 on 2025-07-13: entered 243 km
+2025-08-01 08:34:01 - Total distance calculated from expenses: 25.8 km
+2025-08-01 08:34:01 - HR checking against total distance: 25.8 km, matches: false
+2025-08-01 08:34:08 - Checking distance for user 36 on 2025-07-13: entered 26 km
+2025-08-01 08:34:08 - Total distance calculated from expenses: 25.8 km
+2025-08-01 08:34:08 - HR checking against total distance: 25.8 km, matches: false
+2025-08-01 08:34:24 - Checking distance for user 36 on 2025-07-13: entered 26 km
+2025-08-01 08:34:24 - Total distance calculated from expenses: 25.8 km
+2025-08-01 08:34:24 - HR checking against total distance: 25.8 km, matches: false
+2025-08-01 08:34:44 - Fetching distance data for user 41 on 2025-07-14
+2025-08-01 08:34:44 - Fetching distance data for user 41 on 2025-07-14
+2025-08-01 08:34:55 - Fetching distance data for user 36 on 2025-07-12
+2025-08-01 08:34:55 - Fetching distance data for user 36 on 2025-07-12
+2025-08-01 08:34:55 - Fetching distance data for user 36 on 2025-07-12
+2025-08-01 08:34:55 - Fetching distance data for user 36 on 2025-07-12
+2025-08-01 08:34:55 - Fetching distance data for user 36 on 2025-07-12
+2025-08-01 08:34:55 - Fetching distance data for user 36 on 2025-07-12
+2025-08-01 08:35:07 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 08:35:07 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 08:35:07 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 08:35:07 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 08:35:07 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 08:35:12 - Confirming distance for user 33 on 2025-07-10: 20 km by Bhuvnesh Sharma
+2025-08-01 08:35:12 - Updated 1 records
+2025-08-01 08:35:12 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 08:35:22 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:22 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:22 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:22 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:22 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:24 - Confirming distance for user 52 on 2025-07-11: 32 km by Bhuvnesh Sharma
+2025-08-01 08:35:24 - Updated 3 records
+2025-08-01 08:35:24 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:33 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:33 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:33 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:33 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:35:33 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:36:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:36:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:36:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:36:27 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:36:27 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:39:06 - Fetching distance data for user 48 on 2025-07-11
+2025-08-01 08:39:07 - Fetching distance data for user 48 on 2025-07-11
+2025-08-01 08:39:07 - Fetching distance data for user 48 on 2025-07-11
+2025-08-01 08:39:07 - Fetching distance data for user 48 on 2025-07-11
+2025-08-01 08:39:07 - Fetching distance data for user 48 on 2025-07-11
+2025-08-01 08:39:18 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:39:18 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:39:18 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:39:18 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:39:18 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:53:56 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:56 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:56 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:56 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:56 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:59 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:59 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:59 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:59 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:53:59 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:02 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:54:02 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:54:02 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:54:02 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:54:02 - Fetching distance data for user 52 on 2025-07-11
+2025-08-01 08:54:09 - Checking distance for user 51 on 2025-07-11: entered 92 km
+2025-08-01 08:54:09 - Total distance calculated from expenses: 92 km
+2025-08-01 08:54:09 - HR checking against total distance: 92 km, matches: true
+2025-08-01 08:54:09 - HR saving verification: 92 km
+2025-08-01 08:54:09 - Updated 1 records with HR verification data
+2025-08-01 08:54:17 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:17 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:17 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:17 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:17 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:22 - Confirming distance for user 51 on 2025-07-11: 95 km by Bhuvnesh Sharma
+2025-08-01 08:54:22 - Updated 1 records
+2025-08-01 08:54:22 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:33 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:33 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:33 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:33 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:54:33 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 08:59:41 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:41 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:41 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:41 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:41 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:54 - Checking distance for user 42 on 2025-07-11: entered 42 km
+2025-08-01 08:59:54 - Total distance calculated from expenses: 42 km
+2025-08-01 08:59:54 - HR checking against total distance: 42 km, matches: true
+2025-08-01 08:59:54 - HR saving verification: 42 km
+2025-08-01 08:59:54 - Updated 4 records with HR verification data
+2025-08-01 08:59:59 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:59 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:59 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:59 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 08:59:59 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:02 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:26 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:00:29 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:00:29 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:00:29 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:00:29 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:00:29 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:00:36 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:36 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:36 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:36 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:36 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:36 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:43 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:43 - Confirming distance for user 51 on 2025-07-10: 46 km by Bhuvnesh Sharma
+2025-08-01 09:00:43 - Updated 1 records
+2025-08-01 09:00:43 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:00:50 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:00:50 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:00:50 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:00:50 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:00:50 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:00:50 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:00:52 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:01:01 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:01:01 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:01:01 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:01:01 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:01:01 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:01:07 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:25 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:25 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:25 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:25 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:25 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:27 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:50 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:50 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:50 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:50 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:50 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:02:51 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:34 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:34 - Confirming distance for user 42 on 2025-07-11: 44 km by Bhuvnesh Sharma
+2025-08-01 09:03:34 - Updated 4 records
+2025-08-01 09:03:34 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:39 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:03:39 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:03:39 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:03:39 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:03:39 - Fetching distance data for user 33 on 2025-07-10
+2025-08-01 09:03:42 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:42 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:42 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:42 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:03:42 - Fetching distance data for user 42 on 2025-07-11
+2025-08-01 09:04:12 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 09:04:12 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 09:04:12 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 09:04:12 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 09:04:12 - Fetching distance data for user 51 on 2025-07-11
+2025-08-01 09:04:18 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:04:18 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:04:18 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:04:18 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:04:18 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:04:19 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 09:04:22 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:04:22 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:04:22 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:04:22 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:04:22 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:04:22 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:11 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:11 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:11 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:11 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:11 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:11 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:17 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:17 - Confirming distance for user 32 on 2025-07-10: 36 km by Bhuvnesh Sharma
+2025-08-01 09:07:17 - Updated 1 records
+2025-08-01 09:07:17 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:27 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:27 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:28 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:28 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:28 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:28 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 09:07:36 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:37 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:37 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:37 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:37 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:37 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:47 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:47 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:47 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:47 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:47 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:47 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:55 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:07:55 - Confirming distance for user 39 on 2025-07-10: 5 km by Bhuvnesh Sharma
+2025-08-01 09:07:55 - Updated 1 records
+2025-08-01 09:07:55 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 09:08:05 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:05 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:05 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:05 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:05 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:05 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:10 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:10 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:10 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:10 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:10 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:10 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:36 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:36 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:36 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:36 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:36 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:08:36 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:09:12 - Checking distance for user 48 on 2025-07-09: entered 20 km
+2025-08-01 09:09:12 - Total distance calculated from expenses: 34.6 km
+2025-08-01 09:09:12 - HR checking against total distance: 34.6 km, matches: false
+2025-08-01 09:09:15 - Checking distance for user 48 on 2025-07-09: entered 18 km
+2025-08-01 09:09:15 - Total distance calculated from expenses: 34.6 km
+2025-08-01 09:09:15 - HR checking against total distance: 34.6 km, matches: false
+2025-08-01 09:09:26 - Checking distance for user 48 on 2025-07-09: entered 20 km
+2025-08-01 09:09:26 - Total distance calculated from expenses: 34.6 km
+2025-08-01 09:09:26 - HR checking against total distance: 34.6 km, matches: false
+2025-08-01 09:10:27 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:27 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:27 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:27 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:27 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:27 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:29 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 09:10:47 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:10:47 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:10:47 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:10:47 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:10:47 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:10:47 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:10:59 - Checking distance for user 32 on 2025-07-09: entered 36 km
+2025-08-01 09:10:59 - Total distance calculated from expenses: 36 km
+2025-08-01 09:10:59 - HR checking against total distance: 36 km, matches: true
+2025-08-01 09:10:59 - HR saving verification: 36 km
+2025-08-01 09:10:59 - Updated 1 records with HR verification data
+2025-08-01 09:11:07 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:11:07 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:11:07 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:11:07 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:11:07 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:11:07 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:13:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:13:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:13:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:13:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:13:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:13:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:45 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:45 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:45 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:45 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:45 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:45 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:56 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:56 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:56 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:56 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:56 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:17:56 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:18:48 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:18:51 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:18:51 - Confirming distance for user 32 on 2025-07-09: 38 km by Bhuvnesh Sharma
+2025-08-01 09:18:51 - Updated 1 records
+2025-08-01 09:18:51 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:18:59 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:00 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:00 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:00 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:00 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:00 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:40 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:41 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:41 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:19:41 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:23 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:23 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:23 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:23 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:23 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:23 - Fetching distance data for user 32 on 2025-07-09
+2025-08-01 09:20:30 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:30 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:30 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:30 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:30 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:30 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:34 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:41 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:41 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:41 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:41 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:41 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:41 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:43 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:43 - Confirming distance for user 7 on 2025-07-08: 100 km by Bhuvnesh Sharma
+2025-08-01 09:20:43 - Updated 2 records
+2025-08-01 09:20:43 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:49 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:49 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:49 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:49 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:49 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:20:49 - Fetching distance data for user 7 on 2025-07-08
+2025-08-01 09:34:08 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:08 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:08 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:08 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:09 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:14 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:14 - Confirming distance for user 52 on 2025-07-13: 20 km by Bhuvnesh Sharma
+2025-08-01 09:34:14 - Updated 1 records
+2025-08-01 09:34:14 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:29 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:29 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:29 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:29 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:29 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:33 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:33 - Confirming distance for user 52 on 2025-07-13: 18 km by Bhuvnesh Sharma
+2025-08-01 09:34:33 - Updated 1 records
+2025-08-01 09:34:33 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:38 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:38 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:38 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:38 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:38 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:42 - Fetching distance data for user 52 on 2025-07-13
+2025-08-01 09:34:58 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 09:34:58 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 09:34:58 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 09:34:58 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 09:35:02 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:02 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:02 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:02 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:09 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:12 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:14 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:14 - Confirming distance for user 42 on 2025-07-12: 36 km by Bhuvnesh Sharma
+2025-08-01 09:35:14 - Updated 6 records
+2025-08-01 09:35:14 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:21 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:21 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:21 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:21 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:26 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:26 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:26 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:35:26 - Fetching distance data for user 42 on 2025-07-12
+2025-08-01 09:53:03 - Checking distance for user 7 on 2025-07-08: entered 50 km
+2025-08-01 09:53:03 - Total distance calculated from expenses: 40.2 km
+2025-08-01 09:53:03 - HR checking against PM distance: 100 km, matches: false
+2025-08-01 09:54:56 - Checking distance for user 33 on 2025-07-08: entered 100 km
+2025-08-01 09:54:56 - Total distance calculated from expenses: 27 km
+2025-08-01 09:54:56 - HR checking against total distance: 27 km, matches: false
+2025-08-01 09:54:59 - Checking distance for user 33 on 2025-07-08: entered 65 km
+2025-08-01 09:54:59 - Total distance calculated from expenses: 27 km
+2025-08-01 09:54:59 - HR checking against total distance: 27 km, matches: false
+2025-08-01 10:09:21 - Checking distance for user 33 on 2025-07-08: entered 50 km
+2025-08-01 10:09:21 - Total distance calculated from expenses: 27 km
+2025-08-01 10:09:21 - HR checking against total distance: 27 km, entered: 50 km, needs confirmation: false
+2025-08-01 10:09:21 - HR saving verification: 50 km
+2025-08-01 10:09:21 - Updated 3 records with HR verification data
+2025-08-01 10:14:51 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 10:14:51 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 10:14:51 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 10:14:51 - Fetching distance data for user 51 on 2025-07-12
+2025-08-01 10:15:18 - Checking distance for user 51 on 2025-07-12: entered 50 km
+2025-08-01 10:15:18 - Total distance calculated from expenses: 42.5 km
+2025-08-01 10:15:18 - HR checking against total distance: 42.5 km, entered: 50 km, needs confirmation: false
+2025-08-01 10:15:18 - HR saving verification: 50 km
+2025-08-01 10:15:18 - Updated 1 records with HR verification data
+2025-08-01 10:15:45 - Fetching distance data for user 32 on 2025-07-12
+2025-08-01 10:15:45 - Fetching distance data for user 32 on 2025-07-12
+2025-08-01 10:15:45 - Fetching distance data for user 32 on 2025-07-12
+2025-08-01 10:15:45 - Fetching distance data for user 32 on 2025-07-12
+2025-08-01 10:15:53 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 10:15:53 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 10:15:53 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 10:15:53 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 10:15:53 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 10:15:53 - Fetching distance data for user 51 on 2025-07-10
+2025-08-01 10:16:38 - Checking distance for user 51 on 2025-07-10: entered 47 km
+2025-08-01 10:16:38 - Total distance calculated from expenses: 43 km
+2025-08-01 10:16:38 - HR checking against PM distance: 46 km, entered: 47 km, difference: 1 km
+2025-08-01 10:16:38 - HR saving verification: 47 km
+2025-08-01 10:16:38 - Updated 1 records with HR verification data
+2025-08-01 10:17:00 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:00 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:00 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:00 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:00 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:00 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:03 - Fetching distance data for user 33 on 2025-07-09
+2025-08-01 10:17:03 - Fetching distance data for user 33 on 2025-07-09
+2025-08-01 10:17:03 - Fetching distance data for user 33 on 2025-07-09
+2025-08-01 10:17:03 - Fetching distance data for user 33 on 2025-07-09
+2025-08-01 10:17:03 - Fetching distance data for user 33 on 2025-07-09
+2025-08-01 10:17:03 - Fetching distance data for user 33 on 2025-07-09
+2025-08-01 10:17:06 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 10:17:06 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 10:17:06 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 10:17:06 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 10:17:06 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 10:17:06 - Fetching distance data for user 32 on 2025-07-10
+2025-08-01 10:17:12 - Checking distance for user 32 on 2025-07-10: entered 39 km
+2025-08-01 10:17:12 - Total distance calculated from expenses: 36 km
+2025-08-01 10:17:12 - HR checking against PM distance: 36 km, entered: 39 km, difference: 3 km
+2025-08-01 10:17:24 - Checking distance for user 32 on 2025-07-10: entered 38 km
+2025-08-01 10:17:24 - Total distance calculated from expenses: 36 km
+2025-08-01 10:17:24 - HR checking against PM distance: 36 km, entered: 38 km, difference: 2 km
+2025-08-01 10:17:24 - HR saving verification: 38 km
+2025-08-01 10:17:24 - Updated 1 records with HR verification data
+2025-08-01 10:17:59 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:59 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:59 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:59 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:59 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:17:59 - Fetching distance data for user 48 on 2025-07-09
+2025-08-01 10:18:03 - Fetching distance data for user 42 on 2025-07-10
+2025-08-01 10:18:03 - Fetching distance data for user 42 on 2025-07-10
+2025-08-01 10:18:03 - Fetching distance data for user 42 on 2025-07-10
+2025-08-01 10:18:03 - Fetching distance data for user 42 on 2025-07-10
+2025-08-01 10:18:03 - Fetching distance data for user 42 on 2025-07-10
+2025-08-01 10:18:03 - Fetching distance data for user 42 on 2025-07-10
+2025-08-01 10:18:08 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:08 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:08 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:08 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:08 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:08 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:16 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:16 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:16 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:16 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:16 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:16 - Fetching distance data for user 39 on 2025-07-10
+2025-08-01 10:18:28 - Checking distance for user 39 on 2025-07-10: entered 10 km
+2025-08-01 10:18:28 - Total distance calculated from expenses: 5 km
+2025-08-01 10:18:28 - HR checking against PM distance: 5 km, entered: 10 km, difference: 5 km
+2025-08-01 10:18:48 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:18:48 - Total distance calculated from expenses: 5 km
+2025-08-01 10:18:48 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:20:34 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:20:34 - Total distance calculated from expenses: 5 km
+2025-08-01 10:20:34 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:21:12 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:21:12 - Total distance calculated from expenses: 5 km
+2025-08-01 10:21:12 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:23:04 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:23:04 - Total distance calculated from expenses: 5 km
+2025-08-01 10:23:04 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:23:52 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:23:53 - Total distance calculated from expenses: 5 km
+2025-08-01 10:23:53 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:23:53 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:23:53 - Total distance calculated from expenses: 5 km
+2025-08-01 10:23:53 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:26:31 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:26:31 - Total distance calculated from expenses: 5 km
+2025-08-01 10:26:31 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:26:35 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:26:35 - Total distance calculated from expenses: 5 km
+2025-08-01 10:26:35 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:26:35 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:26:35 - Total distance calculated from expenses: 5 km
+2025-08-01 10:26:35 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:26:39 - Rejecting expenses for user 39 on 2025-07-10 by Gunjan Anand Sehgal. Reason: Distance mismatch: Confirmed distance (8 km) is less than claimed distance (5 km)
+2025-08-01 10:26:39 - User role: HR - Updating hr_status
+2025-08-01 10:26:39 - Rejected 1 expense records
+2025-08-01 10:26:49 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:26:49 - Total distance calculated from expenses: 5 km
+2025-08-01 10:26:49 - HR checking against PM distance: 8 km, entered: 8 km, difference: 0 km
+2025-08-01 10:26:49 - HR saving verification: 8 km
+2025-08-01 10:26:49 - Updated 1 records with HR verification data
+2025-08-01 10:26:49 - Checking distance for user 39 on 2025-07-10: entered 8 km
+2025-08-01 10:26:49 - Total distance calculated from expenses: 5 km
+2025-08-01 10:26:49 - HR checking against PM distance: 8 km, entered: 8 km, difference: 0 km
+2025-08-01 10:26:50 - HR saving verification: 8 km
+2025-08-01 10:26:50 - Updated 1 records with HR verification data
+2025-08-01 10:28:25 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:25 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:25 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:25 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:33 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:33 - Confirming distance for user 36 on 2025-07-07: 47 km by Bhuvnesh Sharma
+2025-08-01 10:28:33 - Updated 9 records
+2025-08-01 10:28:33 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:38 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:38 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:38 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:38 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:28:50 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:28:50 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:28:50 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:28:50 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:28:50 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:28:50 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:31:26 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:31:26 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:31:26 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:31:26 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:31:26 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:31:26 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:31:38 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:31:38 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:31:38 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:31:38 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:31:38 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:31:38 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:36:40 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:36:40 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:36:40 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:36:40 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:36:40 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:36:40 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:37:17 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:37:17 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:37:17 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:37:17 - Checking distance for user 36 on 2025-07-07: entered 50 km
+2025-08-01 10:37:17 - Total distance calculated from expenses: 83.1 km
+2025-08-01 10:37:17 - HR checking against PM distance: 47 km, entered: 50 km, difference: 3 km
+2025-08-01 10:37:20 - Rejecting expenses for user 36 on 2025-07-07 by Gunjan Anand Sehgal. Reason: Distance mismatch: Confirmed distance (50 km) is less than claimed distance (38.1 km)
+2025-08-01 10:37:20 - User role: HR - Updating hr_status
+2025-08-01 10:37:20 - Rejected 9 expense records
+2025-08-01 10:40:17 - Fetching distance data for user 39 on 2025-07-08
+2025-08-01 10:40:17 - Fetching distance data for user 39 on 2025-07-08
+2025-08-01 10:40:18 - Fetching distance data for user 39 on 2025-07-08
+2025-08-01 10:40:18 - Fetching distance data for user 39 on 2025-07-08
+2025-08-01 10:40:23 - Fetching distance data for user 39 on 2025-07-08
+2025-08-01 10:40:24 - Confirming distance for user 39 on 2025-07-08: 5 km by Bhuvnesh Sharma
+2025-08-01 10:40:24 - Updated 1 records
+2025-08-01 10:40:24 - Fetching distance data for user 39 on 2025-07-08
+2025-08-01 10:40:39 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:40:39 - Total distance calculated from expenses: 5 km
+2025-08-01 10:40:39 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:40:39 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:40:39 - Total distance calculated from expenses: 5 km
+2025-08-01 10:40:39 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:41:03 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:41:03 - Total distance calculated from expenses: 5 km
+2025-08-01 10:41:03 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:41:03 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:41:03 - Total distance calculated from expenses: 5 km
+2025-08-01 10:41:03 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:41:23 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:41:23 - Total distance calculated from expenses: 5 km
+2025-08-01 10:41:23 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:41:23 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:41:23 - Total distance calculated from expenses: 5 km
+2025-08-01 10:41:23 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:42:12 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:42:12 - Total distance calculated from expenses: 5 km
+2025-08-01 10:42:12 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:42:12 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:42:12 - Total distance calculated from expenses: 5 km
+2025-08-01 10:42:12 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:42:41 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:42:41 - Total distance calculated from expenses: 5 km
+2025-08-01 10:42:41 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:43:14 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:43:14 - Total distance calculated from expenses: 5 km
+2025-08-01 10:43:14 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:47:10 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:47:10 - Total distance calculated from expenses: 5 km
+2025-08-01 10:47:10 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:47:38 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:47:38 - Total distance calculated from expenses: 5 km
+2025-08-01 10:47:38 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:48:50 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:48:50 - Total distance calculated from expenses: 5 km
+2025-08-01 10:48:50 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:51:56 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:51:56 - Total distance calculated from expenses: 5 km
+2025-08-01 10:51:56 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:53:50 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:53:50 - Total distance calculated from expenses: 5 km
+2025-08-01 10:53:50 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:53:50 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:53:50 - Total distance calculated from expenses: 5 km
+2025-08-01 10:53:50 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:54:18 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:54:18 - Total distance calculated from expenses: 5 km
+2025-08-01 10:54:18 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:54:18 - Checking distance for user 39 on 2025-07-08: entered 8 km
+2025-08-01 10:54:18 - Total distance calculated from expenses: 5 km
+2025-08-01 10:54:18 - HR checking against PM distance: 5 km, entered: 8 km, difference: 3 km
+2025-08-01 10:54:21 - Rejecting expenses for user 39 on 2025-07-08 by Gunjan Anand Sehgal. Reason: Distance mismatch: Confirmed distance (8 km) is less than claimed distance (5 km)
+2025-08-01 10:54:21 - User role: HR - Updating hr_status
+2025-08-01 10:54:21 - Rejected 1 expense records
+2025-08-01 10:55:25 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:25 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:37 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:41 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:41 - Confirming distance for user 42 on 2025-07-07: 70 km by Bhuvnesh Sharma
+2025-08-01 10:55:41 - Updated 5 records
+2025-08-01 10:55:41 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:48 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:48 - Fetching distance data for user 42 on 2025-07-07
+2025-08-01 10:55:57 - Checking distance for user 42 on 2025-07-07: entered 65 km
+2025-08-01 10:55:57 - Total distance calculated from expenses: 56 km
+2025-08-01 10:55:57 - HR checking against PM distance: 70 km, entered: 65 km, difference: 5 km
+2025-08-01 10:55:57 - Checking distance for user 42 on 2025-07-07: entered 65 km
+2025-08-01 10:55:57 - Total distance calculated from expenses: 56 km
+2025-08-01 10:55:57 - HR checking against PM distance: 70 km, entered: 65 km, difference: 5 km
+2025-08-01 10:56:00 - Checking distance for user 42 on 2025-07-07: entered 73 km
+2025-08-01 10:56:00 - Total distance calculated from expenses: 56 km
+2025-08-01 10:56:00 - HR checking against PM distance: 70 km, entered: 73 km, difference: 3 km
+2025-08-01 10:56:00 - Checking distance for user 42 on 2025-07-07: entered 73 km
+2025-08-01 10:56:00 - Total distance calculated from expenses: 56 km
+2025-08-01 10:56:00 - HR checking against PM distance: 70 km, entered: 73 km, difference: 3 km
+2025-08-01 10:56:09 - Checking distance for user 42 on 2025-07-07: entered 72 km
+2025-08-01 10:56:09 - Total distance calculated from expenses: 56 km
+2025-08-01 10:56:09 - HR checking against PM distance: 70 km, entered: 72 km, difference: 2 km
+2025-08-01 10:56:09 - HR saving verification: 72 km
+2025-08-01 10:56:09 - Updated 5 records with HR verification data
+2025-08-01 10:56:09 - Checking distance for user 42 on 2025-07-07: entered 72 km
+2025-08-01 10:56:09 - Total distance calculated from expenses: 56 km
+2025-08-01 10:56:09 - HR checking against PM distance: 70 km, entered: 72 km, difference: 2 km
+2025-08-01 10:56:09 - HR saving verification: 72 km
+2025-08-01 10:56:09 - Updated 0 records with HR verification data
+2025-08-01 10:56:28 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:56:28 - Fetching distance data for user 36 on 2025-07-07
+2025-08-01 10:56:48 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:48 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:48 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:48 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:51 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:55 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:58 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:56:58 - Confirming distance for user 42 on 2025-07-05: 69 km by Bhuvnesh Sharma
+2025-08-01 10:56:58 - Updated 4 records
+2025-08-01 10:56:58 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 10:59:36 - Checking distance for user 42 on 2025-07-05: entered 66 km
+2025-08-01 10:59:36 - Total distance calculated from expenses: 66 km
+2025-08-01 10:59:36 - HR checking against PM distance: 69 km, entered: 66 km, difference: 3 km
+2025-08-01 10:59:37 - Checking distance for user 42 on 2025-07-05: entered 66 km
+2025-08-01 10:59:37 - Total distance calculated from expenses: 66 km
+2025-08-01 10:59:37 - HR checking against PM distance: 69 km, entered: 66 km, difference: 3 km
+2025-08-01 10:59:43 - Checking distance for user 42 on 2025-07-05: entered 73 km
+2025-08-01 10:59:43 - Total distance calculated from expenses: 66 km
+2025-08-01 10:59:43 - HR checking against PM distance: 69 km, entered: 73 km, difference: 4 km
+2025-08-01 10:59:44 - Checking distance for user 42 on 2025-07-05: entered 73 km
+2025-08-01 10:59:44 - Total distance calculated from expenses: 66 km
+2025-08-01 10:59:44 - HR checking against PM distance: 69 km, entered: 73 km, difference: 4 km
+2025-08-01 10:59:49 - Checking distance for user 42 on 2025-07-05: entered 70 km
+2025-08-01 10:59:49 - Total distance calculated from expenses: 66 km
+2025-08-01 10:59:49 - HR checking against PM distance: 69 km, entered: 70 km, difference: 1 km
+2025-08-01 10:59:49 - HR saving verification: 70 km
+2025-08-01 10:59:49 - Updated 4 records with HR verification data
+2025-08-01 10:59:49 - Checking distance for user 42 on 2025-07-05: entered 70 km
+2025-08-01 10:59:49 - Total distance calculated from expenses: 66 km
+2025-08-01 10:59:49 - HR checking against PM distance: 69 km, entered: 70 km, difference: 1 km
+2025-08-01 10:59:49 - HR saving verification: 70 km
+2025-08-01 10:59:49 - Updated 0 records with HR verification data
+2025-08-01 11:00:12 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:12 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:12 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:12 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:26 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:26 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:26 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:26 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:38 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:38 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:38 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:00:38 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:03:35 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:03:36 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:03:36 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:03:36 - Fetching distance data for user 42 on 2025-07-05
+2025-08-01 11:06:38 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:38 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:38 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:39 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:39 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:40 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:41 - Confirming distance for user 42 on 2025-07-04: 55 km by Bhuvnesh Sharma
+2025-08-01 11:06:41 - Updated 2 records
+2025-08-01 11:06:41 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:47 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:47 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:47 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:47 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:06:47 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:07:03 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:07:04 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:07:04 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:07:04 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:07:04 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:07:07 - Checking distance for user 42 on 2025-07-04: entered 52 km
+2025-08-01 11:07:07 - Total distance calculated from expenses: 42 km
+2025-08-01 11:07:07 - HR checking against PM distance: 55 km, entered: 52 km, difference: 3 km
+2025-08-01 11:07:07 - Checking distance for user 42 on 2025-07-04: entered 52 km
+2025-08-01 11:07:07 - Total distance calculated from expenses: 42 km
+2025-08-01 11:07:07 - HR checking against PM distance: 55 km, entered: 52 km, difference: 3 km
+2025-08-01 11:16:19 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:19 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:19 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:19 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:19 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:51 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:51 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:51 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:51 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:16:51 - Fetching distance data for user 42 on 2025-07-04
+2025-08-01 11:17:19 - Checking distance for user 42 on 2025-07-04: entered 57 km
+2025-08-01 11:17:19 - Total distance calculated from expenses: 42 km
+2025-08-01 11:17:19 - HR checking against PM distance: 55 km, entered: 57 km, difference: 2 km
+2025-08-01 11:17:19 - HR saving verification: 57 km
+2025-08-01 11:17:19 - Updated 2 records with HR verification data
+2025-08-01 11:17:19 - Checking distance for user 42 on 2025-07-04: entered 57 km
+2025-08-01 11:17:19 - Total distance calculated from expenses: 42 km
+2025-08-01 11:17:19 - HR checking against PM distance: 55 km, entered: 57 km, difference: 2 km
+2025-08-01 11:17:19 - HR saving verification: 57 km
+2025-08-01 11:17:19 - Updated 0 records with HR verification data
+2025-08-01 12:09:04 - Checking distance for user 36 on 2025-07-01: entered 20 km
+2025-08-01 12:09:04 - Total distance calculated from expenses: 14.8 km
+2025-08-01 12:09:04 - HR checking against total distance: 14.8 km, entered: 20 km, needs confirmation: false
+2025-08-01 12:09:04 - HR saving verification: 20 km
+2025-08-01 12:09:04 - Updated 2 records with HR verification data
+2025-08-01 12:09:04 - Checking distance for user 36 on 2025-07-01: entered 20 km
+2025-08-01 12:09:04 - Total distance calculated from expenses: 14.8 km
+2025-08-01 12:09:04 - HR checking against total distance: 14.8 km, entered: 20 km, needs confirmation: false
+2025-08-01 12:09:04 - HR saving verification: 20 km
+2025-08-01 12:09:04 - Updated 0 records with HR verification data
+2025-08-01 12:18:36 - Checking distance for user 42 on 2025-07-01: entered 25 km
+2025-08-01 12:18:36 - Total distance calculated from expenses: 96 km
+2025-08-01 12:18:36 - HR checking against total distance: 96 km, entered: 25 km, needs confirmation: true
+2025-08-01 12:18:41 - Rejecting expenses for user 42 on 2025-07-01 by Gunjan Anand Sehgal. Reason: Distance mismatch: Confirmed distance (25 km) is less than claimed distance (65 km)
+2025-08-01 12:18:41 - User role: HR - Updating hr_status
+2025-08-01 12:18:41 - Rejected 7 expense records
+2025-08-01 12:20:01 - Checking distance for user 42 on 2025-07-01: entered 20 km
+2025-08-01 12:20:01 - Total distance calculated from expenses: 96 km
+2025-08-01 12:20:01 - HR checking against PM distance: 25 km, entered: 20 km, difference: 5 km
+2025-08-01 12:56:01 - Checking distance for user 41 on 2025-07-01: entered 10 km
+2025-08-01 12:56:01 - Total distance calculated from expenses: 14 km
+2025-08-01 12:56:01 - HR checking against total distance: 14 km, entered: 10 km, needs confirmation: true
+2025-08-01 12:56:07 - Checking distance for user 41 on 2025-07-01: entered 22 km
+2025-08-01 12:56:07 - Total distance calculated from expenses: 14 km
+2025-08-01 12:56:07 - HR checking against total distance: 14 km, entered: 22 km, needs confirmation: false
+2025-08-01 12:56:07 - HR saving verification: 22 km
+2025-08-01 12:56:07 - Updated 2 records with HR verification data
+2025-08-01 12:56:07 - Checking distance for user 41 on 2025-07-01: entered 22 km
+2025-08-01 12:56:07 - Total distance calculated from expenses: 14 km
+2025-08-01 12:56:07 - HR checking against total distance: 14 km, entered: 22 km, needs confirmation: false
+2025-08-01 12:56:07 - HR saving verification: 22 km
+2025-08-01 12:56:07 - Updated 0 records with HR verification data
+2025-08-01 13:16:24 - Fetching distance data for user 36 on 2025-07-21
+2025-08-01 13:16:42 - Fetching distance data for user 36 on 2025-07-21
+2025-08-01 13:16:42 - Fetching distance data for user 36 on 2025-07-21
+2025-08-01 13:16:42 - Fetching distance data for user 36 on 2025-07-21
+2025-08-01 13:16:59 - Fetching distance data for user 33 on 2025-07-30
+2025-08-01 13:25:28 - Fetching distance data for user 33 on 2025-07-30
+2025-08-01 13:56:58 - Fetching distance data for user 36 on 2025-07-21
+2025-08-01 13:57:19 - Fetching distance data for user 36 on 2025-07-07

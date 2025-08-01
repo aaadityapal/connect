@@ -1,0 +1,31 @@
+<?php
+// Get the current file content
+$content = file_get_contents('travelling_allowance.php');
+
+// Replace the problematic code
+$search = "                        // Update the heading text
+                        const headingContainer = document.querySelector(`#\${modalId} .px-3.py-3.border-bottom.bg-light .d-flex.align-items-center .d-flex.align-items-center div`);";
+$replace = "                        // Update the heading text again
+                        headingContainer = document.querySelector(`#\${modalId} .px-3.py-3.border-bottom.bg-light .d-flex.align-items-center .d-flex.align-items-center div`);";
+
+// Replace only at line 3486 (approximately)
+$lines = explode("\n", $content);
+$lineCount = count($lines);
+$found = false;
+
+for ($i = 3480; $i < 3490; $i++) {
+    if (strpos($lines[$i], "const headingContainer = document.querySelector") !== false) {
+        $lines[$i] = "                        // Update the heading text again
+                        headingContainer = document.querySelector(`#\${modalId} .px-3.py-3.border-bottom.bg-light .d-flex.align-items-center .d-flex.align-items-center div`);";
+        $found = true;
+        break;
+    }
+}
+
+if ($found) {
+    $fixedContent = implode("\n", $lines);
+    echo "Fixed content created. Replace the original file with this one.";
+} else {
+    echo "Could not find the line to fix.";
+}
+?>

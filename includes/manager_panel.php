@@ -52,7 +52,7 @@
         <span class="menu-text">Purchase Management</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'travel_expenses_approval.php' ? 'active' : ''; ?>" onclick="window.location.href='travel_expenses_approval.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'travelling_allowance.php' ? 'active' : ''; ?>" onclick="window.location.href='travelling_allowance.php'">
         <i class="fas fa-user-tie"></i>
         <span class="menu-text">Travel Expenses Approval</span>
     </div>

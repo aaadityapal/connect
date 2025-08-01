@@ -2728,7 +2728,7 @@ try {
                 <i class="bi bi-map"></i>
                 Geofence Locations
             </a>
-            <a href="hr_travel_expenses.php" class="nav-link">
+            <a href="travelling_allowanceh.php" class="nav-link">
                 <i class="bi bi-car-front-fill"></i>
                 Travel Expenses
             </a>

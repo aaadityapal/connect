@@ -74,8 +74,10 @@ try {
 // Initialize filter variables
 $employee = isset($_GET['employee']) ? $_GET['employee'] : '';
 $status = isset($_GET['status']) ? $_GET['status'] : '';
-$month = isset($_GET['month']) ? $_GET['month'] : '';
-$year = isset($_GET['year']) ? $_GET['year'] : '';
+$month = isset($_GET['month']) ? $_GET['month'] : $currentMonth; // Set current month as default
+// Default year to current year if not specified
+$currentYear = date('Y');
+$year = isset($_GET['year']) ? $_GET['year'] : $currentYear;
 $approval_status = isset($_GET['approval_status']) ? $_GET['approval_status'] : '';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
@@ -221,27 +223,27 @@ try {
 }
 
 // Sample data for other dropdowns
-$statuses = ['All Statuses', 'Pending', 'Checked', 'Rejected'];
+$statuses = ['All Statuses', 'Pending', 'Approved', 'Rejected'];
 
 // Approval status structure with option groups
 $approval_status_groups = [
     'Overall Status' => [
         'Pending',
-        'Checked',
+        'Approved',
         'Rejected'
     ],
     'Manager' => [
-        'Manager Checked',
+        'Manager Approved',
         'Manager Rejected',
         'Manager Pending'
     ],
     'Accountant' => [
-        'Accountant Checked',
+        'Accountant Approved',
         'Accountant Rejected',
         'Accountant Pending'
     ],
     'HR' => [
-        'HR Checked',
+        'HR Approved',
         'HR Rejected',
         'HR Pending'
     ]
@@ -250,7 +252,7 @@ $approval_status_groups = [
 // Fetch travel expenses from database
 $travel_expenses = [];
 $totalRecords = 0;
-$recordsPerPage = 10;
+$recordsPerPage = 20;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
@@ -282,12 +284,49 @@ try {
     }
     
     // Month and year filter for travel date
-    if (!empty($month) && !empty($year)) {
+    if (empty($_GET)) {
+        // First page load - use current month and year
+        $baseQuery .= " AND MONTH(te.travel_date) = :month AND YEAR(te.travel_date) = :year";
+        $params[':month'] = $currentMonthNum;
+        $params[':year'] = $currentYear;
+    } elseif (!empty($month) && !empty($year)) {
         $monthNum = array_search($month, $months);
         if ($monthNum) {
             $baseQuery .= " AND MONTH(te.travel_date) = :month AND YEAR(te.travel_date) = :year";
             $params[':month'] = $monthNum;
             $params[':year'] = $year;
+        }
+    } elseif (!empty($month)) {
+        // If only month is selected without year, search across all years
+        $monthNum = array_search($month, $months);
+        if ($monthNum) {
+            $baseQuery .= " AND MONTH(te.travel_date) = :month";
+            $params[':month'] = $monthNum;
+        }
+    } elseif (!empty($year)) {
+        // If only year is selected without month
+        $baseQuery .= " AND YEAR(te.travel_date) = :year";
+        $params[':year'] = $year;
+    }
+    
+    // Week filter - only apply if we have month and year context
+    if (!empty($week) && !empty($month) && !empty($year)) {
+        // Extract the day range from the week format (e.g., "Week 2 (8-14)")
+        if (preg_match('/\((\d+)-(\d+)\)/', $weeks[$week], $matches)) {
+            $weekStartDay = (int)$matches[1];
+            $weekEndDay = (int)$matches[2];
+            
+            // Create date strings in SQL format (YYYY-MM-DD)
+            $monthNum = array_search($month, $months);
+            if ($monthNum) {
+                $startDate = sprintf('%04d-%02d-%02d', $year, $monthNum, $weekStartDay);
+                $endDate = sprintf('%04d-%02d-%02d', $year, $monthNum, $weekEndDay);
+                
+                // Add date range filter to query
+                $baseQuery .= " AND te.travel_date BETWEEN :week_start AND :week_end";
+                $params[':week_start'] = $startDate;
+                $params[':week_end'] = $endDate;
+            }
         }
     }
     
@@ -422,6 +461,7 @@ try {
             --card-shadow: 0 1px 3px rgba(0,0,0,0.05);
             --hover-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
             --transition-speed: 0.2s;
+            --sidebar-width: 280px;
         }
         
         body {
@@ -431,6 +471,148 @@ try {
             overflow-x: hidden;
             line-height: 1.6;
             font-weight: 400;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            overflow-y: auto; /* Add scrolling */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .toggle-sidebar:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar.collapsed .bi {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link {
+            color: var(--muted-text);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        /* Logout button styles */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding-top: 1rem;
+            color: white !important;
+            background-color: #D22B2B;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+        }
+
+        /* Update nav container to allow for margin-top: auto on logout */
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100% - 60px); /* Adjust based on your logo height */
+            padding-bottom: 20px; /* Add padding at the bottom for better visibility */
         }
         
         /* Layout and containers */
@@ -1059,6 +1241,81 @@ try {
     </style>
 </head>
 <body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
+        </div>
+        
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="manager_payouts.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Manager Payouts
+            </a>
+            <a href="company_analytics_dashboard.php" class="nav-link">
+                <i class="bi bi-graph-up"></i>
+                Company Stats
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="admin/manage_geofence_locations.php" class="nav-link">
+                <i class="bi bi-map"></i>
+                Geofence Locations
+            </a>
+            <a href="travelling_allowanceh.php" class="nav-link active">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
+            </a>
+            <a href="hr_overtime_approval.php" class="nav-link">
+                <i class="bi bi-clock"></i>
+                Overtime Approval
+            </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <!-- Added Logout Button -->
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Add this button after the sidebar div -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
     <div class="container-fluid">
         <div class="page-header mb-4">
             <h1 class="page-title">Travel Expenses Approval</h1>
@@ -1120,9 +1377,9 @@ try {
                             <div class="col-md-6 col-lg-2">
                                 <label for="month" class="form-label">Month</label>
                                 <select class="form-select" id="month" name="month">
-                                    <option value="">All Months</option>
+                                    <option value="" <?= ($month === '') && !empty($_GET) ? 'selected' : '' ?>>All Months</option>
                                     <?php foreach ($months as $monthNum => $monthName): ?>
-                                        <option value="<?= htmlspecialchars($monthName) ?>" <?= $month === $monthName ? 'selected' : '' ?>>
+                                        <option value="<?= htmlspecialchars($monthName) ?>" <?= ($month === $monthName || (empty($_GET) && $monthName === $currentMonth)) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($monthName) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -1161,7 +1418,7 @@ try {
                                             <?php foreach ($statuses as $status): ?>
                                                 <?php
                                                     $statusClass = '';
-                                                    if (strpos($status, 'Approved') !== false || strpos($status, 'Checked') !== false) $statusClass = 'status-approved';
+                                                    if (strpos($status, 'Approved') !== false) $statusClass = 'status-approved';
                                                     elseif (strpos($status, 'Rejected') !== false) $statusClass = 'status-rejected';
                                                     elseif (strpos($status, 'Pending') !== false) $statusClass = 'status-pending';
                                                 ?>
@@ -1192,6 +1449,9 @@ try {
                 </div>
             </div>
         </div>
+        
+        <!-- Quick Overview Section -->
+        <?php include 'components/dashboard_widgets/travel_expenses_overview.php'; ?>
         
         <!-- Results Area -->
         <div class="card">
@@ -1234,7 +1494,7 @@ try {
                                     // Get status classes
                                     $statusClass = '';
                                     switch(strtolower($expense['status'])) {
-                                        case 'approved': case 'checked': $statusClass = 'bg-success'; break;
+                                        case 'approved': $statusClass = 'bg-success'; break;
                                         case 'pending': $statusClass = 'bg-warning text-dark'; break;
                                         case 'rejected': $statusClass = 'bg-danger'; break;
                                         default: $statusClass = 'bg-secondary'; break;
@@ -1242,7 +1502,7 @@ try {
                                     
                                     $managerStatusClass = '';
                                     switch(strtolower($expense['manager_status'] ?? 'not_reviewed')) {
-                                        case 'approved': case 'checked': $managerStatusClass = 'bg-success'; break;
+                                        case 'approved': $managerStatusClass = 'bg-success'; break;
                                         case 'pending': $managerStatusClass = 'bg-warning text-dark'; break;
                                         case 'rejected': $managerStatusClass = 'bg-danger'; break;
                                         default: $managerStatusClass = 'bg-secondary'; break;
@@ -1250,7 +1510,7 @@ try {
                                     
                                     $accountantStatusClass = '';
                                     switch(strtolower($expense['accountant_status'] ?? 'not_reviewed')) {
-                                        case 'approved': case 'checked': $accountantStatusClass = 'bg-success'; break;
+                                        case 'approved': $accountantStatusClass = 'bg-success'; break;
                                         case 'pending': $accountantStatusClass = 'bg-warning text-dark'; break;
                                         case 'rejected': $accountantStatusClass = 'bg-danger'; break;
                                         default: $accountantStatusClass = 'bg-secondary'; break;
@@ -1258,7 +1518,7 @@ try {
                                     
                                     $hrStatusClass = '';
                                     switch(strtolower($expense['hr_status'] ?? 'not_reviewed')) {
-                                        case 'approved': case 'checked': $hrStatusClass = 'bg-success'; break;
+                                        case 'approved': $hrStatusClass = 'bg-success'; break;
                                         case 'pending': $hrStatusClass = 'bg-warning text-dark'; break;
                                         case 'rejected': $hrStatusClass = 'bg-danger'; break;
                                         default: $hrStatusClass = 'bg-secondary'; break;
@@ -4535,6 +4795,91 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                     document.body.style.paddingRight = '';
                 }, 300);
             });
+        });
+
+        // Sidebar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleButton = document.getElementById('sidebarToggle');
+            
+            // Check saved state
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                toggleButton.classList.add('collapsed');
+            }
+
+            // Toggle function
+            function toggleSidebar() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                toggleButton.classList.toggle('collapsed');
+                
+                // Save state
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            }
+
+            // Click event
+            toggleButton.addEventListener('click', toggleSidebar);
+
+            // Enhanced hover effect
+            toggleButton.addEventListener('mouseenter', function() {
+                const isCollapsed = toggleButton.classList.contains('collapsed');
+                const icon = toggleButton.querySelector('.bi');
+                
+                if (!isCollapsed) {
+                    icon.style.transform = 'translateX(-3px)';
+                } else {
+                    icon.style.transform = 'translateX(3px) rotate(180deg)';
+                }
+            });
+
+            toggleButton.addEventListener('mouseleave', function() {
+                const isCollapsed = toggleButton.classList.contains('collapsed');
+                const icon = toggleButton.querySelector('.bi');
+                
+                if (!isCollapsed) {
+                    icon.style.transform = 'none';
+                } else {
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+
+            // Handle window resize
+            function handleResize() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    toggleButton.classList.add('collapsed');
+                } else {
+                    // Restore saved state on desktop
+                    const savedState = localStorage.getItem('sidebarCollapsed');
+                    if (savedState === null || savedState === 'false') {
+                        sidebar.classList.remove('collapsed');
+                        mainContent.classList.remove('expanded');
+                        toggleButton.classList.remove('collapsed');
+                    }
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+
+            // Handle clicks outside sidebar on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768) {
+                    const isClickInside = sidebar.contains(event.target) || 
+                                        toggleButton.contains(event.target);
+                    
+                    if (!isClickInside && !sidebar.classList.contains('collapsed')) {
+                        toggleSidebar();
+                    }
+                }
+            });
+
+            // Initial check for mobile devices
+            handleResize();
         });
     </script>
 </body>

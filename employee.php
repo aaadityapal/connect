@@ -994,6 +994,14 @@ foreach ($managers as $manager) {
                 <i class="bi bi-clock-history"></i>
                 Shifts
             </a>
+            <a  href="manager_payouts.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Managers Payout
+            </a>
+            <a href="company_analytics_dashboard.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Company Stats
+            </a>
             <a href="salary_overview.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>
                 Salary
@@ -1002,17 +1010,17 @@ foreach ($managers as $manager) {
                 <i class="bi bi-calendar-check-fill"></i>
                 Leave Request
             </a>
-            <a href="manage_leave_balance.php" class="nav-link">
+            <a href="admin/manage_geofence_locations.php" class="nav-link">
                 <i class="bi bi-briefcase-fill"></i>
-                Recruitment
+                Geofence Locations
             </a>
-            <a href="hr_travel_expenses.php" class="nav-link">
+            <a href="travelling_allowanceh.php" class="nav-link">
                 <i class="bi bi-car-front-fill"></i>
                 Travel Expenses
             </a>
-            <a href="generate_agreement.php" class="nav-link">
-                <i class="bi bi-chevron-contract"></i>
-                Contracts
+            <a href="hr_overtime_approval.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Overtime Approval
             </a>
             <a href="hr_password_reset.php" class="nav-link">
                 <i class="bi bi-key-fill"></i>

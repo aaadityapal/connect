@@ -16,6 +16,16 @@ require_once 'config/db_connect.php';
 
 // Get filter parameters
 $filterMonth = isset($_GET['month']) ? $_GET['month'] : '';
+// Convert month name to month number if needed
+if (!empty($filterMonth) && !is_numeric($filterMonth)) {
+    $monthNames = [
+        'January' => 1, 'February' => 2, 'March' => 3, 'April' => 4,
+        'May' => 5, 'June' => 6, 'July' => 7, 'August' => 8,
+        'September' => 9, 'October' => 10, 'November' => 11, 'December' => 12
+    ];
+    $filterMonth = isset($monthNames[$filterMonth]) ? $monthNames[$filterMonth] : '';
+}
+
 $filterYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $filterUser = isset($_GET['user_id']) ? $_GET['user_id'] : '';
 $filterRoleStatus = isset($_GET['role_status']) ? $_GET['role_status'] : '';

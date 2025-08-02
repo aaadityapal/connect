@@ -1319,11 +1319,15 @@ try {
     <div class="container-fluid">
         <div class="page-header mb-4">
             <h1 class="page-title">Travel Expenses Approval</h1>
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=<?= urlencode(substr($current_user['name'], 0, 1)) ?>&background=4361ee&color=fff&bold=true" alt="User Avatar" class="user-avatar">
-                <div class="user-info">
-                    <div class="user-name"><?= htmlspecialchars($current_user['name']) ?></div>
-                    <div class="user-role"><?= htmlspecialchars(!empty($current_user['designation']) ? $current_user['designation'] : $current_user['role']) ?></div>
+            <div class="d-flex align-items-center">
+                <a href="#" id="exportExpensesBtn" class="btn btn-primary me-2"><i class="bi bi-file-earmark-excel me-1"></i> Export Expenses</a>
+                <a href="hr_travel_expenses_pay.php" class="btn btn-success me-3"><i class="bi bi-cash-coin me-1"></i> Pay Expenses</a>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=<?= urlencode(substr($current_user['name'], 0, 1)) ?>&background=4361ee&color=fff&bold=true" alt="User Avatar" class="user-avatar">
+                    <div class="user-info">
+                        <div class="user-name"><?= htmlspecialchars($current_user['name']) ?></div>
+                        <div class="user-role"><?= htmlspecialchars(!empty($current_user['designation']) ? $current_user['designation'] : $current_user['role']) ?></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4885,6 +4889,44 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
 
             // Initial check for mobile devices
             handleResize();
+        });
+
+        // Export Expenses button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportBtn = document.getElementById('exportExpensesBtn');
+            
+            exportBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Get all the current filter values
+                const employee = document.getElementById('employee').value;
+                const status = document.getElementById('status').value;
+                const month = document.getElementById('month').value;
+                const week = document.getElementById('week').value;
+                const year = document.getElementById('year').value;
+                const approvalStatus = document.getElementById('approval_status').value;
+                const search = document.getElementById('search').value;
+                
+                // Build the export URL with the current filters
+                let exportUrl = 'export_travel_expenses.php?';
+                if (employee) exportUrl += `user_id=${employee}&`;
+                if (status) exportUrl += `status=${encodeURIComponent(status)}&`;
+                if (month) exportUrl += `month=${encodeURIComponent(month)}&`;
+                if (week) exportUrl += `week=${encodeURIComponent(week)}&`;
+                if (year) exportUrl += `year=${encodeURIComponent(year)}&`;
+                if (approvalStatus && approvalStatus !== 'All Approvals') {
+                    exportUrl += `role_status=${encodeURIComponent(approvalStatus.toLowerCase().replace(' ', '_'))}&`;
+                }
+                if (search) exportUrl += `search=${encodeURIComponent(search)}&`;
+                
+                // Remove trailing & if present
+                if (exportUrl.endsWith('&')) {
+                    exportUrl = exportUrl.slice(0, -1);
+                }
+                
+                // Redirect to the export URL
+                window.location.href = exportUrl;
+            });
         });
     </script>
 </body>

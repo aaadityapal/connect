@@ -55,3 +55,9 @@ Format: [timestamp] user_id action status_field new_status reason affected_rows2
 2025-08-01 10:43:26 - User Gunjan Anand Sehgal (HR) is rejecting expenses for user 42 on date 2025-07-08. Updating hr_status. Reason: f f f f f f f f f f f ff f f ff ff f
 2025-08-01 10:43:26 - Updated 0 records
 
+2025-08-02 09:19:42 - User Bhuvnesh Sharma (Purchase Manager) is approveing expenses for user 39 on date 2025-06-11. Updating accountant_status. Reason: 
+2025-08-02 09:19:42 - Updated 1 records
+
+2025-08-02 09:20:05 - User Bhuvnesh Sharma (Purchase Manager) is rejecting multiple expenses (338). Updating accountant_status. Reason: f ff ff f f f f f f ff f ff
+2025-08-02 09:20:05 - Updated 1 records
+

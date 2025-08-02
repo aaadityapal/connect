@@ -2179,16 +2179,15 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                                     // Check if all expenses in this modal are already approved
                                                     const allExpensesApproved = checkAllExpensesApproved(modalId);
                                                     
-                                                    if (allExpensesApproved) {
-                                                        // If all expenses are approved, disable the input field
-                                                        distanceInput.disabled = true;
-                                                        
-                                                        // Disable the submit button
-                                                        const submitButton = modal.querySelector('.confirm-distance-btn');
-                                                        if (submitButton) {
-                                                            submitButton.disabled = true;
-                                                            submitButton.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Verified';
-                                                        }
+                                                    // On page load/refresh, always keep the input field and button enabled
+                                                    // This allows HR to re-enter the distance after page refresh
+                                                    distanceInput.disabled = false;
+                                                    
+                                                    // Keep the submit button enabled on page load/refresh
+                                                    const submitButton = modal.querySelector('.confirm-distance-btn');
+                                                    if (submitButton) {
+                                                        submitButton.disabled = false;
+                                                        submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
                                                     }
                                     
                                     // Update confirmation status
@@ -3762,16 +3761,16 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                         const modalId = form.closest('.modal').id;
                         const allExpensesApproved = checkAllExpensesApproved(modalId);
                         
-                        if (allExpensesApproved) {
-                            // If all expenses are approved, disable the input field and button
-                            submitButton.disabled = true;
-                            submitButton.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirmed';
-                            form.querySelector('.confirmed-distance-input').disabled = true;
-                        } else {
-                            // If not all expenses are approved, keep button enabled for future edits
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
-                        }
+                        // After form submission, disable the input field and button
+                        // This freezes the form until page refresh
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Verified';
+                        form.querySelector('.confirmed-distance-input').disabled = true;
+                        
+                        // Store a flag in localStorage to indicate this form was just submitted
+                        // We'll use this to track the freeze/unfreeze cycle
+                        const formId = `${userId}_${travelDate.replace(/-/g, '')}`;
+                        localStorage.setItem(`distance_verified_${formId}`, 'true');
                         
                         // Update confirmation status
                         // Get current user's username from session if available
@@ -3816,6 +3815,12 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                         
                         // Show expenses table and hide placeholder
                         showExpenseTable(modalId, confirmedDistance);
+                        
+                        // Add a class to the expenses table to indicate verification was just completed
+                        const expensesTable = document.getElementById('expenses-table-' + modalId);
+                        if (expensesTable) {
+                            expensesTable.classList.add('just-verified');
+                        }
                         
                         // Show success message
                         showToast('Distance verified successfully! Expense details unlocked.', 'success');

@@ -1532,3 +1532,115 @@ Transaction started
 2025-08-02 08:12:33 - HR checking against PM distance: 20 km, entered: 20 km, difference: 0 km
 2025-08-02 08:12:33 - HR saving verification: 20 km
 2025-08-02 08:12:33 - Updated 0 records with HR verification data
+2025-08-02 09:12:36 - Checking distance for user 33 on 2025-07-27: entered 20 km
+2025-08-02 09:12:36 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:36 - HR checking against PM distance: 10 km, entered: 20 km, difference: 10 km
+2025-08-02 09:12:36 - Checking distance for user 33 on 2025-07-27: entered 20 km
+2025-08-02 09:12:36 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:36 - HR checking against PM distance: 10 km, entered: 20 km, difference: 10 km
+2025-08-02 09:12:41 - Checking distance for user 33 on 2025-07-27: entered 22 km
+2025-08-02 09:12:41 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:41 - HR checking against PM distance: 10 km, entered: 22 km, difference: 12 km
+2025-08-02 09:12:41 - Checking distance for user 33 on 2025-07-27: entered 22 km
+2025-08-02 09:12:41 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:41 - HR checking against PM distance: 10 km, entered: 22 km, difference: 12 km
+2025-08-02 09:12:46 - Checking distance for user 33 on 2025-07-27: entered 25 km
+2025-08-02 09:12:46 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:46 - HR checking against PM distance: 10 km, entered: 25 km, difference: 15 km
+2025-08-02 09:12:46 - Checking distance for user 33 on 2025-07-27: entered 25 km
+2025-08-02 09:12:46 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:46 - HR checking against PM distance: 10 km, entered: 25 km, difference: 15 km
+2025-08-02 09:12:53 - Checking distance for user 33 on 2025-07-27: entered 10 km
+2025-08-02 09:12:53 - Total distance calculated from expenses: 11 km
+2025-08-02 09:12:53 - HR checking against PM distance: 10 km, entered: 10 km, difference: 0 km
+2025-08-02 09:12:53 - HR saving verification: 10 km
+2025-08-02 09:12:53 - Updated 1 records with HR verification data
+2025-08-02 09:13:05 - Checking distance for user 33 on 2025-07-27: entered 10 km
+2025-08-02 09:13:05 - Total distance calculated from expenses: 11 km
+2025-08-02 09:13:05 - HR checking against PM distance: 10 km, entered: 10 km, difference: 0 km
+2025-08-02 09:13:05 - HR saving verification: 10 km
+2025-08-02 09:13:05 - Updated 1 records with HR verification data
+2025-08-02 09:13:20 - Checking distance for user 37 on 2025-07-21: entered 20 km
+2025-08-02 09:13:20 - Total distance calculated from expenses: 36 km
+2025-08-02 09:13:20 - HR checking against PM distance: 35 km, entered: 20 km, difference: 15 km
+2025-08-02 09:13:24 - Checking distance for user 37 on 2025-07-21: entered 25 km
+2025-08-02 09:13:24 - Total distance calculated from expenses: 36 km
+2025-08-02 09:13:24 - HR checking against PM distance: 35 km, entered: 25 km, difference: 10 km
+2025-08-02 09:13:28 - Checking distance for user 37 on 2025-07-21: entered 28 km
+2025-08-02 09:13:28 - Total distance calculated from expenses: 36 km
+2025-08-02 09:13:28 - HR checking against PM distance: 35 km, entered: 28 km, difference: 7 km
+2025-08-02 09:13:32 - Checking distance for user 37 on 2025-07-21: entered 30 km
+2025-08-02 09:13:32 - Total distance calculated from expenses: 36 km
+2025-08-02 09:13:32 - HR checking against PM distance: 35 km, entered: 30 km, difference: 5 km
+2025-08-02 09:13:34 - Checking distance for user 37 on 2025-07-21: entered 35 km
+2025-08-02 09:13:34 - Total distance calculated from expenses: 36 km
+2025-08-02 09:13:34 - HR checking against PM distance: 35 km, entered: 35 km, difference: 0 km
+2025-08-02 09:13:34 - HR saving verification: 35 km
+2025-08-02 09:13:34 - Updated 2 records with HR verification data
+2025-08-02 09:19:19 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:19 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:19 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:19 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:24 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:30 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:32 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:32 - Confirming distance for user 39 on 2025-06-11: 4 km by Bhuvnesh Sharma
+2025-08-02 09:19:32 - Updated 1 records
+2025-08-02 09:19:32 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:50 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:50 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:50 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:19:50 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:20:08 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:20:08 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:20:08 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:20:08 - Fetching distance data for user 39 on 2025-06-11
+2025-08-02 09:20:19 - Fetching distance data for user 39 on 2025-06-28
+2025-08-02 09:20:19 - Fetching distance data for user 39 on 2025-06-28
+2025-08-02 09:20:19 - Fetching distance data for user 39 on 2025-06-28
+2025-08-02 09:22:01 - Checking distance for user 39 on 2025-07-21: entered 4 km
+2025-08-02 09:22:01 - Total distance calculated from expenses: 4 km
+2025-08-02 09:22:01 - HR checking against PM distance: 3 km, entered: 4 km, difference: 1 km
+2025-08-02 09:22:01 - HR saving verification: 4 km
+2025-08-02 09:22:01 - Updated 1 records with HR verification data
+2025-08-02 09:22:01 - Checking distance for user 39 on 2025-07-21: entered 4 km
+2025-08-02 09:22:01 - Total distance calculated from expenses: 4 km
+2025-08-02 09:22:01 - HR checking against PM distance: 3 km, entered: 4 km, difference: 1 km
+2025-08-02 09:22:01 - HR saving verification: 4 km
+2025-08-02 09:22:01 - Updated 0 records with HR verification data
+2025-08-02 09:22:14 - Checking distance for user 39 on 2025-07-21: entered 5 km
+2025-08-02 09:22:14 - Total distance calculated from expenses: 4 km
+2025-08-02 09:22:14 - HR checking against PM distance: 3 km, entered: 5 km, difference: 2 km
+2025-08-02 09:22:14 - HR saving verification: 5 km
+2025-08-02 09:22:14 - Updated 1 records with HR verification data
+2025-08-02 09:22:14 - Checking distance for user 39 on 2025-07-21: entered 5 km
+2025-08-02 09:22:14 - Total distance calculated from expenses: 4 km
+2025-08-02 09:22:14 - HR checking against PM distance: 3 km, entered: 5 km, difference: 2 km
+2025-08-02 09:22:14 - HR saving verification: 5 km
+2025-08-02 09:22:14 - Updated 0 records with HR verification data
+2025-08-02 09:22:50 - Checking distance for user 39 on 2025-07-21: entered 5 km
+2025-08-02 09:22:50 - Total distance calculated from expenses: 4 km
+2025-08-02 09:22:50 - HR checking against PM distance: 3 km, entered: 5 km, difference: 2 km
+2025-08-02 09:22:50 - HR saving verification: 5 km
+2025-08-02 09:22:50 - Updated 1 records with HR verification data
+2025-08-02 09:22:51 - Checking distance for user 39 on 2025-07-21: entered 5 km
+2025-08-02 09:22:51 - Total distance calculated from expenses: 4 km
+2025-08-02 09:22:51 - HR checking against PM distance: 3 km, entered: 5 km, difference: 2 km
+2025-08-02 09:22:51 - HR saving verification: 5 km
+2025-08-02 09:22:51 - Updated 1 records with HR verification data
+2025-08-02 09:25:43 - Checking distance for user 39 on 2025-07-21: entered 5 km
+2025-08-02 09:25:43 - Total distance calculated from expenses: 4 km
+2025-08-02 09:25:43 - HR checking against PM distance: 3 km, entered: 5 km, difference: 2 km
+2025-08-02 09:25:43 - HR saving verification: 5 km
+2025-08-02 09:25:43 - Updated 1 records with HR verification data
+2025-08-02 09:25:43 - Checking distance for user 39 on 2025-07-21: entered 5 km
+2025-08-02 09:25:43 - Total distance calculated from expenses: 4 km
+2025-08-02 09:25:43 - HR checking against PM distance: 3 km, entered: 5 km, difference: 2 km
+2025-08-02 09:25:43 - HR saving verification: 5 km
+2025-08-02 09:25:43 - Updated 0 records with HR verification data
+2025-08-02 11:07:09 - Checking distance for user 39 on 2025-07-21: entered 6 km
+2025-08-02 11:07:09 - Total distance calculated from expenses: 4 km
+2025-08-02 11:07:09 - HR checking against PM distance: 3 km, entered: 6 km, difference: 3 km
+2025-08-02 11:07:09 - Checking distance for user 39 on 2025-07-21: entered 6 km
+2025-08-02 11:07:09 - Total distance calculated from expenses: 4 km
+2025-08-02 11:07:09 - HR checking against PM distance: 3 km, entered: 6 km, difference: 3 km

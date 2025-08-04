@@ -1087,6 +1087,31 @@ try {
             background-color: #f8f9fa;
         }
         
+        /* Locked row styles */
+        .locked-row {
+            opacity: 0.75;
+            filter: blur(0.3px);
+            cursor: not-allowed !important;
+        }
+        
+        .locked-row:hover {
+            background-color: inherit !important;
+        }
+        
+        .awaiting-badge {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 0.75em;
+            font-weight: 500;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem;
+            background-color: #6c757d;
+        }
+        
         /* Ensure distance is properly hidden */
         [id^="total-distance-display-"][style*="display:none"] {
             display: none !important;
@@ -1383,8 +1408,25 @@ try {
                                     $profilePicture = !empty($expense['profile_picture']) ? 
                                         'uploads/profile_pictures/' . $expense['profile_picture'] : 
                                         'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
+                                    
+                                    // Check if today is Wednesday to Thursday
+                                    $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
+                                    $isLockDay = ($currentDay >= 3 && $currentDay <= 4); // Wednesday to Thursday
+                                    
+                                    // Get travel date's day of week
+                                    $travelDateObj = new DateTime($date);
+                                    $travelDayOfWeek = (int)$travelDateObj->format('N'); // 1 (Monday) to 7 (Sunday)
+                                    $isTravelDateLockDay = ($travelDayOfWeek >= 3 && $travelDayOfWeek <= 4); // Wednesday to Thursday
+                                    
+                                    // Determine if the expense should be locked based on day of week (Wed-Thu)
+                                    $isLockedDueToWeekday = $isLockDay && $isTravelDateLockDay;
+                                    
+                                    // Lock row if today is Wednesday to Thursday AND the travel date is also Wednesday to Thursday
+                                    $isLocked = $isLockedDueToWeekday;
+                                    $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
+                                    $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
                             ?>
-                            <tr class="group-row clickable-row" data-bs-toggle="modal" data-bs-target="#<?= $modal_id ?>">
+                            <tr class="<?= $rowClass ?>" <?= $modalAttributes ?>>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <img src="<?= htmlspecialchars($profilePicture) ?>" 
@@ -1397,6 +1439,19 @@ try {
                                                 <span class="more-expenses-badge">
                                                     <i class="bi bi-plus-circle"></i> <?= $additional_expenses ?> more expense<?= $additional_expenses > 1 ? 's' : '' ?>
                                                 </span>
+                                            </div>
+                                            <?php endif; ?>
+                                            
+                                            <?php if ($isLocked): ?>
+                                            <div class="d-flex flex-column gap-1 mt-1">
+                                                <?php
+                                                // Prepare awaiting text if locked
+                                                $awaitingText = "Locked (Wed-Thu)";
+                                                ?>
+                                                <div class="locked-indicator">
+                                                    <i class="bi bi-lock-fill text-secondary me-1"></i>
+                                                    <span class="awaiting-badge"><?= $awaitingText ?></span>
+                                                </div>
                                             </div>
                                             <?php endif; ?>
                                         </div>

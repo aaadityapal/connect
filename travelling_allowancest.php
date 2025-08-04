@@ -1773,10 +1773,22 @@ try {
                                     }
                                 }
                                 
-                                // Unlock row if either:
-                                // 1. Both Accountant and HR have approved, OR
-                                // 2. ALL expenses for this date have rejected status
-                                $isLocked = !($accountantApproved && $hrApproved) && !$allRejected;
+                                // Check if today is Wednesday to Saturday
+                                $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
+                                $isLockDay = ($currentDay >= 3 && $currentDay <= 6); // Wednesday to Saturday
+                                
+                                // Get travel date's day of week
+                                $travelDateObj = new DateTime($date);
+                                $travelDayOfWeek = (int)$travelDateObj->format('N'); // 1 (Monday) to 7 (Sunday)
+                                $isTravelDateLockDay = ($travelDayOfWeek >= 3 && $travelDayOfWeek <= 6); // Wednesday to Saturday
+                                
+                                // Determine if the expense should be locked based on day of week (Wed-Sat)
+                                $isLockedDueToWeekday = $isLockDay && $isTravelDateLockDay;
+                                
+                                // Lock row if:
+                                // 1. Both Accountant and HR haven't approved AND all expenses aren't rejected, OR
+                                // 2. Today is Wednesday to Saturday AND the travel date is also Wednesday to Saturday
+                                $isLocked = (!($accountantApproved && $hrApproved) && !$allRejected) || $isLockedDueToWeekday;
                                 $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
                                 $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
                             ?>
@@ -1833,7 +1845,11 @@ try {
                                                     $pendingParts[] = "Accountant";
                                                 }
                                                 
-                                                if (!empty($pendingParts)) {
+                                                // Check if it's locked due to weekday (Wed-Sat)
+                                                if ($isLockedDueToWeekday) {
+                                                    // If it's locked due to being Wed-Sat
+                                                    $awaitingText = "Locked (Wed-Sat)";
+                                                } else if (!empty($pendingParts)) {
                                                     $awaitingText = "Awaiting " . implode(" & ", $pendingParts);
                                                     
                                                     // Add rejected count if any

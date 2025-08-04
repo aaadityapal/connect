@@ -3,6 +3,23 @@
 $overviewBaseQuery = $baseQuery;
 $overviewParams = $params;
 
+// Get current user role from session
+$currentUserRole = $_SESSION['role'] ?? '';
+$currentUserId = $_SESSION['user_id'] ?? 0;
+
+// Role-based condition
+$roleCondition = "";
+if ($currentUserRole == 'Senior Manager (Studio)') {
+    // For Studio Manager, only show their employees
+    // Exclude roles that belong to Site Manager
+    $roleCondition = " AND u.role NOT IN ('Site Coordinator', 'Site Supervisor', 'Sales', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing')";
+} 
+else if ($currentUserRole == 'Senior Manager (Site)') {
+    // For Site Manager, only show employees with specific roles
+    $roleCondition = " AND u.role IN ('Site Coordinator', 'Site Supervisor', 'Sales', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing')";
+}
+// For Purchase Manager and HR, show all users (no additional condition)
+
 // Create month filter condition
 $monthCondition = "";
 $monthParams = [];
@@ -144,40 +161,49 @@ if (!empty($approval_status) && $approval_status !== 'All Approvals') {
 }
 
 // Combine all conditions
-$allConditions = $monthCondition . $weekCondition . $employeeCondition . $searchCondition . $approvalStatusCondition;
+$allConditions = $monthCondition . $weekCondition . $employeeCondition . $searchCondition . $approvalStatusCondition . $roleCondition;
 
-// Create simple queries without joins or parameters
+// Create queries with joins for role-based filtering
 // Pending Approval Count
-$pendingQuery = "SELECT COUNT(*) as count FROM travel_expenses 
-                WHERE (status = 'pending' OR status = 'Pending')" . $allConditions;
+$pendingQuery = "SELECT COUNT(*) as count FROM travel_expenses te 
+                JOIN users u ON te.user_id = u.id
+                WHERE (te.status = 'pending' OR te.status = 'Pending')" . $allConditions;
 
 // Approved Count
-$approvedQuery = "SELECT COUNT(*) as count FROM travel_expenses 
-                WHERE (status = 'approved' OR status = 'Approved')" . $allConditions;
+$approvedQuery = "SELECT COUNT(*) as count FROM travel_expenses te 
+                JOIN users u ON te.user_id = u.id
+                WHERE (te.status = 'approved' OR te.status = 'Approved')" . $allConditions;
 
 // Rejected Count
-$rejectedQuery = "SELECT COUNT(*) as count FROM travel_expenses 
-                WHERE (status = 'rejected' OR status = 'Rejected')" . $allConditions;
+$rejectedQuery = "SELECT COUNT(*) as count FROM travel_expenses te 
+                JOIN users u ON te.user_id = u.id
+                WHERE (te.status = 'rejected' OR te.status = 'Rejected')" . $allConditions;
 
 // Total Amount
-$totalAmountQuery = "SELECT COALESCE(SUM(amount), 0) as total FROM travel_expenses WHERE 1=1" . $allConditions;
+$totalAmountQuery = "SELECT COALESCE(SUM(te.amount), 0) as total FROM travel_expenses te 
+                    JOIN users u ON te.user_id = u.id
+                    WHERE 1=1" . $allConditions;
 
 // Approved Amount
-$approvedAmountQuery = "SELECT COALESCE(SUM(amount), 0) as total FROM travel_expenses 
-                       WHERE (status = 'approved' OR status = 'Approved')" . $allConditions;
+$approvedAmountQuery = "SELECT COALESCE(SUM(te.amount), 0) as total FROM travel_expenses te 
+                       JOIN users u ON te.user_id = u.id
+                       WHERE (te.status = 'approved' OR te.status = 'Approved')" . $allConditions;
 
 // Rejected Amount
-$rejectedAmountQuery = "SELECT COALESCE(SUM(amount), 0) as total FROM travel_expenses 
-                       WHERE (status = 'rejected' OR status = 'Rejected')" . $allConditions;
+$rejectedAmountQuery = "SELECT COALESCE(SUM(te.amount), 0) as total FROM travel_expenses te 
+                       JOIN users u ON te.user_id = u.id
+                       WHERE (te.status = 'rejected' OR te.status = 'Rejected')" . $allConditions;
 
 // Paid Amount
-$paidAmountQuery = "SELECT COALESCE(SUM(amount_paid), 0) as total FROM travel_expenses 
-                   WHERE amount_paid > 0" . $allConditions;
+$paidAmountQuery = "SELECT COALESCE(SUM(te.amount_paid), 0) as total FROM travel_expenses te 
+                   JOIN users u ON te.user_id = u.id
+                   WHERE te.amount_paid > 0" . $allConditions;
 
 // Pending Payment Amount (approved but not paid or partially paid)
-$pendingPaymentQuery = "SELECT COALESCE(SUM(amount - COALESCE(amount_paid, 0)), 0) as total FROM travel_expenses 
-                       WHERE (status = 'approved' OR status = 'Approved') 
-                       AND (amount_paid IS NULL OR amount_paid < amount)" . $allConditions;
+$pendingPaymentQuery = "SELECT COALESCE(SUM(te.amount - COALESCE(te.amount_paid, 0)), 0) as total FROM travel_expenses te 
+                       JOIN users u ON te.user_id = u.id
+                       WHERE (te.status = 'approved' OR te.status = 'Approved') 
+                       AND (te.amount_paid IS NULL OR te.amount_paid < te.amount)" . $allConditions;
 
 // Debug information array
 $debug = [];
@@ -207,12 +233,26 @@ $debug['filters'] = [
         'value' => $approval_status,
         'condition' => $approvalStatusCondition
     ],
+    'role' => [
+        'value' => $currentUserRole,
+        'condition' => $roleCondition
+    ],
     'all_conditions' => $allConditions
 ];
 
 try {
     // Let's simplify our queries to get basic counts first
-    $simpleCountQuery = "SELECT COUNT(*) FROM travel_expenses";
+    $simpleCountQuery = "SELECT COUNT(*) FROM travel_expenses te";
+    
+    // Add role-based filtering to the simple count query if needed
+    if (!empty($roleCondition)) {
+        $simpleCountQuery = "SELECT COUNT(*) FROM travel_expenses te JOIN users u ON te.user_id = u.id";
+        if ($currentUserRole == 'Senior Manager (Studio)') {
+            $simpleCountQuery .= " WHERE u.role NOT IN ('Site Coordinator', 'Site Supervisor', 'Sales', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing')";
+        } else if ($currentUserRole == 'Senior Manager (Site)') {
+            $simpleCountQuery .= " WHERE u.role IN ('Site Coordinator', 'Site Supervisor', 'Sales', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing')";
+        }
+    }
     $simpleStmt = $pdo->prepare($simpleCountQuery);
     $simpleStmt->execute();
     $totalRecordsInTable = $simpleStmt->fetchColumn();

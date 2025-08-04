@@ -61,3 +61,38 @@ Format: [timestamp] user_id action status_field new_status reason affected_rows2
 2025-08-02 09:20:05 - User Bhuvnesh Sharma (Purchase Manager) is rejecting multiple expenses (338). Updating accountant_status. Reason: f ff ff f f f f f f ff f ff
 2025-08-02 09:20:05 - Updated 1 records
 
+2025-08-02 13:36:21 - User Rachana Pal (Senior Manager (Site)) is approveing expense ID 620. Updating manager_status. Reason: 
+2025-08-02 13:36:21 - Updated 1 records
+2025-08-02 13:36:36 - User Rachana Pal (Senior Manager (Site)) is approveing expenses for user 1 on date 2025-07-23. Updating manager_status. Reason: 
+2025-08-02 13:36:36 - Updated 1 records
+
+2025-08-02 13:37:06 - User Rachana Pal (Senior Manager (Site)) is approveing multiple expenses (599, 592, 593, 596). Updating manager_status. Reason: 
+2025-08-02 13:37:06 - Updated 4 records
+
+2025-08-02 13:38:54 - User Rachana Pal (Senior Manager (Site)) is rejecting expense ID 615. Updating manager_status. Reason: rgrg rgr gr gr gr gr gr gr gr gr g
+2025-08-02 13:38:54 - Updated 1 records
+2025-08-02 13:39:30 - User Rachana Pal (Senior Manager (Site)) is rejecting expenses for user 36 on date 2025-07-20. Updating manager_status. Reason: h gh g hg  g hg g h g hg h
+2025-08-02 13:39:30 - Updated 2 records
+
+2025-08-02 14:16:29 - User Rachana Pal (Senior Manager (Site)) is approveing multiple expenses (587, 588). Updating manager_status. Reason: 
+2025-08-02 14:16:29 - Updated 2 records
+
+2025-08-02 14:18:18 - User Gunjan Anand Sehgal (HR) is approveing expenses for user 51 on date 2025-07-19. Updating hr_status. Reason: 
+2025-08-02 14:18:18 - Updated 4 records
+
+2025-08-02 14:18:44 - User Gunjan Anand Sehgal (HR) is approveing expenses for user 41 on date 2025-07-19. Updating hr_status. Reason: 
+2025-08-02 14:18:44 - Updated 2 records
+
+2025-08-02 15:19:49 - User Gunjan Anand Sehgal (HR) is approveing expenses for user 33 on date 2025-07-18. Updating hr_status. Reason: 
+2025-08-02 15:19:49 - Updated 4 records
+
+2025-08-02 15:20:32 - User Rachana Pal (Senior Manager (Site)) is approveing expenses for user 33 on date 2025-07-18. Updating manager_status. Reason: 
+2025-08-02 15:20:32 - Updated 4 records
+
+2025-08-04 08:28:47 - User Bhuvnesh Sharma (Purchase Manager) is approveing expense ID 621. Updating accountant_status. Reason: 
+2025-08-04 08:28:47 - Updated 1 records
+2025-08-04 08:29:24 - User Gunjan Anand Sehgal (HR) is approveing expense ID 621. Updating hr_status. Reason: 
+2025-08-04 08:29:24 - Updated 1 records
+2025-08-04 08:30:23 - User Yojna Sharma (Senior Manager (Studio)) is approveing multiple expenses (621). Updating manager_status. Reason: 
+2025-08-04 08:30:23 - Updated 1 records
+

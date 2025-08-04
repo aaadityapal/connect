@@ -929,16 +929,16 @@ try {
               <i class="bi bi-calendar-check-fill"></i>
               Leave Request
           </a>
-          <a href="manage_leave_balance.php" class="nav-link">
-              <i class="bi bi-briefcase-fill"></i>
-              Recruitment
+          <a href="admin/manage_geofence_locations.php" class="nav-link">
+              <i class="bi bi-geo-alt-fill"></i>
+              Geofence
           </a>
-          <a href="hr_travel_expenses.php" class="nav-link active">
+          <a href="travelling_allowanceh.php" class="nav-link active">
               <i class="bi bi-car-front-fill"></i>
               Travel Expenses
           </a>
-          <a href="generate_agreement.php" class="nav-link">
-              <i class="bi bi-chevron-contract"></i>
+          <a href="overtime_approval.php" class="nav-link">
+              <i class="bi bi-hourglass-split"></i>
               Contracts
           </a>
           <a href="hr_password_reset.php" class="nav-link">

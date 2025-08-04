@@ -27,7 +27,7 @@ try {
     $userRole = $roleStmt->fetchColumn();
     
     // Allow access only to Purchase Manager role
-    if ($userRole !== 'Purchase Manager') {
+    if ($userRole !== 'Senior Manager (Site)') {
         // Get the user's actual role for a more informative message
         $actualRole = $userRole ?: 'Unknown';
         
@@ -79,6 +79,7 @@ $month = isset($_GET['month']) ? $_GET['month'] : $currentMonth; // Set current 
 $currentYear = date('Y');
 $year = isset($_GET['year']) ? $_GET['year'] : $currentYear;
 $approval_status = isset($_GET['approval_status']) ? $_GET['approval_status'] : '';
+$hr_accountant_status = isset($_GET['hr_accountant_status']) ? $_GET['hr_accountant_status'] : '';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
 // Get current date information
@@ -190,9 +191,10 @@ try {
 // Fetch users from database for employee dropdown
 $employees = [];
 try {
-    // Query to get active users
-    $query = "SELECT id, username, designation, department, unique_id FROM users 
+    // Query to get active users with specific roles only
+    $query = "SELECT id, username, designation, department, unique_id, role FROM users 
              WHERE deleted_at IS NULL AND status = 'active' 
+             AND role IN ('Site Coordinator', 'Site Supervisor', 'Sales', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing')
              ORDER BY username ASC";
     $stmt = $pdo->prepare($query);
     $stmt->execute();
@@ -248,6 +250,14 @@ $approval_status_groups = [
     ]
 ];
 
+// Combined HR and Accountant approval status filter options
+$hr_accountant_filter = [
+    'HR and Accountant Approved' => 'Both HR and Accountant have approved',
+    'HR and Accountant Pending' => 'Waiting for both HR and Accountant approval',
+    'HR Pending' => 'Waiting for HR approval only',
+    'Accountant Pending' => 'Waiting for Accountant approval only'
+];
+
 // Fetch travel expenses from database
 $travel_expenses = [];
 $totalRecords = 0;
@@ -256,11 +266,11 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
 try {
-    // Build the base query
+    // Build the base query with role filtering
     $baseQuery = "FROM travel_expenses te 
                   JOIN users u ON te.user_id = u.id 
                   LEFT JOIN users u_updated ON te.updated_by = u_updated.id
-                  WHERE 1=1";
+                  WHERE u.role IN ('Site Coordinator', 'Site Supervisor', 'Sales', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing')";
     $countQuery = "SELECT COUNT(*) as total " . $baseQuery;
     $dataQuery = "SELECT te.*, 
                   u.username, u.designation, u.profile_picture,
@@ -326,6 +336,27 @@ try {
                 $params[':week_start'] = $startDate;
                 $params[':week_end'] = $endDate;
             }
+        }
+    }
+    
+    // HR and Accountant combined filter
+    if (!empty($hr_accountant_status)) {
+        switch ($hr_accountant_status) {
+            case 'HR and Accountant Approved':
+                $baseQuery .= " AND te.hr_status = 'approved' AND te.accountant_status = 'approved'";
+                break;
+            case 'HR and Accountant Pending':
+                $baseQuery .= " AND (te.hr_status IS NULL OR te.hr_status = 'pending' OR te.hr_status = '') 
+                                AND (te.accountant_status IS NULL OR te.accountant_status = 'pending' OR te.accountant_status = '')";
+                break;
+            case 'HR Pending':
+                $baseQuery .= " AND (te.hr_status IS NULL OR te.hr_status = 'pending' OR te.hr_status = '') 
+                                AND te.accountant_status = 'approved'";
+                break;
+            case 'Accountant Pending':
+                $baseQuery .= " AND te.hr_status = 'approved' 
+                                AND (te.accountant_status IS NULL OR te.accountant_status = 'pending' OR te.accountant_status = '')";
+                break;
         }
     }
     
@@ -432,6 +463,23 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <style>
+        /* Custom styles for HR and Accountant filter */
+        #hr_accountant_status option.text-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            font-weight: 500;
+        }
+        #hr_accountant_status option.text-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            font-weight: 500;
+        }
+        #hr_accountant_status option.text-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            font-weight: 500;
+        }
+        #hr_accountant_status {
+            border-color: #6c757d;
+        }
+        
         :root {
             --primary-color: #4361ee;
             --primary-light: #eef2ff;
@@ -1149,6 +1197,27 @@ try {
                             </div>
                             
                             <div class="col-md-6 col-lg-2">
+                                <label for="hr_accountant_status" class="form-label">Approval Filter</label>
+                                <select class="form-select" id="hr_accountant_status" name="hr_accountant_status">
+                                    <option value="">All Approval Combinations</option>
+                                    <?php foreach ($hr_accountant_filter as $value => $label): ?>
+                                        <?php
+                                            $optionClass = '';
+                                            if ($value === 'HR and Accountant Approved') $optionClass = 'text-success';
+                                            elseif ($value === 'HR and Accountant Pending') $optionClass = 'text-danger';
+                                            elseif ($value === 'HR Pending') $optionClass = 'text-warning';
+                                            elseif ($value === 'Accountant Pending') $optionClass = 'text-warning';
+                                        ?>
+                                        <option value="<?= htmlspecialchars($value) ?>" 
+                                                class="<?= $optionClass ?>"
+                                                <?= isset($_GET['hr_accountant_status']) && $_GET['hr_accountant_status'] === $value ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($value) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 col-lg-2">
                                 <label for="month" class="form-label">Month</label>
                                 <select class="form-select" id="month" name="month">
                                     <option value="" <?= ($month === '') && !empty($_GET) ? 'selected' : '' ?>>All Months</option>
@@ -1316,21 +1385,70 @@ try {
                                         'uploads/profile_pictures/' . $expense['profile_picture'] : 
                                         'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
                             ?>
-                            <tr class="group-row clickable-row" data-bs-toggle="modal" data-bs-target="#<?= $modal_id ?>">
+                            <?php 
+                                $isLocked = false;
+                                // Check if both Accountant and HR have approved
+                                $accountantApproved = false;
+                                $hrApproved = false;
+                                
+                                foreach($user_expenses as $exp) {
+                                    if (strtolower($exp['accountant_status'] ?? '') === 'approved') {
+                                        $accountantApproved = true;
+                                    }
+                                    if (strtolower($exp['hr_status'] ?? '') === 'approved') {
+                                        $hrApproved = true;
+                                    }
+                                }
+                                
+                                // Lock row if either Accountant or HR hasn't approved
+                                $isLocked = !($accountantApproved && $hrApproved);
+                                $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
+                                $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
+                            ?>
+                            <tr class="<?= $rowClass ?>" <?= $modalAttributes ?>>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <img src="<?= htmlspecialchars($profilePicture) ?>" 
                                              class="rounded-circle me-2" width="36" height="36" alt="Profile Picture">
                                         <div>
-                                            <div class="fw-medium"><?= htmlspecialchars($expense['username']) ?></div>
-                                            <div class="text-muted small"><?= htmlspecialchars($expense['designation'] ?? 'Employee') ?></div>
-                                            <?php if ($additional_expenses > 0): ?>
-                                            <div class="mt-1">
-                                                <span class="more-expenses-badge">
-                                                    <i class="bi bi-plus-circle"></i> <?= $additional_expenses ?> more expense<?= $additional_expenses > 1 ? 's' : '' ?>
+                                            <div class="fw-medium d-flex align-items-center">
+                                                <?= htmlspecialchars($expense['username']) ?>
+                                                <?php if ($isLocked): ?>
+                                                <span class="ms-2 lock-icon" title="Locked: Waiting for approval">
+                                                    <i class="bi bi-lock-fill"></i>
                                                 </span>
+                                                <?php endif; ?>
                                             </div>
-                                            <?php endif; ?>
+                                            <div class="text-muted small"><?= htmlspecialchars($expense['designation'] ?? 'Employee') ?></div>
+                                            <?php 
+                                            // Prepare awaiting text if locked
+                                            $awaitingText = "";
+                                            if ($isLocked) {
+                                                if (!$accountantApproved && !$hrApproved) {
+                                                    $awaitingText = "Awaiting HR & Accountant";
+                                                } elseif (!$accountantApproved) {
+                                                    $awaitingText = "Awaiting Accountant";
+                                                } elseif (!$hrApproved) {
+                                                    $awaitingText = "Awaiting HR";
+                                                }
+                                            }
+                                            ?>
+                                            <div class="d-flex flex-column gap-1 mt-1">
+                                                <?php if ($additional_expenses > 0): ?>
+                                                <div>
+                                                    <span class="more-expenses-badge">
+                                                        <i class="bi bi-plus-circle"></i> <?= $additional_expenses ?> more expense<?= $additional_expenses > 1 ? 's' : '' ?>
+                                                    </span>
+                                                </div>
+                                                <?php endif; ?>
+                                                <?php if ($isLocked): ?>
+                                                <div>
+                                                    <span class="awaiting-badge d-inline-flex" title="This expense requires additional approvals">
+                                                        <?= $awaitingText ?>
+                                                    </span>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -1469,10 +1587,10 @@ try {
                                             $totalAmount = array_sum(array_column($user_expenses, 'amount'));
                                             
                                             // Calculate total distance
-                                            $totalDistance = 0;
+                                            $calculatedTotalDistance = 0;
                                             foreach($user_expenses as $exp) {
                                                 if (!empty($exp['distance']) && is_numeric($exp['distance'])) {
-                                                    $totalDistance += $exp['distance'];
+                                                    $calculatedTotalDistance += $exp['distance'];
                                                 }
                                             }
                                             
@@ -1501,11 +1619,7 @@ try {
                                         <div class="text-end d-flex flex-column align-items-end">
                                             <div class="d-flex align-items-baseline">
                                                 <h5 class="mb-0 fw-bold">₹<?= number_format($totalAmount, 2) ?></h5>
-                                                <?php if ($totalDistance > 0 && !empty($expense['confirmed_distance'])): ?>
-                                                <span class="text-muted ms-2">(<?= number_format($totalDistance, 0) ?> km)</span>
-                                                <?php elseif ($totalDistance > 0): ?>
-                                                <span class="text-muted ms-2" id="header-distance-hidden-<?= $modal_id ?>">(<i class="bi bi-eye-slash"></i> Hidden)</span>
-                                                <?php endif; ?>
+                                                <span class="text-muted ms-2">(<?= number_format($calculatedTotalDistance, 0) ?> km)</span>
                                             </div>
                                             <p class="text-muted mb-0 small">Total expenses</p>
                                         </div>
@@ -1536,135 +1650,70 @@ try {
                                     </div>
                                 </div>
                                 
-                                <!-- Confirmation section with total distance -->
+                                <!-- Distance summary section -->
                                 <div class="px-3 py-3 border-bottom bg-light">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-geo-alt-fill text-primary me-2 fs-5"></i>
                                             <div>
-                                                <?php if (!empty($expense['confirmed_distance'])): ?>
                                                 <h6 class="mb-0 fw-bold">Total Distance Traveled</h6>
-                                                <p class="mb-0 text-muted small">Confirmed travel distance for this date</p>
-                                                <?php elseif (!empty($expense['hr_confirmed_distance'])): ?>
-                                                <h6 class="mb-0 fw-bold">HR Distance Verification</h6>
-                                                <p class="mb-0 text-muted small">Please verify the distance entered by HR</p>
-                                                <?php else: ?>
-                                                <h6 class="mb-0 fw-bold">Distance Verification Required</h6>
-                                                <?php endif; ?>
+                                                <p class="mb-0 text-muted small">Travel distance for this date</p>
                                             </div>
                                         </div>
-                                        <div class="d-flex align-items-baseline" id="total-distance-display-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display:none !important;"' : '' ?>>
-                                            <h4 class="mb-0 fw-bold text-primary"><?= number_format($totalDistance, 0) ?></h4>
+                                        <div class="d-flex align-items-baseline">
+                                            <?php 
+                                            // Calculate total distance from the expenses
+                                            $calculatedTotalDistance = 0;
+                                            foreach($user_expenses as $exp) {
+                                                if (!empty($exp['distance']) && is_numeric($exp['distance'])) {
+                                                    $calculatedTotalDistance += $exp['distance'];
+                                                }
+                                            }
+                                            ?>
+                                            <h4 class="mb-0 fw-bold text-primary"><?= number_format($calculatedTotalDistance, 0) ?></h4>
                                             <span class="ms-1 text-muted">kilometers</span>
                                         </div>
-                                        <!-- No hidden text placeholder -->
                                     </div>
                                     
-                                    <!-- Distance confirmation input -->
-                                    <form class="distance-confirmation-form" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>" data-total-distance="<?= $totalDistance ?>">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-md-7 col-lg-8">
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-image"></i></span>
-                                                    <input type="number" class="form-control border-start-0 confirmed-distance-input" 
-                                                           placeholder="<?= !empty($expense['hr_confirmed_distance']) ? 'Enter distance to verify HR\'s ' . number_format($expense['hr_confirmed_distance'], 0) . ' km' : 'Enter distance to verify: ' . number_format($totalDistance, 0) . ' km' ?>" 
-                                                           step="any" min="0"
-                                                           value=""
-                                                           required>
-                                                    <span class="input-group-text">km</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5 col-lg-4">
-                                                <button type="submit" class="btn btn-success w-100 confirm-distance-btn">
-                                                    <i class="bi bi-check-circle me-1"></i> I Checked
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Distance comparison options (initially hidden) -->
-                                        <div class="mt-3 distance-comparison-options" style="display: none;">
-                                            <div class="alert alert-warning d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <span class="comparison-message">The distance you entered is less than the claimed distance.</span>
-                                                </div>
-                                                <div class="btn-group btn-group-sm ms-3">
-                                                    <button type="button" class="btn btn-outline-primary edit-anyway-btn" title="Continue editing despite distance mismatch">
-                                                        <i class="bi bi-pencil"></i> Edit Anyway
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-danger reject-all-btn" title="Reject all expenses due to distance mismatch">
-                                                        <i class="bi bi-x-circle"></i> Reject All
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mt-2 confirmation-status small">
-                                            <?php if (!empty($expense['confirmed_distance'])): ?>
-                                                <div class="text-success">
-                                                    <i class="bi bi-check-circle-fill"></i> 
-                                                    Distance Checked: <?= number_format($expense['confirmed_distance'], 0) ?> km
-                                                    <?php if (!empty($expense['distance_confirmed_by'])): ?>
-                                                        by <?= htmlspecialchars($expense['distance_confirmed_by']) ?>
-                                                    <?php endif; ?>
-                                                    <?php if (!empty($expense['distance_confirmed_at'])): ?>
-                                                        on <?= date('d M Y H:i', strtotime($expense['distance_confirmed_at'])) ?>
-                                                    <?php endif; ?>
-                                                </div>
-                                                
-                                                <?php if (!empty($expense['hr_confirmed_distance'])): ?>
-                                                    <div class="text-info mt-1">
-                                                        <i class="bi bi-check-circle-fill"></i> 
-                                                        HR Verified: <?= number_format($expense['hr_confirmed_distance'], 0) ?> km
-                                                        <?php 
-                                                        // Get HR name if we have hr_id
-                                                        if (!empty($expense['hr_id'])) {
-                                                            $hrQuery = "SELECT username FROM users WHERE id = :hr_id";
-                                                            $hrStmt = $pdo->prepare($hrQuery);
-                                                            $hrStmt->bindParam(':hr_id', $expense['hr_id'], PDO::PARAM_INT);
-                                                            $hrStmt->execute();
-                                                            $hrName = $hrStmt->fetchColumn();
-                                                            if ($hrName) {
-                                                                echo " by " . htmlspecialchars($hrName);
-                                                            }
-                                                        }
-                                                        ?>
-                                                        <?php if (!empty($expense['hr_confirmed_at'])): ?>
-                                                            on <?= date('d M Y H:i', strtotime($expense['hr_confirmed_at'])) ?>
-                                                        <?php endif; ?>
-                                                    </div>
+                                    <?php if (!empty($expense['confirmed_distance']) || !empty($expense['hr_confirmed_distance'])): ?>
+                                    <div class="mt-2 small">
+                                        <?php if (!empty($expense['confirmed_distance'])): ?>
+                                            <div class="text-success">
+                                                <i class="bi bi-check-circle-fill"></i> 
+                                                Distance Checked: <?= number_format($expense['confirmed_distance'], 0) ?> km
+                                                <?php if (!empty($expense['distance_confirmed_by'])): ?>
+                                                    by <?= htmlspecialchars($expense['distance_confirmed_by']) ?>
                                                 <?php endif; ?>
-                                                                                            <?php elseif (!empty($expense['hr_confirmed_distance'])): ?>
-                                                <!-- HR verification info is hidden until PM verifies -->
-                                                <div class="text-warning">
-                                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                                    Please verify the distance to view expense details
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="text-warning">
-                                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                                    Please confirm the distance to view expense details
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </form>
-                                </div>
-                                
-                                <!-- Placeholder message when expenses table is hidden -->
-                                <div class="expenses-placeholder text-center py-3 border-bottom" id="expenses-placeholder-<?= $modal_id ?>" <?= !empty($expense['confirmed_distance']) ? 'style="display:none;"' : '' ?>>
-                                    <div class="py-2">
-                                        <div class="d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-lock-fill text-warning fs-1 me-3"></i>
-                                            <div class="text-start">
-                                                <h5 class="fw-bold mb-1">Expense Details Locked</h5>
-                                                <?php if (!empty($expense['hr_confirmed_distance'])): ?>
-                                                    <p class="text-muted mb-0 small">Please verify the HR-confirmed distance to unlock</p>
-                                                <?php else: ?>
-                                                <p class="text-muted mb-0 small"><i class="bi bi-info-circle-fill"></i> Enter the exact distance to unlock expense details</p>
+                                                <?php if (!empty($expense['distance_confirmed_at'])): ?>
+                                                    on <?= date('d M Y H:i', strtotime($expense['distance_confirmed_at'])) ?>
                                                 <?php endif; ?>
                                             </div>
-                                        </div>
+                                        <?php endif; ?>
+                                        
+                                        <?php if (!empty($expense['hr_confirmed_distance'])): ?>
+                                            <div class="text-info mt-1">
+                                                <i class="bi bi-check-circle-fill"></i> 
+                                                HR Verified: <?= number_format($expense['hr_confirmed_distance'], 0) ?> km
+                                                <?php 
+                                                // Get HR name if we have hr_id
+                                                if (!empty($expense['hr_id'])) {
+                                                    $hrQuery = "SELECT username FROM users WHERE id = :hr_id";
+                                                    $hrStmt = $pdo->prepare($hrQuery);
+                                                    $hrStmt->bindParam(':hr_id', $expense['hr_id'], PDO::PARAM_INT);
+                                                    $hrStmt->execute();
+                                                    $hrName = $hrStmt->fetchColumn();
+                                                    if ($hrName) {
+                                                        echo " by " . htmlspecialchars($hrName);
+                                                    }
+                                                }
+                                                ?>
+                                                <?php if (!empty($expense['hr_confirmed_at'])): ?>
+                                                    on <?= date('d M Y H:i', strtotime($expense['hr_confirmed_at'])) ?>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <!-- Attendance Photos Section -->
@@ -1983,7 +2032,7 @@ try {
                                 </script>
                                 
                                 <!-- Expenses table with clean design -->
-                                <div class="table-responsive expenses-table-container" id="expenses-table-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display:none;"' : '' ?>>
+                                <div class="table-responsive expenses-table-container" id="expenses-table-<?= $modal_id ?>" style="display:block;">
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
@@ -2207,7 +2256,7 @@ try {
                                     </div>
                                     
                                     <?php if ($pending_count > 0): ?>
-                                    <div class="btn-group btn-group-sm flex-wrap" id="all-actions-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display: none;"' : '' ?>>
+                                    <div class="btn-group btn-group-sm flex-wrap" id="all-actions-<?= $modal_id ?>" style="display: flex;">
                                         <button class="btn btn-success bulk-action" data-action="approve-all" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>">
                                                             <i class="bi bi-check-all"></i> Check All (<?= $pending_count ?>)
                                                         </button>
@@ -2217,12 +2266,10 @@ try {
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!-- Message when distance not confirmed -->
-                                    <?php if (empty($expense['confirmed_distance'])): ?>
-                                    <div class="text-warning" id="footer-message-<?= $modal_id ?>">
-                                        <i class="bi bi-info-circle"></i> Confirm distance to enable approval actions
+                                    <!-- Footer info message -->
+                                    <div class="text-info" id="footer-message-<?= $modal_id ?>" style="display:none;">
+                                        <i class="bi bi-info-circle"></i> Select expenses to approve or reject
                                     </div>
-                                    <?php endif; ?>
                                 </div>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             </div>
@@ -2245,6 +2292,55 @@ try {
                     }
                     .clickable-row {
                         cursor: pointer;
+                    }
+                    .locked-row {
+                        cursor: not-allowed;
+                        opacity: 0.75;
+                        background-color: #f9f9f9;
+                        position: relative;
+                        filter: blur(0.3px);
+                    }
+                    .locked-row:hover {
+                        background-color: #f5f5f5;
+                        filter: blur(0);
+                        transition: filter 0.2s ease;
+                    }
+                    .lock-icon {
+                        font-size: 0.9rem;
+                        color: #dc3545;
+                        filter: none;
+                        opacity: 0.9;
+                        margin-top: -2px;
+                    }
+                    .locked-row td {
+                        color: #555;
+                    }
+                    .awaiting-badge {
+                        font-size: 0.65rem;
+                        padding: 0.18rem 0.5rem;
+                        background-color: rgba(220, 53, 69, 0.08);
+                        color: #dc3545;
+                        border: 1px solid rgba(220, 53, 69, 0.2);
+                        border-radius: 12px;
+                        font-weight: 500;
+                        display: inline-flex;
+                        align-items: center;
+                        margin-left: 8px;
+                        filter: none !important;
+                        vertical-align: middle;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                        letter-spacing: 0.01em;
+                        white-space: nowrap;
+                    }
+                    
+                    .awaiting-badge::before {
+                        content: '';
+                        display: inline-block;
+                        width: 5px;
+                        height: 5px;
+                        background-color: #dc3545;
+                        border-radius: 50%;
+                        margin-right: 5px;
                     }
                     
                     /* Attendance photo styles */
@@ -2816,6 +2912,42 @@ try {
                 });
             });
             
+            // Handle locked rows
+            document.querySelectorAll('.locked-row').forEach(row => {
+                // Get awaiting text from the badge
+                const awaitingBadge = row.querySelector('.awaiting-badge');
+                const awaitingText = awaitingBadge ? awaitingBadge.textContent.trim() : '';
+                
+                // Initialize Bootstrap tooltip with specific message
+                const tooltipTitle = `This expense is locked (${awaitingText})`;
+                const tooltip = new bootstrap.Tooltip(row, {
+                    title: tooltipTitle,
+                    placement: 'top',
+                    trigger: 'hover',
+                    html: true
+                });
+                
+                // Add click handler to show message
+                row.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on a button, link, or checkbox inside the row
+                    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.form-check')) {
+                        return;
+                    }
+                    
+                    // Show toast notification with specific message
+                    showToast(`This expense is locked - ${awaitingText}`, 'warning');
+                });
+                
+                // Add subtle visual feedback on hover
+                row.addEventListener('mouseenter', function() {
+                    this.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.03)';
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    this.style.boxShadow = '';
+                });
+            });
+            
             // Handle checkbox selection for bulk actions
             document.querySelectorAll('.select-all-expenses').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
@@ -3334,55 +3466,67 @@ try {
                         return;
                     }
                     
-                    // First check if HR has already verified a distance
-                    fetch(`ajax_handlers/check_confirmed_distance.php?user_id=${userId}&travel_date=${travelDate}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.hr_confirmed_distance) {
-                            // HR has verified, compare with HR's distance with tolerance
-                            const hrDistance = parseFloat(data.hr_confirmed_distance);
-                            if (Math.abs(confirmedDistance - hrDistance) <= 2) {
-                                // Within tolerance, proceed with saving
-                                proceedWithSaving(form, userId, travelDate, confirmedDistance);
-                            } else {
-                                // Outside tolerance, show comparison options
-                                comparisonMessage.textContent = `Your distance (${confirmedDistance} km) differs from HR's distance. Please verify.`;
-                                comparisonOptions.style.display = 'block';
-                                
-                                // Reset submit button
-                                submitButton.disabled = false;
-                                submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
-                            }
-                        } else {
-                            // HR has not verified, compare with total claimed distance
-                            if (confirmedDistance < totalDistance) {
-                                // Show comparison options
-                                comparisonMessage.textContent = `The distance you entered (${confirmedDistance} km) is less than the claimed distance. Please verify your input.`;
-                                comparisonOptions.style.display = 'block';
-                                
-                                // Reset submit button
-                                submitButton.disabled = false;
-                                submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
-                            } else {
-                                // Distance is equal or greater than total, proceed with saving
-                                proceedWithSaving(form, userId, travelDate, confirmedDistance);
-                            }
+                    // Check if the entered distance matches the claimed distance (with small tolerance)
+                    if (Math.abs(confirmedDistance - totalDistance) <= 1) {
+                        // Distance matches - show the expense table
+                        const expensesTable = document.getElementById('expenses-table-' + modalId);
+                        const expensesPlaceholder = document.getElementById('expenses-placeholder-' + modalId);
+                        
+                        if (expensesTable) {
+                            expensesTable.style.display = 'block';
+                            // Add a highlight effect to the table
+                            expensesTable.classList.add('border-success');
+                            setTimeout(() => {
+                                expensesTable.classList.remove('border-success');
+                            }, 2000);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error checking HR distance:', error);
-                        // Fallback to original behavior if API call fails
-                        if (confirmedDistance < totalDistance) {
-                            comparisonMessage.textContent = `The distance you entered (${confirmedDistance} km) is less than the claimed distance. Please verify your input.`;
-                            comparisonOptions.style.display = 'block';
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
-                        } else {
-                            proceedWithSaving(form, userId, travelDate, confirmedDistance);
+                        
+                        if (expensesPlaceholder) {
+                            expensesPlaceholder.style.display = 'none';
                         }
-                    });
+                        
+                        // Update button state
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Verified';
+                        
+                        // Show success message
+                        showToast('Distance verified successfully! Expense details unlocked.', 'success');
+                        
+                        // Show bulk action buttons and hide footer message
+                        const allActionsDiv = document.getElementById('all-actions-' + modalId);
+                        const footerMessage = document.getElementById('footer-message-' + modalId);
+                        
+                        if (allActionsDiv) {
+                            allActionsDiv.style.display = 'flex';
+                        }
+                        
+                        if (footerMessage) {
+                            footerMessage.style.display = 'none';
+                        }
+                        
+                        // Update confirmation status
+                        confirmationStatus.innerHTML = `
+                            <div class="text-success">
+                                <i class="bi bi-check-circle-fill"></i> 
+                                Distance verified: ${confirmedDistance} km matches claimed distance
+                            </div>
+                        `;
+                    } else {
+                        // Distance doesn't match - show comparison options
+                        comparisonMessage.textContent = `The distance you entered (${confirmedDistance} km) doesn't match the claimed distance (${totalDistance} km). Please verify your input.`;
+                        comparisonOptions.style.display = 'block';
+                        
+                        // Reset submit button
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
+                        
+                        // Keep table hidden
+                        const expensesTable = document.getElementById('expenses-table-' + modalId);
+                        if (expensesTable) {
+                            expensesTable.style.display = 'none';
+                        }
+                    }
                     
-                    // Don't proceed immediately - the API call will handle it
                     return;
                 });
                 
@@ -4269,6 +4413,7 @@ try {
                 const week = document.getElementById('week').value;
                 const year = document.getElementById('year').value;
                 const approvalStatus = document.getElementById('approval_status').value;
+                const hrAccountantStatus = document.getElementById('hr_accountant_status').value;
                 const search = document.getElementById('search').value;
                 
                 // Build the export URL with the current filters
@@ -4281,6 +4426,9 @@ try {
                 if (approvalStatus && approvalStatus !== 'All Approvals') {
                     exportUrl += `role_status=${encodeURIComponent(approvalStatus.toLowerCase().replace(' ', '_'))}&`;
                 }
+                if (hrAccountantStatus) {
+                    exportUrl += `hr_accountant_status=${encodeURIComponent(hrAccountantStatus)}&`;
+                }
                 if (search) exportUrl += `search=${encodeURIComponent(search)}&`;
                 
                 // Remove trailing & if present
@@ -4291,6 +4439,54 @@ try {
                 // Redirect to the export URL
                 window.location.href = exportUrl;
             });
+        });
+    </script>
+    
+    <!-- HR and Accountant filter enhancement -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const hrAccountantFilter = document.getElementById('hr_accountant_status');
+            
+            if (hrAccountantFilter) {
+                // Add icons to the options for better visual cues
+                Array.from(hrAccountantFilter.options).forEach(option => {
+                    if (option.value === 'HR and Accountant Approved') {
+                        option.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + option.innerHTML;
+                    } else if (option.value === 'HR and Accountant Pending') {
+                        option.innerHTML = '<i class="bi bi-exclamation-circle-fill me-1"></i> ' + option.innerHTML;
+                    } else if (option.value === 'HR Pending') {
+                        option.innerHTML = '<i class="bi bi-clock-fill me-1"></i> ' + option.innerHTML;
+                    } else if (option.value === 'Accountant Pending') {
+                        option.innerHTML = '<i class="bi bi-clock-fill me-1"></i> ' + option.innerHTML;
+                    }
+                });
+                
+                // Add a badge to indicate the filter is active
+                hrAccountantFilter.addEventListener('change', function() {
+                    const filterSection = document.querySelector('.card-header');
+                    const existingBadge = document.getElementById('approval-filter-badge');
+                    
+                    if (this.value && !existingBadge) {
+                        const badge = document.createElement('span');
+                        badge.id = 'approval-filter-badge';
+                        badge.className = 'badge bg-primary ms-2';
+                        badge.innerHTML = '<i class="bi bi-funnel-fill me-1"></i> Approval Filter Active';
+                        filterSection.appendChild(badge);
+                    } else if (!this.value && existingBadge) {
+                        existingBadge.remove();
+                    }
+                });
+                
+                // Initialize the badge if a filter is already selected
+                if (hrAccountantFilter.value) {
+                    const filterSection = document.querySelector('.card-header');
+                    const badge = document.createElement('span');
+                    badge.id = 'approval-filter-badge';
+                    badge.className = 'badge bg-primary ms-2';
+                    badge.innerHTML = '<i class="bi bi-funnel-fill me-1"></i> Approval Filter Active';
+                    filterSection.appendChild(badge);
+                }
+            }
         });
     </script>
     </div> <!-- End of main-content -->

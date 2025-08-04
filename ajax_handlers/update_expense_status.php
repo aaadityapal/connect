@@ -100,9 +100,9 @@ $reasonField = '';
 
 switch ($userRole) {
     case 'Manager':
-    case 'Senior Manager':
+    case 'Senior Manager (Site)':
     case 'Project Manager':
-    case 'Site Manager':
+    case 'Senior Manager (Studio)':
         $statusField = 'manager_status';
         $reasonField = 'manager_reason';
         break;

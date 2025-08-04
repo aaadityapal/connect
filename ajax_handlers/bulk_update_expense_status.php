@@ -30,7 +30,7 @@ try {
     $userRole = $roleStmt->fetchColumn();
     
     // Allow access only to appropriate roles
-    $allowedRoles = ['Purchase Manager', 'HR', 'Finance Manager', 'Accountant'];
+    $allowedRoles = ['Purchase Manager', 'HR', 'Finance Manager', 'Accountant', 'Senior Manager (Site)', 'Senior Manager (Studio)'];
     if (!in_array($userRole, $allowedRoles)) {
         header('Content-Type: application/json');
         echo json_encode([

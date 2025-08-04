@@ -1193,6 +1193,36 @@ try {
             z-index: 1055;
         }
         
+        /* Timeline button styles */
+        .btn-icon-only {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0.4rem;
+            line-height: 1;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .btn-icon-only:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        
+        .btn-icon-only:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-icon-only i {
+            font-size: 1.1rem;
+        }
+        
         /* Mobile optimizations */
         @media (max-width: 767.98px) {
             .modal-dialog-scrollable .modal-content {
@@ -1939,7 +1969,12 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                         <i class="bi bi-receipt me-2"></i> Travel Expenses for <?= htmlspecialchars($expense['username']) ?> on <?= $formatted_date ?>
                                     </h5>
                                 </div>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <div class="d-flex align-items-center">
+                                    <button type="button" class="btn btn-icon-only me-2" id="timeline-btn-<?= $modal_id ?>" title="View Travel Timeline">
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
                             </div>
                             <div class="modal-body p-0">
                                 <!-- User info header -->
@@ -3254,6 +3289,35 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
             expenseModals.forEach(modal => {
                 // Initialize the Bootstrap modal
                 const modalInstance = new bootstrap.Modal(modal);
+                
+                // Handle timeline button click
+                const modalId = modal.id;
+                const timelineBtn = document.getElementById(`timeline-btn-${modalId}`);
+                if (timelineBtn) {
+                    timelineBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        // Prevent event from bubbling up to modal
+                        e.stopPropagation();
+                        
+                        // Get user ID and date from the modal ID
+                        const parts = modalId.split('_');
+                        if (parts.length >= 5) {
+                            const userId = parts[parts.length - 1];
+                            // Reconstruct the date (YYYY-MM-DD)
+                            const year = parts[1];
+                            const month = parts[2];
+                            const day = parts[3];
+                            const travelDate = `${year}-${month}-${day}`;
+                            
+                            // Show the timeline modal
+                            if (window.loadTimelineData) {
+                                window.loadTimelineData(userId, travelDate);
+                                const timelineModal = new bootstrap.Modal(document.getElementById('timelineModal'));
+                                timelineModal.show();
+                            }
+                        }
+                    });
+                }
                 
                 // Handle modal show event
                 modal.addEventListener('show.bs.modal', function() {
@@ -5179,6 +5243,141 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                 // Redirect to the export URL
                 window.location.href = exportUrl;
             });
+        });
+    </script>
+    
+    <?php include 'modals/timeline_modal.php'; ?>
+
+    <script>
+        // Timeline Modal Handling
+        let timelineModal;
+        document.addEventListener('DOMContentLoaded', function() {
+            timelineModal = new bootstrap.Modal(document.getElementById('timelineModal'));
+            
+            // Function to load timeline data
+            function loadTimelineData(userId, travelDate) {
+                const timelineLoader = document.getElementById('timeline-loader');
+                const timelineContent = document.getElementById('timeline-content');
+                
+                // Show loader, hide content
+                timelineLoader.classList.remove('d-none');
+                timelineContent.classList.add('d-none');
+                
+                // Update modal title with date
+                const formattedDate = new Date(travelDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const timelineDate = document.querySelector('#timelineModalLabel .timeline-date');
+                if (timelineDate) {
+                    timelineDate.textContent = `Timeline • ${formattedDate}`;
+                }
+                
+                // Fetch timeline data
+                fetch(`ajax_handlers/get_timeline_data.php?user_id=${userId}&travel_date=${travelDate}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        timelineLoader.classList.add('d-none');
+                        timelineContent.classList.remove('d-none');
+
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to load timeline data');
+                        }
+
+                        // Update user info
+                        const userAvatar = timelineContent.querySelector('.timeline-user-avatar img');
+                        userAvatar.src = data.data.user.profile_picture ? 
+                            `uploads/profile_pictures/${data.data.user.profile_picture}` : 
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(data.data.user.username)}&background=4361ee&color=fff`;
+                        
+                        timelineContent.querySelector('.timeline-username').textContent = data.data.user.username;
+                        timelineContent.querySelector('.timeline-date-info').textContent = 
+                            new Date(travelDate).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+
+                        // Generate timeline events
+                        const timelineEvents = timelineContent.querySelector('.timeline-events');
+                        timelineEvents.innerHTML = '';
+
+                        if (data.data.logs.length === 0) {
+                            timelineEvents.innerHTML = `
+                                <div class="text-center text-muted p-4">
+                                    <i class="bi bi-calendar-x"></i>
+                                    <p class="mt-2 mb-0 small">No site in/out logs found for this date</p>
+                                </div>
+                            `;
+                            return;
+                        }
+
+                        data.data.logs.forEach(log => {
+                            const eventTime = new Date(log.timestamp);
+                            const formattedTime = eventTime.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            const eventHtml = `
+                                <div class="timeline-event event-${log.action.toLowerCase()}">
+                                    <div class="timeline-event-content">
+                                        <div class="timeline-event-time">${formattedTime}</div>
+                                        <div class="timeline-event-title">
+                                            Site ${log.action.charAt(0).toUpperCase() + log.action.slice(1)}
+                                            ${log.geofence_location_id ? 
+                                                `<span class="badge bg-${log.status_type} text-white ms-1" style="font-size: 0.7rem;">
+                                                    ${log.display_name}
+                                                    ${!log.status_indicators.is_active_site ? 
+                                                        `<i class="bi bi-exclamation-triangle-fill ms-1" title="Inactive Site"></i>` : 
+                                                        ''}
+                                                </span>` : 
+                                                ''}
+                                        </div>
+                                        <div class="timeline-event-details">
+                                        <div class="timeline-event-location">
+                                            <i class="bi bi-geo-alt"></i>
+                                            <div class="timeline-event-location-text">
+                                                ${log.address || 'Location not available'}
+                                                ${log.status_indicators.has_coordinates ? 
+                                                    `<div class="text-muted mt-1" style="font-size: 0.65rem;">
+                                                        <i class="bi bi-cursor me-1"></i>
+                                                        ${log.latitude}, ${log.longitude}
+                                                    </div>` : 
+                                                    ''}
+                                            </div>
+                                            ${log.calculated_distance !== undefined ? 
+                                                `<div class="timeline-event-distance ${log.is_within_radius ? 'bg-success-subtle' : 'bg-warning-subtle'}">
+                                                    ${(log.calculated_distance / 1000).toFixed(2)} km from site
+                                                    ${log.is_within_radius ? 
+                                                        `<i class="bi bi-check-circle-fill ms-1 text-success" title="Within geofence radius"></i>` : 
+                                                        `<i class="bi bi-exclamation-circle-fill ms-1 text-warning" title="Outside geofence radius"></i>`
+                                                    }
+                                                </div>` : 
+                                                ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            timelineEvents.insertAdjacentHTML('beforeend', eventHtml);
+                        });
+                    })
+                    .catch(error => {
+                        timelineLoader.classList.add('d-none');
+                        timelineContent.classList.remove('d-none');
+                        timelineContent.innerHTML = `
+                            <div class="alert alert-danger m-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                ${error.message || 'Failed to load timeline data'}
+                            </div>
+                        `;
+                    });
+            }
+            
+            // Expose the function globally
+            window.loadTimelineData = loadTimelineData;
         });
     </script>
 </body>

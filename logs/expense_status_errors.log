@@ -1,0 +1,76 @@
+2025-08-04 10:08:47 - ERROR DETAILS:
+Message: Database error: SQLSTATE[HY093]: Invalid parameter number
+Code: HY093
+Query: UPDATE travel_expenses 
+                   SET accountant_status = :new_status,
+                       accountant_reason = :reason,
+                       updated_by = :updated_by,
+                       updated_at = NOW(),
+                       destination_verified = :destination_verified,
+                       policy_verified = :policy_verified,
+                       meter_verified = :meter_verified, status = 'rejected', manager_status = 'rejected', manager_reason = :cascade_reason, hr_status = 'rejected', hr_reason = :cascade_reason, rejection_cascade = :rejection_cascade WHERE id = :expense_id
+User ID: 33
+User Role: Purchase Manager
+Action: reject
+Expense ID: 559
+Status Field: accountant_status
+Trace: #0 C:\xampp\htdocs\hr\ajax_handlers\update_expense_status.php(236): PDOStatement->execute()
+#1 {main}
+
+2025-08-04 10:09:21 - ERROR DETAILS:
+Message: Database error: SQLSTATE[HY093]: Invalid parameter number
+Code: HY093
+Query: UPDATE travel_expenses 
+                   SET accountant_status = :new_status,
+                       accountant_reason = :reason,
+                       updated_by = :updated_by,
+                       updated_at = NOW(),
+                       destination_verified = :destination_verified,
+                       policy_verified = :policy_verified,
+                       meter_verified = :meter_verified, status = 'rejected', manager_status = 'rejected', manager_reason = :cascade_reason, hr_status = 'rejected', hr_reason = :cascade_reason, rejection_cascade = :rejection_cascade WHERE id = :expense_id
+User ID: 33
+User Role: Purchase Manager
+Action: reject
+Expense ID: 559
+Status Field: accountant_status
+Trace: #0 C:\xampp\htdocs\hr\ajax_handlers\update_expense_status.php(236): PDOStatement->execute()
+#1 {main}
+
+2025-08-04 10:12:10 - ERROR DETAILS:
+Message: Database error: SQLSTATE[HY093]: Invalid parameter number
+Code: HY093
+Query: UPDATE travel_expenses 
+                   SET accountant_status = :new_status,
+                       accountant_reason = :reason,
+                       updated_by = :updated_by,
+                       updated_at = NOW(),
+                       destination_verified = :destination_verified,
+                       policy_verified = :policy_verified,
+                       meter_verified = :meter_verified, status = 'rejected', manager_status = 'rejected', manager_reason = :cascade_reason, hr_status = 'rejected', hr_reason = :cascade_reason, rejection_cascade = :rejection_cascade WHERE id = :expense_id
+User ID: 33
+User Role: Purchase Manager
+Action: reject
+Expense ID: 537
+Status Field: accountant_status
+Trace: #0 C:\xampp\htdocs\hr\ajax_handlers\update_expense_status.php(224): PDOStatement->execute()
+#1 {main}
+
+2025-08-04 10:12:49 - ERROR DETAILS:
+Message: Database error: SQLSTATE[HY093]: Invalid parameter number
+Code: HY093
+Query: UPDATE travel_expenses 
+                   SET accountant_status = :new_status,
+                       accountant_reason = :reason,
+                       updated_by = :updated_by,
+                       updated_at = NOW(),
+                       destination_verified = :destination_verified,
+                       policy_verified = :policy_verified,
+                       meter_verified = :meter_verified, status = 'rejected', manager_status = 'rejected', manager_reason = :cascade_reason, hr_status = 'rejected', hr_reason = :cascade_reason, rejection_cascade = :rejection_cascade WHERE id = :expense_id
+User ID: 33
+User Role: Purchase Manager
+Action: reject
+Expense ID: 537
+Status Field: accountant_status
+Trace: #0 C:\xampp\htdocs\hr\ajax_handlers\update_expense_status.php(224): PDOStatement->execute()
+#1 {main}
+

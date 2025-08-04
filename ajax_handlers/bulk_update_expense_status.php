@@ -124,22 +124,54 @@ try {
                  SET $statusField = :status, 
                      $reasonField = :reason,
                      updated_at = NOW(), 
-                     updated_by = :updated_by 
-                 WHERE id IN (" . implode(',', array_map('intval', $expenseIds)) . ")
+                     updated_by = :updated_by";
+        
+        // If rejecting, cascade to other roles and set overall status to rejected
+        if ($action === 'reject') {
+            // Generate cascade message and escape it for direct inclusion in SQL
+            $cascadeMsg = "Auto-rejected: " . ucfirst(str_replace('_status', '', $statusField)) . " rejected - " . substr($reason, 0, 50);
+            $cascadeMsgEscaped = $pdo->quote($cascadeMsg);
+            
+            // Set overall status to rejected
+            $query .= ", status = 'rejected'";
+            
+            // Add rejection_cascade field to track who initiated the rejection
+            $rejectionFlag = strtoupper(str_replace('_status', '', $statusField)) . '_REJECTED';
+            $rejectionFlagEscaped = $pdo->quote($rejectionFlag);
+            $query .= ", rejection_cascade = $rejectionFlagEscaped";
+            
+            // Add cascade fields directly to the update query based on the current role
+            // Use direct string values instead of parameter binding to avoid the parameter binding issue
+            if ($statusField === 'manager_status') {
+                $query .= ", accountant_status = 'rejected', accountant_reason = $cascadeMsgEscaped";
+                $query .= ", hr_status = 'rejected', hr_reason = $cascadeMsgEscaped";
+            } elseif ($statusField === 'accountant_status') {
+                $query .= ", manager_status = 'rejected', manager_reason = $cascadeMsgEscaped";
+                $query .= ", hr_status = 'rejected', hr_reason = $cascadeMsgEscaped";
+            } elseif ($statusField === 'hr_status') {
+                $query .= ", manager_status = 'rejected', manager_reason = $cascadeMsgEscaped";
+                $query .= ", accountant_status = 'rejected', accountant_reason = $cascadeMsgEscaped";
+            }
+        }
+        
+        $query .= " WHERE id IN (" . implode(',', array_map('intval', $expenseIds)) . ")
                  AND status = 'pending'";
         
         $stmt = $pdo->prepare($query);
         $stmt->bindParam(':status', $newStatus, PDO::PARAM_STR);
         $stmt->bindParam(':reason', $reason, PDO::PARAM_STR);
         $stmt->bindParam(':updated_by', $currentUserId, PDO::PARAM_INT);
+        
+        // No need to bind cascade parameters as we're using direct string values with quote()
+        
         $stmt->execute();
         
         $rowsAffected = $stmt->rowCount();
         
-        // Also update the overall status if this is the final approver
-        if ($statusField === 'hr_status' || 
+        // For approval, update the overall status if this is the final approver
+        if ($action === 'approve' && ($statusField === 'hr_status' || 
             ($statusField === 'accountant_status' && $userRole === 'Purchase Manager') ||
-            ($statusField === 'manager_status' && in_array($userRole, ['HR Manager', 'Finance Manager']))) {
+            ($statusField === 'manager_status' && in_array($userRole, ['HR Manager', 'Finance Manager'])))) {
             
             $overallQuery = "UPDATE travel_expenses 
                            SET status = :status
@@ -158,8 +190,37 @@ try {
                  SET $statusField = :status, 
                      $reasonField = :reason,
                      updated_at = NOW(), 
-                     updated_by = :updated_by 
-                 WHERE user_id = :user_id 
+                     updated_by = :updated_by";
+        
+        // If rejecting, cascade to other roles and set overall status to rejected
+        if ($action === 'reject') {
+            // Generate cascade message and escape it for direct inclusion in SQL
+            $cascadeMsg = "Auto-rejected: " . ucfirst(str_replace('_status', '', $statusField)) . " rejected - " . substr($reason, 0, 50);
+            $cascadeMsgEscaped = $pdo->quote($cascadeMsg);
+            
+            // Set overall status to rejected
+            $query .= ", status = 'rejected'";
+            
+            // Add rejection_cascade field to track who initiated the rejection
+            $rejectionFlag = strtoupper(str_replace('_status', '', $statusField)) . '_REJECTED';
+            $rejectionFlagEscaped = $pdo->quote($rejectionFlag);
+            $query .= ", rejection_cascade = $rejectionFlagEscaped";
+            
+            // Add cascade fields directly to the update query based on the current role
+            // Use direct string values instead of parameter binding to avoid the parameter binding issue
+            if ($statusField === 'manager_status') {
+                $query .= ", accountant_status = 'rejected', accountant_reason = $cascadeMsgEscaped";
+                $query .= ", hr_status = 'rejected', hr_reason = $cascadeMsgEscaped";
+            } elseif ($statusField === 'accountant_status') {
+                $query .= ", manager_status = 'rejected', manager_reason = $cascadeMsgEscaped";
+                $query .= ", hr_status = 'rejected', hr_reason = $cascadeMsgEscaped";
+            } elseif ($statusField === 'hr_status') {
+                $query .= ", manager_status = 'rejected', manager_reason = $cascadeMsgEscaped";
+                $query .= ", accountant_status = 'rejected', accountant_reason = $cascadeMsgEscaped";
+            }
+        }
+        
+        $query .= " WHERE user_id = :user_id 
                  AND travel_date = :travel_date
                  AND status = 'pending'";
         
@@ -169,14 +230,17 @@ try {
         $stmt->bindParam(':updated_by', $currentUserId, PDO::PARAM_INT);
         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         $stmt->bindParam(':travel_date', $travelDate, PDO::PARAM_STR);
+        
+        // No need to bind cascade parameters as we're using direct string values with quote()
+        
         $stmt->execute();
         
         $rowsAffected = $stmt->rowCount();
         
-        // Also update the overall status if this is the final approver
-        if ($statusField === 'hr_status' || 
+        // For approval, update the overall status if this is the final approver
+        if ($action === 'approve' && ($statusField === 'hr_status' || 
             ($statusField === 'accountant_status' && $userRole === 'Purchase Manager') ||
-            ($statusField === 'manager_status' && in_array($userRole, ['HR Manager', 'Finance Manager']))) {
+            ($statusField === 'manager_status' && in_array($userRole, ['HR Manager', 'Finance Manager'])))) {
             
             $overallQuery = "UPDATE travel_expenses 
                            SET status = :status
@@ -249,11 +313,40 @@ try {
     // Rollback transaction on error
     $pdo->rollBack();
     
+    // Log detailed error information
+    $errorMessage = "Database error: " . $e->getMessage();
+    $errorCode = $e->getCode();
+    $errorTrace = $e->getTraceAsString();
+    $errorQuery = isset($query) ? $query : 'Unknown query';
+    
+    // Create detailed error log
+    $detailedError = date('Y-m-d H:i:s') . " - BULK UPDATE ERROR DETAILS:\n" .
+                    "Message: " . $errorMessage . "\n" .
+                    "Code: " . $errorCode . "\n" .
+                    "Query: " . $errorQuery . "\n" .
+                    "User ID: " . $currentUserId . "\n" .
+                    "User Role: " . $userRole . "\n" .
+                    "Action: " . $action . "\n" .
+                    "Status Field: " . $statusField . "\n" .
+                    "Expense IDs: " . (empty($expenseIds) ? 'None' : implode(',', $expenseIds)) . "\n" .
+                    "User ID/Date: " . $userId . " / " . $travelDate . "\n" .
+                    "Trace: " . $errorTrace . "\n\n";
+    
+    // Log to PHP error log
     error_log('Error updating expense status: ' . $e->getMessage());
     
+    // Log to custom file with more details
+    $detailedLogFile = '../logs/expense_status_errors.log';
+    file_put_contents($detailedLogFile, $detailedError, FILE_APPEND);
+    
+    // Return error response with more details in development environment
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
-        'message' => 'Database error occurred while updating expense status'
+        'message' => 'Database error occurred while updating expense status',
+        'debug_info' => [
+            'error' => $errorMessage,
+            'code' => $errorCode
+        ]
     ]);
 }

@@ -999,6 +999,22 @@ try {
             color: #1e40af;
         }
         
+        .badge-mixed {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+        
+        .badge-sm {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+        }
+        
+        .auto-rejected-badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.3rem;
+            margin-right: 0.3rem;
+        }
+        
                 /* Table highlight effect when unlocked */
         .expenses-table-container.border-success {
             border: 2px solid #10b981;
@@ -1457,6 +1473,25 @@ try {
         <!-- Quick Overview Section -->
         <?php include 'components/dashboard_widgets/travel_expenses_overview.php'; ?>
         
+        <!-- Status Legend -->
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                <div>
+                    <strong>Status Guide:</strong>
+                    <p class="mb-1 mt-1">
+                        <span class="badge bg-info me-1">Mixed (1/1)</span> 
+                        indicates that some expenses have different statuses. The format shows 
+                        <span class="badge bg-success me-1 badge-sm">Approved (1)</span> / 
+                        <span class="badge bg-danger me-1 badge-sm">Rejected (1)</span> counts.
+                    </p>
+                    <p class="mb-0">
+                        <small>Click on any row to see all expenses for that employee on that date.</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
         <!-- Results Area -->
         <div class="card">
             <div class="card-header">
@@ -1495,13 +1530,46 @@ try {
                                     // Generate a unique modal ID using date and user_id to ensure proper linking
                                     $modal_id = "modal_" . str_replace(['-', ' '], '_', $date) . "_" . $user_id;
                                     
-                                    // Get status classes
+                                    // Calculate aggregate status for all expenses on this date
+                                    $pending_count = 0;
+                                    $approved_count = 0;
+                                    $rejected_count = 0;
+                                    
+                                    foreach($user_expenses as $exp) {
+                                        $exp_status = strtolower($exp['status']);
+                                        if ($exp_status == 'pending') {
+                                            $pending_count++;
+                                        } elseif ($exp_status == 'approved') {
+                                            $approved_count++;
+                                        } elseif ($exp_status == 'rejected') {
+                                            $rejected_count++;
+                                        }
+                                    }
+                                    
+                                    // Determine overall status class and text
                                     $statusClass = '';
-                                    switch(strtolower($expense['status'])) {
-                                        case 'approved': $statusClass = 'bg-success'; break;
-                                        case 'pending': $statusClass = 'bg-warning text-dark'; break;
-                                        case 'rejected': $statusClass = 'bg-danger'; break;
-                                        default: $statusClass = 'bg-secondary'; break;
+                                    $statusText = '';
+                                    
+                                    if ($pending_count > 0) {
+                                        // If any expense is pending, show pending
+                                        $statusClass = 'bg-warning text-dark';
+                                        $statusText = "Pending";
+                                    } elseif ($approved_count > 0 && $rejected_count > 0) {
+                                        // If mix of approved and rejected, show mixed
+                                        $statusClass = 'bg-info';
+                                        $statusText = "Mixed";
+                                    } elseif ($approved_count > 0) {
+                                        // If all approved
+                                        $statusClass = 'bg-success';
+                                        $statusText = "Approved";
+                                    } elseif ($rejected_count > 0) {
+                                        // If all rejected
+                                        $statusClass = 'bg-danger';
+                                        $statusText = "Rejected";
+                                    } else {
+                                        // Default case
+                                        $statusClass = 'bg-secondary';
+                                        $statusText = "Unknown";
                                     }
                                     
                                     $managerStatusClass = '';
@@ -1579,11 +1647,49 @@ try {
                                     </div>
                                     <?php endif; ?>
                                 </td>
-                                <td><span class="badge <?= $statusClass ?>"><?= ucfirst(htmlspecialchars($expense['status'])) ?></span></td>
+                                <td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars($statusText) ?></span></td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <span class="badge <?= $accountantStatusClass ?> me-1">
-                                            <?= !empty($expense['accountant_status']) ? ucfirst(htmlspecialchars($expense['accountant_status'])) : 'Not Reviewed' ?>
+                                        <?php
+                                        // Calculate accountant status counts
+                                        $acc_pending_count = 0;
+                                        $acc_approved_count = 0;
+                                        $acc_rejected_count = 0;
+                                        
+                                        foreach($user_expenses as $exp) {
+                                            $acc_status = strtolower($exp['accountant_status'] ?? 'pending');
+                                            if ($acc_status == 'pending' || $acc_status == 'not_reviewed' || empty($acc_status)) {
+                                                $acc_pending_count++;
+                                            } elseif ($acc_status == 'approved') {
+                                                $acc_approved_count++;
+                                            } elseif ($acc_status == 'rejected') {
+                                                $acc_rejected_count++;
+                                            }
+                                        }
+                                        
+                                        // Determine accountant status badge
+                                        $acc_status_text = '';
+                                        $acc_status_class = '';
+                                        
+                                        if ($acc_pending_count > 0) {
+                                            $acc_status_class = 'bg-warning text-dark';
+                                            $acc_status_text = "Pending ({$acc_pending_count})";
+                                        } elseif ($acc_approved_count > 0 && $acc_rejected_count > 0) {
+                                            $acc_status_class = 'bg-info';
+                                            $acc_status_text = "Mixed ({$acc_approved_count}/{$acc_rejected_count})";
+                                        } elseif ($acc_approved_count > 0) {
+                                            $acc_status_class = 'bg-success';
+                                            $acc_status_text = "Approved ({$acc_approved_count})";
+                                        } elseif ($acc_rejected_count > 0) {
+                                            $acc_status_class = 'bg-danger';
+                                            $acc_status_text = "Rejected ({$acc_rejected_count})";
+                                        } else {
+                                            $acc_status_class = 'bg-secondary';
+                                            $acc_status_text = "Not Reviewed";
+                                        }
+                                        ?>
+                                        <span class="badge <?= $acc_status_class ?> me-1">
+                                            <?= $acc_status_text ?>
                                         </span>
                                         <?php if (!empty($expense['accountant_reason'])): ?>
                                             <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
@@ -1598,8 +1704,46 @@ try {
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <span class="badge <?= $managerStatusClass ?> me-1">
-                                            <?= !empty($expense['manager_status']) ? ucfirst(htmlspecialchars($expense['manager_status'])) : 'Not Reviewed' ?>
+                                        <?php
+                                        // Calculate manager status counts
+                                        $mgr_pending_count = 0;
+                                        $mgr_approved_count = 0;
+                                        $mgr_rejected_count = 0;
+                                        
+                                        foreach($user_expenses as $exp) {
+                                            $mgr_status = strtolower($exp['manager_status'] ?? 'pending');
+                                            if ($mgr_status == 'pending' || $mgr_status == 'not_reviewed' || empty($mgr_status)) {
+                                                $mgr_pending_count++;
+                                            } elseif ($mgr_status == 'approved') {
+                                                $mgr_approved_count++;
+                                            } elseif ($mgr_status == 'rejected') {
+                                                $mgr_rejected_count++;
+                                            }
+                                        }
+                                        
+                                        // Determine manager status badge
+                                        $mgr_status_text = '';
+                                        $mgr_status_class = '';
+                                        
+                                        if ($mgr_pending_count > 0) {
+                                            $mgr_status_class = 'bg-warning text-dark';
+                                            $mgr_status_text = "Pending ({$mgr_pending_count})";
+                                        } elseif ($mgr_approved_count > 0 && $mgr_rejected_count > 0) {
+                                            $mgr_status_class = 'bg-info';
+                                            $mgr_status_text = "Mixed ({$mgr_approved_count}/{$mgr_rejected_count})";
+                                        } elseif ($mgr_approved_count > 0) {
+                                            $mgr_status_class = 'bg-success';
+                                            $mgr_status_text = "Approved ({$mgr_approved_count})";
+                                        } elseif ($mgr_rejected_count > 0) {
+                                            $mgr_status_class = 'bg-danger';
+                                            $mgr_status_text = "Rejected ({$mgr_rejected_count})";
+                                        } else {
+                                            $mgr_status_class = 'bg-secondary';
+                                            $mgr_status_text = "Not Reviewed";
+                                        }
+                                        ?>
+                                        <span class="badge <?= $mgr_status_class ?> me-1">
+                                            <?= $mgr_status_text ?>
                                         </span>
                                         <?php if (!empty($expense['manager_reason'])): ?>
                                             <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
@@ -1614,8 +1758,46 @@ try {
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <span class="badge <?= $hrStatusClass ?> me-1">
-                                            <?= !empty($expense['hr_status']) ? ucfirst(htmlspecialchars($expense['hr_status'])) : 'Not Reviewed' ?>
+                                        <?php
+                                        // Calculate HR status counts
+                                        $hr_pending_count = 0;
+                                        $hr_approved_count = 0;
+                                        $hr_rejected_count = 0;
+                                        
+                                        foreach($user_expenses as $exp) {
+                                            $hr_status = strtolower($exp['hr_status'] ?? 'pending');
+                                            if ($hr_status == 'pending' || $hr_status == 'not_reviewed' || empty($hr_status)) {
+                                                $hr_pending_count++;
+                                            } elseif ($hr_status == 'approved') {
+                                                $hr_approved_count++;
+                                            } elseif ($hr_status == 'rejected') {
+                                                $hr_rejected_count++;
+                                            }
+                                        }
+                                        
+                                        // Determine HR status badge
+                                        $hr_status_text = '';
+                                        $hr_status_class = '';
+                                        
+                                        if ($hr_pending_count > 0) {
+                                            $hr_status_class = 'bg-warning text-dark';
+                                            $hr_status_text = "Pending ({$hr_pending_count})";
+                                        } elseif ($hr_approved_count > 0 && $hr_rejected_count > 0) {
+                                            $hr_status_class = 'bg-info';
+                                            $hr_status_text = "Mixed ({$hr_approved_count}/{$hr_rejected_count})";
+                                        } elseif ($hr_approved_count > 0) {
+                                            $hr_status_class = 'bg-success';
+                                            $hr_status_text = "Approved ({$hr_approved_count})";
+                                        } elseif ($hr_rejected_count > 0) {
+                                            $hr_status_class = 'bg-danger';
+                                            $hr_status_text = "Rejected ({$hr_rejected_count})";
+                                        } else {
+                                            $hr_status_class = 'bg-secondary';
+                                            $hr_status_text = "Not Reviewed";
+                                        }
+                                        ?>
+                                        <span class="badge <?= $hr_status_class ?> me-1">
+                                            <?= $hr_status_text ?>
                                         </span>
                                         <?php if (!empty($expense['hr_reason'])): ?>
                                             <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
@@ -2383,6 +2565,11 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                                         <span class="badge <?= $managerStatusClass ?> me-1">
                                                             <?= !empty($expense['manager_status']) ? ucfirst(htmlspecialchars($expense['manager_status'])) : 'Not Reviewed' ?>
                                                         </span>
+                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'MANAGER_REJECTED' && strtolower($expense['manager_status']) === 'rejected'): ?>
+                                                            <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
+                                                                <i class="bi bi-arrow-repeat"></i>
+                                                            </span>
+                                                        <?php endif; ?>
                                                         <?php if (!empty($expense['manager_reason'])): ?>
                                                             <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
                                                                     data-bs-toggle="modal" data-bs-target="#reasonModal" 
@@ -2398,6 +2585,11 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                                         <span class="badge <?= $accountantStatusClass ?> me-1">
                                                             <?= !empty($expense['accountant_status']) ? ucfirst(htmlspecialchars($expense['accountant_status'])) : 'Not Reviewed' ?>
                                                         </span>
+                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'ACCOUNTANT_REJECTED' && strtolower($expense['accountant_status']) === 'rejected'): ?>
+                                                            <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
+                                                                <i class="bi bi-arrow-repeat"></i>
+                                                            </span>
+                                                        <?php endif; ?>
                                                         <?php if (!empty($expense['accountant_reason'])): ?>
                                                             <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
                                                                     data-bs-toggle="modal" data-bs-target="#reasonModal" 
@@ -2413,6 +2605,11 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                                         <span class="badge <?= $hrStatusClass ?> me-1">
                                                             <?= !empty($expense['hr_status']) ? ucfirst(htmlspecialchars($expense['hr_status'])) : 'Not Reviewed' ?>
                                                         </span>
+                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'HR_REJECTED' && strtolower($expense['hr_status']) === 'rejected'): ?>
+                                                            <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
+                                                                <i class="bi bi-arrow-repeat"></i>
+                                                            </span>
+                                                        <?php endif; ?>
                                                         <?php if (!empty($expense['hr_reason'])): ?>
                                                             <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
                                                                     data-bs-toggle="modal" data-bs-target="#reasonModal" 

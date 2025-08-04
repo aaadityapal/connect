@@ -176,6 +176,27 @@ try {
     } else {
         // For rejection, immediately set the overall status to rejected
         $updateQuery .= ", status = 'rejected'";
+        
+        // Add cascade fields directly to the update query based on the current role
+        // Use direct string values instead of parameter binding for cascade reasons
+        $cascadeMsg = "Auto-rejected: " . ucfirst(str_replace('_', ' ', $statusField)) . " rejected - " . substr($reason, 0, 50);
+        $cascadeMsgEscaped = $pdo->quote($cascadeMsg); // Safely escape the string
+        $rejectionFlag = strtoupper(str_replace('_status', '', $statusField)) . '_REJECTED';
+        $rejectionFlagEscaped = $pdo->quote($rejectionFlag);
+        
+        if ($statusField === 'manager_status') {
+            $updateQuery .= ", accountant_status = 'rejected', accountant_reason = $cascadeMsgEscaped";
+            $updateQuery .= ", hr_status = 'rejected', hr_reason = $cascadeMsgEscaped";
+        } elseif ($statusField === 'accountant_status') {
+            $updateQuery .= ", manager_status = 'rejected', manager_reason = $cascadeMsgEscaped";
+            $updateQuery .= ", hr_status = 'rejected', hr_reason = $cascadeMsgEscaped";
+        } elseif ($statusField === 'hr_status') {
+            $updateQuery .= ", manager_status = 'rejected', manager_reason = $cascadeMsgEscaped";
+            $updateQuery .= ", accountant_status = 'rejected', accountant_reason = $cascadeMsgEscaped";
+        }
+        
+        // Add rejection_cascade field to track who initiated the rejection
+        $updateQuery .= ", rejection_cascade = $rejectionFlagEscaped";
     }
     
     $updateQuery .= " WHERE id = :expense_id";
@@ -191,6 +212,8 @@ try {
     $updateStmt->bindValue(':destination_verified', $checkDestination ? 1 : 0, PDO::PARAM_INT);
     $updateStmt->bindValue(':policy_verified', $checkPolicy ? 1 : 0, PDO::PARAM_INT);
     $updateStmt->bindValue(':meter_verified', $checkMeter ? 1 : 0, PDO::PARAM_INT);
+    
+    // No need to bind cascade parameters anymore as we're using direct string values with quote()
     
     $updateStmt->execute();
     $rowsAffected = $updateStmt->rowCount();
@@ -214,14 +237,39 @@ try {
     // Rollback transaction on error
     $pdo->rollBack();
     
-    // Log error
+    // Log detailed error information
     $errorMessage = "Database error: " . $e->getMessage();
+    $errorCode = $e->getCode();
+    $errorTrace = $e->getTraceAsString();
+    $errorQuery = isset($updateQuery) ? $updateQuery : 'Unknown query';
+    
+    // Create detailed error log
+    $detailedError = date('Y-m-d H:i:s') . " - ERROR DETAILS:\n" .
+                    "Message: " . $errorMessage . "\n" .
+                    "Code: " . $errorCode . "\n" .
+                    "Query: " . $errorQuery . "\n" .
+                    "User ID: " . $currentUserId . "\n" .
+                    "User Role: " . $userRole . "\n" .
+                    "Action: " . $action . "\n" .
+                    "Expense ID: " . $expenseId . "\n" .
+                    "Status Field: " . $statusField . "\n" .
+                    "Trace: " . $errorTrace . "\n\n";
+    
+    // Log to PHP error log
     error_log($errorMessage);
+    
+    // Log to custom file with more details
+    $detailedLogFile = '../logs/expense_status_errors.log';
+    file_put_contents($detailedLogFile, $detailedError, FILE_APPEND);
     file_put_contents($logFile, date('Y-m-d H:i:s') . " - ERROR: $errorMessage\n", FILE_APPEND);
     
-    // Return error response
+    // Return error response with more details in development environment
     echo json_encode([
         'success' => false,
-        'message' => 'Database error occurred'
+        'message' => 'Database error occurred',
+        'debug_info' => [
+            'error' => $errorMessage,
+            'code' => $errorCode
+        ]
     ]);
 }

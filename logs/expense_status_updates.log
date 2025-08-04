@@ -96,3 +96,26 @@ Format: [timestamp] user_id action status_field new_status reason affected_rows2
 2025-08-04 08:30:23 - User Yojna Sharma (Senior Manager (Studio)) is approveing multiple expenses (621). Updating manager_status. Reason: 
 2025-08-04 08:30:23 - Updated 1 records
 
+2025-08-04 09:58:21 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 559. Updating accountant_status. Reason: rr r r rr r r rr r rr r
+2025-08-04 09:58:21 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 09:59:14 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 537. Updating accountant_status. Reason: g  g g g g g g g gg g
+2025-08-04 09:59:14 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 09:59:32 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 537. Updating accountant_status. Reason: jj  jj  j j j j j j j j j
+2025-08-04 09:59:32 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 10:00:15 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 559. Updating accountant_status. Reason: d d d d d d d d dd  d
+2025-08-04 10:00:15 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 10:08:47 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 559. Updating accountant_status. Reason: jj jj  j j j j j j j j
+2025-08-04 10:08:47 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 10:09:21 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 559. Updating accountant_status. Reason: gg gg  ggg g ggg gg g gg  gg g g
+2025-08-04 10:09:21 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 10:12:10 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 537. Updating accountant_status. Reason: jujujuj uju juju jujuju ju ju ju juju ju ju j
+2025-08-04 10:12:10 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 10:12:49 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 537. Updating accountant_status. Reason: 5bb g g g  g gg  ggg g  g gg
+2025-08-04 10:12:49 - ERROR: Database error: SQLSTATE[HY093]: Invalid parameter number
+2025-08-04 10:15:42 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 559. Updating accountant_status. Reason: dddd d  d d dd  dd  d d d dd
+2025-08-04 10:15:42 - Updated 1 records
+2025-08-04 10:16:11 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 537. Updating accountant_status. Reason: vv  v v v v v v v v v v v v vv  v
+2025-08-04 10:16:11 - Updated 1 records
+2025-08-04 10:32:21 - User Bhuvnesh Sharma (Purchase Manager) is rejecting multiple expenses (557, 558, 560). Updating accountant_status. Reason: r ere re re re rer er er er e r
+2025-08-04 10:32:21 - Updated 3 records
+

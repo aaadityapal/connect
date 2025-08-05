@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Include database connection
-require_once 'includes/db_connect.php'; // Updated path to match project structure
+require_once 'config/db_connect.php';
 
 // Check if expense ID is provided
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -23,8 +23,8 @@ $expense_id = intval($_GET['id']);
 $user_id = $_SESSION['user_id'];
 
 try {
-    // Fetch expense details with all columns - relaxed permission check
-    $stmt = $conn->prepare("
+    // Fetch expense details with all columns including meter photos - relaxed permission check
+    $stmt = $pdo->prepare("
         SELECT 
             te.id,
             te.user_id,
@@ -40,6 +40,8 @@ try {
             te.created_at,
             te.updated_at,
             te.bill_file_path,
+            te.meter_start_photo_path as meter_start_photo,
+            te.meter_end_photo_path as meter_end_photo,
             te.manager_status,
             te.accountant_status,
             te.hr_status,
@@ -53,11 +55,10 @@ try {
         JOIN users u ON te.user_id = u.id
         WHERE te.id = ?
     ");
-    $stmt->bind_param("i", $expense_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $stmt->execute([$expense_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($row = $result->fetch_assoc()) {
+    if ($row) {
         // Return expense details as JSON
         header('Content-Type: application/json');
         echo json_encode($row);

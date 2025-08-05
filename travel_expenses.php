@@ -112,7 +112,9 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/manager/dashboard.css">
-    <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
+    <link rel="stylesheet" href="css/supervisor/new-travel-expense-modal.css">
+    <link rel="stylesheet" href="css/supervisor/approval-status.css">
+    <link rel="stylesheet" href="css/supervisor/expense-detail-modal.css">
     <script>
         // Define togglePanel function globally and early
         window.togglePanel = function() {
@@ -1224,124 +1226,18 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
         </div>
     </div>
     
-    <!-- Travel Expense Modal -->
-    <div class="modal fade" id="travelExpenseModal" tabindex="-1" role="dialog" aria-labelledby="travelExpenseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="travelExpenseModalLabel">Add Travel Expense</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="travel-expenses-container">
-                        <form id="travelExpenseForm" class="mb-4">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="purposeOfVisit">Purpose of Visit<span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="purposeOfVisit" placeholder="Enter purpose" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="modeOfTransport">Mode of Transport<span class="text-danger">*</span></label>
-                                        <select class="form-control" id="modeOfTransport" required>
-                                            <option value="">Select mode</option>
-                                            <option value="Car">Car</option>
-                                            <option value="Bike">Bike</option>
-                                            <option value="Taxi">Taxi</option>
-                                            <option value="Bus">Bus</option>
-                                            <option value="Train">Train</option>
-                                            <option value="Auto">Auto</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="fromLocation">From<span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="fromLocation" placeholder="Starting location" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="toLocation">To<span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="toLocation" placeholder="Destination" required>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="travelDate">Date<span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="travelDate" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="approxDistance">Distance (km)<span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="approxDistance" placeholder="Approx distance" min="0" step="0.1" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="totalExpense">Amount (₹)<span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="totalExpense" placeholder="Total expense" min="0" step="0.01" required>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="expenseNotes">Notes</label>
-                                <textarea class="form-control" id="expenseNotes" rows="2" placeholder="Additional notes (optional)"></textarea>
-                            </div>
-                            
-                            <div class="form-group text-right">
-                                <button type="button" class="btn btn-secondary" id="resetExpenseForm">Reset</button>
-                                <button type="button" class="btn btn-primary" id="addExpenseEntry">Add Entry</button>
-                            </div>
-                        </form>
-                        
-                        <hr>
-                        
-                        <div class="travel-expenses-list">
-                            <!-- Expense entries will be added here dynamically -->
-                        </div>
-                        
-                        <div class="travel-expenses-summary" style="display: none;">
-                            <h5>Summary</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p>Total Entries: <span id="totalEntries">0</span></p>
-                                </div>
-                                <div class="col-md-6 text-right">
-                                    <p>Total Amount: ₹<span id="totalAmount">0.00</span></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveAllExpenses">Save All Expenses</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Include the new travel expense modal -->
+    <?php include_once('modals/travel_expense_modal_new.php'); ?>
     
     <!-- Expense Detail Modal -->
     <div class="modal fade" id="expenseDetailModal" tabindex="-1" role="dialog" aria-labelledby="expenseDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="expenseDetailModalLabel">Expense Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content expense-detail-modal">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="expenseDetailModalLabel">
+                        <i class="fas fa-receipt mr-2"></i>Expense Details
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -1355,7 +1251,12 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="printExpenseDetail">
+                        <i class="fas fa-print mr-1"></i>Print
+                    </button>
                 </div>
             </div>
         </div>
@@ -1469,11 +1370,7 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        // Override the save_travel_expenses.php endpoint for the travel expense modal
-        window.travelExpenseEndpoint = 'api/save_travel_expenses.php';
-    </script>
-    <script src="js/supervisor/travel-expense-modal.js"></script>
+    <script src="js/supervisor/new-travel-expense-modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Mobile menu functions
@@ -1554,7 +1451,7 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
             const addTravelExpenseBtn = document.getElementById('addTravelExpenseBtn');
             if (addTravelExpenseBtn) {
                 addTravelExpenseBtn.addEventListener('click', function() {
-                    $('#travelExpenseModal').modal('show');
+                    $('#newTravelExpenseModal').modal('show');
                 });
             }
             
@@ -1562,7 +1459,7 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
             const emptyStateAddBtn = document.getElementById('emptyStateAddBtn');
             if (emptyStateAddBtn) {
                 emptyStateAddBtn.addEventListener('click', function() {
-                    $('#travelExpenseModal').modal('show');
+                    $('#newTravelExpenseModal').modal('show');
                 });
             }
             
@@ -1811,129 +1708,301 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                 // Create HTML for expense details
                 const html = `
                     <div class="expense-detail">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <strong>Purpose:</strong> ${expense.purpose}
+                        <div class="card mb-4 expense-summary-card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Expense Summary
+                                </h5>
                             </div>
-                            <div class="col-md-6">
-                                <strong>Date:</strong> ${formattedDate}
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <strong>From:</strong> ${expense.from_location}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>To:</strong> ${expense.to_location}
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <strong>Mode:</strong> 
-                                <span class="expense-mode ${modeClass}">
-                                    ${modeOfTransport}
-                                </span>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Distance:</strong> ${expense.distance} km
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Amount:</strong> 
-                                <span class="expense-amount">₹${parseFloat(expense.amount).toFixed(2)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <strong>Payment Status:</strong> 
-                                ${getPaymentStatusHTML(expense)}
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-clipboard-list"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Purpose</div>
+                                                <div class="detail-value">${expense.purpose}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Date</div>
+                                                <div class="detail-value">${formattedDate}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">From</div>
+                                                <div class="detail-value">${expense.from_location}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-map-pin"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">To</div>
+                                                <div class="detail-value">${expense.to_location}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-${modeOfTransport.toLowerCase() === 'car' ? 'car' : 
+                                                    modeOfTransport.toLowerCase() === 'bike' ? 'motorcycle' : 
+                                                    modeOfTransport.toLowerCase() === 'bus' ? 'bus' : 
+                                                    modeOfTransport.toLowerCase() === 'train' ? 'train' : 
+                                                    modeOfTransport.toLowerCase() === 'taxi' ? 'taxi' : 
+                                                    modeOfTransport.toLowerCase() === 'auto' ? 'taxi' : 'route'}"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Mode</div>
+                                                <div class="detail-value">
+                                                    <span class="expense-mode ${modeClass}">
+                                                        ${modeOfTransport}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-road"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Distance</div>
+                                                <div class="detail-value">${expense.distance} km</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-rupee-sign"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Amount</div>
+                                                <div class="detail-value expense-amount">₹${parseFloat(expense.amount).toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-money-check-alt"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Payment Status</div>
+                                                <div class="detail-value">${getPaymentStatusHTML(expense)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="detail-item">
+                                            <div class="detail-icon">
+                                                <i class="fas fa-tasks"></i>
+                                            </div>
+                                            <div class="detail-content">
+                                                <div class="detail-label">Approval Status</div>
+                                                <div class="detail-value approval-badges">
+                                                    <span class="approval-badge ${expense.manager_status === 'approved' ? 'approved' : (expense.manager_status === 'rejected' ? 'rejected' : 'pending')}">
+                                                        <i class="fas fa-user-shield"></i> Manager: ${expense.manager_status ? expense.manager_status.charAt(0).toUpperCase() + expense.manager_status.slice(1) : 'Pending'}
+                                                    </span>
+                                                    <span class="approval-badge ${expense.hr_status === 'approved' ? 'approved' : (expense.hr_status === 'rejected' ? 'rejected' : 'pending')}">
+                                                        <i class="fas fa-users"></i> HR: ${expense.hr_status ? expense.hr_status.charAt(0).toUpperCase() + expense.hr_status.slice(1) : 'Pending'}
+                                                    </span>
+                                                    <span class="approval-badge ${expense.accountant_status === 'approved' ? 'approved' : (expense.accountant_status === 'rejected' ? 'rejected' : 'pending')}">
+                                                        <i class="fas fa-calculator"></i> Accounts: ${expense.accountant_status ? expense.accountant_status.charAt(0).toUpperCase() + expense.accountant_status.slice(1) : 'Pending'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
                         ${expense.notes ? `
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <strong>Notes:</strong>
-                                <p class="mt-1">${expense.notes}</p>
+                        <div class="card mb-4 notes-card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-sticky-note mr-2"></i>
+                                    Notes
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="notes-content">
+                                    <i class="fas fa-quote-left text-muted mr-2"></i>
+                                    ${expense.notes}
+                                    <i class="fas fa-quote-right text-muted ml-2"></i>
+                                </div>
                             </div>
                         </div>
                         ` : ''}
                         
-                        ${hasBillFile || expense.bill_file_path ? `
                         <div class="row mb-3">
                             <div class="col-12">
-                                <strong>Bill Receipt:</strong>
-                                <div class="mt-2">
-                                    <!-- Direct PDF link based on the debug output -->
-                                    ${hasPdfPath ? `
-                                        <div class="pdf-container">
-                                            <div class="pdf-icon mb-2">
-                                                <i class="fas fa-file-pdf text-danger" style="font-size: 2.5rem;"></i>
-                                                <span class="ml-2">PDF Receipt</span>
-                                            </div>
-                                            <a href="${expense.bill_file_path}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-file-pdf mr-1"></i> View PDF Receipt
-                                            </a>
-                                        </div>
-                                    ` : expense.bill_file_exists !== false ? `
-                                        ${expense.bill_is_image ? `
-                                            <div class="bill-image-container">
-                                                <img src="${billFileUrl}" alt="Bill Receipt" class="bill-image img-fluid img-thumbnail" onclick="openBillImageModal('${billFileUrl}')">
-                                                <a href="${billFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                    <i class="fas fa-external-link-alt mr-1"></i> View Full Size
-                                                </a>
-                                            </div>
-                                        ` : (expense.bill_is_pdf || isPdf) ? `
-                                            <div class="pdf-container">
-                                                <div class="pdf-icon mb-2">
-                                                    <i class="fas fa-file-pdf text-danger" style="font-size: 2.5rem;"></i>
-                                                    <span class="ml-2">${billFile}</span>
+                                <div class="card receipt-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-receipt mr-2"></i>
+                                            Receipts & Documentation
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            ${hasBillFile || expense.bill_file_path ? `
+                                            <div class="col-md-6 mb-3">
+                                                <div class="receipt-item">
+                                                    <h6 class="receipt-title">Bill Receipt</h6>
+                                                    <div class="receipt-content">
+                                                        ${hasPdfPath ? `
+                                                            <div class="pdf-container">
+                                                                <div class="pdf-icon mb-2">
+                                                                    <i class="fas fa-file-pdf text-danger" style="font-size: 2.5rem;"></i>
+                                                                    <span class="ml-2">PDF Receipt</span>
+                                                                </div>
+                                                                <a href="${expense.bill_file_path}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                    <i class="fas fa-file-pdf mr-1"></i> View PDF Receipt
+                                                                </a>
+                                                            </div>
+                                                        ` : expense.bill_file_exists !== false ? `
+                                                            ${expense.bill_is_image ? `
+                                                                <div class="bill-image-container">
+                                                                    <img src="${billFileUrl}" alt="Bill Receipt" class="bill-image img-fluid img-thumbnail" onclick="openBillImageModal('${billFileUrl}')">
+                                                                    <a href="${billFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                                        <i class="fas fa-external-link-alt mr-1"></i> View Full Size
+                                                                    </a>
+                                                                </div>
+                                                            ` : (expense.bill_is_pdf || isPdf) ? `
+                                                                <div class="pdf-container">
+                                                                    <div class="pdf-icon mb-2">
+                                                                        <i class="fas fa-file-pdf text-danger" style="font-size: 2.5rem;"></i>
+                                                                        <span class="ml-2">${billFile}</span>
+                                                                    </div>
+                                                                    <a href="${billFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-file-pdf mr-1"></i> View PDF Receipt
+                                                                    </a>
+                                                                </div>
+                                                            ` : `
+                                                                <div class="file-container">
+                                                                    <div class="file-icon mb-2">
+                                                                        <i class="fas fa-file text-secondary" style="font-size: 2rem;"></i>
+                                                                        <span class="ml-2">${billFile} ${expense.bill_extension ? `(${expense.bill_extension.toUpperCase()})` : ''}</span>
+                                                                    </div>
+                                                                    <a href="${billFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-download mr-1"></i> Download Receipt
+                                                                    </a>
+                                                                </div>
+                                                            `}
+                                                        ` : `
+                                                            <div class="alert alert-warning">
+                                                                <i class="fas fa-exclamation-triangle mr-1"></i> Bill file not found or not accessible
+                                                                ${billFile ? `
+                                                                <div class="mt-2">
+                                                                    <p>Try direct link:</p>
+                                                                    <a href="uploads/bills/${billFile}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                                        <i class="fas fa-external-link-alt mr-1"></i> Direct Link to File
+                                                                    </a>
+                                                                </div>
+                                                                ` : ''}
+                                                            </div>
+                                                        `}
+                                                    </div>
                                                 </div>
-                                                <a href="${billFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-file-pdf mr-1"></i> View PDF Receipt
-                                                </a>
                                             </div>
-                                        ` : `
-                                            <div class="file-container">
-                                                <div class="file-icon mb-2">
-                                                    <i class="fas fa-file text-secondary" style="font-size: 2rem;"></i>
-                                                    <span class="ml-2">${billFile} ${expense.bill_extension ? `(${expense.bill_extension.toUpperCase()})` : ''}</span>
+                                            ` : ''}
+                                            
+                                            ${expense.meter_start_photo || expense.meter_start_photo_path ? `
+                                            <div class="col-md-6 mb-3">
+                                                <div class="receipt-item">
+                                                    <h6 class="receipt-title">Meter Start Photo</h6>
+                                                    <div class="receipt-content">
+                                                        <div class="meter-image-container">
+                                                            <img src="${expense.meter_start_photo_path || expense.meter_start_photo_url || 'uploads/meter_photos/' + (expense.meter_start_photo || '')}" 
+                                                                alt="Meter Start Photo" 
+                                                                class="bill-image img-fluid img-thumbnail" 
+                                                                onclick="openBillImageModal('${expense.meter_start_photo_path || expense.meter_start_photo_url || 'uploads/meter_photos/' + (expense.meter_start_photo || '')}')">
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <a href="${billFileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-download mr-1"></i> Download Receipt
-                                                </a>
                                             </div>
-                                        `}
-                                    ` : `
-                                        <div class="alert alert-warning">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i> Bill file not found or not accessible
-                                            ${billFile ? `
-                                            <div class="mt-2">
-                                                <p>Try direct link:</p>
-                                                <a href="uploads/bills/${billFile}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="fas fa-external-link-alt mr-1"></i> Direct Link to File
-                                                </a>
+                                            ` : ''}
+                                            
+                                            ${expense.meter_end_photo || expense.meter_end_photo_path ? `
+                                            <div class="col-md-6 mb-3">
+                                                <div class="receipt-item">
+                                                    <h6 class="receipt-title">Meter End Photo</h6>
+                                                    <div class="receipt-content">
+                                                        <div class="meter-image-container">
+                                                            <img src="${expense.meter_end_photo_path || expense.meter_end_photo_url || 'uploads/meter_photos/' + (expense.meter_end_photo || '')}" 
+                                                                alt="Meter End Photo" 
+                                                                class="bill-image img-fluid img-thumbnail" 
+                                                                onclick="openBillImageModal('${expense.meter_end_photo_path || expense.meter_end_photo_url || 'uploads/meter_photos/' + (expense.meter_end_photo || '')}')">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            ` : ''}
+                                            
+                                            ${!hasBillFile && !expense.bill_file_path && !expense.meter_start_photo && !expense.meter_end_photo && !expense.meter_start_photo_path && !expense.meter_end_photo_path ? `
+                                            <div class="col-12">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle mr-2"></i>
+                                                    No receipts or documentation available for this expense.
+                                                </div>
                                             </div>
                                             ` : ''}
                                         </div>
-                                    `}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        ${expense.approval_notes ? `
+                        <div class="card mb-4 notes-card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comment-alt mr-2"></i>
+                                    Approval Notes
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="notes-content">
+                                    <i class="fas fa-quote-left text-muted mr-2"></i>
+                                    ${expense.approval_notes}
+                                    <i class="fas fa-quote-right text-muted ml-2"></i>
                                 </div>
                             </div>
                         </div>
                         ` : ''}
-                        
-                        
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="alert alert-${status === 'approved' ? 'success' : (status === 'rejected' ? 'danger' : 'info')}">
-                                    <i class="fas fa-${status === 'approved' ? 'check-circle' : (status === 'rejected' ? 'times-circle' : 'clock')} mr-2"></i>
-                                    <strong>Status:</strong> <span class="status-indicator ${statusClass}">${statusText}</span>
-                                    ${expense.approval_notes ? `<div class="mt-2"><strong>Approval Notes:</strong> ${expense.approval_notes}</div>` : ''}
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 `;
                 
@@ -2184,6 +2253,76 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                 if (event.target === modal) {
                     closeBillImageModal();
                 }
+            });
+            
+            // Add print functionality for expense details
+            document.getElementById('printExpenseDetail').addEventListener('click', function() {
+                const expenseContent = document.getElementById('expenseDetailContent').innerHTML;
+                const printWindow = window.open('', '_blank');
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Travel Expense Details</title>
+                        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                        <link rel="stylesheet" href="css/supervisor/expense-detail-modal.css">
+                        <link rel="stylesheet" href="css/supervisor/approval-status.css">
+                        <style>
+                            body {
+                                padding: 20px;
+                                font-family: Arial, sans-serif;
+                            }
+                            .print-header {
+                                text-align: center;
+                                margin-bottom: 20px;
+                                padding-bottom: 20px;
+                                border-bottom: 2px solid #ddd;
+                            }
+                            .print-header h1 {
+                                font-size: 24px;
+                                font-weight: bold;
+                            }
+                            .print-footer {
+                                margin-top: 30px;
+                                padding-top: 20px;
+                                border-top: 1px solid #ddd;
+                                text-align: center;
+                                font-size: 12px;
+                                color: #777;
+                            }
+                            @media print {
+                                .no-print {
+                                    display: none;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-header">
+                            <h1>Travel Expense Details</h1>
+                            <p>Generated on ${new Date().toLocaleString()}</p>
+                        </div>
+                        <div class="expense-detail-print">
+                            ${expenseContent}
+                        </div>
+                        <div class="print-footer">
+                            <p>This is a computer-generated document. No signature is required.</p>
+                        </div>
+                        <div class="text-center mt-4 no-print">
+                            <button class="btn btn-primary" onclick="window.print()">
+                                <i class="fas fa-print mr-1"></i> Print
+                            </button>
+                            <button class="btn btn-secondary ml-2" onclick="window.close()">
+                                <i class="fas fa-times mr-1"></i> Close
+                            </button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
             });
             
             /**

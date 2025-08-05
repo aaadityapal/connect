@@ -35,3 +35,30 @@ SET @preparedStatement = (SELECT IF(
 PREPARE createIndexIfNotExists FROM @preparedStatement;
 EXECUTE createIndexIfNotExists;
 DEALLOCATE PREPARE createIndexIfNotExists;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     ALTER TABLE travel_expenses 
+     ADD COLUMN meter_start_photo_path VARCHAR(255) DEFAULT NULL AFTER bill_file_path, 
+     ADD COLUMN meter_end_photo_path VARCHAR(255) DEFAULT NULL AFTER meter_start_photo_path;

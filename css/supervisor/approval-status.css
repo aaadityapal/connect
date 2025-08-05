@@ -1,0 +1,215 @@
+/* Approval Status Styles for Travel Expenses */
+
+/* Card styles */
+.approval-status-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.approval-status-card .card-header {
+    padding: 12px 15px;
+}
+
+.approval-status-card .card-header h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Approval flow styles */
+.approval-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Step styles */
+.approval-step {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    position: relative;
+}
+
+.approval-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 25px;
+    height: 20px;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.approval-step.approved {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 4px solid #28a745;
+}
+
+.approval-step.rejected {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid #dc3545;
+}
+
+.approval-step.pending {
+    background-color: rgba(108, 117, 125, 0.1);
+    border-left: 4px solid #6c757d;
+}
+
+.step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.approval-step.approved .step-icon {
+    background-color: #28a745;
+    color: white;
+}
+
+.approval-step.rejected .step-icon {
+    background-color: #dc3545;
+    color: white;
+}
+
+.approval-step.pending .step-icon {
+    background-color: #6c757d;
+    color: white;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h6 {
+    margin: 0 0 5px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.approval-step.approved .status-badge {
+    background-color: #28a745;
+    color: white;
+}
+
+.approval-step.rejected .status-badge {
+    background-color: #dc3545;
+    color: white;
+}
+
+.approval-step.pending .status-badge {
+    background-color: #6c757d;
+    color: white;
+}
+
+.step-notes {
+    font-size: 0.85rem;
+    margin: 5px 0;
+    color: #495057;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.overall-status {
+    font-size: 1rem;
+}
+
+.approval-notes {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+/* Receipt card styles */
+.receipt-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.receipt-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.receipt-item {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    height: 100%;
+}
+
+.receipt-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.receipt-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.meter-image-container {
+    max-width: 100%;
+    text-align: center;
+}
+
+.meter-image-container img {
+    max-height: 200px;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.meter-image-container img:hover {
+    transform: scale(1.05);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .approval-flow {
+        gap: 15px;
+    }
+    
+    .approval-step {
+        padding: 12px;
+    }
+    
+    .step-icon {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+    }
+    
+    .step-content h6 {
+        font-size: 0.9rem;
+    }
+    
+    .meter-image-container img {
+        max-height: 150px;
+    }
+}

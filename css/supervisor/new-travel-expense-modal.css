@@ -1,0 +1,293 @@
+/* New Travel Expense Modal Styles */
+.modal-dialog.modal-lg {
+    max-width: 900px;
+}
+
+#newTravelExpenseModal .modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+#newTravelExpenseModal .modal-header {
+    background-color: #3498db;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 15px 20px;
+}
+
+#newTravelExpenseModal .modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+#newTravelExpenseModal .close {
+    color: white;
+    opacity: 0.8;
+    text-shadow: none;
+}
+
+#newTravelExpenseModal .close:hover {
+    opacity: 1;
+}
+
+#newTravelExpenseModal .modal-body {
+    padding: 20px;
+}
+
+#newTravelExpenseModal .form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+#newTravelExpenseModal .form-control {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#newTravelExpenseModal .form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+#newTravelExpenseModal .custom-file-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#newTravelExpenseModal .bill-preview,
+#newTravelExpenseModal .meter-photo-preview {
+    margin-top: 10px;
+}
+
+#newTravelExpenseModal .bill-thumbnail img,
+#newTravelExpenseModal .meter-thumbnail img {
+    max-height: 100px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+#newTravelExpenseModal .pdf-icon {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+#newTravelExpenseModal .pdf-icon i {
+    margin-right: 10px;
+    font-size: 24px;
+    color: #e74c3c;
+}
+
+#newTravelExpenseModal .meter-photos-container {
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+}
+
+#newTravelExpenseModal .reused-photo-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* Return Trip Confirmation Modal */
+#returnTripConfirmModal {
+    z-index: 1060; /* Higher than the default Bootstrap modal z-index (1050) */
+}
+
+#returnTripConfirmModal .modal-dialog {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+#returnTripConfirmModal .modal-body {
+    padding: 1.5rem;
+}
+
+#returnTripConfirmModal .from-location,
+#returnTripConfirmModal .to-location {
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+#returnTripConfirmModal .modal-footer {
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+}
+
+#newTravelExpenseModal .expense-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    scrollbar-width: thin;  /* For Firefox */
+    scrollbar-color: rgba(0,0,0,0.1) transparent;  /* For Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+#newTravelExpenseModal .expense-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#newTravelExpenseModal .expense-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#newTravelExpenseModal .expense-modal-body::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 6px;
+}
+
+#newTravelExpenseModal .expenses-list-container {
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+#newTravelExpenseModal .expenses-table-container {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    scrollbar-width: thin;  /* For Firefox */
+    scrollbar-color: rgba(0,0,0,0.1) transparent;  /* For Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+#newTravelExpenseModal .expenses-table-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#newTravelExpenseModal .expenses-table-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#newTravelExpenseModal .expenses-table-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 6px;
+}
+
+#newTravelExpenseModal .expenses-list-container h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+#addedExpensesTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#addedExpensesTable th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    padding: 10px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+#addedExpensesTable td {
+    padding: 10px;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#addedExpensesTable tfoot th {
+    border-top: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    padding: 10px;
+}
+
+#addedExpensesTable .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+#addedExpensesTable .btn-edit {
+    color: #3498db;
+    margin-right: 5px;
+}
+
+#addedExpensesTable .btn-delete {
+    color: #e74c3c;
+}
+
+#addedExpensesTable .no-expenses-row td {
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.expense-row {
+    transition: background-color 0.3s ease;
+}
+
+.expense-row:hover {
+    background-color: #f8f9fa;
+}
+
+.expense-row.fade-out {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#newTravelExpenseModal .modal-footer {
+    border-top: 1px solid #eee;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#addExpenseBtn {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+#addExpenseBtn:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+#saveAllExpensesBtn {
+    background-color: #2ecc71;
+    border-color: #2ecc71;
+}
+
+#saveAllExpensesBtn:hover {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .modal-dialog.modal-lg {
+        max-width: 95%;
+        margin: 10px auto;
+    }
+    
+    #newTravelExpenseModal .form-row {
+        flex-direction: column;
+    }
+    
+    #newTravelExpenseModal .form-group {
+        margin-bottom: 15px;
+    }
+    
+    #addedExpensesTable {
+        display: block;
+        overflow-x: auto;
+    }
+}

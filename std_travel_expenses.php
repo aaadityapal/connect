@@ -226,6 +226,7 @@ $expenses = getExpenses($pdo, $user_id);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
+    <link rel="stylesheet" href="css/supervisor/new-travel-expense-modal.css">
     <style>
         * {
             box-sizing: border-box;
@@ -433,6 +434,31 @@ $expenses = getExpenses($pdo, $user_id);
             width: 80px;
             height: 3px;
             background: #3498db;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .current-filter-badge {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .current-filter-badge i {
+            font-size: 12px;
         }
         
         h2 {
@@ -1114,6 +1140,10 @@ $expenses = getExpenses($pdo, $user_id);
             <div class="container">
                 <div class="page-header">
                     <h1>Travel Expenses Tracker</h1>
+                    <div id="current-filter-info" class="current-filter-badge">
+                        <i class="fas fa-filter mr-1"></i>
+                        <span id="filter-info-text">Loading...</span>
+                    </div>
                 </div>
                 
                 <!-- Travel Expenses Summary Section -->
@@ -1213,8 +1243,8 @@ $expenses = getExpenses($pdo, $user_id);
                             <input type="date" id="filter-date-to" class="filter-date">
                         </div>
                         <div class="filter-actions">
-                            <button id="apply-filters" class="filter-btn apply">Apply Filters</button>
-                            <button id="reset-filters" class="filter-btn reset">Reset</button>
+                            <button id="apply-filters" class="filter-btn apply" onclick="applyFilters()">Apply Filters</button>
+                            <button id="reset-filters" class="filter-btn reset" onclick="resetFilters()">Reset</button>
                         </div>
                     </div>
                 </div>
@@ -1611,89 +1641,40 @@ $expenses = getExpenses($pdo, $user_id);
             const resetFiltersBtn = document.getElementById('reset-filters');
             
             // Apply filters
+            if (applyFiltersBtn) {
             applyFiltersBtn.addEventListener('click', function() {
                 applyFilters();
             });
+            }
             
             // Reset filters
+            if (resetFiltersBtn) {
             resetFiltersBtn.addEventListener('click', function() {
-                filterStatus.value = '';
-                filterMonth.value = '';
-                filterDateFrom.value = '';
-                filterDateTo.value = '';
+                    if (filterStatus) filterStatus.value = '';
+                    if (filterMonth) filterMonth.value = '';
+                    if (filterDateFrom) filterDateFrom.value = '';
+                    if (filterDateTo) filterDateTo.value = '';
                 applyFilters();
             });
-            
-            // Apply filters to expenses list
-            function applyFilters() {
-                console.log('Applying filters...');
-                
-                const status = $('#filter-status').val();
-                const month = $('#filter-month').val();
-                const dateFrom = $('#filter-date-from').val() ? new Date($('#filter-date-from').val()) : null;
-                const dateTo = $('#filter-date-to').val() ? new Date($('#filter-date-to').val()) : null;
-                
-                // Get all loaded expenses from the original data
-                $.ajax({
-                    url: 'get_all_travel_expenses.php',
-                    type: 'GET',
-                    dataType: 'json',
-                    data: { user_id: <?php echo $user_id; ?> },
-                    success: function(allExpenses) {
-                        if (allExpenses.error) {
-                            showTravelExpensesError(allExpenses.error);
-                            return;
-                        }
-                        
-                        console.log('All expenses loaded for filtering:', allExpenses);
-                        
-                        // Apply filters
-                        let filteredExpenses = [...allExpenses];
-                        
-                        // Filter by status
-                        if (status) {
-                            console.log('Filtering by status:', status);
-                            filteredExpenses = filteredExpenses.filter(expense => expense.status === status);
-                        }
-                        
-                        // Filter by month
-                        if (month !== '') {
-                            console.log('Filtering by month:', month);
-                            filteredExpenses = filteredExpenses.filter(expense => {
-                                const expenseDate = new Date(expense.travel_date);
-                                return expenseDate.getMonth() === parseInt(month);
-                            });
-                        }
-                        
-                        // Filter by date range
-                        if (dateFrom) {
-                            console.log('Filtering by date from:', dateFrom);
-                            filteredExpenses = filteredExpenses.filter(expense => {
-                                const expenseDate = new Date(expense.travel_date);
-                                return expenseDate >= dateFrom;
-                            });
-                        }
-                        
-                        if (dateTo) {
-                            console.log('Filtering by date to:', dateTo);
-                            filteredExpenses = filteredExpenses.filter(expense => {
-                                const expenseDate = new Date(expense.travel_date);
-                                return expenseDate <= dateTo;
-                            });
-                        }
-                        
-                        console.log('Filtered expenses:', filteredExpenses);
-                        
-                        // Update table with filtered expenses
-                        displayTravelExpenses(filteredExpenses);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('AJAX Error:', xhr.status, xhr.statusText);
-                        console.error('Response Text:', xhr.responseText);
-                        showTravelExpensesError('Failed to load expenses for filtering. Please try again later.');
-                    }
-                });
             }
+            
+            // Set current month as default after a delay to ensure DOM is ready
+            setTimeout(function() {
+                const currentMonth = new Date().getMonth();
+                console.log('Setting current month:', currentMonth);
+                
+                if (filterMonth) {
+                    filterMonth.value = currentMonth.toString();
+                    console.log('Month filter set to:', filterMonth.value);
+                    
+                    // Trigger change event to show the selection visually
+                    const event = new Event('change', { bubbles: true });
+                    filterMonth.dispatchEvent(event);
+                } else {
+                    console.error('Filter month element not found');
+                }
+            }, 500);
+
             
             // Function to load travel expenses data
             loadTravelExpenses();
@@ -1710,187 +1691,463 @@ $expenses = getExpenses($pdo, $user_id);
                 $('#filter-date-to').val('');
                 applyFilters();
             });
+            
+            // Apply filters on page load with current month selected
+            setTimeout(function() {
+                console.log('Auto-applying filters after page load...');
+                
+                // Check if month filter has a value (should be current month)
+                if (filterMonth && filterMonth.value !== '') {
+                    console.log('Auto-applying filter for current month:', filterMonth.value);
+                    applyFilters();
+                } else {
+                    console.log('No month filter set, loading all expenses');
+                    // Just load all expenses if no month is set
+                    loadTravelExpenses();
+                }
+            }, 1500); // Wait for initial data to load and month to be set
         });
+        
+        // Global helper functions
+        function showTravelExpensesError(message) {
+            const tableBody = $('#travelExpensesTableBody');
+            tableBody.html(`<tr><td colspan="10" class="text-center text-danger">${message}</td></tr>`);
+            
+            // Reset summary cards when there's an error
+            updateSummaryCards([]);
+        }
+        
+        function updateSummaryCards(expenses) {
+            // Get summary card elements
+            const totalExpensesElement = $('#summary-total-expenses');
+            const totalAmountElement = $('#summary-total-amount');
+            const approvedAmountElement = $('#summary-approved-amount');
+            const pendingAmountElement = $('#summary-pending-amount');
+            const rejectedAmountElement = $('#summary-rejected-amount');
+            
+            // Default values
+            let totalExpenses = 0;
+            let totalAmount = 0;
+            let approvedAmount = 0;
+            let pendingAmount = 0;
+            let rejectedAmount = 0;
+            
+            // Calculate values from expenses data
+            if (expenses && expenses.length > 0) {
+                totalExpenses = expenses.length;
+                
+                expenses.forEach(function(expense) {
+                    const amount = parseFloat(expense.amount) || 0;
+                    totalAmount += amount;
+                    
+                    switch(expense.status) {
+                        case 'approved':
+                            approvedAmount += amount;
+                            break;
+                        case 'rejected':
+                            rejectedAmount += amount;
+                            break;
+                        case 'pending':
+                        default:
+                            pendingAmount += amount;
+                            break;
+                    }
+                });
+            }
+            
+            // Format currency values
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(value);
+            };
+            
+            // Update the summary cards
+            if (totalExpensesElement) totalExpensesElement.text(totalExpenses);
+            if (totalAmountElement) totalAmountElement.text(formatCurrency(totalAmount));
+            if (approvedAmountElement) approvedAmountElement.text(formatCurrency(approvedAmount));
+            if (pendingAmountElement) pendingAmountElement.text(formatCurrency(pendingAmount));
+            if (rejectedAmountElement) rejectedAmountElement.text(formatCurrency(rejectedAmount));
+        }
+        
+        function displayTravelExpenses(expenses) {
+            console.log('displayTravelExpenses called with', expenses ? expenses.length : 0, 'expenses');
+            
+            const tableBody = $('#travelExpensesTableBody');
+            tableBody.empty();
+            
+            if (!expenses || expenses.length === 0) {
+                tableBody.html('<tr><td colspan="10" class="text-center">No travel expenses found</td></tr>');
+                updateSummaryCards([]); // Update summary cards with empty data
+                return;
+            }
+            
+            expenses.forEach(function(expense) {
+                // Format date for display
+                const expenseDate = new Date(expense.travel_date);
+                const formattedDate = expenseDate.toLocaleDateString();
+                
+                // Create status badge
+                let statusBadge = '';
+                switch(expense.status) {
+                    case 'approved':
+                        statusBadge = '<span class="badge badge-success">Approved</span>';
+                        break;
+                    case 'rejected':
+                        statusBadge = '<span class="badge badge-danger">Rejected</span>';
+                        break;
+                    case 'pending':
+                    default:
+                        statusBadge = '<span class="badge badge-warning">Pending</span>';
+                        break;
+                }
+                
+                // Create action buttons
+                const viewButton = `<button class="btn btn-sm btn-info view-expense" data-id="${expense.id}" title="View Details"><i class="fas fa-eye"></i></button>`;
+                const deleteButton = `<button class="btn btn-sm btn-danger delete-expense" data-id="${expense.id}" title="Delete"><i class="fas fa-trash"></i></button>`;
+                
+                // Create table row
+                const row = `
+                    <tr>
+                        <td>${expense.id}</td>
+                        <td>${formattedDate}</td>
+                        <td>${expense.purpose}</td>
+                        <td>${expense.from_location}</td>
+                        <td>${expense.to_location}</td>
+                        <td>${expense.mode_of_transport}</td>
+                        <td>${expense.distance} km</td>
+                        <td>₹${parseFloat(expense.amount).toFixed(2)}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="btn-group">
+                                ${viewButton}
+                                ${expense.status === 'pending' ? deleteButton : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                
+                tableBody.append(row);
+            });
+            
+            // Add event listeners for view and delete buttons
+            $('.view-expense').off('click').on('click', function() {
+                const expenseId = $(this).data('id');
+                viewExpenseDetails(expenseId);
+            });
+            
+            $('.delete-expense').off('click').on('click', function() {
+                const expenseId = $(this).data('id');
+                confirmDeleteExpense(expenseId);
+            });
+            
+            // Update summary cards with the expenses data
+            updateSummaryCards(expenses);
+        }
+
+        // Global applyFilters function to ensure it's accessible
+            function applyFilters() {
+                console.log('Applying filters...');
+                
+                const status = $('#filter-status').val();
+                const month = $('#filter-month').val();
+                const dateFrom = $('#filter-date-from').val() ? new Date($('#filter-date-from').val()) : null;
+                const dateTo = $('#filter-date-to').val() ? new Date($('#filter-date-to').val()) : null;
+            
+            console.log('Filter values:', { status, month, dateFrom, dateTo });
+                
+                // Get all loaded expenses from the original data
+                $.ajax({
+                    url: 'get_all_travel_expenses.php',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { user_id: <?php echo $user_id; ?> },
+                    success: function(allExpenses) {
+                    console.log('Raw response:', allExpenses);
+                    
+                        if (allExpenses.error) {
+                            showTravelExpensesError(allExpenses.error);
+                            return;
+                        }
+                        
+                    // Ensure allExpenses is an array
+                    if (!Array.isArray(allExpenses)) {
+                        console.error('Expected array but got:', typeof allExpenses);
+                        showTravelExpensesError('Invalid data format received from server');
+                        return;
+                    }
+                    
+                    console.log('All expenses loaded for filtering:', allExpenses.length, 'items');
+                        
+                        // Apply filters
+                        let filteredExpenses = [...allExpenses];
+                        
+                        // Filter by status
+                    if (status && status !== '') {
+                            console.log('Filtering by status:', status);
+                        filteredExpenses = filteredExpenses.filter(expense => {
+                            return expense.status && expense.status.toLowerCase() === status.toLowerCase();
+                        });
+                        console.log('After status filter:', filteredExpenses.length, 'items');
+                        }
+                        
+                        // Filter by month
+                    if (month !== '' && month !== null) {
+                            console.log('Filtering by month:', month);
+                        const monthInt = parseInt(month);
+                            filteredExpenses = filteredExpenses.filter(expense => {
+                            if (!expense.travel_date) return false;
+                                const expenseDate = new Date(expense.travel_date);
+                            const expenseMonth = expenseDate.getMonth();
+                            console.log('Expense date:', expense.travel_date, 'Month:', expenseMonth, 'Target month:', monthInt);
+                            return expenseMonth === monthInt;
+                            });
+                        console.log('After month filter:', filteredExpenses.length, 'items');
+                        }
+                        
+                        // Filter by date range
+                        if (dateFrom) {
+                            console.log('Filtering by date from:', dateFrom);
+                            filteredExpenses = filteredExpenses.filter(expense => {
+                            if (!expense.travel_date) return false;
+                                const expenseDate = new Date(expense.travel_date);
+                                return expenseDate >= dateFrom;
+                            });
+                        console.log('After date from filter:', filteredExpenses.length, 'items');
+                        }
+                        
+                        if (dateTo) {
+                            console.log('Filtering by date to:', dateTo);
+                        // Set time to end of day for dateTo comparison
+                        const dateToEndOfDay = new Date(dateTo);
+                        dateToEndOfDay.setHours(23, 59, 59, 999);
+                        
+                            filteredExpenses = filteredExpenses.filter(expense => {
+                            if (!expense.travel_date) return false;
+                                const expenseDate = new Date(expense.travel_date);
+                            return expenseDate <= dateToEndOfDay;
+                            });
+                        console.log('After date to filter:', filteredExpenses.length, 'items');
+                        }
+                        
+                    console.log('Final filtered expenses:', filteredExpenses.length, 'items');
+                        
+                        // Update table with filtered expenses
+                        displayTravelExpenses(filteredExpenses);
+                    
+                    // Update filter info badge
+                    updateFilterInfoBadge(status, month, dateFrom, dateTo, filteredExpenses.length);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr.status, xhr.statusText);
+                        console.error('Response Text:', xhr.responseText);
+                        showTravelExpensesError('Failed to load expenses for filtering. Please try again later.');
+                    }
+                });
+            }
+            
+        // Function to update filter info badge
+        function updateFilterInfoBadge(status, month, dateFrom, dateTo, count) {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            let filterText = '';
+            
+            if (status || month !== '' || dateFrom || dateTo) {
+                let filters = [];
+                
+                if (status) {
+                    filters.push(status.charAt(0).toUpperCase() + status.slice(1));
+                }
+                
+                if (month !== '' && month !== null) {
+                    filters.push(monthNames[parseInt(month)] + ' ' + new Date().getFullYear());
+                }
+                
+                if (dateFrom && dateTo) {
+                    filters.push(`${dateFrom.toLocaleDateString()} - ${dateTo.toLocaleDateString()}`);
+                } else if (dateFrom) {
+                    filters.push(`From ${dateFrom.toLocaleDateString()}`);
+                } else if (dateTo) {
+                    filters.push(`Until ${dateTo.toLocaleDateString()}`);
+                }
+                
+                filterText = `Filtered: ${filters.join(', ')} (${count} expenses)`;
+            } else {
+                filterText = `All Expenses (${count} total)`;
+            }
+            
+            $('#filter-info-text').text(filterText);
+        }
+        
+        // Global reset filters function
+        function resetFilters() {
+            console.log('Resetting all filters...');
+                $('#filter-status').val('');
+                $('#filter-month').val('');
+                $('#filter-date-from').val('');
+                $('#filter-date-to').val('');
+            
+            // Load all expenses without filters
+            $.ajax({
+                url: 'get_all_travel_expenses.php',
+                type: 'GET',
+                dataType: 'json',
+                data: { user_id: <?php echo $user_id; ?> },
+                success: function(allExpenses) {
+                    console.log('Reset: All expenses loaded:', allExpenses.length);
+                    displayTravelExpenses(allExpenses);
+                    $('#filter-info-text').text(`All Expenses (${allExpenses.length} total)`);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Reset: AJAX Error:', xhr.status, xhr.statusText);
+                    showTravelExpensesError('Failed to load expenses. Please try again later.');
+                }
+            });
+        }
     </script>
     
-    <!-- Travel Expense Modal -->
-    <div class="modal fade" id="travelExpenseModal" tabindex="-1" role="dialog" aria-labelledby="travelExpenseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="travelExpenseModalLabel">Add Travel Expenses</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="travel-expenses-container">
-                        <form id="travelExpenseForm">
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label for="purposeOfVisit">Purpose of Visit<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="purposeOfVisit" placeholder="Enter purpose" required>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="modeOfTransport">Mode of Transport<span class="text-danger">*</span></label>
-                                    <select class="form-control" id="modeOfTransport" required>
-                                        <option value="">Select mode</option>
-                                        <option value="Bike">Bike</option>
-                                        <option value="Car">Car</option>
-                                        <option value="Taxi">Taxi</option>
-                                        <option value="Bus">Bus</option>
-                                        <option value="Train">Train</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label for="fromLocation">From Location<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="fromLocation" placeholder="Starting point" required>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="toLocation">To Location<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="toLocation" placeholder="Destination" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label for="travelDate">Date<span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="travelDate" required>
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label for="approxDistance">Approximate Distance (km)<span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="approxDistance" placeholder="Distance in km" min="0" step="0.1" required>
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label for="totalExpense">Total Expense (₹)<span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="totalExpense" placeholder="Amount in ₹" min="0" step="0.01" required>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="expenseNotes">Notes</label>
-                                <textarea class="form-control" id="expenseNotes" rows="2" placeholder="Additional details (optional)"></textarea>
-                            </div>
-                            <div class="form-group text-right">
-                                <button type="button" class="btn btn-secondary" id="resetExpenseForm">Reset</button>
-                                <button type="button" class="btn btn-primary" id="addExpenseEntry">Add Entry</button>
-                            </div>
-                        </form>
-                        
-                        <hr>
-                        
-                        <div class="travel-expenses-list">
-                            <!-- Expense entries will be added here dynamically -->
-                        </div>
-                        
-                        <div class="travel-expenses-summary" style="display: none;">
-                            <h5>Summary</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p>Total Entries: <span id="totalEntries">0</span></p>
-                                </div>
-                                <div class="col-md-6 text-right">
-                                    <p>Total Amount: ₹<span id="totalAmount">0.00</span></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveAllExpenses">Save All Expenses</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Bootstrap JS and jQuery (required for modal) -->
+    <!-- Bootstrap JS and jQuery (required for modal) - MOVED TO TOP -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Global functions for expense details and delete -->
+    <script>
+        // Global function to view expense details
+        function viewExpenseDetails(expenseId) {
+            console.log('Viewing expense details for ID:', expenseId);
+            
+            $.ajax({
+                url: 'get_expense_details.php',
+                type: 'GET',
+                dataType: 'json',
+                data: { id: expenseId },
+                success: function(response) {
+                    console.log('Response received:', response);
+                    
+                    if (response.error) {
+                        alert(response.error);
+                        return;
+                    }
+                    
+                    // Show expense details in a modal
+                    window.showExpenseDetailsModal(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', xhr.status, xhr.statusText);
+                    console.error('Response Text:', xhr.responseText);
+                    alert('Failed to load expense details. Please try again later.');
+                }
+            });
+        }
+        
+        // Global function to confirm delete expense
+        function confirmDeleteExpense(expenseId) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                deleteExpense(expenseId);
+            }
+        }
+
+        // Global function to delete expense
+        function deleteExpense(expenseId) {
+            $.ajax({
+                url: 'delete_travel_expense.php',
+                type: 'POST',
+                dataType: 'json',
+                data: { expense_id: expenseId },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Expense deleted successfully');
+                        // Call the loadTravelExpenses function from inside document.ready
+                        $(document).ready(function() {
+                            loadTravelExpenses();
+                        });
+                    } else {
+                        alert('Error deleting expense: ' + (response.message || 'Unknown error'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Failed to delete expense. Please try again later.');
+                    console.error('AJAX Error:', status, error);
+                }
+            });
+        }
+    </script>
+    
+    <?php include 'modals/travel_expense_modal_new.php'; ?>
+    
     <!-- Travel Expense Modal JS -->
-    <script src="js/supervisor/travel-expense-modal.js"></script>
+    <script src="js/supervisor/new-travel-expense-modal.js"></script>
     
     <!-- Initialize the modal -->
     <script>
-        // Make sure the modal is properly initialized
         $(document).ready(function() {
-            // Initialize the modal
-            $('#addTravelExpenseBtn').on('click', function() {
-                $('#travelExpenseModal').modal('show');
-            });
+            // Set current month as default in the filter dropdown
+            const currentMonth = new Date().getMonth();
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            const currentMonthName = monthNames[currentMonth];
             
-            // Close modal when close button is clicked
-            $('.close').on('click', function() {
-                $('#travelExpenseModal').modal('hide');
-            });
+            console.log('Current month (0-based):', currentMonth, '(' + currentMonthName + ')');
+            $('#filter-month').val(currentMonth.toString());
+            console.log('Month filter dropdown value set to:', $('#filter-month').val(), '(' + currentMonthName + ')');
             
-            // Close modal when Close button in footer is clicked
-            $('button[data-dismiss="modal"]').on('click', function() {
-                $('#travelExpenseModal').modal('hide');
-            });
-            
-            // NOTE: Save All Expenses handler removed to prevent duplicate submissions.
-            // The saveAllExpenses function in travel-expense-modal.js already handles this.
-            
-            // Function to convert various date formats to YYYY-MM-DD
-            function formatDateToYYYYMMDD(dateStr) {
-                // If it's already in YYYY-MM-DD format, return it
-                if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                    return dateStr;
-                }
-                
-                // Handle common date formats
-                let date;
-                
-                // Try to parse the date string
-                try {
-                    // Handle "Month Day, Year" format (e.g., "Jun 15, 2023")
-                    if (/^[A-Za-z]{3}\s+\d{1,2},\s+\d{4}$/.test(dateStr)) {
-                        date = new Date(dateStr);
-                    }
-                    // Handle "DD/MM/YYYY" format
-                    else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
-                        const parts = dateStr.split('/');
-                        date = new Date(parts[2], parts[1] - 1, parts[0]);
-                    }
-                    // Handle "MM/DD/YYYY" format
-                    else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
-                        date = new Date(dateStr);
-                    }
-                    // Handle "DD-MM-YYYY" format
-                    else if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(dateStr)) {
-                        const parts = dateStr.split('-');
-                        date = new Date(parts[2], parts[1] - 1, parts[0]);
-                    }
-                    // Default: try standard Date parsing
-                    else {
-                        date = new Date(dateStr);
-                    }
-                } catch (e) {
-                    console.error('Error parsing date:', dateStr, e);
-                    // Default to today's date if parsing fails
-                    date = new Date();
-                }
-                
-                // Check if the date is valid
-                if (isNaN(date.getTime())) {
-                    console.error('Invalid date:', dateStr);
-                    // Default to today's date if invalid
-                    date = new Date();
-                }
-                
-                // Format the date as YYYY-MM-DD
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                
-                return `${year}-${month}-${day}`;
-            }
+            // Load travel expenses data first, then auto-filter by current month
+            loadTravelExpensesAndFilter();
 
-            // Load travel expenses data
-            loadTravelExpenses();
+            // Function to load travel expenses and auto-apply current month filter
+            function loadTravelExpensesAndFilter() {
+                console.log('Loading travel expenses and applying current month filter...');
+                
+                // Get user ID from PHP session
+                const userId = <?php echo $user_id; ?>;
+                console.log('User ID:', userId);
+                
+                // Fetch all travel expenses for the user
+                $.ajax({
+                    url: 'get_all_travel_expenses.php',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { user_id: userId },
+                    success: function(response) {
+                        console.log('Travel expenses loaded:', response);
+                        
+                        if (response.error) {
+                            showTravelExpensesError(response.error);
+                            return;
+                        }
+                        
+                        // Immediately apply current month filter
+                        const currentMonth = new Date().getMonth();
+                        console.log('Auto-filtering for current month:', currentMonth);
+                        
+                        if (Array.isArray(response)) {
+                            // Filter by current month
+                            const currentMonthExpenses = response.filter(expense => {
+                                if (!expense.travel_date) return false;
+                                const expenseDate = new Date(expense.travel_date);
+                                const expenseMonth = expenseDate.getMonth();
+                                return expenseMonth === currentMonth;
+                            });
+                            
+                            console.log('Current month expenses found:', currentMonthExpenses.length);
+                            displayTravelExpenses(currentMonthExpenses);
+                            
+                            // Update filter info badge
+                            $('#filter-info-text').text(`Showing ${currentMonthName} ${new Date().getFullYear()}`);
+                        } else {
+                            showTravelExpensesError('Invalid data format received from server');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', xhr.status, xhr.statusText);
+                        console.error('Response Text:', xhr.responseText);
+                        showTravelExpensesError('Failed to load travel expenses. Please try again later.');
+                    }
+                });
+            }
 
             // Function to load travel expenses
             function loadTravelExpenses() {
@@ -1920,180 +2177,16 @@ $expenses = getExpenses($pdo, $user_id);
                         console.error('AJAX Error:', xhr.status, xhr.statusText);
                         console.error('Response Text:', xhr.responseText);
                         showTravelExpensesError('Failed to load travel expenses. Please try again later.');
-                    }
-                });
-            }
-
-            // Function to display travel expenses in the table
-            function displayTravelExpenses(expenses) {
-                const tableBody = $('#travelExpensesTableBody');
-                tableBody.empty();
-                
-                if (!expenses || expenses.length === 0) {
-                    tableBody.html('<tr><td colspan="10" class="text-center">No travel expenses found</td></tr>');
-                    updateSummaryCards([]); // Update summary cards with empty data
-                    return;
-                }
-                
-                expenses.forEach(function(expense) {
-                    // Format date for display
-                    const expenseDate = new Date(expense.travel_date);
-                    const formattedDate = expenseDate.toLocaleDateString();
-                    
-                    // Create status badge
-                    let statusBadge = '';
-                    switch(expense.status) {
-                        case 'approved':
-                            statusBadge = '<span class="badge badge-success">Approved</span>';
-                            break;
-                        case 'rejected':
-                            statusBadge = '<span class="badge badge-danger">Rejected</span>';
-                            break;
-                        case 'pending':
-                        default:
-                            statusBadge = '<span class="badge badge-warning">Pending</span>';
-                            break;
-                    }
-                    
-                    // Create action buttons
-                    const viewButton = `<button class="btn btn-sm btn-info view-expense" data-id="${expense.id}" title="View Details"><i class="fas fa-eye"></i></button>`;
-                    const deleteButton = `<button class="btn btn-sm btn-danger delete-expense" data-id="${expense.id}" title="Delete"><i class="fas fa-trash"></i></button>`;
-                    
-                    // Create table row
-                    const row = `
-                        <tr>
-                            <td>${expense.id}</td>
-                            <td>${formattedDate}</td>
-                            <td>${expense.purpose}</td>
-                            <td>${expense.from_location}</td>
-                            <td>${expense.to_location}</td>
-                            <td>${expense.mode_of_transport}</td>
-                            <td>${expense.distance} km</td>
-                            <td>₹${parseFloat(expense.amount).toFixed(2)}</td>
-                            <td>${statusBadge}</td>
-                            <td>
-                                <div class="btn-group">
-                                    ${viewButton}
-                                    ${expense.status === 'pending' ? deleteButton : ''}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    
-                    tableBody.append(row);
-                });
-                
-                // Add event listeners for view and delete buttons
-                $('.view-expense').on('click', function() {
-                    const expenseId = $(this).data('id');
-                    viewExpenseDetails(expenseId);
-                });
-                
-                $('.delete-expense').on('click', function() {
-                    const expenseId = $(this).data('id');
-                    confirmDeleteExpense(expenseId);
-                });
-                
-                // Update summary cards with the expenses data
-                updateSummaryCards(expenses);
-            }
-            
-            // Function to update summary cards with actual data
-            function updateSummaryCards(expenses) {
-                // Get summary card elements
-                const totalExpensesElement = $('#summary-total-expenses');
-                const totalAmountElement = $('#summary-total-amount');
-                const approvedAmountElement = $('#summary-approved-amount');
-                const pendingAmountElement = $('#summary-pending-amount');
-                const rejectedAmountElement = $('#summary-rejected-amount');
-                
-                // Default values
-                let totalExpenses = 0;
-                let totalAmount = 0;
-                let approvedAmount = 0;
-                let pendingAmount = 0;
-                let rejectedAmount = 0;
-                
-                // Calculate values from expenses data
-                if (expenses && expenses.length > 0) {
-                    totalExpenses = expenses.length;
-                    
-                    expenses.forEach(function(expense) {
-                        const amount = parseFloat(expense.amount) || 0;
-                        totalAmount += amount;
-                        
-                        switch(expense.status) {
-                            case 'approved':
-                                approvedAmount += amount;
-                                break;
-                            case 'rejected':
-                                rejectedAmount += amount;
-                                break;
-                            case 'pending':
-                            default:
-                                pendingAmount += amount;
-                                break;
                         }
                     });
                 }
                 
-                // Format currency values
-                const formatCurrency = (value) => {
-                    return new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR',
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    }).format(value);
-                };
-                
-                // Update the summary cards
-                totalExpensesElement.text(totalExpenses);
-                totalAmountElement.text(formatCurrency(totalAmount));
-                approvedAmountElement.text(formatCurrency(approvedAmount));
-                pendingAmountElement.text(formatCurrency(pendingAmount));
-                rejectedAmountElement.text(formatCurrency(rejectedAmount));
-            }
 
-            // Function to show error message in the table
-            function showTravelExpensesError(message) {
-                const tableBody = $('#travelExpensesTableBody');
-                tableBody.html(`<tr><td colspan="10" class="text-center text-danger">${message}</td></tr>`);
-                
-                // Reset summary cards when there's an error
-                updateSummaryCards([]);
-            }
 
-            // Function to view expense details
-            function viewExpenseDetails(expenseId) {
-                console.log('Viewing expense details for ID:', expenseId);
-                
-                $.ajax({
-                    url: 'get_expense_details.php',
-                    type: 'GET',
-                    dataType: 'json',
-                    data: { id: expenseId },
-                    success: function(response) {
-                        console.log('Response received:', response);
-                        
-                        if (response.error) {
-                            alert(response.error);
-                            return;
-                        }
-                        
-                        // Show expense details in a modal
-                        showExpenseDetailsModal(response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('AJAX Error:', xhr.status, xhr.statusText);
-                        console.error('Response Text:', xhr.responseText);
-                        alert('Failed to load expense details. Please try again later.');
-                    }
-                });
-            }
+            // Function to show expense details modal is kept inside document.ready
 
             // Function to show expense details modal
-            function showExpenseDetailsModal(expense) {
+            window.showExpenseDetailsModal = function(expense) {
                 console.log('Showing modal for expense:', expense);
                 
                 // Format date for display
@@ -2102,70 +2195,365 @@ $expenses = getExpenses($pdo, $user_id);
                 
                 // Create status badge
                 let statusBadge = '';
+                let statusClass = '';
                 switch(expense.status) {
                     case 'approved':
-                        statusBadge = '<span class="badge badge-success">Approved</span>';
+                        statusBadge = '<span class="badge badge-success px-3 py-2"><i class="fas fa-check-circle mr-1"></i>Approved</span>';
+                        statusClass = 'success';
                         break;
                     case 'rejected':
-                        statusBadge = '<span class="badge badge-danger">Rejected</span>';
+                        statusBadge = '<span class="badge badge-danger px-3 py-2"><i class="fas fa-times-circle mr-1"></i>Rejected</span>';
+                        statusClass = 'danger';
                         break;
                     case 'pending':
                     default:
-                        statusBadge = '<span class="badge badge-warning">Pending</span>';
+                        statusBadge = '<span class="badge badge-warning px-3 py-2"><i class="fas fa-clock mr-1"></i>Pending</span>';
+                        statusClass = 'warning';
                         break;
                 }
                 
-                // Create bill attachment link if available
-                let billAttachment = 'No bill attached';
+                // Create bill attachment section
+                let billSection = '';
                 if (expense.bill_file_path) {
                     const fileName = expense.bill_file_path.split('/').pop();
-                    billAttachment = `<a href="${expense.bill_file_path}" target="_blank">${fileName}</a>`;
+                    const fileExtension = fileName.split('.').pop().toLowerCase();
+                    let billIcon = 'fas fa-file';
+                    
+                    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+                        billIcon = 'fas fa-image';
+                        billSection = `
+                            <div class="bill-attachment-section">
+                                <h6 class="mb-3"><i class="fas fa-paperclip mr-2"></i>Bill Attachment</h6>
+                                <div class="bill-preview-card">
+                                    <div class="bill-thumbnail">
+                                        <img src="${expense.bill_file_path}" alt="Bill" class="img-fluid rounded shadow-sm" style="max-height: 200px; cursor: pointer;" onclick="openImageModal('${expense.bill_file_path}', 'Bill Attachment')">
+                                    </div>
+                                    <div class="bill-info mt-2">
+                                        <p class="mb-1"><strong>File:</strong> ${fileName}</p>
+                                        <a href="${expense.bill_file_path}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt mr-1"></i>View Full Size
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (fileExtension === 'pdf') {
+                        billIcon = 'fas fa-file-pdf';
+                        billSection = `
+                            <div class="bill-attachment-section">
+                                <h6 class="mb-3"><i class="fas fa-paperclip mr-2"></i>Bill Attachment</h6>
+                                <div class="bill-preview-card">
+                                    <div class="pdf-preview text-center py-4">
+                                        <i class="fas fa-file-pdf text-danger" style="font-size: 3rem;"></i>
+                                        <p class="mt-2 mb-1"><strong>${fileName}</strong></p>
+                                        <a href="${expense.bill_file_path}" target="_blank" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-external-link-alt mr-1"></i>Open PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    billSection = `
+                        <div class="bill-attachment-section">
+                            <h6 class="mb-3"><i class="fas fa-paperclip mr-2"></i>Bill Attachment</h6>
+                            <div class="no-bill-card text-center py-4">
+                                <i class="fas fa-file-slash text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted mt-2 mb-0">No bill attached</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Create meter photos section
+                let meterPhotosSection = '';
+                if (expense.meter_start_photo || expense.meter_end_photo) {
+                    meterPhotosSection = `
+                        <div class="meter-photos-section">
+                            <h6 class="mb-3"><i class="fas fa-tachometer-alt mr-2"></i>Meter Photos</h6>
+                            <div class="row">
+                                ${expense.meter_start_photo ? `
+                                    <div class="col-md-6 mb-3">
+                                        <div class="meter-photo-card">
+                                            <div class="meter-photo-header">
+                                                <h6 class="mb-2 text-success"><i class="fas fa-play-circle mr-1"></i>Start Meter</h6>
+                                            </div>
+                                            <div class="meter-photo-thumbnail">
+                                                <img src="${expense.meter_start_photo}" alt="Start Meter" class="img-fluid rounded shadow-sm" style="max-height: 200px; width: 100%; object-fit: cover; cursor: pointer;" onclick="openImageModal('${expense.meter_start_photo}', 'Start Meter Photo')">
+                                            </div>
+                                            <div class="meter-photo-actions mt-2 text-center">
+                                                <a href="${expense.meter_start_photo}" target="_blank" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-expand-alt mr-1"></i>View Full Size
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                ${expense.meter_end_photo ? `
+                                    <div class="col-md-6 mb-3">
+                                        <div class="meter-photo-card">
+                                            <div class="meter-photo-header">
+                                                <h6 class="mb-2 text-danger"><i class="fas fa-stop-circle mr-1"></i>End Meter</h6>
+                                            </div>
+                                            <div class="meter-photo-thumbnail">
+                                                <img src="${expense.meter_end_photo}" alt="End Meter" class="img-fluid rounded shadow-sm" style="max-height: 200px; width: 100%; object-fit: cover; cursor: pointer;" onclick="openImageModal('${expense.meter_end_photo}', 'End Meter Photo')">
+                                            </div>
+                                            <div class="meter-photo-actions mt-2 text-center">
+                                                <a href="${expense.meter_end_photo}" target="_blank" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-expand-alt mr-1"></i>View Full Size
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            ${!expense.meter_start_photo && !expense.meter_end_photo ? `
+                                <div class="no-meter-photos text-center py-4">
+                                    <i class="fas fa-camera-slash text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2 mb-0">No meter photos available</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                // Function to get approval status badge
+                function getApprovalStatusBadge(status, role) {
+                    if (!status || status === null || status === '') {
+                        return '<span class="badge badge-secondary badge-sm"><i class="fas fa-clock mr-1"></i>Pending</span>';
+                    }
+                    
+                    switch(status.toLowerCase()) {
+                        case 'approved':
+                            return '<span class="badge badge-success badge-sm"><i class="fas fa-check mr-1"></i>Approved</span>';
+                        case 'rejected':
+                            return '<span class="badge badge-danger badge-sm"><i class="fas fa-times mr-1"></i>Rejected</span>';
+                        case 'pending':
+                        default:
+                            return '<span class="badge badge-warning badge-sm"><i class="fas fa-clock mr-1"></i>Pending</span>';
+                    }
+                }
+                
+                // Create rejection reasons section if any exist
+                let rejectionReasonsSection = '';
+                const rejectionReasons = [];
+                
+                if (expense.manager_status === 'rejected' && expense.manager_reason) {
+                    rejectionReasons.push({
+                        role: 'Manager',
+                        reason: expense.manager_reason,
+                        icon: 'fas fa-user-tie',
+                        color: 'danger'
+                    });
+                }
+                
+                if (expense.accountant_status === 'rejected' && expense.accountant_reason) {
+                    rejectionReasons.push({
+                        role: 'Accountant',
+                        reason: expense.accountant_reason,
+                        icon: 'fas fa-calculator',
+                        color: 'warning'
+                    });
+                }
+                
+                if (expense.hr_status === 'rejected' && expense.hr_reason) {
+                    rejectionReasons.push({
+                        role: 'HR',
+                        reason: expense.hr_reason,
+                        icon: 'fas fa-users',
+                        color: 'info'
+                    });
+                }
+                
+                if (rejectionReasons.length > 0) {
+                    rejectionReasonsSection = `
+                        <div class="rejection-reasons-section mb-4">
+                            <h6 class="mb-3 text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Rejection Reasons</h6>
+                            <div class="rejection-reasons-list">
+                                ${rejectionReasons.map(reason => `
+                                    <div class="rejection-reason-card mb-3">
+                                        <div class="card border-left-${reason.color}">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="rejection-icon mr-3">
+                                                        <i class="${reason.icon} text-${reason.color}" style="font-size: 1.2rem;"></i>
+                                                    </div>
+                                                    <div class="rejection-content flex-grow-1">
+                                                        <h6 class="mb-1 text-${reason.color}">${reason.role} Rejection</h6>
+                                                        <p class="mb-0 text-muted">${reason.reason}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
                 }
                 
                 // Create modal HTML
                 const modalHTML = `
                     <div class="modal fade" id="expenseDetailsModal" tabindex="-1" role="dialog" aria-labelledby="expenseDetailsModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-dialog modal-xl" role="document">
                             <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="expenseDetailsModalLabel">Expense Details</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <div class="modal-header bg-gradient-primary text-white">
+                                    <h5 class="modal-title d-flex align-items-center" id="expenseDetailsModalLabel">
+                                        <i class="fas fa-receipt mr-2"></i>Travel Expense Details
+                                    </h5>
+                                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
                                 </div>
-                                <div class="modal-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <p><strong>ID:</strong> ${expense.id}</p>
-                                            <p><strong>Purpose:</strong> ${expense.purpose}</p>
-                                            <p><strong>Date:</strong> ${formattedDate}</p>
-                                            <p><strong>From:</strong> ${expense.from_location}</p>
-                                            <p><strong>To:</strong> ${expense.to_location}</p>
+                                <div class="modal-body p-4">
+                                    <!-- Expense Summary Card -->
+                                    <div class="expense-summary-card mb-4">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="expense-basic-info">
+                                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                                        <div>
+                                                            <h4 class="text-primary mb-1">Expense #${expense.id}</h4>
+                                                            <p class="text-muted mb-0">${expense.purpose}</p>
                                         </div>
-                                        <div class="col-md-6">
-                                            <p><strong>Mode:</strong> ${expense.mode_of_transport}</p>
-                                            <p><strong>Distance:</strong> ${expense.distance} km</p>
-                                            <p><strong>Amount:</strong> ₹${parseFloat(expense.amount).toFixed(2)}</p>
-                                            <p><strong>Status:</strong> ${statusBadge}</p>
-                                            <p><strong>Bill:</strong> ${billAttachment}</p>
+                                                        <div class="text-right">
+                                                            ${statusBadge}
                                         </div>
                                     </div>
+                                                    
+                                                    <div class="expense-details-grid">
                                     <div class="row">
-                                        <div class="col-12">
-                                            <p><strong>Notes:</strong></p>
-                                            <p>${expense.notes || 'No notes provided'}</p>
+                                                            <div class="col-sm-6 mb-3">
+                                                                <div class="detail-item">
+                                                                    <i class="fas fa-calendar-alt text-primary mr-2"></i>
+                                                                    <strong>Date:</strong> ${formattedDate}
+                                        </div>
+                                    </div>
+                                                            <div class="col-sm-6 mb-3">
+                                                                <div class="detail-item">
+                                                                    <i class="fas fa-car text-primary mr-2"></i>
+                                                                    <strong>Mode:</strong> ${expense.mode_of_transport}
+                                </div>
+                                </div>
+                                                            <div class="col-sm-6 mb-3">
+                                                                <div class="detail-item">
+                                                                    <i class="fas fa-map-marker-alt text-success mr-2"></i>
+                                                                    <strong>From:</strong> ${expense.from_location}
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6 mb-3">
+                                                                <div class="detail-item">
+                                                                    <i class="fas fa-map-marker-alt text-danger mr-2"></i>
+                                                                    <strong>To:</strong> ${expense.to_location}
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6 mb-3">
+                                                                <div class="detail-item">
+                                                                    <i class="fas fa-route text-primary mr-2"></i>
+                                                                    <strong>Distance:</strong> ${expense.distance} km
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6 mb-3">
+                                                                <div class="detail-item amount-highlight">
+                                                                    <i class="fas fa-rupee-sign text-success mr-2"></i>
+                                                                    <strong>Amount:</strong> <span class="text-success font-weight-bold">₹${parseFloat(expense.amount).toFixed(2)}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="expense-status-card p-3 bg-light rounded">
+                                                    <h6 class="mb-3 text-center">Overall Status</h6>
+                                                    <div class="text-center mb-3">
+                                                        ${statusBadge}
+                                                    </div>
+                                                    
+                                                    <!-- Approval Status Breakdown -->
+                                                    <div class="approval-status-section">
+                                                        <h6 class="mb-2 text-muted"><i class="fas fa-users mr-1"></i>Approval Status</h6>
+                                                        
+                                                        <!-- Manager Status -->
+                                                        <div class="status-item d-flex justify-content-between align-items-center mb-2">
+                                                            <span class="status-label">
+                                                                <i class="fas fa-user-tie mr-1 text-primary"></i>Manager:
+                                                            </span>
+                                                            <span class="status-value">
+                                                                ${getApprovalStatusBadge(expense.manager_status, 'manager')}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <!-- Accountant Status -->
+                                                        <div class="status-item d-flex justify-content-between align-items-center mb-2">
+                                                            <span class="status-label">
+                                                                <i class="fas fa-calculator mr-1 text-warning"></i>Accountant:
+                                                            </span>
+                                                            <span class="status-value">
+                                                                ${getApprovalStatusBadge(expense.accountant_status, 'accountant')}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <!-- HR Status -->
+                                                        <div class="status-item d-flex justify-content-between align-items-center mb-2">
+                                                            <span class="status-label">
+                                                                <i class="fas fa-users mr-1 text-info"></i>HR:
+                                                            </span>
+                                                            <span class="status-value">
+                                                                ${getApprovalStatusBadge(expense.hr_status, 'hr')}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mt-3 text-center">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Created: ${new Date(expense.created_at).toLocaleDateString()}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Rejection Reasons Section -->
+                                    ${rejectionReasonsSection}
+                                    
+                                    <!-- Notes Section -->
+                                    ${expense.notes ? `
+                                        <div class="notes-section mb-4">
+                                            <h6 class="mb-3"><i class="fas fa-sticky-note mr-2"></i>Notes</h6>
+                                            <div class="notes-card p-3 bg-light rounded">
+                                                <p class="mb-0">${expense.notes}</p>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <!-- Attachments Section -->
+                                    <div class="attachments-section">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-4">
+                                                ${billSection}
+                                            </div>
+                                            <div class="col-md-6 mb-4">
+                                                ${meterPhotosSection}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        <i class="fas fa-times mr-1"></i>Close
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="printExpenseDetails()">
+                                        <i class="fas fa-print mr-1"></i>Print
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-                
-                console.log('Modal HTML created');
                 
                 // Remove any existing modal
                 $('#expenseDetailsModal').remove();
@@ -2173,44 +2561,278 @@ $expenses = getExpenses($pdo, $user_id);
                 // Add modal to body
                 $('body').append(modalHTML);
                 
-                console.log('Modal added to body, showing now');
-                
                 // Show modal
                 $('#expenseDetailsModal').modal('show');
             }
 
-            // Function to confirm delete expense
-            function confirmDeleteExpense(expenseId) {
-                if (confirm('Are you sure you want to delete this expense?')) {
-                    deleteExpense(expenseId);
-                }
+            // Delete functions are kept inside document.ready
+            
+            // Function to open image in a modal for full view
+            window.openImageModal = function(imageSrc, title) {
+                const imageModalHTML = `
+                    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="imageModalLabel">${title}</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body text-center p-0">
+                                    <img src="${imageSrc}" alt="${title}" class="img-fluid" style="max-width: 100%; height: auto;">
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="${imageSrc}" download class="btn btn-primary">
+                                        <i class="fas fa-download mr-1"></i>Download
+                                    </a>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove any existing image modal
+                $('#imageModal').remove();
+                
+                // Add modal to body
+                $('body').append(imageModalHTML);
+                
+                // Show modal
+                $('#imageModal').modal('show');
             }
-
-            // Function to delete expense
-            function deleteExpense(expenseId) {
-                $.ajax({
-                    url: 'delete_travel_expense.php',
-                    type: 'POST',
-                    dataType: 'json',
-                    data: { expense_id: expenseId },
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Expense deleted successfully');
-                            loadTravelExpenses(); // Reload expenses
-                        } else {
-                            alert('Error deleting expense: ' + (response.message || 'Unknown error'));
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        alert('Failed to delete expense. Please try again later.');
-                        console.error('AJAX Error:', status, error);
-                    }
-                });
+            
+            // Function to print expense details
+            window.printExpenseDetails = function() {
+                const printContent = document.getElementById('expenseDetailsModal').querySelector('.modal-body').innerHTML;
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Travel Expense Details</title>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                        <style>
+                            @media print {
+                                .btn { display: none !important; }
+                                .modal-footer { display: none !important; }
+                                body { font-size: 12px; }
+                                .expense-summary-card { page-break-inside: avoid; }
+                                .meter-photo-card { page-break-inside: avoid; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container-fluid">
+                            <h2 class="text-center mb-4">Travel Expense Details</h2>
+                            ${printContent}
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
             }
-
-            // Load travel expenses data
-            loadTravelExpenses();
         });
     </script>
+    
+    <style>
+        /* Professional Modal Styles */
+        #expenseDetailsModal .modal-xl {
+            max-width: 1200px;
+        }
+        
+        #expenseDetailsModal .modal-header.bg-gradient-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9) !important;
+        }
+        
+        #expenseDetailsModal .expense-summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        #expenseDetailsModal .detail-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        #expenseDetailsModal .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        #expenseDetailsModal .amount-highlight {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        
+        #expenseDetailsModal .expense-status-card {
+            border: 1px solid #e9ecef;
+            background: #f8f9fa !important;
+        }
+        
+        #expenseDetailsModal .bill-preview-card,
+        #expenseDetailsModal .meter-photo-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        #expenseDetailsModal .bill-preview-card:hover,
+        #expenseDetailsModal .meter-photo-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        #expenseDetailsModal .no-bill-card,
+        #expenseDetailsModal .no-meter-photos {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+        }
+        
+        #expenseDetailsModal .meter-photo-header h6 {
+            font-weight: 600;
+        }
+        
+        #expenseDetailsModal .meter-photo-thumbnail img {
+            transition: transform 0.3s ease;
+        }
+        
+        #expenseDetailsModal .meter-photo-thumbnail img:hover {
+            transform: scale(1.05);
+        }
+        
+        #expenseDetailsModal .notes-card {
+            border-left: 4px solid #3498db;
+            background: #f8f9fa !important;
+        }
+        
+        #expenseDetailsModal .badge {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+        
+        #expenseDetailsModal .bill-attachment-section h6,
+        #expenseDetailsModal .meter-photos-section h6,
+        #expenseDetailsModal .notes-section h6,
+        #expenseDetailsModal .rejection-reasons-section h6 {
+            color: #2c3e50;
+            font-weight: 600;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+        
+        #expenseDetailsModal .rejection-reasons-section h6 {
+            border-bottom-color: #dc3545;
+        }
+        
+        /* Approval Status Styles */
+        #expenseDetailsModal .approval-status-section {
+            border-top: 1px solid #e9ecef;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        #expenseDetailsModal .status-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        #expenseDetailsModal .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        #expenseDetailsModal .status-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        #expenseDetailsModal .badge-sm {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+        
+        /* Rejection Reasons Styles */
+        #expenseDetailsModal .rejection-reason-card .card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        #expenseDetailsModal .rejection-reason-card .border-left-danger {
+            border-left: 4px solid #dc3545 !important;
+        }
+        
+        #expenseDetailsModal .rejection-reason-card .border-left-warning {
+            border-left: 4px solid #ffc107 !important;
+        }
+        
+        #expenseDetailsModal .rejection-reason-card .border-left-info {
+            border-left: 4px solid #17a2b8 !important;
+        }
+        
+        #expenseDetailsModal .rejection-content h6 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        #expenseDetailsModal .rejection-content p {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        /* Image Modal Styles */
+        #imageModal .modal-body {
+            background: #000;
+        }
+        
+        #imageModal .modal-body img {
+            max-height: 80vh;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #expenseDetailsModal .modal-xl {
+                max-width: 95%;
+                margin: 10px auto;
+            }
+            
+            #expenseDetailsModal .expense-details-grid .col-sm-6 {
+                margin-bottom: 15px;
+            }
+            
+            #expenseDetailsModal .meter-photo-card {
+                margin-bottom: 20px;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            #expenseDetailsModal .modal-header,
+            #expenseDetailsModal .modal-footer {
+                display: none !important;
+            }
+            
+            #expenseDetailsModal .modal-body {
+                padding: 0 !important;
+            }
+            
+            #expenseDetailsModal .btn {
+                display: none !important;
+            }
+        }
+    </style>
 </body>
 </html>

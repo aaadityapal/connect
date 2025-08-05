@@ -1,0 +1,271 @@
+/* Expense Detail Modal Styles */
+
+/* Modal styles */
+.expense-detail-modal {
+    border: none;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.expense-detail-modal .modal-header {
+    padding: 15px 20px;
+}
+
+.expense-detail-modal .modal-body {
+    padding: 20px;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+.expense-detail-modal .modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Expense summary card */
+.expense-summary-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.expense-summary-card .card-header {
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.expense-summary-card .card-header h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Detail item styles */
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.detail-item:hover {
+    background-color: #f8f9fa;
+}
+
+.detail-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    color: #495057;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.detail-content {
+    flex: 1;
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Notes card */
+.notes-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.notes-card .card-header {
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.notes-content {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    font-style: italic;
+    color: #495057;
+    line-height: 1.5;
+}
+
+.notes-content .fa-quote-left,
+.notes-content .fa-quote-right {
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+/* Mode of transport badges */
+.expense-mode {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.mode-car {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+.mode-bike {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+}
+
+.mode-taxi {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f1c40f;
+}
+
+.mode-bus {
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #9b59b6;
+}
+
+.mode-train {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+}
+
+.mode-auto {
+    background-color: rgba(52, 73, 94, 0.15);
+    color: #34495e;
+}
+
+.mode-other {
+    background-color: rgba(149, 165, 166, 0.15);
+    color: #95a5a6;
+}
+
+/* Amount styling */
+.expense-amount {
+    font-weight: 700;
+    color: #e74c3c;
+}
+
+/* Payment status badges */
+.payment-status-paid {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+}
+
+.payment-status-unpaid {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #8e44ad;
+}
+
+/* Approval badges */
+.approval-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.approval-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.approval-badge i {
+    margin-right: 6px;
+    font-size: 0.9rem;
+    width: 16px;
+    text-align: center;
+}
+
+.approval-badge.approved {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+    border-left: 3px solid #27ae60;
+}
+
+.approval-badge.rejected {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border-left: 3px solid #e74c3c;
+}
+
+.approval-badge.pending {
+    background-color: rgba(149, 165, 166, 0.15);
+    color: #7f8c8d;
+    border-left: 3px solid #7f8c8d;
+}
+
+/* Print button styles */
+#printExpenseDetail {
+    transition: all 0.3s;
+}
+
+#printExpenseDetail:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .detail-item {
+        padding: 6px;
+    }
+    
+    .detail-icon {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+    }
+    
+    .detail-value {
+        font-size: 0.95rem;
+    }
+    
+    .expense-detail-modal .modal-body {
+        padding: 15px;
+    }
+}

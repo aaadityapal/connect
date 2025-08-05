@@ -235,7 +235,7 @@ if ($currentHour < 12) {
     <link rel="stylesheet" href="css/manager/site-overview.css">
     <link rel="stylesheet" href="css/manager/calendar-stats.css">
     <link rel="stylesheet" href="css/manager/calendar-event-modal.css">
-    <link rel="stylesheet" href="css/supervisor/travel-expense-modal.css">
+    <link rel="stylesheet" href="css/supervisor/new-travel-expense-modal.css">
     <link rel="stylesheet" href="css/manager/event-details-modal.css">
     <style>
         :root {
@@ -1786,7 +1786,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 </div>
                                 <div class="site-card-stat">
                                     <div class="site-card-stat-value">₹0</div>
-                                    <div class="site-card-stat-label">Total</div>
+                                    <div class="site-card-stat-label">Pending Payment</div>
                                 </div>
                             </div>
                             <div class="text-center mt-3">
@@ -2484,7 +2484,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
         // Override the save_travel_expenses.php endpoint for the travel expense modal
         window.travelExpenseEndpoint = 'save_travel_expenses.php';
     </script>
-    <script src="js/supervisor/travel-expense-modal.js"></script>
+    <script src="js/supervisor/new-travel-expense-modal.js"></script>
     <script>
         // Variables to track punch status
         let isPunchedIn = false;
@@ -3652,6 +3652,16 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         window.location.href = 'travel_expenses.php';
                     }
                 });
+                
+                // Add click handler for the Add Expense button
+                const addTravelExpenseBtn = document.getElementById('addTravelExpenseBtn');
+                if (addTravelExpenseBtn) {
+                    addTravelExpenseBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $('#newTravelExpenseModal').modal('show');
+                    });
+                }
             }
             
             // Check if we should enable scrolling based on screen height
@@ -3920,116 +3930,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
     </script>
 </body>
 
-<!-- Travel Expense Modal -->
-<div class="modal fade" id="travelExpenseModal" tabindex="-1" role="dialog" aria-labelledby="travelExpenseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="travelExpenseModalLabel">Add Travel Expense</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="travel-expenses-container">
-                    <form id="travelExpenseForm" class="mb-4">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="purposeOfVisit">Purpose of Visit<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="purposeOfVisit" placeholder="Enter purpose" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="modeOfTransport">Mode of Transport<span class="text-danger">*</span></label>
-                                    <select class="form-control" id="modeOfTransport" required>
-                                        <option value="">Select mode</option>
-                                        <option value="Car">Car</option>
-                                        <option value="Bike">Bike</option>
-                                        <option value="Taxi">Taxi</option>
-                                        <option value="Bus">Bus</option>
-                                        <option value="Train">Train</option>
-                                        <option value="Auto">Auto</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="fromLocation">From<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="fromLocation" placeholder="Starting location" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="toLocation">To<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="toLocation" placeholder="Destination" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="travelDate">Date<span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="travelDate" required>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="approxDistance">Distance (km)<span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="approxDistance" placeholder="Approx distance" min="0" step="0.1" required>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="totalExpense">Amount (₹)<span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="totalExpense" placeholder="Total expense" min="0" step="0.01" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="expenseNotes">Notes</label>
-                            <textarea class="form-control" id="expenseNotes" rows="2" placeholder="Additional notes (optional)"></textarea>
-                        </div>
-                        
-                        <div class="form-group text-right">
-                            <button type="button" class="btn btn-secondary" id="resetExpenseForm">Reset</button>
-                            <button type="button" class="btn btn-primary" id="addExpenseEntry">Add Entry</button>
-                        </div>
-                    </form>
-                    
-                    <hr>
-                    
-                    <div class="travel-expenses-list">
-                        <!-- Expense entries will be added here dynamically -->
-                    </div>
-                    
-                    <div class="travel-expenses-summary" style="display: none;">
-                        <h5>Summary</h5>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p>Total Entries: <span id="totalEntries">0</span></p>
-                            </div>
-                            <div class="col-md-6 text-right">
-                                <p>Total Amount: ₹<span id="totalAmount">0.00</span></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveAllExpenses">Save All Expenses</button>
-            </div>
-        </div>
-    </div>
-</div>
+<?php include_once('modals/travel_expense_modal_new.php'); ?>
 
 <!-- Event Details Modal -->
 <div id="eventDetailsModal" class="event-details-modal">

@@ -23,8 +23,8 @@ if ($user_id !== $_SESSION['user_id'] && !isset($_SESSION['role'])) {
 }
 
 try {
-    // Fetch all travel expenses for the user
-    $stmt = $conn->prepare("
+    // Fetch all travel expenses for the user including meter photos
+    $stmt = $pdo->prepare("
         SELECT 
             id,
             user_id,
@@ -38,6 +38,8 @@ try {
             status,
             notes,
             bill_file_path,
+            meter_start_photo_path as meter_start_photo,
+            meter_end_photo_path as meter_end_photo,
             created_at,
             updated_at
         FROM travel_expenses 
@@ -45,14 +47,8 @@ try {
         ORDER BY travel_date DESC
     ");
     
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $expenses = [];
-    while ($row = $result->fetch_assoc()) {
-        $expenses[] = $row;
-    }
+    $stmt->execute([$user_id]);
+    $expenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Return expenses as JSON
     header('Content-Type: application/json');

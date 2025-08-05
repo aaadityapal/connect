@@ -27,10 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-// Create uploads directory if it doesn't exist
-$upload_dir = 'uploads/bills';
-if (!file_exists($upload_dir)) {
-    mkdir($upload_dir, 0755, true);
+// Create uploads directories if they don't exist
+$bills_dir = 'uploads/bills';
+$meter_photos_dir = 'uploads/meter_photos';
+
+if (!file_exists($bills_dir)) {
+    mkdir($bills_dir, 0755, true);
+}
+
+if (!file_exists($meter_photos_dir)) {
+    mkdir($meter_photos_dir, 0755, true);
 }
 
 // Debug info
@@ -101,7 +107,7 @@ try {
         // Validate file type
         $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
         if (!in_array($file_type, $allowed_types)) {
-            throw new Exception("Invalid file type for bill file: " . $file_type);
+            throw new Exception("Invalid file type for file: " . $file_type);
         }
         
         // Validate file size (max 5MB)
@@ -110,8 +116,13 @@ try {
             throw new Exception("File size too large. Maximum allowed size is 5MB");
         }
         
+        // Determine if this is a meter photo or a bill file
+        $is_meter_photo = (strpos($file_key, 'meter_start_photo_') === 0 || strpos($file_key, 'meter_end_photo_') === 0);
+        $upload_dir = $is_meter_photo ? $meter_photos_dir : $bills_dir;
+        $prefix = $is_meter_photo ? 'meter_' : 'bill_';
+        
         // Generate a unique filename to prevent overwriting
-        $unique_prefix = uniqid('bill_' . $user_id . '_');
+        $unique_prefix = uniqid($prefix . $user_id . '_');
         $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
         $unique_filename = $unique_prefix . '.' . $file_extension;
         $upload_path = $upload_dir . '/' . $unique_filename;
@@ -129,25 +140,30 @@ try {
         }
     }
     
-    // Check if we have at least one file for taxi expenses
-    $has_taxi_expense = false;
+    // Check if we have at least one file for expenses that require bills
+    $needs_bill_files = false;
+    $expense_types_needing_bills = [];
+    
     foreach ($expenses as $expense) {
-        if ($expense['mode'] === 'Taxi') {
-            $has_taxi_expense = true;
+        if (in_array($expense['mode'], ['Taxi', 'Bus', 'Train', 'Other'])) {
+            $needs_bill_files = true;
+            $expense_types_needing_bills[] = $expense['mode'];
             break;
         }
     }
     
-    if ($has_taxi_expense && empty($uploaded_files)) {
-        throw new Exception("No bill files were uploaded for taxi expenses");
+    if ($needs_bill_files && empty($uploaded_files)) {
+        $expense_types = array_unique($expense_types_needing_bills);
+        throw new Exception("No bill files were uploaded for " . implode(', ', $expense_types) . " expenses");
     }
 
-    // Prepare the SQL statement with bill_file_path
+    // Prepare the SQL statement with file paths
     $stmt = $conn->prepare("
         INSERT INTO travel_expenses (
             user_id, purpose, mode_of_transport, from_location, 
-            to_location, travel_date, distance, amount, status, notes, bill_file_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            to_location, travel_date, distance, amount, status, notes, 
+            bill_file_path, meter_start_photo_path, meter_end_photo_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     if (!$stmt) {
@@ -159,12 +175,15 @@ try {
     
     // Insert each expense entry
     foreach ($expenses as $index => $expense) {
-        // Determine if this expense needs a bill file path
+        // Initialize file paths
         $expense_bill_path = null;
+        $meter_start_photo_path = null;
+        $meter_end_photo_path = null;
         
-        if ($expense['mode'] === 'Taxi') {
+        // Handle bill file for Taxi, Bus, Train and Other
+        if (in_array($expense['mode'], ['Taxi', 'Bus', 'Train', 'Other'])) {
             // Look for a file that matches this expense's index
-            if (isset($uploaded_files['bill_file_' . $expense['billFileIndex']])) {
+            if (isset($expense['billFileIndex']) && isset($uploaded_files['bill_file_' . $expense['billFileIndex']])) {
                 $expense_bill_path = $uploaded_files['bill_file_' . $expense['billFileIndex']];
             } 
             // If not found by index, try using bill_file_0
@@ -175,15 +194,54 @@ try {
             else if (isset($uploaded_files['bill_file'])) {
                 $expense_bill_path = $uploaded_files['bill_file'];
             }
-            // If we still don't have a file, check if there's any file at all
-            else if (!empty($uploaded_files)) {
-                // Just use the first file we found
-                $expense_bill_path = reset($uploaded_files);
+            // If we still don't have a file, check if there's any bill file
+            else {
+                // Look for any bill file
+                foreach ($uploaded_files as $key => $path) {
+                    if (strpos($key, 'bill_file_') === 0) {
+                        $expense_bill_path = $path;
+                        break;
+                    }
+                }
             }
             
-            // If we still don't have a bill path for a taxi expense, that's an error
+            // If we still don't have a bill path for this expense type, that's an error
             if ($expense_bill_path === null) {
-                throw new Exception("Missing bill file for taxi expense #" . ($index + 1));
+                throw new Exception("Missing bill file for " . $expense['mode'] . " expense #" . ($index + 1));
+            }
+        }
+        
+        // Handle meter photos for Bike and Car
+        if ($expense['mode'] === 'Bike' || $expense['mode'] === 'Car') {
+            // Look for meter start photo
+            if (isset($expense['meterStartPhotoIndex']) && isset($uploaded_files['meter_start_photo_' . $expense['meterStartPhotoIndex']])) {
+                $meter_start_photo_path = $uploaded_files['meter_start_photo_' . $expense['meterStartPhotoIndex']];
+            } else {
+                // Look for any meter start photo
+                foreach ($uploaded_files as $key => $path) {
+                    if (strpos($key, 'meter_start_photo_') === 0) {
+                        $meter_start_photo_path = $path;
+                        break;
+                    }
+                }
+            }
+            
+            // Look for meter end photo
+            if (isset($expense['meterEndPhotoIndex']) && isset($uploaded_files['meter_end_photo_' . $expense['meterEndPhotoIndex']])) {
+                $meter_end_photo_path = $uploaded_files['meter_end_photo_' . $expense['meterEndPhotoIndex']];
+            } else {
+                // Look for any meter end photo
+                foreach ($uploaded_files as $key => $path) {
+                    if (strpos($key, 'meter_end_photo_') === 0) {
+                        $meter_end_photo_path = $path;
+                        break;
+                    }
+                }
+            }
+            
+            // Check if we have both meter photos
+            if ($meter_start_photo_path === null || $meter_end_photo_path === null) {
+                throw new Exception("Missing meter photos for " . $expense['mode'] . " expense #" . ($index + 1));
             }
         }
         
@@ -204,7 +262,7 @@ try {
 
         // Bind the parameters - note we're using 's' for date as it's a string in YYYY-MM-DD format
         $stmt->bind_param(
-            "isssssddsss",
+            "isssssddsssss",
             $user_id,
             $expense['purpose'],
             $expense['mode'],
@@ -215,7 +273,9 @@ try {
             $expense['amount'],
             $status,
             $expense['notes'],
-            $expense_bill_path
+            $expense_bill_path,
+            $meter_start_photo_path,
+            $meter_end_photo_path
         );
 
         // Execute the statement

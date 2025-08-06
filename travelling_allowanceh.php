@@ -230,6 +230,8 @@ $approval_status_groups = [
     'Overall Status' => [
         'Pending',
         'Approved',
+        'Approved and Paid',
+        'Approved and Unpaid',
         'Rejected'
     ],
     'Manager' => [
@@ -344,11 +346,17 @@ try {
             $status_value = strtolower(str_replace('HR ', '', $approval_status));
             $baseQuery .= " AND te.hr_status = :approval_status";
             $params[':approval_status'] = $status_value;
+            } else {
+        // Overall status
+        if ($approval_status === 'Approved and Paid') {
+            $baseQuery .= " AND te.status = 'approved' AND te.payment_status = 'paid'";
+        } elseif ($approval_status === 'Approved and Unpaid') {
+            $baseQuery .= " AND te.status = 'approved' AND (te.payment_status = 'pending' OR te.payment_status IS NULL)";
         } else {
-            // Overall status
             $baseQuery .= " AND te.status = :approval_status";
             $params[':approval_status'] = strtolower($approval_status);
         }
+    }
     }
     
     // Search filter
@@ -1550,10 +1558,7 @@ try {
         <!-- Results Area -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title"><i class="bi bi-receipt me-2"></i>Travel Expenses</h5>
-                <button class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-download"></i> Export
-                </button>
+                <h5 class="card-title"><i class="bi bi-receipt me-2"></i>Travel Expenses</h5>    
             </div>
             <div class="card-body p-0">
                 <?php if (!empty($grouped_expenses)): ?>
@@ -1571,6 +1576,7 @@ try {
                                 <th><i class="bi bi-calculator me-1"></i> Accountant</th>
                                 <th><i class="bi bi-briefcase me-1"></i> Manager</th>
                                 <th><i class="bi bi-people me-1"></i> HR</th>
+                                <th><i class="bi bi-cash-coin me-1"></i> Pay Status</th>
                                 <th class="text-center"><i class="bi bi-gear me-1"></i> Actions</th>
                             </tr>
                         </thead>
@@ -1670,7 +1676,7 @@ try {
                                     
                                     // Check if today is Wednesday to Thursday
                                     $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
-                                    $isLockDay = ($currentDay >= 4 && $currentDay <= 4); // Wednesday to Thursday
+                                    $isLockDay = ($currentDay >= 3 && $currentDay <= 4); // Wednesday to Thursday
                                     
                                     // MODIFIED: Lock all expenses if today is Wednesday or Thursday, regardless of travel date
                                     $isLocked = $isLockDay;
@@ -1886,6 +1892,23 @@ try {
                                         <?php endif; ?>
                                     </div>
 
+                                </td>
+                                <td>
+                                    <?php
+                                    // Display payment status
+                                    $paymentStatus = strtolower($expense['payment_status'] ?? 'pending');
+                                    $payStatusClass = '';
+                                    $payStatusText = '';
+                                    
+                                    if ($paymentStatus === 'paid') {
+                                        $payStatusClass = 'bg-success';
+                                        $payStatusText = 'Paid';
+                                    } else {
+                                        $payStatusClass = 'bg-secondary';
+                                        $payStatusText = 'Unpaid';
+                                    }
+                                    ?>
+                                    <span class="badge <?= $payStatusClass ?>"><?= $payStatusText ?></span>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
@@ -2594,6 +2617,7 @@ function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = f
                                                 <th class="col-status"><i class="bi bi-briefcase me-1"></i> Manager</th>
                                                 <th class="col-status"><i class="bi bi-calculator me-1"></i> Accountant</th>
                                                 <th class="col-status"><i class="bi bi-people me-1"></i> HR</th>
+                                                <th class="col-status"><i class="bi bi-cash-coin me-1"></i> Pay Status</th>
                                                 <th class="text-end pe-3 col-actions"><i class="bi bi-gear me-1"></i> Actions</th>
                                             </tr>
                                         </thead>
@@ -2628,16 +2652,29 @@ function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = f
                                                 
                                                 // Get HR status class
                                                 $hrStatusClass = '';
-                                                switch(strtolower($expense['hr_status'] ?? 'not_reviewed')) {
-                                                    case 'approved': case 'checked': $hrStatusClass = 'bg-success'; break;
-                                                    case 'pending': $hrStatusClass = 'bg-warning text-dark'; break;
-                                                    case 'rejected': $hrStatusClass = 'bg-danger'; break;
-                                                    default: $hrStatusClass = 'bg-secondary'; break;
-                                                }
-                                                
-                                                // Format dates
-                                                $submittedDate = date('d M Y', strtotime($expense['created_at']));
-                                            ?>
+                                                                                                    switch(strtolower($expense['hr_status'] ?? 'not_reviewed')) {
+                                                        case 'approved': case 'checked': $hrStatusClass = 'bg-success'; break;
+                                                        case 'pending': $hrStatusClass = 'bg-warning text-dark'; break;
+                                                        case 'rejected': $hrStatusClass = 'bg-danger'; break;
+                                                        default: $hrStatusClass = 'bg-secondary'; break;
+                                                    }
+                                                    
+                                                    // Get payment status class
+                                                    $paymentStatus = strtolower($expense['payment_status'] ?? 'pending');
+                                                    $payStatusClass = '';
+                                                    $payStatusText = '';
+                                                    
+                                                    if ($paymentStatus === 'paid') {
+                                                        $payStatusClass = 'bg-success';
+                                                        $payStatusText = 'Paid';
+                                                    } else {
+                                                        $payStatusClass = 'bg-secondary';
+                                                        $payStatusText = 'Unpaid';
+                                                    }
+                                                    
+                                                    // Format dates
+                                                    $submittedDate = date('d M Y', strtotime($expense['created_at']));
+                                                ?>
                                             <tr>
                                                 <td class="ps-3 text-center">
                                                     <div class="form-check">
@@ -2766,6 +2803,11 @@ function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = f
                                                             </button>
                                                         <?php endif; ?>
                                                     </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge <?= $payStatusClass ?>">
+                                                        <?= $payStatusText ?>
+                                                    </span>
                                                 </td>
                                                 <td class="text-end pe-3">
                                                     <div class="btn-group">

@@ -1670,18 +1670,10 @@ try {
                                     
                                     // Check if today is Wednesday to Thursday
                                     $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
-                                    $isLockDay = ($currentDay >= 3 && $currentDay <= 4); // Wednesday to Thursday
+                                    $isLockDay = ($currentDay >= 4 && $currentDay <= 4); // Wednesday to Thursday
                                     
-                                    // Get travel date's day of week
-                                    $travelDateObj = new DateTime($date);
-                                    $travelDayOfWeek = (int)$travelDateObj->format('N'); // 1 (Monday) to 7 (Sunday)
-                                    $isTravelDateLockDay = ($travelDayOfWeek >= 3 && $travelDayOfWeek <= 4); // Wednesday to Thursday
-                                    
-                                    // Determine if the expense should be locked based on day of week (Wed-Thu)
-                                    $isLockedDueToWeekday = $isLockDay && $isTravelDateLockDay;
-                                    
-                                    // Lock row if today is Wednesday to Thursday AND the travel date is also Wednesday to Thursday
-                                    $isLocked = $isLockedDueToWeekday;
+                                    // MODIFIED: Lock all expenses if today is Wednesday or Thursday, regardless of travel date
+                                    $isLocked = $isLockDay;
                                     $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
                                     $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
                             ?>
@@ -1705,7 +1697,7 @@ try {
                                             <div class="d-flex flex-column gap-1 mt-1">
                                                 <?php
                                                 // Prepare awaiting text if locked
-                                                $awaitingText = "Locked (Wed-Thu)";
+                                                $awaitingText = "Locked (System locked on Wed-Thu)";
                                                 ?>
                                                 <div class="locked-indicator">
                                                     <i class="bi bi-lock-fill text-secondary me-1"></i>
@@ -2290,32 +2282,81 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
 
                                 <script>
                                 // Function to fetch attendance photos
-                                function fetchAttendancePhotos(userId, travelDate, modalId) {
-                                    // Fetch punch in photo
-                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
-                                        })
-                                        .catch(error => {
-                                            console.error('Error fetching punch in photo:', error);
-                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load punch in photo');
-                                        });
-                                    
-                                    // Fetch punch out photo
-                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
-                                        })
-                                        .catch(error => {
-                                            console.error('Error fetching punch out photo:', error);
-                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load punch out photo');
-                                        });
+function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = false) {
+                                    // If user is site supervisor, show punch in/out photos
+                                    if (isSiteSupervisor) {
+                                        // Fetch punch in photo
+                                        fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                            })
+                                            .catch(error => {
+                                                console.error('Error fetching punch in photo:', error);
+                                                showPhotoError('punch-in-card-' + modalId, 'Failed to load punch in photo');
+                                            });
+                                        
+                                        // Fetch punch out photo
+                                        fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                            })
+                                            .catch(error => {
+                                                console.error('Error fetching punch out photo:', error);
+                                                showPhotoError('punch-out-card-' + modalId, 'Failed to load punch out photo');
+                                            });
+                                    } else {
+                                        // For non-supervisors, show meter photos
+                                        fetch(`ajax_handlers/get_meter_photos.php?user_id=${userId}&travel_date=${travelDate}`)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    // Update header text for meter photos
+                                                    const punchInHeader = document.querySelector(`#punch-in-card-${modalId} .card-header .d-flex > span:first-child`);
+                                                    const punchOutHeader = document.querySelector(`#punch-out-card-${modalId} .card-header .d-flex > span:first-child`);
+                                                    
+                                                    if (punchInHeader) punchInHeader.innerHTML = '<i class="bi bi-speedometer2 me-1"></i> Meter Start';
+                                                    if (punchOutHeader) punchOutHeader.innerHTML = '<i class="bi bi-speedometer2 me-1"></i> Meter End';
+                                                    
+                                                    // Update the section title
+                                                    const sectionTitle = document.querySelector(`#${modalId} .p-3.border-bottom.bg-light h6`);
+                                                    if (sectionTitle) sectionTitle.innerHTML = '<i class="bi bi-camera me-2"></i>Meter Photos';
+                                                    
+                                                    // Handle meter start photo
+                                                    const startPhotoData = {
+                                                        success: data.meter_start_photo_path ? true : false,
+                                                        photo: data.meter_start_photo_path,
+                                                        time: 'Start',
+                                                        formatted_address: data.from_location || 'N/A'
+                                                    };
+                                                    updateAttendanceCard('punch-in-card-' + modalId, startPhotoData, 'meter-start');
+                                                    
+                                                    // Handle meter end photo
+                                                    const endPhotoData = {
+                                                        success: data.meter_end_photo_path ? true : false,
+                                                        photo: data.meter_end_photo_path,
+                                                        time: 'End',
+                                                        formatted_address: data.to_location || 'N/A'
+                                                    };
+                                                    updateAttendanceCard('punch-out-card-' + modalId, endPhotoData, 'meter-end');
+                                                } else {
+                                                    showPhotoError('punch-in-card-' + modalId, 'No meter start photo available');
+                                                    showPhotoError('punch-out-card-' + modalId, 'No meter end photo available');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error fetching meter photos:', error);
+                                                showPhotoError('punch-in-card-' + modalId, 'Failed to load meter photos');
+                                                showPhotoError('punch-out-card-' + modalId, 'Failed to load meter photos');
+                                            });
+                                    }
                                 }
                                 
                                 // Function to update attendance card with fetched data
                                 function updateAttendanceCard(cardId, data, type) {
+                                    // Determine if this is a meter photo
+                                    const isMeterPhoto = type === 'meter-start' || type === 'meter-end';
                                     const card = document.getElementById(cardId);
                                     if (!card) return;
                                     
@@ -2352,13 +2393,21 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                             // Open photo in modal
                                             const photoModal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
                                             document.getElementById('photoViewerImage').src = data.photo;
-                                            document.getElementById('photoViewerModalLabel').textContent = type === 'punch-in' ? 'Punch In Photo' : 'Punch Out Photo';
+                                            if (isMeterPhoto) {
+                                                document.getElementById('photoViewerModalLabel').textContent = type === 'meter-start' ? 'Meter Start Photo' : 'Meter End Photo';
+                                            } else {
+                                                document.getElementById('photoViewerModalLabel').textContent = type === 'punch-in' ? 'Punch In Photo' : 'Punch Out Photo';
+                                            }
                                             photoModal.show();
                                         };
                                         
                                         const img = document.createElement('img');
                                         img.src = data.photo;
-                                        img.alt = type === 'punch-in' ? 'Punch In Photo' : 'Punch Out Photo';
+                                        if (isMeterPhoto) {
+                                            img.alt = type === 'meter-start' ? 'Meter Start Photo' : 'Meter End Photo';
+                                        } else {
+                                            img.alt = type === 'punch-in' ? 'Punch In Photo' : 'Punch Out Photo';
+                                        }
                                         img.classList.add('img-fluid', 'punch-photo');
                                         
                                         imgContainer.appendChild(img);
@@ -2382,7 +2431,11 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                                         noPhotoDiv.className = 'p-4 text-muted';
                                         noPhotoDiv.innerHTML = `
                                             <i class="bi bi-camera-slash display-4"></i>
-                                            <p class="mt-2">No ${type === 'punch-in' ? 'punch in' : 'punch out'} photo available</p>
+                                            <p class="mt-2">No ${
+                                                isMeterPhoto 
+                                                    ? (type === 'meter-start' ? 'meter start' : 'meter end') 
+                                                    : (type === 'punch-in' ? 'punch in' : 'punch out')
+                                            } photo available</p>
                                         `;
                                         cardBody.appendChild(noPhotoDiv);
                                     }
@@ -2438,8 +2491,12 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
                         const day = parts[3];
                         const travelDate = `${year}-${month}-${day}`;
                         
-                        // Fetch attendance photos
-                        fetchAttendancePhotos(userId, travelDate, modalId);
+                        // Get the employee designation from the modal
+                        const expenseUserDesignation = document.querySelector(`#${modalId} .fw-medium + .text-muted.small`);
+                        const isSiteSupervisor = expenseUserDesignation && expenseUserDesignation.textContent.toLowerCase().includes('site supervisor');
+                        
+                        // Pass the employee designation to the fetch function
+                        fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor);
                         
                         // Check if HR verification data exists and show expenses table
                         const distanceInput = modal.querySelector('.confirmed-distance-input');

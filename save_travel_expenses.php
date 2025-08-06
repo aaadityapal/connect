@@ -211,8 +211,14 @@ try {
             }
         }
         
-        // Handle meter photos for Bike and Car
-        if ($expense['mode'] === 'Bike' || $expense['mode'] === 'Car') {
+        // Check if user is a Site Supervisor
+        $isSiteSupervisor = false;
+        if (isset($_SESSION['role']) && strpos(strtolower($_SESSION['role']), 'supervisor') !== false) {
+            $isSiteSupervisor = true;
+        }
+        
+        // Handle meter photos for Bike and Car (but exempt Site Supervisors)
+        if (($expense['mode'] === 'Bike' || $expense['mode'] === 'Car') && !$isSiteSupervisor) {
             // Look for meter start photo
             if (isset($expense['meterStartPhotoIndex']) && isset($uploaded_files['meter_start_photo_' . $expense['meterStartPhotoIndex']])) {
                 $meter_start_photo_path = $uploaded_files['meter_start_photo_' . $expense['meterStartPhotoIndex']];
@@ -239,7 +245,7 @@ try {
                 }
             }
             
-            // Check if we have both meter photos
+            // Check if we have both meter photos (only for non-Site Supervisors)
             if ($meter_start_photo_path === null || $meter_end_photo_path === null) {
                 throw new Exception("Missing meter photos for " . $expense['mode'] . " expense #" . ($index + 1));
             }

@@ -830,7 +830,7 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
         }
     </style>
 </head>
-<body>
+<body data-user-role="<?php echo htmlspecialchars($_SESSION['role'] ?? ''); ?>">
     <div class="main-container">
         <!-- Include left panel -->
         <?php include_once('includes/manager_panel.php'); ?>

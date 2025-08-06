@@ -166,8 +166,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleModeChange() {
         const selectedMode = modeInput.value;
         
-        // Show/hide meter photos container based on mode
-        if (selectedMode === 'Bike' || selectedMode === 'Car') {
+        // Check if user is a Site Supervisor
+        const userRole = document.body.getAttribute('data-user-role') || '';
+        const isSiteSupervisor = userRole.toLowerCase().includes('supervisor');
+        
+        // Show/hide meter photos container based on mode and role
+        if ((selectedMode === 'Bike' || selectedMode === 'Car') && !isSiteSupervisor) {
             meterPhotosContainer.style.display = 'flex';
         } else {
             meterPhotosContainer.style.display = 'none';
@@ -394,8 +398,12 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
-        // Validate meter photos only for Bike and Car
-        if (modeInput.value === 'Bike' || modeInput.value === 'Car') {
+        // Check if user is a Site Supervisor
+        const userRole = document.body.getAttribute('data-user-role') || '';
+        const isSiteSupervisor = userRole.toLowerCase().includes('supervisor');
+        
+        // Validate meter photos only for Bike and Car (but exempt Site Supervisors)
+        if ((modeInput.value === 'Bike' || modeInput.value === 'Car') && !isSiteSupervisor) {
             // Validate meter start photo
             if (!meterStartPhotoInput.files || meterStartPhotoInput.files.length === 0) {
                 showError(meterStartPhotoInput, 'Meter start photo is required');

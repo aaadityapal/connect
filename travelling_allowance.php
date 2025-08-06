@@ -1441,18 +1441,10 @@ try {
                                     
                                     // Check if today is Wednesday to Thursday
                                     $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
-                                    $isLockDay = ($currentDay >= 3 && $currentDay <= 4); // Wednesday to Thursday
+                                    $isLockDay = ($currentDay >= 4 && $currentDay <= 4); // Wednesday to Thursday
                                     
-                                    // Get travel date's day of week
-                                    $travelDateObj = new DateTime($date);
-                                    $travelDayOfWeek = (int)$travelDateObj->format('N'); // 1 (Monday) to 7 (Sunday)
-                                    $isTravelDateLockDay = ($travelDayOfWeek >= 3 && $travelDayOfWeek <= 4); // Wednesday to Thursday
-                                    
-                                    // Determine if the expense should be locked based on day of week (Wed-Thu)
-                                    $isLockedDueToWeekday = $isLockDay && $isTravelDateLockDay;
-                                    
-                                    // Lock row if today is Wednesday to Thursday AND the travel date is also Wednesday to Thursday
-                                    $isLocked = $isLockedDueToWeekday;
+                                    // MODIFIED: Lock all expenses if today is Wednesday or Thursday, regardless of travel date
+                                    $isLocked = $isLockDay;
                                     $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
                                     $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
                             ?>
@@ -1476,7 +1468,7 @@ try {
                                             <div class="d-flex flex-column gap-1 mt-1">
                                                 <?php
                                                 // Prepare awaiting text if locked
-                                                $awaitingText = "Locked (Wed-Thu)";
+                                                $awaitingText = "Locked (System locked on Wed-Thu)";
                                                 ?>
                                                 <div class="locked-indicator">
                                                     <i class="bi bi-lock-fill text-secondary me-1"></i>
@@ -1939,15 +1931,15 @@ try {
                                     </div>
                                 </div>
                                 
-                                <!-- Attendance Photos Section -->
+                                <!-- Photos Section -->
                                 <div class="p-3 border-bottom bg-light">
-                                    <h6 class="mb-3"><i class="bi bi-camera me-2"></i>Attendance Photos</h6>
+                                    <h6 class="mb-3"><i class="bi bi-camera me-2"></i><span class="photos-section-title">Verification Photos</span></h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <div class="card h-100 border attendance-photo-card" id="punch-in-card-<?= $modal_id ?>">
                                                 <div class="card-header bg-primary text-white py-2">
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <span><i class="bi bi-box-arrow-in-right me-1"></i> Punch In</span>
+                                                        <span class="card-header-title"><i class="bi bi-box-arrow-in-right me-1"></i> <span class="header-text">Punch In</span></span>
                                                         <span class="badge bg-light text-dark punch-time">Loading...</span>
                                                     </div>
                                                 </div>
@@ -1956,7 +1948,7 @@ try {
                                                         <div class="spinner-border text-primary" role="status">
                                                             <span class="visually-hidden">Loading...</span>
                                                         </div>
-                                                        <p class="mt-2">Loading punch in photo...</p>
+                                                        <p class="mt-2">Loading photo...</p>
                                                     </div>
                                                 </div>
                                                 <div class="card-footer p-2 bg-light location-footer d-none">
@@ -1974,7 +1966,7 @@ try {
                                             <div class="card h-100 border attendance-photo-card" id="punch-out-card-<?= $modal_id ?>">
                                                 <div class="card-header bg-success text-white py-2">
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <span><i class="bi bi-box-arrow-right me-1"></i> Punch Out</span>
+                                                        <span class="card-header-title"><i class="bi bi-box-arrow-right me-1"></i> <span class="header-text">Punch Out</span></span>
                                                         <span class="badge bg-light text-dark punch-time">Loading...</span>
                                                     </div>
                                                 </div>
@@ -1983,7 +1975,7 @@ try {
                                                         <div class="spinner-border text-success" role="status">
                                                             <span class="visually-hidden">Loading...</span>
                                                         </div>
-                                                        <p class="mt-2">Loading punch out photo...</p>
+                                                        <p class="mt-2">Loading photo...</p>
                                                     </div>
                                                 </div>
                                                 <div class="card-footer p-2 bg-light location-footer d-none">
@@ -2002,27 +1994,126 @@ try {
 
                                 <script>
                                 // Function to fetch attendance photos
-                                function fetchAttendancePhotos(userId, travelDate, modalId) {
-                                    // Fetch punch in photo
-                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = false) {
+                                    // First check user role
+                                    fetch('ajax_handlers/get_current_user_role.php')
                                         .then(response => response.json())
-                                        .then(data => {
-                                            updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                        .then(userData => {
+                                            if (userData.success && userData.role) {
+                                                const userRole = userData.role.toLowerCase();
+                                                
+                                                // If user is site supervisor or the employee is a site supervisor, show punch in/out photos
+                                                // Check for any supervisor role or designation
+                                                if (userRole.includes('supervisor') || userRole === 'site supervisor' || userRole === 'supervisor' || isSiteSupervisor) {
+                                                    // Update section title
+                                                    const sectionTitle = document.querySelector(`#${modalId} .photos-section-title`);
+                                                    if (sectionTitle) {
+                                                        sectionTitle.textContent = 'Attendance Photos';
+                                                    }
+                                                    
+                                                    // Fetch punch in photo
+                                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                                        .then(response => response.json())
+                                                        .then(data => {
+                                                            updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                                        })
+                                                        .catch(error => {
+                                                            console.error('Error fetching punch in photo:', error);
+                                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load punch in photo');
+                                                        });
+                                                    
+                                                    // Fetch punch out photo
+                                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                                        .then(response => response.json())
+                                                        .then(data => {
+                                                            updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                                        })
+                                                        .catch(error => {
+                                                            console.error('Error fetching punch out photo:', error);
+                                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load punch out photo');
+                                                        });
+                                                } else {
+                                                    // Update section title for other roles
+                                                    const sectionTitle = document.querySelector(`#${modalId} .photos-section-title`);
+                                                    if (sectionTitle) {
+                                                        sectionTitle.textContent = 'Meter Photos';
+                                                    }
+                                                    
+                                                    // For other roles, fetch meter start/end photos
+                                                    fetch(`ajax_handlers/get_meter_photos.php?user_id=${userId}&travel_date=${travelDate}`)
+                                                        .then(response => response.json())
+                                                        .then(data => {
+                                                            if (data.success) {
+                                                                // Update meter start photo
+                                                                const startData = {
+                                                                    success: true,
+                                                                    photo: data.meter_start_photo_path,
+                                                                    time: data.travel_date + ' (Start)',
+                                                                    formatted_address: data.from_location || 'N/A'
+                                                                };
+                                                                updateAttendanceCard('punch-in-card-' + modalId, startData, 'meter-start');
+                                                                
+                                                                // Update meter end photo
+                                                                const endData = {
+                                                                    success: true,
+                                                                    photo: data.meter_end_photo_path,
+                                                                    time: data.travel_date + ' (End)',
+                                                                    formatted_address: data.to_location || 'N/A'
+                                                                };
+                                                                updateAttendanceCard('punch-out-card-' + modalId, endData, 'meter-end');
+                                                            } else {
+                                                                showPhotoError('punch-in-card-' + modalId, 'No meter start photo available');
+                                                                showPhotoError('punch-out-card-' + modalId, 'No meter end photo available');
+                                                            }
+                                                        })
+                                                        .catch(error => {
+                                                            console.error('Error fetching meter photos:', error);
+                                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load meter start photo');
+                                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load meter end photo');
+                                                        });
+                                                }
+                                            } else {
+                                                console.error('Error getting user role:', userData.message || 'Unknown error');
+                                                // Fallback to punch in/out photos
+                                                fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                                    })
+                                                    .catch(error => {
+                                                        showPhotoError('punch-in-card-' + modalId, 'Failed to load photo');
+                                                    });
+                                                
+                                                fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                                    })
+                                                    .catch(error => {
+                                                        showPhotoError('punch-out-card-' + modalId, 'Failed to load photo');
+                                                    });
+                                            }
                                         })
                                         .catch(error => {
-                                            console.error('Error fetching punch in photo:', error);
-                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load punch in photo');
-                                        });
-                                    
-                                    // Fetch punch out photo
-                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
-                                        })
-                                        .catch(error => {
-                                            console.error('Error fetching punch out photo:', error);
-                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load punch out photo');
+                                            console.error('Error getting user role:', error);
+                                            // Fallback to punch in/out photos
+                                            fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                                })
+                                                .catch(error => {
+                                                    showPhotoError('punch-in-card-' + modalId, 'Failed to load photo');
+                                                });
+                                            
+                                            fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                                })
+                                                .catch(error => {
+                                                    showPhotoError('punch-out-card-' + modalId, 'Failed to load photo');
+                                                });
                                         });
                                 }
                                 
@@ -2036,6 +2127,20 @@ try {
                                     const locationFooter = card.querySelector('.location-footer');
                                     const locationText = card.querySelector('.location-text');
                                     const mapLink = card.querySelector('.map-link');
+                                    const headerText = card.querySelector('.header-text');
+                                    
+                                    // Update header text based on type
+                                    if (headerText) {
+                                        if (type === 'meter-start') {
+                                            headerText.textContent = 'Meter Start';
+                                        } else if (type === 'meter-end') {
+                                            headerText.textContent = 'Meter End';
+                                        } else if (type === 'punch-in') {
+                                            headerText.textContent = 'Punch In';
+                                        } else if (type === 'punch-out') {
+                                            headerText.textContent = 'Punch Out';
+                                        }
+                                    }
                                     
                                     // Update time display
                                     timeDisplay.textContent = data.time || 'N/A';
@@ -2064,13 +2169,28 @@ try {
                                             // Open photo in modal
                                             const photoModal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
                                             document.getElementById('photoViewerImage').src = data.photo;
-                                            document.getElementById('photoViewerModalLabel').textContent = type === 'punch-in' ? 'Punch In Photo' : 'Punch Out Photo';
+                                            
+                                            // Set appropriate title based on type
+                                            let modalTitle = 'Photo';
+                                            if (type === 'punch-in') modalTitle = 'Punch In Photo';
+                                            else if (type === 'punch-out') modalTitle = 'Punch Out Photo';
+                                            else if (type === 'meter-start') modalTitle = 'Meter Start Photo';
+                                            else if (type === 'meter-end') modalTitle = 'Meter End Photo';
+                                            
+                                            document.getElementById('photoViewerModalLabel').textContent = modalTitle;
                                             photoModal.show();
                                         };
                                         
                                         const img = document.createElement('img');
                                         img.src = data.photo;
-                                        img.alt = type === 'punch-in' ? 'Punch In Photo' : 'Punch Out Photo';
+                                        
+                                        // Set appropriate alt text based on type
+                                        if (type === 'punch-in') img.alt = 'Punch In Photo';
+                                        else if (type === 'punch-out') img.alt = 'Punch Out Photo';
+                                        else if (type === 'meter-start') img.alt = 'Meter Start Photo';
+                                        else if (type === 'meter-end') img.alt = 'Meter End Photo';
+                                        else img.alt = 'Photo';
+                                        
                                         img.classList.add('img-fluid', 'punch-photo');
                                         
                                         imgContainer.appendChild(img);
@@ -2092,9 +2212,17 @@ try {
                                         // Show no photo available message
                                         const noPhotoDiv = document.createElement('div');
                                         noPhotoDiv.className = 'p-4 text-muted';
+                                        
+                                        // Set appropriate message based on type
+                                        let message = 'No photo available';
+                                        if (type === 'punch-in') message = 'No punch in photo available';
+                                        else if (type === 'punch-out') message = 'No punch out photo available';
+                                        else if (type === 'meter-start') message = 'No meter start photo available';
+                                        else if (type === 'meter-end') message = 'No meter end photo available';
+                                        
                                         noPhotoDiv.innerHTML = `
                                             <i class="bi bi-camera-slash display-4"></i>
-                                            <p class="mt-2">No ${type === 'punch-in' ? 'punch in' : 'punch out'} photo available</p>
+                                            <p class="mt-2">${message}</p>
                                         `;
                                         cardBody.appendChild(noPhotoDiv);
                                     }
@@ -2150,8 +2278,12 @@ try {
                                                 const day = parts[3];
                                                 const travelDate = `${year}-${month}-${day}`;
                                                 
-                                                // Fetch attendance photos
-                                                fetchAttendancePhotos(userId, travelDate, modalId);
+                                                // Get the employee designation from the modal
+                                                const expenseUserDesignation = document.querySelector(`#${modalId} .fw-medium + .text-muted.small`);
+                                                const isSiteSupervisor = expenseUserDesignation && expenseUserDesignation.textContent.toLowerCase().includes('site supervisor');
+                                                
+                                                // Pass the employee designation to the fetch function
+                                                fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor);
                                                 
                                                 // Fetch the confirmed distance from the database
                                                 fetch(`ajax_handlers/check_confirmed_distance.php?user_id=${userId}&travel_date=${travelDate}`)

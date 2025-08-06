@@ -47,7 +47,7 @@
             }
         }
         
-        /* Sidebar styles */
+        /* Wrapper styles */
         .wrapper {
             display: flex;
             width: 100%;
@@ -55,246 +55,27 @@
             min-height: 100vh;
         }
         
-        .sidebar {
-            width: 280px;
-            background: #ffffff;
-            color: #333;
-            position: fixed;
-            top: 0;
-            left: 0;
+        #content {
+            flex: 1;
+            margin-left: 250px;
             height: 100vh;
-            z-index: 999;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 20px;
-            /* Hide scrollbar */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE and Edge */
+            background: #f8f9fa;
+            padding-bottom: 30px;
+            transition: margin-left 0.3s ease;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;     /* Firefox */
+        }
+        
+        /* Main content expanded state when panel is collapsed */
+        #content.expanded {
+            margin-left: 60px;
         }
         
         /* Hide scrollbar for Chrome, Safari and Opera */
-        .sidebar::-webkit-scrollbar {
+        #content::-webkit-scrollbar {
             display: none;
-        }
-        
-        .sidebar.collapsed {
-            width: 70px;
-        }
-        
-        .toggle-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.05);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 101;
-        }
-        
-        .toggle-btn:hover {
-            background: rgba(0,0,0,0.1);
-        }
-        
-        .toggle-btn i {
-            color: #666;
-            font-size: 12px;
-            transition: transform 0.3s;
-        }
-        
-        .sidebar.collapsed .toggle-btn i {
-            transform: rotate(180deg);
-        }
-        
-        .sidebar-header {
-            padding: 20px 20px 10px;
-            border-bottom: none;
-        }
-        
-        .sidebar-text {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #888888;
-            margin-bottom: 10px;
-            white-space: nowrap;
-            transition: opacity 0.3s ease;
-        }
-        
-        .sidebar-header h3.sidebar-text {
-            color: #888888;
-        }
-        
-        .sidebar.collapsed .sidebar-text {
-            opacity: 0;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu li {
-            position: relative;
-        }
-        
-        .sidebar-menu li a {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            color: #333;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            margin: 0 10px;
-            border-radius: 5px;
-            font-weight: 500;
-        }
-        
-        .sidebar-menu li a:hover {
-            color: #333;
-            background: rgba(0,0,0,0.03);
-            border-radius: 5px;
-            margin: 0 10px;
-        }
-        
-        .sidebar-menu li.active a {
-            color: #4361ee;
-            background: rgba(67, 97, 238, 0.1);
-            box-shadow: none;
-            border-radius: 5px;
-            margin: 0 10px;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu li a i {
-            min-width: 30px;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        /* Dashboard icon colors */
-        .sidebar-menu li a i.fa-tachometer-alt {
-            color: #FF6B6B;
-        }
-        
-        .sidebar-menu li a i.fa-calendar-check {
-            color: #4ECDC4;
-        }
-        
-        .sidebar-menu li a i.fa-users {
-            color: #FFD166;
-        }
-        
-        .sidebar-menu li a i.fa-box {
-            color: #6A8EFF;
-        }
-        
-        .sidebar-menu li a i.fa-chart-line {
-            color: #F72585;
-        }
-        
-        .sidebar-menu li a i.fa-file-invoice {
-            color: #4CC9F0;
-        }
-        
-        .sidebar-menu li a i.fa-clock {
-            color: #8AC926;
-        }
-        
-        .sidebar-menu li a i.fa-hourglass-half {
-            color: #A5B4FC;
-        }
-        
-        .sidebar-menu li a i.fa-plane {
-            color: #FB5607;
-        }
-        
-        .sidebar-menu li a i.fa-user {
-            color: #06D6A0;
-        }
-        
-        .sidebar-menu li a i.fa-bell {
-            color: #FFD166;
-        }
-        
-        .sidebar-menu li a i.fa-cog {
-            color: #A5B4FC;
-        }
-        
-        .sidebar-menu li a i.fa-lock {
-            color: #F72585;
-        }
-        
-        .sidebar-menu li a i.fa-sign-out-alt {
-            color: #FF6B6B;
-        }
-        
-        .sidebar-menu li a .sidebar-text {
-            margin-left: 10px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-transform: none;
-            color: inherit;
-            opacity: 1;
-        }
-        
-        .sidebar.collapsed .sidebar-menu li a .sidebar-text {
-            opacity: 0;
             width: 0;
-        }
-        
-        .sidebar-footer {
-            padding: 15px;
-            border-top: 1px solid rgba(0,0,0,0.05);
-            margin-top: auto;
-        }
-        
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            color: #ff6b6b !important;
-            padding: 10px;
-            border-radius: 5px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .logout-btn:hover {
-            background: rgba(255,107,107,0.1) !important;
-        }
-        
-        .logout-btn i {
-            margin-right: 10px;
-        }
-        
-        #content {
-            width: calc(100% - 280px);
-            min-height: 100vh;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-left: 280px;
-        }
-        
-        #content.expanded {
-            width: calc(100% - 70px);
-            margin-left: 70px;
         }
         
         .page-header {
@@ -719,47 +500,11 @@
         }
         
         /* Project Type Color Coding for Rows */
-        /* Mobile responsiveness for sidebar */
+        /* Mobile responsiveness for sidebar - using manager_panel.php's approach */
         @media (max-width: 768px) {
-            .sidebar {
-                margin-left: -280px;
-            }
-            
-            .sidebar.collapsed {
-                margin-left: 0;
-                width: 280px;
-            }
-            
             #content {
                 width: 100%;
                 margin-left: 0;
-            }
-            
-            #content.expanded {
-                width: 100%;
-                margin-left: 0;
-            }
-            
-            .sidebar.collapsed .sidebar-text,
-            .sidebar.collapsed .sidebar-menu li a .sidebar-text {
-                opacity: 1;
-                width: auto;
-            }
-            
-            /* Add overlay when sidebar is open on mobile */
-            .sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                z-index: 998;
-                display: none;
-            }
-            
-            .sidebar-overlay.active {
-                display: block;
             }
         }
     </style>
@@ -866,129 +611,8 @@
     ?>
 
     <div class="wrapper">
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div class="toggle-btn" id="toggle-btn">
-                <i class="fas fa-chevron-left"></i>
-            </div>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">MAIN</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="real.php">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span class="sidebar-text">Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-calendar-check"></i>
-                        <span class="sidebar-text">Leaves</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-users"></i>
-                        <span class="sidebar-text">Employees</span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="projects.php">
-                        <i class="fas fa-box"></i>
-                        <span class="sidebar-text">Projects</span>
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">ANALYTICS</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="#">
-                        <i class="fas fa-chart-line"></i>
-                        <span class="sidebar-text"> Employee Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="work_report.php">
-                        <i class="fas fa-file-invoice"></i>
-                        <span class="sidebar-text"> Work Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="attendance_report.php">
-                        <i class="fas fa-clock"></i>
-                        <span class="sidebar-text"> Attendance Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="attendance_approval.php">
-                        <i class="fas fa-calendar-check"></i>
-                        <span class="sidebar-text"> Attendance Approval</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="overtime_reports.php">
-                        <i class="fas fa-hourglass-half"></i>
-                        <span class="sidebar-text"> Overtime Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="travelling_allowancest.php">
-                        <i class="fas fa-plane"></i>
-                        <span class="sidebar-text"> Travel Reports</span>
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">SETTINGS</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="manager_profile.php">
-                        <i class="fas fa-user"></i>
-                        <span class="sidebar-text">Profile</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-bell"></i>
-                        <span class="sidebar-text">Notifications</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="manager_settings.php">
-                        <i class="fas fa-cog"></i>
-                        <span class="sidebar-text">Settings</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="reset_password.php">
-                        <i class="fas fa-lock"></i>
-                        <span class="sidebar-text">Reset Password</span>
-                    </a>
-                </li>
-            </ul>
-
-            <!-- Add logout at the end of sidebar -->
-            <div class="sidebar-footer">
-                <ul class="sidebar-menu">
-                    <li>
-                        <a href="logout.php" class="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span class="sidebar-text">Logout</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+        <!-- Include Manager Panel -->
+        <?php include 'includes/manager_panel.php'; ?>
 
         <!-- Page Content -->
         <div id="content">
@@ -1084,7 +708,7 @@
                                             <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="btn btn-outline-secondary">
                                                 <i class="bi bi-x-circle me-1"></i> Reset Filters
                                             </a>
-                                            <button type="button" id="saveFilters" class="btn btn-outline-primary">
+                                            <button type="button" id="saveFilters" class="btn btn-outline-primary <?= $_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'manager' ? 'disabled' : '' ?>" title="<?= $_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'manager' ? 'You do not have permission to save filters' : 'Save current filters' ?>">
                                                 <i class="bi bi-bookmark-plus me-1"></i> Save Filters
                                             </button>
                                         </div>
@@ -1187,11 +811,11 @@
                                                        data-address="<?= htmlspecialchars($project['client_address'] ?? '') ?>">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
-                                                    <a href="edit_project.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-warning action-btn me-1" title="Edit Project">
+                                                    <a href="edit_project.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-warning action-btn me-1 <?= $_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'manager' ? 'disabled' : '' ?>" title="<?= $_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'manager' ? 'You do not have permission to edit projects' : 'Edit Project' ?>">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
-                                                    <button type="button" class="btn btn-sm btn-danger action-btn delete-project" 
-                                                            title="Delete Project"
+                                                    <button type="button" class="btn btn-sm btn-danger action-btn delete-project <?= $_SESSION['user_role'] !== 'admin' ? 'disabled' : '' ?>" 
+                                                            title="<?= $_SESSION['user_role'] !== 'admin' ? 'You do not have permission to delete projects' : 'Delete Project' ?>"
                                                             data-id="<?= $project['id'] ?>"
                                                             data-title="<?= htmlspecialchars($project['title']) ?>">
                                                         <i class="bi bi-trash"></i>
@@ -1359,14 +983,32 @@
             toast.style.position = 'fixed';
             toast.style.bottom = '20px';
             toast.style.right = '20px';
-            toast.style.backgroundColor = type === 'success' ? '#10b981' : '#3949ab';
+            
+            // Set background color based on toast type
+            if (type === 'success') {
+                toast.style.backgroundColor = '#10b981';
+            } else if (type === 'error') {
+                toast.style.backgroundColor = '#ef4444';
+            } else {
+                toast.style.backgroundColor = '#3949ab';
+            }
+            
             toast.style.color = 'white';
             toast.style.padding = '12px 20px';
             toast.style.borderRadius = '4px';
             toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
             toast.style.zIndex = '9999';
             toast.style.transition = 'all 0.5s ease';
-            toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>${message}`;
+            
+            // Set icon based on toast type
+            let icon = 'info-circle';
+            if (type === 'success') {
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                icon = 'exclamation-circle';
+            }
+            
+            toast.innerHTML = `<i class="bi bi-${icon} me-2"></i>${message}`;
             return toast;
         }
         
@@ -1846,82 +1488,6 @@
                             return 'bg-secondary';
                         }
                     }
-                    
-                    // Sidebar toggle functionality
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const sidebar = document.querySelector('.sidebar');
-                        const toggleBtn = document.getElementById('toggle-btn');
-                        const content = document.getElementById('content');
-                        const isMobile = window.innerWidth <= 768;
-                        
-                        // Create sidebar overlay for mobile
-                        const sidebarOverlay = document.createElement('div');
-                        sidebarOverlay.className = 'sidebar-overlay';
-                        document.body.appendChild(sidebarOverlay);
-                        
-                        // Initialize sidebar state based on device
-                        if (!isMobile) {
-                            // On desktop, start with sidebar expanded
-                            sidebar.classList.remove('collapsed');
-                            content.classList.remove('expanded');
-                        } else {
-                            // On mobile, start with sidebar collapsed (hidden)
-                            sidebar.classList.add('collapsed');
-                            content.classList.add('expanded');
-                        }
-                        
-                        // Toggle sidebar
-                        toggleBtn.addEventListener('click', function() {
-                            sidebar.classList.toggle('collapsed');
-                            content.classList.toggle('expanded');
-                            
-                            // Rotate toggle button icon
-                            const icon = toggleBtn.querySelector('i');
-                            if (sidebar.classList.contains('collapsed')) {
-                                icon.style.transform = 'rotate(180deg)';
-                            } else {
-                                icon.style.transform = 'rotate(0deg)';
-                            }
-                            
-                            // Show/hide overlay on mobile
-                            if (window.innerWidth <= 768) {
-                                sidebarOverlay.classList.toggle('active');
-                            }
-                        });
-                        
-                        // Close sidebar when clicking overlay
-                        sidebarOverlay.addEventListener('click', function() {
-                            sidebar.classList.add('collapsed');
-                            content.classList.add('expanded');
-                            const icon = toggleBtn.querySelector('i');
-                            icon.style.transform = 'rotate(180deg)';
-                            sidebarOverlay.classList.remove('active');
-                        });
-                        
-                        // Handle window resize
-                        window.addEventListener('resize', function() {
-                            const newIsMobile = window.innerWidth <= 768;
-                            
-                            // If transitioning between mobile and desktop
-                            if (newIsMobile !== isMobile) {
-                                if (newIsMobile) {
-                                    // Switching to mobile
-                                    sidebar.classList.add('collapsed');
-                                    content.classList.add('expanded');
-                                    sidebarOverlay.classList.remove('active');
-                                    const icon = toggleBtn.querySelector('i');
-                                    icon.style.transform = 'rotate(180deg)';
-                                } else {
-                                    // Switching to desktop
-                                    sidebar.classList.remove('collapsed');
-                                    content.classList.remove('expanded');
-                                    sidebarOverlay.classList.remove('active');
-                                    const icon = toggleBtn.querySelector('i');
-                                    icon.style.transform = 'rotate(0deg)';
-                                }
-                            }
-                        });
-                    });
                     
                     // Save filters functionality
                     document.getElementById('saveFilters').addEventListener('click', function() {
@@ -2434,6 +2000,18 @@
                     // Add event listeners for project deletion
                     document.querySelectorAll('.delete-project').forEach(button => {
                         button.addEventListener('click', function() {
+                            // Check if button is disabled
+                            if (this.classList.contains('disabled')) {
+                                // Show permission denied message
+                                const toast = createToast('Permission denied: You do not have permission to delete projects', 'error');
+                                document.body.appendChild(toast);
+                                setTimeout(() => {
+                                    toast.classList.add('hide');
+                                    setTimeout(() => toast.remove(), 500);
+                                }, 2000);
+                                return;
+                            }
+                            
                             const projectId = this.dataset.id;
                             const projectTitle = this.dataset.title;
                             
@@ -2481,5 +2059,7 @@
     </script>
         </div>
     </div>
+    
+
 </body>
 </html>

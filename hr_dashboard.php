@@ -444,6 +444,14 @@ try {
             z-index: 1000;
             padding: 2rem;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .sidebar::-webkit-scrollbar {
+            display: none;
         }
 
         .sidebar.collapsed {
@@ -2140,6 +2148,14 @@ try {
             display: flex;
             flex-direction: column;
             height: calc(100% - 10px); /* Adjust based on your logo height */
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        /* Hide scrollbar for nav element in Chrome, Safari and Opera */
+        .sidebar nav::-webkit-scrollbar {
+            display: none;
         }
 
         /* Add these styles to your existing CSS */
@@ -2735,6 +2751,10 @@ try {
             <a href="hr_overtime_approval.php" class="nav-link">
                 <i class="bi bi-clock"></i>
                 Overtime Approval
+            </a>
+            <a href="hr_project_list.php" class="nav-link">
+                <i class="bi bi-diagram-3-fill"></i>
+                Projects
             </a>
             <a href="hr_password_reset.php" class="nav-link">
                 <i class="bi bi-key-fill"></i>

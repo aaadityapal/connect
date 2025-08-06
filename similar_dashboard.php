@@ -3081,9 +3081,9 @@ if ($shift_details && $shift_details['end_time']) {
                 <i class="fas fa-clock"></i>
                 <span class="menu-text">Overtime</span>
             </div>
-            <div class="menu-item" onclick="window.location.href='site_expenses.php'">
-                <i class="fas fa-file-excel"></i>
-                <span class="menu-text">Site Excel</span>
+            <div class="menu-item" onclick="window.location.href='projects_list.php'">
+                <i class="fas fa-project-diagram"></i>
+                <span class="menu-text">Projects</span>
             </div>
             <div class="menu-item" onclick="window.location.href='site_updates.php'">
                 <i class="fas fa-file-alt"></i>

@@ -50,9 +50,10 @@ try {
     $eventFilter = isset($_GET['event_id']) ? intval($_GET['event_id']) : 0;
     $vendorFilter = isset($_GET['vendor_id']) ? intval($_GET['vendor_id']) : 0;
     $labourTypeFilter = isset($_GET['labour_type']) ? $_GET['labour_type'] : 'all';
+    $labourNameFilter = isset($_GET['labour_name']) ? $_GET['labour_name'] : '';
     $siteTitle = '';
 
-    logError("Filters initialized: from=$fromDateFilter, to=$toDateFilter, status=$statusFilter, event=$eventFilter, vendor=$vendorFilter, type=$labourTypeFilter");
+    logError("Filters initialized: from=$fromDateFilter, to=$toDateFilter, status=$statusFilter, event=$eventFilter, vendor=$vendorFilter, type=$labourTypeFilter, labour_name=$labourNameFilter");
 
     // Check if required tables exist
     $tableCheckQuery = "SELECT COUNT(*) AS table_exists FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'sv_calendar_events'";
@@ -132,6 +133,12 @@ try {
             $companyLaboursQuery .= " AND (cl.morning_attendance = :status OR cl.evening_attendance = :status)";
             $params[':status'] = $statusFilter;
         }
+        
+        // Apply labour name filter if specified
+        if (!empty($labourNameFilter)) {
+            $companyLaboursQuery .= " AND cl.labour_name = :labour_name";
+            $params[':labour_name'] = $labourNameFilter;
+        }
 
         $companyLaboursQuery .= " ORDER BY cl.attendance_date DESC, cl.sequence_number, cl.labour_name";
 
@@ -199,6 +206,12 @@ try {
             $vendorLaboursQuery .= " AND (vl.morning_attendance = :status OR vl.evening_attendance = :status)";
             $vendorParams[':status'] = $statusFilter;
         }
+        
+        // Apply labour name filter if specified
+        if (!empty($labourNameFilter)) {
+            $vendorLaboursQuery .= " AND vl.labour_name = :labour_name";
+            $vendorParams[':labour_name'] = $labourNameFilter;
+        }
 
         $vendorLaboursQuery .= " ORDER BY vl.attendance_date DESC, ev.vendor_name, vl.sequence_number, vl.labour_name";
 
@@ -228,6 +241,11 @@ try {
         $fromDate = date('d-M-Y', strtotime($fromDateFilter));
         $toDate = date('d-M-Y', strtotime($toDateFilter));
         $filename = "labour_attendance_{$fromDate}_to_{$toDate}";
+    }
+    
+    // Add labour name to filename if specified
+    if (!empty($labourNameFilter)) {
+        $filename .= "_" . preg_replace('/[^a-zA-Z0-9]/', '_', $labourNameFilter);
     }
 
     logError("Filename set: $filename");
@@ -362,7 +380,8 @@ try {
                 <td colspan="10" class="company-name">Construction HR Management System</td>
             </tr>
             <tr>
-                <td colspan="10" class="subtitle">Date Range: ' . $fromDateFormatted . ' to ' . $toDateFormatted . '</td>
+                <td colspan="10" class="subtitle">Date Range: ' . $fromDateFormatted . ' to ' . $toDateFormatted . 
+                (!empty($labourNameFilter) ? ' | Labour: ' . htmlspecialchars($labourNameFilter) : '') . '</td>
             </tr>
             <tr>
                 <td colspan="10" class="color-coding">

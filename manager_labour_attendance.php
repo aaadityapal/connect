@@ -46,6 +46,7 @@ try {
     $eventFilter = isset($_GET['event_id']) ? intval($_GET['event_id']) : 0;
     $vendorFilter = isset($_GET['vendor_id']) ? intval($_GET['vendor_id']) : 0;
     $labourTypeFilter = isset($_GET['labour_type']) ? $_GET['labour_type'] : 'all';
+    $labourNameFilter = isset($_GET['labour_name']) ? $_GET['labour_name'] : '';
     $siteTitle = '';
 
     // Check if required tables exist
@@ -94,6 +95,11 @@ try {
         $columnCheck = $stmt->fetch(PDO::FETCH_ASSOC);
         $isDeletedExists = ($columnCheck && $columnCheck['column_exists'] > 0);
         
+        // Get all unique labour names for the dropdown filter
+        $labourNamesQuery = "SELECT DISTINCT labour_name FROM sv_company_labours ORDER BY labour_name ASC";
+        $labourNamesStmt = $pdo->query($labourNamesQuery);
+        $labourNames = $labourNamesStmt->fetchAll(PDO::FETCH_COLUMN);
+        
         // Fetch company labours
         $companyLaboursQuery = "
             SELECT 
@@ -131,6 +137,12 @@ try {
         if ($statusFilter !== 'all') {
             $companyLaboursQuery .= " AND (cl.morning_attendance = :status OR cl.evening_attendance = :status)";
             $params[':status'] = $statusFilter;
+        }
+        
+        // Apply labour name filter if specified
+        if (!empty($labourNameFilter)) {
+            $companyLaboursQuery .= " AND cl.labour_name = :labour_name";
+            $params[':labour_name'] = $labourNameFilter;
         }
 
         $companyLaboursQuery .= " ORDER BY cl.attendance_date DESC, cl.sequence_number, cl.labour_name";
@@ -200,6 +212,12 @@ try {
         if ($statusFilter !== 'all') {
             $vendorLaboursQuery .= " AND (vl.morning_attendance = :status OR vl.evening_attendance = :status)";
             $vendorParams[':status'] = $statusFilter;
+        }
+        
+        // Apply labour name filter if specified
+        if (!empty($labourNameFilter)) {
+            $vendorLaboursQuery .= " AND vl.labour_name = :labour_name";
+            $vendorParams[':labour_name'] = $labourNameFilter;
         }
 
         $vendorLaboursQuery .= " ORDER BY vl.attendance_date DESC, ev.vendor_name, vl.sequence_number, vl.labour_name";
@@ -1611,6 +1629,20 @@ try {
                             <option value="vendor" <?php echo $labourTypeFilter === 'vendor' ? 'selected' : ''; ?>>Vendor Labour</option>
                         </select>
                     </div>
+                    
+                    <div class="horizontal-filter-group">
+                        <h4><i class="fas fa-user"></i> Labour Name</h4>
+                        <select id="labourNameFilter" name="labour_name" class="filter-select">
+                            <option value="">All Labour Names</option>
+                            <?php if (isset($labourNames) && is_array($labourNames)): ?>
+                                <?php foreach ($labourNames as $name): ?>
+                                    <option value="<?php echo htmlspecialchars($name); ?>" <?php echo $labourNameFilter === $name ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($name); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="filter-actions">
@@ -1629,7 +1661,7 @@ try {
                 <div class="content-header">
                     <h2><i class="fas fa-clipboard-list"></i> Labour Attendance</h2>
                     <div class="action-buttons">
-                        <a href="export_labour_attendance.php?from_date=<?php echo urlencode($fromDateFilter); ?>&to_date=<?php echo urlencode($toDateFilter); ?>&status=<?php echo urlencode($statusFilter); ?>&event_id=<?php echo urlencode($eventFilter); ?>&vendor_id=<?php echo urlencode($vendorFilter); ?>&labour_type=<?php echo urlencode($labourTypeFilter); ?>" class="btn btn-secondary">
+                        <a href="export_labour_attendance.php?from_date=<?php echo urlencode($fromDateFilter); ?>&to_date=<?php echo urlencode($toDateFilter); ?>&status=<?php echo urlencode($statusFilter); ?>&event_id=<?php echo urlencode($eventFilter); ?>&vendor_id=<?php echo urlencode($vendorFilter); ?>&labour_type=<?php echo urlencode($labourTypeFilter); ?>&labour_name=<?php echo urlencode($labourNameFilter); ?>" class="btn btn-secondary">
                             <i class="fas fa-download"></i> <span class="btn-text">Export</span>
                         </a>
                         <a href="add_labour_attendance.php" class="btn btn-primary">
@@ -1942,7 +1974,8 @@ try {
             status: '<?php echo $statusFilter; ?>',
             eventId: <?php echo $eventFilter; ?>,
             vendorId: <?php echo $vendorFilter; ?>,
-            labourType: '<?php echo $labourTypeFilter; ?>'
+            labourType: '<?php echo $labourTypeFilter; ?>',
+            labourName: '<?php echo $labourNameFilter; ?>'
         });
         console.log('Query Results:', {
             companyLabourCount: <?php echo $companyLabourCount; ?>,

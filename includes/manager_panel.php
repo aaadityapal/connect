@@ -78,9 +78,9 @@
         <span class="menu-text">Labour Attendance</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'materials_management.php' ? 'active' : ''; ?>" onclick="window.location.href='materials_management.php'">
-        <i class="fas fa-dolly-flatbed"></i>
-        <span class="menu-text">Materials Management</span>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'drawings_list.php' ? 'active' : ''; ?>" onclick="window.location.href='drawings_list.php'">
+        <i class="fas fa-project-diagram"></i>
+        <span class="menu-text">Projects List</span>
     </div>
     
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'equipment_allocation.php' ? 'active' : ''; ?>" onclick="window.location.href='equipment_allocation.php'">

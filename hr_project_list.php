@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Replace the SheetJS CDN with a more reliable one -->
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
@@ -25,6 +25,15 @@
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
             --transition-speed: 0.3s;
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --secondary: #7C3AED;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --dark: #111827;
+            --gray: #6B7280;
+            --light: #F3F4F6;
         }
         
         body {
@@ -55,22 +64,19 @@
             min-height: 100vh;
         }
         
+        /* Modern Sidebar */
         .sidebar {
-            width: 280px;
-            background: #ffffff;
-            color: #333;
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            height: 100vh;
-            z-index: 999;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 20px;
-            /* Hide scrollbar */
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
         }
@@ -79,73 +85,131 @@
         .sidebar::-webkit-scrollbar {
             display: none;
         }
-        
+
         .sidebar.collapsed {
-            width: 70px;
+            transform: translateX(-100%);
         }
-        
-        .toggle-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.05);
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin 0.3s ease;
+            padding: 2rem;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: white;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
-            z-index: 101;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
         }
-        
-        .toggle-btn:hover {
-            background: rgba(0,0,0,0.1);
+
+        .toggle-sidebar:hover {
+            background: var(--primary);
+            color: white;
         }
-        
-        .toggle-btn i {
-            color: #666;
-            font-size: 12px;
-            transition: transform 0.3s;
+
+        .toggle-sidebar .bi {
+            transition: transform 0.3s ease;
         }
-        
-        .sidebar.collapsed .toggle-btn i {
+
+        .toggle-sidebar.collapsed {
+            left: 1rem;
+        }
+
+        .toggle-sidebar.collapsed .bi {
             transform: rotate(180deg);
         }
-        
-        .sidebar-header {
-            padding: 20px 20px 10px;
-            border-bottom: none;
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .toggle-sidebar {
+                left: 1rem;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
         }
         
-        .sidebar-text {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #888888;
-            margin-bottom: 10px;
-            white-space: nowrap;
-            transition: opacity 0.3s ease;
+        /* Update nav container to allow for margin-top: auto on logout */
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 10px); /* Adjust based on your logo height */
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
         }
         
-        .sidebar-header h3.sidebar-text {
-            color: #888888;
+        /* Hide scrollbar for nav element in Chrome, Safari and Opera */
+        .sidebar nav::-webkit-scrollbar {
+            display: none;
         }
         
-        .sidebar.collapsed .sidebar-text {
-            opacity: 0;
+        /* Logout button styles */
+        .logout-link {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+            color: black!important;
+            background-color: #D22B2B;
         }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu li {
-            position: relative;
+
+        .logout-link:hover {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
         }
         
         .sidebar-menu li a {
@@ -868,127 +932,80 @@
     <div class="wrapper">
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
-            <div class="toggle-btn" id="toggle-btn">
-                <i class="fas fa-chevron-left"></i>
+            <div class="sidebar-logo">
+                <i class="bi bi-hexagon-fill"></i>
+                HR Portal
             </div>
             
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">MAIN</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="real.php">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span class="sidebar-text">Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-calendar-check"></i>
-                        <span class="sidebar-text">Leaves</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-users"></i>
-                        <span class="sidebar-text">Employees</span>
-                    </a>
-                </li>
-                <li class="active">
-                    <a href="projects.php">
-                        <i class="fas fa-box"></i>
-                        <span class="sidebar-text">Projects</span>
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">ANALYTICS</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="#">
-                        <i class="fas fa-chart-line"></i>
-                        <span class="sidebar-text"> Employee Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="work_report.php">
-                        <i class="fas fa-file-invoice"></i>
-                        <span class="sidebar-text"> Work Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="attendance_report.php">
-                        <i class="fas fa-clock"></i>
-                        <span class="sidebar-text"> Attendance Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="attendance_approval.php">
-                        <i class="fas fa-calendar-check"></i>
-                        <span class="sidebar-text"> Attendance Approval</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="overtime_reports.php">
-                        <i class="fas fa-hourglass-half"></i>
-                        <span class="sidebar-text"> Overtime Reports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="travelling_allowancest.php">
-                        <i class="fas fa-plane"></i>
-                        <span class="sidebar-text"> Travel Reports</span>
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="sidebar-header">
-                <h3 class="sidebar-text">SETTINGS</h3>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="manager_profile.php">
-                        <i class="fas fa-user"></i>
-                        <span class="sidebar-text">Profile</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <i class="fas fa-bell"></i>
-                        <span class="sidebar-text">Notifications</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="manager_settings.php">
-                        <i class="fas fa-cog"></i>
-                        <span class="sidebar-text">Settings</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="reset_password.php">
-                        <i class="fas fa-lock"></i>
-                        <span class="sidebar-text">Reset Password</span>
-                    </a>
-                </li>
-            </ul>
-
-            <!-- Add logout at the end of sidebar -->
-            <div class="sidebar-footer">
-                <ul class="sidebar-menu">
-                    <li>
-                        <a href="logout.php" class="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span class="sidebar-text">Logout</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+            <nav>
+                <a href="hr_dashboard.php" class="nav-link">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    Dashboard
+                </a>
+                <a href="employee.php" class="nav-link">
+                    <i class="bi bi-people-fill"></i>
+                    Employees
+                </a>
+                <a href="hr_attendance_report.php" class="nav-link">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    Attendance
+                </a>
+                <a href="shifts.php" class="nav-link">
+                    <i class="bi bi-clock-history"></i>
+                    Shifts
+                </a>
+                <a href="manager_payouts.php" class="nav-link">
+                    <i class="bi bi-cash-coin"></i>
+                    Manager Payouts
+                </a>
+                <a href="company_analytics_dashboard.php" class="nav-link">
+                    <i class="bi bi-graph-up"></i>
+                    Company Stats
+                </a>
+                <a href="salary_overview.php" class="nav-link">
+                    <i class="bi bi-cash-coin"></i>
+                    Salary
+                </a>
+                <a href="edit_leave.php" class="nav-link">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    Leave Request
+                </a>
+                <a href="admin/manage_geofence_locations.php" class="nav-link">
+                    <i class="bi bi-map"></i>
+                    Geofence Locations
+                </a>
+                <a href="travelling_allowanceh.php" class="nav-link">
+                    <i class="bi bi-car-front-fill"></i>
+                    Travel Expenses
+                </a>
+                <a href="hr_overtime_approval.php" class="nav-link">
+                    <i class="bi bi-clock"></i>
+                    Overtime Approval
+                </a>
+                <a href="hr_project_list.php" class="nav-link active">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    Projects
+                </a>
+                <a href="hr_password_reset.php" class="nav-link">
+                    <i class="bi bi-key-fill"></i>
+                    Password Reset
+                </a>
+                <a href="hr_settings.php" class="nav-link">
+                    <i class="bi bi-gear-fill"></i>
+                    Settings
+                </a>
+                <!-- Added Logout Button -->
+                <a href="logout.php" class="nav-link logout-link">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </nav>
         </div>
+        
+        <!-- Add this button after the sidebar div -->
+        <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+            <i class="bi bi-chevron-left"></i>
+        </button>
 
         <!-- Page Content -->
         <div id="content">
@@ -2477,6 +2494,17 @@
                                 xhr.send('project_id=' + encodeURIComponent(projectId));
                             }
                         });
+                    });
+                    
+                    // Toggle sidebar functionality
+                    document.getElementById('sidebarToggle').addEventListener('click', function() {
+                        const sidebar = document.getElementById('sidebar');
+                        const mainContent = document.getElementById('content');
+                        const toggleBtn = this;
+                        
+                        sidebar.classList.toggle('collapsed');
+                        mainContent.classList.toggle('expanded');
+                        toggleBtn.classList.toggle('collapsed');
                     });
     </script>
         </div>

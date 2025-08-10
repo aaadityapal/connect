@@ -52,6 +52,12 @@ try {
     echo '</body></html>';
     exit;
 }
+
+// Decide back URL based on role
+$role = $_SESSION['role'] ?? '';
+$isHR = ($role === 'HR');
+$isSM = ($role === 'Senior Manager (Studio)');
+$backUrl = $isHR ? 'hr_project_list.php' : 'projects.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -61,6 +67,9 @@ try {
     <title>Edit Project #<?= htmlspecialchars($projectId) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <?php if ($isSM): ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <?php endif; ?>
     <style>
         :root{
             --bg: #f6f7fb;
@@ -71,6 +80,7 @@ try {
             --danger: #ef4444;
             --muted: #6b7280;
             --card-radius: 14px;
+            --sidebar-width: 280px;
         }
         body { background: radial-gradient(1200px 600px at 100% -10%, rgba(99,102,241,.12), transparent 60%), var(--bg); }
         .card { border: none; box-shadow: 0 8px 24px rgba(0,0,0,0.06); border-radius: var(--card-radius); }
@@ -94,13 +104,246 @@ try {
         .status-chip { color: #111827; background: #eef2ff; }
         .btn-outline-primary { border-color: var(--primary); color: var(--primary); }
         .btn-outline-primary:hover { background: var(--primary); color: #fff; }
+
+        /* Sidebar styles (HR variant) */
+        .sidebar.hr {
+            width: var(--sidebar-width);
+            background: #ffffff;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .sidebar.hr::-webkit-scrollbar { display: none; }
+        .sidebar.collapsed { transform: translateX(-100%); }
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .nav-link {
+            color: #6B7280;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            text-decoration: none;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--primary); background: rgba(79, 70, 229, 0.1); }
+
+        /* Main content beside sidebar */
+        .main-content { margin-left: var(--sidebar-width); transition: margin 0.3s ease; }
+        .main-content.expanded { margin-left: 0; }
+
+        /* Make sticky actions respect sidebar */
+        .main-content .sticky-actions { left: var(--sidebar-width); }
+        .main-content.expanded .sticky-actions { left: 0; }
+
+        /* Sidebar toggle button */
+        .toggle-sidebar {
+            position: fixed;
+            left: calc(var(--sidebar-width) - 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            background: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .toggle-sidebar:hover { background: var(--primary); color: #fff; }
+        .toggle-sidebar.collapsed { left: 1rem; }
+
+        @media (max-width: 768px) {
+            .sidebar.hr, .sidebar.sm { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .toggle-sidebar { left: 1rem; }
+            .sidebar.show { transform: translateX(0); }
+            .main-content .sticky-actions { left: 0; }
+        }
+
+        /* Sidebar styles (Senior Manager variant, light UI with colorful icons) */
+        .sidebar.sm {
+            width: var(--sidebar-width);
+            background: #ffffff; /* light background as requested */
+            color: #111827;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            padding: 1.25rem 1rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+        .sidebar.sm .sidebar-header { padding: .25rem .75rem; }
+        .sidebar.sm .sidebar-header h3 { font-size: .75rem; letter-spacing: .08em; color: #6b7280; margin: .75rem 0; text-transform: uppercase; }
+        .sidebar.sm .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+        .sidebar.sm .sidebar-menu li a {
+            display: flex; gap: .75rem; align-items: center; color: #111827; text-decoration: none;
+            padding: .65rem .75rem; border-radius: .5rem; margin: .15rem .25rem;
+        }
+        .sidebar.sm .sidebar-menu li a:hover { background: rgba(0,0,0,.03); }
+        .sidebar.sm .sidebar-menu li.active a { background: rgba(67, 97, 238, 0.1); color: #111827; }
+        .sidebar.sm .sidebar-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar.sm .logout-btn { color: #EF4444; }
+
+        /* Colorful icon accents (match screenshot vibes) */
+        .icon-dashboard { color: #ff6b6b; }
+        .icon-leaves { color: #4ECDC4; }
+        .icon-employees { color: #FFD166; }
+        .icon-projects { color: #6A8EFF; }
+        .icon-emp-reports { color: #F72585; }
+        .icon-work-reports { color: #4CC9F0; }
+        .icon-attendance { color: #8AC926; }
+        .icon-approval { color: #A5B4FC; }
+        .icon-overtime { color: #A78BFA; }
+        .icon-travel { color: #FB5607; }
+        .icon-profile { color: #06D6A0; }
+        .icon-notify { color: #F59E0B; }
+        .icon-settings { color: #A78BFA; }
+        .icon-reset { color: #EC4899; }
     </style>
 </head>
 <body>
+    <!-- Sidebar: shown per role -->
+    <?php if ($isHR): ?>
+    <div class="sidebar hr" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-hexagon-fill"></i>
+            HR Portal
+        </div>
+        <nav>
+            <a href="hr_dashboard.php" class="nav-link">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Dashboard
+            </a>
+            <a href="employee.php" class="nav-link">
+                <i class="bi bi-people-fill"></i>
+                Employees
+            </a>
+            <a href="hr_attendance_report.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Attendance
+            </a>
+            <a href="shifts.php" class="nav-link">
+                <i class="bi bi-clock-history"></i>
+                Shifts
+            </a>
+            <a href="manager_payouts.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Manager Payouts
+            </a>
+            <a href="company_analytics_dashboard.php" class="nav-link">
+                <i class="bi bi-graph-up"></i>
+                Company Stats
+            </a>
+            <a href="salary_overview.php" class="nav-link">
+                <i class="bi bi-cash-coin"></i>
+                Salary
+            </a>
+            <a href="edit_leave.php" class="nav-link">
+                <i class="bi bi-calendar-check-fill"></i>
+                Leave Request
+            </a>
+            <a href="admin/manage_geofence_locations.php" class="nav-link">
+                <i class="bi bi-map"></i>
+                Geofence Locations
+            </a>
+            <a href="travelling_allowanceh.php" class="nav-link">
+                <i class="bi bi-car-front-fill"></i>
+                Travel Expenses
+            </a>
+            <a href="hr_overtime_approval.php" class="nav-link">
+                <i class="bi bi-clock"></i>
+                Overtime Approval
+            </a>
+            <a href="<?= htmlspecialchars($backUrl) ?>" class="nav-link active">
+                <i class="bi bi-diagram-3-fill"></i>
+                Projects
+            </a>
+            <a href="hr_password_reset.php" class="nav-link">
+                <i class="bi bi-key-fill"></i>
+                Password Reset
+            </a>
+            <a href="hr_settings.php" class="nav-link">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <a href="logout.php" class="nav-link logout-link">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+        </nav>
+    </div>
+    <?php elseif ($isSM): ?>
+    <div class="sidebar sm" id="sidebar">
+        <button class="toggle-sidebar" id="toggle-btn" title="Toggle Sidebar"><i class="bi bi-chevron-left"></i></button>
+        <div class="sidebar-header"><h3 class="sidebar-text">MAIN</h3></div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="real.php"><i class="bi bi-speedometer2 icon-dashboard"></i><span class="sidebar-text">Dashboard</span></a></li>
+            <li><a href="#"><i class="bi bi-journal-check icon-leaves"></i><span class="sidebar-text">Leaves</span></a></li>
+            <li><a href="#"><i class="bi bi-people-fill icon-employees"></i><span class="sidebar-text">Employees</span></a></li>
+            <li><a href="projects.php"><i class="bi bi-box-seam icon-projects"></i><span class="sidebar-text">Projects</span></a></li>
+        </ul>
+        <div class="sidebar-header"><h3 class="sidebar-text">ANALYTICS</h3></div>
+        <ul class="sidebar-menu">
+            <li><a href="#"><i class="bi bi-graph-up-arrow icon-emp-reports"></i><span class="sidebar-text"> Employee Reports</span></a></li>
+            <li><a href="work_report.php"><i class="bi bi-file-earmark-text icon-work-reports"></i><span class="sidebar-text"> Work Reports</span></a></li>
+            <li><a href="attendance_report.php"><i class="bi bi-clock icon-attendance"></i><span class="sidebar-text"> Attendance Reports</span></a></li>
+            <li><a href="attendance_approval.php"><i class="bi bi-check2-square icon-approval"></i><span class="sidebar-text"> Attendance Approval</span></a></li>
+            <li><a href="overtime_reports.php"><i class="bi bi-hourglass-split icon-overtime"></i><span class="sidebar-text"> Overtime Reports</span></a></li>
+            <li><a href="travelling_allowancest.php"><i class="bi bi-airplane icon-travel"></i><span class="sidebar-text"> Travel Reports</span></a></li>
+        </ul>
+        <div class="sidebar-header"><h3 class="sidebar-text">SETTINGS</h3></div>
+        <ul class="sidebar-menu">
+            <li><a href="manager_profile.php"><i class="bi bi-person-circle icon-profile"></i><span class="sidebar-text">Profile</span></a></li>
+            <li><a href="#"><i class="bi bi-bell-fill icon-notify"></i><span class="sidebar-text">Notifications</span></a></li>
+            <li><a href="manager_settings.php"><i class="bi bi-gear icon-settings"></i><span class="sidebar-text">Settings</span></a></li>
+            <li><a href="reset_password.php"><i class="bi bi-shield-lock icon-reset"></i><span class="sidebar-text">Reset Password</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <ul class="sidebar-menu">
+                <li><a href="logout.php" class="logout-btn"><i class="bi bi-box-arrow-right"></i><span class="sidebar-text">Logout</span></a></li>
+            </ul>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Sidebar toggle button -->
+    <button class="toggle-sidebar" id="sidebarToggle" title="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <!-- Main content -->
+    <div class="main-content" id="mainContent">
     <div class="container-fluid py-4 container-has-sticky">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Project</h4>
-            <a href="projects.php" class="btn btn-outline-secondary btn-icon"><i class="bi bi-arrow-left"></i> Back</a>
+            <a href="<?= htmlspecialchars($backUrl) ?>" class="btn btn-outline-secondary btn-icon"><i class="bi bi-arrow-left"></i> Back</a>
         </div>
 
         <div class="accordion" id="editAccordion">
@@ -253,11 +496,13 @@ try {
             <span id="projectStatusChip" class="chip status-chip"><i class="bi bi-circle-fill" style="font-size:.55rem"></i><span class="label"></span></span>
         </div>
         <div class="d-flex gap-2">
-            <a href="projects.php" class="btn btn-outline-secondary btn-icon"><i class="bi bi-x-circle"></i> Cancel</a>
+            <a href="<?= htmlspecialchars($backUrl) ?>" class="btn btn-outline-secondary btn-icon"><i class="bi bi-x-circle"></i> Cancel</a>
             <button id="saveProjectBtn" class="btn btn-primary btn-icon"><i class="bi bi-save"></i> Save Changes</button>
             <button id="saveProjectBtnBottom" class="btn btn-primary d-none">Save</button>
         </div>
     </div>
+
+    </div><!-- /main-content -->
 
     <script>
     const PROJECT_ID = <?= json_encode($projectId) ?>;
@@ -801,9 +1046,30 @@ try {
     document.getElementById('projectStatus').addEventListener('change', updateProjectStatusChip);
     // When project type changes, re-render substage title controls accordingly
     document.getElementById('projectType').addEventListener('change', () => renderStages());
+
+    // Sidebar toggle handler
+    (function(){
+        const sidebar = document.getElementById('sidebar');
+        const main = document.getElementById('mainContent');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        if (toggleBtn && sidebar && main) {
+            toggleBtn.addEventListener('click', function(){
+                sidebar.classList.toggle('collapsed');
+                main.classList.toggle('expanded');
+                toggleBtn.classList.toggle('collapsed');
+            });
+        }
+        // Support SM variant toggle button id from real.php if present
+        const smToggle = document.getElementById('toggle-btn');
+        if (smToggle && sidebar && main) {
+            smToggle.addEventListener('click', function(){
+                sidebar.classList.toggle('collapsed');
+                main.classList.toggle('expanded');
+                this.classList.toggle('collapsed');
+            });
+        }
+    })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-

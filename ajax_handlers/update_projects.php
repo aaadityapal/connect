@@ -9,6 +9,17 @@ header('Content-Type: application/json');
 $json_data = file_get_contents('php://input');
 $data = json_decode($json_data, true);
 
+// RBAC: Only HR and Senior Manager (Studio) can update projects
+$allowed_roles = ['HR', 'Senior Manager (Studio)'];
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
+    http_response_code(403);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Access denied. You do not have permission to update projects.'
+    ]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = [
         'status' => 'error',
@@ -24,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('Project ID is required');
         }
 
-        $project_id = $data['projectId'];
+        $project_id = (int)$data['projectId'];
 
         // First, get all existing stage IDs for this project
         $existing_stages_query = "SELECT id FROM project_stages WHERE project_id = ?";
@@ -38,7 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Convert assignTo value 0 to NULL for database storage
-        $assignedTo = (!empty($data['assignTo']) && $data['assignTo'] !== '0') ? $data['assignTo'] : null;
+        $assignedTo = (!empty($data['assignTo']) && $data['assignTo'] !== '0') ? (int)$data['assignTo'] : null;
+        $categoryId = (isset($data['projectCategory']) && $data['projectCategory'] !== '' && $data['projectCategory'] !== null)
+            ? (int)$data['projectCategory'] : null;
+        $projectStatus = (!empty($data['projectStatus'])) ? $data['projectStatus'] : 'not_started';
+        $startDate = (!empty($data['startDate'])) ? $data['startDate'] : null;
+        $dueDate = (!empty($data['dueDate'])) ? $data['dueDate'] : null;
 
         // Update project details
         $update_project_sql = "UPDATE projects SET 
@@ -50,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             end_date = ?,
             assigned_to = ?,
             assignment_status = CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END,
+            status = ?,
             updated_at = NOW(),
             updated_by = ?,
             client_name = ?,
@@ -60,15 +77,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE id = ?";
         
         $stmt = $conn->prepare($update_project_sql);
-        $stmt->bind_param("sssissiissssssi",
+        if (!$stmt) { throw new Exception('Prepare failed (update project): ' . $conn->error); }
+        // Types: s,s,s,i,s,s,i,i,s,i,s,s,s,s,s,i
+        $stmt->bind_param(
+            "sssissiisisssssi",
             $data['projectTitle'],
             $data['projectDescription'],
             $data['projectType'],
-            $data['projectCategory'],
-            $data['startDate'],
-            $data['dueDate'],
+            $categoryId,
+            $startDate,
+            $dueDate,
             $assignedTo,
             $assignedTo,
+            $projectStatus,
             $_SESSION['user_id'],
             $data['client_name'],
             $data['client_address'],
@@ -109,16 +130,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         assignment_status = CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END,
                         start_date = ?,
                         end_date = ?,
+                        status = ?,
                         updated_at = NOW(),
                         updated_by = ?
                         WHERE id = ?";
                     
                     $stmt = $conn->prepare($update_stage_sql);
-                    $stmt->bind_param("iissii",
+                    if (!$stmt) { throw new Exception('Prepare failed (update stage): ' . $conn->error); }
+                    $stageStatus = (!empty($stage['status'])) ? $stage['status'] : 'not_started';
+                    $stageStart = (!empty($stage['startDate'])) ? $stage['startDate'] : null;
+                    $stageEnd = (!empty($stage['dueDate'])) ? $stage['dueDate'] : null;
+                    $stmt->bind_param("iisssii",
                         $stageAssignedTo,
                         $stageAssignedTo,
-                        $stage['startDate'],
-                        $stage['dueDate'],
+                        $stageStart,
+                        $stageEnd,
+                        $stageStatus,
                         $_SESSION['user_id'],
                         $stage['id']
                     );
@@ -146,16 +173,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Insert new stage
                     $insert_stage_sql = "INSERT INTO project_stages 
-                        (project_id, assigned_to, start_date, end_date, stage_number, created_by, created_at, assignment_status) 
-                        VALUES (?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
+                        (project_id, assigned_to, start_date, end_date, stage_number, status, created_by, created_at, assignment_status) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
                     
                     $stmt = $conn->prepare($insert_stage_sql);
-                    $stmt->bind_param('isssiii',
+                    if (!$stmt) { throw new Exception('Prepare failed (insert stage): ' . $conn->error); }
+                    // Types: i,i,s,s,i,s,i,i
+                    $stageStatus = (!empty($stage['status'])) ? $stage['status'] : 'not_started';
+                    $stageStart = (!empty($stage['startDate'])) ? $stage['startDate'] : null;
+                    $stageEnd = (!empty($stage['dueDate'])) ? $stage['dueDate'] : null;
+                    $stmt->bind_param('iissisii',
                         $project_id,
                         $stageAssignedTo,
-                        $stage['startDate'],
-                        $stage['dueDate'],
+                        $stageStart,
+                        $stageEnd,
                         $stage['stage_number'],
+                        $stageStatus,
                         $_SESSION['user_id'],
                         $stageAssignedTo
                     );
@@ -209,18 +242,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 start_date = ?,
                                 end_date = ?,
                                 drawing_number = ?,
+                                status = ?,
                                 updated_at = NOW(),
                                 updated_by = ?
                                 WHERE id = ?";
                             
                             $stmt = $conn->prepare($update_substage_sql);
-                            $stmt->bind_param("siissssi",
+                            if (!$stmt) { throw new Exception('Prepare failed (update substage): ' . $conn->error); }
+                            $subStatus = (!empty($substage['status'])) ? $substage['status'] : 'not_started';
+                            $subStart = (!empty($substage['startDate'])) ? $substage['startDate'] : null;
+                            $subEnd = (!empty($substage['dueDate'])) ? $substage['dueDate'] : null;
+                            $drawingNum = isset($substage['drawingNumber']) ? $substage['drawingNumber'] : null;
+                            $stmt->bind_param("siissssii",
                                 $substage['title'],
                                 $substageAssignedTo,
                                 $substageAssignedTo,
-                                $substage['startDate'],
-                                $substage['dueDate'],
-                                $substage['drawingNumber'],
+                                $subStart,
+                                $subEnd,
+                                $drawingNum,
+                                $subStatus,
                                 $_SESSION['user_id'],
                                 $substage['id']
                             );
@@ -248,18 +288,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             // Insert new substage
                             $insert_substage_sql = "INSERT INTO project_substages 
-                                (stage_id, title, assigned_to, start_date, end_date, drawing_number, substage_number, created_by, created_at, assignment_status) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
+                                (stage_id, title, assigned_to, start_date, end_date, drawing_number, substage_number, status, created_by, created_at, assignment_status) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), CASE WHEN ? IS NULL THEN 'unassigned' ELSE 'assigned' END)";
                             
                             $stmt = $conn->prepare($insert_substage_sql);
-                            $stmt->bind_param('isssssiis',
+                            if (!$stmt) { throw new Exception('Prepare failed (insert substage): ' . $conn->error); }
+                            // Types: i,s,i,s,s,s,i,s,i,i
+                            $subStatus = (!empty($substage['status'])) ? $substage['status'] : 'not_started';
+                            $subStart = (!empty($substage['startDate'])) ? $substage['startDate'] : null;
+                            $subEnd = (!empty($substage['dueDate'])) ? $substage['dueDate'] : null;
+                            $drawingNum = isset($substage['drawingNumber']) ? $substage['drawingNumber'] : null;
+                            $stmt->bind_param('isisssisii',
                                 $stage_id,
                                 $substage['title'],
                                 $substageAssignedTo,
-                                $substage['startDate'],
-                                $substage['dueDate'],
-                                $substage['drawingNumber'],
+                                $subStart,
+                                $subEnd,
+                                $drawingNum,
                                 $substage['substage_number'],
+                                $subStatus,
                                 $_SESSION['user_id'],
                                 $substageAssignedTo
                             );

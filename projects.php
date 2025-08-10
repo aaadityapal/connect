@@ -1489,12 +1489,11 @@
                             // Format and set timeline
                             let timeline = '';
                             if (projectData.startDate) {
-                                const startDate = new Date(projectData.startDate);
-                                timeline = `Started: ${startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`;
-                                
+                                const startStr = formatDate(projectData.startDate);
+                                timeline = `Started: ${startStr}`;
                                 if (projectData.endDate) {
-                                    const endDate = new Date(projectData.endDate);
-                                    timeline += ` • Due: ${endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+                                    const endStr = formatDate(projectData.endDate);
+                                    timeline += ` • Due: ${endStr}`;
                                 }
                             } else {
                                 timeline = 'Timeline not specified';
@@ -1809,7 +1808,7 @@
                         `;
                     }
                     
-                    // Helper function to format date
+                    // Helper function to format date (dates only for stages/substages)
                     function formatDate(dateString) {
                         const date = new Date(dateString);
                         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -2340,11 +2339,11 @@
                                                 </td>
                                                 <td><span class="badge bg-light text-dark">${file.type}</span></td>
                                                 <td>${file.uploaded_by_name || 'N/A'}</td>
-                                                <td>${formatDate(file.uploaded_at)}</td>
+                                                <td>${formatDateTime(file.uploaded_at)}</td>
                                                 <td><span class="badge bg-${getStatusBadgeClass(file.status)}">${file.status}</span></td>
                                                 <td>
                                                     ${file.last_modified_at ? `
-                                                        <div>${formatDate(file.last_modified_at)}</div>
+                                                        <div>${formatDateTime(file.last_modified_at)}</div>
                                                         <small class="text-muted">by ${file.last_modified_by_name}</small>
                                                     ` : 'N/A'}
                                                 </td>
@@ -2411,8 +2410,8 @@
                         }
                     }
 
-                    // Helper function to format date
-                    function formatDate(dateString) {
+                    // Helper function to format date+time for file timestamps
+                    function formatDateTime(dateString) {
                         if (!dateString) return 'Not set';
                         const date = new Date(dateString);
                         return date.toLocaleDateString('en-US', { 

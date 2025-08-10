@@ -5,6 +5,14 @@ require_once 'config/db_connect.php';
 header('Content-Type: application/json');
 
 try {
+    // RBAC: Only HR and Senior Manager (Studio) can upload via edit flow
+    $allowed_roles = ['HR', 'Senior Manager (Studio)'];
+    if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Access denied. You do not have permission to upload files.']);
+        exit;
+    }
+
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
         throw new Exception('User not authenticated');

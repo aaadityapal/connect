@@ -1,0 +1,1995 @@
+
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <!--[if gte mso 9]>
+        <xml>
+            <x:ExcelWorkbook>
+                <x:ExcelWorksheets>
+                    <x:ExcelWorksheet>
+                        <x:Name>Labour Attendance</x:Name>
+                        <x:WorksheetOptions>
+                            <x:DisplayGridlines/>
+                            <x:AutoFilter/>
+                        </x:WorksheetOptions>
+                    </x:ExcelWorksheet>
+                </x:ExcelWorksheets>
+            </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                border: 2px solid #4361ee;
+            }
+            td, th {
+                vertical-align: middle;
+                padding: 8px;
+                border: 1px solid #bdc3c7;
+                text-align: left;
+                font-size: 12pt;
+            }
+            .title {
+                background-color: #3a0ca3;
+                color: white;
+                font-weight: bold;
+                font-size: 18pt;
+                text-align: center;
+                padding: 12px;
+                border: 2px solid #3a0ca3;
+            }
+            .company-name {
+                background-color: #4361ee;
+                color: white;
+                font-weight: bold;
+                font-size: 14pt;
+                text-align: center;
+                padding: 10px;
+            }
+            .subtitle {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                padding: 10px;
+                border: 1px solid #bdc3c7;
+                font-size: 13pt;
+            }
+            .header {
+                background-color: #4cc9f0;
+                color: #000000;
+                font-weight: bold;
+                border: 1px solid #3a86ff;
+                text-align: center;
+                white-space: nowrap;
+            }
+            .color-coding {
+                background-color: #f8f9fa;
+                padding: 8px;
+                font-size: 11pt;
+            }
+            .company-labour {
+                color: #0077b6;
+                font-weight: bold;
+            }
+            .vendor-labour {
+                color: #e63946;
+                font-weight: bold;
+            }
+            .status-present {
+                color: #06d6a0;
+                font-weight: bold;
+                background-color: #e8fff3;
+            }
+            .status-absent {
+                color: #e63946;
+                font-weight: bold;
+                background-color: #ffeeee;
+            }
+            .status-late {
+                color: #f77f00;
+                font-weight: bold;
+                background-color: #fff5e6;
+            }
+            .company-row {
+                background-color: #e9f6ff;
+            }
+            .vendor-row {
+                background-color: #fff0f5;
+            }
+            .currency {
+                text-align: right;
+                color: #1a535c;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+            .date-cell {
+                white-space: nowrap;
+                font-weight: 500;
+            }
+            .name-cell {
+                font-weight: 500;
+            }
+        </style>
+    </head>
+    <body>
+        <table border="1" cellpadding="5" cellspacing="0" width="100%">
+            <tr>
+                <td colspan="10" class="title">Labour Attendance Report</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="company-name">Construction HR Management System</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="subtitle">Date Range: 30-Jul-2025 to 06-Aug-2025</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="color-coding">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><b>Color Coding:</b> <span class="company-labour">■ Company Labour</span> | <span class="vendor-labour">■ Vendor Labour</span></span>
+                        <span><b>Status:</b> <span class="status-present">Present</span> | <span class="status-absent">Absent</span> | <span class="status-late">Late</span></span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="header">Date</td>
+                <td class="header">ID</td>
+                <td class="header">Name</td>
+                <td class="header">Contact</td>
+                <td class="header">Type</td>
+                <td class="header">Site</td>
+                <td class="header">Vendor</td>
+                <td class="header">Morning</td>
+                <td class="header">Evening</td>
+                <td class="header">Wages</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>1</td>
+                <td class="name-cell">Ram Avtar mistri</td>
+                <td>8587824530</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>2</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td>9691172532</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>3</td>
+                <td class="name-cell">Jitender labour</td>
+                <td>8570857565</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>4</td>
+                <td class="name-cell">Ravi labour</td>
+                <td>8085684623</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>5</td>
+                <td class="name-cell">Brijesh labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>6</td>
+                <td class="name-cell">Aadarsh labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>7</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>8</td>
+                <td class="name-cell">Bacholal mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>9</td>
+                <td class="name-cell">Dhiraj Lbr</td>
+                <td>6395478614</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>10</td>
+                <td class="name-cell">Abhishek</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>11</td>
+                <td class="name-cell">Geeta labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>12</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>13</td>
+                <td class="name-cell">Veeran mistri</td>
+                <td>6281089506</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>14</td>
+                <td class="name-cell">Kamlesh mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>15</td>
+                <td class="name-cell">Surendra labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>16</td>
+                <td class="name-cell">Bhagwati</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>17</td>
+                <td class="name-cell">Dilip</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>18</td>
+                <td class="name-cell">Shivani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>19</td>
+                <td class="name-cell">Raushan mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>20</td>
+                <td class="name-cell">Bacholal mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>21</td>
+                <td class="name-cell">Kamlesh mistri</td>
+                <td>079990 06522</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>22</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>23</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>24</td>
+                <td class="name-cell">Raushan mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>25</td>
+                <td class="name-cell">Veeran mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>26</td>
+                <td class="name-cell">Bhagvati lbr</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>27</td>
+                <td class="name-cell">Dhiraj</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>28</td>
+                <td class="name-cell">Geeta labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>29</td>
+                <td class="name-cell">Deepak labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>30</td>
+                <td class="name-cell">Dilip</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>31</td>
+                <td class="name-cell">Shivani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>32</td>
+                <td class="name-cell">Dilip labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>33</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>34</td>
+                <td class="name-cell">Veeran mistri</td>
+                <td>6281089506</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>35</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>36</td>
+                <td class="name-cell">Kamlesh mistri</td>
+                <td>7999006322</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>37</td>
+                <td class="name-cell">Bagwati</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>38</td>
+                <td class="name-cell">Dhiraj Lbr</td>
+                <td>6395478614</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>39</td>
+                <td class="name-cell">Sayani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>40</td>
+                <td class="name-cell">Surendra</td>
+                <td>7489278150</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>41</td>
+                <td class="name-cell">Ram Avtar mistri</td>
+                <td>8587824530</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>42</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>43</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>44</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>45</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>46</td>
+                <td class="name-cell">Veeran mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>47</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>48</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>49</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>50</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>51</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td>9691172532</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>52</td>
+                <td class="name-cell">Kamlesh mistri</td>
+                <td>079990 06522</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>53</td>
+                <td class="name-cell">Bagawati</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>54</td>
+                <td class="name-cell">Bagawti</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>55</td>
+                <td class="name-cell">Bagawti</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>56</td>
+                <td class="name-cell">Bagawti</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>57</td>
+                <td class="name-cell">Battuk lal mistri</td>
+                <td>9165945749</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>58</td>
+                <td class="name-cell">Surendra lbr</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>59</td>
+                <td class="name-cell">Dhiraj Lbr</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>60</td>
+                <td class="name-cell">Roshan mistri</td>
+                <td>8595540245</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>61</td>
+                <td class="name-cell">Siwani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>62</td>
+                <td class="name-cell">Siwani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>63</td>
+                <td class="name-cell">Siwani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>64</td>
+                <td class="name-cell">Siwani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>65</td>
+                <td class="name-cell">Ravi labour</td>
+                <td>8085684623</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>66</td>
+                <td class="name-cell">Surendra</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>67</td>
+                <td class="name-cell">Surendra</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>68</td>
+                <td class="name-cell">Biren</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>69</td>
+                <td class="name-cell">Dhiraj</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>70</td>
+                <td class="name-cell">Jitender labour</td>
+                <td>8540857565</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>71</td>
+                <td class="name-cell">Abhishek labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>72</td>
+                <td class="name-cell">Dhiraj</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>73</td>
+                <td class="name-cell">Kamlesh</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>74</td>
+                <td class="name-cell">Adarsh labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>75</td>
+                <td class="name-cell">Bíren</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>76</td>
+                <td class="name-cell">Kamlesh</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>77</td>
+                <td class="name-cell">Geeta bai labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>78</td>
+                <td class="name-cell">Bacholal mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>79</td>
+                <td class="name-cell">Geeta labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>80</td>
+                <td class="name-cell">Abhishek labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>81</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>82</td>
+                <td class="name-cell">Aadarsh labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>83</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>84</td>
+                <td class="name-cell">Bagwati</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>85</td>
+                <td class="name-cell">Raushan mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>86</td>
+                <td class="name-cell">Geeta labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>87</td>
+                <td class="name-cell">Siwani</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>88</td>
+                <td class="name-cell">Bacholal mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>89</td>
+                <td class="name-cell">Biren mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>90</td>
+                <td class="name-cell">Kamlesh</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>91</td>
+                <td class="name-cell">Surendra</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>92</td>
+                <td class="name-cell">Dhiraj</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>93</td>
+                <td class="name-cell">Bacholal mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>94</td>
+                <td class="name-cell">Barkat ali Lbr</td>
+                <td>7289850522</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>95</td>
+                <td class="name-cell">Sayam</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>96</td>
+                <td class="name-cell">Achal</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>97</td>
+                <td class="name-cell">Bablu mistri</td>
+                <td>8448424194</td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>98</td>
+                <td class="name-cell">Raushan mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>99</td>
+                <td class="name-cell">Bagwati</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>100</td>
+                <td class="name-cell">Geeta labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>101</td>
+                <td class="name-cell">Abhishek labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>102</td>
+                <td class="name-cell">Biren mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>103</td>
+                <td class="name-cell">Aadarsh labour</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>104</td>
+                <td class="name-cell">Kamlesh</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>105</td>
+                <td class="name-cell">Surendra</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>106</td>
+                <td class="name-cell">Dhiraj</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="company-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>107</td>
+                <td class="name-cell">Manoj mistri</td>
+                <td></td>
+                <td class="company-labour">Company Labour</td>
+                <td>Construction Site At Faridabad Sector 91</td>
+                <td>N/A</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>108</td>
+                <td class="name-cell">Ramveer mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Asvani</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>109</td>
+                <td class="name-cell">Ram jane</td>
+                <td>+916387398179</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>110</td>
+                <td class="name-cell">Manoj</td>
+                <td>9350235645</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>111</td>
+                <td class="name-cell">Ajit labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>Sahabuddin labour</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>112</td>
+                <td class="name-cell">Sonu labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>Sahabuddin labour</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">06-Aug-2025</td>
+                <td>113</td>
+                <td class="name-cell">Surendra labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>Sahabuddin labour</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>114</td>
+                <td class="name-cell">Chotu labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Sector 53</td>
+                <td>Amit labour</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>115</td>
+                <td class="name-cell">Ram jane Lbr</td>
+                <td>063873 98179</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>116</td>
+                <td class="name-cell">Ram ratan</td>
+                <td>9815887861</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>117</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>118</td>
+                <td class="name-cell">Ravi labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">05-Aug-2025</td>
+                <td>119</td>
+                <td class="name-cell">Jitendra labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>120</td>
+                <td class="name-cell">Ram Jane Lbr</td>
+                <td>6387398179</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>121</td>
+                <td class="name-cell">Ram Ratan</td>
+                <td>9815887161</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>122</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>123</td>
+                <td class="name-cell">Jitendra labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">04-Aug-2025</td>
+                <td>124</td>
+                <td class="name-cell">Ravi labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>125</td>
+                <td class="name-cell">Arvind mistri</td>
+                <td>9616437825</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Abhishek</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>126</td>
+                <td class="name-cell">Subham Lbr</td>
+                <td>7303958216</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Abhishek</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>127</td>
+                <td class="name-cell">Ramu</td>
+                <td>8826255158</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Ajay</td>
+                <td class="status-present">Present</td>
+                <td class="status-absent">Absent</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>128</td>
+                <td class="name-cell">Ram jane lbr</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">03-Aug-2025</td>
+                <td>129</td>
+                <td class="name-cell">Ram ratan mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-absent">Absent</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>130</td>
+                <td class="name-cell">Ram manish</td>
+                <td>8448676423</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Asaram</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>131</td>
+                <td class="name-cell">Luvkush</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Asaram</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>132</td>
+                <td class="name-cell">Virender ji</td>
+                <td>97183 20306</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Virender ji</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">02-Aug-2025</td>
+                <td>133</td>
+                <td class="name-cell">Rinku</td>
+                <td>98217 67314</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Virender ji</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>134</td>
+                <td class="name-cell">Ram manish</td>
+                <td>8448676423</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Asaram</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>135</td>
+                <td class="name-cell">Luv-kush</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Asaram</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>136</td>
+                <td class="name-cell">Ramveer mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Asvani</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>137</td>
+                <td class="name-cell">Babu Lbr</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Asvani</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>138</td>
+                <td class="name-cell">Haidar</td>
+                <td>6397855457</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Bablu</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>139</td>
+                <td class="name-cell">Aazam</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Bablu</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>140</td>
+                <td class="name-cell">Pradeep</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Krishan</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>141</td>
+                <td class="name-cell">Nushad</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Krishan</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>142</td>
+                <td class="name-cell">Syam sing mistri</td>
+                <td>9772241047</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Manoj</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>143</td>
+                <td class="name-cell">Chotu lbr</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Manoj</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>144</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>145</td>
+                <td class="name-cell">Jitendra labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>146</td>
+                <td class="name-cell">Ravi labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>147</td>
+                <td class="name-cell">Danish</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Sameer</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>148</td>
+                <td class="name-cell">Bilal</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Sameer</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>149</td>
+                <td class="name-cell">Virender ji</td>
+                <td>97183 20306</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Virender ji</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">01-Aug-2025</td>
+                <td>150</td>
+                <td class="name-cell">Rinku ji</td>
+                <td>98217 67314</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Virender ji</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>151</td>
+                <td class="name-cell">Ramveer Mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Asvani</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>152</td>
+                <td class="name-cell">Asvani</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Asvani</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>153</td>
+                <td class="name-cell">Haidar</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Bablu</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>154</td>
+                <td class="name-cell">Aazam</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Bablu</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>155</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>156</td>
+                <td class="name-cell">Jitendra mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>157</td>
+                <td class="name-cell">Ravi labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>158</td>
+                <td class="name-cell">Ratan labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>159</td>
+                <td class="name-cell">Bharti labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>160</td>
+                <td class="name-cell">Bilal</td>
+                <td>9897973642</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Sameer</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>161</td>
+                <td class="name-cell">Danish</td>
+                <td>9917644785</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Ballabgarh</td>
+                <td>Sameer</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>162</td>
+                <td class="name-cell">Virender ji</td>
+                <td>9718320306</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Virender ji</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">31-Jul-2025</td>
+                <td>163</td>
+                <td class="name-cell">Rinku ji</td>
+                <td>9821767314</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Dilshad Garden</td>
+                <td>Virender ji</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>164</td>
+                <td class="name-cell">Piyush</td>
+                <td>8400422354</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>165</td>
+                <td class="name-cell">Rakesh</td>
+                <td>8376858320</td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Jasola</td>
+                <td>Rajesh</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>166</td>
+                <td class="name-cell">Chotu mistri</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>167</td>
+                <td class="name-cell">Ravi labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr><tr class="vendor-row">
+                <td class="date-cell">30-Jul-2025</td>
+                <td>168</td>
+                <td class="name-cell">Jitendra labour</td>
+                <td></td>
+                <td class="vendor-labour">Vendor Labour</td>
+                <td>Construction Site At Supertech Oxford</td>
+                <td>Ramawtar mistri</td>
+                <td class="status-present">Present</td>
+                <td class="status-present">Present</td>
+                <td class="currency">₹ 0.00</td>
+            </tr></table></body></html>

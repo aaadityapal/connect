@@ -44,11 +44,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!e.target.closest('.supervisor-avatar')) {
                 const cardType = this.getAttribute('data-card-type');
                 
-                // Special handling for supervisors card
+                // Special handling for different card types
                 if (cardType === 'supervisors') {
                     openSupervisorModal();
                 } else if (cardType === 'productivity') {
                     openLaborAttendanceModal();
+                } else if (cardType === 'supervisors-leave') {
+                    // This is handled by the supervisors-on-leave.js file
+                    // Do nothing here to avoid duplicate handling
                 } else {
                     navigateToDetailPage(cardType);
                 }

@@ -1729,41 +1729,96 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         </div>
                     </div>
                     
-                    <!-- Equipment Card -->
-                    <div class="site-card" data-card-type="equipment">
+                    <!-- Site Supervisors on Leave Card -->
+                    <div class="site-card" data-card-type="supervisors-leave">
                         <div class="site-card-header">
-                            <h3 class="site-card-title">Equipment</h3>
-                            <div class="site-card-icon bg-equipment">
-                                <i class="fas fa-truck-pickup"></i>
+                            <h3 class="site-card-title">Supervisors on Leave</h3>
+                            <div class="site-card-icon bg-warning">
+                                <i class="fas fa-user-clock"></i>
                             </div>
                         </div>
                         <div class="site-card-body">
-                            <div class="site-card-value" data-value="92">0</div>
-                            <div class="site-card-trend trend-down">
-                                <i class="fas fa-arrow-down"></i>
-                                <span>-1% from last week</span>
+                            <div class="site-card-value" id="supervisorLeaveCount">0</div>
+                            <div class="site-card-trend trend-neutral">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Currently on leave</span>
                             </div>
                             <div class="site-card-progress">
-                                <div class="site-card-progress-bar bg-equipment" data-width="92" style="width: 0%"></div>
+                                <div class="site-card-progress-bar bg-warning" id="supervisorLeaveProgressBar" style="width: 0%"></div>
                             </div>
-                            <div class="site-card-stats">
-                                <div class="site-card-stat" data-stat="active">
-                                    <div class="site-card-stat-value">24</div>
-                                    <div class="site-card-stat-label">Active</div>
-                                </div>
-                                <div class="site-card-stat">
-                                    <div class="site-card-stat-value">3</div>
-                                    <div class="site-card-stat-label">Maintenance</div>
+                            <div class="supervisors-on-leave mt-3">
+                                <h4>Supervisors on Leave</h4>
+                                <div class="supervisor-leave-list" id="supervisorLeaveList">
+                                    <div class="text-center py-2">
+                                        <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                        <span class="ml-2">Loading data...</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="site-card-footer">
-                            Last updated: Today, 08:30 AM
+                            <span>Click to view all leave details</span>
                         </div>
                     </div>
                     
-                    <!-- Travel Expenses Card (Replacing Workforce Card) -->
-                    <div class="site-card" data-card-type="travel-expenses">
+                    <!-- Pending Leave Requests Card - Only visible to Senior Manager (Site) -->
+                    <div id="pendingLeaveCardContainer" style="display: none;">
+                        <div class="site-card" data-card-type="pending-leave">
+                            <div class="site-card-header">
+                                <h3 class="site-card-title">Leave Requests</h3>
+                                <div class="site-card-icon bg-danger">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="site-card-body">
+                                <div class="site-card-value" id="pendingLeaveCount">0</div>
+                                <div class="site-card-trend trend-neutral">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Awaiting approval</span>
+                                </div>
+                                <div class="site-card-progress">
+                                    <div class="site-card-progress-bar bg-danger" id="pendingLeaveProgressBar" style="width: 0%"></div>
+                                </div>
+                                                            <div class="pending-leave-requests mt-3">
+                                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
+                            <h4 class="mb-2 mb-md-0">Recent Requests</h4>
+                            <div class="d-flex flex-wrap w-100 w-md-auto">
+                                <div class="mr-2 mb-2 mb-md-0" style="min-width: 120px;">
+                                    <select id="leaveMonthYearFilter" class="form-control form-control-sm w-100">
+                                        <option value="">All Dates</option>
+                                        <!-- Month options will be added by JavaScript -->
+                                    </select>
+                                </div>
+                                <div style="min-width: 100px;">
+                                    <select id="leaveStatusFilter" class="form-control form-control-sm w-100">
+                                        <option value="pending" selected>Pending</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="all">All</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                                <div class="pending-leave-list" id="pendingLeaveList" style="max-height: 180px; overflow-y: auto; scrollbar-width: thin; border-radius: 4px; -webkit-overflow-scrolling: touch;">
+                                    <div class="text-center py-2">
+                                        <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                        <span class="ml-2">Loading data...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="site-card-footer">
+                                <span>Click to view all leave requests</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Travel Expenses Card (Replacing Workforce Card) - Hidden for Senior Manager (Site) -->
+                    <div class="site-card" data-card-type="travel-expenses" id="travelExpensesCardContainer">
                         <div class="site-card-header">
                             <h3 class="site-card-title">Travel Expenses</h3>
                             <div class="site-card-icon bg-primary">
@@ -2478,6 +2533,8 @@ function updateWorkReportWordCount(textarea, displayElement) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="js/manager/site-overview.js"></script>
+    <script src="js/manager/supervisors-on-leave.js"></script>
+    <script src="js/manager/pending-leave-requests.js"></script>
     <script src="js/manager/calendar-event-modal.js"></script>
     <script src="js/manager/calendar-stats.js"></script>
     <script>

@@ -52,6 +52,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             case 'Interior Designer':
                 $prefix = 'ID';
                 break;
+            case 'Senior Interior Designer':
+                $prefix = 'SID';
+                break;
+            case 'Junior Interior Designer':
+                $prefix = 'JID';
+                break;
+            case 'Lead Interior Designer':
+                $prefix = 'LID';
+                break;
+            case 'Associate Interior Designer':
+                $prefix = 'AID';
+                break;
+            case 'Interior Design Coordinator':
+                $prefix = 'IDC';
+                break;
+            case 'Interior Design Assistant':
+                $prefix = 'IDA';
+                break;
+            case 'FF&E Designer':
+                $prefix = 'FFE';
+                break;
+            case 'Interior Stylist':
+                $prefix = 'IS';
+                break;
+            case 'Interior Design Intern':
+                $prefix = 'IDI';
+                break;
             case '3D Designing Team':
                 $prefix = '3DT';
                 break;
@@ -63,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 break;
             case 'Social Media Manager':
                 $prefix = 'SMD';
+                break;
+            case 'Social Media Marketing':
+                $prefix = 'SMMKT';
                 break;
             case 'Site Manager':
                 $prefix = 'STM';
@@ -96,6 +126,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 break;
             case 'Purchase Executive':
                 $prefix = 'PE';
+                break;
+            case 'Graphic Designer':
+                $prefix = 'GD';
                 break;
             case 'Sales':
                 $prefix = 'SL';
@@ -735,11 +768,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Design Team">Design Team</option>
                                     <option value="Working Team">Working Team</option>
                                     <option value="Interior Designer">Interior Designer</option>
+                                 <option value="Senior Interior Designer">Senior Interior Designer</option>
+                                 <option value="Junior Interior Designer">Junior Interior Designer</option>
+                                 <option value="Lead Interior Designer">Lead Interior Designer</option>
+                                 <option value="Associate Interior Designer">Associate Interior Designer</option>
+                                 <option value="Interior Design Coordinator">Interior Design Coordinator</option>
+                                 <option value="Interior Design Assistant">Interior Design Assistant</option>
+                                 <option value="FF&E Designer">FF&E Designer</option>
+                                 <option value="Interior Stylist">Interior Stylist</option>
+                                 <option value="Interior Design Intern">Interior Design Intern</option>
                                     <option value="Draughtsman">Draughtsman</option>
                                     <option value="3D Designing Team">3D Designing Team</option>
                                     <option value="Studio Trainees">Studio Trainees</option>
+                                 <option value="Graphic Designer">Graphic Designer</option>
                                     <option value="Business Developer">Business Developer</option>
-                                    <option value="Social Media Manager">Social Media Manager</option>
+                                 <option value="Social Media Manager">Social Media Manager</option>
+                                 <option value="Social Media Marketing">Social Media Marketing</option>
                                     <option value="Site Manager">Site Manager</option>
                                     <option value="Site Coordinator">Site Coordinator</option>
                                     <option value="Site Supervisor">Site Supervisor</option>
@@ -878,7 +922,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 // Auto-select reporting manager based on role
                 let manager = '';
-                if (['Design Team', 'Working Team', '3D Designing Team', 'Studio Trainees'].includes(role)) {
+                if ([
+                    'Design Team', 'Working Team', '3D Designing Team', 'Studio Trainees',
+                    'Interior Designer', 'Senior Interior Designer', 'Junior Interior Designer',
+                    'Lead Interior Designer', 'Associate Interior Designer', 'Interior Design Coordinator',
+                    'Interior Design Assistant', 'FF&E Designer', 'Interior Stylist', 'Interior Design Intern',
+                    'Graphic Designer'
+                ].includes(role)) {
                     manager = 'Sr. Manager (Studio)';
                 } else if (role === 'Business Developer') {
                     manager = 'Sr. Manager (Business Developer)';
@@ -886,7 +936,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     manager = 'Sr. Manager (Relationship Manager)';
                 } else if (['Site Manager', 'Site Coordinator', 'Site Supervisor', 'Site Trainee'].includes(role)) {
                     manager = 'Sr. Manager (Operations)';
-                } else if (role === 'Social Media Manager') {
+                } else if (['Social Media Manager', 'Social Media Marketing'].includes(role)) {
                     manager = 'Sr. Manager (HR)';
                 } else if (['Purchase Manager', 'Purchase Executive', 'Purchase'].includes(role)) {
                     manager = 'Sr. Manager (Purchase)';

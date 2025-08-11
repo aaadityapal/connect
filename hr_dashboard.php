@@ -64,7 +64,7 @@ $employee_stats['users_on_leave'] = $users_on_leave_row['on_leave'];
 $pending_details_query = "SELECT 
     l.*,
     u.username,
-    u.employee_id,
+    u.unique_id,
     lt.name as leave_type
     FROM leave_request l
     JOIN users u ON l.user_id = u.id
@@ -3039,9 +3039,11 @@ try {
                             $query = "SELECT 
                                         lr.*,
                                         u.username,
-                                        u.employee_id
+                                        u.unique_id,
+                                        COALESCE(lt.name, lr.leave_type) AS leave_type_name
                                      FROM leave_request lr
                                      JOIN users u ON lr.user_id = u.id
+                                     LEFT JOIN leave_types lt ON (lt.id = lr.leave_type OR lt.name = lr.leave_type)
                                      WHERE (
                                         lr.status = 'pending' 
                                         OR lr.status = 'pending_hr'
@@ -3065,10 +3067,10 @@ try {
                                                         <i class="bi bi-person-circle"></i>
                                                         <?php echo htmlspecialchars($leave['username'] ?? ''); ?>
                                                     </span>
-                                                    <span class="employee-id">(<?php echo htmlspecialchars($leave['employee_id'] ?? ''); ?>)</span>
+                                                    <span class="employee-id">(<?php echo htmlspecialchars($leave['unique_id'] ?? ''); ?>)</span>
                                                 </div>
                                                 <span class="leave-type-badge">
-                                                    <?php echo htmlspecialchars($leave['leave_type'] ?? ''); ?>
+                                                    <?php echo htmlspecialchars($leave['leave_type_name'] ?? ($leave['leave_type'] ?? '')); ?>
                                                 </span>
                                             </div>
                                             <div class="leave-details">

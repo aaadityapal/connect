@@ -14,6 +14,7 @@ try {
     $per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
     $offset = ($page - 1) * $per_page;
     
+    // Build base query
     $query = "
         SELECT 
             lr.id,
@@ -32,22 +33,55 @@ try {
         JOIN users u ON lr.user_id = u.id
         JOIN leave_types lt ON lr.leave_type = lt.id
     ";
-    
-    if ($type !== 'all') {
-        $query .= " WHERE lr.status = :status";
+
+    // Exclude specific roles from results
+    $excludedRoles = [
+        'Site Supervisor',
+        'Site Coordinator',
+        'Purchase Manager',
+        'Sales',
+        'Graphich Designer',
+        'Social Media Marketing',
+    ];
+
+    $conditions = [];
+
+    // Prepare named placeholders for excluded roles
+    $rolePlaceholders = [];
+    foreach ($excludedRoles as $index => $roleName) {
+        $rolePlaceholders[] = ":role{$index}";
     }
-    
-    $query .= " ORDER BY lr.created_at DESC LIMIT :limit OFFSET :offset";
-    
+    if (!empty($rolePlaceholders)) {
+        $conditions[] = 'u.role NOT IN (' . implode(',', $rolePlaceholders) . ')';
+    }
+
+    // Apply status/type filter if not 'all'
+    if ($type !== 'all') {
+        $conditions[] = 'lr.status = :status';
+    }
+
+    if (!empty($conditions)) {
+        $query .= ' WHERE ' . implode(' AND ', $conditions);
+    }
+
+    $query .= ' ORDER BY lr.created_at DESC LIMIT :limit OFFSET :offset';
+
     $stmt = $pdo->prepare($query);
-    
-    if ($type !== 'all') {
-        $stmt->bindParam(':status', $type);
+
+    // Bind excluded roles
+    foreach ($excludedRoles as $index => $roleName) {
+        $stmt->bindValue(":role{$index}", $roleName, PDO::PARAM_STR);
     }
-    
+
+    // Bind status if needed
+    if ($type !== 'all') {
+        $stmt->bindParam(':status', $type, PDO::PARAM_STR);
+    }
+
+    // Bind pagination
     $stmt->bindParam(':limit', $per_page, PDO::PARAM_INT);
     $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-    
+
     $stmt->execute();
     $leaves = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

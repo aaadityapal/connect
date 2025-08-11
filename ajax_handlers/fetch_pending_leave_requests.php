@@ -50,6 +50,24 @@ try {
     $where_conditions = [];
     $params = [];
     $param_types = '';
+
+    // Restrict to specific user roles to be shown in the card
+    $allowed_roles = [
+        'Site Supervisor',
+        'Site Coordinator',
+        'Sales',
+        'Social Media Marketing',
+        'Purchase Manager',
+        'Graphic Designer'
+    ];
+    if (!empty($allowed_roles)) {
+        $role_placeholders = implode(',', array_fill(0, count($allowed_roles), '?'));
+        $where_conditions[] = "u.role IN ($role_placeholders)";
+        foreach ($allowed_roles as $role) {
+            $params[] = $role;
+        }
+        $param_types .= str_repeat('s', count($allowed_roles));
+    }
     
     // Status condition
     if ($status !== 'all') {
@@ -73,15 +91,17 @@ try {
     
     // Combine conditions
     $where_clause = "WHERE " . implode(" AND ", $where_conditions);
+
+    // Common FROM/JOIN clause reused for both data and count queries
+    $from_clause = "FROM leave_request lr JOIN users u ON lr.user_id = u.id";
     
     // Query to get leave requests based on status filter
     $query = "
-        SELECT lr.id, lr.user_id, lr.leave_type, lr.start_date, lr.end_date, 
+        SELECT lr.id, lr.user_id, lr.leave_type, lr.start_date, lr.end_date,
                lr.duration_type, lr.half_day_type, lr.reason, lr.status,
                lr.created_at, lr.time_from, lr.time_to, lr.comp_off_source_date,
                u.username, lt.name as leave_type_name, lt.color_code
-        FROM leave_request lr
-        JOIN users u ON lr.user_id = u.id
+        $from_clause
         LEFT JOIN leave_types lt ON lr.leave_type = lt.id
         $where_clause
         ORDER BY lr.created_at DESC
@@ -175,14 +195,11 @@ try {
         ];
     }
     
-    // Get total count of requests based on all filters
-    // Convert the main WHERE clause to work with the count query
-    $count_where_clause = str_replace("lr.", "", $where_clause);
-    
+    // Get total count of requests based on all filters (same JOINs and WHERE)
     $count_query = "
         SELECT COUNT(*) as total
-        FROM leave_request
-        $count_where_clause
+        $from_clause
+        $where_clause
     ";
     
     $count_stmt = $conn->prepare($count_query);

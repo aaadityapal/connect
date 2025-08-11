@@ -93,7 +93,10 @@
         <i class="fas fa-chart-bar"></i>
         <span class="menu-text">Reports & Analytics</span>
     </div>
-    
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_supervisor_recent_leaves.php' ? 'active' : ''; ?>" onclick="window.location.href='site_supervisor_recent_leaves.php'">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="menu-text">Apply Leaves</span>
+    </div>
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'pm_overtime.php' ? 'active' : ''; ?>" onclick="window.location.href='pm_overtime.php'">
         <i class="fas fa-tachometer-alt"></i>
         <span class="menu-text">Overtime</span>
@@ -150,18 +153,24 @@
 <div class="panel-overlay" id="panelOverlay"></div>
 
 <style>
-    /* Updated Left Panel Styling to match the image */
+    /* Unified color/system variables to match supervisor panel */
+    :root {
+        --panel-width: 280px;
+        --panel-collapsed: 70px;
+    }
+
+    /* Updated Left Panel Styling to match supervisor UI */
     .left-panel {
-        background-color: #1a237e; /* Dark blue background */
+        background: linear-gradient(180deg, #2a4365, #1a365d);
         color: #ffffff;
-        width: 250px;
+        width: var(--panel-width);
         height: 100vh;
         position: fixed;
         left: 0;
         top: 0;
         overflow-y: auto;
         z-index: 100;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
         transition: all 0.3s ease;
         /* Hide scrollbar */
         scrollbar-width: none; /* Firefox */
@@ -219,40 +228,57 @@
     }
     
     .menu-item {
-        padding: 12px 20px;
+        padding: 16px 25px;
         display: flex;
         align-items: center;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
         border-left: 4px solid transparent;
+        margin: 5px 0;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        color: #fff;
     }
     
     .menu-item:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1);
+        border-left: 4px solid rgba(255, 255, 255, 0.8);
+        padding-left: 30px;
     }
     
     .menu-item.active {
-        background-color: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.15);
         border-left: 4px solid #ffffff;
     }
     
     .menu-item i {
-        font-size: 16px;
         margin-right: 15px;
-        width: 20px;
+        width: 16px;
+        font-size: 1em;
         text-align: center;
+        position: relative;
+        z-index: 1;
+        color: rgba(255, 255, 255, 0.85);
+        display: inline-block;
+        opacity: 0.9;
     }
     
     .menu-text {
-        font-size: 14px;
-        font-weight: 400;
-        transition: opacity 0.3s ease;
+        transition: all 0.3s ease;
+        font-size: 0.95em;
+        letter-spacing: 0.3px;
+        font-weight: 500;
+        position: relative;
+        z-index: 1;
+        white-space: nowrap;
+        padding-left: 5px;
     }
     
     .section-start {
-        margin-top: 10px;
+        margin-top: 20px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding-top: 15px;
+        padding-top: 20px;
         color: rgba(255, 255, 255, 0.7);
         font-weight: 600;
         cursor: default;
@@ -262,21 +288,29 @@
         background-color: transparent;
     }
     
+    /* Logout item styling aligned with supervisor panel */
     .logout-item {
-        margin-top: 20px;
+        margin-top: auto;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
-        color: #ff5252;
+        background: rgba(197, 48, 48, 0.1);
+    }
+    .logout-item:hover {
+        background: rgba(197, 48, 48, 0.2);
+        border-left: 4px solid #c53030 !important;
+    }
+    .logout-item i {
+        color: #f56565 !important;
     }
     
     /* Adjust main content to accommodate fixed left panel */
     .main-content {
-        margin-left: 250px;
+        margin-left: var(--panel-width);
         transition: margin-left 0.3s ease;
     }
     
     /* Collapsed state styling */
     .left-panel.collapsed {
-        width: 60px;
+        width: var(--panel-collapsed);
     }
     
     .left-panel.collapsed .menu-text {
@@ -296,32 +330,24 @@
     
     /* Main content expanded state when panel is collapsed */
     .main-content.expanded {
-        margin-left: 60px;
+        margin-left: var(--panel-collapsed);
     }
     
     /* Responsive adjustments for mobile devices */
     @media (max-width: 768px) {
         .left-panel {
             transform: translateX(-100%);
-            width: 250px;
+            width: 280px;
+            box-shadow: none;
+            transition: transform 0.3s ease;
         }
-        
         .left-panel.mobile-open {
             transform: translateX(0);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
         }
-        
-        .mobile-toggle {
-            display: block !important; /* Force display with !important */
-        }
-        
-        .panel-overlay.active {
-            display: block;
-        }
-        
-        .main-content {
-            margin-left: 0;
-            padding-top: 10px; /* Add padding for hamburger */
-        }
+        .mobile-toggle { display: block !important; }
+        .panel-overlay.active { display: block; }
+        .main-content { margin-left: 0; padding-top: 10px; }
     }
     
     /* Specific adjustments for iPhone SE, XR and other small devices */

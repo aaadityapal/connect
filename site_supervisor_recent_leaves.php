@@ -3,9 +3,10 @@
 // Fetch leave types from database
 session_start();
 
-// Check if user is logged in and has proper role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Site Supervisor') {
-    header("Location: login.php");
+// Check if user is logged in and has an allowed role for this page
+$allowedRoles = ['Site Supervisor', 'Site Coordinator', 'Purchase manager', 'Purchase Manager'];
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', $allowedRoles, true)) {
+    header("Location: unauthorized.php");
     exit();
 }
 
@@ -780,7 +781,13 @@ foreach ($leave_balances as $b) {
     <!-- Note: Replace inline styles with project-wide styles if available -->
 </head>
 <body>
-<?php include 'includes/supervisor_panel.php'; ?>
+<?php
+    if (isset($_SESSION['role']) && $_SESSION['role'] === 'Site Supervisor') {
+        include 'includes/supervisor_panel.php';
+    } else {
+        include 'includes/manager_panel.php';
+    }
+?>
 
 <!-- Serialized leave balance map for JS to read -->
 <script id="leaveBalanceMap" type="application/json">

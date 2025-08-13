@@ -972,6 +972,11 @@ try {
         <div class="page-title">
               <h1>Travel Expenses Payout</h1>
         </div>
+        <div class="page-actions">
+          <button type="button" class="btn btn-outline-primary" onclick="exportTravelExpenses()">
+            <i class="bi bi-download"></i> Export
+          </button>
+        </div>
           </div>
         </div>
         
@@ -1420,6 +1425,25 @@ try {
   <script>
     // Track selected expenses
     let selectedExpenses = [];
+    function exportTravelExpenses() {
+      const params = new URLSearchParams(window.location.search);
+      const month = document.getElementById('month')?.value || params.get('month') || '';
+      const year = document.getElementById('year')?.value || params.get('year') || '';
+      const userId = document.getElementById('user_id')?.value || params.get('user_id') || '';
+      const paymentStatus = document.getElementById('payment_status')?.value || params.get('payment_status') || '';
+      const fromDate = params.get('from_date') || '';
+      const toDate = params.get('to_date') || '';
+
+      const qs = new URLSearchParams();
+      if (month) qs.set('month', month);
+      if (year) qs.set('year', year);
+      if (userId) qs.set('user_id', userId);
+      if (paymentStatus) qs.set('payment_status', paymentStatus);
+      if (fromDate) qs.set('from_date', fromDate);
+      if (toDate) qs.set('to_date', toDate);
+
+      window.location.href = `export_travel_expenses_pay.php?${qs.toString()}`;
+    }
     
     // Sidebar Toggle
     document.addEventListener('DOMContentLoaded', function() {

@@ -458,11 +458,75 @@ document.addEventListener('DOMContentLoaded', function() {
     function markValid(field) {
         if (field) field.classList.remove('is-invalid');
     }
+
+	/**
+	 * Shows a nice modal to ask if user wants to add a return trip
+	 * @returns {Promise<boolean>} resolves true if user confirms, else false
+	 */
+	function askReturnTrip() {
+		return new Promise((resolve) => {
+			// If Bootstrap modal available, build and show a custom modal
+			if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+				let modal = document.getElementById('returnTripConfirmModal');
+				if (!modal) {
+					const html = `
+<div class="modal fade" id="returnTripConfirmModal" tabindex="-1" role="dialog" aria-labelledby="returnTripConfirmLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="returnTripConfirmLabel">Add Return Trip</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				Do you want to add a return trip with From/To reversed?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-secondary" data-dismiss="modal" id="returnTripNoBtn">No</button>
+				<button type="button" class="btn btn-primary" id="returnTripYesBtn">Yes, add return</button>
+			</div>
+		</div>
+	</div>
+</div>`;
+					const wrapper = document.createElement('div');
+					wrapper.innerHTML = html;
+					document.body.appendChild(wrapper.firstElementChild);
+					modal = document.getElementById('returnTripConfirmModal');
+				}
+
+				const yesBtn = modal.querySelector('#returnTripYesBtn');
+				const noBtn = modal.querySelector('#returnTripNoBtn');
+				const onYes = () => {
+					cleanup();
+					$(modal).modal('hide');
+					resolve(true);
+				};
+				const onNo = () => {
+					cleanup();
+					resolve(false);
+				};
+				const cleanup = () => {
+					yesBtn && yesBtn.removeEventListener('click', onYes);
+					noBtn && noBtn.removeEventListener('click', onNo);
+					$(modal).off('hidden.bs.modal', onNo);
+				};
+
+				yesBtn && yesBtn.addEventListener('click', onYes, { once: true });
+				noBtn && noBtn.addEventListener('click', onNo, { once: true });
+				$(modal).on('hidden.bs.modal', onNo);
+				$(modal).modal('show');
+			} else {
+				// Fallback to native confirm if Bootstrap modal is not available
+				resolve(window.confirm('Do you want to add a return trip with From/To reversed?'));
+			}
+		});
+	}
     
     /**
      * Adds a new expense entry
      */
-    function addExpenseEntry() {
+	async function addExpenseEntry() {
         if (!validateForm()) {
             return;
         }
@@ -522,20 +586,36 @@ document.addEventListener('DOMContentLoaded', function() {
             status: addExpenseEntryBtn.dataset.status || 'pending'
         };
         
-        // Add to expenses array
-        travelExpenses.push(expense);
-        
-        // Add to UI
-        addExpenseToUI(expense);
-        
-        // Update summary
-        updateSummary();
-        
-        // Reset form
-        resetForm();
-        
-        // Show success message
-        showNotification('Expense added successfully', 'success');
+		// Add to expenses array
+		travelExpenses.push(expense);
+		
+		// Add to UI
+		addExpenseToUI(expense);
+		
+		// Ask for return trip using a styled modal
+		const wantsReturnTrip = await askReturnTrip();
+		if (wantsReturnTrip) {
+			const returnExpense = {
+				...expense,
+				id: entryIdCounter++,
+				from: expense.to,
+				to: expense.from,
+				notes: expense.notes ? expense.notes + ' (Return)' : 'Return trip',
+				// Avoid duplicating the same bill file for the return entry
+				billFile: expense.mode === 'Taxi' ? null : expense.billFile
+			};
+			travelExpenses.push(returnExpense);
+			addExpenseToUI(returnExpense);
+		}
+		
+		// Update summary
+		updateSummary();
+		
+		// Reset form
+		resetForm();
+		
+		// Show success message
+		showNotification('Expense added successfully', 'success');
     }
     
     /**

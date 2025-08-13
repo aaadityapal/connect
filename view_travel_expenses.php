@@ -213,6 +213,27 @@ function generateMonthOptions($selected_month) {
     
     return $options;
 }
+
+// Determine which role(s) the pending status is from based on role-specific status columns
+function getPendingFromRoles($expense) {
+    $pendingRoles = array();
+    $roleColumnToLabel = array(
+        'manager_status' => 'Manager',
+        'accountant_status' => 'Accountant',
+        'hr_status' => 'HR'
+    );
+
+    foreach ($roleColumnToLabel as $columnName => $label) {
+        if (array_key_exists($columnName, $expense)) {
+            $value = strtolower((string)$expense[$columnName]);
+            if ($value === 'pending') {
+                $pendingRoles[] = $label;
+            }
+        }
+    }
+
+    return implode(', ', $pendingRoles);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1272,10 +1293,14 @@ function generateMonthOptions($selected_month) {
                                         $combined_status = 'Approved, Not Paid';
                                         $combined_status_class = 'status-approved-not-paid';
                                     } elseif ($status == 'pending' && $is_paid) {
-                                        $combined_status = 'Pending, Prepaid';
+                                        $roles = getPendingFromRoles($first_expense);
+                                        $suffix = $roles ? ' (' . $roles . ')' : '';
+                                        $combined_status = 'Pending, Prepaid' . $suffix;
                                         $combined_status_class = 'status-pending-paid';
                                     } elseif ($status == 'pending' && !$is_paid) {
-                                        $combined_status = 'Pending';
+                                        $roles = getPendingFromRoles($first_expense);
+                                        $suffix = $roles ? ' (' . $roles . ')' : '';
+                                        $combined_status = 'Pending' . $suffix;
                                         $combined_status_class = 'status-pending';
                                     } elseif ($status == 'rejected' && $is_paid) {
                                         $combined_status = 'Rejected, Refund Due';
@@ -1454,10 +1479,14 @@ function generateMonthOptions($selected_month) {
                                                     $combined_status = 'Approved, Not Paid';
                                                     $combined_status_class = 'status-approved-not-paid';
                                                 } elseif ($status == 'pending' && $is_paid) {
-                                                    $combined_status = 'Pending, Prepaid';
+                                                    $roles = getPendingFromRoles($expense);
+                                                    $suffix = $roles ? ' (' . $roles . ')' : '';
+                                                    $combined_status = 'Pending, Prepaid' . $suffix;
                                                     $combined_status_class = 'status-pending-paid';
                                                 } elseif ($status == 'pending' && !$is_paid) {
-                                                    $combined_status = 'Pending';
+                                                    $roles = getPendingFromRoles($expense);
+                                                    $suffix = $roles ? ' (' . $roles . ')' : '';
+                                                    $combined_status = 'Pending' . $suffix;
                                                     $combined_status_class = 'status-pending';
                                                 } elseif ($status == 'rejected' && $is_paid) {
                                                     $combined_status = 'Rejected, Refund Due';
@@ -1585,7 +1614,14 @@ function generateMonthOptions($selected_month) {
                             </div>
                             <div class="expense-detail-meta">
                                 <span class="expense-status status-<?php echo $expense['status']; ?>">
-                                    <?php echo ucfirst($expense['status']); ?>
+                                    <?php
+                                        if ($expense['status'] === 'pending') {
+                                            $roles = getPendingFromRoles($expense);
+                                            echo 'Pending' . ($roles ? ' (' . $roles . ')' : '');
+                                        } else {
+                                            echo ucfirst($expense['status']);
+                                        }
+                                    ?>
                                 </span>
                                 <span class="expense-detail-date">
                                     <i class="far fa-calendar-alt"></i>
@@ -1679,10 +1715,14 @@ function generateMonthOptions($selected_month) {
                                     $combined_status = 'Approved, Not Paid';
                                     $combined_status_class = 'status-approved-not-paid';
                                 } elseif ($status == 'pending' && $is_paid) {
-                                    $combined_status = 'Pending, Prepaid';
+                                    $roles = getPendingFromRoles($expense);
+                                    $suffix = $roles ? ' (' . $roles . ')' : '';
+                                    $combined_status = 'Pending, Prepaid' . $suffix;
                                     $combined_status_class = 'status-pending-paid';
                                 } elseif ($status == 'pending' && !$is_paid) {
-                                    $combined_status = 'Pending';
+                                    $roles = getPendingFromRoles($expense);
+                                    $suffix = $roles ? ' (' . $roles . ')' : '';
+                                    $combined_status = 'Pending' . $suffix;
                                     $combined_status_class = 'status-pending';
                                 } elseif ($status == 'rejected' && $is_paid) {
                                     $combined_status = 'Rejected, Refund Due';

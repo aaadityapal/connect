@@ -5330,7 +5330,20 @@ function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = f
                 if (week) exportUrl += `week=${encodeURIComponent(week)}&`;
                 if (year) exportUrl += `year=${encodeURIComponent(year)}&`;
                 if (approvalStatus && approvalStatus !== 'All Approvals') {
-                    exportUrl += `role_status=${encodeURIComponent(approvalStatus.toLowerCase().replace(' ', '_'))}&`;
+                    let roleStatusParam = '';
+                    if (approvalStatus === 'Approved and Paid') {
+                        roleStatusParam = 'approved_paid';
+                    } else if (approvalStatus === 'Approved and Unpaid') {
+                        roleStatusParam = 'approved_unpaid';
+                    } else {
+                        const parts = approvalStatus.split(' ');
+                        if (parts.length === 2) {
+                            roleStatusParam = `${parts[0].toLowerCase()}_${parts[1].toLowerCase()}`;
+                        }
+                    }
+                    if (roleStatusParam) {
+                        exportUrl += `role_status=${encodeURIComponent(roleStatusParam)}&`;
+                    }
                 }
                 if (search) exportUrl += `search=${encodeURIComponent(search)}&`;
                 

@@ -407,7 +407,11 @@
         }
         
         .data-table th.col-date {
-            width: 10%;
+            width: 8%;
+        }
+        
+        .data-table th.col-client {
+            width: 12%;
         }
         
         .data-table th.col-title {
@@ -415,19 +419,19 @@
         }
         
         .data-table th.col-type {
-            width: 15%;
+            width: 12%;
         }
         
         .data-table th.col-location {
             width: 15%;
         }
         
-        .data-table th.col-client {
-            width: 12%;
+        .data-table th.col-phone {
+            width: 10%;
         }
         
         .data-table th.col-assigned {
-            width: 12%;
+            width: 10%;
         }
         
         .data-table th.col-actions {
@@ -468,6 +472,15 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        
+        /* Allow title column to wrap text */
+        .data-table td:nth-child(4) {
+            white-space: normal;
+            word-wrap: break-word;
+            overflow: visible;
+            text-overflow: clip;
+            min-width: 200px;
         }
         
         .data-table tr:hover {
@@ -693,6 +706,35 @@
             font-style: italic;
         }
         
+        /* Search suggestions styling */
+        #searchSuggestions {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+        }
+        
+        .suggestion-item {
+            transition: background-color 0.2s ease;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .suggestion-item.selected {
+            background-color: #f0f0f0;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none !important;
+        }
+        
+        .suggestion-item mark {
+            background-color: rgba(67, 97, 238, 0.2);
+            color: inherit;
+            padding: 0;
+            font-weight: bold;
+        }
+        
         /* Substages styling */
         .substages-container .card {
             box-shadow: none;
@@ -770,24 +812,49 @@
     require_once 'config/db_connect.php';
     
     // Initialize filter variables
-    $dateFrom = isset($_GET['dateFrom']) ? $_GET['dateFrom'] : '';
-    $dateTo = isset($_GET['dateTo']) ? $_GET['dateTo'] : '';
-    $status = isset($_GET['status']) ? $_GET['status'] : '';
-    $projectType = isset($_GET['projectType']) ? $_GET['projectType'] : '';
-    $categoryId = isset($_GET['categoryId']) ? $_GET['categoryId'] : '';
-    $search = isset($_GET['search']) ? $_GET['search'] : '';
+    // Sanitize and validate input parameters
+    $dateFrom = isset($_GET['dateFrom']) ? trim($_GET['dateFrom']) : '';
+    $dateTo = isset($_GET['dateTo']) ? trim($_GET['dateTo']) : '';
+    $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+    $projectType = isset($_GET['projectType']) ? trim($_GET['projectType']) : '';
     
-    // Build SQL query with filters
-    $sql = "SELECT p.*, 
+    // Handle category ID safely
+    $categoryId = '';
+    if (isset($_GET['categoryId']) && !empty($_GET['categoryId'])) {
+        $categoryId = is_numeric($_GET['categoryId']) ? intval($_GET['categoryId']) : '';
+    }
+    
+    // Special handling for search parameter to prevent SQL injection
+    $search = '';
+    if (isset($_GET['search']) && !empty($_GET['search'])) {
+        // Simply trim the search term - we'll use prepared statements for safety
+        $search = trim($_GET['search']);
+        
+        // Log the search term for debugging
+        error_log("Search term: " . $search);
+    }
+    
+    // Enable error reporting for debugging
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+    
+    // Build a simpler SQL query with fewer joins to identify issues
+    $sql = "SELECT p.id, 
+                   p.title,
+                   p.description,
+                   p.client_name,
+                   p.project_type,
+                   p.project_location,
+                   p.start_date,
+                   p.end_date,
+                   p.status,
                    p.created_at,
                    p.contact_number,
-                   u1.username as creator_name,
-                   u2.username as assignee_name,
-                   pc.name as category_name
+                   p.category_id,
+                   p.created_by,
+                   p.assigned_to
             FROM projects p
-            LEFT JOIN users u1 ON p.created_by = u1.id
-            LEFT JOIN users u2 ON p.assigned_to = u2.id
-            LEFT JOIN project_categories pc ON p.category_id = pc.id
             WHERE p.deleted_at IS NULL";
     
     $params = [];
@@ -819,11 +886,19 @@
     }
     
     if (!empty($search)) {
-        $sql .= " AND (p.title LIKE :search OR p.description LIKE :search OR p.client_name LIKE :search OR p.project_location LIKE :search)";
-        $params[':search'] = "%$search%";
+        // Debug the search query
+        error_log("Processing search: " . $search);
+        
+        // Use separate parameter names for each condition to avoid parameter number issues
+        $sql .= " AND (p.title LIKE :search_title OR p.client_name LIKE :search_client)";
+        $params[':search_title'] = "%$search%";
+        $params[':search_client'] = "%$search%";
+        
+        // Log the final SQL query for debugging
+        error_log("Final SQL query: " . $sql);
     }
     
-    $sql .= " ORDER BY p.created_at DESC";
+    $sql .= " ORDER BY p.start_date DESC, p.created_at DESC";
     
     // Get distinct project types and statuses for filter dropdowns
     $projectTypesQuery = "SELECT DISTINCT project_type FROM projects WHERE deleted_at IS NULL ORDER BY project_type";
@@ -832,29 +907,126 @@
     // Get project categories for filter dropdown
     $categoriesQuery = "SELECT id, name, description FROM project_categories WHERE deleted_at IS NULL ORDER BY name";
     
+    // Initialize variables
+    $projects = [];
+    $projectTypes = [];
+    $statuses = [];
+    $categories = [];
+    
     try {
-        // Prepare and execute the main query
+        // First, try to get the categories (simplest query)
+        try {
+            $categoriesStmt = $pdo->query("SELECT id, name, description FROM project_categories WHERE deleted_at IS NULL ORDER BY name");
+            $categories = $categoriesStmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Successfully fetched " . count($categories) . " categories");
+        } catch (PDOException $e) {
+            error_log("Error fetching categories: " . $e->getMessage());
+        }
+        
+        // Then try to get project types
+        try {
+            $projectTypesStmt = $pdo->query("SELECT DISTINCT project_type FROM projects WHERE deleted_at IS NULL ORDER BY project_type");
+            $projectTypes = $projectTypesStmt->fetchAll(PDO::FETCH_COLUMN);
+            error_log("Successfully fetched " . count($projectTypes) . " project types");
+        } catch (PDOException $e) {
+            error_log("Error fetching project types: " . $e->getMessage());
+        }
+        
+        // Then try to get statuses
+        try {
+            $statusesStmt = $pdo->query("SELECT DISTINCT status FROM projects WHERE deleted_at IS NULL ORDER BY status");
+            $statuses = $statusesStmt->fetchAll(PDO::FETCH_COLUMN);
+            error_log("Successfully fetched " . count($statuses) . " statuses");
+        } catch (PDOException $e) {
+            error_log("Error fetching statuses: " . $e->getMessage());
+        }
+        
+        // Finally, execute the main projects query
         $stmt = $pdo->prepare($sql);
+        
+        // Log the SQL query for debugging
+        error_log("Executing SQL: " . $sql);
+        error_log("With parameters: " . json_encode($params));
+        
+        // Bind parameters
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
+            error_log("Bound parameter $key with value: " . (is_array($value) ? json_encode($value) : $value));
         }
+        
+        // Execute the query
         $stmt->execute();
-        $projects = $stmt->fetchAll();
+        $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Get project types for dropdown
-        $projectTypesStmt = $pdo->query($projectTypesQuery);
-        $projectTypes = $projectTypesStmt->fetchAll(PDO::FETCH_COLUMN);
+        // Log success
+        error_log("Successfully fetched " . count($projects) . " projects");
         
-        // Get statuses for dropdown
-        $statusesStmt = $pdo->query($statusesQuery);
-        $statuses = $statusesStmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        // Get categories for dropdown
-        $categoriesStmt = $pdo->query($categoriesQuery);
-        $categories = $categoriesStmt->fetchAll();
+        // Fetch related data for each project
+        foreach ($projects as &$project) {
+            // Get creator name
+            if (!empty($project['created_by'])) {
+                try {
+                    $creatorStmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+                    $creatorStmt->execute([$project['created_by']]);
+                    $creator = $creatorStmt->fetch(PDO::FETCH_ASSOC);
+                    $project['creator_name'] = $creator ? $creator['username'] : 'Unknown';
+                } catch (PDOException $e) {
+                    $project['creator_name'] = 'Unknown';
+                }
+            } else {
+                $project['creator_name'] = 'Unknown';
+            }
+            
+            // Get assignee name
+            if (!empty($project['assigned_to'])) {
+                try {
+                    $assigneeStmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+                    $assigneeStmt->execute([$project['assigned_to']]);
+                    $assignee = $assigneeStmt->fetch(PDO::FETCH_ASSOC);
+                    $project['assignee_name'] = $assignee ? $assignee['username'] : 'Unassigned';
+                } catch (PDOException $e) {
+                    $project['assignee_name'] = 'Unassigned';
+                }
+            } else {
+                $project['assignee_name'] = 'Unassigned';
+            }
+            
+            // Get category name
+            if (!empty($project['category_id'])) {
+                try {
+                    $categoryStmt = $pdo->prepare("SELECT name FROM project_categories WHERE id = ?");
+                    $categoryStmt->execute([$project['category_id']]);
+                    $category = $categoryStmt->fetch(PDO::FETCH_ASSOC);
+                    $project['category_name'] = $category ? $category['name'] : 'N/A';
+                } catch (PDOException $e) {
+                    $project['category_name'] = 'N/A';
+                }
+            } else {
+                $project['category_name'] = 'N/A';
+            }
+        }
         
     } catch (PDOException $e) {
-        echo '<div class="alert alert-danger">Error fetching projects: ' . $e->getMessage() . '</div>';
+        // Log the error for debugging
+        error_log("Database error in projects.php: " . $e->getMessage());
+        error_log("Error code: " . $e->getCode());
+        error_log("SQL state: " . $e->errorInfo[0] ?? 'unknown');
+        
+        // Always show detailed error for debugging
+        echo '<div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Database Error: ' . htmlspecialchars($e->getMessage()) . '
+                <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>';
+        
+        // Show SQL for debugging (remove in production)
+        echo '<div class="alert alert-warning">
+                <strong>Debug Info:</strong><br>
+                SQL: ' . htmlspecialchars($sql) . '<br>
+                Parameters: ' . htmlspecialchars(json_encode($params)) . '
+              </div>';
+        
+        // Reset variables
         $projects = [];
         $projectTypes = [];
         $statuses = [];
@@ -1068,15 +1240,19 @@
                                             <?php endforeach; ?>
                                         </select>
                 </div>
-                    <div class="col-md-6">
+                                                        <div class="col-md-6">
                         <label for="search" class="form-label">Search</label>
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                            <input type="text" class="form-control" id="search" name="search" placeholder="Search by title, description, client or location..." value="<?= htmlspecialchars($search) ?>">
+                                            <input type="text" class="form-control" id="search" name="search" 
+                                                placeholder="Search by title or client name..." 
+                                                value="<?= htmlspecialchars($search) ?>"
+                                                autocomplete="off">
                                             <button type="submit" class="btn btn-primary">
                                                 <i class="bi bi-filter me-1"></i> Apply Filters
                                             </button>
-                    </div>
+                                        </div>
+                                        <div id="searchSuggestions" class="position-absolute bg-white shadow rounded mt-1 w-75 d-none" style="z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="d-block text-muted mb-2">Actions</label>
@@ -1116,11 +1292,12 @@
                 <thead>
                     <tr>
                                     <th class="col-id"><i class="bi bi-hash me-1"></i>ID</th>
-                                    <th class="col-date"><i class="bi bi-calendar-event me-1"></i>Created On</th>
+                                    <th class="col-date"><i class="bi bi-calendar-event me-1"></i>Start Date</th>
+                                    <th class="col-client"><i class="bi bi-person me-1"></i>Client Name</th>
                                     <th class="col-title"><i class="bi bi-file-earmark-text me-1"></i>Title</th>
-                                    <th class="col-type"><i class="bi bi-building me-1"></i>Project Type with Category</th>
+                                    <th class="col-type"><i class="bi bi-building me-1"></i>Project Type</th>
                                     <th class="col-location"><i class="bi bi-geo-alt me-1"></i>Site Address</th>
-                                    <th class="col-client"><i class="bi bi-telephone me-1"></i>Phone Number</th>
+                                    <th class="col-phone"><i class="bi bi-telephone me-1"></i>Phone Number</th>
                                     <th class="col-assigned"><i class="bi bi-person-check me-1"></i>Assigned To</th>
                                     <th class="col-actions text-center"><i class="bi bi-gear me-1"></i>Actions</th>
                     </tr>
@@ -1128,7 +1305,7 @@
                 <tbody>
                                 <?php if (empty($projects)): ?>
                                     <tr>
-                                        <td colspan="8">
+                                        <td colspan="9">
                                             <div class="empty-state">
                                                 <i class="bi bi-folder"></i>
                                                 <h5>No projects found</h5>
@@ -1140,9 +1317,10 @@
                                     <?php foreach ($projects as $project): ?>
                                         <tr class="project-type-<?= strtolower($project['project_type']) ?>">
                                             <td><?= htmlspecialchars($project['id']) ?></td>
-                                            <td><?= htmlspecialchars(date('M d, Y', strtotime($project['created_at']))) ?></td>
+                                            <td><?= htmlspecialchars(date('M d, Y', strtotime($project['start_date'] ?? $project['created_at']))) ?></td>
+                                            <td><?= htmlspecialchars($project['client_name'] ?? 'N/A') ?></td>
                                             <td>
-                                                <strong><?= htmlspecialchars($project['title']) ?></strong>
+                                                <strong style="word-wrap: break-word; white-space: normal;"><?= htmlspecialchars($project['title']) ?></strong>
                                                 <?php if (!empty($project['description'])): ?>
                                                     <div class="small text-muted text-truncate" style="max-width: 100%;" title="<?= htmlspecialchars($project['description']) ?>">
                                                         <?= htmlspecialchars(substr($project['description'], 0, 30)) ?><?= strlen($project['description']) > 30 ? '...' : '' ?>
@@ -1150,10 +1328,21 @@
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <span class="project-type project-type-<?= strtolower($project['project_type']) ?>">
-                                                    <?= htmlspecialchars($project['project_type']) ?>
+                                                <?php 
+                                                $typeClass = 'bg-secondary';
+                                                $textClass = 'text-white';
+                                                if (strtolower($project['project_type']) === 'architecture') {
+                                                    $typeClass = 'bg-danger';
+                                                } elseif (strtolower($project['project_type']) === 'interior') {
+                                                    $typeClass = 'bg-success';
+                                                } elseif (strtolower($project['project_type']) === 'construction') {
+                                                    $typeClass = 'bg-primary';
+                                                }
+                                                ?>
+                                                <span class="badge <?= $typeClass ?> <?= $textClass ?> py-2 px-3">
+                                                    <?= htmlspecialchars(ucwords($project['project_type'])) ?>
                                                 </span>
-                                                <div class="small text-muted"><?= htmlspecialchars($project['category_name'] ?? 'N/A') ?></div>
+                                                <div class="small text-muted mt-1"><?= htmlspecialchars($project['category_name'] ?? 'N/A') ?></div>
                                             </td>
                                             <td><?= htmlspecialchars($project['project_location'] ?? 'N/A') ?></td>
                                             <td><?= htmlspecialchars($project['contact_number'] ?? 'N/A') ?></td>
@@ -1370,7 +1559,176 @@
             return toast;
         }
         
+        // Debounce function to limit how often a function can be called
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(context, args);
+                }, wait);
+            };
+        }
+        
+        // Search autocomplete functionality
         document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search');
+            const suggestionsContainer = document.getElementById('searchSuggestions');
+            
+            // Function to fetch search suggestions
+            const fetchSuggestions = debounce(function(query) {
+                if (query.length < 2) {
+                    suggestionsContainer.classList.add('d-none');
+                    return;
+                }
+                
+                // Create AJAX request
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', `ajax_handlers/get_search_suggestions.php?query=${encodeURIComponent(query)}`, true);
+                
+                xhr.onload = function() {
+                    if (this.status === 200) {
+                        try {
+                            const response = JSON.parse(this.responseText);
+                            
+                            if (response.success && response.data.length > 0) {
+                                // Clear previous suggestions
+                                suggestionsContainer.innerHTML = '';
+                                
+                                // Add new suggestions
+                                response.data.forEach(item => {
+                                    const suggestionItem = document.createElement('div');
+                                    suggestionItem.className = 'suggestion-item p-2 border-bottom cursor-pointer';
+                                    suggestionItem.style.cursor = 'pointer';
+                                    
+                                    // Highlight matching text
+                                    const regex = new RegExp(`(${query})`, 'gi');
+                                    let displayText = '';
+                                    
+                                    if (item.type === 'title') {
+                                        displayText = `<strong>${item.value.replace(regex, '<mark>$1</mark>')}</strong>`;
+                                        if (item.extra) {
+                                            displayText += ` <span class="text-muted small">(${item.extra})</span>`;
+                                        }
+                                    } else if (item.type === 'client') {
+                                        displayText = `<i class="bi bi-person-circle me-1"></i> ${item.value.replace(regex, '<mark>$1</mark>')}`;
+                                    }
+                                    
+                                    suggestionItem.innerHTML = displayText;
+                                    
+                                    // Add click event to select suggestion
+                                    suggestionItem.addEventListener('click', function() {
+                                        searchInput.value = item.value;
+                                        suggestionsContainer.classList.add('d-none');
+                                    });
+                                    
+                                    suggestionsContainer.appendChild(suggestionItem);
+                                });
+                                
+                                // Show suggestions container
+                                suggestionsContainer.classList.remove('d-none');
+                            } else {
+                                suggestionsContainer.classList.add('d-none');
+                            }
+                        } catch (error) {
+                            console.error('Error parsing suggestions:', error);
+                            suggestionsContainer.classList.add('d-none');
+                        }
+                    } else {
+                        suggestionsContainer.classList.add('d-none');
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    console.error('Network error occurred');
+                    suggestionsContainer.classList.add('d-none');
+                };
+                
+                xhr.send();
+            }, 300); // 300ms debounce delay
+            
+            // Add input event listener
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    fetchSuggestions(query);
+                });
+                
+                // Hide suggestions when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                        suggestionsContainer.classList.add('d-none');
+                    }
+                });
+                
+                // Show suggestions when focusing on input if it has value
+                searchInput.addEventListener('focus', function() {
+                    const query = this.value.trim();
+                    if (query.length >= 2) {
+                        fetchSuggestions(query);
+                    }
+                });
+                
+                // Add keyboard navigation for suggestions
+                searchInput.addEventListener('keydown', function(e) {
+                    const suggestions = suggestionsContainer.querySelectorAll('.suggestion-item');
+                    if (suggestions.length === 0) return;
+                    
+                    // Find currently selected item
+                    const selected = suggestionsContainer.querySelector('.suggestion-item.selected');
+                    
+                    switch (e.key) {
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            if (!selected) {
+                                // Select first item
+                                suggestions[0].classList.add('selected');
+                                suggestions[0].style.backgroundColor = '#f0f0f0';
+                            } else {
+                                // Select next item
+                                const nextIndex = Array.from(suggestions).indexOf(selected) + 1;
+                                if (nextIndex < suggestions.length) {
+                                    selected.classList.remove('selected');
+                                    selected.style.backgroundColor = '';
+                                    suggestions[nextIndex].classList.add('selected');
+                                    suggestions[nextIndex].style.backgroundColor = '#f0f0f0';
+                                    suggestions[nextIndex].scrollIntoView({ block: 'nearest' });
+                                }
+                            }
+                            break;
+                            
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            if (selected) {
+                                // Select previous item
+                                const prevIndex = Array.from(suggestions).indexOf(selected) - 1;
+                                if (prevIndex >= 0) {
+                                    selected.classList.remove('selected');
+                                    selected.style.backgroundColor = '';
+                                    suggestions[prevIndex].classList.add('selected');
+                                    suggestions[prevIndex].style.backgroundColor = '#f0f0f0';
+                                    suggestions[prevIndex].scrollIntoView({ block: 'nearest' });
+                                }
+                            }
+                            break;
+                            
+                        case 'Enter':
+                            if (selected) {
+                                e.preventDefault();
+                                searchInput.value = selected.textContent.replace(/\s\(.*\)$/, '').trim();
+                                suggestionsContainer.classList.add('d-none');
+                            }
+                            break;
+                            
+                        case 'Escape':
+                            e.preventDefault();
+                            suggestionsContainer.classList.add('d-none');
+                            break;
+                    }
+                });
+            }
                     // Apply project type styling for both cells and rows
                     document.querySelectorAll('.project-type').forEach(element => {
                         const projectType = element.textContent.trim().toLowerCase();
@@ -1451,9 +1809,14 @@
                             document.getElementById('modalTitle').querySelector('span').textContent = projectData.title || 'Untitled Project';
                             document.getElementById('modalDescription').querySelector('span').textContent = projectData.description || 'No description available.';
                             
-                            // Set project type with appropriate styling
+                            // Set project type with appropriate styling and capitalized first letters
                             const typeElement = document.getElementById('modalType');
-                            typeElement.textContent = projectData.type || 'Not specified';
+                            // Capitalize first letter of each word
+                            const capitalizedType = projectData.type ? 
+                                projectData.type.replace(/\w\S*/g, function(txt) {
+                                    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                                }) : 'Not specified';
+                            typeElement.textContent = capitalizedType;
                             typeElement.className = 'project-type'; // Reset classes
                             
                             // Apply project type styling
@@ -2002,19 +2365,20 @@
                     // Add headers for projects (excluding the Actions column)
                     const headers = [
                         'S.No.',
+                        'ID',
+                        'Start Date',
+                        'Client Name',
                         'Title',
-                        'Client',
                         'Project Type',
                         'Category',
-                        'Start Date',
-                        'End Date',
-                        'Status',
-                        'Location',
-                        'Assigned To'
+                        'Site Address',
+                        'Phone Number',
+                        'Assigned To',
+                        'Status'
                     ];
                     projectsData.push(headers);
                     
-                    // Add rows for projects
+                    // Add rows for projects (they're already sorted by start date in the table)
                     const rows = table.querySelectorAll('tbody tr');
                     let serialNumber = 1;
                     
@@ -2037,16 +2401,64 @@
                                 title: projectTitle
                             });
                             
-                            // Add project data (skip first column which is ID and last column which is Actions)
-                            for (let i = 1; i < cells.length - 1; i++) {
-                                // Get the text content without the description for the title cell
-                                if (i === 1 && cells[i].querySelector('strong')) {
-                                    rowData.push(cells[i].querySelector('strong').textContent.trim());
-                                } else {
-                                    // Clean up the text (remove extra spaces, etc.)
-                                    let cellText = cells[i].textContent.trim().replace(/\s+/g, ' ');
-                                    rowData.push(cellText);
+                            // Add project data in the correct order for our Excel export
+                            // First add the ID (cells[0])
+                            rowData.push(cells[0].textContent.trim());
+                            
+                            // Start Date (cells[1])
+                            rowData.push(cells[1].textContent.trim());
+                            
+                            // Client Name (cells[2])
+                            rowData.push(cells[2].textContent.trim());
+                            
+                            // Title (cells[3]) - Get just the title without description
+                            if (cells[3].querySelector('strong')) {
+                                rowData.push(cells[3].querySelector('strong').textContent.trim());
+                            } else {
+                                rowData.push(cells[3].textContent.trim());
+                            }
+                            
+                            // Project Type (cells[4]) - Extract just the project type without the badge styling
+                            let projectType = '';
+                            if (cells[4].querySelector('.badge')) {
+                                projectType = cells[4].querySelector('.badge').textContent.trim();
+                            } else {
+                                                                                projectType = cells[4].textContent.trim().split('\n')[0].trim();
+                                            }
+                                            // Capitalize first letter of each word in project type
+                                            projectType = projectType.replace(/\w\S*/g, function(txt) {
+                                                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                                            });
+                                            rowData.push(projectType);
+                            
+                            // Category - Extract from the small text in the project type cell
+                            let category = '';
+                            if (cells[4].querySelector('.small')) {
+                                category = cells[4].querySelector('.small').textContent.trim();
+                            } else {
+                                const lines = cells[4].textContent.trim().split('\n');
+                                if (lines.length > 1) {
+                                    category = lines[lines.length - 1].trim();
                                 }
+                            }
+                            rowData.push(category);
+                            
+                            // Site Address (cells[5])
+                            rowData.push(cells[5].textContent.trim());
+                            
+                            // Phone Number (cells[6])
+                            rowData.push(cells[6].textContent.trim());
+                            
+                            // Assigned To (cells[7])
+                            rowData.push(cells[7].textContent.trim());
+                            
+                            // Status - We need to get this from the data attributes or modal data
+                            // For now, we'll add a placeholder
+                            const viewBtn = row.querySelector('.view-project');
+                            if (viewBtn && viewBtn.dataset.status) {
+                                rowData.push(viewBtn.dataset.status);
+                            } else {
+                                rowData.push('N/A');
                             }
                             projectsData.push(rowData);
                             serialNumber++;
@@ -2058,7 +2470,43 @@
                     
                     // Style the header row - using cell formatting options that work with the library
                     const range = XLSX.utils.decode_range(projectsWS['!ref']);
-                    projectsWS['!cols'] = Array(range.e.c + 1).fill({ wch: 15 }); // Set column width
+                    
+                    // Set column widths
+                    projectsWS['!cols'] = Array(range.e.c + 1).fill({ wch: 15 }); 
+                    
+                    // Create a style object for headers
+                    const headerStyle = {
+                        font: {
+                            bold: true,
+                            sz: 16, // Larger font size (16pt)
+                            color: { rgb: "000000" } // Black color
+                        },
+                        alignment: {
+                            horizontal: "center",
+                            vertical: "center"
+                        },
+                        fill: {
+                            patternType: "solid",
+                            fgColor: { rgb: "E9ECEF" } // Light gray background
+                        },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        }
+                    };
+                    
+                    // Apply the style to the header row
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const headerCell = XLSX.utils.encode_cell({r:0, c:C});
+                        if (!projectsWS[headerCell]) continue;
+                        projectsWS[headerCell].s = headerStyle;
+                    }
+                    
+                    // Set row height for header row
+                    if (!projectsWS['!rows']) projectsWS['!rows'] = [];
+                    projectsWS['!rows'][0] = { hpt: 30 }; // Set header row height to 30 points
                     
                     // Add the worksheet to the workbook
                     XLSX.utils.book_append_sheet(wb, projectsWS, "Projects");
@@ -2186,6 +2634,107 @@
                             
                             // Create worksheet for all stages
                             const stagesWS = XLSX.utils.aoa_to_sheet(allStagesData);
+                            
+                            // Apply styling to headers in stages worksheet
+                            // Find all header rows (rows with column headers)
+                            const headerRows = [];
+                            for (let i = 0; i < allStagesData.length; i++) {
+                                // Check if this is a header row (contains "S.No." or has specific column headers)
+                                if (allStagesData[i].length > 3 && 
+                                   (allStagesData[i].includes('S.No.') || 
+                                    allStagesData[i].includes('Stage Number') || 
+                                    allStagesData[i].includes('Project Title'))) {
+                                    headerRows.push(i);
+                                }
+                            }
+                            
+                            // Create a style object for headers (same as in projects sheet)
+                            const stagesHeaderStyle = {
+                                font: {
+                                    bold: true,
+                                    sz: 16, // Larger font size (16pt)
+                                    color: { rgb: "000000" } // Black color
+                                },
+                                alignment: {
+                                    horizontal: "center",
+                                    vertical: "center"
+                                },
+                                fill: {
+                                    patternType: "solid",
+                                    fgColor: { rgb: "E9ECEF" } // Light gray background
+                                },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "000000" } },
+                                    bottom: { style: "thin", color: { rgb: "000000" } },
+                                    left: { style: "thin", color: { rgb: "000000" } },
+                                    right: { style: "thin", color: { rgb: "000000" } }
+                                }
+                            };
+                            
+                            // Apply styles to all header rows
+                            const stagesRange = XLSX.utils.decode_range(stagesWS['!ref']);
+                            
+                            // Initialize rows array if not exists
+                            if (!stagesWS['!rows']) stagesWS['!rows'] = [];
+                            
+                            headerRows.forEach(rowIndex => {
+                                // Set row height for header rows
+                                stagesWS['!rows'][rowIndex] = { hpt: 30 }; // Set header row height to 30 points
+                                
+                                for (let C = stagesRange.s.c; C <= stagesRange.e.c; ++C) {
+                                    const cell = XLSX.utils.encode_cell({r: rowIndex, c: C});
+                                    if (!stagesWS[cell]) continue;
+                                    
+                                    // Apply header styling
+                                    stagesWS[cell].s = stagesHeaderStyle;
+                                }
+                            });
+                            
+                            // Create style for project title rows
+                            const projectTitleStyle = {
+                                font: {
+                                    bold: true,
+                                    sz: 18, // Even larger font size (18pt)
+                                    color: { rgb: "4F46E5" } // Purple color for project titles
+                                },
+                                alignment: {
+                                    horizontal: "left",
+                                    vertical: "center"
+                                },
+                                fill: {
+                                    patternType: "solid",
+                                    fgColor: { rgb: "F3F4F6" } // Very light gray background
+                                },
+                                border: {
+                                    bottom: { style: "medium", color: { rgb: "4F46E5" } } // Bottom border only
+                                }
+                            };
+                            
+                            // Apply style to project title rows
+                            for (let i = 0; i < allStagesData.length; i++) {
+                                if (allStagesData[i].length > 0 && 
+                                    typeof allStagesData[i][0] === 'string' && 
+                                    allStagesData[i][0].includes('Project')) {
+                                    
+                                    // Set row height for project title rows
+                                    stagesWS['!rows'][i] = { hpt: 35 }; // Set project title row height to 35 points
+                                    
+                                    // Apply style to the cell
+                                    const cell = XLSX.utils.encode_cell({r: i, c: 0});
+                                    if (stagesWS[cell]) {
+                                        stagesWS[cell].s = projectTitleStyle;
+                                    }
+                                    
+                                    // If there are multiple columns, merge them for the title
+                                    if (allStagesData[i].length === 1 && stagesRange.e.c > 0) {
+                                        if (!stagesWS['!merges']) stagesWS['!merges'] = [];
+                                        stagesWS['!merges'].push({
+                                            s: {r: i, c: 0},
+                                            e: {r: i, c: Math.min(5, stagesRange.e.c)} // Merge up to 6 columns or max available
+                                        });
+                                    }
+                                }
+                            }
                             
                             // Add the stages worksheet to the workbook
                             XLSX.utils.book_append_sheet(wb, stagesWS, "Stages & Substages");

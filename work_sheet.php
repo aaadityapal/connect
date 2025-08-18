@@ -1169,17 +1169,12 @@ $debug_info = [
     </style>
 </head>
 <body>
-    <!-- Add hamburger menu button -->
-    <button class="hamburger-menu" id="hamburgerMenu">
-        <i class="fas fa-bars"></i>
-    </button>
-
+    <?php include 'components/minimal_sidebar.php'; ?>
+    
     <div class="dashboard-container">
-        <!-- Include Left Panel -->
-        <?php include 'left_panel.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content" id="mainContent">
+        <div class="main-content msb-content" id="mainContent">
             <div class="container">
                 <div class="header">
                     <h1><i class="fas fa-calendar-alt" style="margin-right: 0.75rem; color: var(--primary-color);"></i>Work Sheet History</h1>
@@ -1848,47 +1843,7 @@ $debug_info = [
             });
         }
 
-        // Hamburger menu functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburgerMenu = document.getElementById('hamburgerMenu');
-            const leftPanel = document.querySelector('.left-panel');
-            const mainContent = document.getElementById('mainContent');
-            const overlay = document.createElement('div');
-            
-            // Create overlay for mobile
-            overlay.classList.add('panel-overlay');
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.right = '0';
-            overlay.style.bottom = '0';
-            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            overlay.style.zIndex = '998';
-            overlay.style.display = 'none';
-            document.body.appendChild(overlay);
-            
-            // Toggle menu function
-            function toggleMenu() {
-                leftPanel.classList.toggle('show');
-                if (leftPanel.classList.contains('show')) {
-                    overlay.style.display = 'block';
-                } else {
-                    overlay.style.display = 'none';
-                }
-            }
-            
-            // Event listeners
-            hamburgerMenu.addEventListener('click', toggleMenu);
-            overlay.addEventListener('click', toggleMenu);
-            
-            // Close menu when window is resized to larger size
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 991 && leftPanel.classList.contains('show')) {
-                    leftPanel.classList.remove('show');
-                    overlay.style.display = 'none';
-                }
-            });
-        });
+        // Sidebar functionality is now handled by minimal_sidebar.php
 
         function showPunchPhoto(photoUrl, caption) {
             // Get the modal

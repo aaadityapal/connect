@@ -1026,86 +1026,12 @@ function getOvertimeReport($conn, $attendance_id) {
     </style>
 </head>
 <body>
+    <?php include 'components/minimal_sidebar.php'; ?>
+    
     <div class="dashboard-container">
-        <!-- Side Panel -->
-        <div class="left-panel" id="leftPanel">
-            <div class="brand-logo">
-                <img src="" alt="Logo">
-            </div>
-            <button class="toggle-btn" onclick="togglePanel()">
-                <i class="fas fa-chevron-left" id="toggleIcon"></i>
-            </button>
-            
-            <!-- Main Navigation -->
-            <div class="menu-item" onclick="window.location.href='similar_dashboard.php'">
-                <i class="fas fa-home"></i>
-                <span class="menu-text">Dashboard</span>
-            </div>
-            
-            <!-- Personal Section -->
-            <div class="menu-item" onclick="window.location.href='profile.php'">
-                <i class="fas fa-user-circle"></i>
-                <span class="menu-text">My Profile</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='leave.php'">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="menu-text">Apply Leave</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='std_travel_expenses.php'">
-                <i class="fas fa-file-excel"></i>
-                <span class="menu-text">Travel Expenses</span>
-            </div>
-            <div class="menu-item active" onclick="window.location.href='employee_overtime.php'">
-                <i class="fas fa-clock"></i>
-                <span class="menu-text">Overtime</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='site_expenses.php'">
-                <i class="fas fa-receipt"></i>
-                <span class="menu-text">Site Excel</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='site_updates.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Site Updates</span>
-            </div>
-            
-            <!-- Work Section -->
-            <div class="menu-item">
-                <i class="fas fa-tasks"></i>
-                <span class="menu-text">My Tasks</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='work_sheet.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Work Sheet & Attendance</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span class="menu-text">Performance</span>
-            </div>
-            
-            <!-- Settings & Support -->
-            <div class="menu-item">
-                <i class="fas fa-cog"></i>
-                <span class="menu-text">Settings</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-question-circle"></i>
-                <span class="menu-text">Help & Support</span>
-            </div>
-            
-            <!-- Logout at the bottom -->
-            <div class="menu-item logout-item" onclick="window.location.href='logout.php'">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="menu-text">Logout</span>
-            </div>
-        </div>
-
-        <!-- Mobile toggle button -->
-        <div class="mobile-toggle" id="mobileToggle" style="display: none;">
-            <i class="fas fa-bars"></i>
-        </div>
         
         <!-- Main Content -->
-        <div class="main-content" id="mainContent">
+        <div class="main-content msb-content" id="mainContent">
             <div class="content-container">
                 <div class="page-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -1459,98 +1385,9 @@ function getOvertimeReport($conn, $attendance_id) {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Mobile menu toggle
-            const mobileToggle = document.getElementById('mobileToggle');
-            const leftPanel = document.getElementById('leftPanel');
+            // Mobile menu functionality is now handled by minimal_sidebar.php
             
-            // Create overlay for mobile
-            const overlay = document.createElement('div');
-            overlay.classList.add('panel-overlay');
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.right = '0';
-            overlay.style.bottom = '0';
-            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            overlay.style.zIndex = '998';
-            overlay.style.display = 'none';
-            document.body.appendChild(overlay);
-            
-            // Show mobile toggle button on small screens
-            if (window.innerWidth <= 768) {
-                mobileToggle.style.display = 'flex';
-            }
-            
-            window.addEventListener('resize', function() {
-                if (window.innerWidth <= 768) {
-                    mobileToggle.style.display = 'flex';
-                } else {
-                    mobileToggle.style.display = 'none';
-                    leftPanel.classList.remove('mobile-show');
-                    leftPanel.classList.remove('show');
-                    overlay.style.display = 'none';
-                }
-            });
-            
-            // Toggle menu function
-            function toggleMenu() {
-                leftPanel.classList.toggle('show');
-                if (leftPanel.classList.contains('show')) {
-                    overlay.style.display = 'block';
-                } else {
-                    overlay.style.display = 'none';
-                }
-            }
-            
-            // Event listeners
-            mobileToggle.addEventListener('click', toggleMenu);
-            overlay.addEventListener('click', toggleMenu);
-            
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', function(event) {
-                if (window.innerWidth <= 768 && 
-                    !leftPanel.contains(event.target) && 
-                    !mobileToggle.contains(event.target) &&
-                    (leftPanel.classList.contains('mobile-show') || leftPanel.classList.contains('show'))) {
-                    leftPanel.classList.remove('mobile-show');
-                    leftPanel.classList.remove('show');
-                    overlay.style.display = 'none';
-                }
-            });
-            
-            // Toggle sidebar
-            window.togglePanel = function() {
-                const leftPanel = document.getElementById('leftPanel');
-                const mainContent = document.getElementById('mainContent');
-                const toggleIcon = document.getElementById('toggleIcon');
-                
-                leftPanel.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                
-                // Rotate icon
-                if (leftPanel.classList.contains('collapsed')) {
-                    toggleIcon.classList.remove('fa-chevron-left');
-                    toggleIcon.classList.add('fa-chevron-right');
-                } else {
-                    toggleIcon.classList.remove('fa-chevron-right');
-                    toggleIcon.classList.add('fa-chevron-left');
-                }
-                
-                // Save the state to localStorage
-                const isCollapsed = leftPanel.classList.contains('collapsed');
-                localStorage.setItem('sidebarCollapsed', isCollapsed);
-            };
-            
-            // Check localStorage on page load for sidebar state
-            document.addEventListener('DOMContentLoaded', function() {
-                const savedState = localStorage.getItem('sidebarCollapsed');
-                if (savedState === 'true') {
-                    document.getElementById('leftPanel').classList.add('collapsed');
-                    document.getElementById('mainContent').classList.add('expanded');
-                    document.getElementById('toggleIcon').classList.remove('fa-chevron-left');
-                    document.getElementById('toggleIcon').classList.add('fa-chevron-right');
-                }
-            });
+                    // Sidebar toggle is now handled by minimal_sidebar.php
         });
         
         // Overtime form functions

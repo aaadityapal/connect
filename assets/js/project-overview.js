@@ -1,3 +1,6 @@
+// Disable console logging for this module
+(() => { try { ['log','debug','info'].forEach(k => console && (console[k] = function(){})); } catch(_) {} })();
+
 class ProjectOverview {
     constructor() {
         this.initializeOverview();
@@ -5,6 +8,9 @@ class ProjectOverview {
         this.initializeViewToggle();
         this.initializeCalendar();
         this.currentDate = new Date();
+        // Track selected filters (numeric month 1-12 or 'all')
+        this.selectedYear = this.currentDate.getFullYear();
+        this.selectedMonth = (this.currentDate.getMonth() + 1).toString();
         this.userProjects = [];
         this.loadAnimateCSS();
         this.fetchUserProjects();
@@ -61,6 +67,14 @@ class ProjectOverview {
                 // Hide dropdown
                 e.target.closest('.overview-filter-dropdown').style.display = 'none';
                 
+                // Persist selection to instance state using data-value
+                if (filterType.id === 'overviewYearFilter') {
+                    this.selectedYear = parseInt(value, 10);
+                } else if (filterType.id === 'overviewMonthFilter') {
+                    // value is 'all' or numeric string 1-12
+                    this.selectedMonth = value;
+                }
+
                 // Refresh data with new filters
                 this.refreshOverviewData();
             });
@@ -68,8 +82,8 @@ class ProjectOverview {
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', () => {
-            yearDropdown.style.display = 'none';
-            monthDropdown.style.display = 'none';
+            yearDropdown && (yearDropdown.style.display = 'none');
+            monthDropdown && (monthDropdown.style.display = 'none');
         });
 
         // Prevent dropdown from closing when clicking inside
@@ -105,11 +119,28 @@ class ProjectOverview {
 
     async refreshOverviewData() {
         try {
-            const yearFilter = document.getElementById('overviewYearFilter');
-            const monthFilter = document.getElementById('overviewMonthFilter');
+            // Prefer internal state (set from data-value) to avoid sending label text
+            let year = this.selectedYear;
+            let month = this.selectedMonth; // 'all' or numeric string
             
-            const year = yearFilter?.querySelector('span').textContent;
-            const month = monthFilter?.querySelector('span').textContent;
+            // Fallback to DOM if state not set
+            if (!year) {
+                const yearFilter = document.getElementById('overviewYearFilter');
+                const yearText = yearFilter?.querySelector('span').textContent;
+                const parsedYear = parseInt(yearText, 10);
+                if (!isNaN(parsedYear)) year = parsedYear;
+            }
+            if (!month) {
+                const monthFilter = document.getElementById('overviewMonthFilter');
+                const monthText = monthFilter?.querySelector('span').textContent;
+                // Attempt mapping month name to number if needed
+                const monthNames = {
+                    'January': '1','February': '2','March': '3','April': '4','May': '5','June': '6',
+                    'July': '7','August': '8','September': '9','October': '10','November': '11','December': '12',
+                    'All Months': 'all'
+                };
+                month = monthNames[monthText] || this.selectedMonth;
+            }
 
             const response = await fetch('get_project_overview.php', {
                 method: 'POST',
@@ -128,7 +159,7 @@ class ProjectOverview {
                 this.updateCards(data.overview);
             }
         } catch (error) {
-            console.error('Error refreshing project overview data:', error);
+            
         }
     }
 
@@ -213,8 +244,7 @@ class ProjectOverview {
         const month = this.currentDate.getMonth();
         
         // Debug data integrity
-        console.log(`Rendering calendar for ${month+1}/${year}`);
-        console.log(`User projects data available: ${this.userProjects.length > 0}`);
+        
         
         // Check if any stages/substages exist
         let hasStages = false;
@@ -231,7 +261,7 @@ class ProjectOverview {
             }
         });
         
-        console.log(`Data has stages: ${hasStages}, has substages: ${hasSubstages}`);
+        
         
         // Update calendar title
         const titleEl = document.getElementById('calendarTitle');
@@ -250,7 +280,7 @@ class ProjectOverview {
         // Generate calendar days
         const daysContainer = document.getElementById('calendarDays');
         if (!daysContainer) {
-            console.error('Calendar days container not found!');
+            
             return;
         }
 
@@ -351,7 +381,7 @@ class ProjectOverview {
         }
 
         daysContainer.innerHTML = daysHtml;
-        console.log('Calendar days rendered');
+        
 
         // Add click handlers for days and "more" links
         document.querySelectorAll('.calendar-day:not(.empty)').forEach(day => {
@@ -1085,7 +1115,7 @@ class ProjectOverview {
                 const targetContainer = document.getElementById(targetId);
                 
                 if (!targetContainer) {
-                    console.error('Container not found:', targetId);
+                    
                     return;
                 }
                 
@@ -1156,7 +1186,6 @@ class ProjectOverview {
                                 window.projectBriefModal.openProjectModal(projectId);
                             } else {
                                 // Fallback if ProjectBriefModal is not available - use direct navigation
-                                console.warn('ProjectBriefModal not available, falling back to direct navigation');
                                 window.location.href = `project-details.php?id=${projectId}`;
                             }
                         }
@@ -1215,7 +1244,7 @@ class ProjectOverview {
 
     async fetchUserProjects() {
         try {
-            console.log('Fetching user projects...');
+            
             const response = await fetch('get_user_projects.php', {
                 method: 'POST',
                 headers: {
@@ -1226,13 +1255,23 @@ class ProjectOverview {
             const data = await response.json();
             
             if (data.success) {
-                this.userProjects = data.projects;
-                console.log('User projects fetched successfully:', this.userProjects);
+                // Filter out soft-deleted projects so tooltips and counts don't show them
+                const rawProjects = Array.isArray(data.projects) ? data.projects : [];
+                this.userProjects = rawProjects.filter(p => {
+                    // Consider various possible flags/fields that might indicate deletion
+                    const deletedAt = p && p.deleted_at;
+                    const projectDeletedFlag = p && (p.project_deleted === true || p.is_deleted === true);
+                    const statusDeleted = p && (p.status === 'deleted' || p.status === 'inactive');
+                    // Treat null/undefined/empty/zero-date as not deleted
+                    const isSoftDeleted = !!deletedAt && deletedAt !== '0000-00-00 00:00:00';
+                    return !isSoftDeleted && !projectDeletedFlag && !statusDeleted;
+                });
+                
                 
                 // Set the USER_ID global variable if it's provided in the response
                 if (data.user_id && typeof window.USER_ID === 'undefined') {
                     window.USER_ID = data.user_id;
-                    console.log('Set USER_ID global variable to:', window.USER_ID);
+                    
                 }
                 
                 // Check specifically for items due on Apr 19, 2025
@@ -1246,8 +1285,7 @@ class ProjectOverview {
                         const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
                         if (stageEndDate === targetDate) {
                             foundStagesOn2025 = true;
-                            console.log(`Found stage with due date ${targetDate}: Stage ${stage.stage_number} (ID: ${stage.id})`);
-                            console.log(`Stage assigned_to: ${stage.assigned_to}, current user: ${data.user_id}`);
+                            
                         }
                         
                         // Check all substages
@@ -1255,14 +1293,13 @@ class ProjectOverview {
                             const substageEndDate = substage.end_date ? substage.end_date.split(' ')[0] : null;
                             if (substageEndDate === targetDate) {
                                 foundSubstagesOn2025 = true;
-                                console.log(`Found substage with due date ${targetDate}: ${substage.title} (ID: ${substage.id})`);
-                                console.log(`Substage assigned_to: ${substage.assigned_to}, current user: ${data.user_id}`);
+                                
                             }
                         });
                     });
                 });
                 
-                console.log(`Items found on 2025-04-19: Stages=${foundStagesOn2025}, Substages=${foundSubstagesOn2025}`);
+                
                 
                 // Log assigned stages and substages for debugging
                 let assignedStagesCount = 0;
@@ -1271,6 +1308,12 @@ class ProjectOverview {
                 
                 this.userProjects.forEach(project => {
                     project.stages?.forEach(stage => {
+                        // Skip soft-deleted stages
+                        const stageDeletedAt = stage && stage.deleted_at;
+                        const isStageSoftDeleted = !!stageDeletedAt && stageDeletedAt !== '0000-00-00 00:00:00';
+                        if (isStageSoftDeleted || stage.status === 'deleted' || stage.is_deleted === true) {
+                            return;
+                        }
                         // Handle different formats of assigned_to
                         const stageAssignedTo = stage.assigned_to || '';
                         let isStageAssignedToUser = false;
@@ -1286,7 +1329,7 @@ class ProjectOverview {
                         
                         if (isStageAssignedToUser) {
                             assignedStagesCount++;
-                            console.log(`Found assigned stage: ${stage.stage_number || ''} in project: ${project.title} (End date: ${stage.end_date})`);
+                            
                         }
                         
                         stage.substages?.forEach(substage => {
@@ -1305,21 +1348,21 @@ class ProjectOverview {
                             
                             if (isSubstageAssignedToUser) {
                                 assignedSubstagesCount++;
-                                console.log(`Found assigned substage: ${substage.title || 'Substage'} in project: ${project.title} (End date: ${substage.end_date})`);
+                                
                             }
                         });
                     });
                 });
                 
-                console.log(`Total assigned stages: ${assignedStagesCount}, Total assigned substages: ${assignedSubstagesCount}`);
+                
                 
                 // Force redraw the calendar
                 this.renderCalendar();
             } else {
-                console.error('Error in fetch response:', data.message || 'Unknown error');
+                
             }
         } catch (error) {
-            console.error('Error fetching user projects:', error);
+            
         }
     }
 
@@ -2152,7 +2195,19 @@ class ProjectOverview {
                 
                 this.userProjects.forEach(project => {
                     project.stages?.forEach(stage => {
+                        // Skip soft-deleted stages
+                        const stageDeletedAt = stage && stage.deleted_at;
+                        const isStageSoftDeleted = !!stageDeletedAt && stageDeletedAt !== '0000-00-00 00:00:00';
+                        if (isStageSoftDeleted || stage.status === 'deleted' || stage.is_deleted === true) {
+                            return;
+                        }
                         stage.substages?.forEach(substage => {
+                            // Skip soft-deleted substages
+                            const subDeletedAt = substage && substage.deleted_at;
+                            const isSubSoftDeleted = !!subDeletedAt && subDeletedAt !== '0000-00-00 00:00:00';
+                            if (isSubSoftDeleted || substage.status === 'deleted' || substage.is_deleted === true) {
+                                return;
+                            }
                             // Check if substage is assigned to current user
                             const substageAssignedTo = substage.assigned_to || '';
                             let isSubstageAssignedToUser = false;
@@ -3135,13 +3190,11 @@ class ProjectOverview {
 document.addEventListener('DOMContentLoaded', () => {
     // Check if USER_ID is defined, if not try to get it from any available source
     if (typeof USER_ID === 'undefined') {
-        console.log('USER_ID not defined, checking for alternative sources...');
         
         // Try to get from a data attribute if available
         const userIdElement = document.querySelector('[data-user-id]');
         if (userIdElement && userIdElement.dataset.userId) {
             window.USER_ID = userIdElement.dataset.userId;
-            console.log('Set USER_ID from data attribute:', window.USER_ID);
         }
     }
     

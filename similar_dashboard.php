@@ -185,21 +185,7 @@ if ($shift_details && $shift_details['end_time']) {
             z-index: 1;
         }
         
-        .left-panel {
-            width: 280px;
-            background: linear-gradient(180deg, #2c3e50, #34495e);
-            color: #fff;
-            height: 100vh;
-            transition: all 0.3s ease;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-        }
+
         
         .left-panel.collapsed {
             width: 70px;
@@ -3040,7 +3026,7 @@ if ($shift_details && $shift_details['end_time']) {
         // Function to show all upcoming dates in a modal
         function showAllUpcomingDates() {
             // This function will be implemented if needed to show all dates in a larger modal
-            console.log("View all upcoming dates clicked");
+            
             // You can implement a modal or redirect to a detailed view page
         }
     </script>
@@ -3048,79 +3034,10 @@ if ($shift_details && $shift_details['end_time']) {
 <body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>" data-user-id="<?php echo htmlspecialchars($_SESSION['user_id'] ?? ''); ?>">
     <!-- Include Update Modal -->
     <?php include 'update_modal.php'; ?>
+    <?php include 'components/minimal_sidebar.php'; ?>
     
     <div class="dashboard-container">
-        <div class="left-panel" id="leftPanel">
-            <div class="brand-logo" style="padding: 20px 25px; margin-bottom: 20px;">
-                <img src="" alt="Logo" style="max-width: 150px; height: auto;">
-            </div>
-            <button class="toggle-btn" onclick="togglePanel()">
-                <i class="fas fa-chevron-left" id="toggleIcon"></i>
-            </button>
-            
-            <!-- Main Navigation -->
-            <div class="menu-item active">
-                <i class="fas fa-home"></i>
-                <span class="menu-text">Dashboard</span>
-            </div>
-            
-            <!-- Personal Section -->
-            <div class="menu-item" onclick="window.location.href='profile.php'">
-                <i class="fas fa-user-circle"></i>
-                <span class="menu-text">My Profile</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='leave.php'">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="menu-text">Apply Leave</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='std_travel_expenses.php'">
-                <i class="fas fa-file-excel"></i>
-                <span class="menu-text">Travel Expenses</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='employee_overtime.php'">
-                <i class="fas fa-clock"></i>
-                <span class="menu-text">Overtime</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='projects_list.php'">
-                <i class="fas fa-project-diagram"></i>
-                <span class="menu-text">Projects</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='site_updates.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Site Updates</span>
-            </div>
-            
-            <!-- Work Section -->
-            <div class="menu-item">
-                <i class="fas fa-tasks"></i>
-                <span class="menu-text">My Tasks</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='work_sheet.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Work Sheet & Attendance</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span class="menu-text">Performance</span>
-            </div>
-            <!-- Settings & Support -->
-            <div class="menu-item">
-                <i class="fas fa-cog"></i>
-                <span class="menu-text">Settings</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-question-circle"></i>
-                <span class="menu-text">Help & Support</span>
-            </div>
-            
-            <!-- Logout at the bottom -->
-            <div class="menu-item logout-item" onclick="window.location.href='logout.php'">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="menu-text">Logout</span>
-            </div>
-        </div>
-        
-        <div class="main-content">
+        <div class="main-content msb-content">
             
             
             <!-- Time Calendar Widget Section -->
@@ -3171,15 +3088,17 @@ if ($shift_details && $shift_details['end_time']) {
                                         
                                         // Count stages by status
                                         $stageStatusQuery = "SELECT 
-                                            status, 
+                                            ps.status, 
                                             COUNT(*) as count 
                                         FROM 
-                                            project_stages 
+                                            project_stages ps
+                                        JOIN projects p ON p.id = ps.project_id
                                         WHERE 
-                                            assigned_to = $userId
-                                            AND deleted_at IS NULL
+                                            ps.assigned_to = $userId
+                                            AND ps.deleted_at IS NULL
+                                            AND p.deleted_at IS NULL
                                         GROUP BY 
-                                            status";
+                                            ps.status";
                                         
                                         $stageResult = mysqli_query($conn, $stageStatusQuery);
                                         
@@ -3206,15 +3125,19 @@ if ($shift_details && $shift_details['end_time']) {
                                         
                                         // Count substages by status
                                         $substageStatusQuery = "SELECT 
-                                            status, 
+                                            pss.status, 
                                             COUNT(*) as count 
                                         FROM 
-                                            project_substages 
+                                            project_substages pss
+                                        JOIN project_stages ps ON ps.id = pss.stage_id
+                                        JOIN projects p ON p.id = ps.project_id
                                         WHERE 
-                                            assigned_to = $userId
-                                            AND deleted_at IS NULL
+                                            pss.assigned_to = $userId
+                                            AND pss.deleted_at IS NULL
+                                            AND ps.deleted_at IS NULL
+                                            AND p.deleted_at IS NULL
                                         GROUP BY 
-                                            status";
+                                            pss.status";
                                         
                                         $substageResult = mysqli_query($conn, $substageStatusQuery);
                                         
@@ -3421,8 +3344,8 @@ if ($shift_details && $shift_details['end_time']) {
                                             COUNT(*) as total_count
                                         FROM 
                                             project_substages ps
-                                            JOIN project_stages pst ON ps.stage_id = pst.id
-                                            JOIN projects p ON pst.project_id = p.id
+                                            JOIN project_stages pst ON ps.stage_id = pst.id AND pst.deleted_at IS NULL
+                                            JOIN projects p ON pst.project_id = p.id AND p.deleted_at IS NULL
                                         WHERE 
                                             ps.assigned_to = $userId
                                             AND ps.end_date >= '$currentDate'
@@ -3454,8 +3377,8 @@ if ($shift_details && $shift_details['end_time']) {
                                             p.id as project_id
                                         FROM 
                                             project_substages ps
-                                            JOIN project_stages pst ON ps.stage_id = pst.id
-                                            JOIN projects p ON pst.project_id = p.id
+                                            JOIN project_stages pst ON ps.stage_id = pst.id AND pst.deleted_at IS NULL
+                                            JOIN projects p ON pst.project_id = p.id AND p.deleted_at IS NULL
                                         WHERE 
                                             ps.assigned_to = $userId
                                             AND ps.end_date >= '$currentDate'
@@ -3602,14 +3525,18 @@ if ($shift_details && $shift_details['end_time']) {
                                         // Calculate completed substages within deadline vs. total completed
                                         $efficiencyQuery = "SELECT 
                                             COUNT(*) as total_completed,
-                                            SUM(CASE WHEN updated_at <= end_date THEN 1 ELSE 0 END) as on_time_completed
+                                            SUM(CASE WHEN pss.updated_at <= pss.end_date THEN 1 ELSE 0 END) as on_time_completed
                                         FROM 
-                                            project_substages 
+                                            project_substages pss
+                                        JOIN project_stages ps ON ps.id = pss.stage_id
+                                        JOIN projects p ON p.id = ps.project_id
                                         WHERE 
-                                            assigned_to = $userId
-                                            AND status = 'completed'
-                    AND deleted_at IS NULL 
-                                            AND updated_at IS NOT NULL";
+                                            pss.assigned_to = $userId
+                                            AND pss.status = 'completed'
+                                            AND pss.deleted_at IS NULL 
+                                            AND ps.deleted_at IS NULL
+                                            AND p.deleted_at IS NULL
+                                            AND pss.updated_at IS NOT NULL";
                                         
                                         $efficiencyResult = mysqli_query($conn, $efficiencyQuery);
                                         $efficiencyData = mysqli_fetch_assoc($efficiencyResult);
@@ -4201,7 +4128,7 @@ if ($shift_details && $shift_details['end_time']) {
             <div class="overview-filter-wrapper">
                 <div class="overview-filter" id="overviewMonthFilter">
                     <i class="fas fa-filter"></i>
-                    <span><?php echo date('F'); ?></span>
+                    <span>All Months</span>
                     <i class="fas fa-chevron-down"></i>
                 </div>
                 <div class="overview-filter-dropdown" id="overviewMonthDropdown">
@@ -4213,9 +4140,10 @@ if ($shift_details && $shift_details['end_time']) {
                         10 => "October", 11 => "November", 12 => "December"
                     );
                     $current_month = intval(date('n'));
+                    // Add All Months option at top as default selected
+                    echo "<div class='overview-filter-option selected' data-value='all'>All Months</div>";
                     foreach ($months as $num => $name) {
-                        $selected = ($num == $current_month) ? ' selected' : '';
-                        echo "<div class='overview-filter-option{$selected}' data-value='{$num}'>{$name}</div>";
+                        echo "<div class='overview-filter-option' data-value='{$num}'>{$name}</div>";
                     }
                     ?>
                 </div>
@@ -4280,10 +4208,12 @@ if ($shift_details && $shift_details['end_time']) {
             <div class="card-content">
                 <?php
                 // Get the count of stages assigned to the current user with assignment_status = 'assigned'
-                $stages_count_query = "SELECT COUNT(*) as total FROM project_stages 
-                                      WHERE assigned_to = ? 
-                                      AND deleted_at IS NULL 
-                                      AND assignment_status = 'assigned'";
+                $stages_count_query = "SELECT COUNT(*) as total FROM project_stages ps
+                                      JOIN projects p ON p.id = ps.project_id
+                                      WHERE ps.assigned_to = ? 
+                                      AND ps.deleted_at IS NULL 
+                                      AND p.deleted_at IS NULL
+                                      AND ps.assignment_status = 'assigned'";
                 $stages_count_stmt = $conn->prepare($stages_count_query);
                 $stages_count_stmt->bind_param("i", $user_id);
                 $stages_count_stmt->execute();
@@ -4291,11 +4221,13 @@ if ($shift_details && $shift_details['end_time']) {
                 $stages_count = $stages_count_result->fetch_assoc()['total'];
                 
                 // Get the count of new stages assigned this month with assignment_status = 'assigned'
-                $new_stages_query = "SELECT COUNT(*) as total FROM project_stages 
-                            WHERE assigned_to = ? 
-                            AND deleted_at IS NULL 
-                            AND created_at >= ?
-                            AND assignment_status = 'assigned'";
+                $new_stages_query = "SELECT COUNT(*) as total FROM project_stages ps
+                            JOIN projects p ON p.id = ps.project_id
+                            WHERE ps.assigned_to = ? 
+                            AND ps.deleted_at IS NULL 
+                            AND p.deleted_at IS NULL
+                            AND ps.created_at >= ?
+                            AND ps.assignment_status = 'assigned'";
                 $new_stages_stmt = $conn->prepare($new_stages_query);
                 $new_stages_stmt->bind_param("is", $user_id, $start_date);
                 $new_stages_stmt->execute();
@@ -4325,10 +4257,14 @@ if ($shift_details && $shift_details['end_time']) {
             <div class="card-content">
                 <?php
                 // Get the count of substages assigned to the current user with assignment_status = 'assigned'
-                $substages_count_query = "SELECT COUNT(*) as total FROM project_substages 
-                                 WHERE assigned_to = ? 
-                                 AND deleted_at IS NULL 
-                                 AND assignment_status = 'assigned'";
+                $substages_count_query = "SELECT COUNT(*) as total FROM project_substages pss
+                                 JOIN project_stages ps ON ps.id = pss.stage_id
+                                 JOIN projects p ON p.id = ps.project_id
+                                 WHERE pss.assigned_to = ? 
+                                 AND pss.deleted_at IS NULL 
+                                 AND ps.deleted_at IS NULL
+                                 AND p.deleted_at IS NULL
+                                 AND pss.assignment_status = 'assigned'";
                 $substages_count_stmt = $conn->prepare($substages_count_query);
                 $substages_count_stmt->bind_param("i", $user_id);
                 $substages_count_stmt->execute();
@@ -4336,11 +4272,15 @@ if ($shift_details && $shift_details['end_time']) {
                 $substages_count = $substages_count_result->fetch_assoc()['total'];
                 
                 // Get the count of new substages assigned this month with assignment_status = 'assigned'
-                $new_substages_query = "SELECT COUNT(*) as total FROM project_substages 
-                                WHERE assigned_to = ? 
-                                AND deleted_at IS NULL 
-                                AND created_at >= ?
-                                AND assignment_status = 'assigned'";
+                $new_substages_query = "SELECT COUNT(*) as total FROM project_substages pss
+                                JOIN project_stages ps ON ps.id = pss.stage_id
+                                JOIN projects p ON p.id = ps.project_id
+                                WHERE pss.assigned_to = ? 
+                                AND pss.deleted_at IS NULL 
+                                AND ps.deleted_at IS NULL
+                                AND p.deleted_at IS NULL
+                                AND pss.created_at >= ?
+                                AND pss.assignment_status = 'assigned'";
                 $new_substages_stmt = $conn->prepare($new_substages_query);
                 $new_substages_stmt->bind_param("is", $user_id, $start_date);
                 $new_substages_stmt->execute();
@@ -4375,12 +4315,14 @@ if ($shift_details && $shift_details['end_time']) {
                 $two_days_later = date('Y-m-d', strtotime('+2 days'));
                 
                 // Get stages due within 7 days
-                $stages_due_query = "SELECT COUNT(*) as total FROM project_stages 
-                           WHERE assigned_to = ? 
-                           AND deleted_at IS NULL 
-                           AND assignment_status = 'assigned'
-                           AND end_date BETWEEN ? AND ?
-                           AND status != 'completed'";
+                $stages_due_query = "SELECT COUNT(*) as total FROM project_stages ps
+                           JOIN projects p ON p.id = ps.project_id
+                           WHERE ps.assigned_to = ? 
+                           AND ps.deleted_at IS NULL 
+                           AND p.deleted_at IS NULL
+                           AND ps.assignment_status = 'assigned'
+                           AND ps.end_date BETWEEN ? AND ?
+                           AND ps.status != 'completed'";
                 $stages_due_stmt = $conn->prepare($stages_due_query);
                 $stages_due_stmt->bind_param("iss", $user_id, $today, $week_later);
                 $stages_due_stmt->execute();
@@ -4388,12 +4330,14 @@ if ($shift_details && $shift_details['end_time']) {
                 $stages_due = $stages_due_result->fetch_assoc()['total'];
                 
                 // Get critical stages (due within 2 days)
-                $critical_stages_query = "SELECT COUNT(*) as total FROM project_stages 
-                                WHERE assigned_to = ? 
-                                AND deleted_at IS NULL 
-                                AND assignment_status = 'assigned'
-                                AND end_date BETWEEN ? AND ?
-                                AND status != 'completed'";
+                $critical_stages_query = "SELECT COUNT(*) as total FROM project_stages ps
+                                JOIN projects p ON p.id = ps.project_id
+                                WHERE ps.assigned_to = ? 
+                                AND ps.deleted_at IS NULL 
+                                AND p.deleted_at IS NULL
+                                AND ps.assignment_status = 'assigned'
+                                AND ps.end_date BETWEEN ? AND ?
+                                AND ps.status != 'completed'";
                 $critical_stages_stmt = $conn->prepare($critical_stages_query);
                 $critical_stages_stmt->bind_param("iss", $user_id, $today, $two_days_later);
                 $critical_stages_stmt->execute();
@@ -4427,12 +4371,16 @@ if ($shift_details && $shift_details['end_time']) {
                 $week_later = date('Y-m-d', strtotime('+7 days'));
                 
                 // Get substages due within 7 days
-                $substages_due_query = "SELECT COUNT(*) as total FROM project_substages 
-                              WHERE assigned_to = ? 
-                              AND deleted_at IS NULL 
-                              AND assignment_status = 'assigned'
-                              AND end_date BETWEEN ? AND ?
-                              AND status != 'completed'";
+                $substages_due_query = "SELECT COUNT(*) as total FROM project_substages pss
+                              JOIN project_stages ps ON ps.id = pss.stage_id
+                              JOIN projects p ON p.id = ps.project_id
+                              WHERE pss.assigned_to = ? 
+                              AND pss.deleted_at IS NULL 
+                              AND ps.deleted_at IS NULL
+                              AND p.deleted_at IS NULL
+                              AND pss.assignment_status = 'assigned'
+                              AND pss.end_date BETWEEN ? AND ?
+                              AND pss.status != 'completed'";
                 $substages_due_stmt = $conn->prepare($substages_due_query);
                 $substages_due_stmt->bind_param("iss", $user_id, $today, $week_later);
                 $substages_due_stmt->execute();
@@ -4440,12 +4388,16 @@ if ($shift_details && $shift_details['end_time']) {
                 $substages_due = $substages_due_result->fetch_assoc()['total'];
                 
                 // Get overdue substages
-                $overdue_substages_query = "SELECT COUNT(*) as total FROM project_substages 
-                                  WHERE assigned_to = ? 
-                                  AND deleted_at IS NULL 
-                                  AND assignment_status = 'assigned'
-                                  AND end_date < ?
-                                  AND status != 'completed'";
+                $overdue_substages_query = "SELECT COUNT(*) as total FROM project_substages pss
+                                  JOIN project_stages ps ON ps.id = pss.stage_id
+                                  JOIN projects p ON p.id = ps.project_id
+                                  WHERE pss.assigned_to = ? 
+                                  AND pss.deleted_at IS NULL 
+                                  AND ps.deleted_at IS NULL
+                                  AND p.deleted_at IS NULL
+                                  AND pss.assignment_status = 'assigned'
+                                  AND pss.end_date < ?
+                                  AND pss.status != 'completed'";
                 $overdue_substages_stmt = $conn->prepare($overdue_substages_query);
                 $overdue_substages_stmt->bind_param("is", $user_id, $today);
                 $overdue_substages_stmt->execute();
@@ -4481,13 +4433,17 @@ if ($shift_details && $shift_details['end_time']) {
                     $week_later = date('Y-m-d', strtotime('+7 days'));
                     
                     // Fetch substages due today
-                    $today_query = "SELECT title FROM project_substages 
-                                  WHERE assigned_to = ? 
-                                  AND deleted_at IS NULL 
-                                  AND assignment_status = 'assigned' 
-                                  AND end_date = ? 
-                                  AND status != 'completed'
-                                  ORDER BY end_date ASC
+                    $today_query = "SELECT pss.title FROM project_substages pss
+                                  JOIN project_stages ps ON ps.id = pss.stage_id
+                                  JOIN projects p ON p.id = ps.project_id
+                                  WHERE pss.assigned_to = ? 
+                                  AND pss.deleted_at IS NULL 
+                                  AND ps.deleted_at IS NULL
+                                  AND p.deleted_at IS NULL
+                                  AND pss.assignment_status = 'assigned' 
+                                  AND pss.end_date = ? 
+                                  AND pss.status != 'completed'
+                                  ORDER BY pss.end_date ASC
                                   LIMIT 5";
                     $today_stmt = $conn->prepare($today_query);
                     $today_stmt->bind_param("is", $user_id, $today_date);
@@ -4495,13 +4451,17 @@ if ($shift_details && $shift_details['end_time']) {
                     $today_result = $today_stmt->get_result();
                     
                     // Fetch substages due tomorrow
-                    $tomorrow_query = "SELECT title FROM project_substages 
-                                     WHERE assigned_to = ? 
-                                     AND deleted_at IS NULL 
-                                     AND assignment_status = 'assigned' 
-                                     AND end_date = ? 
-                                     AND status != 'completed'
-                                     ORDER BY end_date ASC
+                    $tomorrow_query = "SELECT pss.title FROM project_substages pss
+                                     JOIN project_stages ps ON ps.id = pss.stage_id
+                                     JOIN projects p ON p.id = ps.project_id
+                                     WHERE pss.assigned_to = ? 
+                                     AND pss.deleted_at IS NULL 
+                                     AND ps.deleted_at IS NULL
+                                     AND p.deleted_at IS NULL
+                                     AND pss.assignment_status = 'assigned' 
+                                     AND pss.end_date = ? 
+                                     AND pss.status != 'completed'
+                                     ORDER BY pss.end_date ASC
                                      LIMIT 5";
                     $tomorrow_stmt = $conn->prepare($tomorrow_query);
                     $tomorrow_stmt->bind_param("is", $user_id, $tomorrow_date);
@@ -4509,15 +4469,19 @@ if ($shift_details && $shift_details['end_time']) {
                     $tomorrow_result = $tomorrow_stmt->get_result();
                     
                     // Fetch upcoming substages (not today or tomorrow, but within 7 days)
-                    $upcoming_query = "SELECT title, end_date FROM project_substages 
-                                     WHERE assigned_to = ? 
-                                     AND deleted_at IS NULL 
-                                     AND assignment_status = 'assigned' 
-                                     AND end_date > ? 
-                                     AND end_date <= ? 
-                                     AND end_date != ?
-                                     AND status != 'completed'
-                                     ORDER BY end_date ASC
+                    $upcoming_query = "SELECT pss.title, pss.end_date FROM project_substages pss
+                                     JOIN project_stages ps ON ps.id = pss.stage_id
+                                     JOIN projects p ON p.id = ps.project_id
+                                     WHERE pss.assigned_to = ? 
+                                     AND pss.deleted_at IS NULL 
+                                     AND ps.deleted_at IS NULL
+                                     AND p.deleted_at IS NULL
+                                     AND pss.assignment_status = 'assigned' 
+                                     AND pss.end_date > ? 
+                                     AND pss.end_date <= ? 
+                                     AND pss.end_date != ?
+                                     AND pss.status != 'completed'
+                                     ORDER BY pss.end_date ASC
                                      LIMIT 10";
                     $upcoming_stmt = $conn->prepare($upcoming_query);
                     $upcoming_stmt->bind_param("isss", $user_id, $tomorrow_date, $week_later, $tomorrow_date);
@@ -4613,500 +4577,7 @@ if ($shift_details && $shift_details['end_time']) {
 </div>
             
 
-            <div class="kanban-board">
-                <div class="kanban-header">
-                    <div class="kanban-title">Daily Tasks</div>
-                    <div class="board-actions">
-                        <!-- Year Filter -->
-                        <div class="year-filter" id="yearFilter">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span><?php echo date('Y'); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <!-- Month Filter -->
-                        <div class="month-filter" id="monthFilter">
-                            <i class="fas fa-filter"></i>
-                            <span><?php echo date('F'); ?></span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <!-- Year Dropdown -->
-                        <div class="year-dropdown" id="yearDropdown">
-                            <?php
-                            $current_year = intval(date('Y'));
-                            // Show 5 years back and 5 years forward
-                            for ($year = $current_year - 5; $year <= $current_year + 5; $year++) {
-                                $selected = ($year == $current_year) ? ' selected' : '';
-                                echo "<div class='year-option{$selected}' data-year='{$year}'>{$year}</div>";
-                            }
-                            ?>
-                        </div>
-                        <!-- Month Dropdown -->
-                        <div class="month-dropdown" id="monthDropdown">
-                            <div class="month-option" data-month="all">All Months</div>
-                            <?php
-                            $current_month = intval(date('m')) - 1;
-                            $months = array(
-                                "0" => "January", "1" => "February", "2" => "March",
-                                "3" => "April", "4" => "May", "5" => "June",
-                                "6" => "July", "7" => "August", "8" => "September",
-                                "9" => "October", "10" => "November", "11" => "December"
-                            );
-                            
-                            foreach ($months as $num => $name) {
-                                $selected = ($num == $current_month) ? ' selected' : '';
-                                echo "<div class='month-option{$selected}' data-month='{$num}'>{$name}</div>";
-                            }
-                            ?>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="kanban-columns">
-                    <!-- To Do Column -->
-                    <div class="kanban-column">
-                        <div class="column-header">
-                            <span class="column-dot dot-todo"></span>
-                            <h3 class="column-title">To Do List</h3>
-                        </div>
-                        
-                        <div class="kanban-cards-container">
-                            <?php
-                            // Query to get pending and not started projects for the current user
-                            $todo_query = "SELECT DISTINCT 
-                                p.*, 
-                                COUNT(DISTINCT ps.id) as total_stages,
-                                COUNT(DISTINCT pss.id) as total_substages,
-                                u.username as creator_name
-                            FROM projects p
-                            LEFT JOIN project_stages ps ON p.id = ps.project_id
-                            LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                            LEFT JOIN users u ON p.created_by = u.id
-                            WHERE (
-                                p.assigned_to = ? 
-                                OR ps.assigned_to = ?
-                                OR pss.assigned_to = ?
-                            )
-                            AND p.status IN ('pending', 'not_started')
-                            AND p.deleted_at IS NULL
-                            GROUP BY p.id
-                            ORDER BY p.created_at DESC";
-                            
-                            $stmt = $conn->prepare($todo_query);
-                            $stmt->bind_param("iii", $user_id, $user_id, $user_id);
-                            $stmt->execute();
-                            $todo_result = $stmt->get_result();
-
-                            if ($todo_result->num_rows > 0) {
-                                $counter = 0;
-                                while ($project = $todo_result->fetch_assoc()) {
-                                    $counter++;
-                                    // Format the due date
-                                    $due_date = date('M d', strtotime($project['end_date']));
-                                    ?>
-                                    
-                                    <div class="kanban-card project-card" 
-                                         data-project-id="<?php echo $project['id']; ?>"
-                                         data-project-type="<?php echo strtolower($project['project_type']); ?>">
-                                        <div class="card-tags">
-                                            <div class="tag-container">
-                                                <span class="card-tag tag-<?php echo strtolower($project['project_type']); ?>">
-                                                    <?php echo htmlspecialchars($project['project_type']); ?>
-                                                </span>
-                                            </div>
-                                            <span class="meta-status <?php echo $project['status']; ?>">
-                                                <?php echo ucfirst($project['status']); ?>
-                                            </span>
-                                            <?php if (isset($project['role_type'])): ?>
-                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $project['role_type'])); ?>">
-                                                    <?php echo $project['role_type']; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <h4 class="task-title"><?php echo htmlspecialchars($project['title']); ?></h4>
-                                        <p class="task-description">
-                                            <?php 
-                                            echo htmlspecialchars(substr($project['description'], 0, 100)) . 
-                                                 (strlen($project['description']) > 100 ? '...' : ''); 
-                                            ?>
-                                        </p>
-                                        <div class="project-stats">
-                                            <span class="stat-item">
-                                                <i class="fas fa-layer-group"></i>
-                                                <?php echo $project['total_stages']; ?> Stages
-                                            </span>
-                                            <span class="stat-item">
-                                                <i class="fas fa-tasks"></i>
-                                                <?php echo $project['total_substages']; ?> Substages
-                                            </span>
-                                        </div>
-                                        <div class="card-meta">
-                                            <span class="meta-date">
-                                                <i class="far fa-calendar"></i>
-                                                Due: <?php echo $due_date; ?>
-                                            </span>
-                                            <span class="meta-assigned">
-                                                <i class="far fa-user"></i>
-                                                By: <?php echo htmlspecialchars($project['creator_name']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                            } else {
-                                ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-clipboard-list"></i>
-                                    <p>No pending projects found</p>
-                                </div>
-                                <?php
-                            }
-                            ?>
-                        </div>
-                    </div>
-
-                    <!-- In Progress Column -->
-                    <div class="kanban-column">
-                        <div class="column-header">
-                            <span class="column-dot dot-progress"></span>
-                            <h3 class="column-title">In Progress</h3>
-                        </div>
-                        
-                        <div class="kanban-cards-container">
-                            <?php
-                            // Query to get projects with in-progress stages or substages
-                            $progress_query = "SELECT DISTINCT 
-                                                p.*,
-                                                COUNT(DISTINCT ps.id) as total_stages,
-                                                COUNT(DISTINCT pss.id) as total_substages,
-                                                COUNT(DISTINCT CASE WHEN ps.status = 'in_progress' THEN ps.id END) as in_progress_stages,
-                                                COUNT(DISTINCT CASE WHEN pss.status = 'in_progress' THEN pss.id END) as in_progress_substages,
-                                                u.username as creator_name
-                                            FROM projects p
-                                            LEFT JOIN project_stages ps ON p.id = ps.project_id
-                                            LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                                            LEFT JOIN users u ON p.created_by = u.id
-                                            WHERE (
-                                                p.assigned_to = ? 
-                                                OR ps.assigned_to = ?
-                                                OR pss.assigned_to = ?
-                                            )
-                                            AND p.deleted_at IS NULL
-                                            AND (ps.status = 'in_progress' OR pss.status = 'in_progress')
-                                            GROUP BY p.id
-                                            ORDER BY p.updated_at DESC";
-                            
-                            $stmt = $conn->prepare($progress_query);
-                            $stmt->bind_param("iii", $user_id, $user_id, $user_id);
-                            $stmt->execute();
-                            $progress_result = $stmt->get_result();
-
-                            if ($progress_result->num_rows > 0) {
-                                while ($project = $progress_result->fetch_assoc()) {
-                                    // Calculate progress percentage
-                                    $total_items = $project['total_stages'] + $project['total_substages'];
-                                    $in_progress_items = $project['in_progress_stages'] + $project['in_progress_substages'];
-                                    $progress_percentage = $total_items > 0 ? 
-                                        round(($in_progress_items / $total_items) * 100) : 0;
-                                    
-                                    // Format the due date
-                                    $due_date = date('M d', strtotime($project['end_date']));
-                                    ?>
-                                    
-                                    <div class="kanban-card project-card" 
-                                         data-project-id="<?php echo $project['id']; ?>"
-                                         data-project-type="<?php echo strtolower($project['project_type']); ?>">
-                                        <div class="card-tags">
-                                            <div class="tag-container">
-                                                <span class="card-tag tag-<?php echo strtolower($project['project_type']); ?>">
-                                                    <?php echo htmlspecialchars($project['project_type']); ?>
-                                                </span>
-                                            </div>
-                                            <span class="meta-status in_progress">In Progress</span>
-                                            <?php if (isset($project['role_type'])): ?>
-                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $project['role_type'])); ?>">
-                                                    <?php echo $project['role_type']; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <h4 class="task-title"><?php echo htmlspecialchars($project['title']); ?></h4>
-                                        <p class="task-description">
-                                            <?php 
-                                            echo htmlspecialchars(substr($project['description'], 0, 100)) . 
-                                                 (strlen($project['description']) > 100 ? '...' : ''); 
-                                            ?>
-                                        </p>
-                                        
-                                        <div class="task-progress">
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: <?php echo $progress_percentage; ?>%"></div>
-                                            </div>
-                                            <span class="progress-text"><?php echo $progress_percentage; ?>%</span>
-                                        </div>
-                                        
-                                        <div class="project-stats">
-                                            <span class="stat-item">
-                                                <i class="fas fa-layer-group"></i>
-                                                <?php echo $project['in_progress_stages']; ?>/<?php echo $project['total_stages']; ?> Stages
-                                            </span>
-                                            <span class="stat-item">
-                                                <i class="fas fa-tasks"></i>
-                                                <?php echo $project['in_progress_substages']; ?>/<?php echo $project['total_substages']; ?> Substages
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="card-meta">
-                                            <span class="meta-date">
-                                                <i class="far fa-calendar"></i>
-                                                Due: <?php echo $due_date; ?>
-                                            </span>
-                                            <span class="meta-assigned">
-                                                <i class="far fa-user"></i>
-                                                By: <?php echo htmlspecialchars($project['creator_name']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                            } else {
-                                ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-tasks"></i>
-                                    <p>No projects in progress</p>
-                                </div>
-                                <?php
-                            }
-                            ?>
-                        </div>
-                    </div>
-
-                    <!-- In Review Column -->
-                    <div class="kanban-column">
-                        <div class="column-header">
-                            <span class="column-dot dot-review"></span>
-                            <h3 class="column-title">In Review</h3>
-                        </div>
-                        
-                        <div class="kanban-cards-container">
-                            <?php
-                            // Query to get substages in review status
-                            $review_query = "SELECT DISTINCT
-                                p.id as project_id,
-                                p.title as project_title,
-                                p.project_type,
-                                ps.id as stage_id,
-                                ps.stage_number,
-                                ps.assigned_to as stage_assigned_to,
-                                pss.id as substage_id,
-                                pss.title as substage_title,
-                                pss.substage_number,
-                                pss.end_date,
-                                pss.assigned_to as substage_assigned_to,
-                                u.username as reviewer_name,
-                                CASE 
-                                    WHEN p.assigned_to = ? THEN 'Project Owner'
-                                    WHEN ps.assigned_to = ? THEN 'Stage Owner'
-                                    WHEN pss.assigned_to = ? THEN 'Substage Owner'
-                                END as role_type
-                            FROM project_substages pss
-                            JOIN project_stages ps ON pss.stage_id = ps.id
-                            JOIN projects p ON ps.project_id = p.id
-                            LEFT JOIN users u ON pss.assigned_to = u.id
-                            WHERE (
-                                p.assigned_to = ? 
-                                OR ps.assigned_to = ?
-                                OR pss.assigned_to = ?
-                            )
-                            AND pss.status = 'in_review'
-                            AND p.deleted_at IS NULL
-                            ORDER BY pss.updated_at DESC";
-                            
-                            $stmt = $conn->prepare($review_query);
-                            $stmt->bind_param("iiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
-                            $stmt->execute();
-                            $review_result = $stmt->get_result();
-
-                            if ($review_result->num_rows > 0) {
-                                while ($substage = $review_result->fetch_assoc()) {
-                                    // Format the due date
-                                    $due_date = date('M d', strtotime($substage['end_date']));
-                                    ?>
-                                    
-                                    <div class="kanban-card project-card" 
-                                         data-project-id="<?php echo $substage['project_id']; ?>"
-                                         data-substage-id="<?php echo $substage['substage_id']; ?>">
-                                        <div class="card-tags">
-                                            <div class="tag-container">
-                                                <span class="card-tag tag-<?php echo strtolower($substage['project_type']); ?>">
-                                                    <?php echo htmlspecialchars($substage['project_type']); ?>
-                                                </span>
-                                            </div>
-                                            <span class="meta-status in_review">In Review</span>
-                                            <?php if (isset($substage['role_type'])): ?>
-                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $substage['role_type'])); ?>">
-                                                    <?php echo $substage['role_type']; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <h4 class="task-title">
-                                            <?php echo htmlspecialchars($substage['project_title']); ?>
-                                        </h4>
-                                        <p class="task-description">
-                                            Stage <?php echo $substage['stage_number']; ?> > 
-                                            Substage <?php echo $substage['substage_number']; ?>: 
-                                            <?php echo htmlspecialchars($substage['substage_title']); ?>
-                                        </p>
-                                        
-                                        <div class="review-info">
-                                            <span class="review-status">
-                                                <i class="fas fa-clock"></i>
-                                                Awaiting Review
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="card-meta">
-                                            <span class="meta-date">
-                                                <i class="far fa-calendar"></i>
-                                                Due: <?php echo $due_date; ?>
-                                            </span>
-                                            <span class="meta-assigned">
-                                                <i class="far fa-user"></i>
-                                                Reviewer: <?php echo htmlspecialchars($substage['reviewer_name']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                            } else {
-                                ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-clipboard-check"></i>
-                                    <p>No substages in review</p>
-                                </div>
-                                <?php
-                            }
-                            ?>
-                        </div>
-                    </div>
-
-                    <!-- Done Column -->
-                    <div class="kanban-column">
-                        <div class="column-header">
-                            <span class="column-dot dot-done"></span>
-                            <h3 class="column-title">Done</h3>
-                        </div>
-
-                        <div class="kanban-cards-container">
-                            <?php
-                            // Query to get completed projects where all stages and substages are completed
-                            $done_query = "SELECT DISTINCT
-                                p.*,
-                                COUNT(DISTINCT ps.id) as total_stages,
-                                COUNT(DISTINCT pss.id) as total_substages,
-                                COUNT(DISTINCT CASE WHEN ps.status = 'completed' THEN ps.id END) as completed_stages,
-                                COUNT(DISTINCT CASE WHEN pss.status = 'completed' THEN pss.id END) as completed_substages,
-                                u.username as creator_name,
-                                MAX(GREATEST(ps.updated_at, pss.updated_at)) as last_completed_at
-                            FROM projects p
-                            LEFT JOIN project_stages ps ON p.id = ps.project_id
-                            LEFT JOIN project_substages pss ON ps.id = pss.stage_id
-                            LEFT JOIN users u ON p.created_by = u.id
-                            WHERE (
-                                p.assigned_to = ? 
-                                OR ps.assigned_to = ?
-                                OR pss.assigned_to = ?
-                            )
-                            AND p.deleted_at IS NULL
-                            GROUP BY p.id
-                            HAVING 
-                                (total_stages = completed_stages AND total_stages > 0)
-                                AND (total_substages = completed_substages AND total_substages > 0)
-                            ORDER BY last_completed_at DESC
-                            LIMIT 10"; // Limiting to most recent 10 completed projects
-                            
-                            $stmt = $conn->prepare($done_query);
-                            $stmt->bind_param("iii", $user_id, $user_id, $user_id);
-                            $stmt->execute();
-                            $done_result = $stmt->get_result();
-
-                            if ($done_result->num_rows > 0) {
-                                while ($project = $done_result->fetch_assoc()) {
-                                    // Format the completion date
-                                    $completion_date = date('M d', strtotime($project['last_completed_at']));
-                                    ?>
-                                    
-                                    <div class="kanban-card project-card" 
-                                         data-project-id="<?php echo $project['id']; ?>"
-                                         data-project-type="<?php echo strtolower($project['project_type']); ?>">
-                                        <div class="card-tags">
-                                            <div class="tag-container">
-                                                <span class="card-tag tag-<?php echo strtolower($project['project_type']); ?>">
-                                                    <?php echo htmlspecialchars($project['project_type']); ?>
-                                                </span>
-                                            </div>
-                                            <span class="meta-status completed">Completed</span>
-                                            <?php if (isset($project['role_type'])): ?>
-                                                <span class="role-badge <?php echo strtolower(str_replace(' ', '-', $project['role_type'])); ?>">
-                                                    <?php echo $project['role_type']; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <h4 class="task-title"><?php echo htmlspecialchars($project['title']); ?></h4>
-                                        <p class="task-description">
-                                            <?php 
-                                            echo htmlspecialchars(substr($project['description'], 0, 100)) . 
-                                                 (strlen($project['description']) > 100 ? '...' : ''); 
-                                            ?>
-                                        </p>
-                                        
-                                        <div class="completion-info">
-                                            <div class="completion-stats">
-                                                <span class="stat-item">
-                                                    <i class="fas fa-layer-group"></i>
-                                                    <?php echo $project['total_stages']; ?> Stages
-                                                </span>
-                                                <span class="stat-item">
-                                                    <i class="fas fa-tasks"></i>
-                                                    <?php echo $project['total_substages']; ?> Substages
-                                                </span>
-                                            </div>
-                                            <div class="completion-indicator">
-                                                <i class="fas fa-check-circle"></i>
-                                                100% Complete
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="card-meta">
-                                            <span class="meta-date">
-                                                <i class="far fa-calendar-check"></i>
-                                                Completed: <?php echo $completion_date; ?>
-                                            </span>
-                                            <span class="meta-assigned">
-                                                <i class="far fa-user"></i>
-                                                By: <?php echo htmlspecialchars($project['creator_name']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <?php
-                                }
-                            } else {
-                                ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-check-circle"></i>
-                                    <p>No completed projects yet</p>
-                                </div>
-                                <?php
-                            }
-                            ?>
-                        </div>
-                    </div>
-                    
-                </div>
-                
-            </div>
+           
             <!-- Add Forwarded Tasks Section here, after task-overview-section -->
                             <!-- Chat Icon -->
 <div class="floating-chat-trigger">
@@ -5328,24 +4799,6 @@ if ($shift_details && $shift_details['end_time']) {
 
 
     <script>
-        function togglePanel() {
-            const panel = document.getElementById('leftPanel');
-            const icon = document.getElementById('toggleIcon');
-            panel.classList.toggle('collapsed');
-            icon.classList.toggle('fa-chevron-left');
-            icon.classList.toggle('fa-chevron-right');
-        }
-        
-        // Add this to your existing JavaScript
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                // Don't add active class to logout item
-                if (!this.classList.contains('logout-item')) {
-                    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                }
-            });
-        });
 
         function toggleProfileMenu() {
             const dropdown = document.getElementById('profileDropdown');
@@ -5401,7 +4854,7 @@ if ($shift_details && $shift_details['end_time']) {
                     const isWithinGeofence = distance <= maxDistance;
                     
                     // Log for debugging
-                    console.log(`User location: Lat ${latitude}, Long ${longitude}, Distance from office: ${distance.toFixed(2)}m`);
+                    
                     
                     if (!isWithinGeofence) {
                         // User is outside the geo-fence
@@ -5434,7 +4887,7 @@ if ($shift_details && $shift_details['end_time']) {
                                     }
                                 })
                                 .catch(error => {
-                                    console.error("Reverse geocoding error:", error);
+                                    
                                     reject(error);
                                 });
                         });
@@ -5536,7 +4989,7 @@ if ($shift_details && $shift_details['end_time']) {
                                     if (addressText) {
                                         addressText.innerHTML = 'Unable to retrieve address';
                                     }
-                                    console.error("Error getting address:", error);
+                                    
                                 });
                             
                             // Handle capture button click
@@ -5674,7 +5127,7 @@ if ($shift_details && $shift_details['end_time']) {
                     const isWithinGeofence = distance <= maxDistance;
                     
                     // Log for debugging
-                    console.log(`User location: Lat ${latitude}, Long ${longitude}, Distance from office: ${distance.toFixed(2)}m`);
+                    
                     
                     if (!isWithinGeofence) {
                         // User is outside the geo-fence
@@ -5695,7 +5148,7 @@ if ($shift_details && $shift_details['end_time']) {
                     }
                     
                     // Store location info for comparison
-                    console.log(`Punch out location: Lat ${latitude}, Long ${longitude}, Accuracy ${accuracy}m`);
+                    
                     
                     // Get address from coordinates using reverse geocoding
                     const getAddressFromCoordinates = (lat, lng) => {
@@ -5710,7 +5163,7 @@ if ($shift_details && $shift_details['end_time']) {
                                     }
                                 })
                                 .catch(error => {
-                                    console.error("Reverse geocoding error:", error);
+                                    
                                     reject(error);
                                 });
                         });
@@ -5812,7 +5265,7 @@ if ($shift_details && $shift_details['end_time']) {
                                     if (addressText) {
                                         addressText.innerHTML = 'Unable to retrieve address';
                                     }
-                                    console.error("Error getting address:", error);
+                                    
                                 });
                             
                             // Handle capture button click
@@ -6097,7 +5550,7 @@ if ($shift_details && $shift_details['end_time']) {
             if (message) {
                 // Add your message sending logic here
                 // This should integrate with your backend
-                console.log('Sending message:', message);
+                
                 messageInput.value = '';
             }
         }
@@ -6134,7 +5587,7 @@ if ($shift_details && $shift_details['end_time']) {
         function searchUsers(query) {
             // Add your user search logic here
             // This should integrate with your backend
-            console.log('Searching users:', query);
+            
         }
         
     </script>
@@ -6149,13 +5602,13 @@ if ($shift_details && $shift_details['end_time']) {
             setTimeout(function() {
                 try {
                     if (typeof TaskOverviewManager === 'undefined') {
-                        console.error('TaskOverviewManager class is not defined. Check if task-overview-manager.js is loaded correctly.');
+                        
                     } else {
                         window.taskManager = new TaskOverviewManager();
-                        console.log('TaskOverviewManager initialized successfully');
+                        
                     }
                 } catch (error) {
-                    console.error('Error initializing TaskOverviewManager:', error);
+                    
                 }
             }, 500); // Small delay to ensure scripts are fully processed
         });
@@ -6307,11 +5760,11 @@ if ($shift_details && $shift_details['end_time']) {
             });
             
             // Add debugging message
-            console.log(`Applying filters - Year: ${selectedYear}, Month: ${selectedMonth}`);
+            
             
             // Ensure the path is correct (fix for relative URL issues)
             const apiUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/get_filtered_tasks.php';
-            console.log('API URL:', apiUrl);
+            
             
             // Simulate loading (can be removed in production)
             setTimeout(() => {
@@ -6327,17 +5780,17 @@ if ($shift_details && $shift_details['end_time']) {
                     })
                 })
                 .then(response => {
-                    console.log('Server response status:', response.status);
+                    
                     // Check if the response is ok
                     if (!response.ok) {
-                        console.error('Server returned error:', response.status);
+                        
                         // Show error notification to user
                         showErrorNotification('Failed to filter tasks. Using client-side filtering instead.');
                         filterClientSide();
                         return null;
                     }
                     return response.json().catch(error => {
-                        console.error('Error parsing JSON:', error);
+                        
                         showErrorNotification('Error parsing server response. Using client-side filtering instead.');
                         filterClientSide();
                         return null;
@@ -6345,11 +5798,11 @@ if ($shift_details && $shift_details['end_time']) {
                 })
                 .then(data => {
                     if (data) {
-                        console.log('Received filtered data:', data);
+                        
                         
                         // Check if we got data or an error message
                         if (data.error) {
-                            console.error('Server returned error:', data.error);
+                            
                             showErrorNotification('Error filtering tasks: ' + data.error);
                             filterClientSide();
                         } else {
@@ -6360,7 +5813,7 @@ if ($shift_details && $shift_details['end_time']) {
                                 // Update the DOM with server-side filtered data
                                 updateKanbanWithData(data);
                             } catch (error) {
-                                console.error('Error processing data:', error);
+                                
                                 showErrorNotification(error.message);
                                 filterClientSide();
                             }
@@ -6373,7 +5826,7 @@ if ($shift_details && $shift_details['end_time']) {
                     });
                 })
                 .catch(error => {
-                    console.error('Error applying filters:', error);
+                    
                     showErrorNotification('Error filtering tasks. Using client-side filtering instead.');
                     
                     // Fallback to client-side filtering
@@ -6395,26 +5848,26 @@ if ($shift_details && $shift_details['end_time']) {
             
             // Check if all required sections exist
             if (!data.todo || !Array.isArray(data.todo)) {
-                console.error('Missing or invalid todo data:', data.todo);
+                
                 throw new Error('Invalid data structure: todo section missing');
             }
             
             if (!data.in_progress || !Array.isArray(data.in_progress)) {
-                console.error('Missing or invalid in_progress data:', data.in_progress);
+                
                 throw new Error('Invalid data structure: in_progress section missing');
             }
             
             if (!data.in_review || !Array.isArray(data.in_review)) {
-                console.error('Missing or invalid in_review data:', data.in_review);
+                
                 throw new Error('Invalid data structure: in_review section missing');
             }
             
             if (!data.done || !Array.isArray(data.done)) {
-                console.error('Missing or invalid done data:', data.done);
+                
                 throw new Error('Invalid data structure: done section missing');
             }
             
-            console.log('Data validation passed');
+            
         }
         
         // Helper function to show error notification

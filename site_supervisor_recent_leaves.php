@@ -825,9 +825,80 @@ foreach ($leave_balances as $b) {
       <div class="col-12 col-lg-8">
         <div class="ss-card p-3 p-md-4 mb-4">
         <form id="apply-leave-form" class="row g-3 toolbar">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
+                <label class="form-label">Approver</label>
+                <select class="form-select" name="approver">
+                    <?php if ($senior_manager): ?>
+                        <option value="<?= (int)$senior_manager['id'] ?>" selected>
+                            <?= htmlspecialchars($senior_manager['username']) ?> (Senior Manager (Site))
+                        </option>
+                    <?php else: ?>
+                        <option value="" selected>Senior Manager (Site)</option>
+                    <?php endif; ?>
+                    <option value="manager">Manager</option>
+                    <option value="hr">HR</option>
+                </select>
+            </div>
+            
+            <div class="col-12">
+                <label class="form-label">Reason</label>
+                <textarea class="form-control" name="reason" rows="3" placeholder="Brief reason for leave" required></textarea>
+            </div>
+            
+            <div class="col-6 col-md-3">
+                <label class="form-label">From</label>
+                <input type="date" class="form-control" name="date_from" required />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label">To</label>
+                <input type="date" class="form-control" name="date_to" required />
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="generateDateList">
+                    <i class="bi bi-calendar-check me-1"></i>Generate Date List
+                </button>
+            </div>
+            
+            <!-- Date list with leave type options -->
+            <div class="col-12 mt-3" id="dateListContainer" style="display:none;">
+                <div class="card border">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="m-0">Leave Date Selection</h6>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllDates">
+                                <i class="bi bi-check-all me-1"></i>Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" id="clearAllDates">
+                                <i class="bi bi-x-lg me-1"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0" id="leaveDateTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="5%">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="checkAllDates" checked>
+                                            </div>
+                                        </th>
+                                        <th width="20%">Date</th>
+                                        <th width="20%">Day</th>
+                                        <th width="25%">Leave Type</th>
+                                        <th width="30%">Day Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dateListBody">
+                                    <!-- Date rows will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-md-4" id="defaultLeaveTypeContainer">
                 <label class="form-label">Leave Type</label>
-                <select class="form-select" name="leave_type" required>
+                <select class="form-select" name="leave_type" id="defaultLeaveType" required>
                     <option value="" selected disabled>Select leave type</option>
                     <?php foreach ($leave_types as $leave_type): ?>
                         <option value="<?= htmlspecialchars($leave_type['id']) ?>" 
@@ -843,53 +914,12 @@ foreach ($leave_balances as $b) {
                         <option value="" disabled>No leave types available</option>
                     <?php endif; ?>
                 </select>
+                <div id="leaveTypeHint" class="small text-muted mt-1">Select the leave type for your request.</div>
                 <div id="compOffHint" class="small text-primary mt-2" style="display:none;"></div>
             </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label">From</label>
-                <input type="date" class="form-control" name="date_from" required />
-                <div class="d-flex gap-2 mt-2 flex-wrap">
-                    <span class="chip" data-quick="today"><i class="bi bi-calendar-day"></i> Today</span>
-                    <span class="chip" data-quick="tomorrow">Tomorrow</span>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label">To</label>
-                <input type="date" class="form-control" name="date_to" required />
-                <div class="d-flex gap-2 mt-2 flex-wrap">
-                    <span class="chip" data-quick="same">Same day</span>
-                    <span class="chip" data-quick="two">+1 day</span>
-                </div>
-            </div>
-            <div class="col-12 col-md-2 d-flex align-items-end">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="1" id="halfDayToggle" name="half_day">
-                    <label class="form-check-label" for="halfDayToggle">Half day</label>
-                </div>
-            </div>
 
-            <div class="col-12 col-md-4" id="halfDaySessionWrapper" style="display:none;">
-                <label class="form-label">Half-day Session</label>
-                <select class="form-select" name="half_day_session">
-                    <option value="morning">Morning</option>
-                    <option value="afternoon">Afternoon</option>
-                </select>
-                <div class="hint mt-1">Applies only when start and end dates are the same.</div>
-            </div>
-
-            <!-- Compensate day selector (visible only when Compensate Leave is selected) -->
-            <div class="col-12 col-md-4" id="compOffDateWrapper" style="display:none;">
-                <label class="form-label">Select Compensate Day</label>
-                <select class="form-select" name="comp_off_source_date" id="compOffSourceDate">
-                    <option value="" selected disabled>Select worked weekly-off date</option>
-                    <?php foreach (($earned_comp_off_dates ?? []) as $d): ?>
-                        <option value="<?= htmlspecialchars($d) ?>">
-                            <?= date('D, d M Y', strtotime($d)) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="hint mt-1">Pick the weekly-off date you worked to consume as Compensate Leave.</div>
-            </div>
+            <!-- Compensate days are now auto-selected -->
+            <input type="hidden" name="comp_off_source_date" id="compOffSourceDate" value="" />
 
             <!-- Short Leave session (visible only when Short Leave is selected) -->
             <div class="col-12 col-md-6" id="shortLeaveTypeWrapper" style="display:none;">
@@ -905,31 +935,6 @@ foreach ($leave_balances as $b) {
                         1h 30m will be auto-set from shift timings.
                     <?php endif; ?>
                 </div>
-            </div>
-
-            <div class="col-12">
-                <label class="form-label">Reason</label>
-                <textarea class="form-control" name="reason" rows="3" placeholder="Brief reason for leave" required></textarea>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label">Attachment (optional)</label>
-                <input type="file" class="form-control" name="attachment" accept=".pdf,.jpg,.jpeg,.png" />
-                <div class="hint mt-1">Accepted: PDF, JPG, PNG</div>
-            </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label">Approver</label>
-                <select class="form-select" name="approver">
-                    <?php if ($senior_manager): ?>
-                        <option value="<?= (int)$senior_manager['id'] ?>" selected>
-                            <?= htmlspecialchars($senior_manager['username']) ?> (Senior Manager (Site))
-                        </option>
-                    <?php else: ?>
-                        <option value="" selected>Senior Manager (Site)</option>
-                    <?php endif; ?>
-                    <option value="manager">Manager</option>
-                    <option value="hr">HR</option>
-                </select>
             </div>
 
             <div class="col-12">
@@ -2165,10 +2170,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('apply-leave-form');
     const dateFrom = form.querySelector('input[name="date_from"]');
     const dateTo = form.querySelector('input[name="date_to"]');
-    const halfDay = document.getElementById('halfDayToggle');
-    const halfDaySessionWrapper = document.getElementById('halfDaySessionWrapper');
     const durationBadge = document.getElementById('durationBadge');
     const quickChips = document.querySelectorAll('.chip[data-quick]');
+    
+    // Function to check if multiple days are selected
+    function isMultipleDaysSelected() {
+        const fromDate = dateFrom.value;
+        const toDate = dateTo.value;
+        
+        if (!fromDate || !toDate) {
+            return false;
+        }
+        
+        const start = new Date(fromDate);
+        const end = new Date(toDate);
+        
+        // Set time to noon to avoid DST issues
+        start.setHours(12, 0, 0, 0);
+        end.setHours(12, 0, 0, 0);
+        
+        // Calculate difference in days
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return diffDays > 0;
+    }
+    
+    // Function to toggle the visibility of default leave type field
+    function toggleDefaultLeaveTypeVisibility() {
+        const defaultLeaveTypeContainer = document.getElementById('defaultLeaveTypeContainer');
+        const dateListContainer = document.getElementById('dateListContainer');
+        const leaveTypeHint = document.getElementById('leaveTypeHint');
+        
+        if (isMultipleDaysSelected()) {
+            // Multiple days selected - show date list, hide default leave type
+            defaultLeaveTypeContainer.classList.add('d-none');
+            dateListContainer.style.display = '';
+            
+            // Generate and show date list if not already done
+            if (generatedDates.length === 0 && dateFrom.value && dateTo.value) {
+                // Just show the Generate Date List button instead of auto-generating
+                document.getElementById('generateDateList').click();
+            }
+        } else {
+            // Single day selected - show default leave type, hide date list
+            defaultLeaveTypeContainer.classList.remove('d-none');
+            dateListContainer.style.display = 'none';
+            
+            // Update hint text
+            if (leaveTypeHint) {
+                leaveTypeHint.textContent = "Select the leave type for your single day request.";
+            }
+        }
+    }
 
 
     function formatDuration(value) {
@@ -2191,17 +2245,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         let days = Math.floor(diffMs / (1000*60*60*24)) + 1; // inclusive
-        if (halfDay.checked && days === 1) {
-            durationBadge.textContent = '0.5 day';
-        } else {
-            durationBadge.textContent = formatDuration(days);
-        }
+        durationBadge.textContent = formatDuration(days);
     }
 
     // Date constraints
     const todayStr = new Date().toISOString().slice(0,10);
     dateFrom.setAttribute('min', todayStr);
     dateTo.setAttribute('min', todayStr);
+    
+    // Initialize visibility of default leave type field
+    toggleDefaultLeaveTypeVisibility();
 
     dateFrom.addEventListener('change', () => {
         if (dateFrom.value) {
@@ -2209,17 +2262,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!dateTo.value) dateTo.value = dateFrom.value;
         }
         calculateDuration();
+        toggleDefaultLeaveTypeVisibility(); // Toggle visibility based on date range
     });
     dateTo.addEventListener('change', () => {
         calculateDuration();
         validateMaxDays(); // Validate when dates change
+        toggleDefaultLeaveTypeVisibility(); // Toggle visibility based on date range
     });
-    halfDay.addEventListener('change', () => {
-        const sameDay = dateFrom.value && dateTo.value && dateFrom.value === dateTo.value;
-        halfDaySessionWrapper.style.display = halfDay.checked && sameDay ? '' : 'none';
-        calculateDuration();
-        validateMaxDays(); // Validate when half-day changes
-    });
+
 
     // Quick selects
     quickChips.forEach(chip => chip.addEventListener('click', () => {
@@ -2339,6 +2389,601 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     shortSession?.addEventListener('change', updateShortLeaveAutoTimes);
     
+    // Date list generation and management
+    const generateDateListBtn = document.getElementById('generateDateList');
+    const dateListContainer = document.getElementById('dateListContainer');
+    const dateListBody = document.getElementById('dateListBody');
+    const checkAllDates = document.getElementById('checkAllDates');
+    const selectAllDatesBtn = document.getElementById('selectAllDates');
+    const clearAllDatesBtn = document.getElementById('clearAllDates');
+    const defaultLeaveType = document.getElementById('defaultLeaveType');
+    
+    // Store generated dates and their settings
+    let generatedDates = [];
+    
+    // Generate list of dates between from and to
+    function generateDateRange(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const dates = [];
+        
+        // Set time to noon to avoid DST issues
+        start.setHours(12, 0, 0, 0);
+        end.setHours(12, 0, 0, 0);
+        
+        // Generate all dates in the range
+        let currentDate = new Date(start);
+        while (currentDate <= end) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return dates;
+    }
+    
+    // Format date as YYYY-MM-DD
+    function formatDateYMD(date) {
+        return date.toISOString().slice(0, 10);
+    }
+    
+    // Format date as readable string (e.g., "Mon, 15 Apr 2025")
+    function formatDateReadable(date) {
+        return date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    }
+    
+    // Get day of week
+    function getDayOfWeek(date) {
+        return date.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+    
+    // Get leave balances from the serialized data
+    function getLeaveBalances() {
+        try {
+            return JSON.parse(document.getElementById('leaveBalanceMap').textContent || '{}');
+        } catch (err) {
+            console.error('Error parsing leave balances:', err);
+            return {};
+        }
+    }
+    
+    // Find compensate leave type ID and remaining balance
+    function findCompensateLeaveInfo() {
+        const balances = getLeaveBalances();
+        for (const id in balances) {
+            const leave = balances[id];
+            if (leave && leave.name && leave.name.toLowerCase().includes('comp')) {
+                return {
+                    id: id,
+                    name: leave.name,
+                    remaining: leave.remaining !== undefined ? Number(leave.remaining) : 0
+                };
+            }
+        }
+        return null;
+    }
+    
+    // Find casual leave type ID and remaining balance
+    function findCasualLeaveInfo() {
+        const balances = getLeaveBalances();
+        for (const id in balances) {
+            const leave = balances[id];
+            if (leave && leave.name && leave.name.toLowerCase().includes('casual')) {
+                return {
+                    id: id,
+                    name: leave.name,
+                    remaining: leave.remaining !== undefined ? Number(leave.remaining) : 0
+                };
+            }
+        }
+        return null;
+    }
+    
+    // Count casual leaves used in a specific month
+    function countCasualLeavesInMonth(year, month) {
+        return generatedDates.filter(dateInfo => {
+            const date = new Date(dateInfo.date);
+            return date.getFullYear() === year && 
+                   date.getMonth() === month && 
+                   dateInfo.checked && 
+                   dateInfo.leaveTypeId === findCasualLeaveInfo()?.id;
+        }).length;
+    }
+    
+    // Generate leave type options for a select element
+    function generateLeaveTypeOptions(selectedId) {
+        const balances = getLeaveBalances();
+        let options = '';
+        
+        for (const id in balances) {
+            const leave = balances[id];
+            const selected = id === selectedId ? 'selected' : '';
+            const remaining = leave.is_unlimited ? 'No limit' : `${leave.remaining}/${leave.max_days}`;
+            options += `<option value="${id}" ${selected}>${leave.name} (${remaining})</option>`;
+        }
+        
+        return options;
+    }
+    
+    // Check if a leave type is a short leave
+    function isShortLeave(leaveTypeId) {
+        const balances = getLeaveBalances();
+        const leave = balances[leaveTypeId];
+        return leave && leave.name && leave.name.toLowerCase().includes('short');
+    }
+    
+    // Check if a leave type is a compensate leave
+    function isCompensateLeave(leaveTypeId) {
+        const balances = getLeaveBalances();
+        const leave = balances[leaveTypeId];
+        return leave && leave.name && leave.name.toLowerCase().includes('comp');
+    }
+    
+    // Generate day type options based on leave type
+    function getDayTypeOptions(leaveTypeId, selectedDayType) {
+        // If short leave, show morning/evening short leave options with shift times
+        if (isShortLeave(leaveTypeId)) {
+            // Get user shift times
+            const shiftStartTime = '<?= $user_shift['start_time'] ? substr($user_shift['start_time'],0,5) : "09:00" ?>';
+            const shiftEndTime = '<?= $user_shift['end_time'] ? substr($user_shift['end_time'],0,5) : "18:00" ?>';
+            
+            // Calculate short leave times
+            const morningShortLeaveEnd = calculateTimeOffset(shiftStartTime, 90); // 1h30m from shift start
+            const eveningShortLeaveStart = calculateTimeOffset(shiftEndTime, -90); // 1h30m before shift end
+            
+            return `
+                <option value="morning" ${selectedDayType === 'morning' ? 'selected' : ''}>Morning Short Leave (${formatTime(shiftStartTime)} - ${formatTime(morningShortLeaveEnd)})</option>
+                <option value="evening" ${selectedDayType === 'evening' ? 'selected' : ''}>Evening Short Leave (${formatTime(eveningShortLeaveStart)} - ${formatTime(shiftEndTime)})</option>
+            `;
+        } 
+        // Otherwise show regular full/half day options
+        else {
+            return `
+                <option value="full" ${selectedDayType === 'full' ? 'selected' : ''}>Full Day</option>
+                <option value="morning" ${selectedDayType === 'morning' ? 'selected' : ''}>Morning Half-Day</option>
+                <option value="evening" ${selectedDayType === 'evening' ? 'selected' : ''}>Evening Half-Day</option>
+            `;
+        }
+    }
+    
+    // Calculate time offset in minutes (positive or negative)
+    function calculateTimeOffset(timeStr, offsetMinutes) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const totalMinutes = hours * 60 + minutes + offsetMinutes;
+        
+        const newHours = Math.floor(totalMinutes / 60) % 24;
+        const newMinutes = totalMinutes % 60;
+        
+        return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
+    }
+    
+    // Format time for display (12-hour format)
+    function formatTime(timeStr) {
+        try {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`;
+        } catch (e) {
+            return timeStr;
+        }
+    }
+    
+    // Update day type options when leave type changes
+    function updateDayTypeOptions(index) {
+        const leaveTypeId = generatedDates[index].leaveTypeId;
+        const dayType = generatedDates[index].dayType;
+        const dayTypeSelect = document.querySelector(`.day-type-select[data-index="${index}"]`);
+        
+        if (dayTypeSelect) {
+            // Save current value if possible
+            const currentValue = dayTypeSelect.value;
+            
+            // Update options
+            dayTypeSelect.innerHTML = getDayTypeOptions(leaveTypeId, dayType);
+            
+            // If current value is valid in new options, keep it
+            if (Array.from(dayTypeSelect.options).some(opt => opt.value === currentValue)) {
+                dayTypeSelect.value = currentValue;
+                generatedDates[index].dayType = currentValue;
+            } else {
+                // Otherwise use first option
+                generatedDates[index].dayType = dayTypeSelect.options[0].value;
+            }
+        }
+    }
+    
+    // Validate leave type selection based on rules
+    function validateLeaveTypeSelection(index, newLeaveTypeId) {
+        const date = new Date(generatedDates[index].date);
+        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+        
+        // Get leave type info
+        const compInfo = findCompensateLeaveInfo();
+        const casualInfo = findCasualLeaveInfo();
+        
+        // If no compensate or casual leave info, skip validation
+        if (!compInfo || !casualInfo) {
+            return { valid: true };
+        }
+        
+        // Check if new leave type is casual
+        const isNewCasual = newLeaveTypeId === casualInfo.id;
+        
+        // Rule 1: Check if there are any remaining compensate leaves
+        // If yes, then user must use compensate leave first
+        if (isNewCasual && compInfo.remaining > 0) {
+            return {
+                valid: false,
+                message: `You must use all your Compensate Leave (${compInfo.remaining} days remaining) before using Casual Leave.`
+            };
+        }
+        
+        // Rule 2: Check if selecting casual leave would exceed the monthly limit (2 per month)
+        if (isNewCasual) {
+            // Count how many casual leaves are already selected for this month
+            const casualLeavesInMonth = generatedDates.filter(dateInfo => {
+                const d = new Date(dateInfo.date);
+                const dMonthKey = `${d.getFullYear()}-${d.getMonth()}`;
+                return dMonthKey === monthKey && 
+                       dateInfo.checked && 
+                       dateInfo.leaveTypeId === casualInfo.id &&
+                       generatedDates.indexOf(dateInfo) !== index; // Exclude current date
+            }).length;
+            
+            if (casualLeavesInMonth >= 2) {
+                return {
+                    valid: false,
+                    message: `You can only use 2 Casual Leaves per month. You have already selected ${casualLeavesInMonth} Casual Leaves for ${date.toLocaleString('default', { month: 'long', year: 'numeric' })}.`
+                };
+            }
+        }
+        
+        return { valid: true };
+    }
+    
+    // Create a row for a date in the table
+    function createDateRow(dateInfo, index) {
+        const { date, checked, leaveTypeId, dayType } = dateInfo;
+        const dateObj = new Date(date);
+        const dateFormatted = formatDateReadable(dateObj);
+        const dayOfWeek = getDayOfWeek(dateObj);
+        const isWeekend = dayOfWeek === 'Saturday' || dayOfWeek === 'Sunday';
+        const rowClass = isWeekend ? 'table-warning' : '';
+        
+        return `
+            <tr class="${rowClass}" data-index="${index}">
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input date-checkbox" type="checkbox" ${checked ? 'checked' : ''} 
+                               data-index="${index}" id="date-check-${index}">
+                    </div>
+                </td>
+                <td>${dateFormatted}</td>
+                <td>${dayOfWeek}</td>
+                <td>
+                    <select class="form-select form-select-sm leave-type-select" data-index="${index}">
+                        ${generateLeaveTypeOptions(leaveTypeId)}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm day-type-select" data-index="${index}">
+                        ${getDayTypeOptions(leaveTypeId, dayType)}
+                    </select>
+                </td>
+            </tr>
+        `;
+    }
+    
+    // Render the date list table
+    function renderDateList() {
+        if (generatedDates.length === 0) {
+            dateListContainer.style.display = 'none';
+            return;
+        }
+        
+        let tableContent = '';
+        generatedDates.forEach((dateInfo, index) => {
+            tableContent += createDateRow(dateInfo, index);
+        });
+        
+        dateListBody.innerHTML = tableContent;
+        dateListContainer.style.display = '';
+        
+        // Add event listeners to the new elements
+        document.querySelectorAll('.date-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const index = parseInt(this.getAttribute('data-index'), 10);
+                generatedDates[index].checked = this.checked;
+                updateFormData();
+            });
+        });
+        
+        document.querySelectorAll('.leave-type-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const index = parseInt(this.getAttribute('data-index'), 10);
+                const newLeaveTypeId = this.value;
+                
+                // Validate leave type selection
+                const validation = validateLeaveTypeSelection(index, newLeaveTypeId);
+                
+                if (validation.valid) {
+                    // Apply the change
+                    generatedDates[index].leaveTypeId = newLeaveTypeId;
+                    
+                    // Update day type options when leave type changes
+                    updateDayTypeOptions(index);
+                    
+                    // If switching to compensate leave, auto-assign a compensate day
+                    if (isCompensateLeave(newLeaveTypeId)) {
+                        // Get list of earned compensate days
+                        const earnedCompDates = <?= json_encode($earned_comp_off_dates ?? []) ?>;
+                        
+                        // Find a compensate day that hasn't been used yet
+                        const usedCompDates = generatedDates
+                            .filter(d => d.compOffSourceDate && d !== generatedDates[index])
+                            .map(d => d.compOffSourceDate);
+                        
+                        const availableCompDates = earnedCompDates.filter(d => !usedCompDates.includes(d));
+                        
+                        if (availableCompDates.length > 0) {
+                            // Assign the oldest available compensate day
+                            generatedDates[index].compOffSourceDate = availableCompDates[0];
+                        } else {
+                            // No available compensate days, show error
+                            alert('No available compensate days left to assign.');
+                            // Revert the selection
+                            generatedDates[index].leaveTypeId = '';
+                            this.value = '';
+                            return;
+                        }
+                    } else {
+                        // If not compensate leave, remove any assigned compensate day
+                        delete generatedDates[index].compOffSourceDate;
+                    }
+                    
+                    // If switching to short leave, set the time information based on day type
+                    if (isShortLeave(newLeaveTypeId)) {
+                        const dayType = generatedDates[index].dayType;
+                        const shiftStartTime = '<?= $user_shift['start_time'] ? substr($user_shift['start_time'],0,5) : "09:00" ?>';
+                        const shiftEndTime = '<?= $user_shift['end_time'] ? substr($user_shift['end_time'],0,5) : "18:00" ?>';
+                        
+                        if (dayType === 'morning') {
+                            generatedDates[index].timeFrom = shiftStartTime;
+                            generatedDates[index].timeTo = calculateTimeOffset(shiftStartTime, 90);
+                        } else if (dayType === 'evening') {
+                            generatedDates[index].timeFrom = calculateTimeOffset(shiftEndTime, -90);
+                            generatedDates[index].timeTo = shiftEndTime;
+                        }
+                    } else {
+                        // For non-short leaves, remove time information
+                        delete generatedDates[index].timeFrom;
+                        delete generatedDates[index].timeTo;
+                    }
+                    
+                    // Remove any previous error message
+                    const row = this.closest('tr');
+                    const errorRow = document.getElementById(`error-row-${index}`);
+                    if (errorRow) {
+                        errorRow.remove();
+                    }
+                    
+                    updateFormData();
+                } else {
+                    // Revert the selection
+                    this.value = generatedDates[index].leaveTypeId;
+                    
+                    // Show error message
+                    const row = this.closest('tr');
+                    let errorRow = document.getElementById(`error-row-${index}`);
+                    
+                    if (!errorRow) {
+                        errorRow = document.createElement('tr');
+                        errorRow.id = `error-row-${index}`;
+                        errorRow.className = 'error-message';
+                        row.parentNode.insertBefore(errorRow, row.nextSibling);
+                    }
+                    
+                    errorRow.innerHTML = `
+                        <td colspan="5" class="text-danger p-2" style="background-color: #fff3f3;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            ${validation.message}
+                        </td>
+                    `;
+                }
+            });
+        });
+        
+        document.querySelectorAll('.day-type-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const index = parseInt(this.getAttribute('data-index'), 10);
+                const selectedDayType = this.value;
+                generatedDates[index].dayType = selectedDayType;
+                
+                // If this is a short leave, calculate and store the time information
+                const leaveTypeId = generatedDates[index].leaveTypeId;
+                if (isShortLeave(leaveTypeId)) {
+                    const shiftStartTime = '<?= $user_shift['start_time'] ? substr($user_shift['start_time'],0,5) : "09:00" ?>';
+                    const shiftEndTime = '<?= $user_shift['end_time'] ? substr($user_shift['end_time'],0,5) : "18:00" ?>';
+                    
+                    if (selectedDayType === 'morning') {
+                        // Morning short leave: from shift start to shift start + 1h30m
+                        generatedDates[index].timeFrom = shiftStartTime;
+                        generatedDates[index].timeTo = calculateTimeOffset(shiftStartTime, 90);
+                    } else if (selectedDayType === 'evening') {
+                        // Evening short leave: from shift end - 1h30m to shift end
+                        generatedDates[index].timeFrom = calculateTimeOffset(shiftEndTime, -90);
+                        generatedDates[index].timeTo = shiftEndTime;
+                    }
+                } else {
+                    // For non-short leaves, remove time information
+                    delete generatedDates[index].timeFrom;
+                    delete generatedDates[index].timeTo;
+                }
+                
+                updateFormData();
+            });
+        });
+    }
+    
+    // Update the form data based on the selected dates
+    function updateFormData() {
+        // Calculate total days selected
+        const selectedDates = generatedDates.filter(d => d.checked);
+        const totalDays = selectedDates.length;
+        
+        // Update duration badge
+        durationBadge.textContent = totalDays === 1 ? '1 day' : `${totalDays} days`;
+        
+        // Create hidden input with the JSON data for form submission
+        let dateListInput = document.getElementById('dateListInput');
+        if (!dateListInput) {
+            dateListInput = document.createElement('input');
+            dateListInput.type = 'hidden';
+            dateListInput.name = 'date_list';
+            dateListInput.id = 'dateListInput';
+            form.appendChild(dateListInput);
+        }
+        
+        // Store the selected dates in the hidden input
+        dateListInput.value = JSON.stringify(selectedDates);
+    }
+    
+    // Auto-allocate leave types based on available balances
+    function autoAllocateLeaveTypes() {
+        if (generatedDates.length === 0) return;
+        
+        // Get compensate leave info
+        const compInfo = findCompensateLeaveInfo();
+        const casualInfo = findCasualLeaveInfo();
+        const defaultLeaveTypeId = defaultLeaveType.value;
+        
+        // Get list of earned compensate days
+        const earnedCompDates = <?= json_encode($earned_comp_off_dates ?? []) ?>;
+        let availableCompDates = [...earnedCompDates]; // Make a copy so we can remove as we use them
+        
+        // Count how many compensate leaves we can allocate
+        let compLeaveRemaining = compInfo ? compInfo.remaining : 0;
+        let casualLeaveCount = {};  // Track casual leaves by month
+        
+        // Sort dates chronologically to ensure consistent allocation
+        generatedDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // First pass: Allocate compensate leave until exhausted
+        generatedDates.forEach((dateInfo, index) => {
+            const date = new Date(dateInfo.date);
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            
+            // Initialize casual leave count for this month if not exists
+            if (!casualLeaveCount[monthKey]) {
+                casualLeaveCount[monthKey] = 0;
+            }
+            
+            // If compensate leave is available, use it first (must use all compensate leave before casual)
+            if (compLeaveRemaining > 0 && availableCompDates.length > 0) {
+                dateInfo.leaveTypeId = compInfo.id;
+                
+                // Auto-assign a compensate day (take the oldest one first)
+                dateInfo.compOffSourceDate = availableCompDates.shift(); // Remove and return first element
+                
+                compLeaveRemaining--;
+            }
+            // Otherwise use casual leave if available (max 2 per month)
+            else if (casualInfo && casualLeaveCount[monthKey] < 2) {
+                dateInfo.leaveTypeId = casualInfo.id;
+                casualLeaveCount[monthKey]++;
+            }
+            // Otherwise use default leave type
+            else if (defaultLeaveTypeId) {
+                dateInfo.leaveTypeId = defaultLeaveTypeId;
+            }
+        });
+        
+        // Render the updated list
+        renderDateList();
+        updateFormData();
+    }
+    
+
+    
+    // Function to generate the date list
+    function generateDateList() {
+        const fromDate = dateFrom.value;
+        const toDate = dateTo.value;
+        
+        if (!fromDate || !toDate) {
+            alert('Please select both From and To dates.');
+            return;
+        }
+        
+        // Generate date range
+        const dateRange = generateDateRange(fromDate, toDate);
+        
+        // Create date info objects
+        generatedDates = dateRange.map(date => ({
+            date: formatDateYMD(date),
+            checked: true,
+            leaveTypeId: '',
+            dayType: 'full',
+            timeFrom: null,
+            timeTo: null
+        }));
+        
+        // Auto-allocate leave types
+        autoAllocateLeaveTypes();
+        
+        // Render the date list
+        renderDateList();
+    }
+    
+    // Generate date list button click handler
+    generateDateListBtn.addEventListener('click', function() {
+        generateDateList();
+    });
+    
+    // Check/uncheck all dates
+    checkAllDates.addEventListener('change', function() {
+        const checked = this.checked;
+        document.querySelectorAll('.date-checkbox').forEach(checkbox => {
+            checkbox.checked = checked;
+            const index = parseInt(checkbox.getAttribute('data-index'), 10);
+            generatedDates[index].checked = checked;
+        });
+        updateFormData();
+    });
+    
+    // Select all dates button
+    selectAllDatesBtn.addEventListener('click', function() {
+        checkAllDates.checked = true;
+        document.querySelectorAll('.date-checkbox').forEach(checkbox => {
+            checkbox.checked = true;
+            const index = parseInt(checkbox.getAttribute('data-index'), 10);
+            generatedDates[index].checked = true;
+        });
+        updateFormData();
+    });
+    
+    // Clear all dates button
+    clearAllDatesBtn.addEventListener('click', function() {
+        checkAllDates.checked = false;
+        document.querySelectorAll('.date-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+            const index = parseInt(checkbox.getAttribute('data-index'), 10);
+            generatedDates[index].checked = false;
+        });
+        updateFormData();
+    });
+    
+    // Default leave type change handler
+    defaultLeaveType.addEventListener('change', function() {
+        // Re-allocate leave types when default changes
+        autoAllocateLeaveTypes();
+    });
+    
     // Function to validate max days and balance
     function validateMaxDays() {
         const selectedOption = form.querySelector('select[name="leave_type"]').selectedOptions[0];
@@ -2346,10 +2991,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const leaveTypeId = selectedOption?.value;
         const selectedText = selectedOption?.text?.toLowerCase() || '';
         
-        // Enforce Short Leave monthly cap (2 per month)
         try {
             const balanceMap = JSON.parse(document.getElementById('leaveBalanceMap').textContent || '{}');
             const entry = balanceMap[leaveTypeId];
+            
+            // Check if this is a casual leave and if compensate leave is available
+            const isCasual = (entry && entry.name && entry.name.toLowerCase().includes('casual')) || selectedText.includes('casual');
+            
+            // Find compensate leave balance
+            let compLeaveEntry = null;
+            let compLeaveRemaining = 0;
+            
+            // Look through all leave types to find compensate leave
+            for (const id in balanceMap) {
+                const leave = balanceMap[id];
+                if (leave && leave.name && leave.name.toLowerCase().includes('comp')) {
+                    compLeaveEntry = leave;
+                    compLeaveRemaining = leave.remaining !== undefined ? Number(leave.remaining) : 0;
+                    break;
+                }
+            }
+            
+            // If this is casual leave and comp leave is available, show warning
+            if (isCasual && compLeaveRemaining > 0) {
+                let casualWarn = document.getElementById('casualLeaveWarning');
+                if (!casualWarn) {
+                    casualWarn = document.createElement('div');
+                    casualWarn.id = 'casualLeaveWarning';
+                    durationBadge.parentNode.appendChild(casualWarn);
+                }
+                casualWarn.className = 'alert alert-danger small mt-2';
+                casualWarn.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>You cannot apply for Casual Leave until you consume all your Compensate Leave balance (' + compLeaveRemaining + ' days remaining).';
+                
+                // Disable the submit button
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+            } else {
+                // Remove warning if not applicable
+                const casualWarn = document.getElementById('casualLeaveWarning');
+                if (casualWarn) casualWarn.remove();
+                
+                // Re-enable submit button if it was disabled
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn && submitBtn.disabled) submitBtn.disabled = false;
+            }
+            
+            // Enforce Short Leave monthly cap (2 per month)
             const isShort = (entry && entry.name && entry.name.toLowerCase().includes('short')) || selectedText.includes('short');
             if (isShort && entry) {
                 const remainingShort = (entry.remaining !== undefined) ? Number(entry.remaining) : 0;
@@ -2369,7 +3056,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const shortWarn = document.getElementById('shortLeaveMonthlyWarning');
                 if (shortWarn) shortWarn.remove();
             }
-        } catch (_) {}
+        } catch (err) {
+            console.error('Error validating leave types:', err);
+        }
 
         if (maxDays && maxDays > 0 && leaveTypeId) {
             const start = dateFrom.value ? new Date(dateFrom.value) : null;
@@ -2382,9 +3071,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (diffMs >= 0) {
                     let days = Math.floor(diffMs / (1000*60*60*24)) + 1;
-                    if (halfDay.checked && days === 1) {
-                        days = 0.5;
-                    }
                     
                     // Get current balance for this leave type
                     const balanceElement = document.getElementById(`bal-${leaveTypeId}`);
@@ -2424,6 +3110,23 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
 
+        // Check if casual leave warning is active
+        const casualWarn = document.getElementById('casualLeaveWarning');
+        if (casualWarn) {
+            // Show a more prominent error
+            const existingAlert = form.parentElement.querySelector('.apply-leave-alert');
+            if (existingAlert) existingAlert.remove();
+            
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger ss-card mt-3 apply-leave-alert';
+            alert.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>You must use all your Compensate Leave before applying for Casual Leave.';
+            form.parentElement.appendChild(alert);
+            
+            // Scroll to the warning
+            casualWarn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return; // Stop form submission
+        }
+
         // Disable submit while processing
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.textContent;
@@ -2431,42 +3134,139 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
 
         // Gather payload
-        const leaveType = parseInt(form.querySelector('select[name="leave_type"]').value, 10);
+        const defaultLeaveTypeId = parseInt(form.querySelector('select[name="leave_type"]').value, 10);
         const startDate = dateFrom.value;
         const endDate = dateTo.value;
         const reason = (form.querySelector('textarea[name="reason"]').value || '').trim();
-        const isHalfDay = halfDay.checked;
-        // If short leave, map auto times into time_from/time_to
-        let payloadTimeFrom = null;
-        let payloadTimeTo = null;
-        try {
-            const balanceMap = JSON.parse(document.getElementById('leaveBalanceMap').textContent || '{}');
-            const sel = form.querySelector('select[name="leave_type"]').value;
-            const entry = balanceMap[sel];
-            if (entry && entry.name && entry.name.toLowerCase().includes('short')) {
-                payloadTimeFrom = window.__shortLeaveAutoFrom || null;
-                payloadTimeTo = window.__shortLeaveAutoTo || null;
+        
+        // Check if we're using the date list or the simple form
+        // We use date list for multiple days, simple form for single day
+        const isUsingDateList = isMultipleDaysSelected();
+        
+        let payload;
+        
+        if (isUsingDateList) {
+            // Using the detailed date list
+            try {
+                const dateList = JSON.parse(dateListInput.value || '[]');
+                
+                // Check if any dates are selected
+                const selectedDates = dateList.filter(d => d.checked);
+                if (selectedDates.length === 0) {
+                    throw new Error('No dates selected. Please select at least one date.');
+                }
+                
+                // Validate that all selected dates follow the rules
+                const compInfo = findCompensateLeaveInfo();
+                const casualInfo = findCasualLeaveInfo();
+                
+                // Check if compensate leave is being used first
+                if (compInfo && compInfo.remaining > 0) {
+                    // Group dates by month
+                    const datesByMonth = {};
+                    selectedDates.forEach(dateInfo => {
+                        const date = new Date(dateInfo.date);
+                        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                        
+                        if (!datesByMonth[monthKey]) {
+                            datesByMonth[monthKey] = [];
+                        }
+                        
+                        datesByMonth[monthKey].push(dateInfo);
+                    });
+                    
+                    // Check if any casual leaves are being used while compensate leave is available
+                    const casualDates = selectedDates.filter(d => d.leaveTypeId === casualInfo?.id);
+                    if (casualDates.length > 0) {
+                        throw new Error(`You must use all your Compensate Leave (${compInfo.remaining} days remaining) before using Casual Leave.`);
+                    }
+                }
+                
+                // Check if casual leaves per month exceed limit
+                if (casualInfo) {
+                    const casualLeavesByMonth = {};
+                    selectedDates.forEach(dateInfo => {
+                        if (dateInfo.leaveTypeId === casualInfo.id) {
+                            const date = new Date(dateInfo.date);
+                            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+                            const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                            
+                            if (!casualLeavesByMonth[monthKey]) {
+                                casualLeavesByMonth[monthKey] = {
+                                    count: 0,
+                                    name: monthName
+                                };
+                            }
+                            
+                            casualLeavesByMonth[monthKey].count++;
+                        }
+                    });
+                    
+                    // Check if any month exceeds the limit
+                    for (const monthKey in casualLeavesByMonth) {
+                        const monthData = casualLeavesByMonth[monthKey];
+                        if (monthData.count > 2) {
+                            throw new Error(`You can only use 2 Casual Leaves per month. You have selected ${monthData.count} Casual Leaves for ${monthData.name}.`);
+                        }
+                    }
+                }
+                
+                payload = {
+                    reason,
+                    use_date_list: true,
+                    date_list: selectedDates,
+                    start_date: startDate,  // Keep these for compatibility
+                    end_date: endDate
+                };
+            } catch (err) {
+                alert('Error processing date list: ' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                return;
             }
-        } catch (_) {}
-
-        let halfDayType = null;
-        if (isHalfDay && startDate && endDate && startDate === endDate) {
-            const sel = form.querySelector('select[name="half_day_session"]').value;
-            // Map UI values to API values
-            halfDayType = sel === 'afternoon' ? 'second_half' : 'first_half';
+        } else {
+            // Using the simple form (single leave type)
+            // If short leave, map auto times into time_from/time_to
+            let payloadTimeFrom = null;
+            let payloadTimeTo = null;
+            try {
+                const balanceMap = JSON.parse(document.getElementById('leaveBalanceMap').textContent || '{}');
+                const sel = form.querySelector('select[name="leave_type"]').value;
+                const entry = balanceMap[sel];
+                if (entry && entry.name && entry.name.toLowerCase().includes('short')) {
+                    payloadTimeFrom = window.__shortLeaveAutoFrom || null;
+                    payloadTimeTo = window.__shortLeaveAutoTo || null;
+                }
+            } catch (_) {}
+            
+            // If this is a compensate leave, auto-assign a compensate day
+            let compOffSourceDate = null;
+            if (isCompensateLeave(defaultLeaveTypeId)) {
+                // Get list of earned compensate days
+                const earnedCompDates = <?= json_encode($earned_comp_off_dates ?? []) ?>;
+                
+                if (earnedCompDates.length > 0) {
+                    // Assign the oldest available compensate day
+                    compOffSourceDate = earnedCompDates[0];
+                } else {
+                    alert('No available compensate days to assign.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    return;
+                }
+            }
+            
+            payload = {
+                leave_type: defaultLeaveTypeId,
+                start_date: startDate,
+                end_date: endDate,
+                reason,
+                use_date_list: false,
+                time_from: payloadTimeFrom,
+                time_to: payloadTimeTo,
+                comp_off_source_date: compOffSourceDate
+            };
         }
-
-        const payload = {
-            leave_type: leaveType,
-            start_date: startDate,
-            end_date: endDate,
-            reason,
-            half_day: isHalfDay,
-            half_day_type: halfDayType,
-            time_from: payloadTimeFrom,
-            time_to: payloadTimeTo,
-            comp_off_source_date: (document.querySelector('#compOffDateWrapper')?.style?.display !== 'none') ? (document.getElementById('compOffSourceDate')?.value || null) : null
-        };
 
         // Remove any prior alert
         const existingAlert = form.parentElement.querySelector('.apply-leave-alert');
@@ -2506,7 +3306,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Reset key inputs
                 form.reset();
-                halfDaySessionWrapper.style.display = 'none';
                 const warn = document.getElementById('maxDaysWarning');
                 if (warn) warn.remove();
             })

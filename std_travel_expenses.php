@@ -1068,75 +1068,10 @@ $expenses = getExpenses($pdo, $user_id);
     </style>
 </head>
 <body>
+    <?php include 'components/minimal_sidebar.php'; ?>
     <div class="dashboard-container">
-        <div class="left-panel" id="leftPanel">
-            <div class="brand-logo" style="padding: 20px 25px; margin-bottom: 20px;">
-                <img src="" alt="Logo" style="max-width: 150px; height: auto;">
-            </div>
-            <button class="toggle-btn" onclick="togglePanel()">
-                <i class="fas fa-chevron-left" id="toggleIcon"></i>
-            </button>
-            
-            <!-- Main Navigation -->
-            <div class="menu-item" onclick="window.location.href='similar_dashboard.php'">
-                <i class="fas fa-home"></i>
-                <span class="menu-text">Dashboard</span>
-            </div>
-            
-            <!-- Personal Section -->
-            <div class="menu-item" onclick="window.location.href='profile.php'">
-                <i class="fas fa-user-circle"></i>
-                <span class="menu-text">My Profile</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='leave.php'">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="menu-text">Apply Leave</span>
-            </div>
-            <div class="menu-item active" onclick="window.location.href='std_travel_expenses.php'">
-                <i class="fas fa-file-excel"></i>
-                <span class="menu-text">Travel Expenses</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='site_expenses.php'">
-                <i class="fas fa-file-excel"></i>
-                <span class="menu-text">Site Excel</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='site_updates.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Site Updates</span>
-            </div>
-            
-            <!-- Work Section -->
-            <div class="menu-item" onclick="window.location.href='#'">
-                <i class="fas fa-tasks"></i>
-                <span class="menu-text">My Tasks</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='work_sheet.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Work Sheet & Attendance</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='#'">
-                <i class="fas fa-chart-bar"></i>
-                <span class="menu-text">Performance</span>
-            </div>
-            
-            <!-- Settings & Support -->
-            <div class="menu-item" onclick="window.location.href='#'">
-                <i class="fas fa-cog"></i>
-                <span class="menu-text">Settings</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='#'">
-                <i class="fas fa-question-circle"></i>
-                <span class="menu-text">Help & Support</span>
-            </div>
-            
-            <!-- Logout at the bottom -->
-            <div class="menu-item logout-item" onclick="window.location.href='logout.php'">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="menu-text">Logout</span>
-            </div>
-        </div>
         
-        <div class="main-content">
+        <div class="main-content msb-content">
             <div class="container">
                 <div class="page-header">
                     <h1>Travel Expenses Tracker</h1>
@@ -1297,20 +1232,7 @@ $expenses = getExpenses($pdo, $user_id);
     </div>
 
     <script>
-        // Left panel toggle function
-        function togglePanel() {
-            const leftPanel = document.getElementById('leftPanel');
-            const toggleIcon = document.getElementById('toggleIcon');
-            leftPanel.classList.toggle('collapsed');
-            
-            if (leftPanel.classList.contains('collapsed')) {
-                toggleIcon.classList.remove('fa-chevron-left');
-                toggleIcon.classList.add('fa-chevron-right');
-            } else {
-                toggleIcon.classList.remove('fa-chevron-right');
-                toggleIcon.classList.add('fa-chevron-left');
-            }
-        }
+        // Left panel toggle is now handled by minimal_sidebar.php
         
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize expenses array from server data

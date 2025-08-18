@@ -2,16 +2,8 @@
 session_start();
 header('Content-Type: application/json');
 
-// Authorize allowed roles: Site Supervisor, Site Coordinator, Purchase Manager
-$allowedRoles = [
-    'Site Supervisor',
-    'Site Coordinator',   // correct spelling
-    'Site Coordnator',    // common misspelling safeguard
-    'Purchase Manager',
-    'Purchase manager'    // handle case variant
-];
-
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', $allowedRoles, true)) {
+// Allow all authenticated users regardless of role
+if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit();

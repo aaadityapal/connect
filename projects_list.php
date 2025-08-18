@@ -672,6 +672,8 @@
     </style>
 </head>
 <body>
+    <?php include 'components/minimal_sidebar.php'; ?>
+    
     <?php
     // Include database connection
     require_once 'config/db_connect.php';
@@ -773,79 +775,9 @@
     ?>
 
     <div class="wrapper">
-        <!-- Left Panel -->
-        <div class="left-panel" id="leftPanel">
-            <div class="brand-logo" style="padding: 20px 25px; margin-bottom: 20px;">
-                <img src="" alt="Logo" style="max-width: 150px; height: auto;">
-            </div>
-            <button class="toggle-btn" onclick="togglePanel()">
-                <i class="fas fa-chevron-left" id="toggleIcon"></i>
-            </button>
-            
-            <!-- Main Navigation -->
-            <div class="menu-item" onclick="window.location.href='similar_dashboard.php'">
-                <i class="fas fa-home"></i>
-                <span class="menu-text">Dashboard</span>
-            </div>
-            
-            <!-- Personal Section -->
-            <div class="menu-item" onclick="window.location.href='profile.php'">
-                <i class="fas fa-user-circle"></i>
-                <span class="menu-text">My Profile</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='leave.php'">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="menu-text">Apply Leave</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='std_travel_expenses.php'">
-                <i class="fas fa-file-excel"></i>
-                <span class="menu-text">Travel Expenses</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='employee_overtime.php'">
-                <i class="fas fa-clock"></i>
-                <span class="menu-text">Overtime</span>
-            </div>
-            <div class="menu-item active" onclick="window.location.href='projects_list.php'">
-                <i class="fas fa-project-diagram"></i>
-                <span class="menu-text">Projects</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='site_updates.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Site Updates</span>
-            </div>
-            
-            <!-- Work Section -->
-            <div class="menu-item">
-                <i class="fas fa-tasks"></i>
-                <span class="menu-text">My Tasks</span>
-            </div>
-            <div class="menu-item" onclick="window.location.href='work_sheet.php'">
-                <i class="fas fa-file-alt"></i>
-                <span class="menu-text">Work Sheet & Attendance</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span class="menu-text">Performance</span>
-            </div>
-            <!-- Settings & Support -->
-            <div class="menu-item">
-                <i class="fas fa-cog"></i>
-                <span class="menu-text">Settings</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-question-circle"></i>
-                <span class="menu-text">Help & Support</span>
-            </div>
-            
-            <!-- Logout at the bottom -->
-            <div class="menu-item logout-item" onclick="window.location.href='logout.php'">
-                <i class="fas fa-sign-out-alt"></i>
-                <span class="menu-text">Logout</span>
-            </div>
-        </div>
 
         <!-- Page Content -->
-        <div id="content">
+        <div id="content" class="msb-content">
             <!-- Page Header -->
             <header class="page-header bg-dark text-white">
                 <div class="container-fluid px-4">
@@ -1719,78 +1651,9 @@
                         }
                     }
                     
-                    // Function to toggle the left panel
-                    function togglePanel() {
-                        const leftPanel = document.getElementById('leftPanel');
-                        const content = document.getElementById('content');
-                        const toggleIcon = document.getElementById('toggleIcon');
-                        const isMobile = window.innerWidth <= 768;
-                        
-                        leftPanel.classList.toggle('collapsed');
-                        
-                        // Rotate toggle button icon
-                        if (leftPanel.classList.contains('collapsed')) {
-                            toggleIcon.style.transform = 'rotate(180deg)';
-                        } else {
-                            toggleIcon.style.transform = 'rotate(0deg)';
-                        }
-                        
-                        // Show/hide overlay on mobile
-                        if (isMobile) {
-                            const sidebarOverlay = document.querySelector('.sidebar-overlay');
-                            if (sidebarOverlay) {
-                                sidebarOverlay.classList.toggle('active');
-                            }
-                        }
-                    }
+                    // Toggle panel functionality is now handled by minimal_sidebar.php
                     
-                    // Initialize sidebar functionality
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const leftPanel = document.getElementById('leftPanel');
-                        const content = document.getElementById('content');
-                        const toggleIcon = document.getElementById('toggleIcon');
-                        const isMobile = window.innerWidth <= 768;
-                        
-                        // Create sidebar overlay for mobile
-                        const sidebarOverlay = document.createElement('div');
-                        sidebarOverlay.className = 'sidebar-overlay';
-                        document.body.appendChild(sidebarOverlay);
-                        
-                        // Initialize panel state based on device
-                        if (!isMobile) {
-                            // On desktop, start with panel expanded
-                            leftPanel.classList.remove('collapsed');
-                        } else {
-                            // On mobile, start with panel collapsed (hidden)
-                            leftPanel.classList.add('collapsed');
-                        }
-                        
-                        // Close sidebar when clicking overlay
-                        sidebarOverlay.addEventListener('click', function() {
-                            leftPanel.classList.add('collapsed');
-                            toggleIcon.style.transform = 'rotate(180deg)';
-                            sidebarOverlay.classList.remove('active');
-                        });
-                        
-                        // Handle window resize
-                        window.addEventListener('resize', function() {
-                            const newIsMobile = window.innerWidth <= 768;
-                            
-                            // If transitioning between mobile and desktop
-                            if (newIsMobile !== isMobile) {
-                                if (newIsMobile) {
-                                    // Switching to mobile
-                                    leftPanel.classList.add('collapsed');
-                                    sidebarOverlay.classList.remove('active');
-                                    toggleIcon.style.transform = 'rotate(180deg)';
-                                } else {
-                                    // Switching to desktop
-                                    leftPanel.classList.remove('collapsed');
-                                    sidebarOverlay.classList.remove('active');
-                                    toggleIcon.style.transform = 'rotate(0deg)';
-                                }
-                            }
-                        });
+                    // Sidebar functionality is now handled by minimal_sidebar.php
                     });
                     
                     // Save filters functionality
@@ -1845,7 +1708,6 @@
                             }
                         }
                     });
-                });
             
             function exportToExcel() {
                 // Check if XLSX is available
@@ -2365,24 +2227,7 @@
     </div>
     
     <script>
-        // Function to toggle the left panel
-        function togglePanel() {
-            const leftPanel = document.getElementById('leftPanel');
-            const content = document.getElementById('content');
-            const toggleIcon = document.getElementById('toggleIcon');
-            
-            leftPanel.classList.toggle('collapsed');
-            content.classList.toggle('expanded');
-            
-            // Toggle icon direction
-            if (leftPanel.classList.contains('collapsed')) {
-                toggleIcon.classList.remove('fa-chevron-left');
-                toggleIcon.classList.add('fa-chevron-right');
-            } else {
-                toggleIcon.classList.remove('fa-chevron-right');
-                toggleIcon.classList.add('fa-chevron-left');
-            }
-        }
+        // Sidebar toggle is now handled by minimal_sidebar.php
     </script>
 </body>
 </html>

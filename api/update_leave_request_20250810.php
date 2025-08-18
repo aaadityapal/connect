@@ -83,12 +83,15 @@ try {
     $interval = date_diff($sd, $ed);
     $daysInclusive = (int)$interval->format('%a') + 1;
     $durationType = 'full';
-    $halfDayValue = null;
+    $dayTypeValue = 'full'; // Default to full
+    
     if ($isHalfDay && $daysInclusive === 1) {
-        $durationType = in_array($halfDayType, ['first_half', 'second_half'], true) ? $halfDayType : 'first_half';
-        $halfDayValue = $durationType;
-        $computedDuration = 1; // DB convention for half-day in this system
+        $durationType = 'first_half'; // Duration type for half day
+        $dayTypeValue = in_array($halfDayType, ['first_half', 'second_half'], true) ? $halfDayType : 'first_half';
+        $computedDuration = 0.5; // Half day duration
     } else {
+        $durationType = 'full';
+        $dayTypeValue = 'full';
         $computedDuration = $daysInclusive;
     }
 
@@ -101,7 +104,7 @@ try {
              leave_type = :leave_type,
              duration = :duration,
              duration_type = :duration_type,
-             half_day_type = :half_day_type,
+             day_type = :day_type,
              updated_at = NOW(),
              updated_by = :updated_by
          WHERE id = :id AND user_id = :user_id"
@@ -114,7 +117,7 @@ try {
         ':leave_type'    => $leaveTypeId,
         ':duration'      => $computedDuration,
         ':duration_type' => $durationType,
-        ':half_day_type' => $halfDayValue,
+        ':day_type'      => $dayTypeValue,
         ':updated_by'    => $userId,
         ':id'            => $leaveId,
         ':user_id'       => $userId,
@@ -122,6 +125,38 @@ try {
 
     if (!$ok) {
         respond(500, ['success' => false, 'error' => 'Failed to update leave request']);
+    }
+
+    // Insert notification for update
+    try {
+        $title = 'Leave request updated';
+        $message = sprintf('Leave #%d updated: %s → %s, type %d, duration %s day(s).',
+            $leaveId,
+            $sd->format('Y-m-d'),
+            $ed->format('Y-m-d'),
+            $leaveTypeId,
+            number_format((float)$computedDuration, 2)
+        );
+        $payload = json_encode([
+            'leave_request_id' => $leaveId,
+            'start_date' => $sd->format('Y-m-d'),
+            'end_date' => $ed->format('Y-m-d'),
+            'leave_type_id' => $leaveTypeId,
+            'duration' => (float)$computedDuration,
+            'duration_type' => $durationType,
+            'day_type' => $dayTypeValue,
+        ], JSON_UNESCAPED_UNICODE);
+
+        // attempt to find last action_by (approver) for this leave to set recipient
+        $recStmt = $pdo->prepare("SELECT action_by FROM leave_request WHERE id = ?");
+        $recStmt->execute([$leaveId]);
+        $recRow = $recStmt->fetch(PDO::FETCH_ASSOC);
+        $recipientId = isset($recRow['action_by']) ? (int)$recRow['action_by'] : null;
+
+        $ins = $pdo->prepare("INSERT INTO all_notifications (user_id, recipient_id, event, leave_request_id, title, message, payload) VALUES (?, ?, 'leave_updated', ?, ?, ?, ?)");
+        $ins->execute([$userId, $recipientId, $leaveId, $title, $message, $payload]);
+    } catch (Throwable $ne) {
+        error_log('Notification insert failed (update): ' . $ne->getMessage());
     }
 
     respond(200, ['success' => true, 'message' => 'Leave updated successfully']);

@@ -93,7 +93,7 @@
         <i class="fas fa-chart-bar"></i>
         <span class="menu-text">Reports & Analytics</span>
     </div>
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_supervisor_recent_leaves.php' ? 'active' : ''; ?>" onclick="window.location.href='site_supervisor_recent_leaves.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'employee_leave.php' ? 'active' : ''; ?>" onclick="window.location.href='employee_leave.php'">
         <i class="fas fa-calendar-alt"></i>
         <span class="menu-text">Apply Leaves</span>
     </div>

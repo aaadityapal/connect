@@ -2139,12 +2139,48 @@ mysqli_close($conn);
                             </span>
                         </label>
                         <span class="toggle-label">Site</span>
+                        
+                        <button id="pay-selected-btn" class="btn btn-success" style="display: none; margin-left: 12px; background-color: #8e44ad;">
+                            <i class="fas fa-rupee-sign"></i> Pay Selected
+                        </button>
+                        </div>
+                        </div>
+                <!-- Bulk Pay Confirmation Modal -->
+                <div id="bulkPayConfirmModal" class="modal">
+                    <div class="modal-content" style="max-width: 520px;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i> Confirm Bulk Payment</h2>
+                            <span class="close" onclick="closeModal('bulkPayConfirmModal')">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <p style="margin-bottom: 12px; font-weight: 600; color: #2c3e50;">Are you sure you want to pay all selected overtime entries?</p>
+                            <div style="background:#f8f9fa; border:1px solid #e0e0e0; border-radius:8px; padding:12px;">
+                                <div style="margin-bottom:8px;">
+                                    <input type="checkbox" id="bulkPayChk1" style="margin-right:8px;">
+                                    <label for="bulkPayChk1">I confirm these entries are approved and eligible for payment as per policy.</label>
+                                </div>
+                                <div style="margin-bottom:8px;">
+                                    <input type="checkbox" id="bulkPayChk2" style="margin-right:8px;">
+                                    <label for="bulkPayChk2">I confirm the amounts are calculated correctly.</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="bulkPayChk3" style="margin-right:8px;">
+                                    <label for="bulkPayChk3">I confirm these will be included in the next payroll cycle.</label>
+                                </div>
+                                <div id="bulkPayChkError" style="display:none; color:#e74c3c; margin-top:8px;">Please confirm all statements to proceed.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-neutral" onclick="closeModal('bulkPayConfirmModal')"><i class="fas fa-times"></i> No</button>
+                            <button id="bulkPayConfirmYes" class="btn btn-success"><i class="fas fa-check"></i> Yes, Pay All</button>
+                        </div>
                         </div>
                         </div>
                 <div class="table-responsive">
                     <table class="overtime-table">
                         <thead>
                             <tr>
+                                <th><input type="checkbox" id="select-all-rows" title="Select All" /></th>
                                 <th>Username</th>
                                 <th>Date</th>
                                 <th>Shift End Time</th>
@@ -2655,6 +2691,7 @@ mysqli_close($conn);
             // Get user data from PHP
             const studioUsers = <?php echo json_encode($studioUsers); ?>;
             const siteUsers = <?php echo json_encode($siteUsers); ?>;
+            const isHr = <?php echo (isset($_SESSION['role']) && $_SESSION['role'] === 'HR') ? 'true' : 'false'; ?>;
             
             // Get attendance data from PHP
             const studioAttendance = <?php echo json_encode($studioAttendance); ?>;
@@ -3061,7 +3098,7 @@ mysqli_close($conn);
                     // Show no data message
                     tableBody.innerHTML = `
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 20px;">
+                            <td colspan="13" style="text-align: center; padding: 20px;">
                                 <div style="font-size: 16px; color: #777;">
                                     <i class="fas fa-info-circle" style="margin-right: 10px;"></i>
                                     No qualifying overtime data found (minimum 1.5 hours required).
@@ -3173,6 +3210,7 @@ mysqli_close($conn);
                     
                     // Create row content
                     row.innerHTML = `
+                        <td><input type="checkbox" class="row-select" data-user-id="${item.id}" data-overtime-id="${item.overtime_id || item.id}" data-hours="${typeof item.rawHours === 'number' ? item.rawHours : (parseFloat((item.hours || '0').match(/\d+(\.\d+)?/)) || 0)}" title="Select row" ${statusText === 'Approved' ? '' : 'disabled'} /></td>
                         <td>${item.username}</td>
                         <td>${item.date}</td>
                         <td>${item.shiftEnd}</td>
@@ -3240,7 +3278,138 @@ mysqli_close($conn);
                     `;
                     
                     tableBody.appendChild(row);
+
+                    // If current user is HR, hide approve/reject (and locked) icons
+                    if (isHr) {
+                        const actions = row.querySelector('.table-actions');
+                        if (actions) {
+                            actions.querySelectorAll('.btn-icon.approve, .btn-icon.reject, .btn-icon.locked').forEach(el => el.remove());
+                        }
+                    }
                 });
+
+                // Wire up Select All checkbox each time table renders
+                const selectAll = document.getElementById('select-all-rows');
+                if (selectAll) {
+                    selectAll.addEventListener('click', function() {
+                        const isChecked = this.checked;
+                        let anyChecked = false;
+                        document.querySelectorAll('.overtime-table tbody input.row-select').forEach(cb => {
+                            if (!cb.disabled) {
+                                cb.checked = isChecked;
+                                if (isChecked) anyChecked = true;
+                            } else {
+                                cb.checked = false;
+                            }
+                        });
+                        const btn = document.getElementById('pay-selected-btn');
+                        if (btn) btn.style.display = anyChecked ? 'inline-flex' : 'none';
+                    });
+                }
+
+                // Row checkbox changes should toggle header button and select-all state
+                document.querySelectorAll('.overtime-table tbody input.row-select').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        // If any unchecked, uncheck select-all; if all checked (ignoring disabled), check select-all
+                        const allCbs = Array.from(document.querySelectorAll('.overtime-table tbody input.row-select'));
+                        const enabledCbs = allCbs.filter(x => !x.disabled);
+                        const allChecked = enabledCbs.length > 0 && enabledCbs.every(x => x.checked);
+                        const anyChecked = enabledCbs.some(x => x.checked);
+                        const selectAllEl = document.getElementById('select-all-rows');
+                        if (selectAllEl) selectAllEl.checked = allChecked;
+                        const btn = document.getElementById('pay-selected-btn');
+                        if (btn) btn.style.display = anyChecked ? 'inline-flex' : 'none';
+                    });
+                });
+
+                // Wire Pay Selected button to process all selected approved rows
+                const payBtn = document.getElementById('pay-selected-btn');
+                if (payBtn && !payBtn._wired) {
+                    payBtn._wired = true;
+                    payBtn.addEventListener('click', function() {
+                        const selected = Array.from(document.querySelectorAll('.overtime-table tbody input.row-select:checked')).filter(cb => !cb.disabled);
+                        if (selected.length === 0) {
+                            showToast('No approved rows selected', 'warning', 'Pay Selected');
+                            return;
+                        }
+                        // Open confirmation modal
+                        document.getElementById('bulkPayChk1').checked = false;
+                        document.getElementById('bulkPayChk2').checked = false;
+                        document.getElementById('bulkPayChk3').checked = false;
+                        document.getElementById('bulkPayChkError').style.display = 'none';
+                        document.getElementById('bulkPayConfirmModal').style.display = 'block';
+                        
+                        const confirmBtn = document.getElementById('bulkPayConfirmYes');
+                        // Prevent duplicate bindings
+                        if (confirmBtn._wired) return;
+                        confirmBtn._wired = true;
+                        confirmBtn.addEventListener('click', function() {
+                            const c1 = document.getElementById('bulkPayChk1').checked;
+                            const c2 = document.getElementById('bulkPayChk2').checked;
+                            const c3 = document.getElementById('bulkPayChk3').checked;
+                            if (!(c1 && c2 && c3)) {
+                                document.getElementById('bulkPayChkError').style.display = 'block';
+                                return;
+                            }
+                            closeModal('bulkPayConfirmModal');
+                            payBtn.disabled = true;
+                            showFilterMessage('Processing selected payments...', 'loading');
+                            let successCount = 0;
+                            let failureCount = 0;
+                            const requests = selected.map(cb => {
+                                const userId = parseInt(cb.getAttribute('data-user-id')) || 0;
+                                const overtimeId = parseInt(cb.getAttribute('data-overtime-id')) || 0;
+                                const hours = parseFloat(cb.getAttribute('data-hours')) || 0;
+                                const amount = Math.round(hours * 500 * 100) / 100; // ₹500 per hour
+                                return $.ajax({
+                                    url: 'api/process_overtime_payment.php',
+                                    method: 'POST',
+                                    dataType: 'json',
+                                    data: {
+                                        overtime_id: overtimeId,
+                                        employee_id: userId,
+                                        amount: amount,
+                                        hours: hours,
+                                        notes: 'Bulk payment via UI',
+                                        status: 'paid'
+                                    }
+                                }).done(resp => {
+                                    if (resp && resp.success) {
+                                        successCount++;
+                                        // Update UI for this row
+                                        updatePaymentStatusInTable(userId, overtimeId);
+                                        cb.checked = false;
+                                        cb.disabled = true;
+                                    } else {
+                                        failureCount++;
+                                    }
+                                }).fail(() => {
+                                    failureCount++;
+                                });
+                            });
+                            Promise.all(requests).then(() => {
+                                payBtn.disabled = false;
+                                const enabledCbs = Array.from(document.querySelectorAll('.overtime-table tbody input.row-select')).filter(x => !x.disabled);
+                                const anyCheckedLeft = enabledCbs.some(x => x.checked);
+                                if (!anyCheckedLeft) {
+                                    payBtn.style.display = 'none';
+                                }
+                                const selectAllEl = document.getElementById('select-all-rows');
+                                if (selectAllEl) selectAllEl.checked = false;
+                                if (failureCount === 0) {
+                                    showFilterMessage('All selected payments processed successfully', 'success');
+                                    showToast('Payments processed successfully', 'success', 'Pay Selected');
+                                } else if (successCount > 0) {
+                                    showFilterMessage(`${successCount} payments processed, ${failureCount} failed`, 'warning');
+                                    showToast(`${successCount} succeeded, ${failureCount} failed`, 'warning', 'Pay Selected');
+                                } else {
+                                    showFilterMessage('Failed to process selected payments', 'error');
+                                    showToast('No payments were processed', 'error', 'Pay Selected');
+                                }
+                            });
+                        });
+                    });
+                }
                 
                 // Update statistics
                 updateStats(filteredData);
@@ -4767,6 +4936,14 @@ mysqli_close($conn);
             const tableRows = document.querySelectorAll('.overtime-table tbody tr');
             let found = false;
             
+            // Determine Payment Status column index dynamically
+            const headerCells = document.querySelectorAll('.overtime-table thead th');
+            let paymentStatusColumnIndex = 0;
+            for (let i = 0; i < headerCells.length; i++) {
+                const txt = headerCells[i].textContent.trim().toLowerCase();
+                if (txt === 'payment status') { paymentStatusColumnIndex = i + 1; break; }
+            }
+            
             tableRows.forEach(row => {
                 // Check if this is the row for our user
                 const actionButtons = row.querySelectorAll('.table-actions button');
@@ -4782,8 +4959,8 @@ mysqli_close($conn);
                 }
                 
                 if (isTargetRow) {
-                    // Get the payment status cell (10th column)
-                    const paymentStatusCell = row.querySelector('td:nth-child(10)');
+                    // Get the payment status cell by header-derived index
+                    const paymentStatusCell = paymentStatusColumnIndex ? row.querySelector(`td:nth-child(${paymentStatusColumnIndex})`) : null;
                     if (paymentStatusCell) {
                         // Update the payment status to "Paid"
                         paymentStatusCell.innerHTML = '<span class="status paid">Paid</span>';
@@ -5264,16 +5441,24 @@ mysqli_close($conn);
                     // Look for payment status in the DOM for this item
                     const tableRows = document.querySelectorAll('.overtime-table tbody tr');
                     for (const row of tableRows) {
-                        // Find the row that matches this item
-                        const usernameCell = row.querySelector('td:first-child');
-                        const dateCell = row.querySelector('td:nth-child(2)');
+                        // Find the row that matches this item (dynamic indices as a checkbox column may exist)
+                        const headerCells = document.querySelectorAll('.overtime-table thead th');
+                        let usernameColIdx = 0, dateColIdx = 0, paymentStatusColIdx = 0;
+                        for (let i = 0; i < headerCells.length; i++) {
+                            const text = headerCells[i].textContent.trim().toLowerCase();
+                            if (text === 'username') usernameColIdx = i + 1;
+                            if (text === 'date') dateColIdx = i + 1;
+                            if (text === 'payment status') paymentStatusColIdx = i + 1;
+                        }
+                        const usernameCell = usernameColIdx ? row.querySelector(`td:nth-child(${usernameColIdx})`) : null;
+                        const dateCell = dateColIdx ? row.querySelector(`td:nth-child(${dateColIdx})`) : null;
                         
                         if (usernameCell && dateCell && 
                             usernameCell.textContent === item.username && 
                             dateCell.textContent === item.date) {
                             
                             // Check the payment status cell
-                            const paymentStatusCell = row.querySelector('td:nth-child(10) .status');
+                            const paymentStatusCell = paymentStatusColIdx ? row.querySelector(`td:nth-child(${paymentStatusColIdx}) .status`) : null;
                             if (paymentStatusCell && paymentStatusCell.textContent.trim() === 'Paid') {
                                 return 'Paid';
                             }

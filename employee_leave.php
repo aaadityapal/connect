@@ -27,10 +27,10 @@ $managerRole = (in_array($currentRole, ['Site Supervisor', 'Site Coordinator', '
     : 'Senior Manager (Studio)';
 
 try {
-	// 1) Exact match using PDO
+	// 1) Exact match using PDO (only active users)
 	$sql = "SELECT id, COALESCE(username, unique_id) AS display_name
 	        FROM users
-	        WHERE role = ?
+	        WHERE role = ? AND LOWER(status) = 'active'
 	        ORDER BY display_name ASC";
 	$stmt = $pdo->prepare($sql);
 	$stmt->execute([$managerRole]);
@@ -40,14 +40,14 @@ try {
 	if (!$approvers) {
 		$sql2 = "SELECT id, COALESCE(username, unique_id) AS display_name
 		         FROM users
-		         WHERE LOWER(role) LIKE LOWER('%Senior%Manager%(Site)%')
+		         WHERE LOWER(role) LIKE LOWER('%Senior%Manager%(Site)%') AND LOWER(status) = 'active'
 		         ORDER BY display_name ASC";
 		$approvers = $pdo->query($sql2)->fetchAll();
 	}
 
 	// 3) As a last resort, try mysqli exact match if available
 	if (!$approvers && isset($conn) && $conn instanceof mysqli && empty($conn->connect_error)) {
-		$res = $conn->query("SELECT id, COALESCE(username, unique_id) AS display_name FROM users WHERE role = 'Senior Manager (Site)' ORDER BY display_name ASC");
+		$res = $conn->query("SELECT id, COALESCE(username, unique_id) AS display_name FROM users WHERE role = 'Senior Manager (Site)' AND LOWER(status) = 'active' ORDER BY display_name ASC");
 		if ($res) {
 			while ($row = $res->fetch_assoc()) { $approvers[] = $row; }
 		}
@@ -56,12 +56,13 @@ try {
 	// 4) Final tolerant fallback: fetch all and filter in PHP (handles odd whitespace or encoding)
 	if (!$approvers) {
 		try {
-			$all = $pdo->query("SELECT id, role, username, unique_id FROM users");
+			$all = $pdo->query("SELECT id, role, username, unique_id, status FROM users");
 			if ($all) {
 				foreach ($all as $row) {
 					$roleRaw = isset($row['role']) ? $row['role'] : '';
 					$normalized = strtolower(preg_replace('/\s+/', ' ', trim($roleRaw)));
-					if (strpos($normalized, 'senior') !== false && strpos($normalized, 'manager') !== false && strpos($normalized, '(site)') !== false) {
+					$statusNorm = isset($row['status']) ? strtolower(trim($row['status'])) : '';
+					if ($statusNorm === 'active' && strpos($normalized, 'senior') !== false && strpos($normalized, 'manager') !== false && strpos($normalized, '(site)') !== false) {
 						$display = $row['username'] ?: $row['unique_id'];
 						$approvers[] = ['id' => $row['id'], 'display_name' => $display];
 					}
@@ -84,6 +85,8 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/logo.png">
     <title>Leave Application</title>
     <style>
         * {
@@ -362,6 +365,12 @@ try {
             .date-row { grid-template-columns: 1fr; }
             .form-actions { flex-direction: column-reverse; }
             .btn { width: 100%; }
+            /* Make the dates table usable on small iPhones (SE/XR) */
+            .table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            #datesTable { min-width: 680px; }
+            .table th, .table td { white-space: nowrap; }
+            /* Ensure selects are visible and usable */
+            .row-leave-type, .row-day-type { min-width: 160px; }
         }
     </style>
 </head>

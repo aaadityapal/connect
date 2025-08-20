@@ -33,13 +33,25 @@ try {
 // Get the selected month from URL parameter or use current month
 $selected_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
 
-// Fetch actual users from database with their shift information
+// Fetch actual users from database with their shift information and latest increment
 $users_query = "SELECT u.id, u.username, u.employee_id, u.department, u.role, u.status, u.created_at, u.base_salary,
-                       us.weekly_offs, s.shift_name, s.start_time, s.end_time
+                       us.weekly_offs, s.shift_name, s.start_time, s.end_time,
+                       si.increment_percentage, si.effective_from, si.status as increment_status, si.salary_after_increment
                 FROM users u
                 LEFT JOIN user_shifts us ON u.id = us.user_id AND 
                     (us.effective_to IS NULL OR us.effective_to >= CURDATE())
                 LEFT JOIN shifts s ON us.shift_id = s.id
+                LEFT JOIN (
+                    SELECT si1.* 
+                    FROM salary_increments si1
+                    INNER JOIN (
+                        SELECT user_id, MAX(effective_from) as latest_date
+                        FROM salary_increments
+                        WHERE status != 'cancelled'
+                        GROUP BY user_id
+                    ) si2 ON si1.user_id = si2.user_id AND si1.effective_from = si2.latest_date
+                    WHERE si1.status != 'cancelled'
+                ) si ON u.id = si.user_id
                 WHERE u.status = 'active' AND u.deleted_at IS NULL 
                 ORDER BY u.username";
 try {
@@ -135,8 +147,20 @@ try {
         $base_salary = $user['base_salary'] ?? 0;
         $working_days = $user['working_days_count'];
         
-        // Calculate daily salary based on working days
-        $daily_salary = $working_days > 0 ? $base_salary / $working_days : 0;
+        // Determine which salary to use (base or incremented) based on effective date
+        $effective_salary = $base_salary;
+        if (!empty($user['increment_percentage']) && !empty($user['effective_from']) && !empty($user['salary_after_increment'])) {
+            $increment_effective_from = new DateTime($user['effective_from']);
+            $month_start_date = new DateTime($month_start);
+            
+            // If increment is effective from or before the current month's start date, use the incremented salary
+            if ($increment_effective_from <= $month_start_date) {
+                $effective_salary = $user['salary_after_increment'];
+            }
+        }
+        
+        // Calculate daily salary based on working days using the effective salary
+        $daily_salary = $working_days > 0 ? $effective_salary / $working_days : 0;
         $half_day_salary = $daily_salary / 2;
         
         // Calculate salary based on present days
@@ -175,8 +199,12 @@ try {
         // Store the deduction breakdown for the modal
         $user['deduction_breakdown'] = [
             'base_salary' => $base_salary,
+            'effective_salary' => $effective_salary,
+            'is_incremented' => ($effective_salary > $base_salary),
+            'increment_percentage' => $user['increment_percentage'] ?? 0,
+            'increment_effective_from' => $user['effective_from'] ?? '',
             'present_days_salary' => $present_days_salary,
-            'absence_deduction' => $base_salary - $present_days_salary,
+            'absence_deduction' => $effective_salary - $present_days_salary,
             'late_deduction' => $total_deduction,
             'half_day_deduction' => $half_day_deduction_amount,
             'working_days' => $working_days,
@@ -488,22 +516,35 @@ try {
             $user['penalty_amount'] = 0;
         }
         
-        // Add code to fetch overtime hours for each user - only count if ≥ 1 hour 30 minutes after shift
+        // Add code to fetch overtime hours for each user - only count if ≥ 1 hour 30 minutes after shift AND overtime is approved
         $overtime_query = "SELECT 
                             a.date, 
+                            a.id as attendance_id,
                             a.punch_out,
+                            a.work_report,
+                            a.overtime_status,
+                            a.overtime_approved_by,
+                            a.overtime_actioned_at,
                             s.end_time as shift_end,
                             TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) as minutes_after_shift,
                             TIMESTAMPDIFF(HOUR, s.end_time, TIME(a.punch_out)) as hours_after_shift,
-                            TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) % 60 as remaining_minutes
+                            TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) % 60 as remaining_minutes,
+                            otn.id as notification_id,
+                            otn.message as notification_message,
+                            otn.manager_response,
+                            otn.actioned_at as notification_actioned_at,
+                            m.username as manager_name
                            FROM attendance a
                            LEFT JOIN user_shifts us ON a.user_id = us.user_id AND (us.effective_to IS NULL OR us.effective_to >= a.date)
                            LEFT JOIN shifts s ON us.shift_id = s.id
+                           LEFT JOIN overtime_notifications otn ON otn.overtime_id = a.id
+                           LEFT JOIN users m ON otn.manager_id = m.id
                            WHERE a.user_id = ? 
                            AND DATE(a.date) BETWEEN ? AND ?
                            AND a.status = 'present'
                            AND s.end_time IS NOT NULL
-                           AND TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) >= 90";
+                           AND TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) >= 90
+                           AND a.overtime_status = 'approved'";
         try {
             $overtime_stmt = $pdo->prepare($overtime_query);
             $overtime_stmt->execute([$user['id'], $month_start, $month_end]);
@@ -601,6 +642,36 @@ try {
     $users = [];
 }
 
+// Check if the salary_increments table exists, if not create it
+try {
+    $check_table_query = "SHOW TABLES LIKE 'salary_increments'";
+    $check_table_stmt = $pdo->prepare($check_table_query);
+    $check_table_stmt->execute();
+    
+    if ($check_table_stmt->rowCount() == 0) {
+        // Table doesn't exist, create it
+        $create_table_query = "CREATE TABLE `salary_increments` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `user_id` int(11) NOT NULL,
+            `increment_percentage` decimal(5,2) NOT NULL,
+            `effective_from` date NOT NULL,
+            `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `created_by` int(11) DEFAULT NULL,
+            `status` enum('pending','applied','cancelled') NOT NULL DEFAULT 'pending',
+            PRIMARY KEY (`id`),
+            KEY `user_id` (`user_id`),
+            KEY `effective_from` (`effective_from`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+        
+        $create_table_stmt = $pdo->prepare($create_table_query);
+        $create_table_stmt->execute();
+        
+        error_log("Created salary_increments table");
+    }
+} catch (PDOException $e) {
+    error_log("Error checking/creating salary_increments table: " . $e->getMessage());
+}
+
 // Process salary update if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_salary') {
     if (isset($_POST['user_id']) && isset($_POST['base_salary'])) {
@@ -618,6 +689,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } catch (PDOException $e) {
             error_log("Error updating salary: " . $e->getMessage());
             $update_error = "Failed to update salary. Please try again.";
+        }
+    }
+}
+
+// Process increment update if form is submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_increment') {
+    if (isset($_POST['user_id']) && isset($_POST['increment_percentage']) && isset($_POST['effective_from'])) {
+        $user_id = $_POST['user_id'];
+        $increment_percentage = $_POST['increment_percentage'];
+        $effective_from = $_POST['effective_from'];
+        
+        // Validate inputs
+        if (empty($increment_percentage) || empty($effective_from)) {
+            $update_error = "Both increment percentage and effective date are required.";
+        } else {
+            try {
+                // Get user's current base salary
+                $get_salary_query = "SELECT base_salary FROM users WHERE id = ?";
+                $get_salary_stmt = $pdo->prepare($get_salary_query);
+                $get_salary_stmt->execute([$user_id]);
+                $user_data = $get_salary_stmt->fetch(PDO::FETCH_ASSOC);
+                $base_salary = $user_data['base_salary'] ?? 0;
+                
+                // Calculate incremented salary
+                $incremented_amount = $base_salary * ($increment_percentage / 100);
+                $salary_after_increment = $base_salary + $incremented_amount;
+                
+                // Insert into salary_increments table
+                $insert_query = "INSERT INTO salary_increments (user_id, increment_percentage, effective_from, salary_after_increment, created_by) 
+                                VALUES (?, ?, ?, ?, ?)";
+                $insert_stmt = $pdo->prepare($insert_query);
+                $insert_stmt->execute([$user_id, $increment_percentage, $effective_from, $salary_after_increment, $_SESSION['user_id']]);
+                
+                // Redirect to prevent form resubmission
+                header("Location: salary.php?month=$selected_month&increment_added=true");
+                exit;
+            } catch (PDOException $e) {
+                error_log("Error adding salary increment: " . $e->getMessage());
+                $update_error = "Failed to add salary increment. Please try again.";
+            }
         }
     }
 }
@@ -1196,6 +1307,132 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
 
         .save-btn:hover {
             background-color: #059669;
+        }
+        
+        /* Increment styles */
+        .increment-inputs {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .increment-input {
+            width: 60px !important;
+        }
+        
+        .date-input {
+            width: 120px !important;
+        }
+        
+        .increment-info {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .increment-percentage {
+            font-weight: 600;
+            color: #10b981;
+            font-size: 16px;
+        }
+        
+        .increment-date {
+            color: #6b7280;
+            font-size: 13px;
+        }
+        
+        .increment-status {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .increment-status.pending {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .increment-status.applied {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+        
+        .edit-increment-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        .edit-increment-btn:hover {
+            color: #1d4ed8;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Incremented Salary Styles */
+        .incremented-salary {
+            display: block;
+            font-size: 16px;
+            color: #10b981;
+        }
+        
+        .increment-details {
+            margin-top: 5px;
+            font-size: 13px;
+        }
+        
+        .increment-amount {
+            color: #059669;
+            background-color: #d1fae5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .no-increment {
+            color: #6b7280;
+            font-style: italic;
+        }
+        
+        .active-salary-badge {
+            display: inline-block;
+            margin-left: 8px;
+            background-color: #4361ee;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+        
+        .increment-info-badge {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .increment-badge {
+            background-color: #d1fae5;
+            color: #059669;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .increment-date-badge {
+            color: #6b7280;
+            font-size: 13px;
         }
 
         .shift-info {
@@ -2115,6 +2352,8 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                         <th>S.No</th>
                         <th>Username</th>
                         <th>Base Salary</th>
+                        <th>Increment</th>
+                        <th>Incremented Salary</th>
                         <th>Working Days</th>
                         <th>Present Days</th>
                         <th>Late Punch In</th>
@@ -2144,6 +2383,52 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                         <input type="number" name="base_salary" value="<?php echo htmlspecialchars($user['base_salary'] ?? 0); ?>" class="salary-input">
                                         <button type="submit" class="save-btn">Save</button>
                                     </form>
+                                </td>
+                                <td class="editable-cell">
+                                    <?php if (!empty($user['increment_percentage']) && !empty($user['effective_from'])): ?>
+                                        <div class="increment-info">
+                                            <span class="increment-percentage"><?php echo number_format($user['increment_percentage'], 1); ?>%</span>
+                                            <span class="increment-date">from <?php echo date('d M Y', strtotime($user['effective_from'])); ?></span>
+                                            <span class="increment-status <?php echo $user['increment_status']; ?>"><?php echo ucfirst($user['increment_status']); ?></span>
+                                            <button class="edit-increment-btn" title="Edit increment"><i class="bi bi-pencil-square"></i></button>
+                                        </div>
+                                    <?php endif; ?>
+                                    <form method="POST" class="increment-form <?php echo !empty($user['increment_percentage']) ? 'hidden' : ''; ?>">
+                                        <input type="hidden" name="action" value="update_increment">
+                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                        <div class="increment-inputs">
+                                            <input type="number" name="increment_percentage" placeholder="%" min="0" max="100" step="0.1" class="increment-input" title="Increment percentage">
+                                            <input type="date" name="effective_from" class="date-input" title="Effective from">
+                                            <button type="submit" class="save-btn">Apply</button>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <?php if (!empty($user['increment_percentage']) && !empty($user['effective_from'])): ?>
+                                        <?php 
+                                            // Calculate incremented salary
+                                            $base_salary = $user['base_salary'] ?? 0;
+                                            $increment_percentage = $user['increment_percentage'];
+                                            $incremented_amount = $base_salary * ($increment_percentage / 100);
+                                            $incremented_salary = $base_salary + $incremented_amount;
+                                        ?>
+                                        <span class="incremented-salary">
+                                            <strong>₹<?php echo number_format($incremented_salary, 2); ?></strong>
+                                        </span>
+                                        <div class="increment-details">
+                                            <span class="increment-amount">+₹<?php echo number_format($incremented_amount, 2); ?></span>
+                                            <?php
+                                                // Show if this salary is being used for current month's calculation
+                                                $increment_effective_from = new DateTime($user['effective_from']);
+                                                $month_start_date = new DateTime($month_start);
+                                                if ($increment_effective_from <= $month_start_date):
+                                            ?>
+                                                <span class="active-salary-badge">Active</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="no-increment">-</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php echo $user['working_days_count']; ?> 
@@ -2444,7 +2729,10 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                           data-missing-days="<?php echo $user['missing_punch_days'] ?? 0; ?>"
                                           data-fourth-saturday-off="<?php echo $user['fourth_saturday_off'] ? 'yes' : 'no'; ?>"
                                           data-fourth-saturday-date="<?php echo $user['fourth_saturday_date'] ?? ''; ?>"
-                                          data-daily-salary="<?php echo $user['working_days_count'] > 0 ? $user['base_salary'] / $user['working_days_count'] : 0; ?>">
+                                          data-daily-salary="<?php echo $daily_salary; ?>"
+                                          data-is-incremented="<?php echo ($effective_salary > $base_salary) ? 'true' : 'false'; ?>"
+                                          data-increment-percentage="<?php echo $user['increment_percentage'] ?? 0; ?>"
+                                          data-increment-effective-from="<?php echo $user['effective_from'] ?? ''; ?>">
                                         <i class="bi bi-info-circle"></i>
                                     </span>
                                 </td>
@@ -3448,8 +3736,13 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     detailsHtml += `
                         <div class="salary-summary">
                             <div class="salary-card base-salary">
-                                <h4>Base Salary</h4>
+                                <h4>${this.getAttribute('data-is-incremented') === 'true' ? 'Incremented Salary' : 'Base Salary'}</h4>
                                 <div class="amount">₹${baseSalary.toFixed(2)}</div>
+                                ${this.getAttribute('data-is-incremented') === 'true' ? 
+                                    `<div class="increment-info-badge">
+                                        <span class="increment-badge">+${this.getAttribute('data-increment-percentage')}%</span>
+                                        <span class="increment-date-badge">from ${new Date(this.getAttribute('data-increment-effective-from')).toLocaleDateString('en-US', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                                    </div>` : ''}
                                 <div class="details">Daily rate: ₹${dailySalary.toFixed(2)} × ${workingDays} working days</div>
                             </div>
                             
@@ -3737,10 +4030,15 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             const directQuery = `
                 SELECT 
                     DATE(a.date) as date,
+                    a.id as attendance_id,
                     a.status,
                     a.punch_in,
                     a.punch_out,
                     a.overtime_hours,
+                    a.work_report,
+                    a.overtime_status,
+                    a.overtime_approved_by,
+                    a.overtime_actioned_at,
                     TIME_FORMAT(s.start_time, '%h:%i %p') as shift_start,
                     TIME_FORMAT(s.end_time, '%h:%i %p') as shift_end,
                     TIME_FORMAT(TIMEDIFF(a.punch_out, a.punch_in), '%H:%i') as worked_hours,
@@ -3751,13 +4049,21 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     TIMESTAMPDIFF(SECOND, s.end_time, TIME(a.punch_out)) as seconds_after_shift,
                     TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) as minutes_after_shift,
                     TIMESTAMPDIFF(HOUR, s.end_time, TIME(a.punch_out)) as hours_after_shift,
-                    TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) % 60 as remaining_minutes
+                    TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) % 60 as remaining_minutes,
+                    otn.id as notification_id,
+                    otn.message as notification_message,
+                    otn.manager_response,
+                    otn.actioned_at as notification_actioned_at,
+                    m.username as manager_name
                 FROM attendance a
                 LEFT JOIN user_shifts us ON a.user_id = us.user_id AND (us.effective_to IS NULL OR us.effective_to >= a.date)
                 LEFT JOIN shifts s ON us.shift_id = s.id
+                LEFT JOIN overtime_notifications otn ON otn.overtime_id = a.id
+                LEFT JOIN users m ON otn.manager_id = m.id
                 WHERE a.user_id = ${userId}
                 AND DATE(a.date) BETWEEN '${month}-01' AND LAST_DAY('${month}-01')
                 AND TIMESTAMPDIFF(MINUTE, s.end_time, TIME(a.punch_out)) >= 90
+                AND a.overtime_status = 'approved'
                 ORDER BY a.date ASC
             `;
             
@@ -3773,51 +4079,52 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             .then(data => {
                 console.log('Overtime data:', data);
                 
-                // Create HTML for overtime details
-                let detailsHtml = '';
-                
-                // Format total overtime hours for display
-                let overtimeDisplay = '';
-                
-                // Check if there's any qualifying overtime (≥ 1 hour 30 minutes after shift)
-                const hasQualifyingOvertime = data.some(record => 
-                    record && record.minutes_after_shift && parseInt(record.minutes_after_shift) >= 90);
-                
-                if (!hasQualifyingOvertime) {
-                    overtimeDisplay = 'No qualifying overtime';
-                } else if (overtimeHours > 0 && overtimeMinutes > 0) {
-                    overtimeDisplay = `${overtimeHours} hours ${overtimeMinutes} minutes`;
-                } else if (overtimeHours > 0) {
-                    overtimeDisplay = `${overtimeHours} hours`;
-                } else if (overtimeMinutes > 0) {
-                    overtimeDisplay = `${overtimeMinutes} minutes`;
-                } else {
-                    overtimeDisplay = '0 hours';
-                }
-                
-                // Add summary section
-                detailsHtml += `
-                    <div class="overtime-summary" style="margin-bottom: 20px; padding: 15px; background-color: #f0f7ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                        <h4 style="margin-top: 0; color: #3b82f6;">Total Overtime: ${overtimeDisplay}</h4>
-                        <p style="margin-bottom: 0;">Showing detailed breakdown of overtime hours for ${username}.</p>
-                        <div style="margin-top: 10px; padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 6px;">
-                            <p style="margin: 0; font-size: 14px;"><strong>How overtime is calculated:</strong></p>
-                            <ul style="margin-top: 5px; margin-bottom: 0; padding-left: 20px; font-size: 13px;">
-                                <li>Overtime is only counted when an employee works <strong>1 hour and 30 minutes or more</strong> after their shift end time</li>
-                                <li>Example: If shift ends at 6:00 PM and employee punches out at 7:30 PM (exactly 1.5 hours), overtime is 1 hour 30 minutes</li>
-                                <li>Example: If shift ends at 6:00 PM and employee punches out at 8:00 PM, overtime is 2 hours</li>
-                                <li>If an employee works less than 1 hour 30 minutes after shift end, no overtime is counted</li>
-                                <li>Minutes are rounded down to the nearest 30-minute increment:
-                                    <ul>
-                                        <li>2 hours 41 minutes → 2 hours 30 minutes</li>
-                                        <li>1 hour 42 minutes → 1 hour 30 minutes</li>
-                                        <li>3 hours 29 minutes → 3 hours 0 minutes</li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                `;
+                                            // Create HTML for overtime details
+                            let detailsHtml = '';
+                            
+                            // Format total overtime hours for display
+                            let overtimeDisplay = '';
+                            
+                            // Check if there's any qualifying overtime (≥ 1 hour 30 minutes after shift)
+                            const hasQualifyingOvertime = data.some(record => 
+                                record && record.minutes_after_shift && parseInt(record.minutes_after_shift) >= 90);
+                            
+                            if (!hasQualifyingOvertime) {
+                                overtimeDisplay = 'No qualifying overtime';
+                            } else if (overtimeHours > 0 && overtimeMinutes > 0) {
+                                overtimeDisplay = `${overtimeHours} hours ${overtimeMinutes} minutes`;
+                            } else if (overtimeHours > 0) {
+                                overtimeDisplay = `${overtimeHours} hours`;
+                            } else if (overtimeMinutes > 0) {
+                                overtimeDisplay = `${overtimeMinutes} minutes`;
+                            } else {
+                                overtimeDisplay = '0 hours';
+                            }
+                            
+                            // Add summary section
+                            detailsHtml += `
+                                <div class="overtime-summary" style="margin-bottom: 20px; padding: 15px; background-color: #f0f7ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                    <h4 style="margin-top: 0; color: #3b82f6;">Total Approved Overtime: ${overtimeDisplay}</h4>
+                                    <p style="margin-bottom: 0;">Showing detailed breakdown of approved overtime hours for ${username}.</p>
+                                    <div style="margin-top: 10px; padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 6px;">
+                                        <p style="margin: 0; font-size: 14px;"><strong>How overtime is calculated:</strong></p>
+                                        <ul style="margin-top: 5px; margin-bottom: 0; padding-left: 20px; font-size: 13px;">
+                                            <li>Only <strong>approved overtime</strong> is counted in salary calculations</li>
+                                            <li>Overtime is only counted when an employee works <strong>1 hour and 30 minutes or more</strong> after their shift end time</li>
+                                            <li>Example: If shift ends at 6:00 PM and employee punches out at 7:30 PM (exactly 1.5 hours), overtime is 1 hour 30 minutes</li>
+                                            <li>Example: If shift ends at 6:00 PM and employee punches out at 8:00 PM, overtime is 2 hours</li>
+                                            <li>If an employee works less than 1 hour 30 minutes after shift end, no overtime is counted</li>
+                                            <li>Minutes are rounded down to the nearest 30-minute increment:
+                                                <ul>
+                                                    <li>2 hours 41 minutes → 2 hours 30 minutes</li>
+                                                    <li>1 hour 42 minutes → 1 hour 30 minutes</li>
+                                                    <li>3 hours 29 minutes → 3 hours 0 minutes</li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            `;
                 
                 if (data && data.length > 0) {
                     // Filter to only show days with overtime (≥ 1 hour 30 minutes after shift end)
@@ -3834,7 +4141,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     } else {
                         // Create table with overtime details
                                                 detailsHtml += '<table class="modal-table">';
-                        detailsHtml += '<thead><tr><th>Date</th><th>Day</th><th>Shift Time</th><th>Punch In</th><th>Punch Out</th><th>Worked Hours</th><th>Overtime</th></tr></thead>';
+                        detailsHtml += '<thead><tr><th>Date</th><th>Day</th><th>Shift Time</th><th>Punch In</th><th>Punch Out</th><th>Worked Hours</th><th>Overtime</th><th>Approved By</th></tr></thead>';
                         detailsHtml += '<tbody>';
                         
                         validOvertimeDays.forEach(record => {
@@ -4017,6 +4324,51 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                             const originalTimeDisplay = `${originalHours}h ${originalMins}m (${originalMinutes} min)`;
                             
                             
+                            // Format approval information
+                            let approvalInfo = '';
+                            if (record.overtime_approved_by) {
+                                approvalInfo = record.overtime_approved_by;
+                                if (record.manager_name) {
+                                    approvalInfo = record.manager_name;
+                                }
+                                
+                                // Add approval date if available
+                                if (record.overtime_actioned_at) {
+                                    try {
+                                        const approvalDate = new Date(record.overtime_actioned_at);
+                                        if (!isNaN(approvalDate.getTime())) {
+                                            approvalInfo += `<div style="font-size: 11px; color: #666; margin-top: 3px;">
+                                                ${approvalDate.toLocaleDateString('en-US', {day: '2-digit', month: 'short'})}
+                                            </div>`;
+                                        }
+                                    } catch (e) {
+                                        console.error('Error parsing approval date:', e);
+                                    }
+                                }
+                            } else {
+                                approvalInfo = '<span style="color: #10b981;">Approved</span>';
+                            }
+                            
+                            // Add work report tooltip if available
+                            let workReportInfo = '';
+                            if (record.work_report) {
+                                workReportInfo = `
+                                    <div style="font-size: 11px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                        <div style="color: #666;"><strong>Work Report:</strong> ${record.work_report}</div>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Add manager response if available
+                            let managerResponseInfo = '';
+                            if (record.manager_response) {
+                                managerResponseInfo = `
+                                    <div style="font-size: 11px; margin-top: 5px; color: #3b82f6;">
+                                        <strong>Manager:</strong> ${record.manager_response}
+                                    </div>
+                                `;
+                            }
+
                             detailsHtml += `<tr>
                                 <td>${formattedDate}</td>
                                 <td>${dayName}</td>
@@ -4028,6 +4380,11 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                     <strong style="color: #3b82f6;">${dailyOvertimeDisplay}</strong>
                                     <div style="font-size: 11px; color: #666; margin-top: 3px;">Original: ${originalTimeDisplay}</div>
                                     ${overtimeExplanation ? `<br>${overtimeExplanation}` : ''}
+                                    ${workReportInfo}
+                                </td>
+                                <td>
+                                    <span style="color: #10b981;">${approvalInfo}</span>
+                                    ${managerResponseInfo}
                                 </td>
                             </tr>`;
                         } catch (e) {
@@ -4245,6 +4602,49 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             closeRemainingSalaryModalBtn.addEventListener('click', function() {
                 remainingSalaryModal.style.display = 'none';
             });
+            
+            // Handle increment edit buttons
+            document.querySelectorAll('.edit-increment-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Find the parent increment-info div and the sibling increment-form
+                    const incrementInfo = this.closest('.increment-info');
+                    const incrementForm = this.closest('.editable-cell').querySelector('.increment-form');
+                    
+                    // Toggle visibility
+                    incrementInfo.style.display = 'none';
+                    incrementForm.classList.remove('hidden');
+                });
+            });
+            
+            // Handle success messages for increment
+            if (window.location.search.includes('increment_added=true')) {
+                // Create a success message element
+                const successMessage = document.createElement('div');
+                successMessage.className = 'alert alert-success';
+                successMessage.style.backgroundColor = '#d1fae5';
+                successMessage.style.color = '#059669';
+                successMessage.style.padding = '10px 15px';
+                successMessage.style.borderRadius = '6px';
+                successMessage.style.marginBottom = '15px';
+                successMessage.innerHTML = '<strong>Success!</strong> Salary increment has been added successfully.';
+                
+                // Insert at the top of the container
+                const container = document.querySelector('.container');
+                container.insertBefore(successMessage, container.firstChild);
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    successMessage.style.opacity = '0';
+                    successMessage.style.transition = 'opacity 0.5s ease';
+                    
+                    // Remove from DOM after fade out
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 500);
+                }, 5000);
+            }
             
             // Update the window click event to include all modals
             window.addEventListener('click', function(event) {

@@ -756,6 +756,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="signup-link">
                     <a href="signup">Don't have an account? Sign up</a>
+                    <div class="mt-2">
+                        <a href="#" id="forgot-password-link">Forgot your password?</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -764,6 +767,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="js/reset_password.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Handle image loading

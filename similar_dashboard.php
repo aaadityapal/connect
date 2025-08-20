@@ -3030,6 +3030,109 @@ if ($shift_details && $shift_details['end_time']) {
             // You can implement a modal or redirect to a detailed view page
         }
     </script>
+
+    <style>
+        /* Password Change Modal visual styles (scoped here for this page) */
+        .work-report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .work-report-modal.active { display: flex; }
+
+        .work-report-content {
+            background: #ffffff;
+            width: 90%;
+            max-width: 520px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: modalSlideIn 0.25s ease;
+        }
+        .work-report-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .work-report-body { padding: 16px 20px; }
+        .work-report-body .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .work-report-body input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .work-report-body input[type="password"]:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.12);
+        }
+        .work-report-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #666;
+            cursor: pointer;
+        }
+        .close-modal:disabled { opacity: 0.6; cursor: not-allowed; }
+        .cancel-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .cancel-btn:hover { background: #eee; }
+        .cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .submit-btn {
+            background: #4a6cf7;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .submit-btn:hover { background: #3a5cdc; }
+        .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+        #passwordChangeError {
+            background: #fdecea;
+            border: 1px solid #f5c2c7;
+            color: #b02a37;
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body data-user-role="<?php echo htmlspecialchars($_SESSION['user_role'] ?? 'default'); ?>" data-user-id="<?php echo htmlspecialchars($_SESSION['user_id'] ?? ''); ?>">
     <!-- Include Update Modal -->
@@ -6256,6 +6359,130 @@ if ($shift_details && $shift_details['end_time']) {
         }, 500);
     });
     </script>
-   
+
+    <!-- Change Password Modal -->
+    <div class="work-report-modal" id="passwordChangeModal" style="display: none;">
+        <div class="work-report-content">
+            <div class="work-report-header">
+                <h3>Change Password</h3>
+                <button class="close-modal" id="closePasswordModal" disabled title="You must update your password to continue.">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="work-report-body">
+                <div id="passwordChangeError" style="display:none;color:#c0392b;margin-bottom:10px;font-size:14px;"></div>
+                <div class="form-group">
+                    <label for="recentPassword">Recent Password</label>
+                    <input type="password" id="recentPassword" placeholder="Enter your recent password">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter your new password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Re-enter your new password">
+                </div>
+            </div>
+            <div class="work-report-footer">
+                <button class="cancel-btn" id="cancelPasswordChange" disabled title="You must update your password to continue.">Cancel</button>
+                <button class="submit-btn" id="submitPasswordChange">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordModal = document.getElementById('passwordChangeModal');
+        const closeBtn = document.getElementById('closePasswordModal');
+        const cancelBtn = document.getElementById('cancelPasswordChange');
+        const submitBtn = document.getElementById('submitPasswordChange');
+        const errorBox = document.getElementById('passwordChangeError');
+        const recentInput = document.getElementById('recentPassword');
+        const newInput = document.getElementById('newPassword');
+        const confirmInput = document.getElementById('confirmPassword');
+
+        function showModal() {
+            passwordModal.style.display = 'flex';
+            setTimeout(function() { passwordModal.classList.add('active'); }, 10);
+        }
+
+        function blockClosing() {
+            if (closeBtn) closeBtn.disabled = true;
+            if (cancelBtn) cancelBtn.disabled = true;
+        }
+
+        function allowClosing() {
+            if (closeBtn) closeBtn.disabled = false;
+            if (cancelBtn) cancelBtn.disabled = false;
+        }
+
+        function setError(msg) {
+            if (!errorBox) return;
+            errorBox.textContent = msg || '';
+            errorBox.style.display = msg ? 'block' : 'none';
+        }
+
+        // Always block closing until success
+        blockClosing();
+
+        // Check if password change is required
+        fetch('password_change_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'check_password_change' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.success && data.password_change_required) {
+                showModal();
+            }
+        })
+        .catch(() => { /* silent */ });
+
+        // Handle submit
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function() {
+                setError('');
+                const recent = recentInput.value.trim();
+                const next = newInput.value.trim();
+                const confirm = confirmInput.value.trim();
+                if (!recent || !next || !confirm) {
+                    setError('Please fill all fields.');
+                    return;
+                }
+                if (next !== confirm) {
+                    setError('New password and confirm password do not match.');
+                    return;
+                }
+
+                const body = new URLSearchParams({
+                    action: 'update_password',
+                    current_password: recent,
+                    new_password: next
+                });
+                submitBtn.disabled = true;
+                fetch('password_change_handler.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.success) {
+                        allowClosing();
+                        passwordModal.classList.remove('active');
+                        passwordModal.style.display = 'none';
+                    } else {
+                        setError((data && data.message) ? data.message : 'Failed to update password.');
+                    }
+                })
+                .catch(() => setError('Network error. Please try again.'))
+                .finally(() => { submitBtn.disabled = false; });
+            });
+        }
+    });
+    </script>
+
 </body>
 </html>

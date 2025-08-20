@@ -3723,5 +3723,6 @@ if (isset($_SESSION['user_id'])) {
         }
     });
     </script>
+    <?php include 'include_password_change.php'; ?>
 </body>
 </html> 

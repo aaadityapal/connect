@@ -2542,6 +2542,9 @@ function updateWorkReportWordCount(textarea, displayElement) {
         window.travelExpenseEndpoint = 'save_travel_expenses.php';
     </script>
     <script src="js/supervisor/new-travel-expense-modal.js"></script>
+    
+    <!-- Include manager password update modal with unique name -->
+    <?php include_once('include_manager_pwd_update.php'); ?>
     <script>
         // Variables to track punch status
         let isPunchedIn = false;

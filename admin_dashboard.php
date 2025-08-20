@@ -7034,6 +7034,9 @@ document.addEventListener('DOMContentLoaded', loadAnnouncements);
 
         </script>
     </div>
+    
+    <!-- Include mandatory password change modal -->
+    <?php include 'include_password_change.php'; ?>
 </body>
 </html>
     

@@ -36,6 +36,7 @@ try {
             distance,
             amount,
             status,
+            payment_status,
             notes,
             bill_file_path,
             meter_start_photo_path as meter_start_photo,

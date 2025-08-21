@@ -38,6 +38,8 @@ try {
             description VARCHAR(255) NOT NULL,
             amount DECIMAL(10,2) NOT NULL,
             status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            payment_status VARCHAR(50) DEFAULT 'Pending',
+            notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -102,6 +104,7 @@ function saveExpenses($pdo, $user_id, $expenses) {
                         description = :description,
                         amount = :amount,
                         status = :status,
+                        payment_status = :payment_status,
                         notes = :notes,
                         updated_at = NOW()
                     WHERE id = :id AND user_id = :user_id
@@ -113,6 +116,7 @@ function saveExpenses($pdo, $user_id, $expenses) {
                     ':description' => $expense['description'],
                     ':amount' => $expense['amount'],
                     ':status' => $expense['status'] ?? 'pending',
+                    ':payment_status' => $expense['payment_status'] ?? 'Pending',
                     ':notes' => $expense['notes'] ?? '',
                     ':id' => $expense['id'],
                     ':user_id' => $user_id
@@ -127,6 +131,7 @@ function saveExpenses($pdo, $user_id, $expenses) {
                         description,
                         amount,
                         status,
+                        payment_status,
                         notes,
                         created_at,
                         updated_at
@@ -137,6 +142,7 @@ function saveExpenses($pdo, $user_id, $expenses) {
                         :description,
                         :amount,
                         :status,
+                        :payment_status,
                         :notes,
                         NOW(),
                         NOW()
@@ -150,6 +156,7 @@ function saveExpenses($pdo, $user_id, $expenses) {
                     ':description' => $expense['description'],
                     ':amount' => $expense['amount'],
                     ':status' => $expense['status'] ?? 'pending',
+                    ':payment_status' => $expense['payment_status'] ?? 'Pending',
                     ':notes' => $expense['notes'] ?? ''
                 ]);
             }
@@ -785,6 +792,10 @@ $expenses = getExpenses($pdo, $user_id);
             border-left-color: #27ae60;
         }
         
+        .summary-card.paid {
+            border-left-color: #8e44ad;
+        }
+        
         .summary-card.pending {
             border-left-color: #f39c12;
         }
@@ -817,6 +828,11 @@ $expenses = getExpenses($pdo, $user_id);
         .summary-card.approved .card-icon {
             background-color: rgba(39, 174, 96, 0.1);
             color: #27ae60;
+        }
+        
+        .summary-card.paid .card-icon {
+            background-color: rgba(142, 68, 173, 0.1);
+            color: #8e44ad;
         }
         
         .summary-card.pending .card-icon {
@@ -1051,6 +1067,16 @@ $expenses = getExpenses($pdo, $user_id);
             background-color: #e74c3c;
         }
         
+        .expense-table-section .badge-purple {
+            background-color: #8e44ad;
+            color: #fff;
+        }
+        
+        .expense-table-section .badge-secondary {
+            background-color: #7f8c8d;
+            color: #fff;
+        }
+        
         .expense-table-section .btn-group .btn {
             margin-right: 5px;
             border-radius: 4px;
@@ -1113,6 +1139,16 @@ $expenses = getExpenses($pdo, $user_id);
                                 <h3>Approved Amount</h3>
                                 <p class="card-value" id="summary-approved-amount">₹0.00</p>
                                 <p class="card-label">Reimbursed</p>
+                            </div>
+                        </div>
+                        <div class="summary-card paid">
+                            <div class="card-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="card-content">
+                                <h3>Paid Amount</h3>
+                                <p class="card-value" id="summary-paid-amount">₹0.00</p>
+                                <p class="card-label">Disbursed</p>
                             </div>
                         </div>
                         <div class="summary-card pending">
@@ -1552,7 +1588,9 @@ $expenses = getExpenses($pdo, $user_id);
             }
             
             // Event listeners
-            addExpenseBtn.addEventListener('click', addExpense);
+            if (addExpenseBtn) {
+                addExpenseBtn.addEventListener('click', addExpense);
+            }
             
             // Filter elements
             const filterStatus = document.getElementById('filter-status');
@@ -1644,6 +1682,7 @@ $expenses = getExpenses($pdo, $user_id);
             const totalExpensesElement = $('#summary-total-expenses');
             const totalAmountElement = $('#summary-total-amount');
             const approvedAmountElement = $('#summary-approved-amount');
+            const paidAmountElement = $('#summary-paid-amount');
             const pendingAmountElement = $('#summary-pending-amount');
             const rejectedAmountElement = $('#summary-rejected-amount');
             
@@ -1651,6 +1690,7 @@ $expenses = getExpenses($pdo, $user_id);
             let totalExpenses = 0;
             let totalAmount = 0;
             let approvedAmount = 0;
+            let paidAmount = 0;
             let pendingAmount = 0;
             let rejectedAmount = 0;
             
@@ -1674,6 +1714,11 @@ $expenses = getExpenses($pdo, $user_id);
                             pendingAmount += amount;
                             break;
                     }
+                    
+                    // Check if expense is marked as paid
+                    if (expense.payment_status === 'Paid') {
+                        paidAmount += amount;
+                    }
                 });
             }
             
@@ -1691,6 +1736,7 @@ $expenses = getExpenses($pdo, $user_id);
             if (totalExpensesElement) totalExpensesElement.text(totalExpenses);
             if (totalAmountElement) totalAmountElement.text(formatCurrency(totalAmount));
             if (approvedAmountElement) approvedAmountElement.text(formatCurrency(approvedAmount));
+            if (paidAmountElement) paidAmountElement.text(formatCurrency(paidAmount));
             if (pendingAmountElement) pendingAmountElement.text(formatCurrency(pendingAmount));
             if (rejectedAmountElement) rejectedAmountElement.text(formatCurrency(rejectedAmount));
         }
@@ -1727,6 +1773,16 @@ $expenses = getExpenses($pdo, $user_id);
                         break;
                 }
                 
+                // Create payment status badge if approved
+                let paymentBadge = '';
+                if (expense.status === 'approved') {
+                    if (expense.payment_status === 'Paid') {
+                        paymentBadge = '<span class="badge badge-purple ml-1"><i class="fas fa-money-bill-wave mr-1"></i>Paid</span>';
+                    } else {
+                        paymentBadge = '<span class="badge badge-secondary ml-1"><i class="fas fa-hourglass-half mr-1"></i>Pending</span>';
+                    }
+                }
+                
                 // Create action buttons
                 const viewButton = `<button class="btn btn-sm btn-info view-expense" data-id="${expense.id}" title="View Details"><i class="fas fa-eye"></i></button>`;
                 const deleteButton = `<button class="btn btn-sm btn-danger delete-expense" data-id="${expense.id}" title="Delete"><i class="fas fa-trash"></i></button>`;
@@ -1742,7 +1798,7 @@ $expenses = getExpenses($pdo, $user_id);
                         <td>${expense.mode_of_transport}</td>
                         <td>${expense.distance} km</td>
                         <td>₹${parseFloat(expense.amount).toFixed(2)}</td>
-                        <td>${statusBadge}</td>
+                        <td>${statusBadge} ${paymentBadge}</td>
                         <td>
                             <div class="btn-group">
                                 ${viewButton}
@@ -2134,6 +2190,16 @@ $expenses = getExpenses($pdo, $user_id);
                         break;
                 }
                 
+                // Create payment status badge if approved
+                let paymentBadge = '';
+                if (expense.status === 'approved') {
+                    if (expense.payment_status === 'Paid') {
+                        paymentBadge = '<span class="badge badge-purple px-3 py-2 ml-2"><i class="fas fa-money-bill-wave mr-1"></i>Paid</span>';
+                    } else {
+                        paymentBadge = '<span class="badge badge-secondary px-3 py-2 ml-2"><i class="fas fa-hourglass-half mr-1"></i>Pending</span>';
+                    }
+                }
+                
                 // Create bill attachment section
                 let billSection = '';
                 if (expense.bill_file_path) {
@@ -2391,6 +2457,7 @@ $expenses = getExpenses($pdo, $user_id);
                                                     <h6 class="mb-3 text-center">Overall Status</h6>
                                                     <div class="text-center mb-3">
                                                         ${statusBadge}
+                                                        ${paymentBadge}
                                                     </div>
                                                     
                                                     <!-- Approval Status Breakdown -->
@@ -2642,6 +2709,16 @@ $expenses = getExpenses($pdo, $user_id);
         #expenseDetailsModal .badge {
             font-size: 0.9rem;
             padding: 8px 16px;
+        }
+        
+        #expenseDetailsModal .badge-purple {
+            background-color: #8e44ad;
+            color: #fff;
+        }
+        
+        #expenseDetailsModal .badge-secondary {
+            background-color: #7f8c8d;
+            color: #fff;
         }
         
         #expenseDetailsModal .bill-attachment-section h6,

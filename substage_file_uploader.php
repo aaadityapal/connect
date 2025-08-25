@@ -129,7 +129,7 @@ try {
 
     // Get file information
     $fileType = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'dwg', 'dxf'];
+    $allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'dwg', 'dxf'];
     
     logDebug("File type: $fileType");
     

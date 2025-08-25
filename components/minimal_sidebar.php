@@ -201,8 +201,8 @@
                     <span class="msb-label">Work Sheet & Attendance</span>
                 </a>
                 <a class="msb-item" href="performance.php" <?php echo $__currentPage==='performance.php' ? 'aria-current="page"' : '';?>>
-                    <span class="msb-icon msb-pink">📊</span>
-                    <span class="msb-label">Performance</span>
+                    <span class="msb-icon msb-pink">📈</span>
+                    <span class="msb-label">Performance Analytics</span>
                 </a>
 
                 <div class="msb-section">System</div>

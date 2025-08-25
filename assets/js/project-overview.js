@@ -321,32 +321,97 @@ class ProjectOverview {
             if (isToday) {
                 // Count overdue projects, stages and substages
                 let overdueCount = 0;
+                const countedProjects = new Set();
+                const countedStages = new Set();
+                
+                const currentUserId = typeof USER_ID !== 'undefined' ? USER_ID : null;
                 
                 this.userProjects.forEach(project => {
-                    // Check overdue projects
-                    const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
-                    if (projectEndDate && projectEndDate < today && 
-                        (project.status === 'pending' || project.status === 'not_started' || project.status === 'in_progress')) {
-                        overdueCount++;
+                    let projectCounted = false;
+                    
+                    // Check if project is assigned to current user
+                    const projectAssignedTo = project.assigned_to || '';
+                    let isProjectAssignedToUser = false;
+                    
+                    if (currentUserId) {
+                        if (typeof projectAssignedTo === 'string' && projectAssignedTo.includes(',')) {
+                            isProjectAssignedToUser = projectAssignedTo.split(',').some(id => 
+                                id.toString().trim() === currentUserId.toString());
+                        } else {
+                            isProjectAssignedToUser = projectAssignedTo.toString() === currentUserId.toString();
+                        }
                     }
                     
-                    // Check overdue stages
-                    project.stages?.forEach(stage => {
-                        const stageEndDate = stage.end_date ? stage.end_date.split(' ')[0] : null;
-                        if (stageEndDate && stageEndDate < today && 
-                            (stage.status === 'pending' || stage.status === 'not_started' || stage.status === 'in_progress')) {
-                            overdueCount++;
-                        }
-                        
-                        // Check overdue substages
-                        stage.substages?.forEach(substage => {
-                            const substageEndDate = substage.end_date ? new Date(substage.end_date.split(' ')[0]) : null;
-                            if (substageEndDate && substageEndDate < today && 
-                                (substage.status === 'pending' || substage.status === 'not_started' || substage.status === 'in_progress')) {
-                                overdueCount++;
+                    // First check if project has stages with substages
+                    if (project.stages && project.stages.length > 0) {
+                        project.stages.forEach(stage => {
+                            let stageCounted = false;
+                            
+                            // Check if stage is assigned to current user
+                            const stageAssignedTo = stage.assigned_to || '';
+                            let isStageAssignedToUser = false;
+                            
+                            if (currentUserId) {
+                                if (typeof stageAssignedTo === 'string' && stageAssignedTo.includes(',')) {
+                                    isStageAssignedToUser = stageAssignedTo.split(',').some(id => 
+                                        id.toString().trim() === currentUserId.toString());
+                                } else {
+                                    isStageAssignedToUser = stageAssignedTo.toString() === currentUserId.toString();
+                                }
+                            }
+                            
+                            // First check if stage has substages
+                            if (stage.substages && stage.substages.length > 0) {
+                                stage.substages.forEach(substage => {
+                                    // Check if substage is assigned to current user
+                                    const substageAssignedTo = substage.assigned_to || '';
+                                    let isSubstageAssignedToUser = false;
+                                    
+                                    if (currentUserId) {
+                                        if (typeof substageAssignedTo === 'string' && substageAssignedTo.includes(',')) {
+                                            isSubstageAssignedToUser = substageAssignedTo.split(',').some(id => 
+                                                id.toString().trim() === currentUserId.toString());
+                                        } else {
+                                            isSubstageAssignedToUser = substageAssignedTo.toString() === currentUserId.toString();
+                                        }
+                                    }
+                                    
+                                    // Only count if assigned to user, not completed, not cancelled, etc.
+                                    if (isSubstageAssignedToUser && substage.status !== 'completed' && substage.status !== 'cancelled' && 
+                                        substage.status !== 'deleted') {
+                                        const substageEndDate = substage.end_date ? new Date(substage.end_date.split(' ')[0]) : null;
+                                        if (substageEndDate && substageEndDate < today) {
+                                            // Count the substage
+                                            overdueCount++;
+                                            stageCounted = true;
+                                            projectCounted = true;
+                                        }
+                                    }
+                                });
+                            } 
+                            
+                            // If stage has no substages or no overdue substages, check if stage itself is overdue
+                            if (!stageCounted && isStageAssignedToUser && stage.status !== 'completed' && stage.status !== 'cancelled' && 
+                                stage.status !== 'deleted') {
+                                const stageEndDate = stage.end_date ? new Date(stage.end_date.split(' ')[0]) : null;
+                                if (stageEndDate && stageEndDate < today) {
+                                    // Count the stage
+                                    overdueCount++;
+                                    projectCounted = true;
+                                }
                             }
                         });
-                    });
+                    }
+                    
+                    // If project has no stages/substages or none are overdue, check if project itself is overdue
+                    if (!projectCounted && isProjectAssignedToUser && project.status !== 'completed' && project.status !== 'cancelled' && 
+                        project.status !== 'deleted') {
+                        const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
+                        if (projectEndDate && projectEndDate < today) {
+                            // Count the project
+                            overdueCount++;
+                        }
+                    }
                 });
                 
                 if (overdueCount > 0) {
@@ -485,6 +550,11 @@ class ProjectOverview {
         
         // Count projects
         this.userProjects.forEach(project => {
+            // Skip completed/cancelled/deleted projects
+            if (project.status === 'completed' || project.status === 'cancelled' || project.status === 'deleted') {
+                return;
+            }
+            
             const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
             const projectDueDate = projectEndDate ? new Date(projectEndDate) : null;
             const isPastDue = projectDueDate && projectDueDate < today;
@@ -502,6 +572,11 @@ class ProjectOverview {
             
             // Count stages - only if assigned to the current user (regardless of project assignment)
             project.stages?.forEach(stage => {
+                // Skip completed/cancelled/deleted stages
+                if (stage.status === 'completed' || stage.status === 'cancelled' || stage.status === 'deleted') {
+                    return;
+                }
+                
                 // Check if this stage is assigned to the current user - handle both string and number comparisons
                 const stageAssignedTo = stage.assigned_to || '';
                 let isStageAssignedToUser = false;
@@ -554,6 +629,11 @@ class ProjectOverview {
             // Count substages - only if assigned to the current user (regardless of project or stage assignment)
             project.stages?.forEach(stage => {
                 stage.substages?.forEach(substage => {
+                    // Skip completed/cancelled/deleted substages
+                    if (substage.status === 'completed' || substage.status === 'cancelled' || substage.status === 'deleted') {
+                        return;
+                    }
+                    
                     // Check if this substage is assigned to the current user - handle both string and number comparisons
                     const substageAssignedTo = substage.assigned_to || '';
                     let isSubstageAssignedToUser = false;
@@ -636,6 +716,11 @@ class ProjectOverview {
         
         // Check projects
         const hasProjectsDue = this.userProjects.some(project => {
+            // Only consider non-completed projects
+            if (project.status === 'completed' || project.status === 'cancelled' || project.status === 'deleted') {
+                return false;
+            }
+            
             const projectEndDate = project.end_date ? project.end_date.split(' ')[0] : null;
             const projectDueDate = projectEndDate ? new Date(projectEndDate) : null;
             const isPastDue = projectDueDate && projectDueDate < today;
@@ -649,6 +734,11 @@ class ProjectOverview {
         // Check stages - only assigned to current user (regardless of project assignment)
         const hasStagesDue = this.userProjects.some(project => {
             return project.stages?.some(stage => {
+                // Only consider non-completed stages
+                if (stage.status === 'completed' || stage.status === 'cancelled' || stage.status === 'deleted') {
+                    return false;
+                }
+                
                 // Check if stage is assigned to current user - handle both string and number comparisons
                 const stageAssignedTo = stage.assigned_to || '';
                 let isStageAssignedToUser = false;
@@ -699,6 +789,11 @@ class ProjectOverview {
         const hasSubstagesDue = this.userProjects.some(project => {
             return project.stages?.some(stage => {
                 return stage.substages?.some(substage => {
+                    // Only consider non-completed substages
+                    if (substage.status === 'completed' || substage.status === 'cancelled' || substage.status === 'deleted') {
+                        return false;
+                    }
+                    
                     // Check if substage is assigned to current user - handle both string and number comparisons
                     const substageAssignedTo = substage.assigned_to || '';
                     let isSubstageAssignedToUser = false;
@@ -1264,7 +1359,34 @@ class ProjectOverview {
                     const statusDeleted = p && (p.status === 'deleted' || p.status === 'inactive');
                     // Treat null/undefined/empty/zero-date as not deleted
                     const isSoftDeleted = !!deletedAt && deletedAt !== '0000-00-00 00:00:00';
-                    return !isSoftDeleted && !projectDeletedFlag && !statusDeleted;
+                    
+                    // Filter out deleted projects
+                    if (isSoftDeleted || projectDeletedFlag || statusDeleted) {
+                        return false;
+                    }
+                    
+                    // Filter stages - remove deleted stages
+                    if (p.stages && Array.isArray(p.stages)) {
+                        p.stages = p.stages.filter(stage => {
+                            const stageDeletedAt = stage && stage.deleted_at;
+                            const isStageSoftDeleted = !!stageDeletedAt && stageDeletedAt !== '0000-00-00 00:00:00';
+                            const stageDeletedFlag = stage && (stage.is_deleted === true || stage.status === 'deleted');
+                            
+                            // Filter substages - remove deleted substages
+                            if (stage.substages && Array.isArray(stage.substages)) {
+                                stage.substages = stage.substages.filter(substage => {
+                                    const substageDeletedAt = substage && substage.deleted_at;
+                                    const isSubstageSoftDeleted = !!substageDeletedAt && substageDeletedAt !== '0000-00-00 00:00:00';
+                                    const substageDeletedFlag = substage && (substage.is_deleted === true || substage.status === 'deleted');
+                                    return !isSubstageSoftDeleted && !substageDeletedFlag;
+                                });
+                            }
+                            
+                            return !isStageSoftDeleted && !stageDeletedFlag;
+                        });
+                    }
+                    
+                    return true;
                 });
                 
                 

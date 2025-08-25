@@ -31,15 +31,17 @@ if (!$user_id) {
 
 try {
     // Get all projects that are either assigned to this user OR have stages/substages assigned to this user
+    // Exclude deleted projects, stages, and substages
     $projects_query = "
         SELECT DISTINCT p.* 
         FROM projects p
-        LEFT JOIN project_stages ps ON p.id = ps.project_id
-        LEFT JOIN project_substages ss ON ps.id = ss.stage_id
+        LEFT JOIN project_stages ps ON p.id = ps.project_id AND ps.deleted_at IS NULL
+        LEFT JOIN project_substages ss ON ps.id = ss.stage_id AND ss.deleted_at IS NULL
         WHERE 
-            (p.assigned_to LIKE ? OR p.assigned_to LIKE ? OR p.assigned_to LIKE ?) OR
+            p.deleted_at IS NULL AND
+            ((p.assigned_to LIKE ? OR p.assigned_to LIKE ? OR p.assigned_to LIKE ?) OR
             (ps.assigned_to LIKE ? OR ps.assigned_to LIKE ? OR ps.assigned_to LIKE ?) OR
-            (ss.assigned_to LIKE ? OR ss.assigned_to LIKE ? OR ss.assigned_to LIKE ?)
+            (ss.assigned_to LIKE ? OR ss.assigned_to LIKE ? OR ss.assigned_to LIKE ?))
         ORDER BY p.end_date ASC";
 
     // Prepare parameters for LIKE queries
@@ -63,8 +65,8 @@ try {
     
     // Loop through each project and get its stages and substages
     while ($project = $projects_result->fetch_assoc()) {
-        // Get stages for this project
-        $stages_query = "SELECT * FROM project_stages WHERE project_id = ? ORDER BY stage_number ASC";
+        // Get stages for this project (excluding deleted stages)
+        $stages_query = "SELECT * FROM project_stages WHERE project_id = ? AND deleted_at IS NULL ORDER BY stage_number ASC";
         $stages_stmt = $conn->prepare($stages_query);
         $stages_stmt->bind_param("i", $project['id']);
         $stages_stmt->execute();
@@ -72,8 +74,8 @@ try {
         
         $stages = [];
         while ($stage = $stages_result->fetch_assoc()) {
-            // Get substages for this stage
-            $substages_query = "SELECT * FROM project_substages WHERE stage_id = ? ORDER BY substage_number ASC";
+            // Get substages for this stage (excluding deleted substages)
+            $substages_query = "SELECT * FROM project_substages WHERE stage_id = ? AND deleted_at IS NULL ORDER BY substage_number ASC";
             $substages_stmt = $conn->prepare($substages_query);
             $substages_stmt->bind_param("i", $stage['id']);
             $substages_stmt->execute();

@@ -3,8 +3,8 @@ session_start();
 include 'config.php';
 
 try {
-    // Query to get total number of users
-    $query = "SELECT COUNT(*) as total_users FROM users";
+    // Query to get total number of active users
+    $query = "SELECT COUNT(*) as total_users FROM users WHERE status = 'active'";
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);

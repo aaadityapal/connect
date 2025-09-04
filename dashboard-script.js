@@ -1098,6 +1098,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update Short Leaves
             if (shortLeaveData.success) {
                 document.getElementById('short-leave-count').textContent = shortLeaveData.count;
+                // Update total employees display if available
+                if (shortLeaveData.total_users) {
+                    document.getElementById('short-leave-total').textContent = `/ ${shortLeaveData.total_users} Total Employees`;
+                }
                 updateShortLeavesTooltip(shortLeaveData.leaves);
             }
 

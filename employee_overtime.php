@@ -117,7 +117,7 @@ $recent_query = "SELECT a.*,
                 AND a.punch_out IS NOT NULL
                 AND TIME_TO_SEC(TIMEDIFF(a.punch_out, ?)) >= 5400
                 ORDER BY a.date DESC
-                LIMIT 10";
+                LIMIT 31";
 
 $stmt_recent = $conn->prepare($recent_query);
 $stmt_recent->bind_param("ssiiss", $shift_end_time, $shift_end_time, $user_id, $filter_month, $filter_year, $shift_end_time);
@@ -1307,6 +1307,12 @@ function getOvertimeReport($conn, $attendance_id) {
                                     $shift_end_time = date('h:i A', strtotime($row['shift_end_time'] ?? $shift_end_time));
                                     $punch_out_time = date('h:i A', strtotime($row['punch_out']));
                                     
+                                    // Check if overtime is more than 15 days old
+                                    $overtime_date = new DateTime($row['date']);
+                                    $current_date = new DateTime();
+                                    $days_difference = $current_date->diff($overtime_date)->days;
+                                    $is_too_old = $days_difference > 15;
+                                    
                                     // Store full report and create truncated version
                                     $full_work_report = $row['work_report'];
                                     $work_report = htmlspecialchars(substr($row['work_report'], 0, 30)) . (strlen($row['work_report']) > 30 ? '...' : '');
@@ -1339,11 +1345,29 @@ function getOvertimeReport($conn, $attendance_id) {
                                         // Silent catch - table may not exist yet
                                     }
                                     
-                                    // Set send button class and icon based on whether it has been sent
-                                    $send_btn_class = $notification_check ? "send-btn sent" : "send-btn";
-                                    $send_icon = $notification_check ? "fa-check" : "fa-paper-plane";
-                                    $send_title = $notification_check ? "Already Sent" : "Send Report";
-                                    $onclick = $notification_check ? "" : "onclick=\"openSendModal('" . $row['id'] . "', '" . $date . "', '" . $hours . "')\"";
+                                    // Set send button class and behavior based on conditions
+                                    if ($notification_check) {
+                                        // Already sent - show normal sent button regardless of age
+                                        $send_btn_class = "send-btn sent";
+                                        $send_icon = "fa-check";
+                                        $send_title = "Already Sent";
+                                        $onclick = "";
+                                        $btn_style = "";
+                                    } else if ($is_too_old) {
+                                        // Not sent and too old - show restriction
+                                        $send_btn_class = "send-btn";
+                                        $send_icon = "fa-ban";
+                                        $send_title = "Too old to send (>15 days)";
+                                        $onclick = "onclick=\"alert('Cannot send overtime report. This overtime is more than 15 days old. Please contact your manager for assistance.')\"";
+                                        $btn_style = "background-color: #ffebee; color: #c62828; cursor: not-allowed;";
+                                    } else {
+                                        // Not sent and within time limit - allow sending
+                                        $send_btn_class = "send-btn";
+                                        $send_icon = "fa-paper-plane";
+                                        $send_title = "Send Report";
+                                        $onclick = "onclick=\"openSendModal('" . $row['id'] . "', '" . $date . "', '" . $hours . "')\"";
+                                        $btn_style = "";
+                                    }
                                     
                                     echo "
                                     <tr style=\"border-bottom: 1px solid #eee;\">
@@ -1358,7 +1382,7 @@ function getOvertimeReport($conn, $attendance_id) {
                                             <button class=\"action-btn view-btn\" style=\"width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;\" title=\"View Details\" onclick=\"openViewModal('" . $row['id'] . "', '" . $date . "', '" . $hours . "', '" . $shift_end_time . "', '" . $punch_out_time . "', '" . addslashes($full_work_report) . "', '" . $status_display . "')\">
                                                 <i class=\"fas fa-eye\"></i>
                                             </button>
-                                            <button class=\"action-btn $send_btn_class\" style=\"width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center;\" title=\"$send_title\" $onclick>
+                                            <button class=\"action-btn $send_btn_class\" style=\"width: 36px; height: 36px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; $btn_style\" title=\"$send_title\" $onclick>
                                                 <i class=\"fas $send_icon\"></i>
                                             </button>
                                         </td>
@@ -1403,6 +1427,18 @@ function getOvertimeReport($conn, $attendance_id) {
         
         // Send overtime report modal functionality
         function openSendModal(overtimeId, date, hours) {
+            // Check if overtime date is more than 15 days old (only for unsent overtime)
+            const overtimeDate = new Date(date);
+            const currentDate = new Date();
+            const daysDifference = Math.floor((currentDate - overtimeDate) / (1000 * 60 * 60 * 24));
+            
+            // Only restrict if overtime is more than 15 days old AND not already sent
+            // (This function is only called for unsent overtime, so we just check the date)
+            if (daysDifference > 15) {
+                alert('Cannot send overtime report. This overtime is more than 15 days old. Please contact your manager for assistance.');
+                return;
+            }
+            
             document.getElementById('sendOvertimeId').value = overtimeId;
             document.getElementById('sendOvertimeDate').textContent = date;
             document.getElementById('sendOvertimeHours').textContent = hours;

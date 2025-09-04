@@ -74,7 +74,7 @@ if ($shiftsResult && mysqli_num_rows($shiftsResult) > 0) {
     }
 }
 
-// Fetch attendance data with overtime for all users
+// Fetch attendance data with overtime for all users (including rejected)
 // We'll calculate the actual overtime based on shift end time later
 $attendanceQuery = "SELECT a.*, 
                    u.username, u.profile_picture, u.department, u.role,
@@ -88,9 +88,9 @@ $attendanceQuery = "SELECT a.*,
                    LEFT JOIN users manager ON a.overtime_approved_by = manager.id
                    LEFT JOIN overtime_notifications otn ON a.id = otn.overtime_id
                    WHERE a.punch_out IS NOT NULL
-                   AND (a.overtime_status IS NULL OR a.overtime_status != 'rejected')
                    GROUP BY a.id
                    ORDER BY a.date DESC";
+
 $attendanceResult = mysqli_query($conn, $attendanceQuery);
 $attendanceData = [];
 
@@ -1940,6 +1940,15 @@ mysqli_close($conn);
                                 <p>Approved Overtime</p>
                         </div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-icon rejected">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>0</h3>
+                                <p>Rejected Overtime</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2713,9 +2722,12 @@ mysqli_close($conn);
                 
                 // Apply filters
                 const filteredData = currentData.filter(item => {
-                    // Ensure minimum overtime requirement (1.5 hours)
+                    // For rejected overtime, always include regardless of hours (for audit trail)
+                    // For other statuses, ensure minimum overtime requirement (1.5 hours)
                     const overtimeHours = parseFloat(item.rawHours) || 0;
-                    if (overtimeHours < 1.5) {
+                    const isRejected = item.status && item.status.toLowerCase() === 'rejected';
+                    
+                    if (!isRejected && overtimeHours < 1.5) {
                         return false;
                     }
                     
@@ -2784,10 +2796,10 @@ mysqli_close($conn);
                     // Show no data message
                     tableBody.innerHTML = `
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 20px;">
+                            <td colspan="11" style="text-align: center; padding: 20px;">
                                 <div style="font-size: 16px; color: #777;">
                                     <i class="fas fa-info-circle" style="margin-right: 10px;"></i>
-                                    No qualifying overtime data found (minimum 1.5 hours required).
+                                    No overtime data found matching the selected filters.
                                 </div>
                             </td>
                         </tr>
@@ -2899,6 +2911,14 @@ mysqli_close($conn);
                                             </button>
                                         `;
                                     } 
+                                    // Show reject button for approved overtime to allow reversal of accidental approvals
+                                    else if (statusText === 'Approved' && !isViewingSiteData) {
+                                        return `
+                                            <button class="btn-icon reject" title="Reject (Reverse Approval)" onclick="openRejectModal(${item.id}, '${item.username}', '${item.date}', '${item.hours}')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        `;
+                                    }
                                     // Show locked button with tooltip for "pending" status when viewing studio data
                                     else if (statusText === 'Pending' && !isViewingSiteData) {
                                         return `
@@ -2915,7 +2935,7 @@ mysqli_close($conn);
                                             </button>
                                         `;
                                     }
-                                    // Don't show buttons for other statuses
+                                    // Don't show buttons for other statuses (including rejected)
                                     else {
                                         return '';
                                     }
@@ -2977,13 +2997,14 @@ mysqli_close($conn);
             function updateStats(data) {
                 // Get stat elements
                 const statElements = document.querySelectorAll('.stat-info h3');
-                if (!statElements || statElements.length < 3) return;
+                if (!statElements || statElements.length < 4) return;
                 
                 if (!data || data.length === 0) {
                     // Reset stats to zero
                     statElements[0].textContent = '0';
                     statElements[1].textContent = '0';
                     statElements[2].textContent = '0';
+                    statElements[3].textContent = '0';
                     return;
                 }
                 
@@ -3023,6 +3044,7 @@ mysqli_close($conn);
                 statElements[0].textContent = totalHours.toFixed(1);
                 statElements[1].textContent = pendingCount;
                 statElements[2].textContent = approvedCount;
+                statElements[3].textContent = rejectedCount;
             }
             
             // Expose these functions to the global scope for action buttons
@@ -3060,6 +3082,26 @@ mysqli_close($conn);
                 
                 // Store the row identifier for more precise updates
                 document.getElementById('rejectRowId').value = `${userId}_${date}`;
+                
+                // Check if this is a reversal of approved overtime
+                const currentData = getCurrentDataset();
+                const userRecord = currentData.find(record => record.id == userId && record.date === date);
+                const isReversal = userRecord && userRecord.status === 'approved';
+                
+                // Update modal title and labels based on whether this is a reversal
+                const modalHeader = document.querySelector('#rejectModal .modal-header h2');
+                const reasonLabel = document.querySelector('#rejectModal label[for="rejectReason"]');
+                const confirmButton = document.querySelector('#rejectModal .btn-danger');
+                
+                if (isReversal) {
+                    modalHeader.innerHTML = '<i class="fas fa-undo" style="color: #e74c3c;"></i> Reverse Approval';
+                    reasonLabel.textContent = 'Reason for Reversing Approval (required):';
+                    confirmButton.innerHTML = '<i class="fas fa-undo"></i> Reverse';
+                } else {
+                    modalHeader.innerHTML = '<i class="fas fa-times-circle" style="color: #e74c3c;"></i> Reject Overtime';
+                    reasonLabel.textContent = 'Reason for Rejection (required):';
+                    confirmButton.innerHTML = '<i class="fas fa-ban"></i> Reject';
+                }
                 
                 document.getElementById('rejectModal').style.display = 'block';
             };
@@ -3125,7 +3167,12 @@ mysqli_close($conn);
                     return;
                 }
                 
-                console.log(`Rejecting overtime for user ID: ${userId} with reason: ${reason}, row ID: ${rowId}`);
+                // Check if this is a reversal of approved overtime
+                const currentData = getCurrentDataset();
+                const userRecord = currentData.find(record => record.id == userId);
+                const isReversal = userRecord && userRecord.status === 'approved';
+                
+                console.log(`${isReversal ? 'Reversing approval' : 'Rejecting overtime'} for user ID: ${userId} with reason: ${reason}, row ID: ${rowId}`);
                 
                 // Get date and hours from the modal
                 const date = document.getElementById('rejectDate').textContent;
@@ -3135,7 +3182,7 @@ mysqli_close($conn);
                 closeModal('rejectModal');
                 
                 // Show loading message
-                showFilterMessage('Processing rejection...', 'loading');
+                showFilterMessage(isReversal ? 'Reversing approval...' : 'Processing rejection...', 'loading');
                 
                 // Call the update function which will make the AJAX request
                 updateUserStatus(userId, 'rejected', reason, date, hours, rowId);
@@ -3695,15 +3742,30 @@ mysqli_close($conn);
                     console.log('Updating actions cell for status:', newStatus);
                     
                     // Clear all existing buttons first
-                    actionsCell.innerHTML = '';
-                    
-                    // Keep only the view button
-                    const viewButton = document.createElement('button');
-                    viewButton.className = 'btn-icon view';
-                    viewButton.title = 'View Details';
-                    viewButton.innerHTML = '<i class="fas fa-eye"></i>';
-                    viewButton.onclick = function() { viewDetails(userId); };
-                    actionsCell.appendChild(viewButton);
+                    const tableActions = actionsCell.querySelector('.table-actions');
+                    if (tableActions) {
+                        tableActions.innerHTML = '';
+                        
+                        // Add appropriate action buttons based on new status
+                        if (newStatus === 'approved') {
+                            // For approved status, show reject button to allow reversal
+                            const rejectButton = document.createElement('button');
+                            rejectButton.className = 'btn-icon reject';
+                            rejectButton.title = 'Reject (Reverse Approval)';
+                            rejectButton.innerHTML = '<i class="fas fa-times"></i>';
+                            rejectButton.onclick = function() { openRejectModal(userId, '', '', ''); };
+                            tableActions.appendChild(rejectButton);
+                        }
+                        // For rejected or other final statuses, no action buttons needed
+                        
+                        // Always keep the view button
+                        const viewButton = document.createElement('button');
+                        viewButton.className = 'btn-icon view';
+                        viewButton.title = 'View Details';
+                        viewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                        viewButton.onclick = function() { viewDetails(userId); };
+                        tableActions.appendChild(viewButton);
+                    }
                     
                     console.log('Actions cell updated:', actionsCell.innerHTML);
                 }
@@ -3785,15 +3847,30 @@ mysqli_close($conn);
                             console.log('Updating actions cell in fallback for status:', newStatus);
                             
                             // Clear all existing buttons first
-                            actionsCell.innerHTML = '';
-                            
-                            // Keep only the view button
-                            const viewButton = document.createElement('button');
-                            viewButton.className = 'btn-icon view';
-                            viewButton.title = 'View Details';
-                            viewButton.innerHTML = '<i class="fas fa-eye"></i>';
-                            viewButton.onclick = function() { viewDetails(userId); };
-                            actionsCell.appendChild(viewButton);
+                            const tableActions = actionsCell.querySelector('.table-actions');
+                            if (tableActions) {
+                                tableActions.innerHTML = '';
+                                
+                                // Add appropriate action buttons based on new status
+                                if (newStatus === 'approved') {
+                                    // For approved status, show reject button to allow reversal
+                                    const rejectButton = document.createElement('button');
+                                    rejectButton.className = 'btn-icon reject';
+                                    rejectButton.title = 'Reject (Reverse Approval)';
+                                    rejectButton.innerHTML = '<i class="fas fa-times"></i>';
+                                    rejectButton.onclick = function() { openRejectModal(userId, '', '', ''); };
+                                    tableActions.appendChild(rejectButton);
+                                }
+                                // For rejected or other final statuses, no action buttons needed
+                                
+                                // Always keep the view button
+                                const viewButton = document.createElement('button');
+                                viewButton.className = 'btn-icon view';
+                                viewButton.title = 'View Details';
+                                viewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                                viewButton.onclick = function() { viewDetails(userId); };
+                                tableActions.appendChild(viewButton);
+                            }
                             
                             console.log('Actions cell updated in fallback:', actionsCell.innerHTML);
                         }
@@ -3810,15 +3887,20 @@ mysqli_close($conn);
             } else {
                 console.log('Successfully updated UI for specific row');
                 
+                // Get the previous status for stats calculation
+                const currentData = getCurrentDataset();
+                const userRecord = currentData.find(record => record.id == userId);
+                const previousStatus = userRecord ? userRecord.status : null;
+                
                 // Also update stats
-                updateStatsAfterStatusChange(newStatus);
+                updateStatsAfterStatusChange(newStatus, previousStatus);
             }
         }
         
         /**
          * Update the stats display after a status change without full refresh
          */
-        function updateStatsAfterStatusChange(newStatus) {
+        function updateStatsAfterStatusChange(newStatus, previousStatus = null) {
             // Get stat elements
             const statElements = document.querySelectorAll('.stat-info h3');
             if (!statElements || statElements.length < 3) return;
@@ -3830,19 +3912,26 @@ mysqli_close($conn);
             
             // Update counts based on status change
             if (newStatus === 'approved') {
-                // One less pending, one more approved
-                pendingCount = Math.max(0, pendingCount - 1);
-                approvedCount += 1;
+                // One less pending (if coming from submitted/pending), one more approved
+                if (previousStatus !== 'approved') {
+                    pendingCount = Math.max(0, pendingCount - 1);
+                    approvedCount += 1;
+                }
             } else if (newStatus === 'rejected') {
-                // One less pending
-                pendingCount = Math.max(0, pendingCount - 1);
+                if (previousStatus === 'approved') {
+                    // Reversing an approval: one less approved
+                    approvedCount = Math.max(0, approvedCount - 1);
+                } else {
+                    // Normal rejection: one less pending
+                    pendingCount = Math.max(0, pendingCount - 1);
+                }
             }
             
             // Update the stats display
             statElements[1].textContent = pendingCount;
             statElements[2].textContent = approvedCount;
             
-            console.log('Stats updated: Pending =', pendingCount, 'Approved =', approvedCount);
+            console.log('Stats updated: Pending =', pendingCount, 'Approved =', approvedCount, 'Previous status =', previousStatus, 'New status =', newStatus);
         }
         
         /**

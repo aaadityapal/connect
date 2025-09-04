@@ -40,7 +40,7 @@ try {
         'Site Coordinator',
         'Purchase Manager',
         'Sales',
-        'Graphich Designer',
+        'Graphic Designer',
         'Social Media Marketing',
     ];
 

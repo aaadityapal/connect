@@ -28,6 +28,7 @@ try {
         JOIN users u ON lr.user_id = u.id
         JOIN leave_types lt ON lr.leave_type = lt.id
         WHERE lr.status = 'pending'
+        AND u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager', 'Sales')
         ORDER BY lr.created_at DESC
     ");
     $stmt->execute();

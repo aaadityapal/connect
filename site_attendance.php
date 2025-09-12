@@ -132,7 +132,7 @@ try {
         JOIN users u ON a.user_id = u.id
         WHERE $whereClause
         ORDER BY a.date DESC, a.punch_in DESC
-        LIMIT 20
+        LIMIT 40
     ");
     $recordsQuery->execute($params);
     $attendanceData = $recordsQuery->fetchAll();

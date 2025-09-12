@@ -41,7 +41,7 @@ $query = "
         a.work_report
     FROM attendance a
     JOIN users u ON a.user_id = u.id
-    WHERE DATE_FORMAT(a.date, '%Y-%m') = :month
+    WHERE DATE_FORMAT(a.date, '%Y-%m') = :month COLLATE utf8mb4_general_ci
     " . ($user_id !== 'all' ? "AND a.user_id = :user_id" : "") . "
     ORDER BY a.date ASC, u.username ASC
 ";

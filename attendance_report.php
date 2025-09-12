@@ -36,7 +36,7 @@ if ($is_hr) {
         deleted_at IS NULL AND 
         (status = 'active' OR 
          (status = 'inactive' AND 
-          DATE_FORMAT(status_changed_date, '%Y-%m') >= :month))
+          DATE_FORMAT(status_changed_date, '%Y-%m') >= :month COLLATE utf8mb4_general_ci))
         ORDER BY username");
     $stmt->execute(['month' => $month]);
     $users = $stmt->fetchAll();
@@ -47,7 +47,7 @@ $users_query = "SELECT id, username, unique_id FROM users WHERE
     deleted_at IS NULL AND 
     (status = 'active' OR 
      (status = 'inactive' AND 
-      DATE_FORMAT(status_changed_date, '%Y-%m') >= :month))
+      DATE_FORMAT(status_changed_date, '%Y-%m') >= :month COLLATE utf8mb4_general_ci))
     ORDER BY username";
 $users_stmt = $pdo->prepare($users_query);
 $users_stmt->execute(['month' => $month]);
@@ -74,7 +74,7 @@ $query = "
         AND (us.effective_to IS NULL OR a.date <= us.effective_to)
     )
     LEFT JOIN shifts s ON us.shift_id = s.id
-    WHERE DATE_FORMAT(a.date, '%Y-%m') = :month
+    WHERE DATE_FORMAT(a.date, '%Y-%m') = :month COLLATE utf8mb4_general_ci
     " . ($user_id !== 'all' ? "AND a.user_id = :user_id" : "") . "
     ORDER BY a.date DESC, u.username ASC
 ";
@@ -165,7 +165,7 @@ if ($user_id !== 'all') {
         WHERE lr.user_id = :user_id
         AND lt.name = 'Short Leave'
         AND lr.status = 'approved'
-        AND DATE_FORMAT(lr.start_date, '%Y-%m') = :month
+        AND DATE_FORMAT(lr.start_date, '%Y-%m') = :month COLLATE utf8mb4_general_ci
     ";
     
     $leave_stmt = $pdo->prepare($leave_query);
@@ -177,6 +177,7 @@ if ($user_id !== 'all') {
     $short_leaves_used = $leave_result ? $leave_result['leave_count'] : 0;
     $short_leaves_available = max(0, 2 - $short_leaves_used);
 }
+
 
 // Calculate working days (excluding weekends)
 $month_start = date('Y-m-01', strtotime($month));

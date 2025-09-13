@@ -32,31 +32,7 @@
                         <div class="col-md-6">
                             <div class="vendor-form-group">
                                 <label for="vendorPhone" class="vendor-form-label">Phone Number <span class="vendor-required">*</span></label>
-                                <div class="vendor-phone-group">
-                                    <select class="vendor-country-code" id="vendorCountryCode" name="country_code">
-                                        <option value="+91" data-country="IN">🇮🇳 +91</option>
-                                        <option value="+1" data-country="US">🇺🇸 +1</option>
-                                        <option value="+44" data-country="GB">🇬🇧 +44</option>
-                                        <option value="+61" data-country="AU">🇦🇺 +61</option>
-                                        <option value="+86" data-country="CN">🇨🇳 +86</option>
-                                        <option value="+81" data-country="JP">🇯🇵 +81</option>
-                                        <option value="+82" data-country="KR">🇰🇷 +82</option>
-                                        <option value="+65" data-country="SG">🇸🇬 +65</option>
-                                        <option value="+971" data-country="AE">🇦🇪 +971</option>
-                                        <option value="+966" data-country="SA">🇸🇦 +966</option>
-                                        <option value="+49" data-country="DE">🇩🇪 +49</option>
-                                        <option value="+33" data-country="FR">🇫🇷 +33</option>
-                                        <option value="+39" data-country="IT">🇮🇹 +39</option>
-                                        <option value="+34" data-country="ES">🇪🇸 +34</option>
-                                        <option value="+7" data-country="RU">🇷🇺 +7</option>
-                                        <option value="+55" data-country="BR">🇧🇷 +55</option>
-                                        <option value="+52" data-country="MX">🇲🇽 +52</option>
-                                        <option value="+27" data-country="ZA">🇿🇦 +27</option>
-                                        <option value="+20" data-country="EG">🇪🇬 +20</option>
-                                        <option value="+234" data-country="NG">🇳🇬 +234</option>
-                                    </select>
-                                    <input type="tel" class="vendor-form-control vendor-phone-input" id="vendorPhone" name="phone_number" placeholder="Enter phone number" required>
-                                </div>
+                                <input type="tel" class="vendor-form-control" id="vendorPhone" name="phone_number" placeholder="Enter phone number" required>
                             </div>
                         </div>
                         
@@ -314,64 +290,6 @@
 .vendor-required {
     color: #dc3545;
     font-weight: 400;
-}
-
-.vendor-phone-group {
-    display: flex;
-    gap: 0;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    overflow: hidden;
-    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.vendor-phone-group:focus-within {
-    border-color: #a8d5f2;
-    box-shadow: 0 0 0 3px rgba(168, 213, 242, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
-    background: linear-gradient(145deg, #ffffff 0%, #f0f8ff 100%);
-    transform: translateY(-1px);
-}
-
-.vendor-phone-group:hover:not(:focus-within) {
-    border-color: #d6e9f7;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    background: linear-gradient(145deg, #ffffff 0%, #f5f9fc 100%);
-}
-
-.vendor-country-code {
-    padding: 0.75rem 0.75rem;
-    font-size: 0.9rem;
-    border: none;
-    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-    color: #495057;
-    cursor: pointer;
-    min-width: 85px;
-    border-right: 1px solid #dee2e6;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.vendor-country-code:focus {
-    background: linear-gradient(145deg, #e9ecef 0%, #d6e9f7 100%);
-}
-
-.vendor-country-code:hover {
-    background: linear-gradient(145deg, #e9ecef 0%, #f0f8ff 100%);
-}
-
-.vendor-phone-input {
-    flex: 1;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    padding-left: 0.75rem !important;
-}
-
-.vendor-phone-input:focus {
-    outline: none;
-    box-shadow: none !important;
 }
 
 .vendor-form-control {

@@ -196,13 +196,9 @@ window.VendorModal = {
         const form = document.getElementById('addVendorForm');
         const formData = new FormData(form);
         
-        // Get phone number components
-        const countryCode = document.getElementById('vendorCountryCode').value;
-        const phoneNumber = formData.get('phone_number');
-        const fullPhoneNumber = countryCode + phoneNumber;
-        
         // Validate required fields
         const fullName = formData.get('full_name');
+        const phoneNumber = formData.get('phone_number');
         // Get vendor type (either from select or custom input)
         const vendorTypeSelect = document.getElementById('vendorType');
         const customTypeInput = document.getElementById('vendorCustomType');
@@ -251,13 +247,11 @@ window.VendorModal = {
         saveBtn.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Saving...';
         saveBtn.disabled = true;
         
-        // Prepare vendor data with full phone number and vendor type
+        // Prepare vendor data with vendor type
         const vendorData = {};
         for (let [key, value] of formData.entries()) {
             vendorData[key] = value;
         }
-        // Override phone_number with full number including country code
-        vendorData['phone_number'] = fullPhoneNumber;
         // Override vendor_type with the correct type (custom or selected)
         vendorData['vendor_type'] = vendorType;
         

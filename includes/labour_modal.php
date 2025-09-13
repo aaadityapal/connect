@@ -12,7 +12,7 @@
                 </button>
             </div>
             <div class="labour-modal-body">
-                <form id="addLabourForm">
+                <form id="addLabourForm" enctype="multipart/form-data">
                     <div class="row g-4">
                         <!-- Basic Information -->
                         <div class="col-12">
@@ -38,21 +38,7 @@
                                     <i class="bi bi-telephone me-1"></i>
                                     Phone Number <span class="labour-required">*</span>
                                 </label>
-                                <div class="labour-phone-group">
-                                    <select class="labour-country-code" id="labourCountryCode" name="country_code">
-                                        <option value="+91" data-country="IN">🇮🇳 +91</option>
-                                        <option value="+1" data-country="US">🇺🇸 +1</option>
-                                        <option value="+44" data-country="GB">🇬🇧 +44</option>
-                                        <option value="+61" data-country="AU">🇦🇺 +61</option>
-                                        <option value="+86" data-country="CN">🇨🇳 +86</option>
-                                        <option value="+81" data-country="JP">🇯🇵 +81</option>
-                                        <option value="+82" data-country="KR">🇰🇷 +82</option>
-                                        <option value="+65" data-country="SG">🇸🇬 +65</option>
-                                        <option value="+971" data-country="AE">🇦🇪 +971</option>
-                                        <option value="+966" data-country="SA">🇸🇦 +966</option>
-                                    </select>
-                                    <input type="tel" class="labour-form-control labour-phone-input" id="labourPhone" name="phone_number" placeholder="Enter phone number" required>
-                                </div>
+                                <input type="tel" class="labour-form-control" id="labourPhone" name="phone_number" placeholder="Enter phone number" required>
                             </div>
                         </div>
                         
@@ -79,6 +65,51 @@
                                     <option value="supervisor">Supervisor</option>
                                     <option value="helper">Helper</option>
                                 </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Documents Section -->
+                        <div class="col-12">
+                            <div class="labour-section-header">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                <span>Documents</span>
+                                <button type="button" class="labour-section-toggle ms-auto" data-target="documentsContent" title="Toggle Documents">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 labour-section-content collapsed" id="documentsContent">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="labour-form-group">
+                                        <label for="aadharCard" class="labour-form-label">
+                                            <i class="bi bi-file-earmark-text me-1"></i>
+                                            Aadhar Card
+                                        </label>
+                                        <input type="file" class="labour-form-control" id="aadharCard" name="aadhar_card" accept=".jpg,.jpeg,.png,.pdf">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="labour-form-group">
+                                        <label for="panCard" class="labour-form-label">
+                                            <i class="bi bi-file-earmark-text me-1"></i>
+                                            PAN Card
+                                        </label>
+                                        <input type="file" class="labour-form-control" id="panCard" name="pan_card" accept=".jpg,.jpeg,.png,.pdf">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="labour-form-group">
+                                        <label for="otherDocument" class="labour-form-label">
+                                            <i class="bi bi-file-earmark-text me-1"></i>
+                                            Other Document
+                                        </label>
+                                        <input type="file" class="labour-form-control" id="otherDocument" name="other_document" accept=".jpg,.jpeg,.png,.pdf">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -241,11 +272,48 @@
     margin-bottom: 1rem !important;
     display: flex !important;
     align-items: center !important;
+    cursor: pointer !important;
 }
 
 .labour-section-header i {
     color: #495057 !important;
     font-size: 0.85rem !important;
+}
+
+.labour-section-toggle {
+    background: transparent !important;
+    border: none !important;
+    color: #6c757d !important;
+    padding: 0.25rem !important;
+    border-radius: 4px !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    margin-left: auto !important;
+}
+
+.labour-section-toggle:hover {
+    background-color: #e9ecef !important;
+    color: #495057 !important;
+    transform: scale(1.1) !important;
+}
+
+.labour-section-toggle i {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-block !important;
+    font-size: 0.9rem !important;
+}
+
+.labour-section-toggle i.rotated {
+    transform: rotate(180deg) !important;
+}
+
+.labour-section-content {
+    transition: all 0.3s ease !important;
+    overflow: hidden !important;
+}
+
+.labour-section-content.collapsed {
+    display: none !important;
 }
 
 .labour-form-group {
@@ -270,47 +338,7 @@
     font-weight: 400 !important;
 }
 
-.labour-phone-group {
-    display: flex !important;
-    gap: 0 !important;
-    border: 1px solid #e9ecef !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-}
-
-.labour-phone-group:focus-within {
-    border-color: #a8d5f2 !important;
-    box-shadow: 0 0 0 3px rgba(168, 213, 242, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-    background: linear-gradient(145deg, #ffffff 0%, #f0f8ff 100%) !important;
-    transform: translateY(-1px) !important;
-}
-
-.labour-country-code {
-    padding: 0.75rem 0.75rem !important;
-    font-size: 0.9rem !important;
-    border: none !important;
-    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    color: #495057 !important;
-    cursor: pointer !important;
-    min-width: 85px !important;
-    border-right: 1px solid #dee2e6 !important;
-    outline: none !important;
-    transition: all 0.3s ease !important;
-}
-
-.labour-phone-input {
-    flex: 1 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    padding-left: 0.75rem !important;
-    background: transparent !important;
-}
-
-.labour-form-control, .labour-country-code, .labour-phone-input {
+.labour-form-control {
     width: 100% !important;
     padding: 0.75rem 1rem !important;
     font-size: 0.9rem !important;
@@ -324,7 +352,7 @@
     outline: none !important;
 }
 
-.labour-form-control:focus, .labour-country-code:focus, .labour-phone-input:focus {
+.labour-form-control:focus {
     border-color: #a8d5f2 !important;
     box-shadow: 0 0 0 3px rgba(168, 213, 242, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     background: linear-gradient(145deg, #ffffff 0%, #f0f8ff 100%) !important;

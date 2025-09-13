@@ -6,17 +6,15 @@
  */
 
 // Global labour modal functions
-const LabourModal = {
+window.LabourModal = {
     
     /**
      * Initialize labour modal functionality
      * Call this after including the modal HTML
      */
     init: function(apiEndpoint = 'payment_expenses.php') {
-        console.log('LabourModal.init() called with endpoint:', apiEndpoint);
         this.apiEndpoint = apiEndpoint;
         this.bindEvents();
-        console.log('LabourModal.init() completed');
     },
 
     /**
@@ -41,6 +39,7 @@ const LabourModal = {
                 }
             });
         }
+        console.log('LabourModal events bound successfully');
     },
 
     /**
@@ -53,14 +52,11 @@ const LabourModal = {
         const modal = document.getElementById('addLabourModal');
         
         if (modal) {
-            // Reset all styles and classes first
-            modal.className = '';
-            modal.style.cssText = '';
-            
-            // Set the modal classes and styles correctly
+            // Remove hidden class and add visible class
+            modal.classList.remove('labour-modal-hidden');
             modal.classList.add('labour-modal-visible');
             
-            // Apply positioning and display styles with highest priority
+            // Use cssText for maximum CSS priority
             modal.style.cssText = `
                 display: block !important;
                 visibility: visible !important;
@@ -71,31 +67,12 @@ const LabourModal = {
                 width: 100% !important;
                 height: 100% !important;
                 z-index: 999999 !important;
-                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             `;
             
-            // Ensure backdrop styling is applied to the container
-            const backdrop = modal.querySelector('.labour-modal-backdrop');
-            if (backdrop) {
-                backdrop.style.cssText = `
-                    position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background-color: rgba(0, 0, 0, 0.5) !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    padding: 20px !important;
-                    box-sizing: border-box !important;
-                `;
-            }
-            
-            // Ensure body doesn't scroll
+            // Prevent body scroll
             document.body.style.overflow = 'hidden';
             
-            // Force DOM reflow
+            // Force a reflow
             modal.offsetHeight;
         }
     },
@@ -116,7 +93,7 @@ const LabourModal = {
                     }
                 }
             } catch (error) {
-                // Bootstrap modal close failed, using direct method
+                // Continue with direct method if Bootstrap fails
             }
             
             // Force close vendor modal
@@ -143,14 +120,8 @@ const LabourModal = {
             modal.classList.remove('labour-modal-visible');
             modal.classList.add('labour-modal-hidden');
             
-            // Reset all inline styles completely
-            modal.style.cssText = 'display: none !important;';
-            
-            // Reset backdrop styles if exists
-            const backdrop = modal.querySelector('.labour-modal-backdrop');
-            if (backdrop) {
-                backdrop.style.cssText = '';
-            }
+            // Reset inline styles
+            modal.style.display = 'none';
             
             // Restore body scroll
             document.body.style.overflow = '';
@@ -230,11 +201,13 @@ const LabourModal = {
                     }
                 });
                 document.dispatchEvent(event);
+                console.log('Labour added with ID:', data.labour_id);
             } else {
                 this.showErrorMessage(data.message || 'Failed to add labour worker. Please try again.');
             }
         })
         .catch(error => {
+            console.error('Error saving labour:', error);
             this.showErrorMessage('An error occurred while saving the labour worker. Please try again.');
         })
         .finally(() => {
@@ -337,17 +310,10 @@ const LabourModal = {
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, checking for labour modal...');
-    const modalElement = document.getElementById('addLabourModal');
-    if (modalElement) {
-        console.log('Labour modal element found, initializing LabourModal...');
+    console.log('DOM loaded, initializing LabourModal...');
+    if (document.getElementById('addLabourModal')) {
         LabourModal.init();
-        console.log('LabourModal initialized successfully');
-        
-        // Make LabourModal globally accessible
-        window.LabourModal = LabourModal;
-        console.log('LabourModal set on window object');
     } else {
-        console.error('Labour modal element not found!');
+        console.log('Labour modal not found on this page');
     }
 });

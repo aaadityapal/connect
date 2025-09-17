@@ -1,61 +1,66 @@
 <?php
-// Enable error reporting
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-echo "<h1>Database Connection Test</h1>";
+// Database test to verify vendor table structure
+require_once 'config/db_connect.php';
 
 try {
-    echo "<div>PHP Version: " . phpversion() . "</div>";
+    // Check if hr_vendors table exists
+    $sql = "SHOW TABLES LIKE 'hr_vendors'";
+    $stmt = $pdo->query($sql);
+    $tables = $stmt->fetchAll();
     
-    // Check if PDO is available
-    echo "<div>PDO Available: " . (class_exists('PDO') ? 'Yes' : 'No') . "</div>";
-    
-    // Check which PDO drivers are available
-    echo "<div>PDO Drivers: " . implode(', ', PDO::getAvailableDrivers()) . "</div>";
-    
-    // Try to include the database connection file and see if it works
-    echo "<div>Attempting to connect using config/db_connect.php...</div>";
-    
-    // Include the DB connection file
-    require_once 'config/db_connect.php';
-    
-    echo "<div style='color:green'>✓ Database connected successfully!</div>";
-    
-    // Test a simple query
-    $stmt = $pdo->query("SELECT VERSION() as version");
-    $dbVersion = $stmt->fetchColumn();
-    echo "<div>Database version: " . htmlspecialchars($dbVersion) . "</div>";
-    
-    // Try a query on the work_progress_media table
-    $tableQuery = $pdo->query("SHOW TABLES LIKE 'work_progress_media'");
-    $tableExists = $tableQuery->rowCount() > 0;
-    echo "<div>work_progress_media table exists: " . ($tableExists ? 'Yes' : 'No') . "</div>";
-    
-    if ($tableExists) {
-        $countQuery = $pdo->query("SELECT COUNT(*) FROM work_progress_media");
-        $count = $countQuery->fetchColumn();
-        echo "<div>Number of records in work_progress_media: " . $count . "</div>";
+    if (count($tables) > 0) {
+        echo "SUCCESS: hr_vendors table exists\n\n";
         
-        // Show the table structure
-        $stmt = $pdo->query("DESCRIBE work_progress_media");
-        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Show table structure
+        $sql = "DESCRIBE hr_vendors";
+        $stmt = $pdo->query($sql);
+        $columns = $stmt->fetchAll();
         
-        echo "<h2>Table Structure:</h2>";
-        echo "<table border='1' cellpadding='5'>";
-        echo "<tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>";
-        
+        echo "Table structure:\n";
         foreach ($columns as $column) {
-            echo "<tr>";
-            foreach ($column as $key => $value) {
-                echo "<td>" . htmlspecialchars($value ?? 'NULL') . "</td>";
-            }
-            echo "</tr>";
+            echo "- " . $column['Field'] . " (" . $column['Type'] . ")\n";
         }
-        echo "</table>";
+        
+        echo "\nChecking for vendor_type column...\n";
+        $hasVendorType = false;
+        foreach ($columns as $column) {
+            if ($column['Field'] === 'vendor_type') {
+                $hasVendorType = true;
+                break;
+            }
+        }
+        
+        if ($hasVendorType) {
+            echo "SUCCESS: vendor_type column exists\n";
+            
+            // Check if there's any data
+            $sql = "SELECT COUNT(*) as count FROM hr_vendors";
+            $stmt = $pdo->query($sql);
+            $result = $stmt->fetch();
+            
+            echo "Total vendors in database: " . $result['count'] . "\n";
+            
+            if ($result['count'] > 0) {
+                // Show sample vendor types
+                $sql = "SELECT DISTINCT vendor_type FROM hr_vendors LIMIT 5";
+                $stmt = $pdo->query($sql);
+                $vendorTypes = $stmt->fetchAll();
+                
+                echo "Sample vendor types:\n";
+                foreach ($vendorTypes as $type) {
+                    echo "- " . $type['vendor_type'] . "\n";
+                }
+            } else {
+                echo "No vendor data found (this is OK for a new installation)\n";
+            }
+        } else {
+            echo "ERROR: vendor_type column is missing\n";
+        }
+    } else {
+        echo "ERROR: hr_vendors table does not exist\n";
+        echo "You may need to run the SQL schema to create the table\n";
     }
-    
 } catch (Exception $e) {
-    echo "<div style='color:red'>Error: " . $e->getMessage() . "</div>";
+    echo "ERROR: Database connection failed - " . $e->getMessage() . "\n";
 }
-?> 
+?>

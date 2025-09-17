@@ -90,4 +90,4 @@ try {
 } catch (PDOException $e) {
     echo "<p style='color:red'>Database error: " . $e->getMessage() . "</p>";
 }
-?> 
+?>

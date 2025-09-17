@@ -10,6 +10,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Loader -->
+                <div class="loader-overlay" id="paymentEntryLoader" style="display: none;">
+                    <div class="loader-content">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Processing your request...</p>
+                    </div>
+                </div>
                 <form id="addPaymentEntryForm">
                     <!-- Payment Information Section -->
                     <div class="payment-section">
@@ -73,6 +82,7 @@
                                     <i class="fas fa-credit-card input-icon"></i>
                                     <select class="form-select" id="paymentMode" name="paymentMode" required>
                                         <option value="">Select Payment Mode</option>
+                                        <option value="split_payment">Split Payment</option>
                                         <option value="cash">Cash</option>
                                         <option value="upi">UPI (Unified Payments Interface)</option>
                                         <option value="neft">NEFT (National Electronic Funds Transfer)</option>
@@ -393,6 +403,87 @@
 }
 
 .custom-back-btn:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+/* Recipient Type Required Indicator */
+.recipient-type-required {
+    transition: all 0.2s ease;
+}
+
+/* File Upload Styles for Recipients */
+.file-upload-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.file-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.file-upload-display {
+    border: 2px dashed #e5e7eb;
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+    background-color: #fafbfc;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-upload-display:hover {
+    border-color: #3b82f6;
+    background-color: #f8faff;
+}
+
+.file-upload-wrapper:hover .file-upload-display {
+    border-color: #3b82f6;
+    background-color: #f8faff;
+}
+
+.file-icon {
+    font-size: 1.5rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+/* Add Payment Entry Modal Styles */
+.loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    border-radius: 16px;
+}
+
+.loader-content {
+    text-align: center;
+    color: #374151;
+}
+
+.loader-content p {
+    margin: 10px 0 0;
+    font-weight: 500;
+}
+
+.payment-section {
     background-color: #f3f4f6;
     color: #374151;
 }
@@ -856,9 +947,14 @@ function toggleSplitPayment(recipientId) {
         splitBtn.classList.remove('btn-outline-success');
         splitBtn.classList.add('btn-outline-danger');
         
-        // Disable main payment mode when split is active
-        mainPaymentMode.disabled = true;
-        mainPaymentMode.removeAttribute('required');
+        // Set main payment mode to "Split Payment" when split is active
+        mainPaymentMode.value = "split_payment";
+        // Keep the field enabled but make it readonly to ensure it's included in form submission
+        mainPaymentMode.disabled = false;
+        mainPaymentMode.readOnly = true;
+        // Add a visual indicator that this is auto-filled
+        mainPaymentMode.style.backgroundColor = "#f8f9fa";
+        mainPaymentMode.style.cursor = "not-allowed";
         
         // Initialize split payment counter
         if (!splitPaymentCounters[recipientId]) {
@@ -877,8 +973,12 @@ function toggleSplitPayment(recipientId) {
         splitBtn.classList.remove('btn-outline-danger');
         splitBtn.classList.add('btn-outline-success');
         
-        // Re-enable main payment mode
+        // Re-enable main payment mode and clear the value
         mainPaymentMode.disabled = false;
+        mainPaymentMode.readOnly = false;
+        mainPaymentMode.value = "";
+        mainPaymentMode.style.backgroundColor = "";
+        mainPaymentMode.style.cursor = "";
         mainPaymentMode.setAttribute('required', 'required');
         
         // Clear all split payments
@@ -1094,8 +1194,11 @@ function addNewRecipient() {
                     <div class="input-icon-wrapper">
                         <i class="fas fa-user input-icon"></i>
                         <input type="text" class="form-control" id="recipientName_${recipientCounter}" name="recipients[${recipientCounter}][name]" 
-                               placeholder="Enter recipient name" required>
+                               placeholder="Enter recipient name" required autocomplete="off" onkeyup="debounceSearch(event, ${recipientCounter})">
+                        <input type="hidden" id="recipientId_${recipientCounter}" name="recipients[${recipientCounter}][id]" value="">
+                        <div class="search-results-dropdown" id="searchResults_${recipientCounter}"></div>
                     </div>
+                    <div class="invalid-feedback" id="nameError_${recipientCounter}">Please select a valid name from the list</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="paymentFor_${recipientCounter}" class="form-label">Payment For <span class="text-danger">*</span></label>
@@ -1120,34 +1223,35 @@ function addNewRecipient() {
                     <div class="input-icon-wrapper">
                         <i class="fas fa-credit-card input-icon"></i>
                         <select class="form-select" id="recipientPaymentMode_${recipientCounter}" name="recipients[${recipientCounter}][paymentMode]" required>
-                            <option value="">Select Payment Mode</option>
-                            <option value="cash">Cash</option>
-                            <option value="upi">UPI (Unified Payments Interface)</option>
-                            <option value="neft">NEFT (National Electronic Funds Transfer)</option>
-                            <option value="rtgs">RTGS (Real Time Gross Settlement)</option>
-                            <option value="imps">IMPS (Immediate Payment Service)</option>
-                            <option value="net_banking">Net Banking</option>
-                            <option value="cheque">Cheque</option>
-                            <option value="demand_draft">Demand Draft (DD)</option>
-                            <option value="debit_card">Debit Card</option>
-                            <option value="credit_card">Credit Card</option>
-                            <option value="paytm">Paytm</option>
-                            <option value="phonepe">PhonePe</option>
-                            <option value="gpay">Google Pay</option>
-                            <option value="bhim">BHIM UPI</option>
-                            <option value="amazon_pay">Amazon Pay</option>
-                            <option value="mobikwik">MobiKwik</option>
-                            <option value="freecharge">FreeCharge</option>
-                            <option value="wallet">Digital Wallet</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="money_order">Money Order</option>
-                            <option value="postal_order">Postal Order</option>
-                            <option value="prepaid_card">Prepaid Card</option>
-                            <option value="ecs">ECS (Electronic Clearing Service)</option>
-                            <option value="ach">ACH (Automated Clearing House)</option>
-                            <option value="nach">NACH (National Automated Clearing House)</option>
-                            <option value="aeps">AEPS (Aadhaar Enabled Payment System)</option>
-                            <option value="other">Other</option>
+                                            <option value="">Select Payment Mode</option>
+                                            <option value="split_payment">Split Payment</option>
+                                            <option value="cash">Cash</option>
+                                            <option value="upi">UPI (Unified Payments Interface)</option>
+                                            <option value="neft">NEFT (National Electronic Funds Transfer)</option>
+                                            <option value="rtgs">RTGS (Real Time Gross Settlement)</option>
+                                            <option value="imps">IMPS (Immediate Payment Service)</option>
+                                            <option value="net_banking">Net Banking</option>
+                                            <option value="cheque">Cheque</option>
+                                            <option value="demand_draft">Demand Draft (DD)</option>
+                                            <option value="debit_card">Debit Card</option>
+                                            <option value="credit_card">Credit Card</option>
+                                            <option value="paytm">Paytm</option>
+                                            <option value="phonepe">PhonePe</option>
+                                            <option value="gpay">Google Pay</option>
+                                            <option value="bhim">BHIM UPI</option>
+                                            <option value="amazon_pay">Amazon Pay</option>
+                                            <option value="mobikwik">MobiKwik</option>
+                                            <option value="freecharge">FreeCharge</option>
+                                            <option value="wallet">Digital Wallet</option>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="money_order">Money Order</option>
+                                            <option value="postal_order">Postal Order</option>
+                                            <option value="prepaid_card">Prepaid Card</option>
+                                            <option value="ecs">ECS (Electronic Clearing Service)</option>
+                                            <option value="ach">ACH (Automated Clearing House)</option>
+                                            <option value="nach">NACH (National Automated Clearing House)</option>
+                                            <option value="aeps">AEPS (Aadhaar Enabled Payment System)</option>
+                                            <option value="other">Other</option>
                         </select>
                     </div>
                 </div>
@@ -1256,6 +1360,12 @@ function handleCategoryChange(recipientId) {
     const typeSelect = document.getElementById(`recipientType_${recipientId}`);
     const typeLabel = typeSelect.closest('.mb-3').querySelector('.form-label');
     const requiredIndicator = typeLabel.querySelector('.recipient-type-required');
+    const nameInput = document.getElementById(`recipientName_${recipientId}`);
+    const nameIdInput = document.getElementById(`recipientId_${recipientId}`);
+    
+    // Reset name field when category changes
+    nameInput.value = '';
+    nameIdInput.value = '';
     
     const category = categorySelect.value;
     
@@ -1280,14 +1390,88 @@ function handleCategoryChange(recipientId) {
     switch(category) {
         case 'vendor':
         case 'supplier':
-            options = [
-                'Cement Supplier', 'Brick Supplier', 'Tile Supplier', 'Tile Vendor', 'Steel Supplier',
-                'Sand Supplier', 'Gravel Supplier', 'Concrete Supplier', 'Timber Supplier', 'Paint Supplier',
-                'Electrical Supplier', 'Plumbing Supplier', 'Hardware Supplier', 'Glass Supplier', 'Roofing Supplier',
-                'Flooring Supplier', 'Insulation Supplier', 'Door Supplier', 'Window Supplier', 'Security Equipment Supplier',
-                'HVAC Supplier', 'Landscaping Supplier', 'Cleaning Supplier', 'Safety Equipment Supplier', 'Transportation Vendor',
-                'Waste Management', 'General Supplier', 'Other', 'Custom Type'
-            ];
+            // For vendor category, fetch vendor types from database
+            if (category === 'vendor') {
+                fetch('../api/get_vendor_types.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Always add default options first
+                    const defaultOptions = [
+                        'Cement Supplier', 'Brick Supplier', 'Tile Supplier', 'Tile Vendor', 'Steel Supplier',
+                        'Sand Supplier', 'Gravel Supplier', 'Concrete Supplier', 'Timber Supplier', 'Paint Supplier',
+                        'Electrical Supplier', 'Plumbing Supplier', 'Hardware Supplier', 'Glass Supplier', 'Roofing Supplier',
+                        'Flooring Supplier', 'Insulation Supplier', 'Door Supplier', 'Window Supplier', 'Security Equipment Supplier',
+                        'HVAC Supplier', 'Landscaping Supplier', 'Cleaning Supplier', 'Safety Equipment Supplier', 'Transportation Vendor',
+                        'Waste Management', 'General Supplier', 'Other', 'Custom Type'
+                    ];
+                    
+                    // Add default options
+                    defaultOptions.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option.toLowerCase().replace(/\s+/g, '_');
+                        optionElement.textContent = option;
+                        typeSelect.appendChild(optionElement);
+                    });
+                    
+                    // Add fetched vendor types if available
+                    if (data.status === 'success' && data.vendor_types && Array.isArray(data.vendor_types) && data.vendor_types.length > 0) {
+                        data.vendor_types.forEach(vendorType => {
+                            // Only add if not already in the default options
+                            const existingOption = Array.from(typeSelect.options).find(opt => 
+                                opt.textContent.toLowerCase() === vendorType.toLowerCase());
+                            
+                            if (!existingOption) {
+                                const optionElement = document.createElement('option');
+                                optionElement.value = vendorType.toLowerCase().replace(/\s+/g, '_');
+                                optionElement.textContent = vendorType;
+                                typeSelect.appendChild(optionElement);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading vendor types:', error);
+                    // Fallback to default options if API fails
+                    const defaultOptions = [
+                        'Cement Supplier', 'Brick Supplier', 'Tile Supplier', 'Tile Vendor', 'Steel Supplier',
+                        'Sand Supplier', 'Gravel Supplier', 'Concrete Supplier', 'Timber Supplier', 'Paint Supplier',
+                        'Electrical Supplier', 'Plumbing Supplier', 'Hardware Supplier', 'Glass Supplier', 'Roofing Supplier',
+                        'Flooring Supplier', 'Insulation Supplier', 'Door Supplier', 'Window Supplier', 'Security Equipment Supplier',
+                        'HVAC Supplier', 'Landscaping Supplier', 'Cleaning Supplier', 'Safety Equipment Supplier', 'Transportation Vendor',
+                        'Waste Management', 'General Supplier', 'Other', 'Custom Type'
+                    ];
+                    
+                    defaultOptions.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option.toLowerCase().replace(/\s+/g, '_');
+                        optionElement.textContent = option;
+                        typeSelect.appendChild(optionElement);
+                    });
+                });
+            } else {
+                // For supplier category, use default options
+                options = [
+                    'Cement Supplier', 'Brick Supplier', 'Tile Supplier', 'Tile Vendor', 'Steel Supplier',
+                    'Sand Supplier', 'Gravel Supplier', 'Concrete Supplier', 'Timber Supplier', 'Paint Supplier',
+                    'Electrical Supplier', 'Plumbing Supplier', 'Hardware Supplier', 'Glass Supplier', 'Roofing Supplier',
+                    'Flooring Supplier', 'Insulation Supplier', 'Door Supplier', 'Window Supplier', 'Security Equipment Supplier',
+                    'HVAC Supplier', 'Landscaping Supplier', 'Cleaning Supplier', 'Safety Equipment Supplier', 'Transportation Vendor',
+                    'Waste Management', 'General Supplier', 'Other', 'Custom Type'
+                ];
+                
+                // Add options to select
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.toLowerCase().replace(/\s+/g, '_');
+                    optionElement.textContent = option;
+                    typeSelect.appendChild(optionElement);
+                });
+            }
             break;
             
         case 'contractor':
@@ -1309,6 +1493,7 @@ function handleCategoryChange(recipientId) {
             
         case 'labour':
             options = [
+                'Permanent Labour', 'Chowk Labour', 'Vendor Labour',
                 'Mason', 'Carpenter', 'Electrician', 'Plumber', 'Painter', 'Welder', 'Driver',
                 'Construction Worker', 'Helper', 'Foreman', 'Crane Operator', 'Excavator Operator',
                 'Other', 'Custom Type'
@@ -1328,18 +1513,31 @@ function handleCategoryChange(recipientId) {
             break;
     }
     
-    // Add options to select
-    options.forEach(option => {
-        const optionElement = document.createElement('option');
-        optionElement.value = option.toLowerCase().replace(/\s+/g, '_');
-        optionElement.textContent = option;
-        typeSelect.appendChild(optionElement);
-    });
+    // Add options to select for non-vendor categories
+    if (category !== 'vendor') {
+        options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.toLowerCase().replace(/\s+/g, '_');
+            optionElement.textContent = option;
+            typeSelect.appendChild(optionElement);
+        });
+    }
     
-    // Add change handler for custom type
+    // Add change handler for custom type and to reset name field when type changes
     typeSelect.onchange = function() {
+        // Reset name field when type changes
+        nameInput.value = '';
+        nameIdInput.value = '';
+        
         if (this.value === 'custom_type') {
             handleCustomType(recipientId);
+        }
+        
+        // Clear any previous search results
+        const searchResults = document.getElementById(`searchResults_${recipientId}`);
+        if (searchResults) {
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
         }
     };
 }
@@ -1465,7 +1663,131 @@ function loadProjectNames() {
 }
 
 // Submit payment entry form
+// Debounce function to limit API calls
+let debounceTimeout = null;
+function debounceSearch(event, recipientId) {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+        searchRecipient(event.target.value, recipientId);
+    }, 300); // 300ms delay
+}
+
+// Search for recipients based on name input
+function searchRecipient(query, recipientId) {
+    if (!query || query.length < 2) {
+        const searchResults = document.getElementById(`searchResults_${recipientId}`);
+        searchResults.innerHTML = '';
+        searchResults.style.display = 'none';
+        return;
+    }
+    
+    const categorySelect = document.getElementById(`recipientCategory_${recipientId}`);
+    const typeSelect = document.getElementById(`recipientType_${recipientId}`);
+    const category = categorySelect.value;
+    const type = typeSelect.value;
+    
+    // Only search for vendor or labour categories
+    if (category !== 'vendor' && category !== 'supplier' && category !== 'labour') {
+        return;
+    }
+    
+    // Make API call to search for recipients
+    const searchEndpoint = category === 'labour' ? '../api/search_labour.php' : '../api/search_vendor.php';
+    
+    fetch(searchEndpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: query,
+            type: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const searchResults = document.getElementById(`searchResults_${recipientId}`);
+        searchResults.innerHTML = '';
+        
+        if (data.status === 'success' && data.results && data.results.length > 0) {
+            searchResults.style.display = 'block';
+            
+            data.results.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.textContent = result.name;
+                resultItem.addEventListener('click', () => {
+                    selectRecipient(result.id, result.name, recipientId);
+                });
+                searchResults.appendChild(resultItem);
+            });
+            
+            // Add option to add new if not found
+            const addNewItem = document.createElement('div');
+            addNewItem.className = 'search-result-item add-new';
+            addNewItem.innerHTML = `<i class="fas fa-plus-circle me-2"></i>Add new ${category}`;
+            addNewItem.addEventListener('click', () => {
+                openAddNewModal(category, query, recipientId);
+            });
+            searchResults.appendChild(addNewItem);
+        } else if (query.length >= 2) {
+            searchResults.style.display = 'block';
+            const noResults = document.createElement('div');
+            noResults.className = 'search-result-item no-results';
+            noResults.innerHTML = `No ${category} found. <span class="add-new-text">Add new?</span>`;
+            noResults.addEventListener('click', () => {
+                openAddNewModal(category, query, recipientId);
+            });
+            searchResults.appendChild(noResults);
+        } else {
+            searchResults.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error searching recipients:', error);
+    });
+}
+
+// Select a recipient from search results
+function selectRecipient(id, name, recipientId) {
+    const nameInput = document.getElementById(`recipientName_${recipientId}`);
+    const idInput = document.getElementById(`recipientId_${recipientId}`);
+    const searchResults = document.getElementById(`searchResults_${recipientId}`);
+    
+    nameInput.value = name;
+    idInput.value = id;
+    searchResults.style.display = 'none';
+    
+    // Remove any validation errors
+    nameInput.classList.remove('is-invalid');
+    document.getElementById(`nameError_${recipientId}`).style.display = 'none';
+}
+
+// Open modal to add new vendor or labour
+function openAddNewModal(category, name, recipientId) {
+    // Store the recipient ID to update after adding
+    window.currentRecipientToUpdate = recipientId;
+    
+    if (category === 'labour') {
+        // Open labour modal and pre-fill name
+        const labourModal = new bootstrap.Modal(document.getElementById('addLabourModal'));
+        document.getElementById('labourFullName').value = name;
+        labourModal.show();
+    } else {
+        // Open vendor modal and pre-fill name
+        const vendorModal = new bootstrap.Modal(document.getElementById('addVendorModal'));
+        document.getElementById('vendorFullName').value = name;
+        vendorModal.show();
+    }
+}
+
 function submitPaymentEntryForm() {
+    // Show loader
+    const loader = document.getElementById('paymentEntryLoader');
+    if (loader) {
+        loader.style.display = 'flex';
+    }
+    
     const form = document.getElementById('addPaymentEntryForm');
     const formData = new FormData(form);
     
@@ -1485,16 +1807,42 @@ function submitPaymentEntryForm() {
     
     // Validate all recipient fields
     const recipientItems = document.querySelectorAll('.recipient-item');
-    recipientItems.forEach(recipientItem => {
+    
+    // If no recipients, show error
+    if (recipientItems.length === 0) {
+        showNotification('warning', 'Please add at least one recipient');
+        isValid = false;
+    }
+    
+    recipientItems.forEach((recipientItem, index) => {
         const recipientId = recipientItem.getAttribute('data-recipient-id');
+        
+        // Ensure form data contains this recipient's data
+        formData.append(`recipients[${recipientId}][index]`, index + 1);
+        
         const requiredInputs = recipientItem.querySelectorAll('input[required], select[required]');
         
         requiredInputs.forEach(input => {
             if (!input.value.trim()) {
                 input.classList.add('is-invalid');
                 isValid = false;
+                console.log(`Missing required field: ${input.name}`);
             } else {
                 input.classList.remove('is-invalid');
+                
+                // Make sure the value is properly added to formData
+                if (input.name && !input.name.includes('[]')) {
+                    // Extract the field name from the input name
+                    const fieldMatch = input.name.match(/recipients\[(\d+)\]\[([^\]]+)\]/);
+                    if (fieldMatch) {
+                        const recipId = fieldMatch[1];
+                        const fieldName = fieldMatch[2];
+                        console.log(`Ensuring field ${fieldName} for recipient ${recipId} is set to "${input.value.trim()}"`);
+                        formData.set(`recipients[${recipId}][${fieldName}]`, input.value.trim());
+                    } else {
+                        formData.set(input.name, input.value.trim());
+                    }
+                }
             }
         });
         
@@ -1509,6 +1857,18 @@ function submitPaymentEntryForm() {
             }
         }
         
+        // Validate that vendor/labour recipients have an ID selected
+        const category = document.getElementById(`recipientCategory_${recipientId}`).value;
+        const nameInput = document.getElementById(`recipientName_${recipientId}`);
+        const idInput = document.getElementById(`recipientId_${recipientId}`);
+        
+        if ((category === 'vendor' || category === 'supplier' || category === 'labour') && 
+            nameInput.value.trim() && !idInput.value.trim()) {
+            nameInput.classList.add('is-invalid');
+            document.getElementById(`nameError_${recipientId}`).style.display = 'block';
+            isValid = false;
+        }
+        
         // Validate split payments if active
         const splitContainer = document.getElementById(`splitPaymentsContainer_${recipientId}`);
         if (splitContainer && splitContainer.style.display !== 'none') {
@@ -1516,10 +1876,28 @@ function submitPaymentEntryForm() {
             const mainAmount = parseFloat(document.getElementById(`recipientAmount_${recipientId}`).value) || 0;
             let totalSplitAmount = 0;
             
+            // If using split payments, make sure the main payment mode is set
+            const recipientPaymentMode = document.getElementById(`recipientPaymentMode_${recipientId}`);
+            if (recipientPaymentMode) {
+                // Force set a value for the payment mode when using splits
+                recipientPaymentMode.value = "split_payment";
+                recipientPaymentMode.classList.remove('is-invalid');
+                
+                // Ensure it's in the form data
+                formData.set(`recipients[${recipientId}][paymentMode]`, "split_payment");
+                console.log(`Setting payment mode for recipient ${recipientId} to "split_payment"`);
+                
+                // Make sure it's visually indicated as filled
+                recipientPaymentMode.readOnly = true;
+                recipientPaymentMode.style.backgroundColor = "#f8f9fa";
+                recipientPaymentMode.style.cursor = "not-allowed";
+            }
+            
             // Validate each split payment
-            splitItems.forEach(splitItem => {
+            splitItems.forEach((splitItem, splitIndex) => {
                 const amountInput = splitItem.querySelector('input[type="number"]');
                 const modeSelect = splitItem.querySelector('select');
+                const splitId = splitItem.id.split('_').pop();
                 
                 if (!amountInput.value.trim() || parseFloat(amountInput.value) <= 0) {
                     amountInput.classList.add('is-invalid');
@@ -1527,6 +1905,9 @@ function submitPaymentEntryForm() {
                 } else {
                     amountInput.classList.remove('is-invalid');
                     totalSplitAmount += parseFloat(amountInput.value);
+                    
+                    // Ensure the split amount is in formData
+                    formData.set(`recipients[${recipientId}][splitPayments][${splitId}][amount]`, amountInput.value.trim());
                 }
                 
                 if (!modeSelect.value.trim()) {
@@ -1534,19 +1915,27 @@ function submitPaymentEntryForm() {
                     isValid = false;
                 } else {
                     modeSelect.classList.remove('is-invalid');
+                    
+                    // Ensure the split mode is in formData
+                    formData.set(`recipients[${recipientId}][splitPayments][${splitId}][mode]`, modeSelect.value.trim());
                 }
             });
             
             // Validate total split amount matches main amount
             if (Math.abs(totalSplitAmount - mainAmount) > 0.01) {
-                alert(`Recipient #${Array.from(recipientItems).indexOf(recipientItem) + 1}: Split payment total (₹${totalSplitAmount.toFixed(2)}) must equal the main amount (₹${mainAmount.toFixed(2)})`);
+                showNotification('warning', `Recipient #${Array.from(recipientItems).indexOf(recipientItem) + 1}: Split payment total (₹${totalSplitAmount.toFixed(2)}) must equal the main amount (₹${mainAmount.toFixed(2)})`);
                 isValid = false;
             }
         }
     });
     
     if (!isValid) {
-        alert('Please fill in all required fields.');
+        // Hide loader
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        
+        showNotification('warning', 'Please fill in all required fields.');
         return;
     }
     
@@ -1554,30 +1943,142 @@ function submitPaymentEntryForm() {
     const recipientCount = recipientItems.length;
     formData.set('recipientCount', recipientCount);
     
-    // Here you would typically send the data to the server
-    console.log('Payment entry form data:', Object.fromEntries(formData));
-    console.log('Number of recipients:', recipientCount);
+    // Debug form data before sending
+    console.log('Form data to be sent:', Object.fromEntries(formData));
     
-    // For now, just show a success message
-    let message = 'Payment entry added successfully!';
-    if (recipientCount > 0) {
-        message += ` with ${recipientCount} recipient${recipientCount > 1 ? 's' : ''}.`;
-    }
-    alert(message);
+    // Send the data to the server using AJAX
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '../api/save_payment_entry.php', true);
     
-    // Reset form and close modal
-    form.reset();
-    // Reset project name dropdown
-    const projectNameSelect = document.getElementById('projectName');
-    projectNameSelect.innerHTML = '<option value="">First select project type</option>';
-    projectNameSelect.disabled = true;
+    // Add event listener for debugging
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            console.log('Response status:', xhr.status);
+            console.log('Response text:', xhr.responseText);
+        }
+    };
     
-    // Reset all recipients
-    resetAllRecipients();
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addPaymentEntryModal'));
-    modal.hide();
+    xhr.onload = function() {
+        // Hide loader
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    // Show success message with animation
+                    let message = 'Payment entry added successfully!';
+                    if (recipientCount > 0) {
+                        message += ` with ${recipientCount} recipient${recipientCount > 1 ? 's' : ''}.`;
+                    }
+                    showNotification('success', message);
+                    
+                    // Reset form and close modal on success
+                    form.reset();
+                    // Reset project name dropdown
+                    const projectNameSelect = document.getElementById('projectName');
+                    projectNameSelect.innerHTML = '<option value="">First select project type</option>';
+                    projectNameSelect.disabled = true;
+                    
+                    // Reset all recipients
+                    resetAllRecipients();
+                    
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addPaymentEntryModal'));
+                    modal.hide();
+                } else {
+                    showNotification('error', 'Error: ' + response.message);
+                }
+            } catch (e) {
+                showNotification('error', 'An error occurred while processing the response.');
+                console.error(e);
+            }
+        } else {
+            showNotification('error', 'Request failed. Please try again.');
+        }
+    };
+    xhr.onerror = function() {
+        // Hide loader
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        
+        showNotification('error', 'Request failed. Please check your connection.');
+    };
+    xhr.send(formData);
 }
+
+// Add CSS for search results dropdown
+const searchResultsStyles = `
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 5px;
+}
+
+.search-result-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.search-result-item:hover {
+    background-color: #f3f4f6;
+}
+
+.search-result-item.add-new {
+    border-top: 1px solid #e5e7eb;
+    color: #3b82f6;
+}
+
+.search-result-item.add-new:hover {
+    background-color: #f3f4f6;
+}
+
+.search-result-item.no-results {
+    color: #9ca3af;
+}
+
+.search-result-item.no-results:hover {
+    background-color: transparent;
+}
+
+.search-result-item.no-results .add-new-text {
+    color: #3b82f6;
+    cursor: pointer;
+}
+
+.search-result-item.no-results .add-new-text:hover {
+    text-decoration: underline;
+}
+
+`;
+
+// Inject CSS into the document
+const styleSheet = document.createElement('style');
+styleSheet.type = 'text/css';
+if (styleSheet.styleSheet){
+    styleSheet.styleSheet.cssText = searchResultsStyles;
+} else {
+    styleSheet.appendChild(document.createTextNode(searchResultsStyles));
+}
+
+// Add the styles to the document
+const styleElement = document.createElement('style');
+styleElement.textContent = searchResultsStyles;
+document.head.appendChild(styleElement);
 
 // Initialize when modal is shown
 document.getElementById('addPaymentEntryModal').addEventListener('shown.bs.modal', function () {
@@ -1596,4 +2097,230 @@ document.getElementById('addPaymentEntryModal').addEventListener('shown.bs.modal
     // Load authorized users for payment done via
     loadAuthorizedUsers();
 });
+
+// Modify vendor and labour form submissions to update recipient after adding
+// Store original functions if they exist
+const originalVendorFormSubmit = typeof window.submitVendorForm === 'function' ? window.submitVendorForm : null;
+
+// Define a new global submitVendorForm function that will be used by the vendor modal
+window.submitVendorForm = function() {
+    const form = document.getElementById('addVendorForm');
+    const formData = new FormData(form);
+    
+    // Handle custom vendor type
+    const vendorTypeSelect = document.getElementById('vendorType');
+    const vendorTypeCustom = document.getElementById('vendorTypeCustom');
+    
+    let vendorTypeValue = '';
+    if (vendorTypeCustom.style.display !== 'none' && vendorTypeCustom.value.trim()) {
+        vendorTypeValue = vendorTypeCustom.value.trim();
+        formData.set('vendorType', vendorTypeValue);
+    } else if (vendorTypeSelect.value) {
+        vendorTypeValue = vendorTypeSelect.value;
+    }
+    
+    // Basic validation
+    const requiredFields = ['fullName', 'phoneNumber', 'email'];
+    let isValid = true;
+    
+    // Validate basic required fields
+    requiredFields.forEach(field => {
+        const input = form.querySelector(`[name="${field}"]`);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    // Validate vendor type (either from dropdown or custom input)
+    if (!vendorTypeValue) {
+        if (vendorTypeCustom.style.display !== 'none') {
+            vendorTypeCustom.classList.add('is-invalid');
+        } else {
+            vendorTypeSelect.classList.add('is-invalid');
+        }
+        isValid = false;
+    } else {
+        vendorTypeCustom.classList.remove('is-invalid');
+        vendorTypeSelect.classList.remove('is-invalid');
+    }
+    
+    if (!isValid) {
+        showNotification('warning', 'Please fill in all required fields.');
+        return;
+    }
+    
+    // Send the data to the server using AJAX
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '../api/save_vendor.php', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    // Show success message with animation
+                    showNotification('success', 'Vendor added successfully!');
+                    
+                    // Update recipient if we're adding from payment entry modal
+                    if (window.currentRecipientToUpdate) {
+                        updateRecipientAfterAdd(response.vendor_id, document.getElementById('vendorFullName').value, 'vendor');
+                    }
+                    
+                    // Reset form and close modal
+                    form.reset();
+                    backToDropdown(); // Reset vendor type to dropdown
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addVendorModal'));
+                    modal.hide();
+                    
+                    // Refresh vendor list if available
+                    if (typeof loadVendors === 'function') {
+                        loadVendors();
+                    }
+                    
+                    // If this was a custom vendor type, update all vendor type dropdowns in payment entry modal
+                    if (vendorTypeCustom.style.display !== 'none' && vendorTypeCustom.value.trim()) {
+                        updateVendorTypesInPaymentEntries(vendorTypeCustom.value.trim());
+                    }
+                } else {
+                    showNotification('error', 'Error: ' + response.message);
+                }
+            } catch (e) {
+                showNotification('error', 'An error occurred while processing the response.');
+                console.error(e);
+            }
+        } else {
+            showNotification('error', 'Request failed. Please try again.');
+        }
+    };
+    xhr.onerror = function() {
+        showNotification('error', 'Request failed. Please check your connection.');
+    };
+    xhr.send(formData);
+};
+
+
+// Function to update vendor types in all payment entry recipient dropdowns
+function updateVendorTypesInPaymentEntries(newVendorType) {
+    // Check if the payment entry modal is open and has recipients
+    const paymentEntryModal = document.getElementById('addPaymentEntryModal');
+    if (paymentEntryModal && paymentEntryModal.classList.contains('show')) {
+        // Get all recipient items
+        const recipientItems = document.querySelectorAll('.recipient-item');
+        
+        recipientItems.forEach(recipientItem => {
+            const recipientId = recipientItem.getAttribute('data-recipient-id');
+            const categorySelect = document.getElementById(`recipientCategory_${recipientId}`);
+            const typeSelect = document.getElementById(`recipientType_${recipientId}`);
+            
+            // If this recipient is a vendor, update its type options
+            if (categorySelect && categorySelect.value === 'vendor' && typeSelect) {
+                // Check if the new vendor type already exists in the dropdown
+                const existingOption = Array.from(typeSelect.options).find(option => 
+                    option.textContent === newVendorType);
+                
+                // If not, add it to the dropdown
+                if (!existingOption) {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = newVendorType.toLowerCase().replace(/\s+/g, '_');
+                    optionElement.textContent = newVendorType;
+                    typeSelect.appendChild(optionElement);
+                }
+            }
+        });
+    }
+}
+
+// Store original labour form submit function
+const originalLabourFormSubmit = typeof window.submitLabourForm === 'function' ? window.submitLabourForm : null;
+
+// Define a new global submitLabourForm function that will be used by the labour modal
+window.submitLabourForm = function() {
+    const form = document.getElementById('addLabourForm');
+    const formData = new FormData(form);
+    
+    const positionSelect = document.getElementById('labourPosition');
+    const positionCustom = document.getElementById('labourPositionCustom');
+    
+    let positionValue = '';
+    if (positionCustom.style.display !== 'none' && positionCustom.value.trim()) {
+        positionValue = positionCustom.value.trim();
+        formData.set('position', positionValue);
+    } else if (positionSelect.value) {
+        positionValue = positionSelect.value;
+    }
+    
+    const requiredFields = ['fullName', 'phoneNumber', 'joinDate', 'labourType'];
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        const input = form.querySelector(`[name="${field}"]`);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!positionValue) {
+        if (positionCustom.style.display !== 'none') {
+            positionCustom.classList.add('is-invalid');
+        } else {
+            positionSelect.classList.add('is-invalid');
+        }
+        isValid = false;
+    } else {
+        positionCustom.classList.remove('is-invalid');
+        positionSelect.classList.remove('is-invalid');
+    }
+    
+    if (!isValid) {
+        showNotification('warning', 'Please fill in all required fields.');
+        return;
+    }
+    
+    // Send the data to the server using AJAX
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '../api/save_labour.php', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    // Show success message with animation
+                    showNotification('success', 'Labour added successfully!');
+                    
+                    // Update recipient if we're adding from payment entry modal
+                    if (window.currentRecipientToUpdate) {
+                        updateRecipientAfterAdd(response.labour_id, document.getElementById('labourFullName').value, 'labour');
+                    }
+                    
+                    // Reset form and close modal
+                    form.reset();
+                    backToPositionDropdown();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addLabourModal'));
+                    modal.hide();
+                    
+                    // Refresh labour list if available
+                    if (typeof loadLabours === 'function') {
+                        loadLabours();
+                    }
+                } else {
+                    showNotification('error', 'Error: ' + response.message);
+                }
+            } catch (e) {
+                showNotification('error', 'An error occurred while processing the response.');
+                console.error(e);
+            }
+        } else {
+            showNotification('error', 'Request failed. Please try again.');
+        }
+    };
+    xhr.onerror = function() {
+        showNotification('error', 'Request failed. Please check your connection.');
+    };
+    xhr.send(formData);
+};
 </script>

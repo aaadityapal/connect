@@ -10,6 +10,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Loader -->
+                <div class="loader-overlay" id="labourLoader" style="display: none;">
+                    <div class="loader-content">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Processing your request...</p>
+                    </div>
+                </div>
                 <form id="addLabourForm">
                     <!-- Personal Information Section -->
                     <div class="labour-section">
@@ -250,6 +259,8 @@
 /* Add Labour Modal Styles */
 .modal-lg { max-width: 800px; }
 .modal-content { border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); }
+/* Increase modal z-index to ensure it appears above other elements */
+#addLabourModal { z-index: 1060 !important; }
 .modal-header { border-bottom: 1px solid #f1f3f4; padding: 1.5rem 2rem; border-radius: 16px 16px 0 0; background-color: #fafbfc; }
 .modal-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
 .modal-body { padding: 2rem; background-color: #ffffff; }
@@ -299,6 +310,31 @@
 .file-upload-wrapper.has-file .file-upload-display { border-color: #10b981; background-color: #f0fdf4; }
 .file-upload-wrapper.has-file .file-icon { color: #10b981; }
 .file-upload-wrapper.has-file .file-text { color: #10b981; }
+
+/* Loader Styles */
+.loader-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    border-radius: 16px;
+}
+
+.loader-content {
+    text-align: center;
+    color: #374151;
+}
+
+.loader-content p {
+    margin: 10px 0 0;
+    font-weight: 500;
+}
 </style>
 
 <script>
@@ -362,6 +398,12 @@ function initializeLabourSections() {
 }
 
 function submitLabourForm() {
+    // Show loader
+    const loader = document.getElementById('labourLoader');
+    if (loader) {
+        loader.style.display = 'flex';
+    }
+    
     const form = document.getElementById('addLabourForm');
     const formData = new FormData(form);
     
@@ -402,17 +444,61 @@ function submitLabourForm() {
     }
     
     if (!isValid) {
-        alert('Please fill in all required fields.');
+        // Hide loader
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        
+        showNotification('warning', 'Please fill in all required fields.');
         return;
     }
     
-    console.log('Labour form data:', Object.fromEntries(formData));
-    alert('Labour added successfully!');
-    
-    form.reset();
-    backToPositionDropdown();
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addLabourModal'));
-    modal.hide();
+    // Send the data to the server using AJAX
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '../api/save_labour.php', true);
+    xhr.onload = function() {
+        // Hide loader
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    // Show success message with animation
+                    showNotification('success', 'Labour added successfully!');
+                    
+                    // Reset form and close modal
+                    form.reset();
+                    backToPositionDropdown();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addLabourModal'));
+                    modal.hide();
+                    
+                    // Refresh labour list if available
+                    if (typeof loadLabours === 'function') {
+                        loadLabours();
+                    }
+                } else {
+                    showNotification('error', 'Error: ' + response.message);
+                }
+            } catch (e) {
+                showNotification('error', 'An error occurred while processing the response.');
+                console.error(e);
+            }
+        } else {
+            showNotification('error', 'Request failed. Please try again.');
+        }
+    };
+    xhr.onerror = function() {
+        // Hide loader
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        
+        showNotification('error', 'Request failed. Please check your connection.');
+    };
+    xhr.send(formData);
 }
 
 document.getElementById('addLabourModal').addEventListener('shown.bs.modal', function () {
@@ -431,7 +517,7 @@ function updateFileName(input) {
         const maxSize = 5 * 1024 * 1024; // 5MB
         
         if (file.size > maxSize) {
-            alert('File size should not exceed 5MB');
+            showNotification('warning', 'File size should not exceed 5MB');
             input.value = '';
             return;
         }
@@ -445,4 +531,231 @@ function updateFileName(input) {
         fileIcon.className = 'fas fa-cloud-upload-alt file-icon';
     }
 }
+
+// Add notification system to the page
+function createNotificationSystem() {
+    // Create notification container if it doesn't exist
+    if (!document.getElementById('notification-container')) {
+        const container = document.createElement('div');
+        container.id = 'notification-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            pointer-events: none;
+        `;
+        document.body.appendChild(container);
+    }
+
+    // Add notification styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification {
+            padding: 15px 25px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            min-width: 300px;
+            max-width: 500px;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.4s ease-out;
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .notification::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.6);
+            transform-origin: left;
+            animation: countdown linear forwards;
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .notification.info {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+        
+        .notification.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .notification-icon {
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        
+        .notification-message {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            margin-left: 10px;
+            transition: opacity 0.2s;
+        }
+        
+        .notification-close:hover {
+            opacity: 1;
+        }
+        
+        @keyframes countdown {
+            from {
+                transform: scaleX(1);
+            }
+            to {
+                transform: scaleX(0);
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .notification.error.show {
+            animation: shake 0.8s ease;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Show notification function
+function showNotification(type, message, duration = 5000) {
+    // Create notification container if it doesn't exist
+    if (!document.getElementById('notification-container')) {
+        createNotificationSystem();
+    }
+    
+    const container = document.getElementById('notification-container');
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    // Set icon based on notification type
+    let icon = '';
+    let title = '';
+    
+    switch(type) {
+        case 'success':
+            icon = '<i class="fas fa-check-circle notification-icon"></i>';
+            title = 'Success';
+            break;
+        case 'error':
+            icon = '<i class="fas fa-exclamation-circle notification-icon"></i>';
+            title = 'Error';
+            break;
+        case 'info':
+            icon = '<i class="fas fa-info-circle notification-icon"></i>';
+            title = 'Information';
+            break;
+        case 'warning':
+            icon = '<i class="fas fa-exclamation-triangle notification-icon"></i>';
+            title = 'Warning';
+            break;
+    }
+    
+    // Set notification content
+    notification.innerHTML = `
+        ${icon}
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Add notification to container
+    container.appendChild(notification);
+    
+    // Set animation duration for countdown
+    notification.style.setProperty('--duration', `${duration}ms`);
+    
+    // Show notification with animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // Handle close button click
+    const closeButton = notification.querySelector('.notification-close');
+    closeButton.addEventListener('click', () => {
+        removeNotification(notification);
+    });
+    
+    // Auto-remove notification after duration
+    setTimeout(() => {
+        removeNotification(notification);
+    }, duration);
+}
+
+// Remove notification with animation
+function removeNotification(notification) {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(50px)';
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.parentElement.removeChild(notification);
+        }
+    }, 400);
+}
+
+// Initialize notification system
+createNotificationSystem();
 </script>

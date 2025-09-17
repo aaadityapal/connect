@@ -66,6 +66,14 @@ try {
     // Calculate the number of days in the month
     $days_in_month = date('t', strtotime($selected_month));
     
+    // Fetch office holidays for the selected month
+    $holidays_query = "SELECT DATE(holiday_date) as holiday_date FROM office_holidays 
+                      WHERE DATE(holiday_date) BETWEEN ? AND ?";
+    $holidays_stmt = $pdo->prepare($holidays_query);
+    $holidays_stmt->execute([$month_start, $month_end]);
+    $holidays_result = $holidays_stmt->fetchAll(PDO::FETCH_COLUMN);
+    $office_holidays = array_flip($holidays_result); // Convert to associative array for faster lookup
+    
     // Process working days for each user
     foreach ($users as &$user) {
         $weekly_offs = !empty($user['weekly_offs']) ? explode(',', $user['weekly_offs']) : [];
@@ -77,9 +85,10 @@ try {
         
         while ($current_date <= $end_date) {
             $day_of_week = $current_date->format('l'); // Get day name (Monday, Tuesday, etc.)
+            $current_date_str = $current_date->format('Y-m-d');
             
-            // If the day is not a weekly off, increment the working days counter
-            if (!in_array($day_of_week, $weekly_offs)) {
+            // If the day is not a weekly off and not an office holiday, increment the working days counter
+            if (!in_array($day_of_week, $weekly_offs) && !isset($office_holidays[$current_date_str])) {
                 $working_days_count++;
             }
             
@@ -138,7 +147,54 @@ try {
         $half_day_stmt->execute([$user['id'], $month_start, $month_end, $one_hour_late]);
         $half_day_result = $half_day_stmt->fetch(PDO::FETCH_ASSOC);
         
-        $user['half_days'] = $half_day_result['half_days'] ?? 0;
+        $raw_half_days = $half_day_result['half_days'] ?? 0;
+        
+        // Check if user has applied short leave for this month
+        $short_leave_query = "SELECT SUM(CASE 
+                                        WHEN lr.duration_type = 'half_day' THEN 0.5 
+                                        ELSE 
+                                           LEAST(DATEDIFF(
+                                               LEAST(lr.end_date, ?), 
+                                               GREATEST(lr.start_date, ?)
+                                           ) + 1, 
+                                           DATEDIFF(?, ?) + 1)
+                                    END) as short_leave_days
+                             FROM leave_request lr
+                             LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+                             WHERE lr.user_id = ? 
+                             AND lr.status = 'approved'
+                             AND lt.name = 'Short Leave'
+                             AND (
+                                 (lr.start_date BETWEEN ? AND ?) 
+                                 OR 
+                                 (lr.end_date BETWEEN ? AND ?)
+                                 OR 
+                                 (lr.start_date <= ? AND lr.end_date >= ?)
+                             )";
+        $short_leave_stmt = $pdo->prepare($short_leave_query);
+        $short_leave_stmt->execute([
+            $month_end, $month_start, $month_end, $month_start, // For LEAST/GREATEST and DATEDIFF
+            $user['id'], 
+            $month_start, $month_end, 
+            $month_start, $month_end,
+            $month_start, $month_end
+        ]);
+        $short_leave_result = $short_leave_stmt->fetch(PDO::FETCH_ASSOC);
+        $short_leave_days = $short_leave_result['short_leave_days'] ?? 0;
+        
+        // Apply logic: If user has short leave, reduce half days by short leave amount (max 2)
+        // But if half days exceed 2, the excess should still count as deduction
+        $deductible_half_days = $raw_half_days;
+        
+        if ($short_leave_days > 0) {
+            // Reduce half days by short leave taken (max 2 days can be covered)
+            $covered_by_short_leave = min($short_leave_days, min($raw_half_days, 2));
+            $deductible_half_days = max(0, $raw_half_days - $covered_by_short_leave);
+        }
+        
+        $user['half_days'] = $deductible_half_days;
+        $user['raw_half_days'] = $raw_half_days; // Store original count for reference
+        $user['short_leave_days'] = $short_leave_days;
         $user['half_day_dates'] = $half_day_result['half_day_dates'] ?? '';
         
         // Calculate late deductions
@@ -146,6 +202,26 @@ try {
         $half_days = $user['half_days'];
         $base_salary = $user['base_salary'] ?? 0;
         $working_days = $user['working_days_count'];
+        
+        // Apply short leave reduction to late days (maximum 2 days can be covered)
+        $effective_late_days = $late_days;
+        $late_days_covered_by_short_leave = 0;
+        
+        if ($short_leave_days > 0) {
+            // Calculate how many late days can be covered by short leave
+            // First, see how much short leave is left after covering half days
+            $short_leave_used_for_half_days = min($short_leave_days, min($raw_half_days, 2));
+            $remaining_short_leave = $short_leave_days - $short_leave_used_for_half_days;
+            
+            // Use remaining short leave to cover late days (max 2 total)
+            $max_late_days_coverable = max(0, 2 - $short_leave_used_for_half_days);
+            $late_days_covered_by_short_leave = min($remaining_short_leave, min($late_days, $max_late_days_coverable));
+            $effective_late_days = max(0, $late_days - $late_days_covered_by_short_leave);
+        }
+        
+        // Store the covered information for display
+        $user['late_days_covered_by_short_leave'] = $late_days_covered_by_short_leave;
+        $user['effective_late_days'] = $effective_late_days;
         
         // Determine which salary to use (base or incremented) based on effective date
         $effective_salary = $base_salary;
@@ -163,17 +239,14 @@ try {
         $daily_salary = $working_days > 0 ? $effective_salary / $working_days : 0;
         $half_day_salary = $daily_salary / 2;
         
-        // Calculate salary based on present days
-        $present_days_salary = $daily_salary * $user['present_days'];
-        
-        // Calculate deductions based on late days
+        // Calculate deductions based on effective late days (after short leave coverage)
         $deduction_days = 0;
-        if ($late_days >= 3) {
+        if ($effective_late_days >= 3) {
             // Initial half-day for first 3 late days
             $deduction_days = 0.5;
             
             // Additional half-day for every 3 more late days
-            $additional_late_days = $late_days - 3;
+            $additional_late_days = $effective_late_days - 3;
             if ($additional_late_days > 0) {
                 $additional_half_days = floor($additional_late_days / 3);
                 $deduction_days += ($additional_half_days * 0.5);
@@ -189,7 +262,8 @@ try {
         $user['late_deduction_days'] = $deduction_days;
         
         // Calculate 1-hour half day deductions (each counts as half day)
-        $half_day_deduction_amount = round($half_days * $half_day_salary, 2);
+        // Only deductible half days (after short leave coverage) are used for calculation
+        $half_day_deduction_amount = round($deductible_half_days * $half_day_salary, 2);
         $user['half_day_deduction'] = $half_day_deduction_amount;
         
         // Calculate final monthly salary after all deductions
@@ -203,12 +277,13 @@ try {
             'is_incremented' => ($effective_salary > $base_salary),
             'increment_percentage' => $user['increment_percentage'] ?? 0,
             'increment_effective_from' => $user['effective_from'] ?? '',
-            'present_days_salary' => $present_days_salary,
-            'absence_deduction' => $effective_salary - $present_days_salary,
+            'absence_deduction' => 0, // Will be calculated after leave processing
             'late_deduction' => $total_deduction,
             'half_day_deduction' => $half_day_deduction_amount,
+            'leave_deduction' => $leave_deduction,
             'working_days' => $working_days,
             'present_days' => $user['present_days'],
+            'absent_days' => 0, // Will be calculated after leave processing
             'daily_salary' => $daily_salary
         ];
         
@@ -347,19 +422,30 @@ try {
         
         // Update deduction breakdown
         $user['deduction_breakdown']['leave_deduction'] = $leave_deduction;
+        $user['deduction_breakdown']['absence_deduction'] = $absence_deduction;
+        $user['deduction_breakdown']['absent_days'] = $absent_days;
         
-        // Calculate final monthly salary after all deductions
-        $total_deductions = $total_deduction + $half_day_deduction_amount + $leave_deduction;
+        // Calculate final monthly salary using simplified formula
+        // Monthly Salary = Base Salary - Late Deduction - Leave Deduction - 4th Saturday Penalty - Half Day Deduction - Absence Deduction
         
-        // Use present days salary as the base instead of full base salary
-        $monthly_salary = $present_days_salary - $total_deductions;
+        // Calculate absence deduction (for days not present)
+        // Half-day late employees are still "present" - they just have a separate half-day penalty
+        $absent_days = max(0, $working_days - $user['present_days']);
+        $absence_deduction = $absent_days * $daily_salary;
+        
+        // Calculate total deductions
+        $total_deductions = $total_deduction + $half_day_deduction_amount + $leave_deduction + $absence_deduction;
+        
+        // Simple formula: Base Salary - All Deductions
+        $monthly_salary = $effective_salary - $total_deductions;
+        
         $user['monthly_salary'] = round($monthly_salary, 2);
         $user['total_deductions'] = $total_deductions;
-        $user['present_days_salary'] = round($present_days_salary, 2);
-        
-        // Calculate absence deduction (difference between base salary and present days salary)
-        $absence_deduction = $base_salary - $present_days_salary;
         $user['absence_deduction'] = round($absence_deduction, 2);
+        $user['absent_days'] = $absent_days;
+        
+        // Remove the present days salary calculation as we're using base salary now
+        $user['present_days_salary'] = round($effective_salary, 2); // This is now the base/effective salary
         
         // After the half day deduction calculation, add the 4th Saturday and penalty calculation logic
         
@@ -501,12 +587,10 @@ try {
                 $penalty_amount = $daily_salary * $penalty_days;
                 $user['penalty_amount'] = round($penalty_amount, 2);
                 
-                // Update deduction breakdown
-                $user['deduction_breakdown']['penalty_deduction'] = $penalty_amount;
-                
                 // Update total deductions and monthly salary
                 $user['total_deductions'] += $penalty_amount;
                 $user['monthly_salary'] -= $penalty_amount;
+                $user['monthly_salary'] = round($user['monthly_salary'], 2);
             } else {
                 $user['penalty_amount'] = 0;
             }
@@ -610,14 +694,8 @@ try {
         // Calculate overtime amount
         $user['overtime_amount'] = $one_hour_salary * $total_overtime_hours;
         
-        // Calculate remaining salary for extra working days
+        // No remaining salary calculation since we cap at working days
         $user['remaining_salary'] = 0;
-        $extra_days = $user['present_days'] - $user['working_days_count'];
-        
-        if ($extra_days > 0) {
-            // If employee worked more days than scheduled, calculate remaining salary
-            $user['remaining_salary'] = $extra_days * $one_day_salary;
-        }
             
             // Also store the legacy total for backward compatibility
             $legacy_overtime_query = "SELECT SUM(overtime_hours) as total_overtime 
@@ -746,7 +824,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
     fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
     
     // Add CSV header
-    fputcsv($output, ['S.No', 'Username', 'Base Salary', 'Working Days', 'Present Days', 'Late Punch In', 'Late Deduction', 'Leave Taken', 'Leave Deduction', '1Hr Half Days', 'Half Day Deduction', '4th Saturday Penalty', 'Monthly Salary', 'Total Overtime Hours', 'Overtime Amount', 'Total Salary', 'Remaining Salary']);
+    fputcsv($output, ['S.No', 'Username', 'Base Salary', 'Working Days', 'Present Days', 'Late Punch In', 'Late Deduction', 'Leave Taken', 'Leave Deduction', '1Hr Half Days', 'Half Day Deduction', '4th Saturday Penalty', 'Monthly Salary', 'Total Overtime Hours', 'Overtime Amount', 'Total Salary', 'Absent Days']);
     
     // Add data rows
     $serial = 1;
@@ -844,23 +922,16 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
             // Add overtime amount
             isset($user['overtime_amount']) ? round($user['overtime_amount'], 2) : 0,
             
-            // Add total salary (monthly salary + overtime amount, excluding remaining salary)
+            // Add total salary (monthly salary + overtime amount, capped at working days)
             (function($user) {
                 $monthly_salary = isset($user['monthly_salary']) ? $user['monthly_salary'] : 0;
                 $overtime_amount = isset($user['overtime_amount']) ? $user['overtime_amount'] : 0;
-                $extra_days = isset($user['present_days']) && isset($user['working_days_count']) ? $user['present_days'] - $user['working_days_count'] : 0;
-                
-                if ($extra_days > 0) {
-                    $daily_salary = isset($user['working_days_count']) && $user['working_days_count'] > 0 ? $user['base_salary'] / $user['working_days_count'] : 0;
-                    $extra_days_salary = $extra_days * $daily_salary;
-                    $monthly_salary = $monthly_salary - $extra_days_salary;
-                }
                 
                 return $monthly_salary + $overtime_amount;
             })($user),
             
-            // Add remaining salary for extra working days
-            isset($user['remaining_salary']) ? round($user['remaining_salary'], 2) : 0
+            // Add absent days instead of excess days
+            isset($user['absent_days']) ? $user['absent_days'] . ' days' : '0 days'
         ];
         fputcsv($output, $row);
     }
@@ -2255,22 +2326,9 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     <?php
                         $total_payable = 0;
                         foreach ($users as $user) {
-                            // Monthly salary + overtime amount
+                            // Monthly salary + overtime amount (already capped at working days)
                             $monthly_salary = isset($user['monthly_salary']) ? $user['monthly_salary'] : 0;
                             $overtime_amount = isset($user['overtime_amount']) ? $user['overtime_amount'] : 0;
-                            
-                            // Calculate total payable for this employee
-                            // Adjust for extra days if needed
-                            $extra_days = isset($user['present_days']) && isset($user['working_days_count']) ? 
-                                          $user['present_days'] - $user['working_days_count'] : 0;
-                            
-                            if ($extra_days > 0) {
-                                // Don't include extra days in current month's payable
-                                $daily_salary = isset($user['working_days_count']) && $user['working_days_count'] > 0 ? 
-                                              $user['base_salary'] / $user['working_days_count'] : 0;
-                                $extra_days_salary = $extra_days * $daily_salary;
-                                $monthly_salary = $monthly_salary - $extra_days_salary;
-                            }
                             
                             $total_payable += $monthly_salary + $overtime_amount;
                         }
@@ -2366,7 +2424,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                         <th>Total Overtime Hours</th>
                         <th>Overtime Amount</th>
                         <th>Total Salary</th>
-                        <th>Remaining Salary</th>
+                        <th>Absent Days</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -2438,24 +2496,35 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $user['present_days']; ?> 
+                                <td><?php echo $user['present_days']; ?>
+                                    <?php if ($user['absent_days'] > 0): ?>
+                                        <small class="text-warning d-block">(<?php echo $user['absent_days']; ?> absent days will be deducted)</small>
+                                    <?php endif; ?>
                                     <span class="attendance-info" data-user-id="<?php echo $user['id']; ?>" data-username="<?php echo htmlspecialchars($user['username']); ?>" data-month="<?php echo $selected_month; ?>">
                                         <i class="bi bi-info-circle"></i>
                                     </span>
                                 </td>
-                                <td><?php echo $user['late_days']; ?> 
-                                    <span class="late-info" data-user-id="<?php echo $user['id']; ?>" data-username="<?php echo htmlspecialchars($user['username']); ?>" data-month="<?php echo $selected_month; ?>" data-shift-start="<?php echo date('h:i A', strtotime($user['start_time'] ?? '09:00:00')); ?>">
+                                <td><?php echo $user['late_days']; ?>
+                                    <?php if ($user['late_days_covered_by_short_leave'] > 0): ?>
+                                        <small class="text-success d-block">(<?php echo $user['late_days_covered_by_short_leave']; ?> covered by short leave)</small>
+                                    <?php endif; ?>
+                                    <span class="late-info" data-user-id="<?php echo $user['id']; ?>" data-username="<?php echo htmlspecialchars($user['username']); ?>" data-month="<?php echo $selected_month; ?>" data-shift-start="<?php echo date('h:i A', strtotime($user['start_time'] ?? '09:00:00')); ?>" data-effective-late-days="<?php echo $user['effective_late_days']; ?>" data-covered-late-days="<?php echo $user['late_days_covered_by_short_leave']; ?>">
                                         <i class="bi bi-exclamation-circle text-warning"></i>
                                     </span>
                                 </td>
                                 <td>
                                     <?php if ($user['late_deduction'] > 0): ?>
                                         <span class="text-danger">₹<?php echo $user['late_deduction']; ?></span>
-                                        <span class="deduction-info" title="Deduction of <?php echo $user['late_deduction_days']; ?> day(s) salary due to <?php echo $user['late_days']; ?> late punch-ins. Calculated based on <?php echo $user['working_days_count']; ?> working days.">
+                                        <span class="deduction-info" title="Deduction of <?php echo $user['late_deduction_days']; ?> day(s) salary due to <?php echo $user['effective_late_days']; ?> effective late punch-ins (<?php echo $user['late_days']; ?> total, <?php echo $user['late_days_covered_by_short_leave']; ?> covered by short leave). Calculated based on <?php echo $user['working_days_count']; ?> working days.">
                                             <i class="bi bi-info-circle"></i>
                                         </span>
                                     <?php else: ?>
-                                        ₹0.00
+                                        <?php if ($user['late_days'] > 0 && $user['late_days_covered_by_short_leave'] > 0): ?>
+                                            <span class="text-success">₹0.00</span>
+                                            <small class="text-success d-block">(<?php echo $user['late_days']; ?> late days covered by short leave)</small>
+                                        <?php else: ?>
+                                            ₹0.00
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -2674,6 +2743,9 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                 <td>
                                     <?php if ($user['half_days'] > 0): ?>
                                         <span class="text-warning"><?php echo $user['half_days']; ?> days</span>
+                                        <?php if ($user['raw_half_days'] != $user['half_days']): ?>
+                                            <small class="text-muted d-block">(<?php echo $user['raw_half_days']; ?> total, <?php echo $user['short_leave_days']; ?> covered by short leave)</small>
+                                        <?php endif; ?>
                                         <span class="half-day-info" 
                                               data-user-id="<?php echo $user['id']; ?>" 
                                               data-username="<?php echo htmlspecialchars($user['username']); ?>" 
@@ -2681,11 +2753,18 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                               data-shift-start="<?php echo date('h:i A', strtotime($user['start_time'] ?? '09:00:00')); ?>"
                                               data-half-day-dates="<?php echo htmlspecialchars($user['half_day_dates']); ?>"
                                               data-half-day-deduction="<?php echo $user['half_day_deduction']; ?>"
-                                              data-daily-salary="<?php echo $daily_salary; ?>">
+                                              data-daily-salary="<?php echo $daily_salary; ?>"
+                                              data-raw-half-days="<?php echo $user['raw_half_days']; ?>"
+                                              data-short-leave-days="<?php echo $user['short_leave_days']; ?>">
                                             <i class="bi bi-exclamation-triangle-fill text-warning"></i>
                                         </span>
                                     <?php else: ?>
-                                        0 days
+                                        <?php if ($user['raw_half_days'] > 0): ?>
+                                            <span class="text-success">0 days</span>
+                                            <small class="text-muted d-block">(<?php echo $user['raw_half_days']; ?> total, covered by short leave)</small>
+                                        <?php else: ?>
+                                            0 days
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -2789,22 +2868,9 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                 </td>
                                 <td>
                                     <?php 
-                                        // Calculate total salary = monthly salary + overtime amount
+                                        // Calculate total salary = monthly salary + overtime amount (already capped)
                                         $monthly_salary = $user['monthly_salary'] ?? 0;
                                         $overtime_amount = $user['overtime_amount'] ?? 0;
-                                        
-                                        // Adjust monthly salary for extra days (don't count extra days in current month)
-                                        $extra_days = $user['present_days'] - $user['working_days_count'];
-                                        $extra_days_salary = 0;
-                                        
-                                        if ($extra_days > 0) {
-                                            $daily_salary = $user['working_days_count'] > 0 ? $user['base_salary'] / $user['working_days_count'] : 0;
-                                            $extra_days_salary = $extra_days * $daily_salary;
-                                            
-                                            // Adjust monthly salary to not include extra days
-                                            $monthly_salary = $monthly_salary - $extra_days_salary;
-                                        }
-                                        
                                         $total_salary = $monthly_salary + $overtime_amount;
                                     ?>
                                     <span class="text-success" style="font-weight: 600;">
@@ -2820,22 +2886,13 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if (!empty($user['remaining_salary']) && $user['remaining_salary'] > 0): ?>
-                                        <span class="text-primary" style="font-weight: 600;">
-                                            ₹<?php echo number_format($user['remaining_salary'], 2); ?>
+                                    <?php if ($user['absent_days'] > 0): ?>
+                                        <span class="text-danger" style="font-weight: 600;">
+                                            <?php echo $user['absent_days']; ?> days
                                         </span>
-                                        <span class="remaining-salary-info" 
-                                              data-user-id="<?php echo $user['id']; ?>" 
-                                              data-username="<?php echo htmlspecialchars($user['username']); ?>" 
-                                              data-working-days="<?php echo $user['working_days_count']; ?>"
-                                              data-present-days="<?php echo $user['present_days']; ?>"
-                                              data-extra-days="<?php echo $user['present_days'] - $user['working_days_count']; ?>"
-                                              data-daily-salary="<?php echo $user['working_days_count'] > 0 ? $user['base_salary'] / $user['working_days_count'] : 0; ?>"
-                                              data-remaining-salary="<?php echo $user['remaining_salary']; ?>">
-                                            <i class="bi bi-info-circle text-primary"></i>
-                                        </span>
+                                        <small class="text-danger d-block">₹<?php echo number_format($user['absence_deduction'], 2); ?> deducted</small>
                                     <?php else: ?>
-                                        ₹0.00
+                                        <span class="text-success">0 days</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -3275,6 +3332,8 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     const username = this.getAttribute('data-username');
                     const month = this.getAttribute('data-month');
                     const shiftStart = this.getAttribute('data-shift-start');
+                    const effectiveLateDays = parseInt(this.getAttribute('data-effective-late-days')) || 0;
+                    const coveredLateDays = parseInt(this.getAttribute('data-covered-late-days')) || 0;
                     
                     latePunchUsername.textContent = username + ' - ' + new Date(month + '-01').toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
                     
@@ -3282,7 +3341,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     latePunchDetails.innerHTML = '<div class="loading-spinner"></div>';
                     latePunchModal.style.display = 'block';
                                     
-                                    // Add explanation about late punch categorization
+                                    // Add explanation about late punch categorization and short leave policy
                                     let explanationHtml = `
                                         <div class="late-punch-explanation">
                                             <p><strong>Note:</strong> Late punch-ins are categorized as follows:</p>
@@ -3290,6 +3349,13 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                                                 <li><strong>Late Punch:</strong> Between 15 minutes and 1 hour after shift start</li>
                                                 <li><strong>Half Day:</strong> More than 1 hour after shift start (shown in the "1Hr Half Days" column)</li>
                                             </ul>
+                                            ${coveredLateDays > 0 ? `
+                                                <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #4caf50;">
+                                                    <h5 style="margin: 0 0 10px 0; color: #2e7d32;"><i class="bi bi-check-circle"></i> Short Leave Policy Applied</h5>
+                                                    <p style="margin: 0; color: #388e3c;">This employee's short leave has covered <strong>${coveredLateDays} late punch-in days</strong> this month.</p>
+                                                    <p style="margin: 5px 0 0 0; color: #388e3c;">Short leave can cover up to <strong>2 late days</strong> without deduction.</p>
+                                                </div>
+                                            ` : ''}
                                         </div>
                                     `;
                     
@@ -3554,6 +3620,8 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                     const halfDayDates = this.getAttribute('data-half-day-dates') || '';
                     const halfDayDeduction = this.getAttribute('data-half-day-deduction') || '0';
                     const dailySalary = parseFloat(this.getAttribute('data-daily-salary')) || 0;
+                    const rawHalfDays = parseInt(this.getAttribute('data-raw-half-days')) || 0;
+                    const shortLeaveDays = parseFloat(this.getAttribute('data-short-leave-days')) || 0;
                     
                     halfDayUsername.textContent = username + ' - ' + new Date(month + '-01').toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
                     
@@ -3575,12 +3643,36 @@ if (isset($_GET['export']) && $_GET['export'] == 'csv') {
                             detailsHtml += '<h4>1-Hour Half Day Summary</h4>';
                             detailsHtml += '<p>When an employee is more than 1 hour late, it counts as a half day and incurs a half-day salary deduction.</p>';
                             
-                            // Add deduction info
+                            // Add short leave policy explanation
+                            if (shortLeaveDays > 0) {
+                                detailsHtml += `
+                                    <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #2196f3;">
+                                        <h5 style="margin: 0 0 10px 0; color: #1976d2;"><i class="bi bi-info-circle"></i> Short Leave Policy Applied</h5>
+                                        <p style="margin: 0; color: #1565c0;">This employee has taken <strong>${shortLeaveDays} days</strong> of approved short leave this month.</p>
+                                        <p style="margin: 5px 0 0 0; color: #1565c0;">Short leave can cover up to <strong>2 days</strong> of 1-hour late arrivals without deduction.</p>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Add deduction calculation details
+                            const coveredDays = Math.min(shortLeaveDays, Math.min(rawHalfDays, 2));
+                            const deductibleDays = Math.max(0, rawHalfDays - coveredDays);
+                            
                             detailsHtml += `
                                 <div class="total-deduction">
-                                    <h4>Total Half Days: ${halfDayDates.split(',').length > 1 ? halfDayDates.split(',').length : (halfDayDates ? 1 : 0)} days</h4>
-                                    <p>Half Day Deduction: ₹${parseFloat(halfDayDeduction).toFixed(2)}</p>
-                                    <p>Half Day Salary: ₹${(dailySalary / 2).toFixed(2)}</p>
+                                    <h4>Calculation Breakdown</h4>
+                                    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                        <div style="margin-bottom: 8px;"><strong>Total 1-Hour Late Days:</strong> ${rawHalfDays} days</div>
+                                        ${shortLeaveDays > 0 ? `
+                                            <div style="margin-bottom: 8px; color: #4caf50;"><strong>Covered by Short Leave:</strong> ${coveredDays} days</div>
+                                            <div style="margin-bottom: 8px; color: #f44336;"><strong>Deductible Days:</strong> ${deductibleDays} days</div>
+                                        ` : `
+                                            <div style="margin-bottom: 8px; color: #f44336;"><strong>Deductible Days:</strong> ${rawHalfDays} days (No short leave applied)</div>
+                                        `}
+                                        <hr style="margin: 10px 0;">
+                                        <div><strong>Half Day Salary:</strong> ₹${(dailySalary / 2).toFixed(2)}</div>
+                                        <div><strong>Total Deduction:</strong> ₹${parseFloat(halfDayDeduction).toFixed(2)}</div>
+                                    </div>
                                 </div>
                             `;
                             

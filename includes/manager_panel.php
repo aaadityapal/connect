@@ -93,6 +93,12 @@
         <i class="fas fa-chart-bar"></i>
         <span class="menu-text">Reports & Analytics</span>
     </div>
+    
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'executive_insights_dashboard.php' ? 'active' : ''; ?>" onclick="window.location.href='analytics/executive_insights_dashboard.php'">
+        <i class="fas fa-chart-line"></i>
+        <span class="menu-text">Executive Insights</span>
+    </div>
+    
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'employee_leave.php' ? 'active' : ''; ?>" onclick="window.location.href='employee_leave.php'">
         <i class="fas fa-calendar-alt"></i>
         <span class="menu-text">Apply Leaves</span>

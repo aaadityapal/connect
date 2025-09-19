@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Entry Error Diagnostic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .diagnostic-card {
+            margin-bottom: 20px;
+        }
+        .status-good { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-error { color: #dc3545; }
+        .json-viewer {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1><i class="fas fa-stethoscope"></i> Payment Entry Error Diagnostic Tool</h1>
+                <p class="text-muted">This tool will help identify why payment entry saving is failing in production.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card diagnostic-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-play-circle"></i> Run Diagnostic</h5>
+                    </div>
+                    <div class="card-body">
+                        <button type="button" class="btn btn-primary" onclick="runDiagnostic()">
+                            <i class="fas fa-search"></i> Check System Health
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="testSimplePayment()">
+                            <i class="fas fa-test-tube"></i> Test Simple Payment
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="checkLogs()">
+                            <i class="fas fa-file-alt"></i> Check Error Logs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card diagnostic-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Common Production Issues</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <strong>Most Common Issues:</strong>
+                            <ul class="mb-0">
+                                <li>File upload directory permissions</li>
+                                <li>PHP file upload limits exceeded</li>
+                                <li>Session timeout or authentication loss</li>
+                                <li>Database connection issues</li>
+                                <li>Missing required form fields</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card diagnostic-card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list"></i> Diagnostic Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="diagnosticResults">
+                            <p class="text-muted">Click "Check System Health" to start diagnostics...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-code"></i> Detailed Technical Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="technicalDetails" class="json-viewer">
+                            Technical details will appear here after running diagnostics...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function runDiagnostic() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            const technicalDiv = document.getElementById('technicalDetails');
+            
+            resultsDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Running diagnostics...</div>';
+            
+            fetch('./api/diagnose_payment_entry_error.php', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayDiagnosticResults(data);
+                technicalDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                resultsDiv.innerHTML = '<div class="alert alert-danger">Error running diagnostics: ' + error.message + '</div>';
+                console.error('Diagnostic error:', error);
+            });
+        }
+
+        function displayDiagnosticResults(data) {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            let html = '';
+
+            // Overall health
+            if (data.overall_health === 'good') {
+                html += '<div class="alert alert-success"><i class="fas fa-check-circle"></i> ' + data.message + '</div>';
+            } else {
+                html += '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ' + data.message + '</div>';
+            }
+
+            // Session check
+            if (data.checks && data.checks.session) {
+                html += '<div class="mb-2">';
+                html += '<strong>Session:</strong> ';
+                if (data.checks.session.user_id_set) {
+                    html += '<span class="status-good"><i class="fas fa-check"></i> Authenticated (User ID: ' + data.checks.session.user_id_value + ')</span>';
+                } else {
+                    html += '<span class="status-error"><i class="fas fa-times"></i> Not authenticated</span>';
+                }
+                html += '</div>';
+            }
+
+            // Database check
+            if (data.checks && data.checks.database) {
+                html += '<div class="mb-2">';
+                html += '<strong>Database:</strong> ';
+                if (data.checks.database.connection_status === 'success') {
+                    html += '<span class="status-good"><i class="fas fa-check"></i> Connected</span>';
+                } else {
+                    html += '<span class="status-error"><i class="fas fa-times"></i> Connection failed</span>';
+                }
+                html += '</div>';
+            }
+
+            // Directory check
+            if (data.checks && data.checks.directories) {
+                html += '<div class="mb-2">';
+                html += '<strong>Upload Directory:</strong> ';
+                if (data.checks.directories.base_writable) {
+                    html += '<span class="status-good"><i class="fas fa-check"></i> Writable</span>';
+                } else {
+                    html += '<span class="status-error"><i class="fas fa-times"></i> Not writable</span>';
+                }
+                html += '</div>';
+            }
+
+            // PHP Config
+            if (data.checks && data.checks.php_config) {
+                html += '<div class="mb-2">';
+                html += '<strong>PHP Upload Config:</strong> ';
+                html += '<small>Max file size: ' + data.checks.php_config.upload_max_filesize + ', ';
+                html += 'Post max: ' + data.checks.php_config.post_max_size + '</small>';
+                html += '</div>';
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function testSimplePayment() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            resultsDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Simple payment test feature will be implemented based on your specific error.</div>';
+        }
+
+        function checkLogs() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            resultsDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Check the server error logs and the payment_entry_errors.log file in the logs directory for detailed error information.</div>';
+        }
+    </script>
+</body>
+</html>

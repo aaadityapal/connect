@@ -11,13 +11,17 @@ CREATE TABLE IF NOT EXISTS hr_payment_entries (
     payment_done_via INT NOT NULL COMMENT 'User ID who made the payment',
     payment_mode VARCHAR(50) NOT NULL,
     recipient_count INT NOT NULL DEFAULT 0,
+    created_by INT COMMENT 'User ID who created this entry',
+    updated_by INT COMMENT 'User ID who last updated this entry',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     -- Indexing for common searches
     INDEX idx_project_id (project_id),
     INDEX idx_payment_date (payment_date),
-    INDEX idx_payment_done_via (payment_done_via)
+    INDEX idx_payment_done_via (payment_done_via),
+    INDEX idx_created_by (created_by),
+    INDEX idx_updated_by (updated_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create payment recipients table

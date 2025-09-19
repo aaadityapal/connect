@@ -1,9 +1,23 @@
 <?php
+// Start session to get current user
+session_start();
+
 // Database connection
 require_once '../config/db_connect.php';
 
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'User not authenticated'
+        ]);
+        exit;
+    }
+    
+    $created_by = $_SESSION['user_id'];
+    $updated_by = $_SESSION['user_id'];
     // Collect form data - Basic information
     $fullName = mysqli_real_escape_string($conn, $_POST['fullName']);
     $position = mysqli_real_escape_string($conn, $_POST['position']);
@@ -29,14 +43,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $otherDocument = '';
     
     // Function to handle file uploads
-    function handleFileUpload($fileInput, $targetDir = '../uploads/labour_documents/') {
+    function handleFileUpload($fileInput, $labourId, $documentType, $targetDir = '../uploads/labour_documents/') {
         if (!isset($_FILES[$fileInput]) || $_FILES[$fileInput]['error'] == UPLOAD_ERR_NO_FILE) {
             return '';
         }
         
-        // Create directory if it doesn't exist
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0777, true);
+        // Create labour-specific directory
+        $labourDir = $targetDir . $labourId . '/';
+        if (!file_exists($labourDir)) {
+            mkdir($labourDir, 0777, true);
         }
         
         $file = $_FILES[$fileInput];
@@ -49,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validate file
         $maxSize = 5 * 1024 * 1024; // 5MB
         $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-        $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-        $newFileName = uniqid() . '_' . time() . '.' . $fileExtension;
-        $targetFilePath = $targetDir . $newFileName;
+        $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $newFileName = $documentType . '.' . $fileExtension;
+        $targetFilePath = $labourDir . $newFileName;
         
         if ($fileSize > $maxSize) {
             return ['error' => 'File size exceeds the limit of 5MB'];
@@ -73,57 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Handle document uploads if files are submitted
-    if (isset($_FILES) && !empty($_FILES)) {
-        if (isset($_FILES['aadharCard']) && $_FILES['aadharCard']['error'] != UPLOAD_ERR_NO_FILE) {
-            $aadharResult = handleFileUpload('aadharCard');
-            if (is_array($aadharResult) && isset($aadharResult['error'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Aadhar Card: ' . $aadharResult['error']
-                ]);
-                exit;
-            }
-            $aadharCard = $aadharResult;
-        }
-        
-        if (isset($_FILES['panCard']) && $_FILES['panCard']['error'] != UPLOAD_ERR_NO_FILE) {
-            $panResult = handleFileUpload('panCard');
-            if (is_array($panResult) && isset($panResult['error'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'PAN Card: ' . $panResult['error']
-                ]);
-                exit;
-            }
-            $panCard = $panResult;
-        }
-        
-        if (isset($_FILES['voterCard']) && $_FILES['voterCard']['error'] != UPLOAD_ERR_NO_FILE) {
-            $voterResult = handleFileUpload('voterCard');
-            if (is_array($voterResult) && isset($voterResult['error'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Voter ID: ' . $voterResult['error']
-                ]);
-                exit;
-            }
-            $voterId = $voterResult;
-        }
-        
-        if (isset($_FILES['otherDocument']) && $_FILES['otherDocument']['error'] != UPLOAD_ERR_NO_FILE) {
-            $otherResult = handleFileUpload('otherDocument');
-            if (is_array($otherResult) && isset($otherResult['error'])) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Other Document: ' . $otherResult['error']
-                ]);
-                exit;
-            }
-            $otherDocument = $otherResult;
-        }
-    }
-    
     // Validate required fields
     if (empty($fullName) || empty($position) || empty($phoneNumber) || empty($joinDate) || empty($labourType)) {
         echo json_encode([
@@ -133,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Insert data into the labours table
+    // Insert data into the labours table first (without file names)
     $sql = "INSERT INTO hr_labours (
                 full_name, 
                 position, 
@@ -143,14 +107,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 join_date,
                 labour_type,
                 daily_salary,
-                aadhar_card,
-                pan_card,
-                voter_id,
-                other_document,
                 address,
                 city,
                 state,
-                notes
+                notes,
+                created_by,
+                updated_by
             ) VALUES (
                 '$fullName', 
                 '$position', 
@@ -160,18 +122,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '$joinDate',
                 '$labourType',
                 $dailySalary,
-                '$aadharCard',
-                '$panCard',
-                '$voterId',
-                '$otherDocument',
                 '$address',
                 '$city',
                 '$state',
-                '$notes'
+                '$notes',
+                '$created_by',
+                '$updated_by'
             )";
     
     if (mysqli_query($conn, $sql)) {
         $labour_id = mysqli_insert_id($conn);
+        
+        // Now handle document uploads with the labour ID
+        $updateFilesSql = "UPDATE hr_labours SET ";
+        $updateFields = [];
+        $hasFiles = false;
+        
+        if (isset($_FILES) && !empty($_FILES)) {
+            if (isset($_FILES['aadharCard']) && $_FILES['aadharCard']['error'] != UPLOAD_ERR_NO_FILE) {
+                $aadharResult = handleFileUpload('aadharCard', $labour_id, 'aadhar');
+                if (is_array($aadharResult) && isset($aadharResult['error'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Aadhar Card: ' . $aadharResult['error']
+                    ]);
+                    exit;
+                }
+                $updateFields[] = "aadhar_card = '$aadharResult'";
+                $hasFiles = true;
+            }
+            
+            if (isset($_FILES['panCard']) && $_FILES['panCard']['error'] != UPLOAD_ERR_NO_FILE) {
+                $panResult = handleFileUpload('panCard', $labour_id, 'pan');
+                if (is_array($panResult) && isset($panResult['error'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'PAN Card: ' . $panResult['error']
+                    ]);
+                    exit;
+                }
+                $updateFields[] = "pan_card = '$panResult'";
+                $hasFiles = true;
+            }
+            
+            if (isset($_FILES['voterCard']) && $_FILES['voterCard']['error'] != UPLOAD_ERR_NO_FILE) {
+                $voterResult = handleFileUpload('voterCard', $labour_id, 'voter');
+                if (is_array($voterResult) && isset($voterResult['error'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Voter ID: ' . $voterResult['error']
+                    ]);
+                    exit;
+                }
+                $updateFields[] = "voter_id = '$voterResult'";
+                $hasFiles = true;
+            }
+            
+            if (isset($_FILES['otherDocument']) && $_FILES['otherDocument']['error'] != UPLOAD_ERR_NO_FILE) {
+                $otherResult = handleFileUpload('otherDocument', $labour_id, 'other');
+                if (is_array($otherResult) && isset($otherResult['error'])) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => 'Other Document: ' . $otherResult['error']
+                    ]);
+                    exit;
+                }
+                $updateFields[] = "other_document = '$otherResult'";
+                $hasFiles = true;
+            }
+        }
+        
+        // Update the record with file names if any files were uploaded
+        if ($hasFiles) {
+            $updateFilesSql .= implode(', ', $updateFields) . " WHERE labour_id = $labour_id";
+            mysqli_query($conn, $updateFilesSql);
+        }
+        
         echo json_encode([
             'status' => 'success',
             'message' => 'Labour added successfully',

@@ -20,6 +20,11 @@
                     </div>
                 </div>
                 <form id="addLabourForm">
+                    <!-- Hidden field for current user tracking -->
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <input type="hidden" name="created_by" value="<?php echo $_SESSION['user_id']; ?>">
+                        <input type="hidden" name="updated_by" value="<?php echo $_SESSION['user_id']; ?>">
+                    <?php endif; ?>
                     <!-- Personal Information Section -->
                     <div class="labour-section">
                         <h6 class="section-title mb-3">

@@ -20,6 +20,11 @@
                     </div>
                 </div>
                 <form id="addVendorForm">
+                    <!-- Hidden field for current user tracking -->
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <input type="hidden" name="created_by" value="<?php echo $_SESSION['user_id']; ?>">
+                        <input type="hidden" name="updated_by" value="<?php echo $_SESSION['user_id']; ?>">
+                    <?php endif; ?>
                     <!-- Basic Information Section -->
                     <div class="vendor-section">
                         <h6 class="section-title mb-3">

@@ -1,9 +1,23 @@
 <?php
+// Start session to get current user
+session_start();
+
 // Database connection
 require_once '../config/db_connect.php';
 
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'User not authenticated'
+        ]);
+        exit;
+    }
+    
+    $created_by = $_SESSION['user_id'];
+    $updated_by = $_SESSION['user_id'];
     // Collect form data
     $fullName = mysqli_real_escape_string($conn, $_POST['fullName']);
     $phoneNumber = mysqli_real_escape_string($conn, $_POST['phoneNumber']);
@@ -52,7 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 state, 
                 zip_code, 
                 country, 
-                additional_notes
+                additional_notes,
+                created_by,
+                updated_by
             ) VALUES (
                 '$fullName', 
                 '$phoneNumber', 
@@ -68,7 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '$state', 
                 '$zipCode', 
                 '$country', 
-                '$additionalNotes'
+                '$additionalNotes',
+                '$created_by',
+                '$updated_by'
             )";
     
     if (mysqli_query($conn, $sql)) {

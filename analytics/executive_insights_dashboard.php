@@ -814,8 +814,13 @@
 <body>
     <?php include '../includes/manager_panel.php'; ?>
     <?php include '../includes/add_vendor_modal.php'; ?>
+    <?php include '../includes/view_vendor_modal.php'; ?>
+    <?php include '../includes/edit_vendor_modal.php'; ?>
     <?php include '../includes/add_labour_modal.php'; ?>
+    <?php include '../includes/view_labour_modal.php'; ?>
+    <?php include '../includes/edit_labour_modal.php'; ?>
     <?php include '../includes/add_payment_entry_modal.php'; ?>
+    <?php include '../includes/view_payment_entry_modal.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
@@ -984,41 +989,7 @@
                                     </button>
                                 </div>
                                 <div class="data-list" id="vendorDataList">
-                                    <!-- Sample Vendor Data -->
-                                    <div class="data-item">
-                                        <div class="item-icon vendor-icon">
-                                            <i class="fas fa-building"></i>
-                                        </div>
-                                        <div class="item-info">
-                                            <h6 class="item-name">ABC Construction Supplies</h6>
-                                            <p class="item-details">Cement Supplier • Added 2 hours ago</p>
-                                        </div>
-                                        <div class="item-actions">
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="viewVendor(1)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editVendor(1)">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="data-item">
-                                        <div class="item-icon vendor-icon">
-                                            <i class="fas fa-building"></i>
-                                        </div>
-                                        <div class="item-info">
-                                            <h6 class="item-name">XYZ Steel Works</h6>
-                                            <p class="item-details">Steel Supplier • Added 5 hours ago</p>
-                                        </div>
-                                        <div class="item-actions">
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="viewVendor(2)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editVendor(2)">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <!-- Vendor data will be loaded here dynamically -->
                                 </div>
                                 <div class="data-footer">
                                     <a href="#" class="view-all-link" onclick="viewAllVendors()">
@@ -1039,23 +1010,12 @@
                                     </button>
                                 </div>
                                 <div class="data-list" id="labourDataList">
-                                    <!-- Sample Labour Data -->
-                                    <div class="data-item">
-                                        <div class="item-icon labour-icon">
-                                            <i class="fas fa-hard-hat"></i>
+                                    <!-- Labour data will be loaded dynamically -->
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
                                         </div>
-                                        <div class="item-info">
-                                            <h6 class="item-name">Rajesh Kumar</h6>
-                                            <p class="item-details">Mason • Permanent Labour • Added 1 hour ago</p>
-                                        </div>
-                                        <div class="item-actions">
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="viewLabour(1)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editLabour(1)">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
+                                        <p class="mt-2 text-muted">Loading labour data...</p>
                                     </div>
                                 </div>
                                 <div class="data-footer">
@@ -1352,17 +1312,215 @@
         // Recently Added Data Functions
         function refreshVendorData() {
             console.log('Refreshing vendor data...');
-            alert('Vendor data refreshed!');
+            
+            // Show loading indicator
+            const vendorDataList = document.getElementById('vendorDataList');
+            vendorDataList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            // Fetch real vendor data from the API
+            fetch('../api/get_recent_vendors.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Clear the loading indicator
+                        vendorDataList.innerHTML = '';
+                        
+                        // Check if we have vendors
+                        if (data.vendors.length === 0) {
+                            vendorDataList.innerHTML = '<div class="text-center py-4"><p class="text-muted">No vendors found</p></div>';
+                            return;
+                        }
+                        
+                        // Populate the vendor list with real data
+                        data.vendors.forEach((vendor, index) => {
+                            // Format the created time
+                            const createdDate = new Date(vendor.created_at);
+                            const timeAgo = getTimeAgo(createdDate);
+                            
+                            // Create vendor item HTML
+                            const vendorItem = document.createElement('div');
+                            vendorItem.className = 'data-item';
+                            vendorItem.innerHTML = `
+                                <div class="item-icon vendor-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="item-info">
+                                    <h6 class="item-name">${escapeHtml(vendor.full_name)}</h6>
+                                    <p class="item-details">${escapeHtml(vendor.vendor_type)} • Added ${timeAgo}</p>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="viewVendor(${vendor.vendor_id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editVendor(${vendor.vendor_id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            `;
+                            
+                            vendorDataList.appendChild(vendorItem);
+                        });
+                    } else {
+                        vendorDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Error loading vendor data: ' + (data.message || 'Unknown error') + '</p></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching vendor data:', error);
+                    vendorDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Failed to load vendor data. Please try again later.</p></div>';
+                });
+        }
+        
+        // Helper function to calculate time ago
+        function getTimeAgo(date) {
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            let interval = Math.floor(seconds / 31536000);
+            if (interval > 1) {
+                return interval + " years ago";
+            }
+            interval = Math.floor(seconds / 2592000);
+            if (interval > 1) {
+                return interval + " months ago";
+            }
+            interval = Math.floor(seconds / 86400);
+            if (interval > 1) {
+                return interval + " days ago";
+            }
+            interval = Math.floor(seconds / 3600);
+            if (interval > 1) {
+                return interval + " hours ago";
+            }
+            interval = Math.floor(seconds / 60);
+            if (interval > 1) {
+                return interval + " minutes ago";
+            }
+            return Math.floor(seconds) + " seconds ago";
+        }
+        
+        // Helper function to escape HTML to prevent XSS
+        function escapeHtml(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
         
         function refreshLabourData() {
             console.log('Refreshing labour data...');
-            alert('Labour data refreshed!');
+            
+            // Show loading indicator
+            const labourDataList = document.getElementById('labourDataList');
+            labourDataList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            // Fetch real labour data from the API
+            fetch('../api/get_recent_labours.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Clear the loading indicator
+                        labourDataList.innerHTML = '';
+                        
+                        // Check if we have labours
+                        if (data.labours.length === 0) {
+                            labourDataList.innerHTML = '<div class="text-center py-4"><p class="text-muted">No labours found</p></div>';
+                            return;
+                        }
+                        
+                        // Populate the labour list with real data
+                        data.labours.forEach((labour, index) => {
+                            // Create labour item HTML
+                            const labourItem = document.createElement('div');
+                            labourItem.className = 'data-item';
+                            labourItem.innerHTML = `
+                                <div class="item-icon labour-icon">
+                                    <i class="fas fa-hard-hat"></i>
+                                </div>
+                                <div class="item-info">
+                                    <h6 class="item-name">${escapeHtml(labour.full_name)}</h6>
+                                    <p class="item-details">${escapeHtml(labour.display_position)} • ${escapeHtml(labour.display_labour_type)} • Added ${labour.time_since_created}</p>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="viewLabour(${labour.labour_id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editLabour(${labour.labour_id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            `;
+                            
+                            labourDataList.appendChild(labourItem);
+                        });
+                    } else {
+                        labourDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Error loading labour data: ' + (data.message || 'Unknown error') + '</p></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching labour data:', error);
+                    labourDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Failed to load labour data. Please try again later.</p></div>';
+                });
         }
         
         function refreshEntryData() {
             console.log('Refreshing entry data...');
-            alert('Entry data refreshed!');
+            
+            // Show loading indicator
+            const entryDataList = document.getElementById('entryDataList');
+            entryDataList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            // Fetch real payment entry data from the API
+            fetch('../api/get_recent_payment_entries.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Clear the loading indicator
+                        entryDataList.innerHTML = '';
+                        
+                        // Check if we have payment entries
+                        if (data.payment_entries.length === 0) {
+                            entryDataList.innerHTML = '<div class="text-center py-4"><p class="text-muted">No payment entries found</p></div>';
+                            return;
+                        }
+                        
+                        // Populate the payment entry list with real data
+                        data.payment_entries.forEach((entry, index) => {
+                            // Create payment entry item HTML
+                            const entryItem = document.createElement('div');
+                            entryItem.className = 'data-item';
+                            entryItem.innerHTML = `
+                                <div class="item-icon entry-icon">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div class="item-info">
+                                    <h6 class="item-name">${escapeHtml(entry.display_project_title || 'Payment #' + entry.payment_id)}</h6>
+                                    <p class="item-details">${escapeHtml(entry.payment_summary)} • Added ${entry.time_since_created}</p>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(${entry.payment_id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editEntry(${entry.payment_id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            `;
+                            
+                            entryDataList.appendChild(entryItem);
+                        });
+                    } else {
+                        entryDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Error loading payment entries: ' + (data.message || 'Unknown error') + '</p></div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching payment entry data:', error);
+                    entryDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Failed to load payment entries. Please try again later.</p></div>';
+                });
         }
         
         function refreshReportData() {
@@ -1373,32 +1531,1058 @@
         // View Functions
         function viewVendor(id) {
             console.log('Viewing vendor:', id);
-            alert(`Viewing vendor details for ID: ${id}`);
+            
+            // Show the view vendor modal
+            const modal = new bootstrap.Modal(document.getElementById('viewVendorModal'));
+            modal.show();
+            
+            // Show loading state
+            document.getElementById('vendorDetailsLoader').style.display = 'block';
+            document.getElementById('vendorDetailsContent').style.display = 'none';
+            document.getElementById('vendorDetailsError').style.display = 'none';
+            
+            // Update modal title with vendor ID
+            document.getElementById('viewVendorModalLabel').innerHTML = `
+                <i class="fas fa-eye me-2"></i>
+                Vendor Details - ID: ${id}
+            `;
+            
+            // Fetch vendor details from API
+            fetch(`../api/get_vendor_details.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading state
+                    document.getElementById('vendorDetailsLoader').style.display = 'none';
+                    
+                    if (data.status === 'success') {
+                        // Populate vendor details
+                        populateVendorDetails(data.vendor);
+                        document.getElementById('vendorDetailsContent').style.display = 'block';
+                        
+                        // Store vendor ID for edit functionality
+                        document.getElementById('editVendorFromView').setAttribute('data-vendor-id', id);
+                    } else {
+                        // Show error message
+                        document.getElementById('vendorErrorMessage').textContent = data.message || 'Failed to load vendor details';
+                        document.getElementById('vendorDetailsError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching vendor details:', error);
+                    document.getElementById('vendorDetailsLoader').style.display = 'none';
+                    document.getElementById('vendorErrorMessage').textContent = 'Network error. Please try again later.';
+                    document.getElementById('vendorDetailsError').style.display = 'block';
+                });
+        }
+        
+        // Function to populate vendor details in the modal
+        function populateVendorDetails(vendor) {
+            // Helper function to safely set text content
+            function safeSetText(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value || '-';
+                }
+            }
+            
+            // Basic Information
+            safeSetText('viewVendorFullName', vendor.full_name);
+            safeSetText('viewVendorType', vendor.vendor_type);
+            safeSetText('viewVendorPhone', vendor.phone_number);
+            safeSetText('viewVendorAltPhone', vendor.alternative_number);
+            safeSetText('viewVendorEmail', vendor.email);
+            safeSetText('viewVendorCompany', vendor.company_name); // This field doesn't exist in DB
+            
+            // Address Information
+            safeSetText('viewVendorAddress', vendor.street_address);
+            safeSetText('viewVendorCity', vendor.city);
+            safeSetText('viewVendorState', vendor.state);
+            safeSetText('viewVendorZip', vendor.zip_code);
+            safeSetText('viewVendorCountry', vendor.country);
+            
+            // Financial Information
+            safeSetText('viewVendorGST', vendor.gst_number); // This field doesn't exist in DB
+            safeSetText('viewVendorPAN', vendor.pan_number); // This field doesn't exist in DB
+            safeSetText('viewVendorBankName', vendor.bank_name);
+            safeSetText('viewVendorAccountNumber', vendor.account_number_masked);
+            safeSetText('viewVendorAccountType', vendor.account_type);
+            safeSetText('viewVendorIFSC', vendor.ifsc_code); // This field doesn't exist in DB
+            safeSetText('viewVendorPaymentTerms', vendor.payment_terms); // This field doesn't exist in DB
+            
+            // Additional Information
+            safeSetText('viewVendorNotes', vendor.additional_notes);
+            safeSetText('viewVendorAccountAge', vendor.account_age);
+            
+            // Format and display dates
+            const createdDate = vendor.created_at ? new Date(vendor.created_at).toLocaleString() : '-';
+            const updatedDate = vendor.updated_at ? new Date(vendor.updated_at).toLocaleString() : '-';
+            safeSetText('viewVendorCreatedAt', createdDate);
+            safeSetText('viewVendorUpdatedAt', updatedDate);
+            
+            // Update modal title with vendor name
+            const modalTitle = document.getElementById('viewVendorModalLabel');
+            if (modalTitle) {
+                modalTitle.innerHTML = `
+                    <i class="fas fa-eye me-2"></i>
+                    ${vendor.full_name || 'Vendor Details'}
+                    <small class="ms-2 text-muted">(ID: ${vendor.vendor_id})</small>
+                `;
+            }
         }
         
         function editVendor(id) {
             console.log('Editing vendor:', id);
-            alert(`Editing vendor for ID: ${id}`);
+            
+            // Show the edit vendor modal
+            const modal = new bootstrap.Modal(document.getElementById('editVendorModal'));
+            modal.show();
+            
+            // Show loading state
+            document.getElementById('editVendorLoader').style.display = 'block';
+            document.getElementById('editVendorForm').style.display = 'none';
+            document.getElementById('editVendorSuccess').style.display = 'none';
+            document.getElementById('editVendorError').style.display = 'none';
+            document.getElementById('saveVendorChanges').style.display = 'none';
+            
+            // Update modal title with vendor ID
+            document.getElementById('editVendorModalLabel').innerHTML = `
+                <i class="fas fa-edit me-2"></i>
+                Edit Vendor - ID: ${id}
+            `;
+            
+            // Fetch vendor details from API
+            fetch(`../api/get_vendor_details.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading state
+                    document.getElementById('editVendorLoader').style.display = 'none';
+                    
+                    if (data.status === 'success') {
+                        // Populate edit form with vendor data
+                        populateEditForm(data.vendor);
+                        document.getElementById('editVendorForm').style.display = 'block';
+                        document.getElementById('saveVendorChanges').style.display = 'inline-flex';
+                    } else {
+                        // Show error message
+                        document.getElementById('editErrorMessage').textContent = data.message || 'Failed to load vendor details';
+                        document.getElementById('editVendorError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching vendor details:', error);
+                    document.getElementById('editVendorLoader').style.display = 'none';
+                    document.getElementById('editErrorMessage').textContent = 'Network error. Please try again later.';
+                    document.getElementById('editVendorError').style.display = 'block';
+                });
+        }
+        
+        // Function to populate the edit form with vendor data
+        function populateEditForm(vendor) {
+            // Helper function to safely set form values
+            function safeSetValue(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.value = value || '';
+                }
+            }
+            
+            // Populate form fields
+            safeSetValue('editVendorId', vendor.vendor_id);
+            safeSetValue('editFullName', vendor.full_name);
+            safeSetValue('editVendorType', vendor.vendor_type);
+            safeSetValue('editPhoneNumber', vendor.phone_number);
+            safeSetValue('editAltPhoneNumber', vendor.alternative_number);
+            safeSetValue('editEmail', vendor.email);
+            safeSetValue('editStreetAddress', vendor.street_address);
+            safeSetValue('editCity', vendor.city);
+            safeSetValue('editState', vendor.state);
+            safeSetValue('editZipCode', vendor.zip_code);
+            safeSetValue('editCountry', vendor.country);
+            safeSetValue('editBankName', vendor.bank_name);
+            safeSetValue('editAccountNumber', vendor.account_number);
+            safeSetValue('editRoutingNumber', vendor.routing_number);
+            safeSetValue('editAccountType', vendor.account_type);
+            safeSetValue('editAdditionalNotes', vendor.additional_notes);
+            
+            // Update modal title with vendor name
+            document.getElementById('editVendorModalLabel').innerHTML = `
+                <i class="fas fa-edit me-2"></i>
+                Edit: ${vendor.full_name || 'Vendor'}
+                <small class="ms-2 text-muted">(ID: ${vendor.vendor_id})</small>
+            `;
+        }
+        
+        // Function to save vendor changes
+        function saveVendorChanges() {
+            const form = document.getElementById('editVendorForm');
+            
+            // Validate required fields
+            const fullName = document.getElementById('editFullName').value.trim();
+            const phoneNumber = document.getElementById('editPhoneNumber').value.trim();
+            const vendorType = document.getElementById('editVendorType').value;
+            
+            if (!fullName || !phoneNumber || !vendorType) {
+                document.getElementById('editErrorMessage').textContent = 'Please fill in all required fields (Full Name, Phone Number, and Vendor Type).';
+                document.getElementById('editVendorError').style.display = 'block';
+                return;
+            }
+            
+            // Validate phone number format
+            const phoneRegex = /^[\d\s\-\(\)]+$/;
+            if (!phoneRegex.test(phoneNumber)) {
+                document.getElementById('editErrorMessage').textContent = 'Please enter a valid phone number (numbers only).';
+                document.getElementById('editVendorError').style.display = 'block';
+                return;
+            }
+            
+            // Validate email if provided
+            const email = document.getElementById('editEmail').value.trim();
+            if (email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    document.getElementById('editErrorMessage').textContent = 'Please enter a valid email address.';
+                    document.getElementById('editVendorError').style.display = 'block';
+                    return;
+                }
+            }
+            
+            const formData = new FormData(form);
+            
+            // Convert FormData to JSON
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Show saving state
+            const saveBtn = document.getElementById('saveVendorChanges');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            saveBtn.disabled = true;
+            
+            // Hide previous messages
+            document.getElementById('editVendorSuccess').style.display = 'none';
+            document.getElementById('editVendorError').style.display = 'none';
+            
+            // Send update request
+            fetch('../api/update_vendor.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Reset save button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+                if (result.status === 'success') {
+                    // Show success message
+                    document.getElementById('editSuccessMessage').textContent = result.message || 'Vendor updated successfully!';
+                    document.getElementById('editVendorSuccess').style.display = 'block';
+                    
+                    // Refresh vendor data in the main list
+                    refreshVendorData();
+                    
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editVendorModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }, 2000);
+                } else {
+                    // Show error message
+                    document.getElementById('editErrorMessage').textContent = result.message || 'Failed to update vendor';
+                    document.getElementById('editVendorError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error updating vendor:', error);
+                
+                // Reset save button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+                // Show error message
+                document.getElementById('editErrorMessage').textContent = 'Network error. Please try again later.';
+                document.getElementById('editVendorError').style.display = 'block';
+            });
         }
         
         function viewLabour(id) {
             console.log('Viewing labour:', id);
-            alert(`Viewing labour details for ID: ${id}`);
+            
+            // Show the view labour modal
+            const modal = new bootstrap.Modal(document.getElementById('viewLabourModal'));
+            modal.show();
+            
+            // Show loading state
+            document.getElementById('labourDetailsLoader').style.display = 'block';
+            document.getElementById('labourDetailsContent').style.display = 'none';
+            document.getElementById('labourDetailsError').style.display = 'none';
+            
+            // Update modal title with labour ID
+            document.getElementById('viewLabourModalLabel').innerHTML = `
+                <i class="fas fa-user me-2"></i>
+                Labour Details - ID: ${id}
+            `;
+            
+            // Fetch labour details from API
+            fetch(`../api/get_labour_details.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading state
+                    document.getElementById('labourDetailsLoader').style.display = 'none';
+                    
+                    if (data.status === 'success') {
+                        // Populate labour details
+                        populateLabourDetails(data.labour);
+                        document.getElementById('labourDetailsContent').style.display = 'block';
+                        
+                        // Store labour ID for edit functionality
+                        document.getElementById('editLabourFromView').setAttribute('data-labour-id', id);
+                    } else {
+                        // Show error message
+                        document.getElementById('labourErrorMessage').textContent = data.message || 'Failed to load labour details';
+                        document.getElementById('labourDetailsError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching labour details:', error);
+                    document.getElementById('labourDetailsLoader').style.display = 'none';
+                    document.getElementById('labourErrorMessage').textContent = 'Network error. Please try again later.';
+                    document.getElementById('labourDetailsError').style.display = 'block';
+                });
+        }
+        
+        function populateLabourDetails(labour) {
+            // Helper function to safely display values
+            const safeDisplay = (value) => value || 'Not specified';
+            
+            // Personal Information
+            document.getElementById('viewLabourFullName').textContent = safeDisplay(labour.full_name);
+            document.getElementById('viewLabourPosition').textContent = labour.position_custom || labour.position || 'Not specified';
+            document.getElementById('viewLabourType').textContent = safeDisplay(labour.labour_type);
+            document.getElementById('viewLabourSalary').textContent = labour.daily_salary ? `₹${labour.daily_salary}/day` : 'Not specified';
+            document.getElementById('viewLabourJoinDate').textContent = safeDisplay(labour.join_date);
+            document.getElementById('viewLabourExperience').textContent = labour.years_experience ? `${labour.years_experience} year(s)` : 'Not calculated';
+            
+            // Contact Information
+            document.getElementById('viewLabourPhone').textContent = safeDisplay(labour.phone_number);
+            document.getElementById('viewLabourAltPhone').textContent = safeDisplay(labour.alternative_number);
+            document.getElementById('viewLabourAddress').textContent = safeDisplay(labour.address);
+            document.getElementById('viewLabourCity').textContent = safeDisplay(labour.city);
+            document.getElementById('viewLabourState').textContent = safeDisplay(labour.state);
+            
+            // Documents with Images - using file info from API
+            populateDocumentSection('Aadhar', labour.aadhar_card_original || labour.aadhar_card, labour.labour_id, labour.aadhar_card_file_info);
+            populateDocumentSection('PAN', labour.pan_card_original || labour.pan_card, labour.labour_id, labour.pan_card_file_info);
+            populateDocumentSection('Voter', labour.voter_id_original || labour.voter_id, labour.labour_id, labour.voter_id_file_info);
+            populateDocumentSection('Other', labour.other_document, labour.labour_id, labour.other_document_file_info);
+            
+            // Notes
+            const notesElement = document.getElementById('viewLabourNotes');
+            notesElement.textContent = labour.notes || 'No additional notes';
+        }
+        
+        function populateDocumentSection(docType, docNumber, labourId, fileInfo) {
+            const docNumberElement = document.getElementById(`viewLabour${docType === 'Voter' ? 'VoterID' : docType === 'Other' ? 'OtherDoc' : docType}`);
+            const docImageElement = document.getElementById(`viewLabour${docType}Image`);
+            
+            // Set document number
+            if (docNumberElement) {
+                docNumberElement.textContent = docNumber || 'Not provided';
+            }
+            
+            // Clear previous image content
+            if (docImageElement) {
+                docImageElement.innerHTML = '';
+            } else {
+                console.error(`Element not found: viewLabour${docType}Image`);
+                return;
+            }
+            
+            if (docNumber && docNumber !== 'Not provided') {
+                // Use file info from API if available
+                if (fileInfo && fileInfo.exists) {
+                    const imagePath = `../${fileInfo.path}`;
+                    
+                    if (fileInfo.type === 'pdf') {
+                        // Display PDF with view button
+                        docImageElement.innerHTML = `
+                            <div class="document-placeholder">
+                                <i class="fas fa-file-pdf text-danger"></i>
+                                <div>PDF Document</div>
+                                <small><a href="${imagePath}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-eye me-1"></i>View PDF
+                                </a></small>
+                            </div>
+                        `;
+                    } else {
+                        // Display image with preview functionality
+                        docImageElement.innerHTML = `
+                            <img src="${imagePath}" alt="${docType} Document" 
+                                 onclick="showImagePreview('${imagePath}', '${docType} Document')" 
+                                 style="cursor: pointer;" />
+                        `;
+                    }
+                } else {
+                    // No file found, show placeholder
+                    docImageElement.innerHTML = `
+                        <div class="document-placeholder">
+                            <i class="fas fa-image"></i>
+                            <div>No document image found</div>
+                            <small class="text-muted">Document folder: labour_${labourId}</small>
+                        </div>
+                    `;
+                }
+            } else {
+                // No document number provided
+                docImageElement.innerHTML = `
+                    <div class="document-placeholder">
+                        <i class="fas fa-file-slash"></i>
+                        <div>No document provided</div>
+                    </div>
+                `;
+            }
+        }
+        
+        function showImagePreview(imageSrc, altText) {
+            const overlay = document.getElementById('imagePreviewOverlay');
+            const previewImg = document.getElementById('previewImage');
+            
+            previewImg.src = imageSrc;
+            previewImg.alt = altText;
+            overlay.style.display = 'flex';
+            
+            // Close on overlay click
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    closeImagePreview();
+                }
+            };
+        }
+        
+        function closeImagePreview() {
+            const overlay = document.getElementById('imagePreviewOverlay');
+            overlay.style.display = 'none';
         }
         
         function editLabour(id) {
             console.log('Editing labour:', id);
-            alert(`Editing labour for ID: ${id}`);
+            
+            // Show the edit labour modal
+            const modal = new bootstrap.Modal(document.getElementById('editLabourModal'));
+            modal.show();
+            
+            // Show loading state
+            document.getElementById('editLabourLoader').style.display = 'block';
+            document.getElementById('editLabourForm').style.display = 'none';
+            document.getElementById('editLabourSuccess').style.display = 'none';
+            document.getElementById('editLabourError').style.display = 'none';
+            document.getElementById('saveLabourChanges').style.display = 'none';
+            
+            // Update modal title with labour ID
+            document.getElementById('editLabourModalLabel').innerHTML = `
+                <i class="fas fa-edit me-2"></i>
+                Edit Labour Details - ID: ${id}
+            `;
+            
+            // Fetch labour details from API
+            fetch(`../api/get_labour_details.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading state
+                    document.getElementById('editLabourLoader').style.display = 'none';
+                    
+                    if (data.status === 'success') {
+                        // Populate edit form with labour data
+                        populateEditLabourForm(data.labour);
+                        document.getElementById('editLabourForm').style.display = 'block';
+                        document.getElementById('saveLabourChanges').style.display = 'block';
+                    } else {
+                        // Show error message
+                        document.getElementById('editLabourErrorMessage').textContent = data.message || 'Failed to load labour details';
+                        document.getElementById('editLabourError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching labour details for edit:', error);
+                    document.getElementById('editLabourLoader').style.display = 'none';
+                    document.getElementById('editLabourErrorMessage').textContent = 'Network error. Please try again later.';
+                    document.getElementById('editLabourError').style.display = 'block';
+                });
+        }
+        
+        function populateEditLabourForm(labour) {
+            // Set labour ID
+            document.getElementById('editLabourId').value = labour.labour_id;
+            
+            // Personal Information
+            document.getElementById('editLabourFullName').value = labour.full_name || '';
+            
+            // Handle position
+            if (labour.position_custom && labour.position_custom.trim()) {
+                document.getElementById('editLabourPosition').value = 'custom';
+                document.getElementById('editLabourPositionCustom').value = labour.position_custom;
+                document.getElementById('editLabourPositionCustom').style.display = 'block';
+            } else {
+                document.getElementById('editLabourPosition').value = labour.position || '';
+                document.getElementById('editLabourPositionCustom').style.display = 'none';
+            }
+            
+            document.getElementById('editLabourType').value = labour.labour_type || '';
+            document.getElementById('editLabourPhone').value = labour.phone_number || '';
+            document.getElementById('editLabourAltPhone').value = labour.alternative_number || '';
+            document.getElementById('editLabourJoinDate').value = labour.join_date || '';
+            document.getElementById('editLabourSalary').value = labour.daily_salary || '';
+            
+            // Address Information
+            document.getElementById('editLabourAddress').value = labour.address || '';
+            document.getElementById('editLabourCity').value = labour.city || '';
+            document.getElementById('editLabourState').value = labour.state || '';
+            
+            // Document Information - handle filenames vs document numbers
+            // If the field contains a filename (ends with common extensions), don't show it as document number
+            const isFilename = (value) => {
+                if (!value) return false;
+                const fileExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+                return fileExtensions.some(ext => value.toLowerCase().endsWith(ext));
+            };
+            
+            document.getElementById('editLabourAadhar').value = isFilename(labour.aadhar_card) ? '' : (labour.aadhar_card || '');
+            document.getElementById('editLabourPan').value = isFilename(labour.pan_card) ? '' : (labour.pan_card || '');
+            document.getElementById('editLabourVoter').value = isFilename(labour.voter_id) ? '' : (labour.voter_id || '');
+            document.getElementById('editLabourOther').value = isFilename(labour.other_document) ? '' : (labour.other_document || '');
+            
+            // Show current file information if available
+            const documentFiles = [
+                { type: 'Aadhar', fileInfo: labour.aadhar_card_file_info, currentId: 'editAadharCurrentFile', nameId: 'editAadharFileName' },
+                { type: 'Pan', fileInfo: labour.pan_card_file_info, currentId: 'editPanCurrentFile', nameId: 'editPanFileName' },
+                { type: 'Voter', fileInfo: labour.voter_id_file_info, currentId: 'editVoterCurrentFile', nameId: 'editVoterFileName' },
+                { type: 'Other', fileInfo: labour.other_document_file_info, currentId: 'editOtherCurrentFile', nameId: 'editOtherFileName' }
+            ];
+            
+            documentFiles.forEach(doc => {
+                const currentFileElement = document.getElementById(doc.currentId);
+                const fileNameElement = document.getElementById(doc.nameId);
+                
+                if (doc.fileInfo && doc.fileInfo.exists && currentFileElement) {
+                    currentFileElement.style.display = 'block';
+                    currentFileElement.innerHTML = `<small class="text-info"><i class="fas fa-file me-1"></i>Current file: ${doc.fileInfo.filename}</small>`;
+                } else if (currentFileElement) {
+                    currentFileElement.style.display = 'none';
+                }
+            });
+            
+            // Additional Information
+            document.getElementById('editLabourNotes').value = labour.notes || '';
+        }
+        
+        // Function to save labour changes
+        function saveLabourChanges() {
+            const form = document.getElementById('editLabourForm');
+            
+            // Validate required fields
+            const fullName = document.getElementById('editLabourFullName').value.trim();
+            const position = document.getElementById('editLabourPosition').value;
+            const positionCustom = document.getElementById('editLabourPositionCustom').value.trim();
+            const labourType = document.getElementById('editLabourType').value;
+            const phoneNumber = document.getElementById('editLabourPhone').value.trim();
+            const joinDate = document.getElementById('editLabourJoinDate').value;
+            
+            if (!fullName || (!position && !positionCustom) || !labourType || !phoneNumber || !joinDate) {
+                document.getElementById('editLabourErrorMessage').textContent = 'Please fill in all required fields (Full Name, Position, Labour Type, Phone Number, and Join Date).';
+                document.getElementById('editLabourError').style.display = 'block';
+                return;
+            }
+            
+            // Validate phone number format
+            const phoneRegex = /^[\d\s\-\(\)]+$/;
+            if (!phoneRegex.test(phoneNumber)) {
+                document.getElementById('editLabourErrorMessage').textContent = 'Please enter a valid phone number (numbers only).';
+                document.getElementById('editLabourError').style.display = 'block';
+                return;
+            }
+            
+            // Validate alternative phone if provided
+            const altPhone = document.getElementById('editLabourAltPhone').value.trim();
+            if (altPhone && !phoneRegex.test(altPhone)) {
+                document.getElementById('editLabourErrorMessage').textContent = 'Please enter a valid alternative phone number (numbers only).';
+                document.getElementById('editLabourError').style.display = 'block';
+                return;
+            }
+            
+            // Validate join date
+            const today = new Date();
+            const joinDateObj = new Date(joinDate);
+            if (joinDateObj > today) {
+                document.getElementById('editLabourErrorMessage').textContent = 'Join date cannot be in the future.';
+                document.getElementById('editLabourError').style.display = 'block';
+                return;
+            }
+            
+            // Validate salary if provided
+            const salary = document.getElementById('editLabourSalary').value.trim();
+            if (salary && (isNaN(salary) || parseFloat(salary) < 0)) {
+                document.getElementById('editLabourErrorMessage').textContent = 'Please enter a valid salary amount.';
+                document.getElementById('editLabourError').style.display = 'block';
+                return;
+            }
+            
+            // Validate file uploads (optional but if provided, check size and type)
+            const fileInputs = ['editAadharFile', 'editPanFile', 'editVoterFile', 'editOtherFile'];
+            for (let inputId of fileInputs) {
+                const fileInput = document.getElementById(inputId);
+                if (fileInput && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    
+                    // Check file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        document.getElementById('editLabourErrorMessage').textContent = `File ${file.name} is too large. Maximum size is 5MB.`;
+                        document.getElementById('editLabourError').style.display = 'block';
+                        return;
+                    }
+                    
+                    // Check file type
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                    if (!allowedTypes.includes(file.type)) {
+                        document.getElementById('editLabourErrorMessage').textContent = `File ${file.name} has invalid type. Only JPG, PNG, and PDF files are allowed.`;
+                        document.getElementById('editLabourError').style.display = 'block';
+                        return;
+                    }
+                }
+            }
+            
+            // Create FormData object to handle both form data and files
+            const formData = new FormData();
+            
+            // Add required form fields to FormData
+            formData.append('labour_id', document.getElementById('editLabourId').value);
+            formData.append('full_name', fullName);
+            formData.append('position', position || positionCustom);
+            formData.append('position_custom', positionCustom);
+            formData.append('labour_type', labourType);
+            formData.append('phone_number', phoneNumber);
+            formData.append('alternative_number', document.getElementById('editLabourAltPhone').value);
+            formData.append('join_date', joinDate);
+            formData.append('daily_salary', document.getElementById('editLabourSalary').value);
+            formData.append('address', document.getElementById('editLabourAddress').value);
+            formData.append('city', document.getElementById('editLabourCity').value);
+            formData.append('state', document.getElementById('editLabourState').value);
+            formData.append('notes', document.getElementById('editLabourNotes').value);
+            
+            // Only add document fields if they have actual content (not empty after trim)
+            const aadharValue = document.getElementById('editLabourAadhar').value.trim();
+            const panValue = document.getElementById('editLabourPan').value.trim();
+            const voterValue = document.getElementById('editLabourVoter').value.trim();
+            const otherValue = document.getElementById('editLabourOther').value.trim();
+            
+            if (aadharValue) formData.append('aadhar_card', aadharValue);
+            if (panValue) formData.append('pan_card', panValue);
+            if (voterValue) formData.append('voter_id', voterValue);
+            if (otherValue) formData.append('other_document', otherValue);
+            
+            // Add file uploads to FormData
+            fileInputs.forEach(inputId => {
+                const fileInput = document.getElementById(inputId);
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append(fileInput.name, fileInput.files[0]);
+                }
+            });
+            
+            // Show saving state
+            const saveBtn = document.getElementById('saveLabourChanges');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            saveBtn.disabled = true;
+            
+            // Hide previous messages
+            document.getElementById('editLabourSuccess').style.display = 'none';
+            document.getElementById('editLabourError').style.display = 'none';
+            
+            // Send update request with FormData (for file uploads)
+            fetch('../api/update_labour.php', {
+                method: 'POST',
+                body: formData  // Use FormData directly, don't set Content-Type header
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Reset save button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+                if (result.status === 'success') {
+                    // Show success message
+                    document.getElementById('editLabourSuccessMessage').textContent = result.message || 'Labour updated successfully!';
+                    document.getElementById('editLabourSuccess').style.display = 'block';
+                    
+                    // Refresh labour data in the main list
+                    refreshLabourData();
+                    
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editLabourModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }, 2000);
+                } else {
+                    // Show error message
+                    document.getElementById('editLabourErrorMessage').textContent = result.message || 'Failed to update labour';
+                    document.getElementById('editLabourError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error updating labour:', error);
+                
+                // Reset save button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+                // Show error message
+                document.getElementById('editLabourErrorMessage').textContent = 'Network error. Please try again later.';
+                document.getElementById('editLabourError').style.display = 'block';
+            });
         }
         
         function viewEntry(id) {
-            console.log('Viewing entry:', id);
-            alert(`Viewing entry details for ID: ${id}`);
+            console.log('Viewing payment entry:', id);
+            
+            // Show the view payment entry modal
+            const modal = new bootstrap.Modal(document.getElementById('viewPaymentEntryModal'));
+            modal.show();
+            
+            // Show loading state
+            document.getElementById('paymentEntryDetailsLoader').style.display = 'block';
+            document.getElementById('paymentEntryDetailsContent').style.display = 'none';
+            document.getElementById('paymentEntryDetailsError').style.display = 'none';
+            
+            // Update modal title with payment ID
+            document.getElementById('viewPaymentEntryModalLabel').innerHTML = `
+                Payment Entry Details - ID: ${id}
+            `;
+            
+            // Fetch payment entry details from API
+            fetch(`../api/get_payment_entry_details.php?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading state
+                    document.getElementById('paymentEntryDetailsLoader').style.display = 'none';
+                    
+                    if (data.status === 'success') {
+                        // Populate payment entry details
+                        populatePaymentEntryDetails(data.payment_entry, data.recipients, data.summary);
+                        document.getElementById('paymentEntryDetailsContent').style.display = 'block';
+                        
+                        // Store payment ID for edit functionality
+                        document.getElementById('editPaymentEntryFromView').setAttribute('data-payment-id', id);
+                    } else {
+                        // Show error message
+                        document.getElementById('paymentEntryErrorMessage').textContent = data.message || 'Failed to load payment entry details';
+                        document.getElementById('paymentEntryDetailsError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching payment entry details:', error);
+                    document.getElementById('paymentEntryDetailsLoader').style.display = 'none';
+                    document.getElementById('paymentEntryErrorMessage').textContent = 'Network error. Please try again later.';
+                    document.getElementById('paymentEntryDetailsError').style.display = 'block';
+                });
+        }
+        
+        
+        // Helper function to get appropriate file icon based on file type
+        function getFileIconClass(fileType) {
+            const type = fileType.toLowerCase();
+            if (type.includes('pdf')) return 'fa-file-pdf';
+            if (type.includes('word') || type.includes('doc')) return 'fa-file-word';
+            if (type.includes('excel') || type.includes('sheet')) return 'fa-file-excel';
+            if (type.includes('powerpoint') || type.includes('presentation')) return 'fa-file-powerpoint';
+            if (type.includes('text') || type.includes('txt')) return 'fa-file-alt';
+            if (type.includes('zip') || type.includes('rar') || type.includes('archive')) return 'fa-file-archive';
+            if (type.includes('video')) return 'fa-file-video';
+            if (type.includes('audio')) return 'fa-file-audio';
+            return 'fa-file';
+        }
+        
+        // Helper function to escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+        
+        // Function to open image preview
+        function openImagePreview(imagePath, fileName) {
+            const modal = document.getElementById('imagePreviewModal');
+            const img = document.getElementById('imagePreviewImg');
+            const title = document.getElementById('imagePreviewTitle');
+            
+            if (modal && img && title) {
+                img.src = imagePath;
+                img.alt = fileName;
+                title.textContent = fileName;
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // Function to download document
+        function downloadDocument(filePath, fileName) {
+            const link = document.createElement('a');
+            link.href = filePath;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Function to populate payment entry details in the modal
+        function populatePaymentEntryDetails(paymentEntry, recipients, summary) {
+            // Helper function to safely set text content
+            function safeSetText(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value || '-';
+                }
+            }
+            
+            function safeSetHTML(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = value || '-';
+                }
+            }
+            
+            // Main Payment Entry Information
+            safeSetText('viewPaymentId', paymentEntry.payment_id);
+            safeSetText('viewProjectTitle', paymentEntry.project_title || 'Project #' + paymentEntry.project_id);
+            safeSetText('viewProjectType', paymentEntry.display_project_type);
+            safeSetText('viewPaymentAmount', paymentEntry.formatted_payment_amount);
+            safeSetText('viewPaymentDate', paymentEntry.formatted_payment_date);
+            safeSetText('viewPaymentMode', paymentEntry.display_payment_mode);
+            safeSetText('viewPaymentVia', paymentEntry.display_payment_done_via);
+            
+            // System Information
+            safeSetText('viewCreatedBy', paymentEntry.created_by_username || 'System');
+            safeSetText('viewUpdatedBy', paymentEntry.updated_by_username || 'System');
+            safeSetText('viewCreatedAt', paymentEntry.formatted_created_at);
+            safeSetText('viewUpdatedAt', paymentEntry.formatted_updated_at);
+            
+            // Summary Statistics
+            safeSetText('recipientCount', summary.total_recipients);
+            safeSetText('summaryRecipients', summary.total_recipients);
+            safeSetText('summarySplits', summary.total_splits);
+            safeSetText('summaryDocuments', summary.total_documents);
+            safeSetText('summaryAmount', summary.formatted_total_recipient_amount);
+            
+            // Show/hide documents section based on available documents
+            const documentsSection = document.getElementById('documentsSection');
+            const documentsList = document.getElementById('documentsList');
+            const documentsCount = document.getElementById('documentsCount');
+            
+            if (summary.total_documents > 0) {
+                // Collect all documents from all recipients
+                let allDocuments = [];
+                recipients.forEach(recipient => {
+                    if (recipient.documents && recipient.documents.length > 0) {
+                        recipient.documents.forEach(doc => {
+                            allDocuments.push({
+                                ...doc,
+                                recipient_name: recipient.name
+                            });
+                        });
+                    }
+                });
+                
+                if (allDocuments.length > 0) {
+                    documentsSection.style.display = 'block';
+                    documentsCount.textContent = allDocuments.length;
+                    
+                    let documentsHTML = '';
+                                    allDocuments.forEach(doc => {
+                                        const isImage = doc.file_type.toLowerCase().includes('image');
+                                        const fileIcon = getFileIconClass(doc.file_type);
+                                        const escapedFileName = escapeHtml(doc.file_name);
+                                        const escapedFilePath = doc.file_path.replace(/'/g, "\'");
+                                        
+                                        // Ensure the file path is correctly formatted for display
+                                        // If the path doesn't start with '/', add '../' for relative path
+                                        let displayPath = doc.file_path;
+                                        if (!displayPath.startsWith('http') && !displayPath.startsWith('/')) {
+                                            displayPath = '../' + displayPath;
+                                        }
+                                        
+                                        documentsHTML += `
+                                            <div class="document-card">
+                                                <div class="document-preview-container">
+                                                    ${isImage ? 
+                                                        `<img src="${displayPath}" class="document-image" alt="${escapedFileName}" onerror="this.parentElement.innerHTML='<div class=&quot;document-icon-fallback&quot;><i class=&quot;fas fa-image fs-1 text-muted&quot;></i><p class=&quot;text-muted mt-2&quot;>Image not found</p></div>';" onclick="openImagePreview('${displayPath}', '${escapedFileName}')" style="cursor: pointer;" title="Click to view full size">` :
+                                                        `<div class="document-icon-container">
+                                                            <i class="fas ${fileIcon} fs-1 text-info"></i>
+                                                            <div class="file-extension">${doc.display_file_type}</div>
+                                                        </div>`
+                                                    }
+                                                </div>
+                                                <div class="document-info">
+                                                    <div class="document-name" title="${escapedFileName}">${escapedFileName}</div>
+                                                    <div class="document-meta">
+                                                        <span class="file-size">${doc.formatted_file_size}</span>
+                                                        <span class="upload-date">${doc.formatted_upload_date}</span>
+                                                        <div class="text-muted small mt-1">From: ${escapeHtml(doc.recipient_name)}</div>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-outline-primary download-btn" onclick="downloadDocument('${displayPath}', '${escapedFileName}')" title="Download document">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    });
+                    
+                    documentsList.innerHTML = documentsHTML;
+                } else {
+                    documentsSection.style.display = 'none';
+                }
+            } else {
+                documentsSection.style.display = 'none';
+            }
+            
+            // Populate Recipients List
+            const recipientsList = document.getElementById('recipientsList');
+            if (recipientsList) {
+                if (recipients.length === 0) {
+                    recipientsList.innerHTML = '<div class="p-4 text-center text-muted">No recipients found for this payment entry.</div>';
+                } else {
+                    let recipientsHTML = '';
+                    
+                    recipients.forEach((recipient, index) => {
+                        recipientsHTML += `
+                            <div class="recipient-item">
+                                <div class="recipient-header">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="recipient-name">
+                                                ${escapeHtml(recipient.name)}
+                                            </h6>
+                                            <div class="mb-2">
+                                                <span class="badge badge-category me-2">${escapeHtml(recipient.display_category)}</span>
+                                                <span class="badge badge-type">${escapeHtml(recipient.display_type)}</span>
+                                                ${recipient.custom_type ? '<span class="badge bg-secondary ms-2">' + escapeHtml(recipient.custom_type) + '</span>' : ''}
+                                            </div>
+                                            <div class="text-muted small">Payment for: ${escapeHtml(recipient.payment_for || 'Not specified')}</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="amount-display">${recipient.formatted_amount}</div>
+                                            <small class="text-muted">${escapeHtml(recipient.display_payment_mode)}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Payment Splits -->
+                                    ${recipient.splits.length > 0 ? `
+                                        <div class="mb-3">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="fas fa-divide text-warning me-2"></i>
+                                                <span class="fw-semibold text-warning">Payment Splits (${recipient.splits.length})</span>
+                                            </div>
+                                            ${recipient.splits.map(split => `
+                                                <div class="split-item">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <div class="fw-semibold">Split #${split.split_id}</div>
+                                                            <small class="text-muted">${split.display_payment_mode}</small>
+                                                            ${split.proof_file ? '<div class="text-info small mt-1"><i class="fas fa-paperclip me-1"></i>Proof attached</div>' : ''}
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-bold">${split.formatted_amount}</div>
+                                                            <small class="text-muted">${split.formatted_date}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <!-- Documents -->
+                                    ${recipient.documents.length > 0 ? `
+                                        <div class="mb-3">
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-folder-open text-info me-2 fs-5"></i>
+                                                    <span class="fw-semibold text-info">Documents</span>
+                                                </div>
+                                                <span class="badge bg-info rounded-pill">${recipient.documents.length}</span>
+                                            </div>
+                                            <div class="documents-grid">
+                                                ${recipient.documents.map(doc => {
+                                                    const isImage = doc.file_type.toLowerCase().includes('image');
+                                                    const fileIcon = getFileIconClass(doc.file_type);
+                                                    const escapedFileName = escapeHtml(doc.file_name);
+                                                    const escapedFilePath = doc.file_path.replace(/'/g, "\\'");
+                                                    
+                                                    return `
+                                                        <div class="document-card">
+                                                            <div class="document-preview-container">
+                                                                ${isImage ? 
+                                                                    `<img src="../${doc.file_path}" class="document-image" alt="${escapedFileName}" onerror="this.parentElement.innerHTML='<div class=&quot;document-icon-fallback&quot;><i class=&quot;fas fa-image fs-1 text-muted&quot;></i><p class=&quot;text-muted mt-2&quot;>Image not found</p></div>';" onclick="openImagePreview('../${doc.file_path}', '${escapedFileName}')" style="cursor: pointer;" title="Click to view full size">` :
+                                                                    `<div class="document-icon-container">
+                                                                        <i class="fas ${fileIcon} fs-1 text-info"></i>
+                                                                        <div class="file-extension">${doc.display_file_type}</div>
+                                                                    </div>`
+                                                                }
+                                                            </div>
+                                                            <div class="document-info">
+                                                                <div class="document-name" title="${escapedFileName}">${escapedFileName}</div>
+                                                                <div class="document-meta">
+                                                                    <span class="file-size">${doc.formatted_file_size}</span>
+                                                                    <span class="upload-date">${doc.formatted_upload_date}</span>
+                                                                </div>
+                                                                <button class="btn btn-sm btn-outline-primary download-btn" onclick="downloadDocument('../${doc.file_path}', '${escapedFileName}')" title="Download document">
+                                                                    <i class="fas fa-download"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    `;
+                                                }).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <div class="text-end pt-2 border-top">
+                                        <small class="text-muted">Added: ${recipient.formatted_date}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    recipientsList.innerHTML = recipientsHTML;
+                }
+            }
+            
+            // Update modal title with payment entry name
+            const modalTitle = document.getElementById('viewPaymentEntryModalLabel');
+            if (modalTitle) {
+                modalTitle.innerHTML = `
+                    ${paymentEntry.project_title || 'Payment Entry #' + paymentEntry.payment_id}
+                    <small class="ms-2 opacity-75">(${paymentEntry.formatted_payment_amount})</small>
+                `;
+            }
         }
         
         function editEntry(id) {
-            console.log('Editing entry:', id);
-            alert(`Editing entry for ID: ${id}`);
+            // TODO: Implement edit payment entry modal
+            alert(`Editing payment entry for ID: ${id}`);
         }
         
         function viewReport(id) {
@@ -1439,8 +2623,16 @@
             // Initialize Quick Add state
             initializeQuickAddState();
             
+            // Load real vendor, labour, and payment entry data when the page loads
+            refreshVendorData();
+            refreshLabourData();
+            refreshEntryData();
+            
             // Update last updated timestamp
-            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            if (lastUpdatedElement) {
+                lastUpdatedElement.textContent = new Date().toLocaleString();
+            }
             
             // Add subtle hover effects
             document.querySelectorAll('.overview-card').forEach(card => {
@@ -1453,6 +2645,82 @@
                 });
             });
             
+            // Edit vendor from view modal functionality
+            const editVendorFromViewBtn = document.getElementById('editVendorFromView');
+            if (editVendorFromViewBtn) {
+                editVendorFromViewBtn.addEventListener('click', function() {
+                    const vendorId = this.getAttribute('data-vendor-id');
+                    if (vendorId) {
+                        // Close the view modal
+                        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewVendorModal'));
+                        if (viewModal) {
+                            viewModal.hide();
+                        }
+                        
+                        // Wait a bit for the modal to close, then open edit modal
+                        setTimeout(() => {
+                            editVendor(vendorId);
+                        }, 300);
+                    }
+                });
+            }
+            
+            // Save vendor changes functionality
+            const saveVendorChangesBtn = document.getElementById('saveVendorChanges');
+            if (saveVendorChangesBtn) {
+                saveVendorChangesBtn.addEventListener('click', function() {
+                    saveVendorChanges();
+                });
+            }
+            
+            // Edit labour from view modal functionality
+            const editLabourFromViewBtn = document.getElementById('editLabourFromView');
+            if (editLabourFromViewBtn) {
+                editLabourFromViewBtn.addEventListener('click', function() {
+                    const labourId = this.getAttribute('data-labour-id');
+                    if (labourId) {
+                        // Close the view modal
+                        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewLabourModal'));
+                        if (viewModal) {
+                            viewModal.hide();
+                        }
+                        
+                        // Wait a bit for the modal to close, then open edit modal
+                        setTimeout(() => {
+                            editLabour(labourId);
+                        }, 300);
+                    }
+                });
+            }
+            
+            // Save labour changes functionality
+            const saveLabourChangesBtn = document.getElementById('saveLabourChanges');
+            if (saveLabourChangesBtn) {
+                saveLabourChangesBtn.addEventListener('click', function() {
+                    saveLabourChanges();
+                });
+            }
+            
+            // Edit payment entry from view modal functionality
+            const editPaymentEntryFromViewBtn = document.getElementById('editPaymentEntryFromView');
+            if (editPaymentEntryFromViewBtn) {
+                editPaymentEntryFromViewBtn.addEventListener('click', function() {
+                    const paymentId = this.getAttribute('data-payment-id');
+                    if (paymentId) {
+                        // Close the view modal
+                        const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewPaymentEntryModal'));
+                        if (viewModal) {
+                            viewModal.hide();
+                        }
+                        
+                        // Wait a bit for the modal to close, then open edit modal
+                        setTimeout(() => {
+                            editEntry(paymentId);
+                        }, 300);
+                    }
+                });
+            }
+            
             // Simulate real-time data updates with subtle indication
             setInterval(function() {
                 const updateIndicator = document.getElementById('lastUpdated');
@@ -1464,7 +2732,33 @@
                     }, 200);
                 }
             }, 60000); // Every 60 seconds
+            
+            // Image preview modal event listeners
+            const imageModal = document.getElementById('imagePreviewModal');
+            if (imageModal) {
+                imageModal.addEventListener('click', function(e) {
+                    if (e.target === imageModal) {
+                        closeImagePreview();
+                    }
+                });
+            }
+            
+            // Close image preview with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeImagePreview();
+                }
+            });
         });
+        
+        // Function to close image preview
+        function closeImagePreview() {
+            const modal = document.getElementById('imagePreviewModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
     </script>
 </body>
 </html>

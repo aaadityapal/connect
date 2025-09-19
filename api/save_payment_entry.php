@@ -1,14 +1,69 @@
 <?php
+// Start session to get current user
+session_start();
+
 // Database connection
 require_once '../config/db_connect.php';
 
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+// Set content type to JSON and configure error handling for production
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Production error handling
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', '../logs/payment_entry_errors.log');
 error_reporting(E_ALL);
 
+// Create logs directory if it doesn't exist
+$logsDir = '../logs/';
+if (!file_exists($logsDir)) {
+    @mkdir($logsDir, 0777, true);
+}
+
+// Function to log errors with context
+function logPaymentError($message, $context = []) {
+    $timestamp = date('Y-m-d H:i:s');
+    $userId = $_SESSION['user_id'] ?? 'unknown';
+    $logMessage = "[$timestamp] [User: $userId] $message";
+    if (!empty($context)) {
+        $logMessage .= " | Context: " . json_encode($context);
+    }
+    error_log($logMessage . "\n", 3, '../logs/payment_entry_errors.log');
+}
+
 // Check if the request method is POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    logPaymentError('Invalid request method attempted', ['method' => $_SERVER['REQUEST_METHOD']]);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Invalid request method'
+    ]);
+    exit;
+}
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    logPaymentError('Unauthenticated access attempt', ['session_data' => $_SESSION]);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'User not authenticated'
+    ]);
+    exit;
+}
+    
+    $created_by = $_SESSION['user_id'];
+    $updated_by = $_SESSION['user_id'];
+    
+    // Log payment entry attempt
+    logPaymentError('Payment entry save attempt started', [
+        'user_id' => $created_by,
+        'post_data_keys' => array_keys($_POST),
+        'files_data_keys' => array_keys($_FILES)
+    ]);
+    
     // Start transaction
     $pdo->beginTransaction();
     
@@ -25,6 +80,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validate required fields
         if (empty($projectType) || empty($projectId) || empty($paymentDate) || 
             empty($paymentAmount) || empty($paymentDoneVia) || empty($paymentMode)) {
+            logPaymentError('Required main payment fields missing', [
+                'projectType' => !empty($projectType),
+                'projectId' => !empty($projectId),
+                'paymentDate' => !empty($paymentDate),
+                'paymentAmount' => !empty($paymentAmount),
+                'paymentDoneVia' => !empty($paymentDoneVia),
+                'paymentMode' => !empty($paymentMode)
+            ]);
             throw new Exception('Required main payment fields are missing');
         }
         
@@ -37,7 +100,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 payment_amount, 
                 payment_done_via, 
                 payment_mode,
-                recipient_count
+                recipient_count,
+                created_by,
+                updated_by
             ) VALUES (
                 :project_type,
                 :project_id,
@@ -45,7 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 :payment_amount,
                 :payment_done_via,
                 :payment_mode,
-                :recipient_count
+                :recipient_count,
+                :created_by,
+                :updated_by
             )
         ");
         
@@ -56,24 +123,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':payment_amount' => $paymentAmount,
             ':payment_done_via' => $paymentDoneVia,
             ':payment_mode' => $paymentMode,
-            ':recipient_count' => $recipientCount
+            ':recipient_count' => $recipientCount,
+            ':created_by' => $created_by,
+            ':updated_by' => $updated_by
         ]);
         
         $paymentId = $pdo->lastInsertId();
-        
-        // Log all POST data for debugging
-        error_log('POST data: ' . print_r($_POST, true));
         
         // Process recipients
         if ($recipientCount > 0) {
             // Get all recipient keys
             $recipientKeys = array_keys($_POST['recipients'] ?? []);
-            error_log('Recipient keys: ' . print_r($recipientKeys, true));
             
             foreach ($recipientKeys as $i) {
                 // Check if this recipient exists in the form data
                 if (!isset($_POST['recipients'][$i]) || !is_array($_POST['recipients'][$i])) {
-                    error_log("Skipping recipient $i - not an array or not set");
                     continue;
                 }
                 
@@ -92,15 +156,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // For split payments, use "split_payment" as the payment mode if not set
                 if (isset($recipient['splitPayments']) && is_array($recipient['splitPayments']) && !empty($recipient['splitPayments']) && empty($recipientPaymentMode)) {
                     $recipientPaymentMode = "split_payment";
-                    error_log("Setting payment mode to 'split_payment' for recipient #$i with split payments");
                 }
                 
                 // Validate required recipient fields
                 if (empty($category) || empty($name) || empty($paymentFor) || empty($amount) || empty($recipientPaymentMode)) {
-                    // Log the missing fields for debugging
-                    error_log("Missing fields for recipient #$i - Category: $category, Name: $name, PaymentFor: $paymentFor, Amount: $amount, Mode: $recipientPaymentMode");
-                    error_log("Full recipient data: " . print_r($recipient, true));
-                    
                     // Create detailed error message
                     $missingFields = [];
                     if (empty($category)) $missingFields[] = 'Category';
@@ -123,7 +182,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         name,
                         payment_for,
                         amount,
-                        payment_mode
+                        payment_mode,
+                        created_by,
+                        updated_by
                     ) VALUES (
                         :payment_id,
                         :category,
@@ -133,7 +194,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         :name,
                         :payment_for,
                         :amount,
-                        :payment_mode
+                        :payment_mode,
+                        :created_by,
+                        :updated_by
                     )
                 ");
                 
@@ -146,7 +209,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':name' => $name,
                     ':payment_for' => $paymentFor,
                     ':amount' => $amount,
-                    ':payment_mode' => $recipientPaymentMode
+                    ':payment_mode' => $recipientPaymentMode,
+                    ':created_by' => $created_by,
+                    ':updated_by' => $updated_by
                 ]);
                 
                 $recipientId = $pdo->lastInsertId();
@@ -165,16 +230,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $fileSize = $_FILES['recipients']['size'][$i]['billImages'][$j];
                             $fileTmpName = $_FILES['recipients']['tmp_name'][$i]['billImages'][$j];
                             
-                            // Generate unique filename
-                            $newFileName = uniqid() . '_' . time() . '_' . $fileName;
-                            $uploadDir = '../uploads/payment_documents/';
+                            // Create organized directory structure
+                            $uploadDir = "../uploads/payment_documents/payment_{$paymentId}/recipient_{$recipientId}/";
                             
                             // Create directory if it doesn't exist
                             if (!file_exists($uploadDir)) {
-                                mkdir($uploadDir, 0777, true);
+                                if (!mkdir($uploadDir, 0777, true)) {
+                                    logPaymentError('Failed to create upload directory', [
+                                        'directory' => $uploadDir,
+                                        'parent_exists' => file_exists(dirname($uploadDir)),
+                                        'parent_writable' => file_exists(dirname($uploadDir)) ? is_writable(dirname($uploadDir)) : false
+                                    ]);
+                                    throw new Exception('Failed to create upload directory: ' . $uploadDir);
+                                }
                             }
                             
+                            // Check if directory is writable
+                            if (!is_writable($uploadDir)) {
+                                logPaymentError('Upload directory not writable', [
+                                    'directory' => $uploadDir,
+                                    'permissions' => substr(sprintf('%o', fileperms($uploadDir)), -4)
+                                ]);
+                                throw new Exception('Upload directory is not writable: ' . $uploadDir);
+                            }
+                            
+                            // Generate organized filename
+                            $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+                            $cleanFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($fileName, PATHINFO_FILENAME));
+                            $newFileName = $cleanFileName . '_' . uniqid() . '_' . time() . '.' . $fileExtension;
                             $destination = $uploadDir . $newFileName;
+                            
+                            // Store relative path for database
+                            $relativePath = "uploads/payment_documents/payment_{$paymentId}/recipient_{$recipientId}/{$newFileName}";
                             
                             // Move uploaded file
                             if (move_uploaded_file($fileTmpName, $destination)) {
@@ -198,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $stmt->execute([
                                     ':recipient_id' => $recipientId,
                                     ':file_name' => $fileName,
-                                    ':file_path' => $newFileName,
+                                    ':file_path' => $relativePath,
                                     ':file_type' => $fileType,
                                     ':file_size' => $fileSize
                                 ]);
@@ -251,16 +338,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $fileName = $_FILES['recipients']['name'][$i]['splitPayments'][$splitId]['proof'];
                             $fileTmpName = $_FILES['recipients']['tmp_name'][$i]['splitPayments'][$splitId]['proof'];
                             
-                            // Generate unique filename
-                            $newFileName = 'split_' . uniqid() . '_' . time() . '_' . $fileName;
-                            $uploadDir = '../uploads/payment_documents/';
+                            // Create organized directory structure for split payments
+                            $uploadDir = "../uploads/payment_documents/payment_{$paymentId}/recipient_{$recipientId}/splits/";
                             
                             // Create directory if it doesn't exist
                             if (!file_exists($uploadDir)) {
                                 mkdir($uploadDir, 0777, true);
                             }
                             
+                            // Generate organized filename
+                            $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+                            $cleanFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($fileName, PATHINFO_FILENAME));
+                            $newFileName = 'split_' . $splitPaymentId . '_' . $cleanFileName . '_' . uniqid() . '.' . $fileExtension;
                             $destination = $uploadDir . $newFileName;
+                            
+                            // Store relative path for database
+                            $relativePath = "uploads/payment_documents/payment_{$paymentId}/recipient_{$recipientId}/splits/{$newFileName}";
                             
                             // Move uploaded file
                             if (move_uploaded_file($fileTmpName, $destination)) {
@@ -272,7 +365,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ");
                                 
                                 $stmt->execute([
-                                    ':proof_file' => $newFileName,
+                                    ':proof_file' => $relativePath,
                                     ':split_id' => $splitPaymentId
                                 ]);
                             }
@@ -296,15 +389,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Rollback transaction on error
         $pdo->rollBack();
         
+        // Log the error for debugging
+        logPaymentError('Payment entry save failed', [
+            'error_message' => $e->getMessage(),
+            'user_id' => $_SESSION['user_id'],
+            'post_data_count' => count($_POST),
+            'files_count' => count($_FILES)
+        ]);
+        
         echo json_encode([
             'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
-} else {
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Invalid request method'
-    ]);
-}
 ?>

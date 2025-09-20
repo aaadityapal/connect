@@ -1,0 +1,1211 @@
+/* Employee Salary Management - Main Styles */
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+    color: white;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.collapsed {
+    transform: translateX(-280px);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar-logo i {
+    font-size: 1.5rem;
+    color: #60a5fa;
+}
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+}
+
+.sidebar-toggle-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 0.25rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    color: #cbd5e1;
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    text-decoration: none;
+}
+
+.nav-item.active .nav-link {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    border-left-color: #3b82f6;
+}
+
+.nav-link i {
+    font-size: 1.125rem;
+    width: 20px;
+    text-align: center;
+}
+
+.nav-text {
+    font-weight: 500;
+}
+
+.sidebar-footer {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: white;
+    font-size: 0.875rem;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Floating Toggle Button for Desktop */
+.floating-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+}
+
+.floating-toggle-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.floating-toggle-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+/* Floating Toggle Button for Desktop */
+.floating-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    z-index: 1001;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+}
+
+.floating-toggle-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.floating-toggle-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+/* Hide floating button on mobile */
+@media (max-width: 992px) {
+    .floating-toggle-btn {
+        display: none !important;
+    }
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Main Wrapper */
+.main-wrapper {
+    margin-left: 280px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+    background: #f8fafc;
+}
+
+.main-wrapper.expanded {
+    margin-left: 0;
+}
+
+/* Top Navigation */
+.top-nav {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.mobile-toggle:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-item {
+    color: #6b7280;
+}
+
+.breadcrumb-item.current {
+    color: #374151;
+    font-weight: 500;
+}
+
+.breadcrumb i {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Layout - Updated for Sidebar */
+.salary-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin: 0; /* Remove margin since it's inside main-wrapper now */
+}
+
+.header-container {
+    max-width: none; /* Remove max-width constraint */
+    margin: 0;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    text-decoration: none;
+}
+
+.page-title h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.page-title p {
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.month-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: white;
+}
+
+.month-selector label {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.month-selector input {
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.875rem;
+}
+
+.month-selector input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-outline {
+    background: transparent;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+/* Statistics Section */
+.stats-section {
+    padding: 2rem 0;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.stats-container {
+    max-width: none; /* Remove max-width constraint for sidebar layout */
+    margin: 0;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.total-employees .stat-icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.budget-card .stat-icon {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.processed-card .stat-icon {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+.pending-card .stat-icon {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+}
+
+.stat-content h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.stat-content p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Action Bar */
+.action-bar {
+    background: white;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.action-container {
+    max-width: none; /* Remove max-width constraint */
+    margin: 0;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.filter-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.75rem;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.search-box input {
+    padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    width: 250px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-select {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Table Section */
+.salary-table-section {
+    padding: 2rem 0;
+    background: #f8fafc;
+}
+
+.table-container {
+    max-width: none; /* Remove max-width constraint for full width in sidebar layout */
+    margin: 0;
+    padding: 0 2rem;
+}
+
+.table-header {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border: 1px solid #e5e7eb;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.table-wrapper {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #cbd5e1 #f1f5f9; /* Firefox */
+}
+
+/* Custom scrollbar for webkit browsers */
+.table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.salary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    min-width: 3200px; /* Further increased from 2400px to ensure all 18 columns are fully visible */
+    table-layout: auto; /* Allow table to adjust column widths automatically */
+}
+
+.salary-table th {
+    background: #f8fafc;
+    padding: 1rem 0.75rem; /* Consistent padding for headers */
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+    min-width: 110px; /* Increased from 100px for better spacing */
+    vertical-align: middle;
+}
+
+/* Enhanced Column Widths for Better Alignment */
+.salary-table th:nth-child(1), .salary-table td:nth-child(1) { 
+    width: 50px; 
+    min-width: 50px; 
+    max-width: 50px; 
+    text-align: center;
+} /* Checkbox column */
+
+.salary-table th:nth-child(2), .salary-table td:nth-child(2) { 
+    width: 280px; 
+    min-width: 280px; 
+} /* Employee Name */
+
+.salary-table th:nth-child(3), .salary-table td:nth-child(3) { 
+    width: 140px; 
+    min-width: 140px; 
+} /* Role */
+
+.salary-table th:nth-child(4), .salary-table td:nth-child(4) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Base Salary */
+
+.salary-table th:nth-child(5), .salary-table td:nth-child(5) { 
+    width: 120px; 
+    min-width: 120px; 
+    text-align: center;
+} /* Working Days */
+
+.salary-table th:nth-child(6), .salary-table td:nth-child(6) { 
+    width: 120px; 
+    min-width: 120px; 
+    text-align: center;
+} /* Present Days */
+
+.salary-table th:nth-child(7), .salary-table td:nth-child(7) { 
+    width: 120px; 
+    min-width: 120px; 
+    text-align: center;
+} /* Late Days */
+
+.salary-table th:nth-child(8), .salary-table td:nth-child(8) { 
+    width: 120px; 
+    min-width: 120px; 
+    text-align: center;
+} /* Leave Days */
+
+.salary-table th:nth-child(9), .salary-table td:nth-child(9) { 
+    width: 140px; 
+    min-width: 140px; 
+    text-align: center;
+} /* Overtime Hours */
+
+.salary-table th:nth-child(10), .salary-table td:nth-child(10) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Overtime Amount */
+
+.salary-table th:nth-child(11), .salary-table td:nth-child(11) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Travel Allowance */
+
+.salary-table th:nth-child(12), .salary-table td:nth-child(12) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Bonus/Incentives */
+
+.salary-table th:nth-child(13), .salary-table td:nth-child(13) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Total Deductions */
+
+.salary-table th:nth-child(14), .salary-table td:nth-child(14) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Tax Deduction */
+
+.salary-table th:nth-child(15), .salary-table td:nth-child(15) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* PF Contribution */
+
+.salary-table th:nth-child(16), .salary-table td:nth-child(16) { 
+    width: 180px; 
+    min-width: 180px; 
+    text-align: right;
+} /* Net Salary */
+
+.salary-table th:nth-child(17), .salary-table td:nth-child(17) { 
+    width: 120px; 
+    min-width: 120px; 
+    text-align: center;
+} /* Status */
+
+.salary-table th:nth-child(18), .salary-table td:nth-child(18) { 
+    width: 200px; 
+    min-width: 200px; 
+    text-align: center;
+} /* Actions */
+
+.salary-table td {
+    padding: 0.875rem 0.75rem; /* Match header padding for consistency */
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+    white-space: nowrap; /* Prevent text wrapping in cells */
+}
+
+
+
+.salary-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* Loading State */
+.loading-row {
+    text-align: center;
+    padding: 3rem 1rem !important;
+    color: #6b7280;
+}
+
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.loading-spinner i {
+    font-size: 1.25rem;
+    color: #3b82f6;
+}
+
+/* Table Pagination */
+.table-pagination {
+    background: white;
+    padding: 1rem 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.page-number {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.page-number:hover {
+    background: #f3f4f6;
+    text-decoration: none;
+}
+
+.page-number.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+
+
+/* Status Badges */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-processed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-review {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Amount Formatting */
+.amount {
+    font-weight: 600;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+.amount.positive {
+    color: #059669;
+}
+
+.amount.negative {
+    color: #dc2626;
+}
+
+.amount.neutral {
+    color: #374151;
+}
+
+/* Employee Info */
+.employee-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.employee-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.employee-details h4 {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.125rem;
+}
+
+.employee-details p {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.375rem;
+}
+
+.action-btn {
+    padding: 0.375rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.action-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.action-btn.view {
+    color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.action-btn.view:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.action-btn.edit {
+    color: #f59e0b;
+    border-color: #f59e0b;
+}
+
+.action-btn.edit:hover {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+/* Responsive Design - Updated for Sidebar */
+@media (max-width: 1200px) {
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .table-container {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    /* Hide sidebar on tablet and mobile */
+    .sidebar {
+        transform: translateX(-280px);
+    }
+    
+    .main-wrapper {
+        margin-left: 0;
+    }
+    
+    .mobile-toggle {
+        display: block;
+    }
+    
+    /* Show sidebar overlay on mobile when active */
+    .sidebar.mobile-active {
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .top-nav {
+        padding: 1rem;
+    }
+    
+    .action-container {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+    
+    .filter-section {
+        flex-wrap: wrap;
+    }
+    
+    .stats-container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+    
+    .search-box input {
+        width: 200px;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .salary-table {
+        min-width: 2400px; /* Maintain increased minimum width on mobile */
+        font-size: 0.8125rem; /* Slightly smaller font on mobile */
+    }
+    
+    .table-pagination {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .salary-header {
+        padding: 1rem 0;
+    }
+    
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-nav,
+    .stats-container,
+    .action-container,
+    .table-container,
+    .header-container {
+        padding: 0 1rem;
+    }
+    
+    .page-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    .search-box input {
+        width: 150px;
+    }
+    
+    /* Ensure table scrollability on very small screens */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .salary-table {
+        font-size: 0.75rem; /* Even smaller font for very small screens */
+    }
+    
+    .sidebar {
+        width: 260px; /* Slightly smaller sidebar on mobile */
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-260px);
+    }
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
+}
+
+/* Smooth transitions for sidebar */
+body.sidebar-transitions-enabled .sidebar,
+body.sidebar-transitions-enabled .main-wrapper {
+    transition: all 0.3s ease;
+}
+
+body.sidebar-transitions-enabled .sidebar-overlay {
+    transition: all 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+.sidebar-toggle-btn:focus,
+.nav-link:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+}
+
+/* Scrollbar styling for sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}

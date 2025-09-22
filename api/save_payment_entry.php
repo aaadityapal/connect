@@ -135,6 +135,13 @@ if (!isset($_SESSION['user_id'])) {
             // Get all recipient keys
             $recipientKeys = array_keys($_POST['recipients'] ?? []);
             
+            // Log recipient data for debugging
+            logPaymentError('Processing recipients', [
+                'recipient_count' => $recipientCount,
+                'recipient_keys' => $recipientKeys,
+                'recipients_data' => $_POST['recipients'] ?? []
+            ]);
+            
             foreach ($recipientKeys as $i) {
                 // Check if this recipient exists in the form data
                 if (!isset($_POST['recipients'][$i]) || !is_array($_POST['recipients'][$i])) {
@@ -296,16 +303,41 @@ if (!isset($_SESSION['user_id'])) {
                 
                 // Process split payments if any
                 if (isset($recipient['splitPayments']) && is_array($recipient['splitPayments'])) {
+                    // Log split payment data for debugging
+                    logPaymentError('Processing split payments for recipient', [
+                        'recipient_id' => $recipientId,
+                        'split_data' => $recipient['splitPayments']
+                    ]);
+                    
                     foreach ($recipient['splitPayments'] as $splitId => $split) {
                         // Skip if not a valid array element
                         if (!is_array($split)) {
+                            logPaymentError('Skipping invalid split payment', [
+                                'split_id' => $splitId,
+                                'split_data' => $split
+                            ]);
                             continue;
                         }
                         
                         $splitAmount = isset($split['amount']) ? $split['amount'] : 0;
                         $splitMode = isset($split['mode']) ? $split['mode'] : '';
+                        $splitPaymentFor = isset($split['payment_for']) ? $split['payment_for'] : '';
                         
-                        if (empty($splitAmount) || empty($splitMode)) {
+                        // Log extracted split data
+                        logPaymentError('Split payment data extracted', [
+                            'split_id' => $splitId,
+                            'amount' => $splitAmount,
+                            'mode' => $splitMode,
+                            'payment_for' => $splitPaymentFor
+                        ]);
+                        
+                        if (empty($splitAmount) || empty($splitMode) || empty($splitPaymentFor)) {
+                            logPaymentError('Skipping split payment - missing required data', [
+                                'split_id' => $splitId,
+                                'amount_empty' => empty($splitAmount),
+                                'mode_empty' => empty($splitMode),
+                                'payment_for_empty' => empty($splitPaymentFor)
+                            ]);
                             continue;
                         }
                         
@@ -314,21 +346,33 @@ if (!isset($_SESSION['user_id'])) {
                             INSERT INTO hr_payment_splits (
                                 recipient_id,
                                 amount,
-                                payment_mode
+                                payment_mode,
+                                payment_for
                             ) VALUES (
                                 :recipient_id,
                                 :amount,
-                                :payment_mode
+                                :payment_mode,
+                                :payment_for
                             )
                         ");
                         
-                        $stmt->execute([
+                        $result = $stmt->execute([
                             ':recipient_id' => $recipientId,
                             ':amount' => $splitAmount,
-                            ':payment_mode' => $splitMode
+                            ':payment_mode' => $splitMode,
+                            ':payment_for' => $splitPaymentFor
                         ]);
                         
                         $splitPaymentId = $pdo->lastInsertId();
+                        
+                        // Log successful insertion
+                        logPaymentError('Split payment inserted successfully', [
+                            'split_payment_id' => $splitPaymentId,
+                            'recipient_id' => $recipientId,
+                            'amount' => $splitAmount,
+                            'mode' => $splitMode,
+                            'payment_for' => $splitPaymentFor
+                        ]);
                         
                         // Process split payment proof if any
                         if (isset($_FILES['recipients']['name'][$i]['splitPayments'][$splitId]['proof']) && 

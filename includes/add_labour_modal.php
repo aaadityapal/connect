@@ -99,10 +99,10 @@
                                     <i class="fas fa-user-tag input-icon"></i>
                                     <select class="form-select" id="labourType" name="labourType" required>
                                         <option value="">Select Labour Type</option>
-                                        <option value="permanent_labour">Permanent Labour</option>
-                                        <option value="chowk_labour">Chowk Labour</option>
-                                        <option value="vendor_labour">Vendor Labour</option>
-                                        <option value="other">Other</option>
+                                        <option value="permanent">Permanent</option>
+                                        <option value="temporary">Temporary</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="others">Others</option>
                                     </select>
                                 </div>
                             </div>

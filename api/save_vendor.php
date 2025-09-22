@@ -18,12 +18,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $created_by = $_SESSION['user_id'];
     $updated_by = $_SESSION['user_id'];
+    
     // Collect form data
     $fullName = mysqli_real_escape_string($conn, $_POST['fullName']);
     $phoneNumber = mysqli_real_escape_string($conn, $_POST['phoneNumber']);
     $alternativeNumber = isset($_POST['alternativeNumber']) ? mysqli_real_escape_string($conn, $_POST['alternativeNumber']) : '';
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $vendorType = mysqli_real_escape_string($conn, $_POST['vendorType']);
+    $vendorCategory = isset($_POST['vendorCategory']) ? mysqli_real_escape_string($conn, $_POST['vendorCategory']) : '';
+    
+    // Determine vendor category - prioritize frontend assignment, then fallback to backend logic
+    if (empty($vendorCategory)) {
+        // First check if it's from a custom category selection
+        if (isset($_POST['originalVendorType'])) {
+            $originalVendorType = mysqli_real_escape_string($conn, $_POST['originalVendorType']);
+            if ($originalVendorType === 'custom_material_supplier') {
+                $vendorCategory = 'Material Supplier';
+            } elseif ($originalVendorType === 'custom_labour_contractor') {
+                $vendorCategory = 'Labour Contractor Vendor';
+            } elseif ($originalVendorType === 'custom_material_contractor') {
+                $vendorCategory = 'Material Contractor';
+            }
+        }
+        
+        // If still empty, determine from vendor type patterns
+        if (empty($vendorCategory)) {
+            if (strpos($vendorType, '_supplier') !== false) {
+                $vendorCategory = 'Material Supplier';
+            } elseif (strpos($vendorType, '_labour') !== false) {
+                $vendorCategory = 'Labour Contractor Vendor';
+            } elseif (strpos($vendorType, '_contractor') !== false) {
+                $vendorCategory = 'Material Contractor';
+            } elseif (stripos($vendorType, 'supplier') !== false) {
+                $vendorCategory = 'Material Supplier';
+            } elseif (stripos($vendorType, 'labour') !== false) {
+                $vendorCategory = 'Labour Contractor Vendor';
+            } elseif (stripos($vendorType, 'contractor') !== false) {
+                $vendorCategory = 'Material Contractor';
+            } else {
+                $vendorCategory = 'Other';
+            }
+        }
+    }
     
     // Banking details
     $bankName = isset($_POST['bankName']) ? mysqli_real_escape_string($conn, $_POST['bankName']) : '';
@@ -50,6 +86,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
+    // Debug: Log all POST data for debugging (remove this in production)
+    error_log("=== BACKEND DEBUG START ===");
+    error_log("All POST data: " . print_r($_POST, true));
+    error_log("vendorType: " . $vendorType);
+    error_log("vendorCategory (before processing): " . $vendorCategory);
+    error_log("originalVendorType: " . (isset($_POST['originalVendorType']) ? $_POST['originalVendorType'] : 'NOT SET'));
+    error_log("=== BACKEND DEBUG END ===");
+    
+    // Debug: Log vendor category assignment (remove this in production)
+    error_log("Final Category Assignment: Type='$vendorType', Category='$vendorCategory', OriginalType='" . (isset($_POST['originalVendorType']) ? $_POST['originalVendorType'] : 'not set') . "'");
+    
+    // Ensure vendor category is never empty
+    if (empty($vendorCategory)) {
+        $vendorCategory = 'Other';
+        error_log("Warning: Vendor category was empty, defaulted to 'Other'");
+    } else {
+        error_log("Category is set to: " . $vendorCategory);
+    }
+    
     // Insert data into the vendors table
     $sql = "INSERT INTO hr_vendors (
                 full_name, 
@@ -57,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 alternative_number, 
                 email, 
                 vendor_type, 
+                vendor_category,
                 bank_name, 
                 account_number, 
                 routing_number, 
@@ -75,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '$alternativeNumber', 
                 '$email', 
                 '$vendorType', 
+                '$vendorCategory',
                 '$bankName', 
                 '$accountNumber', 
                 '$routingNumber', 

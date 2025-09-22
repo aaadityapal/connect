@@ -53,16 +53,27 @@
                                     <option value="service_provider">Service Provider</option>
                                     <option value="consultant">Consultant</option>
                                     <option value="freelancer">Freelancer</option>
+                                    <optgroup label="Material Supplier">
+                                        <option value="brick_supplier">Brick Supplier</option>
+                                        <option value="dust_supplier">Dust Supplier</option>
+                                        <option value="sand_supplier">Sand Supplier</option>
+                                        <option value="electrical_supplier">Electrical Supplier</option>
+                                        <option value="cement_supplier">Cement Supplier</option>
+                                        <option value="steel_supplier">Steel Supplier</option>
+                                        <option value="paint_supplier">Paint Supplier</option>
+                                        <option value="plumbing_supplier">Plumbing Supplier</option>
+                                        <option value="hardware_supplier">Hardware Supplier</option>
+                                        <option value="tile_supplier">Tile Supplier</option>
+                                        <option value="wood_supplier">Wood Supplier</option>
+                                        <option value="glass_supplier">Glass Supplier</option>
+                                        <option value="concrete_supplier">Concrete Supplier</option>
+                                        <option value="insulation_supplier">Insulation Supplier</option>
+                                    </optgroup>
                                     <option value="tile_contractor">Tile Contractor</option>
-                                    <option value="cement_supplier">Cement Supplier</option>
                                     <option value="labour_supplier">Labour Supplier</option>
                                     <option value="electrical_contractor">Electrical Contractor</option>
                                     <option value="plumbing_contractor">Plumbing Contractor</option>
                                     <option value="paint_contractor">Paint Contractor</option>
-                                    <option value="steel_supplier">Steel Supplier</option>
-                                    <option value="sand_supplier">Sand Supplier</option>
-                                    <option value="brick_supplier">Brick Supplier</option>
-                                    <option value="hardware_supplier">Hardware Supplier</option>
                                     <option value="equipment_rental">Equipment Rental</option>
                                     <option value="transport_contractor">Transport Contractor</option>
                                     <option value="security_services">Security Services</option>
@@ -108,60 +119,61 @@
                         
                         <div class="vendor-financial-content collapsed" id="financialContent">
                             <div class="row g-4">
-                        
-                        <div class="col-md-6">
-                            <div class="vendor-form-group">
-                                <label for="vendorGST" class="vendor-form-label">GST Number</label>
-                                <input type="text" class="vendor-form-control" id="vendorGST" name="gst_number" placeholder="07AAACH7409R1ZX">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="vendor-form-group">
-                                <label for="vendorPAN" class="vendor-form-label">PAN Number</label>
-                                <input type="text" class="vendor-form-control" id="vendorPAN" name="pan_number" placeholder="AAACH7409R">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="vendor-form-group">
-                                <label for="vendorBankAccount" class="vendor-form-label">Bank Account</label>
-                                <input type="text" class="vendor-form-control" id="vendorBankAccount" name="bank_account_number">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="vendor-form-group">
-                                <label for="vendorBankName" class="vendor-form-label">Bank Name</label>
-                                <input type="text" class="vendor-form-control" id="vendorBankName" name="bank_name">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="vendor-form-group">
-                                <label for="vendorIFSC" class="vendor-form-label">IFSC Code</label>
-                                <input type="text" class="vendor-form-control" id="vendorIFSC" name="ifsc_code" placeholder="SBIN0000123">
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="vendor-form-group">
-                                <label for="vendorPaymentTerms" class="vendor-form-label">Payment Terms</label>
-                                <select class="vendor-form-control" id="vendorPaymentTerms" name="payment_terms">
-                                    <option value="Immediate">Immediate</option>
-                                    <option value="Net 7">Net 7 days</option>
-                                    <option value="Net 15">Net 15 days</option>
-                                    <option value="Net 30" selected>Net 30 days</option>
-                                    <option value="Net 45">Net 45 days</option>
-                                    <option value="Net 60">Net 60 days</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="vendor-form-group">
-                                <label for="vendorNotes" class="vendor-form-label">Notes</label>
-                                <textarea class="vendor-form-control vendor-textarea" id="vendorNotes" name="notes" rows="3" placeholder="Additional notes..."></textarea>
+                                <div class="col-md-6">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorGST" class="vendor-form-label">GST Number</label>
+                                        <input type="text" class="vendor-form-control" id="vendorGST" name="gst_number" placeholder="07AAACH7409R1ZX">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorPAN" class="vendor-form-label">PAN Number</label>
+                                        <input type="text" class="vendor-form-control" id="vendorPAN" name="pan_number" placeholder="AAACH7409R">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorBankAccount" class="vendor-form-label">Bank Account</label>
+                                        <input type="text" class="vendor-form-control" id="vendorBankAccount" name="bank_account_number">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorBankName" class="vendor-form-label">Bank Name</label>
+                                        <input type="text" class="vendor-form-control" id="vendorBankName" name="bank_name">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorIFSC" class="vendor-form-label">IFSC Code</label>
+                                        <input type="text" class="vendor-form-control" id="vendorIFSC" name="ifsc_code" placeholder="SBIN0000123">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorPaymentTerms" class="vendor-form-label">Payment Terms</label>
+                                        <select class="vendor-form-control" id="vendorPaymentTerms" name="payment_terms">
+                                            <option value="Immediate">Immediate</option>
+                                            <option value="Net 7">Net 7 days</option>
+                                            <option value="Net 15">Net 15 days</option>
+                                            <option value="Net 30" selected>Net 30 days</option>
+                                            <option value="Net 45">Net 45 days</option>
+                                            <option value="Net 60">Net 60 days</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="vendor-form-group">
+                                        <label for="vendorNotes" class="vendor-form-label">Notes</label>
+                                        <textarea class="vendor-form-control vendor-textarea" id="vendorNotes" name="notes" rows="3" placeholder="Additional notes..."></textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

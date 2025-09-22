@@ -18,6 +18,7 @@ function createVendorsTable($pdo) {
                 phone_number VARCHAR(20) NOT NULL,
                 email VARCHAR(255),
                 vendor_type ENUM('supplier', 'contractor', 'service_provider', 'consultant', 'freelancer', 'other') NOT NULL,
+                vendor_category VARCHAR(50),
                 company_name VARCHAR(255),
                 address TEXT,
                 gst_number VARCHAR(50),
@@ -61,11 +62,11 @@ function addVendor($pdo, $user_id, $vendorData) {
         // Insert new vendor
         $stmt = $pdo->prepare("
             INSERT INTO vendors (
-                full_name, phone_number, email, vendor_type, company_name, 
+                full_name, phone_number, email, vendor_type, vendor_category, company_name, 
                 address, gst_number, pan_number, bank_account_number, 
                 bank_name, ifsc_code, payment_terms, notes, created_by
             ) VALUES (
-                :full_name, :phone_number, :email, :vendor_type, :company_name,
+                :full_name, :phone_number, :email, :vendor_type, :vendor_category, :company_name,
                 :address, :gst_number, :pan_number, :bank_account_number,
                 :bank_name, :ifsc_code, :payment_terms, :notes, :created_by
             )
@@ -76,6 +77,7 @@ function addVendor($pdo, $user_id, $vendorData) {
             ':phone_number' => trim($vendorData['phone_number']),
             ':email' => !empty($vendorData['email']) ? trim($vendorData['email']) : null,
             ':vendor_type' => $vendorData['vendor_type'],
+            ':vendor_category' => !empty($vendorData['vendorCategory']) ? trim($vendorData['vendorCategory']) : null,
             ':company_name' => !empty($vendorData['company_name']) ? trim($vendorData['company_name']) : null,
             ':address' => !empty($vendorData['address']) ? trim($vendorData['address']) : null,
             ':gst_number' => !empty($vendorData['gst_number']) ? trim($vendorData['gst_number']) : null,
@@ -168,6 +170,7 @@ function updateVendor($pdo, $vendor_id, $user_id, $vendorData) {
                 phone_number = :phone_number,
                 email = :email,
                 vendor_type = :vendor_type,
+                vendor_category = :vendor_category,
                 company_name = :company_name,
                 address = :address,
                 gst_number = :gst_number,
@@ -186,6 +189,7 @@ function updateVendor($pdo, $vendor_id, $user_id, $vendorData) {
             ':phone_number' => trim($vendorData['phone_number']),
             ':email' => !empty($vendorData['email']) ? trim($vendorData['email']) : null,
             ':vendor_type' => $vendorData['vendor_type'],
+            ':vendor_category' => !empty($vendorData['vendorCategory']) ? trim($vendorData['vendorCategory']) : null,
             ':company_name' => !empty($vendorData['company_name']) ? trim($vendorData['company_name']) : null,
             ':address' => !empty($vendorData['address']) ? trim($vendorData['address']) : null,
             ':gst_number' => !empty($vendorData['gst_number']) ? trim($vendorData['gst_number']) : null,

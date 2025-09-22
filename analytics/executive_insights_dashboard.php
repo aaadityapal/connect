@@ -809,6 +809,66 @@
             margin-left: 0.5rem;
             font-size: 0.8rem;
         }
+        
+        /* Table Styles for Recent Entries */
+        .table-responsive {
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            background-color: #f8fafc;
+            border-bottom: 2px solid #e5e7eb;
+            font-weight: 600;
+            color: #374151;
+            padding: 1rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .table tbody td {
+            padding: 1rem 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #fafbfc;
+        }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .entry-icon-small {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background-color: #fffbeb;
+            border: 1px solid #fef3c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        
+        .entry-icon-small i {
+            font-size: 1rem;
+            color: #d97706;
+        }
+        
+        .table .btn-group .btn {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .table .badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+        }
     </style>
 </head>
 <body>
@@ -1036,25 +1096,53 @@
                                         Refresh
                                     </button>
                                 </div>
-                                <div class="data-list" id="entryDataList">
-                                    <!-- Sample Entry Data -->
-                                    <div class="data-item">
-                                        <div class="item-icon entry-icon">
-                                            <i class="fas fa-money-bill-wave"></i>
-                                        </div>
-                                        <div class="item-info">
-                                            <h6 class="item-name">Payment #PE-001</h6>
-                                            <p class="item-details">₹15,000 • Salary Payment • Added 30 mins ago</p>
-                                        </div>
-                                        <div class="item-actions">
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(1)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editEntry(1)">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div class="table-responsive" id="entryDataContainer">
+                                    <table class="table table-hover align-middle" id="entryDataTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col" class="text-center" style="width: 60px;">
+                                                    <i class="fas fa-money-bill-wave text-warning"></i>
+                                                </th>
+                                                <th scope="col">Project Title</th>
+                                                <th scope="col">Amount</th>
+                                                <th scope="col">Payment Type</th>
+                                                <th scope="col">Date Added</th>
+                                                <th scope="col" class="text-center" style="width: 120px;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="entryDataList">
+                                            <!-- Sample Entry Data -->
+                                            <tr>
+                                                <td class="text-center">
+                                                    <div class="entry-icon-small">
+                                                        <i class="fas fa-money-bill-wave text-warning"></i>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-medium">Project Alpha</span>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold text-success">₹15,000</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info text-white">Salary Payment</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">30 mins ago</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="btn-group" role="group" aria-label="Actions">
+                                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(1)" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="editEntry(1)" title="Edit Entry">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                                 <div class="data-footer">
                                     <a href="#" class="view-all-link" onclick="viewAllEntries()">
@@ -1335,7 +1423,7 @@
                         data.vendors.forEach((vendor, index) => {
                             // Format the created time
                             const createdDate = new Date(vendor.created_at);
-                            const timeAgo = getTimeAgo(createdDate);
+                            const timeAgo = getTimeAgoIST(vendor.created_at);
                             
                             // Create vendor item HTML
                             const vendorItem = document.createElement('div');
@@ -1370,36 +1458,57 @@
                 });
         }
         
-        // Helper function to calculate time ago
-        function getTimeAgo(date) {
+        // Helper function to calculate time ago in IST
+        function getTimeAgoIST(date) {
+            // Convert to IST if needed
+            const istDate = new Date(date);
+            
+            // Get current time in IST
             const now = new Date();
-            const seconds = Math.floor((now - date) / 1000);
+            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const nowIST = new Date(now.getTime() + istOffset);
+            const dateIST = new Date(istDate.getTime() + istOffset);
+            
+            const seconds = Math.floor((nowIST - dateIST) / 1000);
             
             let interval = Math.floor(seconds / 31536000);
             if (interval > 1) {
                 return interval + " years ago";
             }
+            
             interval = Math.floor(seconds / 2592000);
             if (interval > 1) {
                 return interval + " months ago";
             }
+            
             interval = Math.floor(seconds / 86400);
             if (interval > 1) {
                 return interval + " days ago";
             }
+            
             interval = Math.floor(seconds / 3600);
             if (interval > 1) {
                 return interval + " hours ago";
             }
+            
             interval = Math.floor(seconds / 60);
             if (interval > 1) {
                 return interval + " minutes ago";
             }
+            
+            if (seconds < 10) {
+                return "Just now";
+            }
+            
             return Math.floor(seconds) + " seconds ago";
         }
         
         // Helper function to escape HTML to prevent XSS
         function escapeHtml(text) {
+            if (!text || typeof text !== 'string') {
+                return text || '';
+            }
+            
             var map = {
                 '&': '&amp;',
                 '<': '&lt;',
@@ -1472,7 +1581,7 @@
             
             // Show loading indicator
             const entryDataList = document.getElementById('entryDataList');
-            entryDataList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            entryDataList.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2 text-muted">Loading payment entries...</p></td></tr>';
             
             // Fetch real payment entry data from the API
             fetch('../api/get_recent_payment_entries.php')
@@ -1484,42 +1593,66 @@
                         
                         // Check if we have payment entries
                         if (data.payment_entries.length === 0) {
-                            entryDataList.innerHTML = '<div class="text-center py-4"><p class="text-muted">No payment entries found</p></div>';
+                            entryDataList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No payment entries found</td></tr>';
                             return;
                         }
                         
-                        // Populate the payment entry list with real data
+                        // Populate the payment entry table with real data
                         data.payment_entries.forEach((entry, index) => {
-                            // Create payment entry item HTML
-                            const entryItem = document.createElement('div');
-                            entryItem.className = 'data-item';
-                            entryItem.innerHTML = `
-                                <div class="item-icon entry-icon">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                </div>
-                                <div class="item-info">
-                                    <h6 class="item-name">${escapeHtml(entry.display_project_title || 'Payment #' + entry.payment_id)}</h6>
-                                    <p class="item-details">${escapeHtml(entry.payment_summary)} • Added ${entry.time_since_created}</p>
-                                </div>
-                                <div class="item-actions">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(${entry.payment_id})">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editEntry(${entry.payment_id})">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </div>
+                            // Safely get values with fallbacks
+                            const paymentId = entry.payment_id || 'N/A';
+                            const projectTitle = entry.display_project_title || entry.project_title || 'Payment Entry';
+                            const paymentAmount = entry.formatted_payment_amount || '₹0';
+                            const paymentMode = entry.display_payment_mode || entry.payment_mode || 'Payment';
+                            
+                            // Use API provided time or calculate fallback in IST
+                            let timeCreated = entry.time_since_created;
+                            if (!timeCreated || timeCreated === 'null' || timeCreated === '') {
+                                // Fallback: calculate time using IST
+                                timeCreated = getTimeAgoIST(entry.created_at);
+                            }
+                            
+                            // Create payment entry table row
+                            const entryRow = document.createElement('tr');
+                            entryRow.innerHTML = `
+                                <td class="text-center">
+                                    <div class="entry-icon-small">
+                                        <i class="fas fa-money-bill-wave text-warning"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-medium">${escapeHtml(projectTitle.toString())}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">${escapeHtml(paymentAmount.toString())}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-white">${escapeHtml(paymentMode.toString())}</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted" title="Created: ${escapeHtml(entry.created_at_ist || entry.created_at)}">${escapeHtml(timeCreated.toString())}</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group" aria-label="Actions">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(${paymentId})" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editEntry(${paymentId})" title="Edit Entry">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             `;
                             
-                            entryDataList.appendChild(entryItem);
+                            entryDataList.appendChild(entryRow);
                         });
                     } else {
-                        entryDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Error loading payment entries: ' + (data.message || 'Unknown error') + '</p></div>';
+                        entryDataList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error loading payment entries: ' + (data.message || 'Unknown error') + '</td></tr>';
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching payment entry data:', error);
-                    entryDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Failed to load payment entries. Please try again later.</p></div>';
+                    entryDataList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load payment entries. Please try again later.</td></tr>';
                 });
         }
         

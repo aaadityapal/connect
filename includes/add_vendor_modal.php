@@ -70,42 +70,91 @@
                                     <i class="fas fa-tags input-icon" id="vendorTypeIcon"></i>
                                     <select class="form-select" id="vendorType" name="vendorType" required onchange="handleVendorTypeChange()">
                                         <option value="">Select Vendor Type</option>
-                                        <option value="supplier">General Supplier</option>
-                                        <option value="contractor">Contractor</option>
-                                        <option value="service_provider">Service Provider</option>
-                                        <option value="consultant">Consultant</option>
-                                        <option value="material_supplier">Material Supplier</option>
-                                        <option value="equipment_rental">Equipment Rental</option>
-                                        <option value="cement_supplier">Cement Supplier</option>
-                                        <option value="brick_supplier">Brick Supplier</option>
-                                        <option value="tile_supplier">Tile Supplier</option>
-                                        <option value="tile_vendor">Tile Vendor</option>
-                                        <option value="steel_supplier">Steel Supplier</option>
-                                        <option value="sand_supplier">Sand Supplier</option>
-                                        <option value="gravel_supplier">Gravel Supplier</option>
-                                        <option value="paint_supplier">Paint Supplier</option>
-                                        <option value="electrical_supplier">Electrical Supplier</option>
-                                        <option value="plumbing_supplier">Plumbing Supplier</option>
-                                        <option value="hardware_supplier">Hardware Supplier</option>
-                                        <option value="timber_supplier">Timber Supplier</option>
-                                        <option value="glass_supplier">Glass Supplier</option>
-                                        <option value="roofing_supplier">Roofing Supplier</option>
-                                        <option value="concrete_supplier">Concrete Supplier</option>
-                                        <option value="flooring_supplier">Flooring Supplier</option>
-                                        <option value="insulation_supplier">Insulation Supplier</option>
-                                        <option value="door_supplier">Door Supplier</option>
-                                        <option value="window_supplier">Window Supplier</option>
-                                        <option value="security_supplier">Security Equipment Supplier</option>
-                                        <option value="hvac_supplier">HVAC Supplier</option>
-                                        <option value="landscaping_supplier">Landscaping Supplier</option>
-                                        <option value="cleaning_supplier">Cleaning Supplier</option>
-                                        <option value="safety_equipment_supplier">Safety Equipment Supplier</option>
-                                        <option value="excavation_contractor">Excavation Contractor</option>
-                                        <option value="masonry_contractor">Masonry Contractor</option>
-                                        <option value="carpentry_contractor">Carpentry Contractor</option>
-                                        <option value="painting_contractor">Painting Contractor</option>
-                                        <option value="transportation_vendor">Transportation Vendor</option>
-                                        <option value="waste_management">Waste Management</option>
+                                        <optgroup label="Labour Contractor Vendor">
+                                            <option value="ac_labour">AC Labour</option>
+                                            <option value="carpentry_labour">Carpentry Labour</option>
+                                            <option value="civil_labour">Civil Labour</option>
+                                            <option value="cleaning_labour">Cleaning Labour</option>
+                                            <option value="electrical_labour">Electrical Labour</option>
+                                            <option value="excavation_labour">Excavation Labour</option>
+                                            <option value="false_ceiling_labour">False Ceiling Labour</option>
+                                            <option value="fencing_labour">Fencing Labour</option>
+                                            <option value="flooring_labour">Flooring Labour</option>
+                                            <option value="gardening_labour">Gardening Labour</option>
+                                            <option value="landscaping_labour">Landscaping Labour</option>
+                                            <option value="masonry_labour">Masonry Labour</option>
+                                            <option value="paint_labour">Paint Labour</option>
+                                            <option value="plastering_labour">Plastering Labour</option>
+                                            <option value="plumbing_labour">Plumbing Labour</option>
+                                            <option value="pop_labour">POP Labour</option>
+                                            <option value="scaffolding_labour">Scaffolding Labour</option>
+                                            <option value="security_labour">Security Labour</option>
+                                            <option value="steel_fixing_labour">Steel Fixing Labour</option>
+                                            <option value="tiling_labour">Tiling Labour</option>
+                                            <option value="welding_labour">Welding Labour</option>
+                                            <option value="custom_labour_contractor">Custom Labour Contractor</option>
+                                        </optgroup>
+                                        <optgroup label="Material Contractor">
+                                            <option value="ac_contractor">AC Contractor</option>
+                                            <option value="aluminium_contractor">Aluminium Contractor</option>
+                                            <option value="boiler_contractor">Boiler Contractor</option>
+                                            <option value="ceiling_contractor">Ceiling Contractor</option>
+                                            <option value="cladding_contractor">Cladding Contractor</option>
+                                            <option value="doors_contractor">Doors Contractor</option>
+                                            <option value="elevator_contractor">Elevator Contractor</option>
+                                            <option value="facade_contractor">Facade Contractor</option>
+                                            <option value="farma_contractor">Farma Contractor</option>
+                                            <option value="fire_contractor">Fire Safety Contractor</option>
+                                            <option value="flooring_contractor">Flooring Contractor</option>
+                                            <option value="furnishing_contractor">Furnishing Contractor</option>
+                                            <option value="hvac_contractor">HVAC Contractor</option>
+                                            <option value="insulation_contractor">Insulation Contractor</option>
+                                            <option value="kitchen_contractor">Kitchen Contractor</option>
+                                            <option value="landscaping_contractor">Landscaping Contractor</option>
+                                            <option value="painting_contractor">Painting Contractor</option>
+                                            <option value="pop_contractor">POP Contractor</option>
+                                            <option value="pvc_contractor">PVC Contractor</option>
+                                            <option value="roofing_contractor">Roofing Contractor</option>
+                                            <option value="solar_contractor">Solar Contractor</option>
+                                            <option value="upvc_contractor">UPVC Contractor</option>
+                                            <option value="waterproofing_contractor">Waterproofing Contractor</option>
+                                            <option value="windows_contractor">Windows Contractor</option>
+                                            <option value="custom_material_contractor">Custom Material Contractor</option>
+                                        </optgroup>
+                                        <optgroup label="Material Supplier">
+                                            <option value="ac_supplier">AC Supplier</option>
+                                            <option value="aluminium_supplier">Aluminium Supplier</option>
+                                            <option value="boiler_supplier">Boiler Supplier</option>
+                                            <option value="brick_supplier">Brick Supplier</option>
+                                            <option value="cement_supplier">Cement Supplier</option>
+                                            <option value="ceramic_supplier">Ceramic Supplier</option>
+                                            <option value="chemical_supplier">Chemical Supplier</option>
+                                            <option value="concrete_supplier">Concrete Supplier</option>
+                                            <option value="door_supplier">Door Supplier</option>
+                                            <option value="dust_supplier">Dust Supplier</option>
+                                            <option value="electrical_supplier">Electrical Supplier</option>
+                                            <option value="elevator_supplier">Elevator Supplier</option>
+                                            <option value="fittings_supplier">Fittings Supplier</option>
+                                            <option value="flooring_supplier">Flooring Supplier</option>
+                                            <option value="glass_supplier">Glass Supplier</option>
+                                            <option value="granite_supplier">Granite Supplier</option>
+                                            <option value="hardware_supplier">Hardware Supplier</option>
+                                            <option value="insulation_supplier">Insulation Supplier</option>
+                                            <option value="kitchen_supplier">Kitchen Supplier</option>
+                                            <option value="marble_supplier">Marble Supplier</option>
+                                            <option value="paint_supplier">Paint Supplier</option>
+                                            <option value="plumbing_supplier">Plumbing Supplier</option>
+                                            <option value="sand_supplier">Sand Supplier</option>
+                                            <option value="solar_supplier">Solar Supplier</option>
+                                            <option value="steel_supplier">Steel Supplier</option>
+                                            <option value="tile_supplier">Tile Supplier</option>
+                                            <option value="upvc_supplier">UPVC Supplier</option>
+                                            <option value="wallpaper_supplier">Wallpaper Supplier</option>
+                                            <option value="water_tank_supplier">Water Tank Supplier</option>
+                                            <option value="window_supplier">Window Supplier</option>
+                                            <option value="wood_supplier">Wood Supplier</option>
+                                            <option value="custom_material_supplier">Custom Material Supplier</option>
+                                        </optgroup>
                                         <option value="other">Other</option>
                                         <option value="custom">Custom Type</option>
                                     </select>
@@ -611,12 +660,27 @@ function handleVendorTypeChange() {
     const vendorTypeIcon = document.getElementById('vendorTypeIcon');
     const backBtn = document.getElementById('vendorTypeBackBtn');
     
-    if (vendorTypeSelect.value === 'custom') {
+    // Check if the selected value is a custom option within a category
+    if (vendorTypeSelect.value === 'custom_material_supplier' || 
+        vendorTypeSelect.value === 'custom_labour_contractor' || 
+        vendorTypeSelect.value === 'custom_material_contractor' ||
+        vendorTypeSelect.value === 'custom') {
         // Hide dropdown and show text input
         vendorTypeSelect.style.display = 'none';
         vendorTypeCustom.style.display = 'block';
         vendorTypeCustom.style.paddingRight = '3rem';
         backBtn.style.display = 'flex';
+        
+        // Set placeholder based on which custom option was selected
+        if (vendorTypeSelect.value === 'custom_material_supplier') {
+            vendorTypeCustom.placeholder = 'Enter custom material supplier type';
+        } else if (vendorTypeSelect.value === 'custom_labour_contractor') {
+            vendorTypeCustom.placeholder = 'Enter custom labour contractor type';
+        } else if (vendorTypeSelect.value === 'custom_material_contractor') {
+            vendorTypeCustom.placeholder = 'Enter custom material contractor type';
+        } else {
+            vendorTypeCustom.placeholder = 'Enter custom vendor type';
+        }
         
         // Change icon to edit icon
         vendorTypeIcon.className = 'fas fa-edit input-icon';
@@ -699,17 +763,67 @@ function submitVendorForm() {
     const form = document.getElementById('addVendorForm');
     const formData = new FormData(form);
     
-    // Handle custom vendor type
+    // Handle custom vendor type and determine category
     const vendorTypeSelect = document.getElementById('vendorType');
     const vendorTypeCustom = document.getElementById('vendorTypeCustom');
     
     let vendorTypeValue = '';
+    let originalVendorType = '';
+    let vendorCategory = 'Other';
+    
+    // Check if we're using a custom input or dropdown
     if (vendorTypeCustom.style.display !== 'none' && vendorTypeCustom.value.trim()) {
         vendorTypeValue = vendorTypeCustom.value.trim();
+        originalVendorType = vendorTypeSelect.value;
         formData.set('vendorType', vendorTypeValue);
+        // Send the original vendor type to backend for proper categorization
+        formData.set('originalVendorType', originalVendorType);
+        
+        // Determine category based on original selection for custom types
+        if (originalVendorType === 'custom_material_supplier') {
+            vendorCategory = 'Material Supplier';
+        } else if (originalVendorType === 'custom_labour_contractor') {
+            vendorCategory = 'Labour Contractor Vendor';
+        } else if (originalVendorType === 'custom_material_contractor') {
+            vendorCategory = 'Material Contractor';
+        } else if (originalVendorType === 'custom') {
+            // For generic custom, try to determine category from the entered text
+            if (vendorTypeValue.toLowerCase().includes('supplier')) {
+                vendorCategory = 'Material Supplier';
+            } else if (vendorTypeValue.toLowerCase().includes('labour')) {
+                vendorCategory = 'Labour Contractor Vendor';
+            } else if (vendorTypeValue.toLowerCase().includes('contractor')) {
+                vendorCategory = 'Material Contractor';
+            }
+        }
     } else if (vendorTypeSelect.value) {
         vendorTypeValue = vendorTypeSelect.value;
+        originalVendorType = vendorTypeSelect.value;
+        
+        // Determine category based on predefined vendor types
+        if (vendorTypeValue.includes('_supplier')) {
+            vendorCategory = 'Material Supplier';
+        } else if (vendorTypeValue.includes('_labour')) {
+            vendorCategory = 'Labour Contractor Vendor';
+        } else if (vendorTypeValue.includes('_contractor')) {
+            vendorCategory = 'Material Contractor';
+        }
     }
+    
+    // Always set the vendor category in form data
+    formData.set('vendorCategory', vendorCategory);
+    
+    // Debug: Show alert with values (remove in production)
+    alert('DEBUG INFO:\nOriginal Type: ' + originalVendorType + '\nFinal Type: ' + vendorTypeValue + '\nCategory: ' + vendorCategory);
+    
+    // Debug: Log the vendor category assignment (remove in production)
+    console.log('=== VENDOR CATEGORY DEBUG ===');
+    console.log('Original Vendor Type:', originalVendorType);
+    console.log('Final Vendor Type:', vendorTypeValue);
+    console.log('Vendor Category:', vendorCategory);
+    console.log('FormData vendor category:', formData.get('vendorCategory'));
+    console.log('FormData original type:', formData.get('originalVendorType'));
+    console.log('=== END DEBUG ===');
     
     // Basic validation
     const requiredFields = ['fullName', 'phoneNumber', 'email'];

@@ -255,6 +255,15 @@ window.VendorModal = {
         // Override vendor_type with the correct type (custom or selected)
         vendorData['vendor_type'] = vendorType;
         
+        // Add vendor category based on vendor type
+        if (vendorType.includes('supplier')) {
+            vendorData['vendorCategory'] = 'Material Supplier';
+        } else if (vendorType.includes('contractor')) {
+            vendorData['vendorCategory'] = 'Contractor';
+        } else {
+            vendorData['vendorCategory'] = 'Other';
+        }
+        
         // Send AJAX request
         fetch(this.apiEndpoint, {
             method: 'POST',

@@ -686,7 +686,12 @@
 
 .split-payment-amount {
     flex: 1;
-    min-width: 120px;
+    min-width: 100px;
+}
+
+.split-payment-for {
+    flex: 2;
+    min-width: 150px;
 }
 
 .split-payment-mode {
@@ -1006,6 +1011,12 @@ function addSplitPayment(recipientId) {
     
     const splitHtml = `
         <div class="split-payment-item" id="splitPayment_${recipientId}_${splitId}">
+            <div class="split-payment-for">
+                <input type="text" class="form-control form-control-sm" 
+                       id="splitPaymentFor_${recipientId}_${splitId}" 
+                       name="recipients[${recipientId}][splitPayments][${splitId}][payment_for]" 
+                       placeholder="Payment For" required>
+            </div>
             <div class="split-payment-amount">
                 <input type="number" class="form-control form-control-sm" 
                        id="splitAmount_${recipientId}_${splitId}" 
@@ -1881,54 +1892,79 @@ function submitPaymentEntryForm() {
             const mainAmount = parseFloat(document.getElementById(`recipientAmount_${recipientId}`).value) || 0;
             let totalSplitAmount = 0;
             
-            // If using split payments, make sure the main payment mode is set
-            const recipientPaymentMode = document.getElementById(`recipientPaymentMode_${recipientId}`);
-            if (recipientPaymentMode) {
-                // Force set a value for the payment mode when using splits
-                recipientPaymentMode.value = "split_payment";
-                recipientPaymentMode.classList.remove('is-invalid');
-                
-                // Ensure it's in the form data
-                formData.set(`recipients[${recipientId}][paymentMode]`, "split_payment");
-                console.log(`Setting payment mode for recipient ${recipientId} to "split_payment"`);
-                
-                // Make sure it's visually indicated as filled
-                recipientPaymentMode.readOnly = true;
-                recipientPaymentMode.style.backgroundColor = "#f8f9fa";
-                recipientPaymentMode.style.cursor = "not-allowed";
+            // Remove any existing splitPayments field that might conflict
+            const existingSplitField = form.querySelector(`input[name="recipients[${recipientId}][splitPayments]"]`);
+            if (existingSplitField) {
+                existingSplitField.remove();
             }
             
-            // Validate each split payment
-            splitItems.forEach((splitItem, splitIndex) => {
-                const amountInput = splitItem.querySelector('input[type="number"]');
-                const modeSelect = splitItem.querySelector('select');
-                const splitId = splitItem.id.split('_').pop();
-                
-                if (!amountInput.value.trim() || parseFloat(amountInput.value) <= 0) {
-                    amountInput.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    amountInput.classList.remove('is-invalid');
-                    totalSplitAmount += parseFloat(amountInput.value);
+            // Only process if there are actual split payment items
+            if (splitItems.length > 0) {
+                // If using split payments, make sure the main payment mode is set
+                const recipientPaymentMode = document.getElementById(`recipientPaymentMode_${recipientId}`);
+                if (recipientPaymentMode) {
+                    // Force set a value for the payment mode when using splits
+                    recipientPaymentMode.value = "split_payment";
+                    recipientPaymentMode.classList.remove('is-invalid');
                     
-                    // Ensure the split amount is in formData
-                    formData.set(`recipients[${recipientId}][splitPayments][${splitId}][amount]`, amountInput.value.trim());
+                    // Ensure it's in the form data
+                    formData.set(`recipients[${recipientId}][paymentMode]`, "split_payment");
+                    console.log(`Setting payment mode for recipient ${recipientId} to "split_payment"`);
+                    
+                    // Make sure it's visually indicated as filled
+                    recipientPaymentMode.readOnly = true;
+                    recipientPaymentMode.style.backgroundColor = "#f8f9fa";
+                    recipientPaymentMode.style.cursor = "not-allowed";
                 }
                 
-                if (!modeSelect.value.trim()) {
-                    modeSelect.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    modeSelect.classList.remove('is-invalid');
+                // Validate each split payment
+                splitItems.forEach((splitItem, splitIndex) => {
+                    const amountInput = splitItem.querySelector('input[type="number"]');
+                    const paymentForInput = splitItem.querySelector('input[type="text"]');
+                    const modeSelect = splitItem.querySelector('select');
+                    const splitId = splitItem.id.split('_').pop();
                     
-                    // Ensure the split mode is in formData
-                    formData.set(`recipients[${recipientId}][splitPayments][${splitId}][mode]`, modeSelect.value.trim());
+                    if (!amountInput.value.trim() || parseFloat(amountInput.value) <= 0) {
+                        amountInput.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        amountInput.classList.remove('is-invalid');
+                        totalSplitAmount += parseFloat(amountInput.value);
+                        
+                        // Ensure the split amount is in formData
+                        formData.set(`recipients[${recipientId}][splitPayments][${splitId}][amount]`, amountInput.value.trim());
+                    }
+                    
+                    if (!paymentForInput.value.trim()) {
+                        paymentForInput.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        paymentForInput.classList.remove('is-invalid');
+                        
+                        // Ensure the split payment_for is in formData
+                        formData.set(`recipients[${recipientId}][splitPayments][${splitId}][payment_for]`, paymentForInput.value.trim());
+                    }
+                    
+                    if (!modeSelect.value.trim()) {
+                        modeSelect.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        modeSelect.classList.remove('is-invalid');
+                        
+                        // Ensure the split mode is in formData
+                        formData.set(`recipients[${recipientId}][splitPayments][${splitId}][mode]`, modeSelect.value.trim());
+                    }
+                });
+                
+                // Validate total split amount matches main amount
+                if (Math.abs(totalSplitAmount - mainAmount) > 0.01) {
+                    showNotification('warning', `Recipient #${Array.from(recipientItems).indexOf(recipientItem) + 1}: Split payment total (₹${totalSplitAmount.toFixed(2)}) must equal the main amount (₹${mainAmount.toFixed(2)})`);
+                    isValid = false;
                 }
-            });
-            
-            // Validate total split amount matches main amount
-            if (Math.abs(totalSplitAmount - mainAmount) > 0.01) {
-                showNotification('warning', `Recipient #${Array.from(recipientItems).indexOf(recipientItem) + 1}: Split payment total (₹${totalSplitAmount.toFixed(2)}) must equal the main amount (₹${mainAmount.toFixed(2)})`);
+            } else {
+                // No split payment items but split container is visible
+                // This means user enabled split payment but didn't add any items
+                showNotification('warning', `Recipient #${Array.from(recipientItems).indexOf(recipientItem) + 1}: Please add split payment methods or disable split payment.`);
                 isValid = false;
             }
         }
@@ -1947,6 +1983,13 @@ function submitPaymentEntryForm() {
     // Count recipients
     const recipientCount = recipientItems.length;
     formData.set('recipientCount', recipientCount);
+    
+    // Clean up any conflicting splitPayments fields
+    recipientItems.forEach((recipientItem, index) => {
+        const recipientId = recipientItem.getAttribute('data-recipient-id');
+        // Remove any simple splitPayments field that might conflict with our nested structure
+        formData.delete(`recipients[${recipientId}][splitPayments]`);
+    });
     
     // Debug form data before sending
     console.log('Form data to be sent:', Object.fromEntries(formData));

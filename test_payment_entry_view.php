@@ -18,7 +18,7 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="paymentId" class="form-label">Payment Entry ID</label>
-                            <input type="number" class="form-control" id="paymentId" placeholder="Enter payment entry ID" value="1">
+                            <input type="number" class="form-control" id="paymentId" placeholder="Enter payment entry ID" value="26">
                         </div>
                         <button class="btn btn-primary" onclick="testViewPaymentEntry()">
                             <i class="fas fa-eye me-1"></i>
@@ -107,7 +107,7 @@
             
             resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p>Testing API...</p></div>';
             
-            fetch(`./api/get_payment_entry_details.php?id=${paymentId}`)
+            fetch(`./api/get_payment_entry_details.php?id=${paymentId}&_cache_bust=${Date.now()}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log('API Response:', data);
@@ -165,8 +165,8 @@
                 Payment Entry Details - ID: ${id}
             `;
             
-            // Fetch payment entry details from API
-            fetch(`./api/get_payment_entry_details.php?id=${id}`)
+            // Fetch payment entry details from API (with cache busting)
+            fetch(`./api/get_payment_entry_details.php?id=${id}&_cache_bust=${Date.now()}`)
                 .then(response => response.json())
                 .then(data => {
                     // Hide loading state
@@ -218,6 +218,20 @@
             safeSetText('viewPaymentDate', paymentEntry.formatted_payment_date);
             safeSetText('viewPaymentMode', paymentEntry.display_payment_mode);
             safeSetText('viewPaymentVia', paymentEntry.display_payment_done_via);
+            
+            // Handle payment proof image and clip icon
+            const paymentProofClip = document.getElementById('paymentProofClip');
+            if (paymentProofClip && paymentEntry.payment_proof_image) {
+                // Set the proof data
+                paymentProofClip.dataset.proofPath = paymentEntry.payment_proof_image;
+                paymentProofClip.dataset.proofName = 'Payment Proof';
+                
+                // Show the clip icon
+                paymentProofClip.style.display = 'inline-flex';
+            } else if (paymentProofClip) {
+                // Hide the clip icon if no proof image
+                paymentProofClip.style.display = 'none';
+            }
             
             // System Information
             safeSetText('viewCreatedBy', paymentEntry.created_by_username || 'System');
@@ -306,104 +320,107 @@
                     
                     recipients.forEach((recipient, index) => {
                         recipientsHTML += `
-                            <div class=\"recipient-item p-3\">
-                                <div class=\"recipient-header p-2 mb-3\">
-                                    <div class=\"row align-items-center\">
-                                        <div class=\"col-md-8\">
-                                            <h6 class=\"mb-1\">
-                                                <i class=\"fas fa-user me-2\"></i>
-                                                ${escapeHtml(recipient.name)}
-                                            </h6>
-                                            <div class=\"mb-2\">
-                                                <span class=\"badge badge-category me-2\">${escapeHtml(recipient.display_category)}</span>
-                                                <span class=\"badge badge-type\">${escapeHtml(recipient.display_type)}</span>
-                                                ${recipient.custom_type ? '<span class=\"badge bg-secondary ms-2\">' + escapeHtml(recipient.custom_type) + '</span>' : ''}
-                                            </div>
-                                            <p class=\"mb-1 text-muted\">Payment for: ${escapeHtml(recipient.payment_for || 'Not specified')}</p>
+                            <tr class="pmt-table-row">
+                                <td class="pmt-table-cell">
+                                    <div class="pmt-recipient-details">
+                                        <!-- 1. Vendor/Labour Name -->
+                                        <div class="pmt-recipient-name">
+                                            <i class="fas fa-user pmt-name-icon"></i>
+                                            ${escapeHtml(recipient.name)}
                                         </div>
-                                        <div class=\"col-md-4 text-end\">
-                                            <div class=\"amount-highlight text-success\">${recipient.formatted_amount}</div>
-                                            <small class=\"text-muted\">${escapeHtml(recipient.display_payment_mode)}</small>
+                                        
+                                        <!-- 2. Vendor/Labour Type -->
+                                        <div class="pmt-type-tags">
+                                            <span class="pmt-category-tag">${escapeHtml(recipient.display_category)}</span>
+                                            <span class="pmt-type-tag">${escapeHtml(recipient.display_type)}</span>
+                                            ${recipient.custom_type ? '<span class="pmt-custom-tag">' + escapeHtml(recipient.custom_type) + '</span>' : ''}
                                         </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Payment Splits -->
-                                ${recipient.splits.length > 0 ? `
-                                    <div class=\"mb-3\">
-                                        <h6 class=\"text-warning mb-2\">
-                                            <i class=\"fas fa-divide me-2\"></i>
-                                            Payment Splits (${recipient.splits.length})
-                                        </h6>
-                                        ${recipient.splits.map(split => `
-                                            <div class=\"split-item p-2 mb-2\">
-                                                <div class=\"row align-items-center\">
-                                                    <div class=\"col-md-6\">
-                                                        <strong>Split ID: ${split.split_id}</strong>
-                                                        <br><small class=\"text-muted\">${split.display_payment_mode}</small>
-                                                    </div>
-                                                    <div class=\"col-md-3\">
-                                                        <strong>${split.formatted_amount}</strong>
-                                                    </div>
-                                                    <div class=\"col-md-3 text-end\">
-                                                        <small class=\"text-muted\">${split.formatted_date}</small>
-                                                        ${split.proof_file ? '<br><small class=\"text-info\"><i class=\"fas fa-file\"></i> Proof attached</small>' : ''}
-                                                    </div>
+                                        
+                                        <!-- 3. Payment For -->
+                                        <div class="pmt-payment-purpose">
+                                            <span class="pmt-purpose-label">Payment for:</span>
+                                            <span class="pmt-purpose-text">${escapeHtml(recipient.payment_for || 'Not specified')}</span>
+                                        </div>
+                                        
+                                        <!-- 4. Split Payments (if applicable) -->
+                                        ${recipient.splits.length > 0 ? `
+                                            <div class="pmt-splits-section">
+                                                <div class="pmt-splits-header">
+                                                    <i class="fas fa-money-bill-wave pmt-splits-icon"></i>
+                                                    <span class="pmt-splits-title">Payment Splits (${recipient.splits.length})</span>
+                                                </div>
+                                                <div class="pmt-splits-list">
+                                                    ${recipient.splits.map(split => `
+                                                        <div class="pmt-split-item">
+                                                            <div class="pmt-split-info">
+                                                                <span class="pmt-split-mode">${split.display_payment_mode}</span>
+                                                                <span class="pmt-split-amount">${split.formatted_amount}</span>
+                                                                <span class="pmt-split-date">${split.formatted_date}</span>
+                                                                ${split.proof_file ? `<span class="pmt-split-proof" onclick="showSplitProof('${split.proof_file}', 'Split Payment Proof')"><i class="fas fa-paperclip"></i> Proof attached</span>` : ''}
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
                                                 </div>
                                             </div>
-                                        `).join('')}
-                                    </div>
-                                ` : ''}
-                                
-                                <!-- Documents -->
-                                ${recipient.documents.length > 0 ? `
-                                    <div class="mb-3">
-                                        <div class="d-flex align-items-center justify-content-between mb-3">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-folder-open text-info me-2 fs-5"></i>
-                                                <span class="fw-semibold text-info">Documents</span>
-                                            </div>
-                                            <span class="badge bg-info rounded-pill">${recipient.documents.length}</span>
+                                        ` : ''}
+                                        
+                                        <!-- 5. Total Amount -->
+                                        <div class="pmt-total-amount">
+                                            <span class="pmt-amount-label">Total Amount:</span>
+                                            <span class="pmt-amount-value">${recipient.formatted_amount}</span>
                                         </div>
-                                        <div class="documents-grid">
-                                            ${recipient.documents.map(doc => {
-                                                const isImage = doc.file_type.toLowerCase().includes('image');
-                                                const fileIcon = getFileIconClass(doc.file_type);
-                                                const escapedFileName = escapeHtml(doc.file_name);
-                                                const escapedFilePath = doc.file_path.replace(/'/g, "\\\\'");
-                                                
-                                                return `
-                                                    <div class="document-card">
-                                                        <div class="document-preview-container">
-                                                            ${isImage ? 
-                                                                `<img src="${doc.file_path}" class="document-image" alt="${escapedFileName}" onerror="this.parentElement.innerHTML='<div class=&quot;document-icon-fallback&quot;><i class=&quot;fas fa-image fs-1 text-muted&quot;></i></div>';" onclick="openImagePreview('${escapedFilePath}', '${escapedFileName}')" style="cursor: pointer;" title="Click to view full size">` :
-                                                                `<div class="document-icon-container">
-                                                                    <i class="fas ${fileIcon} fs-1 text-info"></i>
-                                                                    <div class="file-extension">${doc.display_file_type}</div>
-                                                                </div>`
-                                                            }
-                                                        </div>
-                                                        <div class="document-info">
-                                                            <div class="document-name" title="${escapedFileName}">${escapedFileName}</div>
-                                                            <div class="document-meta">
-                                                                <span class="file-size">${doc.formatted_file_size}</span>
-                                                                <span class="upload-date">${doc.formatted_upload_date}</span>
+                                        
+                                        <!-- 6. Date and Time -->
+                                        <div class="pmt-timestamp">
+                                            <i class="fas fa-clock pmt-time-icon"></i>
+                                            <span class="pmt-payment-mode">${escapeHtml(recipient.display_payment_mode)}</span>
+                                            <span class="pmt-date-time">Added: ${recipient.formatted_date}</span>
+                                        </div>
+                                        
+                                        <!-- Documents Section -->
+                                        ${recipient.documents.length > 0 ? `
+                                            <div class="pmt-documents-section">
+                                                <div class="pmt-documents-header">
+                                                    <i class="fas fa-folder-open pmt-docs-icon"></i>
+                                                    <span class="pmt-docs-title">Documents (${recipient.documents.length})</span>
+                                                </div>
+                                                <div class="pmt-documents-grid">
+                                                    ${recipient.documents.map(doc => {
+                                                        const isImage = doc.file_type.toLowerCase().includes('image');
+                                                        const fileIcon = getFileIconClass(doc.file_type);
+                                                        const escapedFileName = escapeHtml(doc.file_name);
+                                                        const escapedFilePath = doc.file_path.replace(/'/g, "\\'");
+                                                        
+                                                        return `
+                                                            <div class="pmt-document-card">
+                                                                <div class="pmt-doc-preview">
+                                                                    ${isImage ? 
+                                                                        `<img src="${doc.file_path}" class="pmt-doc-image" alt="${escapedFileName}" onclick="openImagePreview('${escapedFilePath}', '${escapedFileName}')" title="Click to view full size">` :
+                                                                        `<div class="pmt-doc-icon-container">
+                                                                            <i class="fas ${fileIcon} pmt-doc-icon"></i>
+                                                                            <div class="pmt-file-ext">${doc.display_file_type}</div>
+                                                                        </div>`
+                                                                    }
+                                                                </div>
+                                                                <div class="pmt-doc-info">
+                                                                    <div class="pmt-doc-name" title="${escapedFileName}">${escapedFileName}</div>
+                                                                    <div class="pmt-doc-meta">
+                                                                        <span class="pmt-file-size">${doc.formatted_file_size}</span>
+                                                                        <span class="pmt-upload-date">${doc.formatted_upload_date}</span>
+                                                                    </div>
+                                                                    <button class="pmt-download-btn" onclick="downloadDocument('${escapedFilePath}', '${escapedFileName}')" title="Download document">
+                                                                        <i class="fas fa-download"></i>
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                            <button class="btn btn-sm btn-outline-primary download-btn" onclick="downloadDocument('${escapedFilePath}', '${escapedFileName}')" title="Download document">
-                                                                <i class="fas fa-download"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                `;
-                                            }).join('')}
-                                        </div>
+                                                        `;
+                                                    }).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
                                     </div>
-                                ` : ''}
-                                
-                                <div class=\"text-end\">
-                                    <small class=\"text-muted\">Added: ${recipient.formatted_date}</small>
-                                </div>
-                            </div>
+                                </td>
+                            </tr>
                         `;
                     });
                     
@@ -419,6 +436,24 @@
                     ${paymentEntry.project_title || 'Payment Entry #' + paymentEntry.payment_id}
                     <small class=\"ms-2 text-muted\">(${paymentEntry.formatted_payment_amount})</small>
                 `;
+            }
+        }
+        
+        // Function to show split payment proof
+        function showSplitProof(proofPath, proofName) {
+            if (proofPath) {
+                const fileExtension = proofPath.split('.').pop().toLowerCase();
+                
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                    // Show image in preview modal
+                    openImagePreview(proofPath, proofName);
+                } else if (fileExtension === 'pdf') {
+                    // Open PDF in new tab
+                    window.open(proofPath, '_blank');
+                } else {
+                    // Download other file types
+                    downloadDocument(proofPath, proofName);
+                }
             }
         }
         

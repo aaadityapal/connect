@@ -163,12 +163,12 @@ function applyLeave($pdo, $userId, $leaveTypeId, $startDate, $endDate, $reason, 
     ]);
 }
 
-// Test query
-$test_query = "SHOW TABLES";
-$test_result = $conn->query($test_query);
-if (!$test_result) {
-    die("Query failed: " . $conn->error);
-}
+// Test query (commented out to prevent issues)
+// $test_query = "SHOW TABLES";
+// $test_result = $conn->query($test_query);
+// if (!$test_result) {
+//     die("Query failed: " . $conn->error);
+// }
 
 // Example usage:
 // try {

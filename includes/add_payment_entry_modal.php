@@ -120,6 +120,58 @@
                             </div>
                         </div>
                         
+                        <!-- Payment Proof Image Upload -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="paymentProofImage" class="form-label">Payment Proof Image</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" class="form-control file-input" id="paymentProofImage" name="paymentProofImage" 
+                                           accept=".pdf,.jpg,.jpeg,.png" onchange="updatePaymentProofFileName(this)">
+                                    <div class="file-upload-display">
+                                        <i class="fas fa-camera file-icon"></i>
+                                        <span class="file-text">Choose payment proof image (PDF, JPG, PNG)</span>
+                                    </div>
+                                </div>
+                                <div class="selected-files-container" id="selectedPaymentProofFile" style="display: none;">
+                                    <div class="selected-files-header">
+                                        <small class="text-muted">Selected File:</small>
+                                    </div>
+                                    <div class="selected-files-list" id="paymentProofFileList">
+                                        <!-- Selected file will be displayed here -->
+                                    </div>
+                                </div>
+                                <small class="text-muted">Supported formats: PDF, JPG, PNG (Max 5MB)</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Payment Split Section -->
+                        <div class="row" id="mainSplitPaymentSection" style="display: none;">
+                            <div class="col-12 mb-3">
+                                <div class="split-payment-section">
+                                    <div class="split-payment-header mb-3">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-money-bill-wave me-2"></i>
+                                            Split Payment Details
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Split the total payment amount across multiple payment methods
+                                        </small>
+                                    </div>
+                                    <div class="split-payment-items" id="mainSplitPaymentItems">
+                                        <!-- Main split payment items will be added here -->
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addMainSplitPayment()">
+                                        <i class="fas fa-plus me-1"></i>
+                                        Add Payment Method
+                                    </button>
+                                    <div class="split-payment-summary mt-3" id="mainSplitSummary" style="display: none;">
+                                        <!-- Split payment summary will be shown here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Recipients Container -->
                         <div class="recipients-container" id="recipientsContainer">
                             <!-- Recipients will be added here dynamically -->
@@ -905,6 +957,89 @@ function updateRecipientFileName(input, recipientId) {
     }
 }
 
+// Handle payment proof image upload
+function updatePaymentProofFileName(input) {
+    const wrapper = input.closest('.file-upload-wrapper');
+    const fileText = wrapper.querySelector('.file-text');
+    const fileIcon = wrapper.querySelector('.file-icon');
+    const selectedFilesContainer = document.getElementById('selectedPaymentProofFile');
+    const filesList = document.getElementById('paymentProofFileList');
+    
+    // Clear previous file display
+    filesList.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        
+        // Validate file size
+        if (file.size > maxSize) {
+            alert('File size should not exceed 5MB');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please select a valid file type (JPG, PNG, PDF)');
+            input.value = '';
+            return;
+        }
+        
+        // File is valid, display it
+        wrapper.classList.add('has-file');
+        fileText.innerHTML = `File selected <span class="file-count-badge">1</span>`;
+        fileIcon.className = 'fas fa-check-circle file-icon';
+        
+        // Show selected file container
+        selectedFilesContainer.style.display = 'block';
+        
+        // Display the file
+        const fileSize = (file.size / 1024).toFixed(1) + ' KB';
+        const fileExtension = file.name.split('.').pop().toUpperCase();
+        
+        const fileItemHtml = `
+            <div class="file-item" id="paymentProofFileItem">
+                <i class="fas fa-file-${getFileIcon(file.type)} file-item-icon"></i>
+                <div class="file-item-info">
+                    <div class="file-item-name" title="${file.name}">${file.name}</div>
+                    <div class="file-item-size">${fileSize} • ${fileExtension}</div>
+                </div>
+                <button type="button" class="file-item-remove" onclick="removePaymentProofFile()" title="Remove file">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        filesList.insertAdjacentHTML('beforeend', fileItemHtml);
+    } else {
+        // No file selected
+        wrapper.classList.remove('has-file');
+        fileText.textContent = 'Choose payment proof image (PDF, JPG, PNG)';
+        fileIcon.className = 'fas fa-camera file-icon';
+        selectedFilesContainer.style.display = 'none';
+    }
+}
+
+// Remove payment proof file
+function removePaymentProofFile() {
+    const input = document.getElementById('paymentProofImage');
+    const wrapper = input.closest('.file-upload-wrapper');
+    const fileText = wrapper.querySelector('.file-text');
+    const fileIcon = wrapper.querySelector('.file-icon');
+    const selectedFilesContainer = document.getElementById('selectedPaymentProofFile');
+    
+    // Clear the input
+    input.value = '';
+    
+    // Reset display
+    wrapper.classList.remove('has-file');
+    fileText.textContent = 'Choose payment proof image (PDF, JPG, PNG)';
+    fileIcon.className = 'fas fa-camera file-icon';
+    selectedFilesContainer.style.display = 'none';
+}
+
 // Get appropriate file icon based on file type
 function getFileIcon(fileType) {
     if (fileType === 'application/pdf') {
@@ -942,6 +1077,169 @@ function removeSelectedFile(recipientId, fileIndex) {
 
 // Global variables for split payment tracking
 let splitPaymentCounters = {};
+let mainSplitPaymentCounter = 0;
+
+// Handle main payment mode change
+function handleMainPaymentModeChange() {
+    const paymentMode = document.getElementById('paymentMode').value;
+    const splitSection = document.getElementById('mainSplitPaymentSection');
+    
+    if (paymentMode === 'split_payment') {
+        // Show split payment section
+        splitSection.style.display = 'block';
+        
+        // Add first split payment if none exist
+        const splitItems = document.getElementById('mainSplitPaymentItems');
+        if (splitItems.children.length === 0) {
+            addMainSplitPayment();
+        }
+    } else {
+        // Hide split payment section
+        splitSection.style.display = 'none';
+        
+        // Clear all split payments
+        const splitItems = document.getElementById('mainSplitPaymentItems');
+        splitItems.innerHTML = '';
+        mainSplitPaymentCounter = 0;
+        
+        // Hide summary
+        const summary = document.getElementById('mainSplitSummary');
+        if (summary) {
+            summary.style.display = 'none';
+        }
+    }
+}
+
+// Add new main split payment method
+function addMainSplitPayment() {
+    mainSplitPaymentCounter++;
+    const splitId = mainSplitPaymentCounter;
+    
+    const splitItems = document.getElementById('mainSplitPaymentItems');
+    
+    const splitHtml = `
+        <div class="split-payment-item" id="mainSplitPayment_${splitId}">
+            <div class="split-payment-amount">
+                <input type="number" class="form-control form-control-sm" 
+                       id="mainSplitAmount_${splitId}" 
+                       name="mainSplitPayments[${splitId}][amount]" 
+                       placeholder="Amount" min="0" step="0.01" required 
+                       onchange="updateMainSplitSummary()">
+            </div>
+            <div class="split-payment-mode">
+                <select class="form-select form-select-sm" 
+                        id="mainSplitMode_${splitId}" 
+                        name="mainSplitPayments[${splitId}][mode]" required>
+                    <option value="">Select Payment Mode</option>
+                    <option value="cash">Cash</option>
+                    <option value="upi">UPI</option>
+                    <option value="neft">NEFT</option>
+                    <option value="rtgs">RTGS</option>
+                    <option value="imps">IMPS</option>
+                    <option value="net_banking">Net Banking</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="demand_draft">Demand Draft</option>
+                    <option value="debit_card">Debit Card</option>
+                    <option value="credit_card">Credit Card</option>
+                    <option value="paytm">Paytm</option>
+                    <option value="phonepe">PhonePe</option>
+                    <option value="gpay">Google Pay</option>
+                    <option value="bhim">BHIM UPI</option>
+                    <option value="amazon_pay">Amazon Pay</option>
+                    <option value="mobikwik">MobiKwik</option>
+                    <option value="wallet">Digital Wallet</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="split-payment-proof">
+                <input type="file" class="form-control form-control-sm file-input-split" 
+                       id="mainSplitProof_${splitId}" 
+                       name="mainSplitPayments[${splitId}][proof]" 
+                       accept=".pdf,.jpg,.jpeg,.png" 
+                       onchange="updateMainSplitFileName(this, ${splitId})" 
+                       title="Upload payment proof">
+                <small class="file-name-display" id="mainFileName_${splitId}">No file</small>
+            </div>
+            <button type="button" class="split-payment-remove" onclick="removeMainSplitPayment(${splitId})" title="Remove Payment Method">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    splitItems.insertAdjacentHTML('beforeend', splitHtml);
+    updateMainSplitSummary();
+}
+
+// Remove main split payment method
+function removeMainSplitPayment(splitId) {
+    const splitItem = document.getElementById(`mainSplitPayment_${splitId}`);
+    if (splitItem) {
+        splitItem.remove();
+        updateMainSplitSummary();
+    }
+}
+
+// Handle file upload for main split payments
+function updateMainSplitFileName(input, splitId) {
+    const fileNameDisplay = document.getElementById(`mainFileName_${splitId}`);
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        
+        // Validate file size
+        if (file.size > maxSize) {
+            alert('File size should not exceed 5MB');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please select a valid file type (JPG, PNG, PDF)');
+            input.value = '';
+            return;
+        }
+        
+        fileNameDisplay.textContent = file.name.length > 12 ? file.name.substring(0, 12) + '...' : file.name;
+        fileNameDisplay.classList.add('has-file');
+    } else {
+        fileNameDisplay.textContent = 'No file';
+        fileNameDisplay.classList.remove('has-file');
+    }
+}
+
+// Update main split payment summary
+function updateMainSplitSummary() {
+    const mainAmount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+    const splitItems = document.querySelectorAll('#mainSplitPaymentItems .split-payment-item');
+    const summaryContainer = document.getElementById('mainSplitSummary');
+    
+    let totalSplitAmount = 0;
+    splitItems.forEach(item => {
+        const amountInput = item.querySelector('input[type="number"]');
+        totalSplitAmount += parseFloat(amountInput.value) || 0;
+    });
+    
+    if (splitItems.length > 0) {
+        const remaining = mainAmount - totalSplitAmount;
+        summaryContainer.style.display = 'block';
+        
+        const summaryHtml = `
+            <div class="split-payment-total">Total Amount: ₹${mainAmount.toFixed(2)}</div>
+            <div>Split Total: ₹${totalSplitAmount.toFixed(2)}</div>
+            <div class="${remaining === 0 ? 'split-payment-complete' : 'split-payment-remaining'}">
+                ${remaining === 0 ? '✓ Amount fully allocated' : `Remaining: ₹${remaining.toFixed(2)}`}
+            </div>
+        `;
+        
+        summaryContainer.innerHTML = summaryHtml;
+    } else {
+        summaryContainer.style.display = 'none';
+    }
+}
 
 // Toggle split payment section
 function toggleSplitPayment(recipientId) {
@@ -1821,6 +2119,46 @@ function submitPaymentEntryForm() {
         }
     });
     
+    // Validate main split payments if active
+    const paymentMode = document.getElementById('paymentMode').value;
+    if (paymentMode === 'split_payment') {
+        const mainAmount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+        const splitItems = document.querySelectorAll('#mainSplitPaymentItems .split-payment-item');
+        let totalSplitAmount = 0;
+        
+        if (splitItems.length === 0) {
+            showNotification('warning', 'Please add split payment methods or select a different payment mode.');
+            isValid = false;
+        } else {
+            // Validate each main split payment
+            splitItems.forEach((splitItem, index) => {
+                const amountInput = splitItem.querySelector('input[type="number"]');
+                const modeSelect = splitItem.querySelector('select');
+                
+                if (!amountInput.value.trim() || parseFloat(amountInput.value) <= 0) {
+                    amountInput.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    amountInput.classList.remove('is-invalid');
+                    totalSplitAmount += parseFloat(amountInput.value);
+                }
+                
+                if (!modeSelect.value.trim()) {
+                    modeSelect.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    modeSelect.classList.remove('is-invalid');
+                }
+            });
+            
+            // Validate total split amount matches main amount
+            if (Math.abs(totalSplitAmount - mainAmount) > 0.01) {
+                showNotification('warning', `Main split payment total (₹${totalSplitAmount.toFixed(2)}) must equal the payment amount (₹${mainAmount.toFixed(2)})`);
+                isValid = false;
+            }
+        }
+    }
+    
     // Validate all recipient fields
     const recipientItems = document.querySelectorAll('.recipient-item');
     
@@ -2142,8 +2480,23 @@ document.getElementById('addPaymentEntryModal').addEventListener('shown.bs.modal
     // Reset all recipients
     resetAllRecipients();
     
+    // Reset main split payments
+    const mainSplitSection = document.getElementById('mainSplitPaymentSection');
+    mainSplitSection.style.display = 'none';
+    const mainSplitItems = document.getElementById('mainSplitPaymentItems');
+    mainSplitItems.innerHTML = '';
+    mainSplitPaymentCounter = 0;
+    
     // Load authorized users for payment done via
     loadAuthorizedUsers();
+    
+    // Add event listener for payment mode change
+    const paymentModeSelect = document.getElementById('paymentMode');
+    paymentModeSelect.addEventListener('change', handleMainPaymentModeChange);
+    
+    // Add event listener for amount change to update split summary
+    const paymentAmountInput = document.getElementById('paymentAmount');
+    paymentAmountInput.addEventListener('input', updateMainSplitSummary);
 });
 
 // Modify vendor and labour form submissions to update recipient after adding

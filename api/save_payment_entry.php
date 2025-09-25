@@ -34,6 +34,60 @@ function logPaymentError($message, $context = []) {
     error_log($logMessage . "\n", 3, '../logs/payment_entry_errors.log');
 }
 
+// Function to handle payment proof image upload
+function handlePaymentProofImageUpload($file) {
+    try {
+        $fileName = $file['name'];
+        $fileType = $file['type'];
+        $fileSize = $file['size'];
+        $fileTmpName = $file['tmp_name'];
+        
+        // Validate file type
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!in_array($fileType, $allowedTypes)) {
+            logPaymentError('Invalid payment proof file type', ['type' => $fileType, 'allowed' => $allowedTypes]);
+            return false;
+        }
+        
+        // Validate file size (5MB max)
+        $maxSize = 5 * 1024 * 1024; // 5MB
+        if ($fileSize > $maxSize) {
+            logPaymentError('Payment proof file too large', ['size' => $fileSize, 'max_size' => $maxSize]);
+            return false;
+        }
+        
+        // Create upload directory if it doesn't exist
+        $uploadDir = "../uploads/payment_proofs/";
+        if (!file_exists($uploadDir)) {
+            if (!mkdir($uploadDir, 0777, true)) {
+                logPaymentError('Failed to create payment proof upload directory', ['directory' => $uploadDir]);
+                return false;
+            }
+        }
+        
+        // Generate unique filename
+        $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $cleanFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($fileName, PATHINFO_FILENAME));
+        $newFileName = 'payment_proof_' . $cleanFileName . '_' . uniqid() . '_' . time() . '.' . $fileExtension;
+        $destination = $uploadDir . $newFileName;
+        
+        // Store relative path for database
+        $relativePath = "uploads/payment_proofs/{$newFileName}";
+        
+        // Move uploaded file
+        if (move_uploaded_file($fileTmpName, $destination)) {
+            logPaymentError('Payment proof image uploaded successfully', ['path' => $relativePath]);
+            return $relativePath;
+        } else {
+            logPaymentError('Failed to move payment proof file', ['destination' => $destination]);
+            return false;
+        }
+    } catch (Exception $e) {
+        logPaymentError('Payment proof upload exception', ['error' => $e->getMessage()]);
+        return false;
+    }
+}
+
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     logPaymentError('Invalid request method attempted', ['method' => $_SERVER['REQUEST_METHOD']]);
@@ -77,6 +131,15 @@ if (!isset($_SESSION['user_id'])) {
         $paymentMode = isset($_POST['paymentMode']) ? $_POST['paymentMode'] : '';
         $recipientCount = isset($_POST['recipientCount']) ? $_POST['recipientCount'] : 0;
         
+        // Handle payment proof image upload
+        $paymentProofImagePath = null;
+        if (isset($_FILES['paymentProofImage']) && $_FILES['paymentProofImage']['error'] === UPLOAD_ERR_OK) {
+            $paymentProofImagePath = handlePaymentProofImageUpload($_FILES['paymentProofImage']);
+            if ($paymentProofImagePath === false) {
+                throw new Exception('Failed to upload payment proof image');
+            }
+        }
+        
         // Validate required fields
         if (empty($projectType) || empty($projectId) || empty($paymentDate) || 
             empty($paymentAmount) || empty($paymentDoneVia) || empty($paymentMode)) {
@@ -101,6 +164,7 @@ if (!isset($_SESSION['user_id'])) {
                 payment_done_via, 
                 payment_mode,
                 recipient_count,
+                payment_proof_image,
                 created_by,
                 updated_by
             ) VALUES (
@@ -111,6 +175,7 @@ if (!isset($_SESSION['user_id'])) {
                 :payment_done_via,
                 :payment_mode,
                 :recipient_count,
+                :payment_proof_image,
                 :created_by,
                 :updated_by
             )
@@ -124,11 +189,96 @@ if (!isset($_SESSION['user_id'])) {
             ':payment_done_via' => $paymentDoneVia,
             ':payment_mode' => $paymentMode,
             ':recipient_count' => $recipientCount,
+            ':payment_proof_image' => $paymentProofImagePath,
             ':created_by' => $created_by,
             ':updated_by' => $updated_by
         ]);
         
         $paymentId = $pdo->lastInsertId();
+        
+        // Process main split payments if payment mode is split_payment
+        if ($paymentMode === 'split_payment' && isset($_POST['mainSplitPayments']) && is_array($_POST['mainSplitPayments'])) {
+            foreach ($_POST['mainSplitPayments'] as $splitId => $splitData) {
+                if (!is_array($splitData)) {
+                    continue;
+                }
+                
+                $splitAmount = isset($splitData['amount']) ? $splitData['amount'] : 0;
+                $splitMode = isset($splitData['mode']) ? $splitData['mode'] : '';
+                
+                // Validate split payment data
+                if (empty($splitAmount) || empty($splitMode)) {
+                    logPaymentError('Invalid main split payment data', [
+                        'split_id' => $splitId,
+                        'amount' => $splitAmount,
+                        'mode' => $splitMode
+                    ]);
+                    continue;
+                }
+                
+                // Insert main split payment
+                $stmt = $pdo->prepare("
+                    INSERT INTO hr_main_payment_splits (
+                        payment_id,
+                        amount,
+                        payment_mode
+                    ) VALUES (
+                        :payment_id,
+                        :amount,
+                        :payment_mode
+                    )
+                ");
+                
+                $stmt->execute([
+                    ':payment_id' => $paymentId,
+                    ':amount' => $splitAmount,
+                    ':payment_mode' => $splitMode
+                ]);
+                
+                $mainSplitPaymentId = $pdo->lastInsertId();
+                
+                // Process main split payment proof file if uploaded
+                if (isset($_FILES['mainSplitPayments']['name'][$splitId]['proof']) && 
+                    isset($_FILES['mainSplitPayments']['error'][$splitId]['proof']) &&
+                    $_FILES['mainSplitPayments']['error'][$splitId]['proof'] === UPLOAD_ERR_OK) {
+                    
+                    $fileName = $_FILES['mainSplitPayments']['name'][$splitId]['proof'];
+                    $fileTmpName = $_FILES['mainSplitPayments']['tmp_name'][$splitId]['proof'];
+                    $fileType = $_FILES['mainSplitPayments']['type'][$splitId]['proof'];
+                    $fileSize = $_FILES['mainSplitPayments']['size'][$splitId]['proof'];
+                    
+                    // Create directory for main split payment proofs
+                    $uploadDir = "../uploads/main_payment_splits/payment_{$paymentId}/";
+                    
+                    if (!file_exists($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+                    
+                    // Generate filename
+                    $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+                    $cleanFileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($fileName, PATHINFO_FILENAME));
+                    $newFileName = 'main_split_' . $mainSplitPaymentId . '_' . $cleanFileName . '_' . uniqid() . '.' . $fileExtension;
+                    $destination = $uploadDir . $newFileName;
+                    
+                    // Store relative path
+                    $relativePath = "uploads/main_payment_splits/payment_{$paymentId}/{$newFileName}";
+                    
+                    // Move file and update database
+                    if (move_uploaded_file($fileTmpName, $destination)) {
+                        $stmt = $pdo->prepare("
+                            UPDATE hr_main_payment_splits 
+                            SET proof_file = :proof_file 
+                            WHERE main_split_id = :main_split_id
+                        ");
+                        
+                        $stmt->execute([
+                            ':proof_file' => $relativePath,
+                            ':main_split_id' => $mainSplitPaymentId
+                        ]);
+                    }
+                }
+            }
+        }
         
         // Process recipients
         if ($recipientCount > 0) {

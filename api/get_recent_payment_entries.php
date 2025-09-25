@@ -85,11 +85,9 @@ try {
             $entry['formatted_payment_date'] = 'Not specified';
         }
         
-        // Calculate time since created using IST timezone
+        // Calculate time since created
         $createdAt = new DateTime($entry['created_at']);
-        $createdAt->setTimezone(new DateTimeZone('Asia/Kolkata'));
-        
-        $now = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
+        $now = new DateTime();
         $interval = $now->diff($createdAt);
         
         if ($interval->d > 0) {
@@ -101,10 +99,6 @@ try {
         } else {
             $entry['time_since_created'] = 'Just now';
         }
-        
-        // Add IST formatted timestamps for debugging/display
-        $entry['created_at_ist'] = $createdAt->format('Y-m-d H:i:s T');
-        $entry['current_time_ist'] = $now->format('Y-m-d H:i:s T');
         
         // Format project title for display
         $entry['display_project_title'] = $entry['project_title'] ?: 'Project #' . $entry['project_id'];

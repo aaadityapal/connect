@@ -880,7 +880,7 @@
     <?php include '../includes/view_labour_modal.php'; ?>
     <?php include '../includes/edit_labour_modal.php'; ?>
     <?php include '../includes/add_payment_entry_modal.php'; ?>
-    <?php include '../includes/view_payment_entry_modal.php'; ?>
+    <?php include '../includes/ui_minimal_payment_view_modal.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
@@ -1128,11 +1128,11 @@
                                                     <span class="badge bg-info text-white">Salary Payment</span>
                                                 </td>
                                                 <td>
-                                                    <span class="text-muted">30 mins ago</span>
+                                                    <span class="text-muted">Added today</span>
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="btn-group" role="group" aria-label="Actions">
-                                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(1)" title="View Details">
+                                                        <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(27)" title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                         <button class="btn btn-sm btn-outline-primary" onclick="editEntry(1)" title="Edit Entry">
@@ -1311,28 +1311,24 @@
         
         // Quick Add Button functions
         function addVendor() {
-            console.log('Add Vendor clicked');
             // Show the add vendor modal
             const modal = new bootstrap.Modal(document.getElementById('addVendorModal'));
             modal.show();
         }
         
         function addLabour() {
-            console.log('Add Labour clicked');
             // Show the add labour modal
             const modal = new bootstrap.Modal(document.getElementById('addLabourModal'));
             modal.show();
         }
         
         function addPaymentEntry() {
-            console.log('Add Payment Entry clicked');
             // Show the add payment entry modal
             const modal = new bootstrap.Modal(document.getElementById('addPaymentEntryModal'));
             modal.show();
         }
         
         function viewReports() {
-            console.log('View Reports clicked');
             // Here you would typically redirect to reports page or open a modal
             alert('Redirecting to View Reports page...');
             // window.location.href = '../reports.php';
@@ -1375,13 +1371,6 @@
             const paymentType = document.getElementById('paymentType').value;
             const paymentStatus = document.getElementById('paymentStatus').value;
             
-            console.log('Applying filters:', {
-                startDate,
-                endDate,
-                paymentType,
-                paymentStatus
-            });
-            
             // Here you would typically make an AJAX call to filter the data
             // For now, we'll just show an alert
             alert('Filters applied successfully!');
@@ -1393,14 +1382,12 @@
             document.getElementById('paymentType').value = '';
             document.getElementById('paymentStatus').value = '';
             
-            console.log('Filters cleared');
+            // Filters cleared
             alert('Filters cleared!');
         }
         
         // Recently Added Data Functions
         function refreshVendorData() {
-            console.log('Refreshing vendor data...');
-            
             // Show loading indicator
             const vendorDataList = document.getElementById('vendorDataList');
             vendorDataList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
@@ -1423,7 +1410,7 @@
                         data.vendors.forEach((vendor, index) => {
                             // Format the created time
                             const createdDate = new Date(vendor.created_at);
-                            const timeAgo = getTimeAgoIST(vendor.created_at);
+                            const timeAgo = getTimeAgo(createdDate);
                             
                             // Create vendor item HTML
                             const vendorItem = document.createElement('div');
@@ -1453,54 +1440,85 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching vendor data:', error);
                     vendorDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Failed to load vendor data. Please try again later.</p></div>';
                 });
         }
         
-        // Helper function to calculate time ago in IST
-        function getTimeAgoIST(date) {
-            // Convert to IST if needed
-            const istDate = new Date(date);
-            
-            // Get current time in IST
+        // Helper function to calculate time ago with relative dates
+        function getTimeAgo(date) {
             const now = new Date();
-            const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const dateObj = new Date(date);
+            
+            // Convert to IST (UTC+5:30)
+            const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
             const nowIST = new Date(now.getTime() + istOffset);
-            const dateIST = new Date(istDate.getTime() + istOffset);
+            const dateIST = new Date(dateObj.getTime() + istOffset);
             
-            const seconds = Math.floor((nowIST - dateIST) / 1000);
+            // Get start of day for both dates in IST
+            const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+            const dateStartIST = new Date(dateIST.getFullYear(), dateIST.getMonth(), dateIST.getDate());
             
-            let interval = Math.floor(seconds / 31536000);
-            if (interval > 1) {
-                return interval + " years ago";
+            const daysDiff = Math.floor((todayIST - dateStartIST) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff === 0) {
+                return "Added today";
+            } else if (daysDiff === 1) {
+                return "Added yesterday";
+            } else {
+                // For anything older than yesterday, show the actual date
+                const day = String(dateIST.getDate()).padStart(2, '0');
+                const month = String(dateIST.getMonth() + 1).padStart(2, '0');
+                const year = dateIST.getFullYear();
+                return `Added on ${day}/${month}/${year}`;
+            }
+        }
+        
+        // Helper function to format relative date for Recent Entries
+        function formatRelativeDate(dateString) {
+            if (!dateString) {
+                return 'Just now';
             }
             
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) {
-                return interval + " months ago";
+            // Handle different date formats that might come from API
+            let dateObj;
+            if (dateString.includes('ago') || dateString.includes('today') || dateString.includes('yesterday')) {
+                // If already formatted as relative time, return as is
+                return dateString;
             }
             
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) {
-                return interval + " days ago";
+            try {
+                dateObj = new Date(dateString);
+                if (isNaN(dateObj.getTime())) {
+                    return dateString; // Return original if can't parse
+                }
+            } catch (e) {
+                return dateString; // Return original if error
             }
             
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) {
-                return interval + " hours ago";
-            }
+            const now = new Date();
             
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) {
-                return interval + " minutes ago";
-            }
+            // Convert to IST (UTC+5:30)
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const nowIST = new Date(now.getTime() + istOffset);
+            const dateIST = new Date(dateObj.getTime() + istOffset);
             
-            if (seconds < 10) {
-                return "Just now";
-            }
+            // Get start of day for both dates in IST
+            const todayIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+            const dateStartIST = new Date(dateIST.getFullYear(), dateIST.getMonth(), dateIST.getDate());
             
-            return Math.floor(seconds) + " seconds ago";
+            const daysDiff = Math.floor((todayIST - dateStartIST) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff === 0) {
+                return "Added today";
+            } else if (daysDiff === 1) {
+                return "Added yesterday";
+            } else {
+                // For anything older than yesterday, show the actual date
+                const day = String(dateIST.getDate()).padStart(2, '0');
+                const month = String(dateIST.getMonth() + 1).padStart(2, '0');
+                const year = dateIST.getFullYear();
+                return `Added on ${day}/${month}/${year}`;
+            }
         }
         
         // Helper function to escape HTML to prevent XSS
@@ -1521,8 +1539,6 @@
         }
         
         function refreshLabourData() {
-            console.log('Refreshing labour data...');
-            
             // Show loading indicator
             const labourDataList = document.getElementById('labourDataList');
             labourDataList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
@@ -1571,14 +1587,11 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching labour data:', error);
                     labourDataList.innerHTML = '<div class="text-center py-4"><p class="text-danger">Failed to load labour data. Please try again later.</p></div>';
                 });
         }
         
         function refreshEntryData() {
-            console.log('Refreshing entry data...');
-            
             // Show loading indicator
             const entryDataList = document.getElementById('entryDataList');
             entryDataList.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2 text-muted">Loading payment entries...</p></td></tr>';
@@ -1604,13 +1617,7 @@
                             const projectTitle = entry.display_project_title || entry.project_title || 'Payment Entry';
                             const paymentAmount = entry.formatted_payment_amount || '₹0';
                             const paymentMode = entry.display_payment_mode || entry.payment_mode || 'Payment';
-                            
-                            // Use API provided time or calculate fallback in IST
-                            let timeCreated = entry.time_since_created;
-                            if (!timeCreated || timeCreated === 'null' || timeCreated === '') {
-                                // Fallback: calculate time using IST
-                                timeCreated = getTimeAgoIST(entry.created_at);
-                            }
+                            const timeCreated = formatRelativeDate(entry.created_at || entry.time_since_created || entry.date_added);
                             
                             // Create payment entry table row
                             const entryRow = document.createElement('tr');
@@ -1630,7 +1637,7 @@
                                     <span class="badge bg-info text-white">${escapeHtml(paymentMode.toString())}</span>
                                 </td>
                                 <td>
-                                    <span class="text-muted" title="Created: ${escapeHtml(entry.created_at_ist || entry.created_at)}">${escapeHtml(timeCreated.toString())}</span>
+                                    <span class="text-muted">${escapeHtml(timeCreated.toString())}</span>
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group" aria-label="Actions">
@@ -1651,20 +1658,16 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching payment entry data:', error);
                     entryDataList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load payment entries. Please try again later.</td></tr>';
                 });
         }
         
         function refreshReportData() {
-            console.log('Refreshing report data...');
             alert('Report data refreshed!');
         }
         
         // View Functions
         function viewVendor(id) {
-            console.log('Viewing vendor:', id);
-            
             // Show the view vendor modal
             const modal = new bootstrap.Modal(document.getElementById('viewVendorModal'));
             modal.show();
@@ -1701,7 +1704,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching vendor details:', error);
                     document.getElementById('vendorDetailsLoader').style.display = 'none';
                     document.getElementById('vendorErrorMessage').textContent = 'Network error. Please try again later.';
                     document.getElementById('vendorDetailsError').style.display = 'block';
@@ -1764,8 +1766,6 @@
         }
         
         function editVendor(id) {
-            console.log('Editing vendor:', id);
-            
             // Show the edit vendor modal
             const modal = new bootstrap.Modal(document.getElementById('editVendorModal'));
             modal.show();
@@ -1802,7 +1802,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching vendor details:', error);
                     document.getElementById('editVendorLoader').style.display = 'none';
                     document.getElementById('editErrorMessage').textContent = 'Network error. Please try again later.';
                     document.getElementById('editVendorError').style.display = 'block';
@@ -1933,8 +1932,6 @@
                 }
             })
             .catch(error => {
-                console.error('Error updating vendor:', error);
-                
                 // Reset save button
                 saveBtn.innerHTML = originalText;
                 saveBtn.disabled = false;
@@ -1946,8 +1943,6 @@
         }
         
         function viewLabour(id) {
-            console.log('Viewing labour:', id);
-            
             // Show the view labour modal
             const modal = new bootstrap.Modal(document.getElementById('viewLabourModal'));
             modal.show();
@@ -1984,7 +1979,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching labour details:', error);
                     document.getElementById('labourDetailsLoader').style.display = 'none';
                     document.getElementById('labourErrorMessage').textContent = 'Network error. Please try again later.';
                     document.getElementById('labourDetailsError').style.display = 'block';
@@ -2034,7 +2028,6 @@
             if (docImageElement) {
                 docImageElement.innerHTML = '';
             } else {
-                console.error(`Element not found: viewLabour${docType}Image`);
                 return;
             }
             
@@ -2105,8 +2098,6 @@
         }
         
         function editLabour(id) {
-            console.log('Editing labour:', id);
-            
             // Show the edit labour modal
             const modal = new bootstrap.Modal(document.getElementById('editLabourModal'));
             modal.show();
@@ -2143,7 +2134,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching labour details for edit:', error);
                     document.getElementById('editLabourLoader').style.display = 'none';
                     document.getElementById('editLabourErrorMessage').textContent = 'Network error. Please try again later.';
                     document.getElementById('editLabourError').style.display = 'block';
@@ -2370,8 +2360,6 @@
                 }
             })
             .catch(error => {
-                console.error('Error updating labour:', error);
-                
                 // Reset save button
                 saveBtn.innerHTML = originalText;
                 saveBtn.disabled = false;
@@ -2383,47 +2371,650 @@
         }
         
         function viewEntry(id) {
-            console.log('Viewing payment entry:', id);
-            
-            // Show the view payment entry modal
-            const modal = new bootstrap.Modal(document.getElementById('viewPaymentEntryModal'));
+            // Show the new minimalistic modal
+            const modal = new bootstrap.Modal(document.getElementById('uiMinimalPaymentViewModal'));
             modal.show();
             
-            // Show loading state
-            document.getElementById('paymentEntryDetailsLoader').style.display = 'block';
-            document.getElementById('paymentEntryDetailsContent').style.display = 'none';
-            document.getElementById('paymentEntryDetailsError').style.display = 'none';
+            // Reset modal states
+            document.getElementById('uiPaymentDetailsLoader').style.display = 'block';
+            document.getElementById('uiPaymentDetailsContent').style.display = 'none';
+            document.getElementById('uiPaymentDetailsError').style.display = 'none';
             
-            // Update modal title with payment ID
-            document.getElementById('viewPaymentEntryModalLabel').innerHTML = `
-                Payment Entry Details - ID: ${id}
-            `;
+            // Update modal title with entry ID
+            document.getElementById('uiMinimalPaymentViewModalLabel').textContent = 'Payment Details';
+            document.querySelector('.ui-modal-subtitle').textContent = `Entry #PE-${String(id).padStart(3, '0')}`;
             
-            // Fetch payment entry details from API
-            fetch(`../api/get_payment_entry_details.php?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Hide loading state
-                    document.getElementById('paymentEntryDetailsLoader').style.display = 'none';
+            // Determine the correct API URL based on current location
+            const currentUrl = window.location.href;
+            let apiUrl;
+            
+            if (currentUrl.includes('localhost')) {
+                apiUrl = `../api/get_ui_payment_entry_details.php?id=${id}`;
+            } else {
+                // Production environment
+                apiUrl = `api/get_ui_payment_entry_details.php?id=${id}`;
+            }
+            
+            // Fetch real payment data from API with improved error handling
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    // First get the raw text to check for JSON parsing issues
+                    return response.text();
+                })
+                .then(text => {
+                    // Try to parse as JSON
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('Invalid JSON response from server');
+                    }
+                    
+                    // Hide loader
+                    document.getElementById('uiPaymentDetailsLoader').style.display = 'none';
                     
                     if (data.status === 'success') {
-                        // Populate payment entry details
-                        populatePaymentEntryDetails(data.payment_entry, data.recipients, data.summary);
-                        document.getElementById('paymentEntryDetailsContent').style.display = 'block';
+                        // Populate modal with real data
+                        populateRealPaymentData(data.payment_entry);
                         
-                        // Store payment ID for edit functionality
-                        document.getElementById('editPaymentEntryFromView').setAttribute('data-payment-id', id);
+                        // Show content
+                        document.getElementById('uiPaymentDetailsContent').style.display = 'block';
                     } else {
                         // Show error message
-                        document.getElementById('paymentEntryErrorMessage').textContent = data.message || 'Failed to load payment entry details';
-                        document.getElementById('paymentEntryDetailsError').style.display = 'block';
+                        document.getElementById('uiPaymentErrorMessage').textContent = data.message || 'Failed to load payment details';
+                        document.getElementById('uiPaymentDetailsError').style.display = 'block';
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching payment entry details:', error);
-                    document.getElementById('paymentEntryDetailsLoader').style.display = 'none';
-                    document.getElementById('paymentEntryErrorMessage').textContent = 'Network error. Please try again later.';
-                    document.getElementById('paymentEntryDetailsError').style.display = 'block';
+                    // Hide loader
+                    document.getElementById('uiPaymentDetailsLoader').style.display = 'none';
+                    
+                    // Show detailed error message
+                    let errorMessage = 'Network error. Please try again later.';
+                    if (error.message.includes('HTTP error')) {
+                        errorMessage = `Server error (${error.message}). Please contact support.`;
+                    } else if (error.message.includes('JSON')) {
+                        errorMessage = 'Server returned invalid data. Please contact support.';
+                    }
+                    
+                    document.getElementById('uiPaymentErrorMessage').textContent = errorMessage;
+                    document.getElementById('uiPaymentDetailsError').style.display = 'block';
+                });
+        }
+        
+        // Function to populate real payment data from API
+        function populateRealPaymentData(paymentData) {
+            // Helper function to safely set text content
+            function safeSetText(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value || '-';
+                }
+            }
+            
+            // Update modal title with real data
+            safeSetText('uiMinimalPaymentViewModalLabel', 'Payment Details');
+            
+            const subtitleElement = document.querySelector('.ui-modal-subtitle');
+            if (subtitleElement) {
+                subtitleElement.textContent = `Entry #PE-${String(paymentData.payment_id).padStart(3, '0')}`;
+            }
+            
+            // Populate the modal with real payment data using the new layout
+            safeSetText('uiPaymentProject', paymentData.project_title || 'Unknown Project');
+            safeSetText('uiPaymentAmount', paymentData.formatted_payment_amount || '₹0');
+            safeSetText('uiPaymentType', paymentData.display_payment_mode || 'Unknown');
+            safeSetText('uiPaymentDate', paymentData.formatted_payment_date || 'Unknown');
+            safeSetText('uiPaymentMethod', paymentData.display_payment_via || 'Unknown Method');
+            
+            // Handle split payment toggle
+            const splitToggle = document.getElementById('uiSplitToggle');
+            if (splitToggle && paymentData.display_payment_mode && paymentData.display_payment_mode.toLowerCase().includes('split')) {
+                splitToggle.style.display = 'flex';
+                splitToggle.setAttribute('data-payment-id', paymentData.payment_id);
+            } else if (splitToggle) {
+                splitToggle.style.display = 'none';
+            }
+            
+            // Handle status if element exists (might be removed in new layout)
+            const statusElement = document.getElementById('uiPaymentStatus');
+            if (statusElement) {
+                statusElement.textContent = paymentData.status || 'Unknown';
+            }
+            
+            // Handle notes - only show if there are actual notes
+            const notesSection = document.getElementById('uiNotesSection');
+            const notesElement = document.getElementById('uiPaymentNotes');
+            
+            if (paymentData.notes && paymentData.notes.trim() && notesSection && notesElement) {
+                notesElement.textContent = paymentData.notes;
+                notesSection.style.display = 'block';
+            } else if (notesSection) {
+                notesSection.style.display = 'none';
+            }
+            
+            // Handle screenshot link
+            const screenshotLink = document.getElementById('uiViewScreenshot');
+            if (screenshotLink && paymentData.has_payment_proof && paymentData.payment_proof_exists) {
+                screenshotLink.style.display = 'flex';
+                screenshotLink.setAttribute('data-screenshot-path', paymentData.payment_proof_full_path);
+            } else if (screenshotLink) {
+                screenshotLink.style.display = 'none';
+            }
+            
+            // Store payment ID for edit functionality
+            const editBtn = document.getElementById('uiEditPaymentBtn');
+            if (editBtn) {
+                editBtn.setAttribute('data-payment-id', paymentData.payment_id);
+            }
+            
+            // Populate Payment To section
+            populatePaymentRecipients(paymentData);
+        }
+        
+        // Function to populate payment recipients data
+        function populatePaymentRecipients(paymentData) {
+            const recipientsContainer = document.getElementById('uiRecipientsContainer');
+            const recipientsCountBadge = document.getElementById('uiRecipientsCount');
+            const noRecipientsSection = document.getElementById('uiNoRecipients');
+            
+            if (!recipientsContainer || !recipientsCountBadge || !noRecipientsSection) {
+                return;
+            }
+            
+            // Update recipients count
+            const recipientsCount = paymentData.recipients_count || 0;
+            recipientsCountBadge.textContent = recipientsCount;
+            
+            if (!paymentData.has_recipients || !paymentData.recipients || paymentData.recipients.length === 0) {
+                // Show no recipients state
+                recipientsContainer.innerHTML = '';
+                noRecipientsSection.style.display = 'block';
+                return;
+            }
+            
+            // Hide no recipients state
+            noRecipientsSection.style.display = 'none';
+            
+            // Clear container
+            recipientsContainer.innerHTML = '';
+            
+            // Generate recipient cards
+            paymentData.recipients.forEach((recipient, index) => {
+                const recipientCard = document.createElement('div');
+                recipientCard.className = 'ui-recipient-card';
+                
+                let splitToggleHtml = '';
+                if (recipient.has_splits && recipient.splits_count > 0) {
+                    splitToggleHtml = `
+                        <button class="ui-recipient-split-toggle" onclick="toggleRecipientSplits(${recipient.recipient_id})" id="splitToggle_${recipient.recipient_id}">
+                            <i class="fas fa-chevron-down"></i>
+                            ${recipient.splits_count} splits
+                        </button>`;
+                }
+                
+                recipientCard.innerHTML = `
+                    <div class="ui-recipient-header">
+                        <div class="ui-recipient-info">
+                            <span class="ui-recipient-category-badge ${recipient.category}">
+                                ${recipient.display_category}
+                            </span>
+                            <h6 class="ui-recipient-name">${escapeHtml(recipient.name)}</h6>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+                            <span class="ui-recipient-amount">${recipient.formatted_amount}</span>
+                            ${splitToggleHtml}
+                        </div>
+                    </div>
+                    <div class="ui-recipient-details">
+                        <div class="ui-recipient-detail-item">
+                            <span class="ui-recipient-detail-label">Payment For</span>
+                            <span class="ui-recipient-detail-value">${escapeHtml(recipient.payment_for || 'N/A')}</span>
+                        </div>
+                        <div class="ui-recipient-detail-item">
+                            <span class="ui-recipient-detail-label">Type</span>
+                            <span class="ui-recipient-detail-value">${recipient.display_type}</span>
+                        </div>
+                        <div class="ui-recipient-detail-item">
+                            <span class="ui-recipient-detail-label">Payment Mode</span>
+                            <span class="ui-recipient-detail-value">${recipient.display_payment_mode}</span>
+                        </div>
+                        <div class="ui-recipient-detail-item">
+                            <span class="ui-recipient-detail-label">Added By</span>
+                            <span class="ui-recipient-detail-value">${recipient.created_by_name}</span>
+                        </div>
+                    </div>`;
+                
+                // Add split content container if recipient has splits
+                if (recipient.has_splits && recipient.splits_count > 0) {
+                    const splitContentDiv = document.createElement('div');
+                    splitContentDiv.className = 'ui-recipient-split-content';
+                    splitContentDiv.id = `splitContent_${recipient.recipient_id}`;
+                    
+                    // Pre-populate with split data
+                    splitContentDiv.innerHTML = generateSplitContentHtml(recipient.splits);
+                    
+                    recipientCard.appendChild(splitContentDiv);
+                }
+                
+                recipientsContainer.appendChild(recipientCard);
+            });
+        }
+        
+        // Function to generate split content HTML
+        function generateSplitContentHtml(splits) {
+            if (!splits || splits.length === 0) {
+                return '<div class="ui-split-empty-mini">No split details available</div>';
+            }
+            
+            let splitsHtml = '<div class="ui-split-items-list">';
+            
+            splits.forEach((split, index) => {
+                splitsHtml += `
+                    <div class="ui-split-item-mini">
+                        <div class="ui-split-item-header">
+                            <span class="ui-split-item-number">Split #${split.split_id}</span>
+                            <span class="ui-split-item-amount">${split.formatted_amount}</span>
+                        </div>
+                        <div class="ui-split-item-details">
+                            <div class="ui-split-item-detail">
+                                <span class="ui-split-item-label">Payment Mode</span>
+                                <span class="ui-split-item-value">${split.display_payment_mode}</span>
+                            </div>
+                            <div class="ui-split-item-detail">
+                                <span class="ui-split-item-label">Payment For</span>
+                                <span class="ui-split-item-value">${escapeHtml(split.payment_for || 'N/A')}</span>
+                            </div>
+                            <div class="ui-split-item-detail">
+                                <span class="ui-split-item-label">Created At</span>
+                                <span class="ui-split-item-value">${split.formatted_created_at}</span>
+                            </div>
+                        </div>`;
+                
+                if (split.has_proof && split.proof_exists) {
+                    splitsHtml += `
+                        <div class="ui-split-proof-mini">
+                            <a href="${split.proof_full_path}" target="_blank" class="ui-split-proof-link-mini">
+                                <i class="fas fa-paperclip"></i>
+                                View Proof
+                            </a>
+                        </div>`;
+                }
+                
+                splitsHtml += '</div>';
+            });
+            
+            splitsHtml += '</div>';
+            
+            return splitsHtml;
+        }
+        
+        // Function to toggle recipient splits
+        function toggleRecipientSplits(recipientId) {
+            const splitContent = document.getElementById(`splitContent_${recipientId}`);
+            const splitToggle = document.getElementById(`splitToggle_${recipientId}`);
+            
+            if (!splitContent || !splitToggle) {
+                return;
+            }
+            
+            if (splitContent.style.display === 'none' || splitContent.style.display === '') {
+                // Show split content
+                splitContent.style.display = 'block';
+                splitToggle.classList.add('expanded');
+            } else {
+                // Hide split content
+                splitContent.style.display = 'none';
+                splitToggle.classList.remove('expanded');
+            }
+        }
+        
+        // Function to view payment screenshot
+        function viewPaymentScreenshot() {
+            const screenshotLink = document.getElementById('uiViewScreenshot');
+            const screenshotPath = screenshotLink ? screenshotLink.getAttribute('data-screenshot-path') : null;
+            
+            if (screenshotPath) {
+                // Open screenshot in a new window/tab
+                window.open(screenshotPath, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+            } else {
+                alert('Screenshot not available');
+            }
+        }
+        
+        // Function to toggle split payment details (new functionality)
+        function toggleSplitPaymentDetails() {
+            const splitContent = document.getElementById('uiSplitPaymentContent');
+            const splitToggle = document.getElementById('uiSplitPaymentToggle');
+            const splitSection = document.getElementById('uiSplitPaymentSection');
+            const paymentId = splitSection ? splitSection.getAttribute('data-payment-id') : null;
+            
+            if (!splitContent || !splitToggle || !paymentId) {
+                return;
+            }
+            
+            if (splitContent.style.display === 'none') {
+                // Show split content and load data
+                splitContent.style.display = 'block';
+                splitToggle.classList.add('expanded');
+                loadSplitPaymentDetailsData(paymentId);
+            } else {
+                // Hide split content
+                splitContent.style.display = 'none';
+                splitToggle.classList.remove('expanded');
+            }
+        }
+        
+        // Function to load split payment details data from hr_payment_splits
+        function loadSplitPaymentDetailsData(paymentId) {
+            const splitContainer = document.getElementById('uiSplitPaymentContainer');
+            const splitLoading = document.getElementById('uiSplitPaymentLoading');
+            
+            if (!splitContainer) {
+                return;
+            }
+            
+            // Show loading state
+            if (splitLoading) {
+                splitLoading.style.display = 'flex';
+            }
+            
+            // Clear container
+            splitContainer.innerHTML = '';
+            
+            // Fetch split payment data from API
+            fetch(`../api/get_payment_split_details.php?payment_id=${paymentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (splitLoading) {
+                        splitLoading.style.display = 'none';
+                    }
+                    
+                    if (data.status === 'success') {
+                        displaySplitPaymentData(data.splits, data.summary);
+                    } else {
+                        splitContainer.innerHTML = `
+                            <div class="ui-split-empty">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Error loading split details: ${data.message}</span>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    if (splitLoading) {
+                        splitLoading.style.display = 'none';
+                    }
+                    splitContainer.innerHTML = `
+                        <div class="ui-split-empty">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Network error. Please try again later.</span>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Function to display split payment data
+        function displaySplitPaymentData(splits, summary) {
+            const splitContainer = document.getElementById('uiSplitPaymentContainer');
+            
+            if (!splits || splits.length === 0) {
+                splitContainer.innerHTML = `
+                    <div class="ui-split-empty">
+                        <i class="fas fa-info-circle"></i>
+                        <span>No split payment details found.</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            let splitsHtml = '';
+            
+            splits.forEach((split, index) => {
+                splitsHtml += `
+                    <div class="ui-split-item">
+                        <div class="ui-split-header">
+                            <span class="ui-split-number">Split #${split.split_id}</span>
+                            <span class="ui-split-amount">${split.formatted_amount}</span>
+                        </div>
+                        <div class="ui-split-details">
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Recipient</span>
+                                <span class="ui-split-value">${escapeHtml(split.recipient_name)}</span>
+                            </div>
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Category</span>
+                                <span class="ui-split-value">${split.recipient_category}</span>
+                            </div>
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Payment Mode</span>
+                                <span class="ui-split-value">${split.display_payment_mode}</span>
+                            </div>
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Payment For</span>
+                                <span class="ui-split-value">${escapeHtml(split.payment_for || 'N/A')}</span>
+                            </div>
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Created At</span>
+                                <span class="ui-split-value">${split.formatted_created_at}</span>
+                            </div>
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Created By</span>
+                                <span class="ui-split-value">${split.created_by_name}</span>
+                            </div>
+                        </div>`;
+                
+                if (split.has_proof && split.proof_exists) {
+                    splitsHtml += `
+                        <div class="ui-split-proof">
+                            <a href="${split.proof_full_path}" target="_blank" class="ui-split-proof-link">
+                                <i class="fas fa-paperclip"></i>
+                                View Proof Document
+                            </a>
+                        </div>`;
+                }
+                
+                splitsHtml += '</div>';
+            });
+            
+            // Add summary if multiple splits
+            if (splits.length > 1) {
+                splitsHtml += `
+                    <div class="ui-split-item" style="background: #f8fafc; border-style: dashed;">
+                        <div class="ui-split-header">
+                            <span class="ui-split-number"><strong>Total: ${summary.total_splits} splits</strong></span>
+                            <span class="ui-split-amount"><strong>${summary.formatted_total_amount}</strong></span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            splitContainer.innerHTML = splitsHtml;
+        }
+        function toggleSplitDetails() {
+            const splitSection = document.getElementById('uiSplitSection');
+            const splitToggle = document.getElementById('uiSplitToggle');
+            const paymentId = splitToggle ? splitToggle.getAttribute('data-payment-id') : null;
+            
+            if (!splitSection || !splitToggle || !paymentId) {
+                return;
+            }
+            
+            if (splitSection.style.display === 'none') {
+                // Show split section and load data
+                splitSection.style.display = 'block';
+                splitToggle.classList.add('expanded');
+                loadSplitPaymentData(paymentId);
+            } else {
+                // Hide split section
+                splitSection.style.display = 'none';
+                splitToggle.classList.remove('expanded');
+            }
+        }
+        
+        // Function to load split payment data
+        function loadSplitPaymentData(paymentId) {
+            const splitContainer = document.getElementById('uiSplitContainer');
+            const splitLoading = document.getElementById('uiSplitLoading');
+            
+            if (!splitContainer) {
+                return;
+            }
+            
+            // Show loading state
+            if (splitLoading) {
+                splitLoading.style.display = 'flex';
+            }
+            
+            // Fetch split data from API
+            fetch(`../api/get_payment_splits.php?payment_id=${paymentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (splitLoading) {
+                        splitLoading.style.display = 'none';
+                    }
+                    
+                    if (data.status === 'success') {
+                        displaySplitData(data.splits, data.summary);
+                    } else {
+                        splitContainer.innerHTML = `
+                            <div class="ui-split-error">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Error loading split details: ${data.message}</span>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    if (splitLoading) {
+                        splitLoading.style.display = 'none';
+                    }
+                    splitContainer.innerHTML = `
+                        <div class="ui-split-error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Network error. Please try again later.</span>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Function to display split payment data
+        function displaySplitData(splits, summary) {
+            const splitContainer = document.getElementById('uiSplitContainer');
+            
+            if (!splits || splits.length === 0) {
+                splitContainer.innerHTML = `
+                    <div class="ui-split-empty">
+                        <i class="fas fa-info-circle"></i>
+                        <span>No split details found for this payment.</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            let splitsHtml = '<div class="ui-split-list">';
+            
+            splits.forEach(split => {
+                splitsHtml += `
+                    <div class="ui-split-item">
+                        <div class="ui-split-header">
+                            <span class="ui-split-number">Split ${split.split_number}</span>
+                            <span class="ui-split-amount">${split.formatted_amount}</span>
+                        </div>
+                        <div class="ui-split-details">
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Payment Mode</span>
+                                <span class="ui-split-value">${split.display_payment_mode}</span>
+                            </div>
+                            <div class="ui-split-detail">
+                                <span class="ui-split-label">Date Created</span>
+                                <span class="ui-split-value">${split.formatted_created_at}</span>
+                            </div>
+                        </div>`;
+                
+                if (split.has_proof && split.proof_exists) {
+                    splitsHtml += `
+                        <div class="ui-split-proof">
+                            <a href="${split.proof_full_path}" target="_blank" class="ui-split-proof-link">
+                                <i class="fas fa-image"></i>
+                                View Proof
+                            </a>
+                        </div>`;
+                }
+                
+                splitsHtml += '</div>';
+            });
+            
+            splitsHtml += '</div>';
+            
+            // Add summary if multiple splits
+            if (splits.length > 1) {
+                splitsHtml += `
+                    <div class="ui-split-summary">
+                        <div class="ui-split-summary-header">
+                            <strong>Summary: ${summary.total_splits} splits totaling ${summary.formatted_total_amount}</strong>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            splitContainer.innerHTML = splitsHtml;
+        }
+        
+        // Function to handle edit from view modal
+        function editPaymentFromView() {
+            const paymentId = document.getElementById('uiEditPaymentBtn').getAttribute('data-payment-id');
+            
+            // Close the view modal
+            const viewModal = bootstrap.Modal.getInstance(document.getElementById('uiMinimalPaymentViewModal'));
+            if (viewModal) {
+                viewModal.hide();
+            }
+            
+            // Open edit modal (will be implemented later)
+            alert(`Edit functionality will be implemented soon for Payment ID: ${paymentId}`);
+        }
+        
+        // Function to retry loading payment details
+        function retryLoadPaymentDetails() {
+            const paymentId = document.getElementById('uiEditPaymentBtn').getAttribute('data-payment-id') || '1';
+            
+            // Hide error state
+            document.getElementById('uiPaymentDetailsError').style.display = 'none';
+            
+            // Show loader and retry
+            document.getElementById('uiPaymentDetailsLoader').style.display = 'block';
+            
+            // Fetch payment data from API (retry)
+            fetch(`../api/get_ui_payment_entry_details.php?id=${paymentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loader
+                    document.getElementById('uiPaymentDetailsLoader').style.display = 'none';
+                    
+                    if (data.status === 'success') {
+                        // Populate modal with real data
+                        populateRealPaymentData(data.payment_entry);
+                        
+                        // Show content
+                        document.getElementById('uiPaymentDetailsContent').style.display = 'block';
+                    } else {
+                        // Show error message again
+                        document.getElementById('uiPaymentErrorMessage').textContent = data.message || 'Failed to load payment details';
+                        document.getElementById('uiPaymentDetailsError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    // Hide loader
+                    document.getElementById('uiPaymentDetailsLoader').style.display = 'none';
+                    
+                    // Show error message
+                    document.getElementById('uiPaymentErrorMessage').textContent = 'Network error. Please try again later.';
+                    document.getElementById('uiPaymentDetailsError').style.display = 'block';
                 });
         }
         
@@ -2506,6 +3097,26 @@
             safeSetText('viewPaymentDate', paymentEntry.formatted_payment_date);
             safeSetText('viewPaymentMode', paymentEntry.display_payment_mode);
             safeSetText('viewPaymentVia', paymentEntry.display_payment_done_via);
+            
+            // Handle payment proof image and clip icon
+            const paymentProofClip = document.getElementById('paymentProofClip');
+            if (paymentProofClip && paymentEntry.payment_proof_image) {
+                // Ensure the file path is correctly formatted
+                let proofPath = paymentEntry.payment_proof_image;
+                if (!proofPath.startsWith('http') && !proofPath.startsWith('/')) {
+                    proofPath = '../' + proofPath;
+                }
+                
+                // Set the proof data
+                paymentProofClip.dataset.proofPath = proofPath;
+                paymentProofClip.dataset.proofName = 'Payment Proof';
+                
+                // Show the clip icon
+                paymentProofClip.style.display = 'inline-flex';
+            } else if (paymentProofClip) {
+                // Hide the clip icon if no proof image
+                paymentProofClip.style.display = 'none';
+            }
             
             // System Information
             safeSetText('viewCreatedBy', paymentEntry.created_by_username || 'System');
@@ -2601,101 +3212,107 @@
                     
                     recipients.forEach((recipient, index) => {
                         recipientsHTML += `
-                            <div class="recipient-item">
-                                <div class="recipient-header">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div class="flex-grow-1">
-                                            <h6 class="recipient-name">
-                                                ${escapeHtml(recipient.name)}
-                                            </h6>
-                                            <div class="mb-2">
-                                                <span class="badge badge-category me-2">${escapeHtml(recipient.display_category)}</span>
-                                                <span class="badge badge-type">${escapeHtml(recipient.display_type)}</span>
-                                                ${recipient.custom_type ? '<span class="badge bg-secondary ms-2">' + escapeHtml(recipient.custom_type) + '</span>' : ''}
-                                            </div>
-                                            <div class="text-muted small">Payment for: ${escapeHtml(recipient.payment_for || 'Not specified')}</div>
+                            <tr class="pmt-table-row">
+                                <td class="pmt-table-cell">
+                                    <div class="pmt-recipient-details">
+                                        <!-- 1. Vendor/Labour Name -->
+                                        <div class="pmt-recipient-name">
+                                            <i class="fas fa-user pmt-name-icon"></i>
+                                            ${escapeHtml(recipient.name)}
                                         </div>
-                                        <div class="text-end">
-                                            <div class="amount-display">${recipient.formatted_amount}</div>
-                                            <small class="text-muted">${escapeHtml(recipient.display_payment_mode)}</small>
+                                        
+                                        <!-- 2. Vendor/Labour Type -->
+                                        <div class="pmt-type-tags">
+                                            <span class="pmt-category-tag">${escapeHtml(recipient.display_category)}</span>
+                                            <span class="pmt-type-tag">${escapeHtml(recipient.display_type)}</span>
+                                            ${recipient.custom_type ? '<span class="pmt-custom-tag">' + escapeHtml(recipient.custom_type) + '</span>' : ''}
                                         </div>
-                                    </div>
-                                    
-                                    <!-- Payment Splits -->
-                                    ${recipient.splits.length > 0 ? `
-                                        <div class="mb-3">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <i class="fas fa-divide text-warning me-2"></i>
-                                                <span class="fw-semibold text-warning">Payment Splits (${recipient.splits.length})</span>
-                                            </div>
-                                            ${recipient.splits.map(split => `
-                                                <div class="split-item">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <div class="fw-semibold">Split #${split.split_id}</div>
-                                                            <small class="text-muted">${split.display_payment_mode}</small>
-                                                            ${split.proof_file ? '<div class="text-info small mt-1"><i class="fas fa-paperclip me-1"></i>Proof attached</div>' : ''}
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <div class="fw-bold">${split.formatted_amount}</div>
-                                                            <small class="text-muted">${split.formatted_date}</small>
-                                                        </div>
-                                                    </div>
+                                        
+                                        <!-- 3. Payment For -->
+                                        <div class="pmt-payment-purpose">
+                                            <span class="pmt-purpose-label">Payment for:</span>
+                                            <span class="pmt-purpose-text">${escapeHtml(recipient.payment_for || 'Not specified')}</span>
+                                        </div>
+                                        
+                                        <!-- 4. Split Payments (if applicable) -->
+                                        ${recipient.splits.length > 0 ? `
+                                            <div class="pmt-splits-section">
+                                                <div class="pmt-splits-header">
+                                                    <i class="fas fa-money-bill-wave pmt-splits-icon"></i>
+                                                    <span class="pmt-splits-title">Payment Splits (${recipient.splits.length})</span>
                                                 </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : ''}
-                                    
-                                    <!-- Documents -->
-                                    ${recipient.documents.length > 0 ? `
-                                        <div class="mb-3">
-                                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-folder-open text-info me-2 fs-5"></i>
-                                                    <span class="fw-semibold text-info">Documents</span>
-                                                </div>
-                                                <span class="badge bg-info rounded-pill">${recipient.documents.length}</span>
-                                            </div>
-                                            <div class="documents-grid">
-                                                ${recipient.documents.map(doc => {
-                                                    const isImage = doc.file_type.toLowerCase().includes('image');
-                                                    const fileIcon = getFileIconClass(doc.file_type);
-                                                    const escapedFileName = escapeHtml(doc.file_name);
-                                                    const escapedFilePath = doc.file_path.replace(/'/g, "\\'");
-                                                    
-                                                    return `
-                                                        <div class="document-card">
-                                                            <div class="document-preview-container">
-                                                                ${isImage ? 
-                                                                    `<img src="../${doc.file_path}" class="document-image" alt="${escapedFileName}" onerror="this.parentElement.innerHTML='<div class=&quot;document-icon-fallback&quot;><i class=&quot;fas fa-image fs-1 text-muted&quot;></i><p class=&quot;text-muted mt-2&quot;>Image not found</p></div>';" onclick="openImagePreview('../${doc.file_path}', '${escapedFileName}')" style="cursor: pointer;" title="Click to view full size">` :
-                                                                    `<div class="document-icon-container">
-                                                                        <i class="fas ${fileIcon} fs-1 text-info"></i>
-                                                                        <div class="file-extension">${doc.display_file_type}</div>
-                                                                    </div>`
-                                                                }
+                                                <div class="pmt-splits-list">
+                                                    ${recipient.splits.map(split => `
+                                                        <div class="pmt-split-item">
+                                                            <div class="pmt-split-info">
+                                                                <span class="pmt-split-mode">${split.display_payment_mode}</span>
+                                                                <span class="pmt-split-amount">${split.formatted_amount}</span>
+                                                                <span class="pmt-split-date">${split.formatted_date}</span>
+                                                                ${split.proof_file ? `<span class="pmt-split-proof" onclick="showSplitProof('${split.proof_file}', 'Split Payment Proof')"><i class="fas fa-paperclip"></i> Proof attached</span>` : ''}
                                                             </div>
-                                                            <div class="document-info">
-                                                                <div class="document-name" title="${escapedFileName}">${escapedFileName}</div>
-                                                                <div class="document-meta">
-                                                                    <span class="file-size">${doc.formatted_file_size}</span>
-                                                                    <span class="upload-date">${doc.formatted_upload_date}</span>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        <!-- 5. Total Amount -->
+                                        <div class="pmt-total-amount">
+                                            <span class="pmt-amount-label">Total Amount:</span>
+                                            <span class="pmt-amount-value">${recipient.formatted_amount}</span>
+                                        </div>
+                                        
+                                        <!-- 6. Date and Time -->
+                                        <div class="pmt-timestamp">
+                                            <i class="fas fa-clock pmt-time-icon"></i>
+                                            <span class="pmt-payment-mode">${escapeHtml(recipient.display_payment_mode)}</span>
+                                            <span class="pmt-date-time">Added: ${recipient.formatted_date}</span>
+                                        </div>
+                                        
+                                        <!-- Documents Section -->
+                                        ${recipient.documents.length > 0 ? `
+                                            <div class="pmt-documents-section">
+                                                <div class="pmt-documents-header">
+                                                    <i class="fas fa-folder-open pmt-docs-icon"></i>
+                                                    <span class="pmt-docs-title">Documents (${recipient.documents.length})</span>
+                                                </div>
+                                                <div class="pmt-documents-grid">
+                                                    ${recipient.documents.map(doc => {
+                                                        const isImage = doc.file_type.toLowerCase().includes('image');
+                                                        const fileIcon = getFileIconClass(doc.file_type);
+                                                        const escapedFileName = escapeHtml(doc.file_name);
+                                                        const escapedFilePath = doc.file_path.replace(/'/g, "\\'");
+                                                        
+                                                        return `
+                                                            <div class="pmt-document-card">
+                                                                <div class="pmt-doc-preview">
+                                                                    ${isImage ? 
+                                                                        `<img src="../${doc.file_path}" class="pmt-doc-image" alt="${escapedFileName}" onclick="openImagePreview('../${doc.file_path}', '${escapedFileName}')" title="Click to view full size">` :
+                                                                        `<div class="pmt-doc-icon-container">
+                                                                            <i class="fas ${fileIcon} pmt-doc-icon"></i>
+                                                                            <div class="pmt-file-ext">${doc.display_file_type}</div>
+                                                                        </div>`
+                                                                    }
                                                                 </div>
-                                                                <button class="btn btn-sm btn-outline-primary download-btn" onclick="downloadDocument('../${doc.file_path}', '${escapedFileName}')" title="Download document">
-                                                                    <i class="fas fa-download"></i>
-                                                                </button>
+                                                                <div class="pmt-doc-info">
+                                                                    <div class="pmt-doc-name" title="${escapedFileName}">${escapedFileName}</div>
+                                                                    <div class="pmt-doc-meta">
+                                                                        <span class="pmt-file-size">${doc.formatted_file_size}</span>
+                                                                        <span class="pmt-upload-date">${doc.formatted_upload_date}</span>
+                                                                    </div>
+                                                                    <button class="pmt-download-btn" onclick="downloadDocument('../${doc.file_path}', '${escapedFileName}')" title="Download document">
+                                                                        <i class="fas fa-download"></i>
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    `;
-                                                }).join('')}
+                                                        `;
+                                                    }).join('')}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ` : ''}
-                                    
-                                    <div class="text-end pt-2 border-top">
-                                        <small class="text-muted">Added: ${recipient.formatted_date}</small>
+                                        ` : ''}
                                     </div>
-                                </div>
-                            </div>
+                                </td>
+                            </tr>
                         `;
                     });
                     
@@ -2719,34 +3336,52 @@
         }
         
         function viewReport(id) {
-            console.log('Viewing report:', id);
             alert(`Viewing report for ID: ${id}`);
         }
         
         function downloadReport(id) {
-            console.log('Downloading report:', id);
             alert(`Downloading report for ID: ${id}`);
         }
         
         // View All Functions
         function viewAllVendors() {
-            console.log('Viewing all vendors');
             alert('Redirecting to all vendors page...');
         }
         
         function viewAllLabours() {
-            console.log('Viewing all labours');
             alert('Redirecting to all labours page...');
         }
         
         function viewAllEntries() {
-            console.log('Viewing all entries');
             alert('Redirecting to all entries page...');
         }
         
         function viewAllReports() {
-            console.log('Viewing all reports');
             alert('Redirecting to all reports page...');
+        }
+
+        // Function to show split payment proof
+        function showSplitProof(proofPath, proofName) {
+            if (proofPath) {
+                // Ensure the file path is correctly formatted
+                let fullProofPath = proofPath;
+                if (!fullProofPath.startsWith('http') && !fullProofPath.startsWith('/')) {
+                    fullProofPath = '../' + fullProofPath;
+                }
+                
+                const fileExtension = proofPath.split('.').pop().toLowerCase();
+                
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+                    // Show image in preview modal
+                    openImagePreview(fullProofPath, proofName);
+                } else if (fileExtension === 'pdf') {
+                    // Open PDF in new tab
+                    window.open(fullProofPath, '_blank');
+                } else {
+                    // Download other file types
+                    downloadDocument(fullProofPath, proofName);
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {

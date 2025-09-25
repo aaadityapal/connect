@@ -41,6 +41,7 @@ try {
                 pe.payment_done_via,
                 pe.payment_mode,
                 pe.recipient_count,
+                pe.payment_proof_image,
                 pe.created_at,
                 pe.updated_at,
                 p.title as project_title,
@@ -162,9 +163,21 @@ try {
         
         // Format recipient data
         $recipient['formatted_amount'] = '₹' . number_format($recipient['amount'], 2);
-        $recipient['display_category'] = ucwords(str_replace('_', ' ', $recipient['category']));
+        
+        // Proper category display logic
+        if ($recipient['category'] == 'vendor') {
+            $recipient['display_category'] = 'Vendor';
+        } elseif ($recipient['category'] == 'labour') {
+            $recipient['display_category'] = 'Labour';
+        } else {
+            $recipient['display_category'] = ucwords(str_replace('_', ' ', $recipient['category']));
+        }
+        
         $recipient['display_type'] = ucwords(str_replace('_', ' ', $recipient['type']));
         $recipient['display_payment_mode'] = ucwords(str_replace('_', ' ', $recipient['payment_mode']));
+        
+        // Debug logging - remove this after fixing
+        error_log("Recipient {$recipient['recipient_id']}: category='{$recipient['category']}' -> display_category='{$recipient['display_category']}'");
         
         // Format splits data
         foreach ($recipient['splits'] as &$split) {

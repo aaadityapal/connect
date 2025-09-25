@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MIME Type Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>MIME Type Fix Test</h1>
+    <p>This test will verify that the mime_content_type() error has been fixed.</p>
+    
+    <button onclick="testV1API()">Test V1 API (Original)</button>
+    <button onclick="testV2API()">Test V2 API (Fixed)</button>
+    <button onclick="testUtilityFunctions()">Test Utility Functions</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function testV1API() {
+            await testAPI('api/get_ui_payment_entry_details.php?id=27', 'V1 API');
+        }
+        
+        async function testV2API() {
+            await testAPI('api/get_ui_payment_entry_details_v2.php?id=27', 'V2 API (Fixed)');
+        }
+        
+        async function testAPI(url, label) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="info">Testing ${label}...</div>`;
+            
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                const data = JSON.parse(text);
+                
+                if (data.status === 'success') {
+                    resultsDiv.innerHTML = `<div class="success">✅ ${label} Working!</div>`;
+                    resultsDiv.innerHTML += `<div class="info">Payment ID: ${data.payment_entry.payment_id}</div>`;
+                    resultsDiv.innerHTML += `<div class="info">Amount: ${data.payment_entry.formatted_payment_amount}</div>`;
+                    
+                    if (data.payment_entry.has_payment_proof) {
+                        resultsDiv.innerHTML += `<div class="info">Proof Type: ${data.payment_entry.payment_proof_type}</div>`;
+                        if (data.payment_entry.formatted_file_size) {
+                            resultsDiv.innerHTML += `<div class="info">File Size: ${data.payment_entry.formatted_file_size}</div>`;
+                        }
+                    }
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ ${label} Error: ${data.message}</div>`;
+                    if (data.debug) {
+                        resultsDiv.innerHTML += `<pre>${JSON.stringify(data.debug, null, 2)}</pre>`;
+                    }
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ ${label} Failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testUtilityFunctions() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="info">Testing utility functions...</div>';
+            
+            try {
+                const response = await fetch('test_utility_functions.php');
+                const text = await response.text();
+                resultsDiv.innerHTML = text;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Utility test failed: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

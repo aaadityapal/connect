@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Entry Category Debug</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Payment Entry Frontend Debug</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Test API Response Processing</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary" onclick="testFrontendLogic()">Test Frontend Processing</button>
+                <div id="results" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testFrontendLogic() {
+            // Simulate the exact data structure that should be returned by the API
+            const mockApiResponse = {
+                status: 'success',
+                payment_entry: {
+                    payment_id: 56,
+                    formatted_payment_amount: '₹200.00'
+                },
+                recipients: [
+                    {
+                        recipient_id: 21,
+                        category: 'vendor',
+                        type: 'tile_vendor',
+                        custom_type: null,
+                        name: 'Test',
+                        payment_for: 'wage',
+                        amount: 100.00,
+                        formatted_amount: '₹100.00',
+                        display_category: 'Vendor',
+                        display_type: 'Tile Vendor',
+                        display_payment_mode: 'Cash',
+                        formatted_date: 'Sep 23, 2025 12:36',
+                        splits: [],
+                        documents: []
+                    },
+                    {
+                        recipient_id: 22,
+                        category: 'labour',
+                        type: 'chowk_labour',
+                        custom_type: null,
+                        name: 'Test',
+                        payment_for: 'wage',
+                        amount: 100.00,
+                        formatted_amount: '₹100.00',
+                        display_category: 'Labour',
+                        display_type: 'Chowk Labour',
+                        display_payment_mode: 'Cash',
+                        formatted_date: 'Sep 23, 2025 12:36',
+                        splits: [],
+                        documents: []
+                    }
+                ]
+            };
+
+            console.log('Mock API Response:', mockApiResponse);
+
+            // Test the frontend logic
+            let recipientsHTML = '';
+            
+            mockApiResponse.recipients.forEach((recipient, index) => {
+                console.log(`Processing recipient ${index + 1}:`, {
+                    raw_category: recipient.category,
+                    raw_type: recipient.type,
+                    display_category: recipient.display_category,
+                    display_type: recipient.display_type
+                });
+
+                recipientsHTML += `
+                    <div class="border rounded p-3 mb-3">
+                        <h6>Recipient ${index + 1}: ${escapeHtml(recipient.name)}</h6>
+                        
+                        <!-- Category and Type Tags -->
+                        <div class="mb-2">
+                            <span class="badge bg-primary me-2">${escapeHtml(recipient.display_category)}</span>
+                            <span class="badge bg-secondary">${escapeHtml(recipient.display_type)}</span>
+                        </div>
+                        
+                        <!-- Debug Information -->
+                        <small class="text-muted">
+                            Raw Category: <code>${escapeHtml(recipient.category)}</code> | 
+                            Raw Type: <code>${escapeHtml(recipient.type)}</code><br>
+                            Display Category: <code>${escapeHtml(recipient.display_category)}</code> | 
+                            Display Type: <code>${escapeHtml(recipient.display_type)}</code>
+                        </small>
+                        
+                        <div class="mt-2">
+                            <strong>Payment For:</strong> ${escapeHtml(recipient.payment_for)}<br>
+                            <strong>Amount:</strong> ${recipient.formatted_amount}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('results').innerHTML = `
+                <h6>Frontend Processing Results:</h6>
+                ${recipientsHTML}
+                
+                <div class="alert alert-info mt-3">
+                    <h6>Expected Results:</h6>
+                    <ul>
+                        <li>Recipient 1 should show: <span class="badge bg-primary">Vendor</span> <span class="badge bg-secondary">Tile Vendor</span></li>
+                        <li>Recipient 2 should show: <span class="badge bg-primary">Labour</span> <span class="badge bg-secondary">Chowk Labour</span></li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Test with payment ID 56
+        function testRealApi() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p>Loading real API data...</p></div>';
+            
+            fetch(`./simple_api_test.php?_cache_bust=${Date.now()}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    // Check if response is OK
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    // Get response text first to see raw content
+                    return response.text();
+                })
+                .then(responseText => {
+                    console.log('Raw response text:', responseText);
+                    
+                    // Try to parse as JSON
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (parseError) {
+                        throw new Error(`JSON Parse Error: ${parseError.message}. Raw response: ${responseText}`);
+                    }
+                    
+                    console.log('Parsed API Response:', data);
+                    
+                    let html = '<h6>Real API Response:</h6>';
+                    
+                    // Show raw response for debugging
+                    html += `<div class="alert alert-info"><strong>Raw Response:</strong><br><pre>${responseText}</pre></div>`;
+                    
+                    if (data.status === 'success') {
+                        if (data.recipients && data.recipients.length > 0) {
+                            data.recipients.forEach((recipient, index) => {
+                                html += `
+                                    <div class="border rounded p-3 mb-3">
+                                        <h6>Recipient ${index + 1}: ${escapeHtml(recipient.name)}</h6>
+                                        
+                                        <!-- What we get vs what we show -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <strong>Raw Data:</strong><br>
+                                                Category: <code>${escapeHtml(recipient.category)}</code><br>
+                                                Type: <code>${escapeHtml(recipient.type)}</code>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Display Data:</strong><br>
+                                                Display Category: <code>${escapeHtml(recipient.display_category)}</code><br>
+                                                Display Type: <code>${escapeHtml(recipient.display_type)}</code>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Actual Display -->
+                                        <div class="mt-2">
+                                            <span class="badge bg-primary me-2">${escapeHtml(recipient.display_category)}</span>
+                                            <span class="badge bg-secondary">${escapeHtml(recipient.display_type)}</span>
+                                        </div>
+                                        
+                                        <!-- Debug Info -->
+                                        <div class="mt-2 text-muted small">
+                                            <strong>Debug Info:</strong> ${JSON.stringify(recipient.debug_info)}
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            html += '<div class="alert alert-warning">No recipients found in response</div>';
+                        }
+                    } else {
+                        html += `<div class="alert alert-danger">API Error: ${data.message || 'Unknown error'}</div>`;
+                        if (data.debug_info) {
+                            html += `<div class="alert alert-info">Debug Info: ${data.debug_info}</div>`;
+                        }
+                    }
+                    
+                    resultsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('API Error:', error);
+                    const errorHtml = `
+                        <div class="alert alert-danger">
+                            <h6>Network/API Error:</h6>
+                            <p>${error.message}</p>
+                            <p><strong>Please check:</strong></p>
+                            <ul>
+                                <li>Browser console for detailed errors</li>
+                                <li>Network tab in developer tools</li>
+                                <li>Database connection</li>
+                                <li>PHP error logs</li>
+                            </ul>
+                        </div>
+                    `;
+                    resultsDiv.innerHTML = errorHtml;
+                });
+        }
+    </script>
+    
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Real API Response</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-success" onclick="testRealApi()">Test Real API Response</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

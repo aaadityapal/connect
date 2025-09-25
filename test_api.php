@@ -1,17 +1,22 @@
 <?php
-// Simple test to verify our API endpoint
-echo "Testing API endpoint...\n";
+// Simple test script to debug the API
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Use cURL to test the API
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "http://localhost:8000/api/get_recent_vendors.php");
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HEADER, false);
+echo "Testing API directly...\n";
 
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+// Include the API file and see what happens
+$_GET['id'] = 27;
 
-echo "HTTP Code: " . $httpCode . "\n";
-echo "Response:\n" . $response . "\n";
+// Capture output
+ob_start();
+include 'api/get_ui_payment_entry_details.php';
+$output = ob_get_clean();
+
+echo "API Output:\n";
+echo $output;
+
+if (empty($output)) {
+    echo "\nNo output captured - possible fatal error occurred.\n";
+}
 ?>

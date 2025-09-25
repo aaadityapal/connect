@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Quick API Test</h1>
+    
+    <button onclick="testAPI(27, 'v1')">Test V1 API with ID 27</button>
+    <button onclick="testAPI(26, 'v1')">Test V1 API with ID 26</button>
+    <button onclick="testAPI(7, 'v1')">Test V1 API with ID 7 (should fail)</button>
+    <br><br>
+    <button onclick="testAPI(27, 'v2')">Test V2 API with ID 27</button>
+    <button onclick="testAPI(26, 'v2')">Test V2 API with ID 26</button>
+    <button onclick="testAPI(7, 'v2')">Test V2 API with ID 7 (should fail)</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI(id, version = 'v1') {
+            const resultsDiv = document.getElementById('results');
+            const apiFile = version === 'v2' ? 'get_ui_payment_entry_details_v2.php' : 'get_ui_payment_entry_details.php';
+            resultsDiv.innerHTML = `<p class="info">Testing ${version.toUpperCase()} API with payment ID: ${id}</p>`;
+            
+            try {
+                const response = await fetch(`api/${apiFile}?id=${id}`);
+                
+                resultsDiv.innerHTML += `<p class="info">Response Status: ${response.status}</p>`;
+                resultsDiv.innerHTML += `<p class="info">Content-Type: ${response.headers.get('content-type')}</p>`;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                resultsDiv.innerHTML += `<p class="info">Response received (${text.length} characters)</p>`;
+                
+                const data = JSON.parse(text);
+                
+                if (data.status === 'success') {
+                    resultsDiv.innerHTML += `<p class="success">✅ Success! Payment found:</p>`;
+                    resultsDiv.innerHTML += `<p class="info">API Version: ${data.api_version || 'v1'}</p>`;
+                    resultsDiv.innerHTML += `<pre>${JSON.stringify(data.payment_entry, null, 2)}</pre>`;
+                } else {
+                    resultsDiv.innerHTML += `<p class="error">❌ API Error: ${data.message}</p>`;
+                    if (data.debug) {
+                        resultsDiv.innerHTML += `<p class="info">Debug Info:</p>`;
+                        resultsDiv.innerHTML += `<pre>${JSON.stringify(data.debug, null, 2)}</pre>`;
+                    }
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

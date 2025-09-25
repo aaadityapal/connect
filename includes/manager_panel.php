@@ -57,6 +57,11 @@
         <span class="menu-text">Travel Expenses Approval</span>
     </div>
     
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'analytics/executive_insights_dashboard.php' ? 'active' : ''; ?>" onclick="window.location.href='analytics/executive_insights_dashboard.php'">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="menu-text">Site Entry</span>
+    </div>
+
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_expenses.php' ? 'active' : ''; ?>" onclick="window.location.href='site_expenses.php'">
         <i class="fas fa-money-bill-wave"></i>
         <span class="menu-text">Site Expenses</span>

@@ -207,10 +207,10 @@
                                 <p class="item-details">₹15,000 • Salary Payment • Added 30 mins ago</p>
                             </div>
                             <div class="item-actions">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(1)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(27)">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="editEntry(1)">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editEntry(27)">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
@@ -224,10 +224,10 @@
                                 <p class="item-details">₹8,500 • Vendor Payment • Added 2 hours ago</p>
                             </div>
                             <div class="item-actions">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(2)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(26)">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="editEntry(2)">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editEntry(26)">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>
@@ -241,10 +241,10 @@
                                 <p class="item-details">₹25,000 • Material Purchase • Added 4 hours ago</p>
                             </div>
                             <div class="item-actions">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(3)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="viewEntry(25)">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="editEntry(3)">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editEntry(25)">
                                     <i class="fas fa-edit"></i>
                                 </button>
                             </div>

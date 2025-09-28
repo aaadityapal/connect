@@ -218,6 +218,99 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- QR Code Upload -->
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="bankQrCode" class="form-label">Bank QR Code</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-qrcode input-icon"></i>
+                                        <input type="file" class="form-control" id="bankQrCode" name="bankQrCode" accept="image/*">
+                                    </div>
+                                    <div class="form-text">Upload QR code for easy payment transactions</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GST Details Section -->
+                    <div class="vendor-section">
+                        <div class="section-header" onclick="toggleVendorSection('gst')">
+                            <h6 class="section-title mb-0">
+                                <i class="fas fa-file-invoice me-2"></i>
+                                GST Details
+                            </h6>
+                            <button type="button" class="section-toggle-btn collapsed" id="gstToggleBtn">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div class="section-content collapsed" id="gstContent">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="gstNumber" class="form-label">GST Number</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-id-card input-icon"></i>
+                                        <input type="text" class="form-control" id="gstNumber" name="gstNumber" placeholder="Enter GST number" maxlength="15">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="gstRegistrationDate" class="form-label">GST Registration Date</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-calendar input-icon"></i>
+                                        <input type="date" class="form-control" id="gstRegistrationDate" name="gstRegistrationDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="gstState" class="form-label">State</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-map-marker-alt input-icon"></i>
+                                        <select class="form-select" id="gstState" name="gstState">
+                                            <option value="">Select State</option>
+                                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                            <option value="Assam">Assam</option>
+                                            <option value="Bihar">Bihar</option>
+                                            <option value="Chhattisgarh">Chhattisgarh</option>
+                                            <option value="Goa">Goa</option>
+                                            <option value="Gujarat">Gujarat</option>
+                                            <option value="Haryana">Haryana</option>
+                                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                            <option value="Jharkhand">Jharkhand</option>
+                                            <option value="Karnataka">Karnataka</option>
+                                            <option value="Kerala">Kerala</option>
+                                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                            <option value="Maharashtra">Maharashtra</option>
+                                            <option value="Manipur">Manipur</option>
+                                            <option value="Meghalaya">Meghalaya</option>
+                                            <option value="Mizoram">Mizoram</option>
+                                            <option value="Nagaland">Nagaland</option>
+                                            <option value="Odisha">Odisha</option>
+                                            <option value="Punjab">Punjab</option>
+                                            <option value="Rajasthan">Rajasthan</option>
+                                            <option value="Sikkim">Sikkim</option>
+                                            <option value="Tamil Nadu">Tamil Nadu</option>
+                                            <option value="Telangana">Telangana</option>
+                                            <option value="Tripura">Tripura</option>
+                                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                            <option value="Uttarakhand">Uttarakhand</option>
+                                            <option value="West Bengal">West Bengal</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="gstType" class="form-label">GST Type</label>
+                                    <div class="input-icon-wrapper">
+                                        <i class="fas fa-file-alt input-icon"></i>
+                                        <select class="form-select" id="gstType" name="gstType">
+                                            <option value="">Select GST Type</option>
+                                            <option value="regular">Regular</option>
+                                            <option value="composite">Composite</option>
+                                            <option value="unregistered">Unregistered</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -721,6 +814,7 @@ function backToDropdown() {
     vendorTypeCustom.classList.remove('is-invalid');
     vendorTypeSelect.classList.remove('is-invalid');
 }
+
 function toggleVendorSection(sectionType) {
     const content = document.getElementById(sectionType + 'Content');
     const toggleBtn = document.getElementById(sectionType + 'ToggleBtn');
@@ -735,7 +829,7 @@ function toggleVendorSection(sectionType) {
 
 // Initialize vendor section states
 function initializeVendorSections() {
-    const sections = ['banking', 'address'];
+    const sections = ['banking', 'address', 'gst'];
     
     sections.forEach(section => {
         const isCollapsed = localStorage.getItem('vendor' + section.charAt(0).toUpperCase() + section.slice(1) + 'Collapsed') === 'true';
@@ -813,8 +907,14 @@ function submitVendorForm() {
     // Always set the vendor category in form data
     formData.set('vendorCategory', vendorCategory);
     
+    // Handle QR code file upload
+    const qrCodeInput = document.getElementById('bankQrCode');
+    if (qrCodeInput.files.length > 0) {
+        formData.append('bankQrCode', qrCodeInput.files[0]);
+    }
+    
     // Debug: Show alert with values (remove in production)
-    alert('DEBUG INFO:\nOriginal Type: ' + originalVendorType + '\nFinal Type: ' + vendorTypeValue + '\nCategory: ' + vendorCategory);
+    // alert('DEBUG INFO:\nOriginal Type: ' + originalVendorType + '\nFinal Type: ' + vendorTypeValue + '\nCategory: ' + vendorCategory);
     
     // Debug: Log the vendor category assignment (remove in production)
     console.log('=== VENDOR CATEGORY DEBUG ===');
@@ -853,13 +953,28 @@ function submitVendorForm() {
         vendorTypeSelect.classList.remove('is-invalid');
     }
     
+    // Validate GST number format if provided
+    const gstNumberInput = form.querySelector('[name="gstNumber"]');
+    if (gstNumberInput && gstNumberInput.value.trim()) {
+        const gstNumber = gstNumberInput.value.trim();
+        // GST number format: 15 characters (2 state code + 10 PAN + 1 entity code + 1 checksum + 1 checksum)
+        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[Z]{1}[0-9A-Z]{1}$/;
+        if (!gstRegex.test(gstNumber)) {
+            gstNumberInput.classList.add('is-invalid');
+            isValid = false;
+            showNotification('warning', 'Please enter a valid GST number format (e.g., 12ABCDE1234PZ123)');
+        } else {
+            gstNumberInput.classList.remove('is-invalid');
+        }
+    }
+    
     if (!isValid) {
         // Hide loader
         if (loader) {
             loader.style.display = 'none';
         }
         
-        showNotification('warning', 'Please fill in all required fields.');
+        showNotification('warning', 'Please fill in all required fields correctly.');
         return;
     }
     
@@ -900,7 +1015,12 @@ function submitVendorForm() {
                         updateVendorTypesInPaymentEntries(vendorTypeCustom.value.trim());
                     }
                 } else {
-                    showNotification('error', 'Error: ' + response.message);
+                    // Handle duplicate vendor error specifically
+                    if (response.message && response.message.includes('already exists')) {
+                        showNotification('warning', response.message);
+                    } else {
+                        showNotification('error', 'Error: ' + response.message);
+                    }
                 }
             } catch (e) {
                 showNotification('error', 'An error occurred while processing the response.');

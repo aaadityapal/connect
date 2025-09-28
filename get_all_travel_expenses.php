@@ -23,7 +23,7 @@ if ($user_id !== $_SESSION['user_id'] && !isset($_SESSION['role'])) {
 }
 
 try {
-    // Fetch all travel expenses for the user including meter photos
+    // Fetch all travel expenses for the user including meter photos and resubmission data
     $stmt = $pdo->prepare("
         SELECT 
             id,
@@ -41,11 +41,23 @@ try {
             bill_file_path,
             meter_start_photo_path as meter_start_photo,
             meter_end_photo_path as meter_end_photo,
+            manager_status,
+            accountant_status,
+            hr_status,
+            manager_reason,
+            accountant_reason,
+            hr_reason,
+            original_expense_id,
+            resubmission_count,
+            is_resubmitted,
+            resubmitted_from,
+            resubmission_date,
+            max_resubmissions,
             created_at,
             updated_at
         FROM travel_expenses 
         WHERE user_id = ?
-        ORDER BY travel_date DESC
+        ORDER BY travel_date DESC, created_at DESC
     ");
     
     $stmt->execute([$user_id]);

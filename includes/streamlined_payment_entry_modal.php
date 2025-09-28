@@ -1,0 +1,2873 @@
+<!-- Streamlined Payment Entry Modal -->
+<div class="modal fade" id="streamlinedPaymentEntryModal" tabindex="-1" aria-labelledby="streamlinedPaymentEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content streamlined-modal">
+            <div class="modal-header streamlined-header">
+                <h5 class="modal-title streamlined-title" id="streamlinedPaymentEntryModalLabel">
+                    <div class="title-icon-wrapper">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    Payment Information
+                </h5>
+                <button type="button" class="btn-close streamlined-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="streamlinedPaymentEntryForm">
+                    <div class="row g-3">
+                        <!-- Project Type -->
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <label for="streamlinedProjectType" class="streamlined-label">
+                                <i class="fas fa-building-columns streamlined-icon-blue"></i>
+                                Project Type <span class="required-star">*</span>
+                            </label>
+                            <select class="streamlined-input" id="streamlinedProjectType" name="projectType" required>
+                                <option value="">Select Project Type</option>
+                                <option value="architecture">🏛️ Architecture</option>
+                                <option value="interior">🎨 Interior</option>
+                                <option value="construction">🏗️ Construction</option>
+                            </select>
+                        </div>
+
+                        <!-- Project Name -->
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <label for="streamlinedProjectName" class="streamlined-label">
+                                <i class="fas fa-project-diagram streamlined-icon-green"></i>
+                                Project Name <span class="required-star">*</span>
+                            </label>
+                            <select class="streamlined-input" id="streamlinedProjectName" name="projectName" required disabled>
+                                <option value="">First select project type</option>
+                            </select>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <label for="streamlinedPaymentDate" class="streamlined-label">
+                                <i class="fas fa-calendar-alt streamlined-icon-purple"></i>
+                                Date <span class="required-star">*</span>
+                            </label>
+                            <input type="date" class="streamlined-input" id="streamlinedPaymentDate" name="paymentDate" required>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <label for="streamlinedPaymentAmount" class="streamlined-label">
+                                <i class="fas fa-coins streamlined-icon-orange"></i>
+                                Amount <span class="required-star">*</span>
+                            </label>
+                            <div class="amount-input-wrapper">
+                                <span class="currency-symbol">₹</span>
+                                <input type="number" class="streamlined-input amount-input" id="streamlinedPaymentAmount" name="paymentAmount" 
+                                       placeholder="Enter amount" step="0.01" min="0" required>
+                            </div>
+                        </div>
+
+                        <!-- Payment Done Via -->
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <label for="streamlinedPaymentDoneVia" class="streamlined-label">
+                                <i class="fas fa-user-tie streamlined-icon-red"></i>
+                                Payment Done Via <span class="required-star">*</span>
+                            </label>
+                            <select class="streamlined-input" id="streamlinedPaymentDoneVia" name="paymentDoneVia" required>
+                                <option value="">Loading authorized users...</option>
+                            </select>
+                        </div>
+
+                        <!-- Payment Mode -->
+                        <div class="col-xl-4 col-lg-6 col-md-6">
+                            <label for="streamlinedPaymentMode" class="streamlined-label">
+                                <i class="fas fa-credit-card streamlined-icon-indigo"></i>
+                                Payment Mode <span class="required-star">*</span>
+                            </label>
+                            <select class="streamlined-input" id="streamlinedPaymentMode" name="paymentMode" required onchange="togglePaymentDetails()">
+                                <option value="">Select Payment Method</option>
+                                <!-- Split Payment Option -->
+                                <option value="split_payment">🔀 Split Payment (Multiple Payments)</option>
+                                <!-- Cash & Traditional Methods -->
+                                <option value="cash">💵 Cash</option>
+                                <option value="cheque">📄 Cheque</option>
+                                <option value="demand_draft">📜 Demand Draft (DD)</option>
+                                <option value="pay_order">📋 Pay Order</option>
+                                <option value="bankers_cheque">📄 Banker's Cheque</option>
+                                <option value="money_order">📮 Money Order</option>
+                                <option value="postal_order">📮 Postal Order</option>
+                                
+                                <!-- Banking Transfer Methods -->
+                                <option value="rtgs">🌐 RTGS (Real Time Gross Settlement)</option>
+                                <option value="neft">💳 NEFT (National Electronic Funds Transfer)</option>
+                                <option value="imps">⚡ IMPS (Immediate Payment Service)</option>
+                                <option value="net_banking">🌐 Net Banking</option>
+                                <option value="bank_transfer">🏦 Bank Transfer</option>
+                                <option value="wire_transfer">💰 Wire Transfer</option>
+                                <option value="swift">🌍 SWIFT Transfer</option>
+                                <option value="ach">🏦 ACH (Automated Clearing House)</option>
+                                <option value="ecs">🏦 ECS (Electronic Clearing Service)</option>
+                                <option value="nach">🏦 NACH (National Automated Clearing House)</option>
+                                
+                                <!-- UPI & Digital Payments -->
+                                <option value="upi">📱 UPI (Unified Payments Interface)</option>
+                                <option value="bhim">📱 BHIM UPI</option>
+                                <option value="paytm">📱 Paytm</option>
+                                <option value="phonepe">📱 PhonePe</option>
+                                <option value="googlepay">📱 Google Pay (GPay)</option>
+                                <option value="amazonpay">📱 Amazon Pay</option>
+                                <option value="mobikwik">💱 MobiKwik</option>
+                                <option value="freecharge">💱 FreeCharge</option>
+                                <option value="airtel_money">📱 Airtel Money</option>
+                                <option value="jio_money">📱 Jio Money</option>
+                                <option value="olamoney">📱 Ola Money</option>
+                                <option value="payumoney">💱 PayUmoney</option>
+                                <option value="payzapp">📱 PayZapp (HDFC)</option>
+                                <option value="icici_pockets">📱 Pockets (ICICI)</option>
+                                <option value="sbi_buddy">📱 SBI Buddy</option>
+                                <option value="axis_pay">📱 Axis Pay</option>
+                                
+                                <!-- Card Payments -->
+                                <option value="credit_card">💳 Credit Card</option>
+                                <option value="debit_card">💳 Debit Card</option>
+                                <option value="rupay">💳 RuPay Card</option>
+                                <option value="visa">💳 Visa Card</option>
+                                <option value="mastercard">💳 Mastercard</option>
+                                <option value="maestro">💳 Maestro Card</option>
+                                <option value="amex">💳 American Express</option>
+                                <option value="diners">💳 Diners Club</option>
+                                <option value="forex_card">💳 Forex Card</option>
+                                
+
+                                <!-- Other Methods -->
+                                <option value="cash_deposit">💵 Cash Deposit</option>
+                                <option value="barter">🔄 Barter/Exchange</option>
+                                <option value="adjustment">📊 Adjustment</option>
+                                <option value="offset">🔄 Offset</option>
+                                <option value="other">❓ Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Payment Proof Image -->
+                        <div class="col-12">
+                            <label for="streamlinedPaymentProof" class="streamlined-label">
+                                <i class="fas fa-paperclip streamlined-icon-teal"></i>
+                                Payment Proof Image
+                            </label>
+                            <div class="streamlined-upload-area-small">
+                                <div class="upload-content-small">
+                                    <div class="upload-icon-wrapper-small">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text-small">
+                                        <h6>Drop file here or click to browse</h6>
+                                        <p>PDF, JPG, PNG • Max 5MB</p>
+                                    </div>
+                                </div>
+                                <input type="file" class="file-input" id="streamlinedPaymentProof" name="paymentProof" 
+                                       accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileSelection(this)">
+                                <div id="selectedFileName" class="selected-file-small" style="display: none;">
+                                    <i class="fas fa-file-check"></i>
+                                    <span id="fileName"></span>
+                                    <button type="button" class="remove-file-small" onclick="removeSelectedFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Payment Details (Hidden by default) -->
+                        <div class="col-12" id="paymentDetailsSection" style="display: none;">
+                            <div class="payment-details-container">
+                                <div id="paymentEntriesList">
+                                    <!-- First payment entry -->
+                                    <div class="payment-entry-row" data-entry-index="0">
+                                        <div class="row g-2">
+                                            <!-- Payment Type -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <label for="streamlinedPaymentType_0" class="streamlined-label-small">
+                                                    <i class="fas fa-tag streamlined-icon-pink"></i>
+                                                    Type
+                                                </label>
+                                                <select class="streamlined-input-small" id="streamlinedPaymentType_0" name="paymentType[]" onchange="handlePaymentTypeChange(0, this.value)">
+                                                    <option value="">Select Type</option>
+                                                    <option value="advance">💰 Advance</option>
+                                                    <option value="allowance">💼 Allowance</option>
+                                                    <option value="bonus">🎁 Bonus</option>
+                                                    <option value="commission">📈 Commission</option>
+                                                    <option value="compensation">⚖️ Compensation</option>
+                                                    <option value="consultant_fee">🎯 Consultant Fee</option>
+                                                    <option value="contractor">🏗️ Contractor</option>
+                                                    <option value="deposit">🏦 Deposit</option>
+                                                    <option value="emergency">🚨 Emergency Payment</option>
+                                                    <option value="equipment">⚙️ Equipment Payment</option>
+                                                    <option value="expense_reimbursement">📄 Expense Reimbursement</option>
+                                                    <option value="fine">⚠️ Fine/Penalty</option>
+                                                    <option value="full">✅ Full Payment</option>
+                                                    <option value="incentive">🏆 Incentive</option>
+                                                    <option value="insurance">🛡️ Insurance</option>
+                                                    <option value="labour">👷 Labour</option>
+                                                    <option value="loan">💳 Loan</option>
+                                                    <option value="maintenance">🔧 Maintenance</option>
+                                                    <option value="material_supplier">🧱 Material Supplier</option>
+                                                    <option value="overtime">⏰ Overtime</option>
+                                                    <option value="partial">📊 Partial</option>
+                                                    <option value="petty_cash">💵 Petty Cash</option>
+                                                    <option value="professional_fee">👨‍💼 Professional Fee</option>
+                                                    <option value="refund">🔄 Refund</option>
+                                                    <option value="rent">🏠 Rent</option>
+                                                    <option value="salary">💰 Salary</option>
+                                                    <option value="service_charge">⚡ Service Charge</option>
+                                                    <option value="tax">📋 Tax Payment</option>
+                                                    <option value="transportation">🚚 Transportation</option>
+                                                    <option value="utility">💡 Utility Bill</option>
+                                                    <option value="vendor">🏢 Vendor</option>
+                                                    <option value="wages">💸 Wages</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Payment To -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <label for="streamlinedPaymentTo_0" class="streamlined-label-small">
+                                                    <i class="fas fa-user-friends streamlined-icon-cyan"></i>
+                                                    To
+                                                </label>
+                                                <!-- Default dropdown (hidden when vendor/labour selected) -->
+                                                <select class="streamlined-input-small" id="streamlinedPaymentTo_0" name="paymentTo[]" style="display: block;">
+                                                    <option value="">Select Recipient</option>
+                                                    <!-- Construction & Labor -->
+                                                    <option value="labour">👷 Labour/Workers</option>
+                                                    <option value="contractor">🏗️ Contractor</option>
+                                                    <option value="subcontractor">🔧 Sub-contractor</option>
+                                                    <option value="architect">📐 Architect</option>
+                                                    <option value="engineer">⚙️ Engineer</option>
+                                                    <option value="supervisor">👨‍💼 Site Supervisor</option>
+                                                    <option value="foreman">👷‍♂️ Foreman</option>
+                                                                                    
+                                                    <!-- Suppliers -->
+                                                    <option value="material_supplier">🧱 Material Supplier</option>
+                                                    <option value="cement_supplier">🏭 Cement Supplier</option>
+                                                    <option value="steel_supplier">🔩 Steel/Iron Supplier</option>
+                                                    <option value="sand_supplier">⛱️ Sand Supplier</option>
+                                                    <option value="brick_supplier">🧱 Brick Supplier</option>
+                                                    <option value="tile_supplier">🪟 Tile Supplier</option>
+                                                    <option value="paint_supplier">🎨 Paint Supplier</option>
+                                                    <option value="hardware_supplier">🔨 Hardware Supplier</option>
+                                                    <option value="electrical_supplier">⚡ Electrical Supplier</option>
+                                                    <option value="plumbing_supplier">🚿 Plumbing Supplier</option>
+                                                                                    
+                                                    <!-- Vendors & Services -->
+                                                    <option value="vendor">🏢 General Vendor</option>
+                                                    <option value="equipment_vendor">🚛 Equipment Vendor</option>
+                                                    <option value="transport_vendor">🚚 Transport Vendor</option>
+                                                    <option value="rental_vendor">📦 Equipment Rental</option>
+                                                    <option value="security_vendor">🛡️ Security Vendor</option>
+                                                    <option value="cleaning_vendor">🧹 Cleaning Vendor</option>
+                                                    <option value="catering_vendor">🍽️ Catering Vendor</option>
+                                                                                    
+                                                    <!-- Employees & Staff -->
+                                                    <option value="employee">👨‍💼 Employee</option>
+                                                    <option value="manager">👔 Manager</option>
+                                                    <option value="accountant">📊 Accountant</option>
+                                                    <option value="hr_staff">👥 HR Staff</option>
+                                                    <option value="office_staff">🏢 Office Staff</option>
+                                                    <option value="sales_team">💼 Sales Team</option>
+                                                                                    
+                                                    <!-- Professional Services -->
+                                                    <option value="consultant">🎯 Consultant</option>
+                                                    <option value="legal_advisor">⚖️ Legal Advisor</option>
+                                                    <option value="ca_auditor">📋 CA/Auditor</option>
+                                                    <option value="designer">🎨 Designer</option>
+                                                    <option value="surveyor">📏 Surveyor</option>
+                                                                                    
+                                                    <!-- Government & Authorities -->
+                                                    <option value="government">🏛️ Government Authority</option>
+                                                    <option value="municipality">🏘️ Municipality</option>
+                                                    <option value="electricity_board">⚡ Electricity Board</option>
+                                                    <option value="water_department">💧 Water Department</option>
+                                                    <option value="tax_department">💰 Tax Department</option>
+                                                                                    
+                                                    <!-- Financial & Insurance -->
+                                                    <option value="bank">🏦 Bank</option>
+                                                    <option value="insurance_company">🛡️ Insurance Company</option>
+                                                    <option value="loan_provider">💳 Loan Provider</option>
+                                                                                    
+                                                    <!-- Others -->
+                                                    <option value="client">👤 Client</option>
+                                                    <option value="landlord">🏠 Landlord/Property Owner</option>
+                                                    <option value="utility_company">💡 Utility Company</option>
+                                                    <option value="other">❓ Other</option>
+                                                </select>
+                                                
+                                                <!-- Search input (shown when vendor/labour selected) -->
+                                                <div class="payment-to-search-container" id="paymentToSearchContainer_0" style="display: none; position: relative;">
+                                                    <input type="text" class="streamlined-input-small payment-to-search" 
+                                                           id="paymentToSearch_0" 
+                                                           name="paymentToName[]" 
+                                                           placeholder="Search and select..." 
+                                                           autocomplete="off"
+                                                           oninput="searchPaymentRecipient(0, this.value)">
+                                                    <div class="search-suggestions" id="searchSuggestions_0"></div>
+                                                    <input type="hidden" id="paymentToId_0" name="paymentToId[]">
+                                                </div>
+                                            </div>
+
+                                            <!-- Payment For -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <label for="streamlinedPaymentFor_0" class="streamlined-label-small">
+                                                    <i class="fas fa-clipboard-list streamlined-icon-lime"></i>
+                                                    For
+                                                </label>
+                                                <input type="text" class="streamlined-input-small" id="streamlinedPaymentFor_0" name="paymentFor[]" placeholder="Describe what this payment is for..." style="display: block;">
+                                
+                                <!-- Labour Payment For Dropdown (hidden by default) -->
+                                <div class="labour-payment-for-container" id="labourPaymentForContainer_0" style="display: none; position: relative;">
+                                    <select class="streamlined-input-small" id="labourPaymentForSelect_0" name="labourPaymentFor[]" onchange="handleLabourPaymentForChange(0, this.value)">
+                                        <option value="">Select Labour Payment Purpose</option>
+                                        <option value="daily_wage">💰 Daily Wage</option>
+                                        <option value="overtime_wage">⏰ Overtime Wage</option>
+                                        <option value="food">🍽️ Food</option>
+                                        <option value="transportation">🚚 Transportation</option>
+                                        <option value="travelling">✈️ Travelling</option>
+                                        <option value="custom">✏️ Custom (Write your own)</option>
+                                    </select>
+                                    
+                                    <!-- Custom Text Input (hidden by default) -->
+                                    <div class="custom-payment-for-container" id="customPaymentForContainer_0" style="display: none;">
+                                        <div class="custom-input-wrapper">
+                                            <button type="button" class="back-button" onclick="backToLabourDropdown(0)" title="Back to options">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </button>
+                                            <input type="text" class="streamlined-input-small custom-payment-input" id="customPaymentFor_0" name="customPaymentFor[]" placeholder="Enter custom payment purpose...">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Vendor Payment For Dropdown (hidden by default) -->
+                                <div class="vendor-payment-for-container" id="vendorPaymentForContainer_0" style="display: none; position: relative;">
+                                    <select class="streamlined-input-small" id="vendorPaymentForSelect_0" name="vendorPaymentFor[]" onchange="handleVendorPaymentForChange(0, this.value)">
+                                        <option value="">Select Vendor Payment Purpose</option>
+                                        <option value="material">🧱 Material</option>
+                                        <option value="transport">🚚 Transport</option>
+                                        <option value="food">🍽️ Food & Catering</option>
+                                        <option value="labour">👷 Labour Services</option>
+                                        <option value="equipment">⚙️ Equipment</option>
+                                        <option value="rental">📦 Equipment Rental</option>
+                                        <option value="maintenance">🔧 Maintenance</option>
+                                        <option value="security">🛡️ Security Services</option>
+                                        <option value="cleaning">🧹 Cleaning Services</option>
+                                        <option value="utilities">💡 Utilities</option>
+                                        <option value="office_supplies">🗺️ Office Supplies</option>
+                                        <option value="software">💻 Software & Licenses</option>
+                                        <option value="professional_services">👨‍💼 Professional Services</option>
+                                        <option value="consultation">🎯 Consultation</option>
+                                        <option value="insurance">🛡️ Insurance</option>
+                                        <option value="advertising">📰 Advertising & Marketing</option>
+                                        <option value="travel">✈️ Travel & Accommodation</option>
+                                        <option value="fuel">⛽ Fuel & Gas</option>
+                                        <option value="raw_materials">🛢️ Raw Materials</option>
+                                        <option value="custom">✏️ Custom (Write your own)</option>
+                                    </select>
+                                    
+                                    <!-- Custom Text Input for Vendor (hidden by default) -->
+                                    <div class="custom-vendor-payment-for-container" id="customVendorPaymentForContainer_0" style="display: none;">
+                                        <div class="custom-input-wrapper">
+                                            <button type="button" class="back-button" onclick="backToVendorDropdown(0)" title="Back to options">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </button>
+                                            <input type="text" class="streamlined-input-small custom-payment-input" id="customVendorPaymentFor_0" name="customVendorPaymentFor[]" placeholder="Enter custom vendor payment purpose...">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Material Supplier Payment For Dropdown (hidden by default) -->
+                                <div class="material-payment-for-container" id="materialPaymentForContainer_0" style="display: none; position: relative;">
+                                    <select class="streamlined-input-small" id="materialPaymentForSelect_0" name="materialPaymentFor[]" onchange="handleMaterialPaymentForChange(0, this.value)">
+                                        <option value="">Select Building Material</option>
+                                        <option value="cement">🏭 Cement</option>
+                                        <option value="sand">🗺️ Sand</option>
+                                        <option value="brick">🧱 Brick</option>
+                                        <option value="dust">🌫️ Stone Dust</option>
+                                        <option value="gravel">🪨 Gravel</option>
+                                        <option value="steel">🔩 Steel/Iron Bars</option>
+                                        <option value="tiles">🪟 Tiles</option>
+                                        <option value="marble">✨ Marble</option>
+                                        <option value="granite">🗿 Granite</option>
+                                        <option value="paint">🎨 Paint</option>
+                                        <option value="wood">🌲 Wood/Timber</option>
+                                        <option value="plywood">🪚 Plywood</option>
+                                        <option value="glass">🪟 Glass</option>
+                                        <option value="aluminium">🔩 Aluminium</option>
+                                        <option value="pipes">🔧 Pipes (PVC/Metal)</option>
+                                        <option value="electrical_wire">⚡ Electrical Wire</option>
+                                        <option value="roofing">🏠 Roofing Material</option>
+                                        <option value="insulation">🧱 Insulation Material</option>
+                                        <option value="concrete">🏭 Concrete Mix</option>
+                                        <option value="mortar">🧱 Mortar</option>
+                                        <option value="hardware">🔨 Hardware (Nuts/Bolts)</option>
+                                        <option value="waterproofing">💧 Waterproofing Material</option>
+                                        <option value="adhesive">🥅 Adhesive/Glue</option>
+                                        <option value="sealant">🔧 Sealant</option>
+                                        <option value="flooring">🗺️ Flooring Material</option>
+                                        <option value="custom">✏️ Custom (Write your own)</option>
+                                    </select>
+                                    
+                                    <!-- Custom Text Input for Material (hidden by default) -->
+                                    <div class="custom-material-payment-for-container" id="customMaterialPaymentForContainer_0" style="display: none;">
+                                        <div class="custom-input-wrapper">
+                                            <button type="button" class="back-button" onclick="backToMaterialDropdown(0)" title="Back to options">
+                                                <i class="fas fa-arrow-left"></i>
+                                            </button>
+                                            <input type="text" class="streamlined-input-small custom-payment-input" id="customMaterialPaymentFor_0" name="customMaterialPaymentFor[]" placeholder="Enter custom building material...">
+                                        </div>
+                                    </div>
+                                </div>
+                                            </div>
+
+                                            <!-- Payment Amount -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <label for="streamlinedPaymentAmount_0" class="streamlined-label-small">
+                                                    <i class="fas fa-coins streamlined-icon-amber"></i>
+                                                    Amount
+                                                </label>
+                                                <div class="amount-input-wrapper-small">
+                                                    <span class="currency-symbol-small">₹</span>
+                                                    <input type="number" class="streamlined-input-small amount-input-small" id="streamlinedPaymentAmount_0" name="paymentAmount[]" 
+                                                           placeholder="0.00" step="0.01" min="0">
+                                                </div>
+                                            </div>
+
+                                            <!-- Payment Mode -->
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4">
+                                                <label for="streamlinedEntryPaymentMode_0" class="streamlined-label-small">
+                                                    <i class="fas fa-credit-card streamlined-icon-emerald"></i>
+                                                    Payment Mode
+                                                </label>
+                                                <select class="streamlined-input-small" id="streamlinedEntryPaymentMode_0" name="entryPaymentMode[]">
+                                                    <option value="">Select Payment Method</option>
+                                                    <!-- Cash & Traditional Methods -->
+                                                    <option value="cash">💵 Cash</option>
+                                                    <option value="cheque">📄 Cheque</option>
+                                                    <option value="demand_draft">📜 Demand Draft (DD)</option>
+                                                    <option value="pay_order">📋 Pay Order</option>
+                                                    <option value="bankers_cheque">📄 Banker's Cheque</option>
+                                                    <option value="money_order">📮 Money Order</option>
+                                                    <option value="postal_order">📮 Postal Order</option>
+                                                                                
+                                                    <!-- Banking Transfer Methods -->
+                                                    <option value="rtgs">🌐 RTGS (Real Time Gross Settlement)</option>
+                                                    <option value="neft">💳 NEFT (National Electronic Funds Transfer)</option>
+                                                    <option value="imps">⚡ IMPS (Immediate Payment Service)</option>
+                                                    <option value="net_banking">🌐 Net Banking</option>
+                                                    <option value="bank_transfer">🏦 Bank Transfer</option>
+                                                    <option value="wire_transfer">💰 Wire Transfer</option>
+                                                    <option value="swift">🌍 SWIFT Transfer</option>
+                                                    <option value="ach">🏦 ACH (Automated Clearing House)</option>
+                                                    <option value="ecs">🏦 ECS (Electronic Clearing Service)</option>
+                                                    <option value="nach">🏦 NACH (National Automated Clearing House)</option>
+                                                                                
+                                                    <!-- UPI & Digital Payments -->
+                                                    <option value="upi">📱 UPI (Unified Payments Interface)</option>
+                                                    <option value="bhim">📱 BHIM UPI</option>
+                                                    <option value="paytm">📱 Paytm</option>
+                                                    <option value="phonepe">📱 PhonePe</option>
+                                                    <option value="googlepay">📱 Google Pay (GPay)</option>
+                                                    <option value="amazonpay">📱 Amazon Pay</option>
+                                                    <option value="mobikwik">💱 MobiKwik</option>
+                                                    <option value="freecharge">💱 FreeCharge</option>
+                                                    <option value="airtel_money">📱 Airtel Money</option>
+                                                    <option value="jio_money">📱 Jio Money</option>
+                                                    <option value="olamoney">📱 Ola Money</option>
+                                                    <option value="payumoney">💱 PayUmoney</option>
+                                                    <option value="payzapp">📱 PayZapp (HDFC)</option>
+                                                    <option value="icici_pockets">📱 Pockets (ICICI)</option>
+                                                    <option value="sbi_buddy">📱 SBI Buddy</option>
+                                                    <option value="axis_pay">📱 Axis Pay</option>
+                                                                                
+                                                    <!-- Card Payments -->
+                                                    <option value="credit_card">💳 Credit Card</option>
+                                                    <option value="debit_card">💳 Debit Card</option>
+                                                    <option value="rupay">💳 RuPay Card</option>
+                                                    <option value="visa">💳 Visa Card</option>
+                                                    <option value="mastercard">💳 Mastercard</option>
+                                                    <option value="maestro">💳 Maestro Card</option>
+                                                    <option value="amex">💳 American Express</option>
+                                                    <option value="diners">💳 Diners Club</option>
+                                                    <option value="forex_card">💳 Forex Card</option>
+                                                                                
+                                                    <!-- Other Methods -->
+                                                    <option value="cash_deposit">💵 Cash Deposit</option>
+                                                    <option value="barter">🔄 Barter/Exchange</option>
+                                                    <option value="adjustment">📊 Adjustment</option>
+                                                    <option value="offset">🔄 Offset</option>
+                                                    <option value="other">❓ Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Add Another Payment Entry Button -->
+                                <div class="add-payment-entry-section">
+                                    <button type="button" class="add-payment-entry-btn" onclick="addAnotherPaymentEntry()">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Add Another Payment Entry
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer streamlined-footer">
+                <button type="button" class="streamlined-btn streamlined-btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="streamlined-btn streamlined-btn-primary" onclick="submitStreamlinedPaymentEntry()">
+                    <i class="fas fa-check"></i>
+                    Save Payment Entry
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ========== STREAMLINED MODAL STYLES ========== */
+
+/* Modal Container */
+.streamlined-modal {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+/* Custom Modal Sizing for Better Screen Utilization */
+@media (min-width: 1200px) {
+    #streamlinedPaymentEntryModal .modal-xl {
+        max-width: 1400px;
+    }
+}
+
+@media (min-width: 1400px) {
+    #streamlinedPaymentEntryModal .modal-xl {
+        max-width: 1600px;
+    }
+}
+
+@media (min-width: 1600px) {
+    #streamlinedPaymentEntryModal .modal-xl {
+        max-width: 1800px;
+    }
+}
+
+/* Header */
+.streamlined-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 25px 30px;
+    position: relative;
+}
+
+.streamlined-title {
+    color: white;
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.streamlined-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    color: white;
+    opacity: 1;
+}
+
+.streamlined-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+/* Form Body */
+.modal-body {
+    padding: 30px;
+    background: #fafbfc;
+}
+
+/* Labels */
+.streamlined-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+/* Colorful Icons */
+.streamlined-icon-blue { color: #4299e1; }
+.streamlined-icon-green { color: #48bb78; }
+.streamlined-icon-purple { color: #9f7aea; }
+.streamlined-icon-orange { color: #ed8936; }
+.streamlined-icon-red { color: #f56565; }
+.streamlined-icon-indigo { color: #667eea; }
+.streamlined-icon-teal { color: #38b2ac; }
+.streamlined-icon-pink { color: #ed64a6; }
+.streamlined-icon-cyan { color: #0bc5ea; }
+.streamlined-icon-lime { color: #68d391; }
+.streamlined-icon-amber { color: #fbd38d; }
+.streamlined-icon-emerald { color: #34d399; }
+
+/* Required Star */
+.required-star {
+    color: #f56565;
+    font-weight: bold;
+    margin-left: 2px;
+}
+
+/* Input Fields */
+.streamlined-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.streamlined-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+.streamlined-input:disabled {
+    background: #f7fafc;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+
+/* Amount Input Special Styling */
+.amount-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 16px;
+    color: #ed8936;
+    font-weight: bold;
+    font-size: 1.1rem;
+    z-index: 2;
+}
+
+.amount-input {
+    padding-left: 40px;
+}
+
+/* Small Amount Input for Payment Entries */
+.amount-input-wrapper-small {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.currency-symbol-small {
+    position: absolute;
+    left: 8px;
+    color: #ed8936;
+    font-weight: bold;
+    font-size: 0.8rem;
+    z-index: 2;
+}
+
+.amount-input-small {
+    padding-left: 20px !important;
+    width: 100%;
+}
+
+/* Payment Details Section */
+.payment-details-container {
+    background: linear-gradient(135deg, #f7fafc, #edf2f7);
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-details-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4299e1, #48bb78, #9f7aea, #ed8936, #f56565);
+}
+
+/* Small Form Elements */
+.streamlined-label-small {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+}
+
+.streamlined-input-small {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: white;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.streamlined-input-small:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Payment Details Animation */
+#paymentDetailsSection {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top;
+}
+
+#paymentDetailsSection.show {
+    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Payment Entry Rows */
+.payment-entry-row {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background: white;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.payment-entry-row:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.payment-entry-row:first-child {
+    border-left: 4px solid #667eea;
+}
+
+.payment-entry-row:not(:first-child) {
+    border-left: 4px solid #48bb78;
+}
+
+/* Ensure proper grid layout in payment entries */
+.payment-entry-row .row {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.payment-entry-row .col-xl-2,
+.payment-entry-row .col-xl-3,
+.payment-entry-row .col-lg-2,
+.payment-entry-row .col-lg-3,
+.payment-entry-row .col-md-4,
+.payment-entry-row .col-md-6,
+.payment-entry-row .col-6 {
+    padding: 0 8px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Force single row layout for payment entries */
+.payment-entry-row .row {
+    margin: 0;
+    display: flex;
+    flex-wrap: nowrap !important; /* Prevent wrapping to new lines */
+    align-items: stretch;
+    min-height: 60px;
+}
+
+.payment-entry-row .col-xl-2,
+.payment-entry-row .col-xl-3,
+.payment-entry-row .col-lg-2,
+.payment-entry-row .col-lg-3,
+.payment-entry-row .col-md-2,
+.payment-entry-row .col-md-3,
+.payment-entry-row .col-sm-2,
+.payment-entry-row .col-sm-3,
+.payment-entry-row .col-2,
+.payment-entry-row .col-3 {
+    padding: 0 4px;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+    min-width: 0; /* Allow fields to shrink below their content size */
+}
+
+/* Force proper Bootstrap grid behavior for dynamic entries */
+.payment-entry-row .row > [class*="col-"] {
+    position: relative;
+    width: 100%;
+    padding-right: 4px;
+    padding-left: 4px;
+    flex-shrink: 1;
+}
+
+/* Compact form elements for single row */
+.payment-entry-row .streamlined-input-small,
+.payment-entry-row .payment-to-search {
+    height: 32px;
+    min-height: 32px;
+    box-sizing: border-box;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+}
+
+/* Compact labels for single row */
+.payment-entry-row .streamlined-label-small {
+    margin-bottom: 4px;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Fix form group spacing in payment entries */
+.payment-entry-row .form-group {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+}
+
+/* Fix dropdown display in payment entries */
+.payment-entry-row .payment-to-search-container {
+    position: relative;
+    width: 100%;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.payment-entry-row .search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1001;
+    display: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive single row adjustments */
+@media (max-width: 768px) {
+    .payment-entry-row .col-2,
+    .payment-entry-row .col-3 {
+        min-width: 80px; /* Minimum width to maintain readability */
+    }
+    
+    .payment-entry-row .streamlined-input-small,
+    .payment-entry-row .payment-to-search {
+        font-size: 0.75rem;
+        padding: 3px 6px;
+    }
+    
+    .payment-entry-row .streamlined-label-small {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .payment-entry-row .row {
+        flex-wrap: nowrap !important;
+        overflow-x: auto; /* Allow horizontal scrolling on very small screens */
+    }
+    
+    .payment-entry-row .col-2,
+    .payment-entry-row .col-3 {
+        min-width: 70px;
+        flex-shrink: 0;
+    }
+}
+
+/* Responsive adjustments for payment entries */
+@media (max-width: 1400px) {
+    .payment-entry-row .col-xl-2 {
+        flex: 0 0 20%;
+        max-width: 20%;
+    }
+    .payment-entry-row .col-xl-3 {
+        flex: 0 0 30%;
+        max-width: 30%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .payment-entry-row .col-xl-2 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+    .payment-entry-row .col-xl-3 {
+        flex: 0 0 37.5%;
+        max-width: 37.5%;
+    }
+}
+
+@media (max-width: 992px) {
+    .payment-entry-row .col-lg-2 {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+    }
+    .payment-entry-row .col-lg-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    .payment-entry-row .col-md-4,
+    .payment-entry-row .col-md-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    
+    .payment-entry-row .col-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 576px) {
+    .payment-entry-row .col-xl-2,
+    .payment-entry-row .col-xl-3,
+    .payment-entry-row .col-lg-2,
+    .payment-entry-row .col-lg-3,
+    .payment-entry-row .col-md-4,
+    .payment-entry-row .col-md-6,
+    .payment-entry-row .col-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Remove Entry Button */
+.remove-entry-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #fed7d7;
+    border: none;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f56565;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.remove-entry-btn:hover {
+    background: #feb2b2;
+    transform: scale(1.1);
+}
+
+/* Add Payment Entry Section */
+.add-payment-entry-section {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 2px dashed #e2e8f0;
+    display: none; /* Initially hidden */
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.add-payment-entry-btn {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+}
+
+.add-payment-entry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    background: linear-gradient(135deg, #38a169, #2f855a);
+}
+
+.add-payment-entry-btn i {
+    font-size: 1rem;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scaleY(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scaleY(1);
+    }
+}
+
+/* Entry Addition Animation */
+.payment-entry-row.adding {
+    animation: entrySlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes entrySlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* Upload Area */
+.streamlined-upload-area {
+    border: 2px dashed #cbd5e0;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.streamlined-upload-area:hover {
+    border-color: #38b2ac;
+    background: #f0fdfa;
+    transform: translateY(-2px);
+}
+
+/* Small Upload Area */
+.streamlined-upload-area-small {
+    border: 2px dashed #cbd5e0;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.streamlined-upload-area-small:hover {
+    border-color: #38b2ac;
+    background: #f0fdfa;
+    transform: translateY(-1px);
+}
+
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.upload-content-small {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
+
+.upload-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #38b2ac, #319795);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 25px rgba(56, 178, 172, 0.3);
+}
+
+.upload-icon-wrapper-small {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #38b2ac, #319795);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3);
+    flex-shrink: 0;
+}
+
+.upload-text h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.upload-text p {
+    color: #718096;
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+}
+
+.upload-text-small h6 {
+    color: #2d3748;
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.upload-text-small p {
+    color: #718096;
+    margin: 2px 0 0 0;
+    font-size: 0.75rem;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Selected File Display */
+.selected-file {
+    background: #e6fffa;
+    border: 1px solid #38b2ac;
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    color: #2d3748;
+}
+
+.selected-file i {
+    color: #38b2ac;
+}
+
+.selected-file-small {
+    background: #e6fffa;
+    border: 1px solid #38b2ac;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    color: #2d3748;
+    font-size: 0.85rem;
+}
+
+.selected-file-small i {
+    color: #38b2ac;
+}
+
+.remove-file {
+    background: #fed7d7;
+    border: none;
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f56565;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.2s ease;
+}
+
+.remove-file:hover {
+    background: #feb2b2;
+}
+
+.remove-file-small {
+    background: #fed7d7;
+    border: none;
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f56565;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.remove-file-small:hover {
+    background: #feb2b2;
+}
+
+/* Footer */
+.streamlined-footer {
+    background: white;
+    border: none;
+    padding: 20px 30px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Buttons */
+.streamlined-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    outline: none;
+}
+
+.streamlined-btn-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.streamlined-btn-secondary:hover {
+    background: #cbd5e0;
+    transform: translateY(-1px);
+}
+
+.streamlined-btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.streamlined-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .streamlined-modal {
+        margin: 10px;
+        border-radius: 16px;
+    }
+    
+    .streamlined-header {
+        padding: 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .streamlined-footer {
+        padding: 15px 20px;
+        flex-direction: column;
+    }
+    
+    .streamlined-btn {
+        justify-content: center;
+    }
+    
+    .upload-content {
+        gap: 12px;
+    }
+    
+    .upload-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Animation Effects */
+.streamlined-modal {
+    animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Loading States */
+.streamlined-input:disabled {
+    background: #f7fafc;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+
+/* Focus Ring for Accessibility */
+.streamlined-input:focus,
+.streamlined-btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Payment To Search Styles */
+.payment-to-search-container {
+    position: relative;
+}
+
+.payment-to-search {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: white;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.payment-to-search:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.search-suggestions.show {
+    display: block;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f7fafc;
+    font-size: 0.85rem;
+    color: #2d3748;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: #f7fafc;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item.highlighted {
+    background-color: #e6fffa;
+    color: #2d3748;
+}
+
+.no-results {
+    padding: 12px;
+    text-align: center;
+    color: #718096;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.add-new-suggestion {
+    padding: 8px 12px;
+    background-color: #f0fff4;
+    border-top: 1px solid #e2e8f0;
+    color: #38a169;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.add-new-suggestion:hover {
+    background-color: #e6fffa;
+}
+
+/* Labour Payment For Custom Input Styles */
+.labour-payment-for-container {
+    position: relative;
+    width: 100%;
+}
+
+.vendor-payment-for-container {
+    position: relative;
+    width: 100%;
+}
+
+.material-payment-for-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-payment-for-container,
+.custom-vendor-payment-for-container,
+.custom-material-payment-for-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.back-button {
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #e2e8f0;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    font-size: 0.7rem;
+}
+
+.back-button:hover {
+    background: #cbd5e0;
+    color: #2d3748;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.custom-payment-input {
+    padding-left: 30px !important;
+    width: 100%;
+}
+
+/* Animation for switching between dropdown and text input */
+.labour-payment-for-container,
+.vendor-payment-for-container,
+.material-payment-for-container,
+.custom-payment-for-container,
+.custom-vendor-payment-for-container,
+.custom-material-payment-for-container {
+    transition: all 0.3s ease;
+}
+
+.labour-payment-for-container.show,
+.vendor-payment-for-container.show,
+.material-payment-for-container.show,
+.custom-payment-for-container.show,
+.custom-vendor-payment-for-container.show,
+.custom-material-payment-for-container.show {
+    animation: fadeInSlide 0.3s ease;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+// Payment mode change handler to show/hide additional fields
+function togglePaymentDetails() {
+    const paymentModeSelect = document.getElementById('streamlinedPaymentMode');
+    const paymentDetailsSection = document.getElementById('paymentDetailsSection');
+    const addPaymentEntrySection = document.querySelector('.add-payment-entry-section');
+    
+    if (paymentModeSelect.value) {
+        // Show payment details section with animation
+        paymentDetailsSection.style.display = 'block';
+        paymentDetailsSection.classList.add('show');
+        
+        // Show or hide the "Add Another Payment Entry" button based on payment mode
+        if (paymentModeSelect.value === 'split_payment') {
+            // Show the add another entry button for split payments
+            addPaymentEntrySection.style.display = 'block';
+            addPaymentEntrySection.style.opacity = '1';
+        } else {
+            // Hide the add another entry button for single payment methods
+            addPaymentEntrySection.style.display = 'none';
+            addPaymentEntrySection.style.opacity = '0';
+        }
+        
+        // Set default payment mode for first entry
+        const entryPaymentModeSelect = document.getElementById('streamlinedEntryPaymentMode_0');
+        if (paymentModeSelect.value === 'cash' || paymentModeSelect.value === 'split_payment') {
+            entryPaymentModeSelect.value = 'cash';
+        } else if (paymentModeSelect.value) {
+            entryPaymentModeSelect.value = paymentModeSelect.value;
+        }
+        
+        // Scroll to the new section smoothly
+        setTimeout(() => {
+            paymentDetailsSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+            });
+        }, 200);
+    } else {
+        // Hide payment details section
+        paymentDetailsSection.classList.remove('show');
+        addPaymentEntrySection.style.display = 'none';
+        setTimeout(() => {
+            paymentDetailsSection.style.display = 'none';
+        }, 400);
+    }
+}
+
+// Add another payment entry
+function addAnotherPaymentEntry() {
+    const paymentEntriesList = document.getElementById('paymentEntriesList');
+    const currentEntries = paymentEntriesList.querySelectorAll('.payment-entry-row');
+    const newIndex = currentEntries.length;
+    
+    // Create new payment entry with proper Bootstrap structure
+    const newEntry = document.createElement('div');
+    newEntry.className = 'payment-entry-row adding';
+    newEntry.setAttribute('data-entry-index', newIndex);
+    
+    newEntry.innerHTML = `
+        <button type="button" class="remove-entry-btn" onclick="removePaymentEntry(this)" title="Remove this entry">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="row g-2">
+            <!-- Payment Type -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedPaymentType_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-tag streamlined-icon-pink"></i>
+                        Type
+                    </label>
+                    <select class="streamlined-input-small" id="streamlinedPaymentType_${newIndex}" name="paymentType[]" onchange="handlePaymentTypeChange(${newIndex}, this.value)">
+                        <option value="">Select Type</option>
+                        <option value="advance">💰 Advance</option>
+                        <option value="allowance">💼 Allowance</option>
+                        <option value="bonus">🎁 Bonus</option>
+                        <option value="commission">📈 Commission</option>
+                        <option value="compensation">⚖️ Compensation</option>
+                        <option value="consultant_fee">🎯 Consultant Fee</option>
+                        <option value="contractor">🏗️ Contractor</option>
+                        <option value="deposit">🏦 Deposit</option>
+                        <option value="emergency">🚨 Emergency Payment</option>
+                        <option value="equipment">⚙️ Equipment Payment</option>
+                        <option value="expense_reimbursement">📄 Expense Reimbursement</option>
+                        <option value="fine">⚠️ Fine/Penalty</option>
+                        <option value="full">✅ Full Payment</option>
+                        <option value="incentive">🏆 Incentive</option>
+                        <option value="insurance">🛡️ Insurance</option>
+                        <option value="labour">👷 Labour</option>
+                        <option value="loan">💳 Loan</option>
+                        <option value="maintenance">🔧 Maintenance</option>
+                        <option value="material_supplier">🧱 Material Supplier</option>
+                        <option value="overtime">⏰ Overtime</option>
+                        <option value="partial">📊 Partial</option>
+                        <option value="petty_cash">💵 Petty Cash</option>
+                        <option value="professional_fee">👨‍💼 Professional Fee</option>
+                        <option value="refund">🔄 Refund</option>
+                        <option value="rent">🏠 Rent</option>
+                        <option value="salary">💰 Salary</option>
+                        <option value="service_charge">⚡ Service Charge</option>
+                        <option value="tax">📋 Tax Payment</option>
+                        <option value="transportation">🚚 Transportation</option>
+                        <option value="utility">💡 Utility Bill</option>
+                        <option value="vendor">🏢 Vendor</option>
+                        <option value="wages">💸 Wages</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Payment To -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedPaymentTo_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-user-friends streamlined-icon-cyan"></i>
+                        To
+                    </label>
+                    <!-- Default dropdown -->
+                    <select class="streamlined-input-small" id="streamlinedPaymentTo_${newIndex}" name="paymentTo[]" style="display: block;">
+                        <option value="">Select Recipient</option>
+                        <option value="labour">👷 Labour/Workers</option>
+                        <option value="contractor">🏗️ Contractor</option>
+                        <option value="subcontractor">🔧 Sub-contractor</option>
+                        <option value="architect">📐 Architect</option>
+                        <option value="engineer">⚙️ Engineer</option>
+                        <option value="supervisor">👨‍💼 Site Supervisor</option>
+                        <option value="foreman">👷‍♂️ Foreman</option>
+                        <option value="material_supplier">🧱 Material Supplier</option>
+                        <option value="cement_supplier">🏭 Cement Supplier</option>
+                        <option value="steel_supplier">🔩 Steel/Iron Supplier</option>
+                        <option value="sand_supplier">⛱️ Sand Supplier</option>
+                        <option value="brick_supplier">🧱 Brick Supplier</option>
+                        <option value="tile_supplier">🪟 Tile Supplier</option>
+                        <option value="paint_supplier">🎨 Paint Supplier</option>
+                        <option value="hardware_supplier">🔨 Hardware Supplier</option>
+                        <option value="electrical_supplier">⚡ Electrical Supplier</option>
+                        <option value="plumbing_supplier">🚿 Plumbing Supplier</option>
+                        <option value="vendor">🏢 General Vendor</option>
+                        <option value="equipment_vendor">🚛 Equipment Vendor</option>
+                        <option value="transport_vendor">🚚 Transport Vendor</option>
+                        <option value="rental_vendor">📦 Equipment Rental</option>
+                        <option value="security_vendor">🛡️ Security Vendor</option>
+                        <option value="cleaning_vendor">🧹 Cleaning Vendor</option>
+                        <option value="catering_vendor">🍽️ Catering Vendor</option>
+                        <option value="employee">👨‍💼 Employee</option>
+                        <option value="manager">👔 Manager</option>
+                        <option value="accountant">📊 Accountant</option>
+                        <option value="hr_staff">👥 HR Staff</option>
+                        <option value="office_staff">🏢 Office Staff</option>
+                        <option value="sales_team">💼 Sales Team</option>
+                        <option value="consultant">🎯 Consultant</option>
+                        <option value="legal_advisor">⚖️ Legal Advisor</option>
+                        <option value="ca_auditor">📋 CA/Auditor</option>
+                        <option value="designer">🎨 Designer</option>
+                        <option value="surveyor">📏 Surveyor</option>
+                        <option value="government">🏛️ Government Authority</option>
+                        <option value="municipality">🏘️ Municipality</option>
+                        <option value="electricity_board">⚡ Electricity Board</option>
+                        <option value="water_department">💧 Water Department</option>
+                        <option value="tax_department">💰 Tax Department</option>
+                        <option value="bank">🏦 Bank</option>
+                        <option value="insurance_company">🛡️ Insurance Company</option>
+                        <option value="loan_provider">💳 Loan Provider</option>
+                        <option value="client">👤 Client</option>
+                        <option value="landlord">🏠 Landlord/Property Owner</option>
+                        <option value="utility_company">💡 Utility Company</option>
+                        <option value="other">❓ Other</option>
+                    </select>
+                    
+                    <!-- Search input -->
+                    <div class="payment-to-search-container" id="paymentToSearchContainer_${newIndex}" style="display: none; position: relative;">
+                        <input type="text" class="streamlined-input-small payment-to-search" 
+                               id="paymentToSearch_${newIndex}" 
+                               name="paymentToName[]" 
+                               placeholder="Search and select..." 
+                               autocomplete="off"
+                               oninput="searchPaymentRecipient(${newIndex}, this.value)">
+                        <div class="search-suggestions" id="searchSuggestions_${newIndex}"></div>
+                        <input type="hidden" id="paymentToId_${newIndex}" name="paymentToId[]">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment For -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedPaymentFor_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-clipboard-list streamlined-icon-lime"></i>
+                        For
+                    </label>
+                    <input type="text" class="streamlined-input-small" id="streamlinedPaymentFor_${newIndex}" name="paymentFor[]" placeholder="Describe what this payment is for..." style="display: block;">
+                    
+                    <!-- Labour Payment For Dropdown (hidden by default) -->
+                    <div class="labour-payment-for-container" id="labourPaymentForContainer_${newIndex}" style="display: none; position: relative;">
+                        <select class="streamlined-input-small" id="labourPaymentForSelect_${newIndex}" name="labourPaymentFor[]" onchange="handleLabourPaymentForChange(${newIndex}, this.value)">
+                            <option value="">Select Labour Payment Purpose</option>
+                            <option value="daily_wage">💰 Daily Wage</option>
+                            <option value="overtime_wage">⏰ Overtime Wage</option>
+                            <option value="food">🍽️ Food</option>
+                            <option value="transportation">🚚 Transportation</option>
+                            <option value="travelling">✈️ Travelling</option>
+                            <option value="custom">✏️ Custom (Write your own)</option>
+                        </select>
+                        
+                        <!-- Custom Text Input (hidden by default) -->
+                        <div class="custom-payment-for-container" id="customPaymentForContainer_${newIndex}" style="display: none;">
+                            <div class="custom-input-wrapper">
+                                <button type="button" class="back-button" onclick="backToLabourDropdown(${newIndex})" title="Back to options">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <input type="text" class="streamlined-input-small custom-payment-input" id="customPaymentFor_${newIndex}" name="customPaymentFor[]" placeholder="Enter custom payment purpose...">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vendor Payment For Dropdown (hidden by default) -->
+                    <div class="vendor-payment-for-container" id="vendorPaymentForContainer_${newIndex}" style="display: none; position: relative;">
+                        <select class="streamlined-input-small" id="vendorPaymentForSelect_${newIndex}" name="vendorPaymentFor[]" onchange="handleVendorPaymentForChange(${newIndex}, this.value)">
+                            <option value="">Select Vendor Payment Purpose</option>
+                            <option value="material">🧱 Material</option>
+                            <option value="transport">🚚 Transport</option>
+                            <option value="food">🍽️ Food & Catering</option>
+                            <option value="labour">👷 Labour Services</option>
+                            <option value="equipment">⚙️ Equipment</option>
+                            <option value="rental">📦 Equipment Rental</option>
+                            <option value="maintenance">🔧 Maintenance</option>
+                            <option value="security">🛡️ Security Services</option>
+                            <option value="cleaning">🧹 Cleaning Services</option>
+                            <option value="utilities">💡 Utilities</option>
+                            <option value="office_supplies">🗺️ Office Supplies</option>
+                            <option value="software">💻 Software & Licenses</option>
+                            <option value="professional_services">👨‍💼 Professional Services</option>
+                            <option value="consultation">🎯 Consultation</option>
+                            <option value="insurance">🛡️ Insurance</option>
+                            <option value="advertising">📰 Advertising & Marketing</option>
+                            <option value="travel">✈️ Travel & Accommodation</option>
+                            <option value="fuel">⛽ Fuel & Gas</option>
+                            <option value="raw_materials">🛢️ Raw Materials</option>
+                            <option value="custom">✏️ Custom (Write your own)</option>
+                        </select>
+                        
+                        <!-- Custom Text Input for Vendor (hidden by default) -->
+                        <div class="custom-vendor-payment-for-container" id="customVendorPaymentForContainer_${newIndex}" style="display: none;">
+                            <div class="custom-input-wrapper">
+                                <button type="button" class="back-button" onclick="backToVendorDropdown(${newIndex})" title="Back to options">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <input type="text" class="streamlined-input-small custom-payment-input" id="customVendorPaymentFor_${newIndex}" name="customVendorPaymentFor[]" placeholder="Enter custom vendor payment purpose...">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Material Supplier Payment For Dropdown (hidden by default) -->
+                    <div class="material-payment-for-container" id="materialPaymentForContainer_${newIndex}" style="display: none; position: relative;">
+                        <select class="streamlined-input-small" id="materialPaymentForSelect_${newIndex}" name="materialPaymentFor[]" onchange="handleMaterialPaymentForChange(${newIndex}, this.value)">
+                            <option value="">Select Building Material</option>
+                            <option value="cement">🏭 Cement</option>
+                            <option value="sand">🗺️ Sand</option>
+                            <option value="brick">🧱 Brick</option>
+                            <option value="dust">🌫️ Stone Dust</option>
+                            <option value="gravel">🪨 Gravel</option>
+                            <option value="steel">🔩 Steel/Iron Bars</option>
+                            <option value="tiles">🪟 Tiles</option>
+                            <option value="marble">✨ Marble</option>
+                            <option value="granite">🗿 Granite</option>
+                            <option value="paint">🎨 Paint</option>
+                            <option value="wood">🌲 Wood/Timber</option>
+                            <option value="plywood">🪚 Plywood</option>
+                            <option value="glass">🪟 Glass</option>
+                            <option value="aluminium">🔩 Aluminium</option>
+                            <option value="pipes">🔧 Pipes (PVC/Metal)</option>
+                            <option value="electrical_wire">⚡ Electrical Wire</option>
+                            <option value="roofing">🏠 Roofing Material</option>
+                            <option value="insulation">🧱 Insulation Material</option>
+                            <option value="concrete">🏭 Concrete Mix</option>
+                            <option value="mortar">🧱 Mortar</option>
+                            <option value="hardware">🔨 Hardware (Nuts/Bolts)</option>
+                            <option value="waterproofing">💧 Waterproofing Material</option>
+                            <option value="adhesive">🥅 Adhesive/Glue</option>
+                            <option value="sealant">🔧 Sealant</option>
+                            <option value="flooring">🗺️ Flooring Material</option>
+                            <option value="custom">✏️ Custom (Write your own)</option>
+                        </select>
+                        
+                        <!-- Custom Text Input for Material (hidden by default) -->
+                        <div class="custom-material-payment-for-container" id="customMaterialPaymentForContainer_${newIndex}" style="display: none;">
+                            <div class="custom-input-wrapper">
+                                <button type="button" class="back-button" onclick="backToMaterialDropdown(${newIndex})" title="Back to options">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <input type="text" class="streamlined-input-small custom-payment-input" id="customMaterialPaymentFor_${newIndex}" name="customMaterialPaymentFor[]" placeholder="Enter custom building material...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Amount -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedPaymentAmount_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-coins streamlined-icon-amber"></i>
+                        Amount
+                    </label>
+                    <div class="amount-input-wrapper-small">
+                        <span class="currency-symbol-small">₹</span>
+                        <input type="number" class="streamlined-input-small amount-input-small" id="streamlinedPaymentAmount_${newIndex}" name="paymentAmount[]" 
+                               placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Mode -->
+            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4">
+                <div class="form-group">
+                    <label for="streamlinedEntryPaymentMode_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-credit-card streamlined-icon-emerald"></i>
+                        Payment Mode
+                    </label>
+                    <select class="streamlined-input-small" id="streamlinedEntryPaymentMode_${newIndex}" name="entryPaymentMode[]">
+                        <option value="">Select Payment Method</option>
+                        <!-- Cash & Traditional Methods -->
+                        <option value="cash">💵 Cash</option>
+                        <option value="cheque">📄 Cheque</option>
+                        <option value="demand_draft">📜 Demand Draft (DD)</option>
+                        <option value="pay_order">📋 Pay Order</option>
+                        <option value="bankers_cheque">📄 Banker's Cheque</option>
+                        <option value="money_order">📮 Money Order</option>
+                        <option value="postal_order">📮 Postal Order</option>
+                        
+                        <!-- Banking Transfer Methods -->
+                        <option value="rtgs">🌐 RTGS (Real Time Gross Settlement)</option>
+                        <option value="neft">💳 NEFT (National Electronic Funds Transfer)</option>
+                        <option value="imps">⚡ IMPS (Immediate Payment Service)</option>
+                        <option value="net_banking">🌐 Net Banking</option>
+                        <option value="bank_transfer">🏦 Bank Transfer</option>
+                        <option value="wire_transfer">💰 Wire Transfer</option>
+                        <option value="swift">🌍 SWIFT Transfer</option>
+                        <option value="ach">🏦 ACH (Automated Clearing House)</option>
+                        <option value="ecs">🏦 ECS (Electronic Clearing Service)</option>
+                        <option value="nach">🏦 NACH (National Automated Clearing House)</option>
+                        
+                        <!-- UPI & Digital Payments -->
+                        <option value="upi">📱 UPI (Unified Payments Interface)</option>
+                        <option value="bhim">📱 BHIM UPI</option>
+                        <option value="paytm">📱 Paytm</option>
+                        <option value="phonepe">📱 PhonePe</option>
+                        <option value="googlepay">📱 Google Pay (GPay)</option>
+                        <option value="amazonpay">📱 Amazon Pay</option>
+                        <option value="mobikwik">💱 MobiKwik</option>
+                        <option value="freecharge">💱 FreeCharge</option>
+                        <option value="airtel_money">📱 Airtel Money</option>
+                        <option value="jio_money">📱 Jio Money</option>
+                        <option value="olamoney">📱 Ola Money</option>
+                        <option value="payumoney">💱 PayUmoney</option>
+                        <option value="payzapp">📱 PayZapp (HDFC)</option>
+                        <option value="icici_pockets">📱 Pockets (ICICI)</option>
+                        <option value="sbi_buddy">📱 SBI Buddy</option>
+                        <option value="axis_pay">📱 Axis Pay</option>
+                        
+                        <!-- Card Payments -->
+                        <option value="credit_card">💳 Credit Card</option>
+                        <option value="debit_card">💳 Debit Card</option>
+                        <option value="rupay">💳 RuPay Card</option>
+                        <option value="visa">💳 Visa Card</option>
+                        <option value="mastercard">💳 Mastercard</option>
+                        <option value="maestro">💳 Maestro Card</option>
+                        <option value="amex">💳 American Express</option>
+                        <option value="diners">💳 Diners Club</option>
+                        <option value="forex_card">💳 Forex Card</option>
+                        
+                        <!-- Other Methods -->
+                        <option value="cash_deposit">💵 Cash Deposit</option>
+                        <option value="barter">🔄 Barter/Exchange</option>
+                        <option value="adjustment">📊 Adjustment</option>
+                        <option value="offset">🔄 Offset</option>
+                        <option value="other">❓ Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add the new entry to the list
+    paymentEntriesList.appendChild(newEntry);
+    
+    // Set default payment mode based on main payment mode
+    const paymentModeSelect = document.getElementById('streamlinedPaymentMode');
+    const newEntryPaymentModeSelect = document.getElementById(`streamlinedEntryPaymentMode_${newIndex}`);
+    if (paymentModeSelect.value === 'cash' || paymentModeSelect.value === 'split_payment') {
+        newEntryPaymentModeSelect.value = 'cash';
+    } else if (paymentModeSelect.value && paymentModeSelect.value !== 'split_payment') {
+        newEntryPaymentModeSelect.value = paymentModeSelect.value;
+    }
+    
+    // Remove adding animation class after animation completes
+    setTimeout(() => {
+        newEntry.classList.remove('adding');
+    }, 400);
+    
+    // Scroll to new entry
+    setTimeout(() => {
+        newEntry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+}
+
+// Remove payment entry
+function removePaymentEntry(button) {
+    const entryRow = button.closest('.payment-entry-row');
+    const paymentEntriesList = document.getElementById('paymentEntriesList');
+    const allEntries = paymentEntriesList.querySelectorAll('.payment-entry-row');
+    
+    // Don't allow removing if it's the only entry
+    if (allEntries.length <= 1) {
+        showFileError('At least one payment entry is required');
+        return;
+    }
+    
+    // Add removal animation
+    entryRow.style.transform = 'translateX(-20px)';
+    entryRow.style.opacity = '0';
+    
+    // Remove after animation
+    setTimeout(() => {
+        entryRow.remove();
+        updateEntryIndices();
+    }, 300);
+}
+
+// Update entry indices after removal
+function updateEntryIndices() {
+    const paymentEntriesList = document.getElementById('paymentEntriesList');
+    const entries = paymentEntriesList.querySelectorAll('.payment-entry-row');
+    
+    entries.forEach((entry, index) => {
+        entry.setAttribute('data-entry-index', index);
+        
+        // Update all form field IDs and names in this entry
+        const fields = entry.querySelectorAll('input, select');
+        fields.forEach(field => {
+            const baseId = field.id.split('_')[0];
+            field.id = `${baseId}_${index}`;
+            
+            // Update corresponding label
+            const label = entry.querySelector(`label[for="${field.id}"]`);
+            if (label) {
+                label.setAttribute('for', field.id);
+            }
+        });
+        
+        // Update placeholder for reference field
+        const refField = entry.querySelector('input[placeholder^="REF-"]');
+        if (refField) {
+            refField.placeholder = `REF-${String(index + 1).padStart(3, '0')}`;
+        }
+    });
+}
+
+// File selection handler
+function handleFileSelection(input) {
+    const fileNameDisplay = document.getElementById('selectedFileName');
+    const fileName = document.getElementById('fileName');
+    const uploadArea = input.closest('.streamlined-upload-area-small') || input.closest('.streamlined-upload-area');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        fileName.textContent = file.name;
+        fileNameDisplay.style.display = 'flex';
+        uploadArea.style.borderColor = '#38b2ac';
+        uploadArea.style.background = '#f0fdfa';
+        
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            showFileError('File size must be less than 5MB');
+            input.value = '';
+            fileNameDisplay.style.display = 'none';
+            resetUploadArea(uploadArea);
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            showFileError('Only PDF, JPG, and PNG files are allowed');
+            input.value = '';
+            fileNameDisplay.style.display = 'none';
+            resetUploadArea(uploadArea);
+            return;
+        }
+    } else {
+        fileNameDisplay.style.display = 'none';
+        resetUploadArea(uploadArea);
+    }
+}
+
+// Remove selected file
+function removeSelectedFile() {
+    const fileInput = document.getElementById('streamlinedPaymentProof');
+    const fileNameDisplay = document.getElementById('selectedFileName');
+    const uploadArea = document.querySelector('.streamlined-upload-area-small') || document.querySelector('.streamlined-upload-area');
+    
+    fileInput.value = '';
+    fileNameDisplay.style.display = 'none';
+    resetUploadArea(uploadArea);
+}
+
+// Reset upload area appearance
+function resetUploadArea(uploadArea) {
+    uploadArea.style.borderColor = '#cbd5e0';
+    uploadArea.style.background = 'white';
+}
+
+// Show file error with modern styling
+function showFileError(message, type = 'error') {
+    // Create or update notification
+    let errorDiv = document.getElementById('fileErrorNotification');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'fileErrorNotification';
+        document.body.appendChild(errorDiv);
+    }
+    
+    // Set styling based on type
+    let backgroundGradient, textColor, borderColor;
+    if (type === 'success') {
+        backgroundGradient = 'linear-gradient(135deg, #d1fae5, #a7f3d0)';
+        textColor = '#065f46';
+        borderColor = '#10b981';
+    } else {
+        backgroundGradient = 'linear-gradient(135deg, #fed7d7, #feb2b2)';
+        textColor = '#742a2a';
+        borderColor = '#f56565';
+    }
+    
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${backgroundGradient};
+        color: ${textColor};
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-weight: 500;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid ${borderColor};
+        z-index: 9999;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    
+    const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+    errorDiv.innerHTML = `<i class="${icon}"></i> ${message}`;
+    
+    setTimeout(() => errorDiv.style.transform = 'translateX(0)', 100);
+    
+    // Auto hide after 4 seconds for success, 3 seconds for error
+    const hideDelay = type === 'success' ? 4000 : 3000;
+    setTimeout(() => {
+        errorDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
+            }
+        }, 300);
+    }, hideDelay);
+}
+
+// Project type change handler
+document.addEventListener('DOMContentLoaded', function() {
+    const projectTypeSelect = document.getElementById('streamlinedProjectType');
+    const projectNameSelect = document.getElementById('streamlinedProjectName');
+    
+    // Add event listener for payment type changes to handle dynamic Payment To field
+    const paymentTypeSelect = document.getElementById('streamlinedPaymentType_0');
+    if (paymentTypeSelect) {
+        paymentTypeSelect.addEventListener('change', function() {
+            handlePaymentTypeChange(0, this.value);
+        });
+    }
+    
+    // Load authorized users on page load
+    loadAuthorizedUsers();
+    
+    if (projectTypeSelect && projectNameSelect) {
+        projectTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            
+            // Clear and disable project name select
+            projectNameSelect.innerHTML = '<option value="">Loading projects...</option>';
+            projectNameSelect.disabled = true;
+            
+            if (selectedType) {
+                // Fetch projects from API
+                fetchProjectsByType(selectedType)
+                    .then(projects => {
+                        projectNameSelect.innerHTML = '<option value="">Select a project</option>';
+                        
+                        if (projects && projects.length > 0) {
+                            projects.forEach(project => {
+                                const option = document.createElement('option');
+                                option.value = project.id;
+                                option.textContent = project.title;
+                                projectNameSelect.appendChild(option);
+                            });
+                            projectNameSelect.disabled = false;
+                        } else {
+                            projectNameSelect.innerHTML = '<option value="">No projects found</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching projects:', error);
+                        projectNameSelect.innerHTML = '<option value="">Error loading projects</option>';
+                        showFileError('Failed to load projects. Please try again.');
+                    });
+            } else {
+                projectNameSelect.innerHTML = '<option value="">First select project type</option>';
+                projectNameSelect.disabled = true;
+            }
+        });
+    }
+    
+    // Set default date to today
+    const dateInput = document.getElementById('streamlinedPaymentDate');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});
+
+// Fetch projects by type from API
+function fetchProjectsByType(projectType) {
+    return new Promise((resolve, reject) => {
+        const requestData = {
+            project_type: projectType
+        };
+        
+        fetch('../api/get_projects.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                resolve(data.projects);
+            } else {
+                throw new Error(data.message || 'Failed to fetch projects');
+            }
+        })
+        .catch(error => {
+            console.error('API Error:', error);
+            reject(error);
+        });
+    });
+}
+
+// Load authorized users for Payment Done Via dropdown
+function loadAuthorizedUsers() {
+    const paymentDoneViaSelect = document.getElementById('streamlinedPaymentDoneVia');
+    
+    if (!paymentDoneViaSelect) {
+        console.error('Payment Done Via select element not found');
+        return;
+    }
+    
+    fetch('../api/get_authorized_users.php', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.users) {
+            // Clear loading option
+            paymentDoneViaSelect.innerHTML = '<option value="">Select Authorized User</option>';
+            
+            // Add role icons mapping
+            const roleIcons = {
+                'site supervisor': '👷‍♂️',
+                'purchase manager': '📋', 
+                'senior manager (site)': '👨‍💼',
+                'coordinator': '🎯'
+            };
+            
+            // Populate with real users
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                const roleIcon = roleIcons[user.role.toLowerCase()] || '👤';
+                const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                option.textContent = `${roleIcon} ${user.username} (${roleName})`;
+                paymentDoneViaSelect.appendChild(option);
+            });
+            
+            console.log(`Loaded ${data.users.length} authorized users`);
+        } else {
+            throw new Error(data.message || 'No authorized users found');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading authorized users:', error);
+        paymentDoneViaSelect.innerHTML = '<option value="">Error loading users</option>';
+        showFileError('Failed to load authorized users. Please try again.');
+    });
+}
+
+// Form submission handler (placeholder for future implementation)
+function submitStreamlinedPaymentEntry() {
+    const form = document.getElementById('streamlinedPaymentEntryForm');
+    
+    // Basic validation
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // TODO: Implement actual form submission logic
+    showSuccessNotification('Payment entry form submitted successfully! (UI implementation only)');
+    
+    // Close modal after successful submission
+    const modal = bootstrap.Modal.getInstance(document.getElementById('streamlinedPaymentEntryModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Reset form and sections
+    resetFormAndSections();
+}
+
+// Reset form and all dynamic sections
+function resetFormAndSections() {
+    const form = document.getElementById('streamlinedPaymentEntryForm');
+    form.reset();
+    
+    // Reset file upload
+    document.getElementById('selectedFileName').style.display = 'none';
+    const uploadArea = document.querySelector('.streamlined-upload-area-small') || document.querySelector('.streamlined-upload-area');
+    resetUploadArea(uploadArea);
+    
+    // Reset project name dropdown
+    const projectNameSelect = document.getElementById('streamlinedProjectName');
+    projectNameSelect.innerHTML = '<option value="">First select project type</option>';
+    projectNameSelect.disabled = true;
+    
+    // Reset payment entries to just the first one
+    const paymentEntriesList = document.getElementById('paymentEntriesList');
+    const allEntries = paymentEntriesList.querySelectorAll('.payment-entry-row');
+    
+    // Remove all entries except the first one
+    for (let i = 1; i < allEntries.length; i++) {
+        allEntries[i].remove();
+    }
+    
+    // Reset the first entry's values
+    if (allEntries.length > 0) {
+        const firstEntry = allEntries[0];
+        const inputs = firstEntry.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (input.type === 'select-one') {
+                input.selectedIndex = 0;
+            } else {
+                input.value = '';
+            }
+        });
+    }
+    
+    // Hide payment details section
+    const paymentDetailsSection = document.getElementById('paymentDetailsSection');
+    paymentDetailsSection.classList.remove('show');
+    paymentDetailsSection.style.display = 'none';
+}
+
+// Show success notification
+function showSuccessNotification(message) {
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+        color: #22543d;
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-weight: 500;
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        z-index: 9999;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 350px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle" style="color: #38a169;"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(successDiv);
+    setTimeout(() => successDiv.style.transform = 'translateX(0)', 100);
+    
+    // Auto hide after 4 seconds
+    setTimeout(() => {
+        successDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (successDiv.parentNode) {
+                successDiv.parentNode.removeChild(successDiv);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Handle payment type change to show/hide search input
+function handlePaymentTypeChange(index, paymentType) {
+    const dropdown = document.getElementById(`streamlinedPaymentTo_${index}`);
+    const searchContainer = document.getElementById(`paymentToSearchContainer_${index}`);
+    const paymentForInput = document.getElementById(`streamlinedPaymentFor_${index}`);
+    const labourPaymentForContainer = document.getElementById(`labourPaymentForContainer_${index}`);
+    const vendorPaymentForContainer = document.getElementById(`vendorPaymentForContainer_${index}`);
+    const materialPaymentForContainer = document.getElementById(`materialPaymentForContainer_${index}`);
+    
+    // Handle Payment To field changes
+    if (paymentType === 'vendor' || paymentType === 'labour') {
+        // Hide dropdown and show search input
+        dropdown.style.display = 'none';
+        searchContainer.style.display = 'block';
+        
+        // Update placeholder based on type
+        const searchInput = document.getElementById(`paymentToSearch_${index}`);
+        if (paymentType === 'vendor') {
+            searchInput.placeholder = 'Search vendors...';
+        } else if (paymentType === 'labour') {
+            searchInput.placeholder = 'Search labours...';
+        }
+        
+        // Clear previous values
+        searchInput.value = '';
+        document.getElementById(`paymentToId_${index}`).value = '';
+        
+        // Hide suggestions
+        const suggestions = document.getElementById(`searchSuggestions_${index}`);
+        if (suggestions) {
+            suggestions.classList.remove('show');
+        }
+    } else {
+        // Show dropdown and hide search input
+        dropdown.style.display = 'block';
+        searchContainer.style.display = 'none';
+        
+        // Clear search values
+        const searchInput = document.getElementById(`paymentToSearch_${index}`);
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        const hiddenId = document.getElementById(`paymentToId_${index}`);
+        if (hiddenId) {
+            hiddenId.value = '';
+        }
+    }
+    
+    // Handle Payment For field changes for labour
+    if (paymentType === 'labour') {
+        // Hide default payment for input and show labour-specific dropdown
+        paymentForInput.style.display = 'none';
+        labourPaymentForContainer.style.display = 'block';
+        labourPaymentForContainer.classList.add('show');
+        vendorPaymentForContainer.style.display = 'none';
+        materialPaymentForContainer.style.display = 'none';
+        
+        // Clear default input value
+        paymentForInput.value = '';
+        
+        // Reset labour dropdown and custom input
+        const labourSelect = document.getElementById(`labourPaymentForSelect_${index}`);
+        const customContainer = document.getElementById(`customPaymentForContainer_${index}`);
+        if (labourSelect) {
+            labourSelect.value = '';
+        }
+        if (customContainer) {
+            customContainer.style.display = 'none';
+        }
+    } else if (paymentType === 'vendor') {
+        // Hide default payment for input and show vendor-specific dropdown
+        paymentForInput.style.display = 'none';
+        vendorPaymentForContainer.style.display = 'block';
+        vendorPaymentForContainer.classList.add('show');
+        labourPaymentForContainer.style.display = 'none';
+        materialPaymentForContainer.style.display = 'none';
+        
+        // Clear default input value
+        paymentForInput.value = '';
+        
+        // Reset vendor dropdown and custom input
+        const vendorSelect = document.getElementById(`vendorPaymentForSelect_${index}`);
+        const customVendorContainer = document.getElementById(`customVendorPaymentForContainer_${index}`);
+        if (vendorSelect) {
+            vendorSelect.value = '';
+        }
+        if (customVendorContainer) {
+            customVendorContainer.style.display = 'none';
+        }
+    } else if (paymentType === 'material_supplier') {
+        // Hide default payment for input and show material supplier-specific dropdown
+        paymentForInput.style.display = 'none';
+        materialPaymentForContainer.style.display = 'block';
+        materialPaymentForContainer.classList.add('show');
+        labourPaymentForContainer.style.display = 'none';
+        vendorPaymentForContainer.style.display = 'none';
+        
+        // Clear default input value
+        paymentForInput.value = '';
+        
+        // Reset material dropdown and custom input
+        const materialSelect = document.getElementById(`materialPaymentForSelect_${index}`);
+        const customMaterialContainer = document.getElementById(`customMaterialPaymentForContainer_${index}`);
+        if (materialSelect) {
+            materialSelect.value = '';
+        }
+        if (customMaterialContainer) {
+            customMaterialContainer.style.display = 'none';
+        }
+    } else {
+        // Show default payment for input and hide all dropdowns
+        paymentForInput.style.display = 'block';
+        labourPaymentForContainer.style.display = 'none';
+        labourPaymentForContainer.classList.remove('show');
+        vendorPaymentForContainer.style.display = 'none';
+        vendorPaymentForContainer.classList.remove('show');
+        materialPaymentForContainer.style.display = 'none';
+        materialPaymentForContainer.classList.remove('show');
+        
+        // Clear labour-related values
+        const labourSelect = document.getElementById(`labourPaymentForSelect_${index}`);
+        const customInput = document.getElementById(`customPaymentFor_${index}`);
+        if (labourSelect) {
+            labourSelect.value = '';
+        }
+        if (customInput) {
+            customInput.value = '';
+        }
+        
+        // Clear vendor-related values
+        const vendorSelect = document.getElementById(`vendorPaymentForSelect_${index}`);
+        const customVendorInput = document.getElementById(`customVendorPaymentFor_${index}`);
+        if (vendorSelect) {
+            vendorSelect.value = '';
+        }
+        if (customVendorInput) {
+            customVendorInput.value = '';
+        }
+        
+        // Clear material-related values
+        const materialSelect = document.getElementById(`materialPaymentForSelect_${index}`);
+        const customMaterialInput = document.getElementById(`customMaterialPaymentFor_${index}`);
+        if (materialSelect) {
+            materialSelect.value = '';
+        }
+        if (customMaterialInput) {
+            customMaterialInput.value = '';
+        }
+    }
+}
+
+// Handle labour payment for dropdown change
+function handleLabourPaymentForChange(index, value) {
+    const labourSelect = document.getElementById(`labourPaymentForSelect_${index}`);
+    const customContainer = document.getElementById(`customPaymentForContainer_${index}`);
+    const defaultPaymentFor = document.getElementById(`streamlinedPaymentFor_${index}`);
+    
+    if (value === 'custom') {
+        // Hide dropdown and show custom input
+        labourSelect.style.display = 'none';
+        customContainer.style.display = 'block';
+        customContainer.classList.add('show');
+        
+        // Focus on custom input
+        const customInput = document.getElementById(`customPaymentFor_${index}`);
+        setTimeout(() => {
+            customInput.focus();
+        }, 100);
+    } else if (value) {
+        // Set the selected value to the main payment for field (hidden)
+        const selectedText = labourSelect.options[labourSelect.selectedIndex].text;
+        defaultPaymentFor.value = selectedText.replace(/^[^\s]+\s/, ''); // Remove emoji
+    }
+}
+
+// Back to labour dropdown from custom input
+function backToLabourDropdown(index) {
+    const labourSelect = document.getElementById(`labourPaymentForSelect_${index}`);
+    const customContainer = document.getElementById(`customPaymentForContainer_${index}`);
+    const customInput = document.getElementById(`customPaymentFor_${index}`);
+    
+    // Hide custom input and show dropdown
+    customContainer.style.display = 'none';
+    customContainer.classList.remove('show');
+    labourSelect.style.display = 'block';
+    
+    // Reset custom dropdown selection and clear custom input
+    labourSelect.value = '';
+    customInput.value = '';
+    
+    // Clear main payment for field
+    const defaultPaymentFor = document.getElementById(`streamlinedPaymentFor_${index}`);
+    defaultPaymentFor.value = '';
+}
+
+// Handle vendor payment for dropdown change
+function handleVendorPaymentForChange(index, value) {
+    const vendorSelect = document.getElementById(`vendorPaymentForSelect_${index}`);
+    const customVendorContainer = document.getElementById(`customVendorPaymentForContainer_${index}`);
+    const defaultPaymentFor = document.getElementById(`streamlinedPaymentFor_${index}`);
+    
+    if (value === 'custom') {
+        // Hide dropdown and show custom input
+        vendorSelect.style.display = 'none';
+        customVendorContainer.style.display = 'block';
+        customVendorContainer.classList.add('show');
+        
+        // Focus on custom input
+        const customVendorInput = document.getElementById(`customVendorPaymentFor_${index}`);
+        setTimeout(() => {
+            customVendorInput.focus();
+        }, 100);
+    } else if (value) {
+        // Set the selected value to the main payment for field (hidden)
+        const selectedText = vendorSelect.options[vendorSelect.selectedIndex].text;
+        defaultPaymentFor.value = selectedText.replace(/^[^\s]+\s/, ''); // Remove emoji
+    }
+}
+
+// Back to vendor dropdown from custom input
+function backToVendorDropdown(index) {
+    const vendorSelect = document.getElementById(`vendorPaymentForSelect_${index}`);
+    const customVendorContainer = document.getElementById(`customVendorPaymentForContainer_${index}`);
+    const customVendorInput = document.getElementById(`customVendorPaymentFor_${index}`);
+    
+    // Hide custom input and show dropdown
+    customVendorContainer.style.display = 'none';
+    customVendorContainer.classList.remove('show');
+    vendorSelect.style.display = 'block';
+    
+    // Reset custom dropdown selection and clear custom input
+    vendorSelect.value = '';
+    customVendorInput.value = '';
+    
+    // Clear main payment for field
+    const defaultPaymentFor = document.getElementById(`streamlinedPaymentFor_${index}`);
+    defaultPaymentFor.value = '';
+}
+
+// Handle material supplier payment for dropdown change
+function handleMaterialPaymentForChange(index, value) {
+    const materialSelect = document.getElementById(`materialPaymentForSelect_${index}`);
+    const customMaterialContainer = document.getElementById(`customMaterialPaymentForContainer_${index}`);
+    const defaultPaymentFor = document.getElementById(`streamlinedPaymentFor_${index}`);
+    
+    if (value === 'custom') {
+        // Hide dropdown and show custom input
+        materialSelect.style.display = 'none';
+        customMaterialContainer.style.display = 'block';
+        customMaterialContainer.classList.add('show');
+        
+        // Focus on custom input
+        const customMaterialInput = document.getElementById(`customMaterialPaymentFor_${index}`);
+        setTimeout(() => {
+            customMaterialInput.focus();
+        }, 100);
+    } else if (value) {
+        // Set the selected value to the main payment for field (hidden)
+        const selectedText = materialSelect.options[materialSelect.selectedIndex].text;
+        defaultPaymentFor.value = selectedText.replace(/^[^\s]+\s/, ''); // Remove emoji
+    }
+}
+
+// Back to material supplier dropdown from custom input
+function backToMaterialDropdown(index) {
+    const materialSelect = document.getElementById(`materialPaymentForSelect_${index}`);
+    const customMaterialContainer = document.getElementById(`customMaterialPaymentForContainer_${index}`);
+    const customMaterialInput = document.getElementById(`customMaterialPaymentFor_${index}`);
+    
+    // Hide custom input and show dropdown
+    customMaterialContainer.style.display = 'none';
+    customMaterialContainer.classList.remove('show');
+    materialSelect.style.display = 'block';
+    
+    // Reset custom dropdown selection and clear custom input
+    materialSelect.value = '';
+    customMaterialInput.value = '';
+    
+    // Clear main payment for field
+    const defaultPaymentFor = document.getElementById(`streamlinedPaymentFor_${index}`);
+    defaultPaymentFor.value = '';
+}
+
+// Debounce function for search
+let searchTimeouts = {};
+
+// Search payment recipients with debouncing
+function searchPaymentRecipient(index, query) {
+    // Clear previous timeout
+    if (searchTimeouts[index]) {
+        clearTimeout(searchTimeouts[index]);
+    }
+    
+    const suggestions = document.getElementById(`searchSuggestions_${index}`);
+    
+    if (query.length < 2) {
+        suggestions.classList.remove('show');
+        return;
+    }
+    
+    // Debounce search with 300ms delay
+    searchTimeouts[index] = setTimeout(() => {
+        performSearch(index, query);
+    }, 300);
+}
+
+// Perform the actual search
+function performSearch(index, query) {
+    const paymentTypeSelect = document.getElementById(`streamlinedPaymentType_${index}`);
+    const paymentType = paymentTypeSelect.value;
+    
+    if (paymentType !== 'vendor' && paymentType !== 'labour') {
+        return;
+    }
+    
+    const suggestions = document.getElementById(`searchSuggestions_${index}`);
+    suggestions.innerHTML = '<div class="suggestion-item">Searching...</div>';
+    suggestions.classList.add('show');
+    
+    // Prepare search data
+    const searchData = {
+        query: query,
+        type: paymentType
+    };
+    
+    // Make API call to search
+    fetch('../api/search_payment_recipients.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(searchData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        displaySearchResults(index, data, query, paymentType);
+    })
+    .catch(error => {
+        console.error('Search error:', error);
+        suggestions.innerHTML = '<div class="no-results">Error occurred during search</div>';
+    });
+}
+
+// Display search results
+function displaySearchResults(index, data, query, paymentType) {
+    const suggestions = document.getElementById(`searchSuggestions_${index}`);
+    
+    if (data.success && data.results && data.results.length > 0) {
+        let html = '';
+        
+        data.results.forEach(item => {
+            const id = paymentType === 'vendor' ? item.vendor_id : item.labour_id;
+            const name = item.full_name;
+            const phone = item.phone_number || '';
+            const type = paymentType === 'vendor' ? (item.vendor_type || '') : (item.labour_type || '');
+            
+            html += `
+                <div class="suggestion-item" onclick="selectRecipient(${index}, '${id}', '${name}', '${paymentType}')">
+                    <strong>${name}</strong>
+                    ${phone ? `<br><small>📞 ${phone}</small>` : ''}
+                    ${type ? `<br><small>🏷️ ${type}</small>` : ''}
+                </div>
+            `;
+        });
+        
+        // Add option to add new recipient
+        html += `
+            <div class="add-new-suggestion" onclick="addNewRecipient('${paymentType}')">
+                <i class="fas fa-plus"></i> Add New ${paymentType === 'vendor' ? 'Vendor' : 'Labour'}
+            </div>
+        `;
+        
+        suggestions.innerHTML = html;
+    } else {
+        suggestions.innerHTML = `
+            <div class="no-results">No ${paymentType}s found for "${query}"</div>
+            <div class="add-new-suggestion" onclick="addNewRecipient('${paymentType}')">
+                <i class="fas fa-plus"></i> Add New ${paymentType === 'vendor' ? 'Vendor' : 'Labour'}
+            </div>
+        `;
+    }
+}
+
+// Select a recipient from search results
+function selectRecipient(index, id, name, type) {
+    const searchInput = document.getElementById(`paymentToSearch_${index}`);
+    const hiddenId = document.getElementById(`paymentToId_${index}`);
+    const suggestions = document.getElementById(`searchSuggestions_${index}`);
+    
+    searchInput.value = name;
+    hiddenId.value = id;
+    suggestions.classList.remove('show');
+}
+
+// Add new recipient (placeholder function)
+function addNewRecipient(type) {
+    if (type === 'vendor') {
+        // Open vendor modal
+        const vendorModal = new bootstrap.Modal(document.getElementById('addVendorModal'));
+        vendorModal.show();
+        
+        // Store current recipient info for later update
+        window.currentRecipientToUpdate = {
+            type: 'vendor',
+            searchInputId: getCurrentSearchInputId()
+        };
+    } else if (type === 'labour') {
+        // Open labour modal
+        const labourModal = new bootstrap.Modal(document.getElementById('addLabourModal'));
+        labourModal.show();
+        
+        // Store current recipient info for later update
+        window.currentRecipientToUpdate = {
+            type: 'labour',
+            searchInputId: getCurrentSearchInputId()
+        };
+    }
+}
+
+// Get current search input ID from the active search
+function getCurrentSearchInputId() {
+    const activeSearchInputs = document.querySelectorAll('.payment-to-search:focus');
+    if (activeSearchInputs.length > 0) {
+        return activeSearchInputs[0].id;
+    }
+    
+    // Fallback: find the most recently used search input
+    const allSearchInputs = document.querySelectorAll('.payment-to-search');
+    for (let input of allSearchInputs) {
+        if (input.value.trim() !== '') {
+            return input.id;
+        }
+    }
+    
+    // Default to first search input
+    return allSearchInputs.length > 0 ? allSearchInputs[0].id : 'paymentToSearch_0';
+}
+
+// Update recipient after successful addition from modal
+function updateRecipientAfterAdd(recipientId, recipientName, recipientType) {
+    if (window.currentRecipientToUpdate && window.currentRecipientToUpdate.searchInputId) {
+        const searchInputId = window.currentRecipientToUpdate.searchInputId;
+        const searchInput = document.getElementById(searchInputId);
+        
+        if (searchInput) {
+            // Extract index from search input ID
+            const indexMatch = searchInputId.match(/_([0-9]+)$/);
+            const index = indexMatch ? indexMatch[1] : '0';
+            
+            // Update the search input and hidden field
+            searchInput.value = recipientName;
+            const hiddenId = document.getElementById(`paymentToId_${index}`);
+            if (hiddenId) {
+                hiddenId.value = recipientId;
+            }
+            
+            // Hide suggestions
+            const suggestions = document.getElementById(`searchSuggestions_${index}`);
+            if (suggestions) {
+                suggestions.classList.remove('show');
+            }
+            
+            // Show success notification
+            showFileError(`${recipientType === 'vendor' ? 'Vendor' : 'Labour'} "${recipientName}" added successfully and selected!`, 'success');
+        }
+        
+        // Clear the stored info
+        window.currentRecipientToUpdate = null;
+    }
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(event) {
+    const searchContainers = document.querySelectorAll('.payment-to-search-container');
+    searchContainers.forEach(container => {
+        if (!container.contains(event.target)) {
+            const suggestions = container.querySelector('.search-suggestions');
+            if (suggestions) {
+                suggestions.classList.remove('show');
+            }
+        }
+    });
+});
+</script>
+
+<!-- Include Add Vendor Modal -->
+<?php include 'add_vendor_modal.php'; ?>
+
+<!-- Include Add Labour Modal -->
+<?php include 'add_labour_modal.php'; ?>

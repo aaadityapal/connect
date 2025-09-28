@@ -73,8 +73,9 @@ try {
             pe.updated_at,
             pe.payment_proof_image,
             
-            -- Get project title from projects table
+            -- Get project title and project_type from projects table
             COALESCE(p.title, CONCAT('Project #', pe.project_id)) as project_title,
+            p.project_type as actual_project_type,
             
             -- Get payment done via username
             COALESCE(pvu.username, 'Unknown User') as payment_via_username,
@@ -110,7 +111,7 @@ try {
     $formatted_data = [
         'payment_id' => $payment_entry['payment_id'],
         'project_title' => $payment_entry['project_title'],
-        'project_type' => ucfirst(str_replace('_', ' ', $payment_entry['project_type'])),
+        'project_type' => $payment_entry['actual_project_type'] ? ucfirst($payment_entry['actual_project_type']) : ucfirst(str_replace('_', ' ', $payment_entry['project_type'])),
         'project_id' => $payment_entry['project_id'],
         
         // Format payment amount

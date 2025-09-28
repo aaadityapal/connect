@@ -33,15 +33,48 @@ try {
         CREATE TABLE IF NOT EXISTS travel_expenses (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
-            date DATE NOT NULL,
-            category VARCHAR(50) NOT NULL,
-            description VARCHAR(255) NOT NULL,
+            purpose VARCHAR(255) NOT NULL,
+            mode_of_transport VARCHAR(100) NOT NULL,
+            from_location VARCHAR(255) NOT NULL,
+            to_location VARCHAR(255) NOT NULL,
+            travel_date DATE NOT NULL,
+            distance DECIMAL(10,2),
             amount DECIMAL(10,2) NOT NULL,
-            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
-            payment_status VARCHAR(50) DEFAULT 'Pending',
             notes TEXT,
+            status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            bill_file_path VARCHAR(500),
+            meter_start_photo_path VARCHAR(500),
+            meter_end_photo_path VARCHAR(500),
+            updated_by INT,
+            manager_reason TEXT,
+            accountant_reason TEXT,
+            hr_reason TEXT,
+            rejection_cascade TEXT,
+            manager_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            accountant_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            hr_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+            payment_status VARCHAR(50) DEFAULT 'Pending',
+            paid_on_date DATE,
+            paid_by INT,
+            amount_paid DECIMAL(10,2),
+            payment_reference VARCHAR(255),
+            confirmed_distance DECIMAL(10,2),
+            distance_confirmed_by INT,
+            distance_confirmed_at TIMESTAMP NULL,
+            destination_verified TINYINT(1) DEFAULT 0,
+            policy_verified TINYINT(1) DEFAULT 0,
+            meter_verified TINYINT(1) DEFAULT 0,
+            hr_confirmed_distance DECIMAL(10,2),
+            hr_id INT,
+            hr_confirmed_at TIMESTAMP NULL,
+            original_expense_id INT,
+            resubmission_count INT DEFAULT 0,
+            is_resubmitted TINYINT(1) DEFAULT 0,
+            resubmitted_from INT,
+            resubmission_date TIMESTAMP NULL,
+            max_resubmissions INT DEFAULT 3,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
@@ -54,7 +87,13 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
     
-    switch ($_POST['action']) {
+    // Enable error reporting for debugging
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+    
+    try {
+        switch ($_POST['action']) {
         case 'save_expenses':
             if (isset($_POST['expenses']) && is_array($_POST['expenses'])) {
                 $result = saveExpenses($pdo, $user_id, $_POST['expenses']);
@@ -77,6 +116,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 echo json_encode(['success' => false, 'error' => 'Invalid expense ID']);
             }
             exit;
+            
+        case 'resubmit_expense':
+            if (isset($_POST['expense_id'])) {
+                $result = resubmitExpense($pdo, $user_id, $_POST['expense_id']);
+                echo json_encode($result);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Invalid expense ID']);
+            }
+            exit;
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        exit;
     }
 }
 
@@ -99,9 +151,12 @@ function saveExpenses($pdo, $user_id, $expenses) {
                 $stmt = $pdo->prepare("
                     UPDATE travel_expenses 
                     SET 
-                        date = :date,
-                        category = :category,
-                        description = :description,
+                        travel_date = :travel_date,
+                        purpose = :purpose,
+                        mode_of_transport = :mode_of_transport,
+                        from_location = :from_location,
+                        to_location = :to_location,
+                        distance = :distance,
                         amount = :amount,
                         status = :status,
                         payment_status = :payment_status,
@@ -111,9 +166,12 @@ function saveExpenses($pdo, $user_id, $expenses) {
                 ");
                 
                 $stmt->execute([
-                    ':date' => $expense['date'],
-                    ':category' => $expense['category'],
-                    ':description' => $expense['description'],
+                    ':travel_date' => $expense['date'],
+                    ':purpose' => $expense['description'] ?? $expense['purpose'] ?? '',
+                    ':mode_of_transport' => $expense['category'] ?? $expense['mode'] ?? 'Car',
+                    ':from_location' => $expense['from'] ?? 'Office',
+                    ':to_location' => $expense['to'] ?? 'Destination', 
+                    ':distance' => $expense['distance'] ?? 0,
                     ':amount' => $expense['amount'],
                     ':status' => $expense['status'] ?? 'pending',
                     ':payment_status' => $expense['payment_status'] ?? 'Pending',
@@ -126,24 +184,42 @@ function saveExpenses($pdo, $user_id, $expenses) {
                 $stmt = $pdo->prepare("
                     INSERT INTO travel_expenses (
                         user_id,
-                        date,
-                        category,
-                        description,
+                        travel_date,
+                        purpose,
+                        mode_of_transport,
+                        from_location,
+                        to_location,
+                        distance,
                         amount,
                         status,
                         payment_status,
                         notes,
+                        manager_status,
+                        accountant_status,
+                        hr_status,
+                        resubmission_count,
+                        is_resubmitted,
+                        max_resubmissions,
                         created_at,
                         updated_at
                     ) VALUES (
                         :user_id,
-                        :date,
-                        :category,
-                        :description,
+                        :travel_date,
+                        :purpose,
+                        :mode_of_transport,
+                        :from_location,
+                        :to_location,
+                        :distance,
                         :amount,
                         :status,
                         :payment_status,
                         :notes,
+                        'pending',
+                        'pending',
+                        'pending',
+                        0,
+                        0,
+                        3,
                         NOW(),
                         NOW()
                     )
@@ -151,9 +227,12 @@ function saveExpenses($pdo, $user_id, $expenses) {
                 
                 $stmt->execute([
                     ':user_id' => $user_id,
-                    ':date' => $expense['date'],
-                    ':category' => $expense['category'],
-                    ':description' => $expense['description'],
+                    ':travel_date' => $expense['date'],
+                    ':purpose' => $expense['description'] ?? $expense['purpose'] ?? '',
+                    ':mode_of_transport' => $expense['category'] ?? $expense['mode'] ?? 'Car',
+                    ':from_location' => $expense['from'] ?? 'Office',
+                    ':to_location' => $expense['to'] ?? 'Destination',
+                    ':distance' => $expense['distance'] ?? 0,
                     ':amount' => $expense['amount'],
                     ':status' => $expense['status'] ?? 'pending',
                     ':payment_status' => $expense['payment_status'] ?? 'Pending',
@@ -183,7 +262,7 @@ function getExpenses($pdo, $user_id) {
         $stmt = $pdo->prepare("
             SELECT * FROM travel_expenses 
             WHERE user_id = :user_id 
-            ORDER BY date DESC
+            ORDER BY travel_date DESC, created_at DESC
         ");
         
         $stmt->execute([':user_id' => $user_id]);
@@ -218,6 +297,153 @@ function deleteExpense($pdo, $user_id, $expense_id) {
     } catch (Exception $e) {
         error_log("Error deleting expense: " . $e->getMessage());
         return false;
+    }
+}
+
+/**
+ * Resubmit a rejected expense
+ * 
+ * @param PDO $pdo Database connection  
+ * @param int $user_id User ID
+ * @param int $expense_id Expense ID
+ * @return array Response with success status and message
+ */
+function resubmitExpense($pdo, $user_id, $expense_id) {
+    try {
+        error_log("Resubmit attempt - User ID: {$user_id}, Expense ID: {$expense_id}");
+        
+        $pdo->beginTransaction();
+        
+        // Fetch the rejected expense details
+        $stmt = $pdo->prepare("
+            SELECT * FROM travel_expenses 
+            WHERE id = :id AND user_id = :user_id AND status = 'rejected'
+        ");
+        
+        $stmt->execute([
+            ':id' => $expense_id,
+            ':user_id' => $user_id
+        ]);
+        
+        $expense = $stmt->fetch();
+        
+        if (!$expense) {
+            throw new Exception('Rejected expense not found or you don\'t have permission to resubmit it');
+        }
+        
+        // Check 15-day restriction - rejected expenses older than 15 days cannot be resubmitted
+        $rejectionDate = new DateTime($expense['updated_at']);
+        $currentDate = new DateTime();
+        $daysSinceRejection = $currentDate->diff($rejectionDate)->days;
+        
+        if ($daysSinceRejection > 15) {
+            throw new Exception("This expense was rejected more than 15 days ago ({$daysSinceRejection} days). Expenses older than 15 days cannot be resubmitted. Please submit a new expense instead.");
+        }
+        
+        error_log("Found expense to resubmit: " . json_encode([
+            'id' => $expense['id'],
+            'original_expense_id' => $expense['original_expense_id'],
+            'resubmission_count' => $expense['resubmission_count']
+        ]));
+        
+        // Check if this expense was already resubmitted and still pending/approved
+        $root_id = $expense['original_expense_id'] ?? $expense['id'];
+        
+        $stmt = $pdo->prepare("
+            SELECT id, status, resubmission_count FROM travel_expenses 
+            WHERE (original_expense_id = :root_id OR (id = :root_id_check AND original_expense_id IS NULL)) 
+            AND user_id = :user_id 
+            AND id != :current_expense_id
+            AND status IN ('pending', 'approved')
+            ORDER BY created_at DESC
+            LIMIT 1
+        ");
+        
+        $stmt->execute([
+            ':root_id' => $root_id,
+            ':root_id_check' => $root_id,
+            ':user_id' => $user_id,
+            ':current_expense_id' => $expense_id
+        ]);
+        
+        $pendingResubmission = $stmt->fetch();
+        
+        if ($pendingResubmission) {
+            $statusText = ucfirst($pendingResubmission['status']);
+            throw new Exception("This expense has already been resubmitted and is currently {$statusText} (Expense #{$pendingResubmission['id']}). Please wait for the current submission to be processed before resubmitting again.");
+        }
+        
+        // Check resubmission limits
+        $current_count = $expense['resubmission_count'] ?? 0;
+        $max_allowed = $expense['max_resubmissions'] ?? 3;
+        
+        if ($current_count >= $max_allowed) {
+            throw new Exception("Maximum resubmissions reached. This expense has already been resubmitted {$current_count} times (limit: {$max_allowed}).");
+        }
+        
+        // Create new expense entry with pending status
+        $stmt = $pdo->prepare("
+            INSERT INTO travel_expenses (
+                user_id, purpose, mode_of_transport, from_location, to_location, 
+                travel_date, distance, amount, notes, status, 
+                bill_file_path, meter_start_photo_path, meter_end_photo_path,
+                manager_status, accountant_status, hr_status, payment_status,
+                original_expense_id, resubmission_count, is_resubmitted, 
+                resubmitted_from, resubmission_date, max_resubmissions, created_at
+            ) VALUES (
+                :user_id, :purpose, :mode_of_transport, :from_location, :to_location,
+                :travel_date, :distance, :amount, :notes, 'pending',
+                :bill_file_path, :meter_start_photo_path, :meter_end_photo_path,
+                'pending', 'pending', 'pending', 'Pending',
+                :original_expense_id, :resubmission_count, 1, 
+                :resubmitted_from, NOW(), :max_resubmissions, NOW()
+            )
+        ");
+        
+        $new_resubmission_count = $current_count + 1;
+        
+        $stmt->execute([
+            ':user_id' => $expense['user_id'],
+            ':purpose' => $expense['purpose'] ?? '',
+            ':mode_of_transport' => $expense['mode_of_transport'] ?? '',
+            ':from_location' => $expense['from_location'] ?? '',
+            ':to_location' => $expense['to_location'] ?? '',
+            ':travel_date' => $expense['travel_date'],
+            ':distance' => $expense['distance'],
+            ':amount' => $expense['amount'],
+            ':notes' => $expense['notes'] ?? '',
+            ':bill_file_path' => $expense['bill_file_path'] ?? '',
+            ':meter_start_photo_path' => $expense['meter_start_photo_path'] ?? '',
+            ':meter_end_photo_path' => $expense['meter_end_photo_path'] ?? '',
+            ':original_expense_id' => $root_id,
+            ':resubmission_count' => $new_resubmission_count,
+            ':resubmitted_from' => $expense_id,
+            ':max_resubmissions' => $max_allowed
+        ]);
+        
+        $new_expense_id = $pdo->lastInsertId();
+        
+        $pdo->commit();
+        
+        $remaining_resubmissions = $max_allowed - $new_resubmission_count;
+        
+        error_log("Expense resubmitted successfully - New ID: {$new_expense_id}, Count: {$new_resubmission_count}");
+        
+        return [
+            'success' => true,
+            'message' => "Expense resubmitted successfully (Resubmission #{$new_resubmission_count}). You have {$remaining_resubmissions} resubmissions remaining.",
+            'new_expense_id' => $new_expense_id,
+            'resubmission_count' => $new_resubmission_count,
+            'remaining_resubmissions' => $remaining_resubmissions
+        ];
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        error_log("Error resubmitting expense: " . $e->getMessage() . " - File: " . $e->getFile() . " - Line: " . $e->getLine());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
     }
 }
 
@@ -1091,6 +1317,41 @@ $expenses = getExpenses($pdo, $user_id);
             background-color: #e74c3c;
             border-color: #e74c3c;
         }
+        
+        .expense-table-section .btn-warning {
+            background-color: #f39c12;
+            border-color: #f39c12;
+            color: #fff;
+        }
+        
+        .expense-table-section .btn-warning:hover {
+            background-color: #e67e22;
+            border-color: #e67e22;
+            color: #fff;
+        }
+        
+        .expense-table-section .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: #fff;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .expense-table-section .btn-secondary:disabled {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            opacity: 0.6;
+        }
+        
+        .expense-table-section .fa-calendar-times {
+            color: #dc3545;
+        }
+        
+        .expense-table-section .btn-secondary .fa-calendar-times {
+            color: #fff;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -1786,6 +2047,41 @@ $expenses = getExpenses($pdo, $user_id);
                 // Create action buttons
                 const viewButton = `<button class="btn btn-sm btn-info view-expense" data-id="${expense.id}" title="View Details"><i class="fas fa-eye"></i></button>`;
                 const deleteButton = `<button class="btn btn-sm btn-danger delete-expense" data-id="${expense.id}" title="Delete"><i class="fas fa-trash"></i></button>`;
+                const resubmitButton = `<button class="btn btn-sm btn-warning resubmit-expense" data-id="${expense.id}" title="Resubmit"><i class="fas fa-redo"></i></button>`;
+                
+                // Determine which buttons to show based on status and resubmission state
+                let actionButtons = viewButton;
+                if (expense.status === 'pending') {
+                    actionButtons += ' ' + deleteButton;
+                } else if (expense.status === 'rejected') {
+                    // Check 15-day restriction
+                    const rejectionDate = new Date(expense.updated_at);
+                    const currentDate = new Date();
+                    const daysDifference = Math.floor((currentDate - rejectionDate) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysDifference > 15) {
+                        // Show disabled button for expenses older than 15 days
+                        const expiredButton = `<button class="btn btn-sm btn-secondary" disabled title="Cannot resubmit: Expense rejected more than 15 days ago (${daysDifference} days). Please submit a new expense."><i class="fas fa-calendar-times"></i></button>`;
+                        actionButtons += ' ' + expiredButton;
+                    } else {
+                        // Check resubmission limits for recent rejections
+                        const currentCount = expense.resubmission_count || 0;
+                        const maxAllowed = expense.max_resubmissions || 3;
+                        const isResubmitted = expense.is_resubmitted == 1;
+                        
+                        if (currentCount < maxAllowed) {
+                            // Add tooltip to show remaining resubmissions and days remaining
+                            const remainingCount = maxAllowed - currentCount;
+                            const daysRemaining = 15 - daysDifference;
+                            const resubmitButtonWithTooltip = `<button class="btn btn-sm btn-warning resubmit-expense" data-id="${expense.id}" title="Resubmit (${remainingCount} attempts remaining, expires in ${daysRemaining} days)"><i class="fas fa-redo"></i></button>`;
+                            actionButtons += ' ' + resubmitButtonWithTooltip;
+                        } else {
+                            // Show disabled button when max resubmissions reached
+                            const disabledButton = `<button class="btn btn-sm btn-secondary" disabled title="Maximum resubmissions reached (${maxAllowed}/${maxAllowed})"><i class="fas fa-ban"></i></button>`;
+                            actionButtons += ' ' + disabledButton;
+                        }
+                    }
+                }
                 
                 // Create table row
                 const row = `
@@ -1801,8 +2097,7 @@ $expenses = getExpenses($pdo, $user_id);
                         <td>${statusBadge} ${paymentBadge}</td>
                         <td>
                             <div class="btn-group">
-                                ${viewButton}
-                                ${expense.status === 'pending' ? deleteButton : ''}
+                                ${actionButtons}
                             </div>
                         </td>
                     </tr>
@@ -1820,6 +2115,11 @@ $expenses = getExpenses($pdo, $user_id);
             $('.delete-expense').off('click').on('click', function() {
                 const expenseId = $(this).data('id');
                 confirmDeleteExpense(expenseId);
+            });
+            
+            $('.resubmit-expense').off('click').on('click', function() {
+                const expenseId = $(this).data('id');
+                confirmResubmitExpense(expenseId);
             });
             
             // Update summary cards with the expenses data
@@ -2049,6 +2349,79 @@ $expenses = getExpenses($pdo, $user_id);
                 error: function(xhr, status, error) {
                     alert('Failed to delete expense. Please try again later.');
                     console.error('AJAX Error:', status, error);
+                }
+            });
+        }
+        
+        // Global function to confirm resubmit expense
+        function confirmResubmitExpense(expenseId) {
+            // Get expense data to show additional info in confirmation
+            const expenseData = <?php echo json_encode($expenses); ?>;
+            const expense = expenseData.find(exp => exp.id == expenseId);
+            
+            let confirmMessage = 'Are you sure you want to resubmit this rejected expense? This will create a new expense entry with pending status.';
+            
+            if (expense) {
+                const rejectionDate = new Date(expense.updated_at);
+                const currentDate = new Date();
+                const daysDifference = Math.floor((currentDate - rejectionDate) / (1000 * 60 * 60 * 24));
+                const daysRemaining = 15 - daysDifference;
+                
+                confirmMessage += `\n\nNote: You have ${daysRemaining} days remaining to resubmit this expense before it expires.`;
+            }
+            
+            if (confirm(confirmMessage)) {
+                resubmitExpense(expenseId);
+            }
+        }
+        
+        // Global function to resubmit expense
+        function resubmitExpense(expenseId) {
+            $.ajax({
+                url: window.location.href,
+                type: 'POST',
+                dataType: 'json',
+                data: { 
+                    action: 'resubmit_expense',
+                    expense_id: expenseId 
+                },
+                success: function(response) {
+                    console.log('Resubmit response:', response);
+                    if (response.success) {
+                        alert('✅ ' + response.message);
+                        // Reload the expenses to show the new entry
+                        loadTravelExpenses();
+                    } else {
+                        alert('❌ ' + (response.message || 'Unknown error occurred while resubmitting expense'));
+                        console.error('Resubmit error details:', response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error Details:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    
+                    let errorMessage = 'Failed to resubmit expense. Please try again later.';
+                    
+                    // Try to parse error response for more details
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        if (errorResponse.message) {
+                            errorMessage = errorResponse.message;
+                        }
+                    } catch (e) {
+                        // If not JSON, check for common error patterns
+                        if (xhr.responseText.includes('SQLSTATE')) {
+                            errorMessage = 'Database error occurred. Please contact support.';
+                        } else if (xhr.status === 500) {
+                            errorMessage = 'Server error occurred. Please try again or contact support.';
+                        }
+                    }
+                    
+                    alert('❌ ' + errorMessage);
                 }
             });
         }

@@ -137,3 +137,29 @@ Format: [timestamp] user_id action status_field new_status reason affected_rows2
 2025-08-06 10:05:39 - User Bhuvnesh Sharma (Purchase Manager) is approveing expenses for user 1 on date 2025-08-06. Updating accountant_status. Reason: 
 2025-08-06 10:05:39 - Updated 2 records
 
+2025-09-25 14:49:34 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 655. Updating accountant_status. Reason: testing test tettet e et ee e t et e te
+2025-09-25 14:49:34 - Updated 1 records
+2025-09-26 08:53:36 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 656. Updating accountant_status. Reason: e eee ee e e e e e e e e
+2025-09-26 08:53:36 - Updated 1 records
+2025-09-26 08:55:06 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 659. Updating accountant_status. Reason: yy yy y yy y  yyy y y y y  y
+2025-09-26 08:55:06 - Updated 1 records
+2025-09-26 08:58:31 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 660. Updating accountant_status. Reason: yhjyjgyjgyjgy y gy jgy jgy j gyjyj gy j gy jgy
+2025-09-26 08:58:31 - Updated 1 records
+2025-09-26 09:05:36 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 662. Updating accountant_status. Reason: retertre r ter er ter ter ert r tet er t
+2025-09-26 09:05:36 - Updated 1 records
+2025-09-26 09:21:59 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 668. Updating accountant_status. Reason: g  g g g g  g g g g g g g
+2025-09-26 09:21:59 - Updated 1 records
+2025-09-26 09:26:19 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 669. Updating accountant_status. Reason: g g gg  gg  g g g gg  gg  g
+2025-09-26 09:26:19 - Updated 1 records
+2025-09-26 09:34:23 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 670. Updating accountant_status. Reason: r r r r rr  r r r r rr
+2025-09-26 09:34:23 - Updated 1 records
+2025-09-26 09:35:13 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 671. Updating accountant_status. Reason: h  hh  hhh hh h hh h h h h
+2025-09-26 09:35:13 - Updated 1 records
+2025-09-26 09:36:01 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 672. Updating accountant_status. Reason: y y yy y yy y yy y y y
+2025-09-26 09:36:01 - Updated 1 records
+2025-09-26 09:41:14 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 673. Updating accountant_status. Reason: j  jj  jj  jj  jj j jj  jj j jj
+2025-09-26 09:41:14 - Updated 1 records
+2025-09-26 09:41:53 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 674. Updating accountant_status. Reason: hh h h h  hhh  hh h h h h
+2025-09-26 09:41:53 - Updated 1 records
+2025-09-26 09:52:56 - User Bhuvnesh Sharma (Purchase Manager) is rejecting expense ID 675. Updating accountant_status. Reason: h h  hh h h h hh  hhh h  hh
+2025-09-26 09:52:56 - Updated 1 records

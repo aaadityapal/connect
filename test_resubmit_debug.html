@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Resubmit</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Test Resubmit Functionality</h2>
+    
+    <div>
+        <label>Expense ID:</label>
+        <input type="number" id="expenseId" placeholder="Enter expense ID">
+        <button onclick="testDiagnostic()">Test Diagnostic</button>
+        <button onclick="testResubmit()">Test Resubmit</button>
+        <button onclick="testSimpleResubmit()">Test Simple Resubmit</button>
+    </div>
+    
+    <div id="results" style="margin-top: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9;">
+        <h3>Results:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        function testDiagnostic() {
+            const expenseId = document.getElementById('expenseId').value;
+            if (!expenseId) {
+                alert('Please enter an expense ID');
+                return;
+            }
+
+            $.ajax({
+                url: 'diagnostic_resubmit.php',
+                type: 'POST',
+                data: { expense_id: expenseId },
+                dataType: 'json',
+                success: function(response) {
+                    document.getElementById('output').textContent = 'DIAGNOSTIC RESULT:\n' + JSON.stringify(response, null, 2);
+                },
+                error: function(xhr, status, error) {
+                    document.getElementById('output').textContent = 'DIAGNOSTIC ERROR:\n' + 
+                        'Status: ' + xhr.status + '\n' +
+                        'Response: ' + xhr.responseText + '\n' +
+                        'Error: ' + error;
+                }
+            });
+        }
+
+        function testResubmit() {
+            const expenseId = document.getElementById('expenseId').value;
+            if (!expenseId) {
+                alert('Please enter an expense ID');
+                return;
+            }
+
+            $.ajax({
+                url: 'resubmit_travel_expense_fixed.php',
+                type: 'POST',
+                data: { expense_id: expenseId },
+                dataType: 'json',
+                success: function(response) {
+                    document.getElementById('output').textContent = 'RESUBMIT RESULT:\n' + JSON.stringify(response, null, 2);
+                },
+                error: function(xhr, status, error) {
+                    document.getElementById('output').textContent = 'RESUBMIT ERROR:\n' + 
+                        'Status: ' + xhr.status + '\n' +
+                        'Response: ' + xhr.responseText + '\n' +
+                        'Error: ' + error;
+                }
+            });
+        }
+        
+        function testSimpleResubmit() {
+            const expenseId = document.getElementById('expenseId').value;
+            if (!expenseId) {
+                alert('Please enter an expense ID');
+                return;
+            }
+
+            $.ajax({
+                url: 'resubmit_simple.php',
+                type: 'POST',
+                data: { expense_id: expenseId },
+                dataType: 'json',
+                success: function(response) {
+                    document.getElementById('output').textContent = 'SIMPLE RESUBMIT RESULT:\n' + JSON.stringify(response, null, 2);
+                },
+                error: function(xhr, status, error) {
+                    document.getElementById('output').textContent = 'SIMPLE RESUBMIT ERROR:\n' + 
+                        'Status: ' + xhr.status + '\n' +
+                        'Response: ' + xhr.responseText + '\n' +
+                        'Error: ' + error;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -67,6 +67,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $routingNumber = isset($_POST['routingNumber']) ? mysqli_real_escape_string($conn, $_POST['routingNumber']) : '';
     $accountType = isset($_POST['accountType']) ? mysqli_real_escape_string($conn, $_POST['accountType']) : '';
     
+    // QR Code (we'll store the file path)
+    $qrCodePath = '';
+    if (isset($_FILES['bankQrCode']) && $_FILES['bankQrCode']['error'] === UPLOAD_ERR_OK) {
+        // Handle file upload
+        $uploadDir = '../uploads/vendor_qr_codes/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $fileExtension = pathinfo($_FILES['bankQrCode']['name'], PATHINFO_EXTENSION);
+        $fileName = uniqid('qr_') . '.' . $fileExtension;
+        $targetPath = $uploadDir . $fileName;
+        
+        if (move_uploaded_file($_FILES['bankQrCode']['tmp_name'], $targetPath)) {
+            $qrCodePath = $targetPath;
+        }
+    }
+    
+    // GST details
+    $gstNumber = isset($_POST['gstNumber']) ? mysqli_real_escape_string($conn, $_POST['gstNumber']) : '';
+    $gstRegistrationDate = isset($_POST['gstRegistrationDate']) ? mysqli_real_escape_string($conn, $_POST['gstRegistrationDate']) : '';
+    $gstState = isset($_POST['gstState']) ? mysqli_real_escape_string($conn, $_POST['gstState']) : '';
+    $gstType = isset($_POST['gstType']) ? mysqli_real_escape_string($conn, $_POST['gstType']) : '';
+    
     // Address details
     $streetAddress = isset($_POST['streetAddress']) ? mysqli_real_escape_string($conn, $_POST['streetAddress']) : '';
     $city = isset($_POST['city']) ? mysqli_real_escape_string($conn, $_POST['city']) : '';
@@ -82,6 +106,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode([
             'status' => 'error',
             'message' => 'Required fields are missing'
+        ]);
+        exit;
+    }
+    
+    // Check for duplicate vendors before inserting
+    // We'll check for duplicates based on phone number, email, and GST number (if provided)
+    $duplicateCheckSql = "SELECT vendor_id, full_name FROM hr_vendors WHERE ";
+    $duplicateCheckParams = [];
+    
+    // Always check phone number
+    $duplicateCheckSql .= "phone_number = '$phoneNumber'";
+    
+    // Also check email if provided
+    if (!empty($email)) {
+        $duplicateCheckSql .= " OR email = '$email'";
+    }
+    
+    // Also check GST number if provided
+    if (!empty($gstNumber)) {
+        $duplicateCheckSql .= " OR gst_number = '$gstNumber'";
+    }
+    
+    $duplicateResult = mysqli_query($conn, $duplicateCheckSql);
+    
+    if ($duplicateResult && mysqli_num_rows($duplicateResult) > 0) {
+        $existingVendor = mysqli_fetch_assoc($duplicateResult);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'A vendor with the same phone number, email, or GST number already exists in the system. Existing vendor: ' . $existingVendor['full_name']
         ]);
         exit;
     }
@@ -117,6 +170,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 account_number, 
                 routing_number, 
                 account_type, 
+                qr_code_path,
+                gst_number,
+                gst_registration_date,
+                gst_state,
+                gst_type,
                 street_address, 
                 city, 
                 state, 
@@ -136,6 +194,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '$accountNumber', 
                 '$routingNumber', 
                 '$accountType', 
+                '$qrCodePath',
+                '$gstNumber',
+                '$gstRegistrationDate',
+                '$gstState',
+                '$gstType',
                 '$streetAddress', 
                 '$city', 
                 '$state', 

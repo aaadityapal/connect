@@ -25,7 +25,21 @@ $current_month = date('Y-m');
 $month_filter = isset($_GET['month']) ? $_GET['month'] : $current_month;
 
 // Build query based on filters
-$query = "SELECT * FROM travel_expenses WHERE user_id = ?";
+$query = "SELECT *, 
+                 COALESCE(resubmission_count, 0) as resubmission_count,
+                 COALESCE(is_resubmitted, 0) as is_resubmitted,
+                 COALESCE(max_resubmissions, 3) as max_resubmissions,
+                 original_expense_id,
+                 resubmitted_from,
+                 resubmission_date,
+                 manager_status,
+                 accountant_status,
+                 hr_status,
+                 manager_reason,
+                 accountant_reason,
+                 hr_reason
+          FROM travel_expenses 
+          WHERE user_id = ?";
 $params = array($user_id);
 $types = "i";
 
@@ -233,6 +247,174 @@ function getPendingFromRoles($expense) {
     }
 
     return implode(', ', $pendingRoles);
+}
+
+// Function to get the correct remaining resubmissions for an expense chain
+function getRemainingResubmissions($expense) {
+    global $conn;
+    
+    $max_allowed = intval($expense['max_resubmissions'] ?? 3);
+    
+    // Get the root expense ID
+    $root_id = isset($expense['original_expense_id']) && $expense['original_expense_id'] ? $expense['original_expense_id'] : $expense['id'];
+    
+    // Find the highest resubmission count in the entire chain
+    $stmt = $conn->prepare("
+        SELECT MAX(resubmission_count) as max_count 
+        FROM travel_expenses 
+        WHERE (original_expense_id = ? OR (id = ? AND original_expense_id IS NULL))
+    ");
+    
+    if ($stmt) {
+        $stmt->bind_param("ii", $root_id, $root_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            $highest_count = intval($row['max_count'] ?? 0);
+            $stmt->close();
+            return $max_allowed - $highest_count;
+        }
+        $stmt->close();
+    }
+    
+    // Fallback to individual expense count
+    return $max_allowed - intval($expense['resubmission_count'] ?? 0);
+}
+
+// Function to check if resubmission is allowed
+function canResubmit($expense) {
+    global $conn;
+    
+    if ($expense['status'] !== 'rejected') {
+        return false;
+    }
+    
+    // Check if the expense is within 15 days from present date
+    $travel_date = new DateTime($expense['travel_date']);
+    $current_date = new DateTime();
+    $date_diff = $current_date->diff($travel_date)->days;
+    
+    // If the expense is older than 15 days, don't allow resubmission
+    if ($date_diff > 15) {
+        return false;
+    }
+    
+    // Check remaining resubmissions using the same logic as getRemainingResubmissions
+    $remaining = getRemainingResubmissions($expense);
+    if ($remaining <= 0) {
+        return false;
+    }
+    
+    // Check if this expense was already resubmitted and still pending/approved
+    $root_id = isset($expense['original_expense_id']) && $expense['original_expense_id'] ? $expense['original_expense_id'] : $expense['id'];
+    
+    $pending_stmt = $conn->prepare("
+        SELECT id, status FROM travel_expenses 
+        WHERE (original_expense_id = ? OR (id = ? AND original_expense_id IS NULL)) 
+        AND user_id = ? 
+        AND id != ?
+        AND status IN ('pending', 'approved')
+        ORDER BY created_at DESC
+        LIMIT 1
+    ");
+    
+    if ($pending_stmt) {
+        $pending_stmt->bind_param("iiii", $root_id, $root_id, $expense['user_id'], $expense['id']);
+        
+        if ($pending_stmt->execute()) {
+            $pending_result = $pending_stmt->get_result();
+            
+            if ($pending_result->num_rows > 0) {
+                $pending_stmt->close();
+                return false; // Already resubmitted and still pending/approved
+            }
+        }
+        
+        $pending_stmt->close();
+    }
+    
+    return true;
+}
+
+// Function to check if expense is too old for resubmission (older than 15 days)
+function isExpenseTooOld($expense) {
+    $travel_date = new DateTime($expense['travel_date']);
+    $current_date = new DateTime();
+    $date_diff = $current_date->diff($travel_date)->days;
+    
+    return $date_diff > 15;
+}
+
+// Function to get days since travel date
+function getDaysSinceTravelDate($expense) {
+    $travel_date = new DateTime($expense['travel_date']);
+    $current_date = new DateTime();
+    return $current_date->diff($travel_date)->days;
+}
+
+// Function to get resubmission status text
+function getResubmissionStatusText($expense) {
+    $is_resubmitted = intval($expense['is_resubmitted']);
+    $resubmission_count = intval($expense['resubmission_count']);
+    
+    if ($is_resubmitted && $resubmission_count > 0) {
+        return "Resubmission #{$resubmission_count}";
+    }
+    
+    return '';
+}
+
+// Function to get who rejected the expense
+function getRejectedBy($expense) {
+    $rejectedBy = [];
+    
+    if (isset($expense['manager_status']) && $expense['manager_status'] === 'rejected') {
+        $rejectedBy[] = 'Manager';
+    }
+    if (isset($expense['accountant_status']) && $expense['accountant_status'] === 'rejected') {
+        $rejectedBy[] = 'Accountant';
+    }
+    if (isset($expense['hr_status']) && $expense['hr_status'] === 'rejected') {
+        $rejectedBy[] = 'HR';
+    }
+    
+    return $rejectedBy;
+}
+
+// Function to get rejection reasons by role
+function getRejectionReasons($expense) {
+    $reasons = [];
+    
+    if (isset($expense['manager_status']) && $expense['manager_status'] === 'rejected' && !empty($expense['manager_reason'])) {
+        $reasons['Manager'] = $expense['manager_reason'];
+    }
+    if (isset($expense['accountant_status']) && $expense['accountant_status'] === 'rejected' && !empty($expense['accountant_reason'])) {
+        $reasons['Accountant'] = $expense['accountant_reason'];
+    }
+    if (isset($expense['hr_status']) && $expense['hr_status'] === 'rejected' && !empty($expense['hr_reason'])) {
+        $reasons['HR'] = $expense['hr_reason'];
+    }
+    
+    return $reasons;
+}
+
+// Function to format rejection information for display
+function formatRejectionInfo($expense) {
+    $rejectedBy = getRejectedBy($expense);
+    $reasons = getRejectionReasons($expense);
+    
+    if (empty($rejectedBy)) {
+        return null;
+    }
+    
+    $info = [
+        'rejected_by' => $rejectedBy,
+        'reasons' => $reasons,
+        'display_text' => 'Rejected by: ' . implode(', ', $rejectedBy)
+    ];
+    
+    return $info;
 }
 ?>
 <!DOCTYPE html>
@@ -971,6 +1153,44 @@ function getPendingFromRoles($expense) {
             padding: 0 4px;
         }
         
+        .resubmission-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        
+        .resubmission-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .max-resubmissions-reached {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .too-old-resubmit {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            border: 1px solid #ffcc02;
+        }
+        
+        .btn-outline-secondary[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
         /* Expense Details Modal Styles */
         .expense-details-modal .modal-content {
             border-radius: 15px;
@@ -1123,6 +1343,30 @@ function getPendingFromRoles($expense) {
         .rejection-reason {
             color: #721c24;
         }
+        
+        .rejection-item {
+            background-color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ffcdd2;
+            margin-bottom: 10px;
+        }
+        
+        .rejection-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .rejection-role .badge {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+        
+        .rejected-by-info {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
     </style>
 </head>
 <body>
@@ -1268,6 +1512,12 @@ function getPendingFromRoles($expense) {
                                         <div class="expense-item-header">
                                                                             <h6 class="expense-purpose">
                                     <?php echo htmlspecialchars($first_expense['purpose']); ?>
+                                    <?php 
+                                    $resubmission_text = getResubmissionStatusText($first_expense);
+                                    if ($resubmission_text): 
+                                    ?>
+                                        <span class="resubmission-badge"><?php echo $resubmission_text; ?></span>
+                                    <?php endif; ?>
                                     <?php
                                     // Check if expense is paid
                                     $is_paid = false;
@@ -1305,12 +1555,37 @@ function getPendingFromRoles($expense) {
                                     } elseif ($status == 'rejected' && $is_paid) {
                                         $combined_status = 'Rejected, Refund Due';
                                         $combined_status_class = 'status-rejected-paid';
+                                        
+                                        // Add rejection info
+                                        $rejection_info = formatRejectionInfo($first_expense);
+                                        if ($rejection_info) {
+                                            $combined_status .= ' (' . implode(', ', $rejection_info['rejected_by']) . ')';
+                                        }
                                     } elseif ($status == 'rejected' && !$is_paid) {
                                         $combined_status = 'Rejected';
                                         $combined_status_class = 'status-rejected';
+                                        
+                                        // Add rejection info
+                                        $rejection_info = formatRejectionInfo($first_expense);
+                                        if ($rejection_info) {
+                                            $combined_status .= ' (' . implode(', ', $rejection_info['rejected_by']) . ')';
+                                        }
+                                    }
+                                    
+                                    // Add tooltip information for rejected expenses
+                                    $tooltip_info = '';
+                                    if ($status == 'rejected') {
+                                        $rejection_info = formatRejectionInfo($first_expense);
+                                        if ($rejection_info && !empty($rejection_info['reasons'])) {
+                                            $tooltip_parts = [];
+                                            foreach ($rejection_info['reasons'] as $role => $reason) {
+                                                $tooltip_parts[] = $role . ': ' . $reason;
+                                            }
+                                            $tooltip_info = 'title="' . htmlspecialchars(implode(' | ', $tooltip_parts)) . '" data-toggle="tooltip"';
+                                        }
                                     }
                                     ?>
-                                    <span class="expense-combined-status <?php echo $combined_status_class; ?>">
+                                    <span class="expense-combined-status <?php echo $combined_status_class; ?>" <?php echo $tooltip_info; ?>>
                                         <?php echo $combined_status; ?>
                                     </span>
                                 </h6>
@@ -1348,6 +1623,44 @@ function getPendingFromRoles($expense) {
                                                 <button class="btn btn-sm btn-outline-danger delete-expense-btn" data-id="<?php echo $first_expense['id']; ?>">
                                                     <i class="fas fa-trash-alt"></i> Delete
                                                 </button>
+                                            <?php elseif ($first_expense['status'] == 'rejected'): ?>
+                                                <?php 
+                                                $rejection_info = formatRejectionInfo($first_expense);
+                                                if ($rejection_info): 
+                                                ?>
+                                                    <div class="rejected-by-info mb-2">
+                                                        <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($rejection_info['display_text']); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <?php if (canResubmit($first_expense)): ?>
+                                                    <button class="btn btn-sm btn-outline-primary resubmit-expense-btn" data-id="<?php echo $first_expense['id']; ?>">
+                                                        <i class="fas fa-redo"></i> Resubmit
+                                                    </button>
+                                                    <div class="resubmission-info">
+                                                        <?php 
+                                                        $remaining = getRemainingResubmissions($first_expense);
+                                                        echo "({$remaining} resubmissions remaining)";
+                                                        ?>
+                                                    </div>
+                                                <?php elseif (isExpenseTooOld($first_expense)): ?>
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                        <i class="fas fa-clock"></i> Too Old to Resubmit
+                                                    </button>
+                                                    <div class="resubmission-info max-resubmissions-reached">
+                                                        <?php 
+                                                        $days_since = getDaysSinceTravelDate($first_expense);
+                                                        echo "Travel date is {$days_since} days old (max 15 days allowed)";
+                                                        ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                        <i class="fas fa-ban"></i> Max Resubmissions Reached
+                                                    </button>
+                                                    <div class="resubmission-info max-resubmissions-reached">
+                                                        Maximum resubmissions (<?php echo $first_expense['max_resubmissions']; ?>) reached
+                                                    </div>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1454,6 +1767,12 @@ function getPendingFromRoles($expense) {
                                                             <h6 class="expense-purpose">
                                                                                                                 <span class="expense-serial">#<?php echo $index + 1; ?></span>
                                                 <?php echo htmlspecialchars($expense['purpose']); ?>
+                                                <?php 
+                                                $resubmission_text = getResubmissionStatusText($expense);
+                                                if ($resubmission_text): 
+                                                ?>
+                                                    <span class="resubmission-badge"><?php echo $resubmission_text; ?></span>
+                                                <?php endif; ?>
                                                 <?php
                                                 // Check if expense is paid
                                                 $is_paid = false;
@@ -1491,9 +1810,21 @@ function getPendingFromRoles($expense) {
                                                 } elseif ($status == 'rejected' && $is_paid) {
                                                     $combined_status = 'Rejected, Refund Due';
                                                     $combined_status_class = 'status-rejected-paid';
+                                                    
+                                                    // Add rejection info
+                                                    $rejection_info = formatRejectionInfo($expense);
+                                                    if ($rejection_info) {
+                                                        $combined_status .= ' (' . implode(', ', $rejection_info['rejected_by']) . ')';
+                                                    }
                                                 } elseif ($status == 'rejected' && !$is_paid) {
                                                     $combined_status = 'Rejected';
                                                     $combined_status_class = 'status-rejected';
+                                                    
+                                                    // Add rejection info
+                                                    $rejection_info = formatRejectionInfo($expense);
+                                                    if ($rejection_info) {
+                                                        $combined_status .= ' (' . implode(', ', $rejection_info['rejected_by']) . ')';
+                                                    }
                                                 }
                                                 ?>
                                                 <span class="expense-combined-status <?php echo $combined_status_class; ?>">
@@ -1571,6 +1902,41 @@ function getPendingFromRoles($expense) {
                                                                 <button class="btn btn-sm btn-outline-danger delete-expense-btn" data-id="<?php echo $expense['id']; ?>" data-dismiss="modal">
                                                                     <i class="fas fa-trash-alt"></i> Delete
                                                                 </button>
+                                                            <?php elseif ($expense['status'] == 'rejected'): ?>
+                                                                <?php 
+                                                                $rejection_info = formatRejectionInfo($expense);
+                                                                if ($rejection_info): 
+                                                                ?>
+                                                                    <div class="rejected-by-info mb-2">
+                                                                        <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($rejection_info['display_text']); ?>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                                
+                                                                <?php if (canResubmit($expense)): ?>
+                                                                    <button class="btn btn-sm btn-outline-primary resubmit-expense-btn" data-id="<?php echo $expense['id']; ?>" data-dismiss="modal">
+                                                                        <i class="fas fa-redo"></i> Resubmit
+                                                                    </button>
+                                                                    <div class="resubmission-info">
+                                                                        <?php 
+                                                                        $remaining = getRemainingResubmissions($expense);
+                                                                        echo "({$remaining} remaining)";
+                                                                        ?>
+                                                                    </div>
+                                                                <?php elseif (isExpenseTooOld($expense)): ?>
+                                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                                        <i class="fas fa-clock"></i> Too Old
+                                                                    </button>
+                                                                    <div class="resubmission-info max-resubmissions-reached">
+                                                                        <?php 
+                                                                        $days_since = getDaysSinceTravelDate($expense);
+                                                                        echo "({$days_since} days old)";
+                                                                        ?>
+                                                                    </div>
+                                                                <?php else: ?>
+                                                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                                        <i class="fas fa-ban"></i> Max Reached
+                                                                    </button>
+                                                                <?php endif; ?>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
@@ -1688,7 +2054,15 @@ function getPendingFromRoles($expense) {
                     
                     <div class="expense-view-content" id="viewContent-<?php echo $expense['id']; ?>">
                         <div class="expense-detail-header">
-                            <h4 class="expense-detail-purpose"><?php echo htmlspecialchars($expense['purpose']); ?></h4>
+                            <h4 class="expense-detail-purpose">
+                                <?php echo htmlspecialchars($expense['purpose']); ?>
+                                <?php 
+                                $resubmission_text = getResubmissionStatusText($expense);
+                                if ($resubmission_text): 
+                                ?>
+                                    <span class="resubmission-badge"><?php echo $resubmission_text; ?></span>
+                                <?php endif; ?>
+                            </h4>
                             <div class="expense-detail-meta">
                                 <?php
                                 // Check if expense is paid
@@ -1727,9 +2101,21 @@ function getPendingFromRoles($expense) {
                                 } elseif ($status == 'rejected' && $is_paid) {
                                     $combined_status = 'Rejected, Refund Due';
                                     $combined_status_class = 'status-rejected-paid';
+                                    
+                                    // Add rejection info
+                                    $rejection_info = formatRejectionInfo($expense);
+                                    if ($rejection_info) {
+                                        $combined_status .= ' (' . implode(', ', $rejection_info['rejected_by']) . ')';
+                                    }
                                 } elseif ($status == 'rejected' && !$is_paid) {
                                     $combined_status = 'Rejected';
                                     $combined_status_class = 'status-rejected';
+                                    
+                                    // Add rejection info
+                                    $rejection_info = formatRejectionInfo($expense);
+                                    if ($rejection_info) {
+                                        $combined_status .= ' (' . implode(', ', $rejection_info['rejected_by']) . ')';
+                                    }
                                 }
                                 ?>
                                 <span class="expense-combined-status <?php echo $combined_status_class; ?>">
@@ -1835,12 +2221,38 @@ function getPendingFromRoles($expense) {
                         </div>
                         <?php endif; ?>
                         
-                        <?php if ($expense['status'] == 'rejected' && !empty($expense['rejection_reason'])): ?>
+                        <?php if ($expense['status'] == 'rejected'): ?>
                         <div class="expense-detail-section rejection-section">
-                            <h5 class="section-title">Rejection Reason</h5>
-                            <div class="rejection-reason">
-                                <?php echo htmlspecialchars($expense['rejection_reason']); ?>
-                            </div>
+                            <h5 class="section-title">Rejection Information</h5>
+                            <?php 
+                            $rejection_info = formatRejectionInfo($expense);
+                            if ($rejection_info && !empty($rejection_info['reasons'])):
+                            ?>
+                                <?php foreach ($rejection_info['reasons'] as $role => $reason): ?>
+                                    <div class="rejection-item mb-3">
+                                        <div class="rejection-role">
+                                            <span class="badge badge-danger mr-2">
+                                                <i class="fas fa-<?php 
+                                                    echo $role === 'Manager' ? 'user-tie' : 
+                                                        ($role === 'Accountant' ? 'calculator' : 'users'); 
+                                                ?>"></i>
+                                                Rejected by <?php echo htmlspecialchars($role); ?>
+                                            </span>
+                                        </div>
+                                        <div class="rejection-reason mt-2">
+                                            <strong>Reason:</strong> <?php echo htmlspecialchars($reason); ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php elseif (!empty($expense['rejection_reason'])): ?>
+                                <div class="rejection-reason">
+                                    <strong>Reason:</strong> <?php echo htmlspecialchars($expense['rejection_reason']); ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="rejection-reason text-muted">
+                                    No specific rejection reason provided.
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -1863,6 +2275,35 @@ function getPendingFromRoles($expense) {
                                 <i class="fas fa-save"></i> Save Changes
                             </button>
                         </div>
+                    <?php elseif ($expense['status'] == 'rejected'): ?>
+                        <?php if (canResubmit($expense)): ?>
+                            <button type="button" class="btn btn-outline-primary resubmit-expense-btn" data-id="<?php echo $expense['id']; ?>" data-dismiss="modal">
+                                <i class="fas fa-redo"></i> Resubmit
+                            </button>
+                            <div class="resubmission-info">
+                                <?php 
+                                $remaining = getRemainingResubmissions($expense);
+                                echo "({$remaining} resubmissions remaining)";
+                                ?>
+                            </div>
+                        <?php elseif (isExpenseTooOld($expense)): ?>
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-clock"></i> Too Old to Resubmit
+                            </button>
+                            <div class="resubmission-info max-resubmissions-reached">
+                                <?php 
+                                $days_since = getDaysSinceTravelDate($expense);
+                                echo "Travel date is {$days_since} days old (maximum 15 days allowed for resubmission)";
+                                ?>
+                            </div>
+                        <?php else: ?>
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-ban"></i> Maximum Resubmissions Reached
+                            </button>
+                            <div class="resubmission-info max-resubmissions-reached">
+                                This expense has reached the maximum of <?php echo $expense['max_resubmissions']; ?> resubmissions
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
@@ -2513,6 +2954,106 @@ function getPendingFromRoles($expense) {
                     notesContainer.style.display = 'none';
                 }
             }
+            
+            // Resubmit expense functionality
+            let currentExpenseId = null;
+            
+            document.querySelectorAll('.resubmit-expense-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    currentExpenseId = this.getAttribute('data-id');
+                    
+                    // Show confirmation modal instead of browser confirm
+                    $('#resubmitModal').modal('show');
+                });
+            });
+            
+            // Handle confirm resubmit button click
+            document.getElementById('confirmResubmitBtn').addEventListener('click', function() {
+                if (!currentExpenseId) return;
+                
+                // Hide confirmation modal and show processing modal
+                $('#resubmitModal').modal('hide');
+                $('#resubmitProcessingModal').modal('show');
+                
+                // Find the button to update its state
+                const button = document.querySelector(`[data-id="${currentExpenseId}"]`);
+                const originalHTML = button ? button.innerHTML : '';
+                
+                // Send AJAX request to resubmit expense
+                fetch('resubmit_travel_expense_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'expense_id=' + encodeURIComponent(currentExpenseId)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide processing modal
+                    $('#resubmitProcessingModal').modal('hide');
+                    
+                    if (data.success) {
+                        // Show success modal with enhanced message
+                        let message = data.message || 'Your expense has been resubmitted successfully!';
+                        document.getElementById('successMessage').textContent = message;
+                        
+                        // Show remaining resubmissions info if available
+                        const remainingElement = document.getElementById('remainingResubmissions');
+                        if (data.remaining_resubmissions !== undefined) {
+                            remainingElement.textContent = `You have ${data.remaining_resubmissions} resubmission(s) remaining for this expense.`;
+                            remainingElement.style.display = 'block';
+                        } else {
+                            remainingElement.style.display = 'none';
+                        }
+                        
+                        $('#resubmitSuccessModal').modal('show');
+                        
+                        // Reload page when success modal is closed
+                        $('#resubmitSuccessModal').on('hidden.bs.modal', function() {
+                            window.location.reload();
+                        });
+                        
+                        // Also reload when OK button is clicked
+                        document.getElementById('successOkBtn').addEventListener('click', function() {
+                            window.location.reload();
+                        });
+                        
+                    } else {
+                        // Show error modal
+                        const errorMessage = data.message || 'An unexpected error occurred. Please try again.';
+                        document.getElementById('errorMessage').textContent = errorMessage;
+                        $('#resubmitErrorModal').modal('show');
+                        
+                        // Reset button if it exists
+                        if (button) {
+                            button.innerHTML = originalHTML;
+                            button.disabled = false;
+                        }
+                    }
+                    
+                    // Reset current expense ID
+                    currentExpenseId = null;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    
+                    // Hide processing modal
+                    $('#resubmitProcessingModal').modal('hide');
+                    
+                    // Show error modal
+                    document.getElementById('errorMessage').textContent = 'Network error occurred. Please check your connection and try again.';
+                    $('#resubmitErrorModal').modal('show');
+                    
+                    // Reset button if it exists
+                    if (button) {
+                        button.innerHTML = originalHTML;
+                        button.disabled = false;
+                    }
+                    
+                    // Reset current expense ID
+                    currentExpenseId = null;
+                });
+            });
         });
     </script>
     
@@ -2536,6 +3077,125 @@ function getPendingFromRoles($expense) {
         </div>
         <div class="custom-toast-body">
             There was an error updating the expense. Please try again.
+        </div>
+    </div>
+
+    <!-- Resubmit Confirmation Modal -->
+    <div id="resubmitModal" class="modal fade" tabindex="-1" role="dialog" style="z-index: 10050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-redo-alt mr-2"></i>
+                        Resubmit Travel Expense
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-question-circle text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <h6 class="mb-3">Are you sure you want to resubmit this expense?</h6>
+                        <p class="text-muted small mb-0">
+                            This will create a new expense entry with the same details and submit it for approval.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmResubmitBtn">
+                        <i class="fas fa-redo-alt mr-1"></i> Yes, Resubmit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resubmit Processing Modal -->
+    <div id="resubmitProcessingModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" style="z-index: 10050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <h6 class="mb-2">Processing your resubmission...</h6>
+                    <p class="text-muted small mb-0">Please wait while we process your request.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resubmit Success Modal -->
+    <div id="resubmitSuccessModal" class="modal fade" tabindex="-1" role="dialog" style="z-index: 10050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Resubmission Successful
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h6 class="mb-3" id="successMessage">Your expense has been resubmitted successfully!</h6>
+                        <p class="text-muted small mb-0" id="remainingResubmissions">
+                            <!-- Remaining resubmissions info will be inserted here -->
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal" id="successOkBtn">
+                        <i class="fas fa-check mr-1"></i> OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resubmit Error Modal -->
+    <div id="resubmitErrorModal" class="modal fade" tabindex="-1" role="dialog" style="z-index: 10050;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Resubmission Failed
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h6 class="mb-3">Resubmission Failed</h6>
+                        <p class="text-muted small mb-0" id="errorMessage">
+                            <!-- Error message will be inserted here -->
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i> Close
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </body>

@@ -287,6 +287,12 @@ if (!isset($_SESSION['user_id'])) {
                     </a>
                 </li>
                 <li>
+                    <a href="excel_import.php">
+                        <i class="fas fa-file-excel"></i>
+                        <span class="sidebar-text">Excel Import</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#">
                         <i class="fas fa-box"></i>
                         <span class="sidebar-text">Projects</span>

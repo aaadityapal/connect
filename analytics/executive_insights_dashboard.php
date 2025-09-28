@@ -880,7 +880,9 @@
     <?php include '../includes/view_labour_modal.php'; ?>
     <?php include '../includes/edit_labour_modal.php'; ?>
     <?php include '../includes/add_payment_entry_modal.php'; ?>
+    <?php include '../includes/streamlined_payment_entry_modal.php'; ?>
     <?php include '../includes/ui_minimal_payment_view_modal.php'; ?>
+    <?php include '../includes/payment_entry_edit_modal.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
@@ -1323,8 +1325,8 @@
         }
         
         function addPaymentEntry() {
-            // Show the add payment entry modal
-            const modal = new bootstrap.Modal(document.getElementById('addPaymentEntryModal'));
+            // Show the streamlined payment entry modal
+            const modal = new bootstrap.Modal(document.getElementById('streamlinedPaymentEntryModal'));
             modal.show();
         }
         
@@ -2975,8 +2977,10 @@
                 viewModal.hide();
             }
             
-            // Open edit modal (will be implemented later)
-            alert(`Edit functionality will be implemented soon for Payment ID: ${paymentId}`);
+            // Wait a moment for the view modal to close, then open edit modal
+            setTimeout(() => {
+                editEntry(paymentId);
+            }, 300);
         }
         
         // Function to retry loading payment details
@@ -3331,8 +3335,21 @@
         }
         
         function editEntry(id) {
-            // TODO: Implement edit payment entry modal
-            alert(`Editing payment entry for ID: ${id}`);
+            // Show the payment entry edit modal
+            const modal = new bootstrap.Modal(document.getElementById('paymentEntryEditModal'));
+            modal.show();
+            
+            // Reset modal states
+            showPaymentEditLoadingState();
+            
+            // Update modal title
+            document.getElementById('paymentEntryEditModalLabel').innerHTML = `
+                <i class="fas fa-edit me-2 text-primary"></i>
+                Edit Payment Entry #PE-${String(id).padStart(3, '0')}
+            `;
+            
+            // Load payment entry data for editing
+            loadPaymentEntryForEdit(id);
         }
         
         function viewReport(id) {
@@ -3517,6 +3534,47 @@
                     closeImagePreview();
                 }
             });
+            
+            // Payment Entry Edit Modal event listeners
+            const peEditSaveBtn = document.getElementById('peEditSaveChanges');
+            if (peEditSaveBtn) {
+                peEditSaveBtn.addEventListener('click', function() {
+                    savePaymentEntryChanges();
+                });
+            }
+                    
+            // Add Split Payment button event listener
+            const addSplitBtn = document.getElementById('peEditAddSplitBtn');
+            if (addSplitBtn) {
+                addSplitBtn.addEventListener('click', function() {
+                    addSplitPaymentForm();
+                });
+            }
+                    
+            // Main payment amount change handler for split payment summary
+            const paymentAmountInput = document.getElementById('peEditPaymentAmount');
+            if (paymentAmountInput) {
+                paymentAmountInput.addEventListener('input', function() {
+                    updateSplitSummary();
+                });
+            }
+            
+            // Reset edit modal when closed
+            const peEditModal = document.getElementById('paymentEntryEditModal');
+            if (peEditModal) {
+                peEditModal.addEventListener('hidden.bs.modal', function() {
+                    // Reset form and states
+                    document.getElementById('paymentEntryEditForm').reset();
+                    clearValidationStates();
+                    document.getElementById('peEditNewProofPreview').style.display = 'none';
+                    
+                    // Remove any temporary removal flags
+                    const removeInput = document.getElementById('peEditRemoveProof');
+                    if (removeInput) {
+                        removeInput.remove();
+                    }
+                });
+            }
         });
         
         // Function to close image preview
@@ -3525,6 +3583,863 @@
             if (modal) {
                 modal.style.display = 'none';
                 document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // ========== PAYMENT ENTRY EDIT MODAL FUNCTIONS ==========
+        
+        function showPaymentEditLoadingState() {
+            document.getElementById('peEditLoadingState').style.display = 'flex';
+            document.getElementById('peEditErrorState').style.display = 'none';
+            document.getElementById('paymentEntryEditForm').style.display = 'none';
+            document.getElementById('peEditSuccessState').style.display = 'none';
+            
+            // Show loading footer
+            document.getElementById('peEditFooterLoading').style.display = 'flex';
+            document.getElementById('peEditFooterError').style.display = 'none';
+            document.getElementById('peEditFooterForm').style.display = 'none';
+            document.getElementById('peEditFooterSuccess').style.display = 'none';
+        }
+        
+        function showPaymentEditErrorState(message) {
+            document.getElementById('peEditLoadingState').style.display = 'none';
+            document.getElementById('peEditErrorState').style.display = 'flex';
+            document.getElementById('paymentEntryEditForm').style.display = 'none';
+            document.getElementById('peEditSuccessState').style.display = 'none';
+            
+            document.getElementById('peEditErrorMessage').textContent = message;
+            
+            // Show error footer
+            document.getElementById('peEditFooterLoading').style.display = 'none';
+            document.getElementById('peEditFooterError').style.display = 'flex';
+            document.getElementById('peEditFooterForm').style.display = 'none';
+            document.getElementById('peEditFooterSuccess').style.display = 'none';
+        }
+        
+        function showPaymentEditFormState() {
+            document.getElementById('peEditLoadingState').style.display = 'none';
+            document.getElementById('peEditErrorState').style.display = 'none';
+            document.getElementById('paymentEntryEditForm').style.display = 'block';
+            document.getElementById('peEditSuccessState').style.display = 'none';
+            
+            // Show form footer
+            document.getElementById('peEditFooterLoading').style.display = 'none';
+            document.getElementById('peEditFooterError').style.display = 'none';
+            document.getElementById('peEditFooterForm').style.display = 'flex';
+            document.getElementById('peEditFooterSuccess').style.display = 'none';
+        }
+        
+        function showPaymentEditSuccessState(message) {
+            document.getElementById('peEditLoadingState').style.display = 'none';
+            document.getElementById('peEditErrorState').style.display = 'none';
+            document.getElementById('paymentEntryEditForm').style.display = 'none';
+            document.getElementById('peEditSuccessState').style.display = 'flex';
+            
+            document.getElementById('peEditSuccessMessage').textContent = message;
+            
+            // Show success footer
+            document.getElementById('peEditFooterLoading').style.display = 'none';
+            document.getElementById('peEditFooterError').style.display = 'none';
+            document.getElementById('peEditFooterForm').style.display = 'none';
+            document.getElementById('peEditFooterSuccess').style.display = 'flex';
+        }
+        
+        function loadPaymentEntryForEdit(paymentId) {
+            // Load form data (projects and users) first
+            Promise.all([
+                fetch('../api/get_payment_entry_form_data.php'),
+                fetch(`../api/get_ui_payment_entry_details.php?id=${paymentId}`)
+            ])
+            .then(responses => Promise.all(responses.map(r => r.json())))
+            .then(([formData, paymentData]) => {
+                if (formData.status === 'success' && paymentData.status === 'success') {
+                    populateEditForm(formData.data, paymentData.payment_entry);
+                    showPaymentEditFormState();
+                } else {
+                    const errorMsg = paymentData.message || formData.message || 'Failed to load payment entry data';
+                    showPaymentEditErrorState(errorMsg);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading payment entry for edit:', error);
+                showPaymentEditErrorState('Network error. Please check your connection and try again.');
+            });
+        }
+        
+        function populateEditForm(formData, paymentEntry) {
+            // Populate payment entry ID
+            document.getElementById('peEditPaymentId').value = paymentEntry.payment_id;
+            
+            // Store projects data for later use
+            window.paymentEditProjectsData = formData.projects || [];
+            
+            // Populate projects dropdown
+            const projectSelect = document.getElementById('peEditProjectId');
+            projectSelect.innerHTML = '<option value="">Select a project...</option>';
+            
+            if (formData.projects) {
+                formData.projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = project.display_title;
+                    option.setAttribute('data-project-type', project.project_type || '');
+                    option.selected = project.id == paymentEntry.project_id;
+                    projectSelect.appendChild(option);
+                });
+            }
+            
+            // Add event listener for project selection to auto-populate project type
+            projectSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const projectType = selectedOption.getAttribute('data-project-type');
+                const projectTypeSelect = document.getElementById('peEditProjectType');
+                
+                if (projectType && projectType.trim() !== '') {
+                    const projectTypeValue = projectType.toLowerCase();
+                    projectTypeSelect.value = projectTypeValue;
+                } else {
+                    projectTypeSelect.value = '';
+                }
+            });
+            
+            // Set the project selection explicitly after population
+            setTimeout(() => {
+                const projectSelectElement = document.getElementById('peEditProjectId');
+                if (projectSelectElement) {
+                    projectSelectElement.value = paymentEntry.project_id;
+                    // Trigger change event to populate project type
+                    const changeEvent = new Event('change');
+                    projectSelectElement.dispatchEvent(changeEvent);
+                }
+            }, 100);
+            
+            // Populate users dropdown
+            const userSelect = document.getElementById('peEditPaymentVia');
+            userSelect.innerHTML = '<option value="">Select user...</option>';
+            
+            if (formData.users) {
+                formData.users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.display_name;
+                    option.selected = user.id == paymentEntry.payment_done_via;
+                    userSelect.appendChild(option);
+                });
+            }
+            
+            // Populate form fields
+            document.getElementById('peEditPaymentDate').value = paymentEntry.payment_date;
+            document.getElementById('peEditPaymentAmount').value = paymentEntry.payment_amount;
+            document.getElementById('peEditPaymentMode').value = paymentEntry.payment_mode;
+            
+            // Handle payment mode change for split payments
+            setupPaymentModeHandler(paymentEntry.payment_id);
+            
+            // Check if current payment mode is split payment
+            if (paymentEntry.payment_mode === 'split_payment') {
+                showSplitPaymentSection();
+                loadExistingSplitPayments(paymentEntry.payment_id);
+            }
+            
+            // Handle current payment proof
+            const currentProofSection = document.getElementById('peEditCurrentProofSection');
+            const currentProofPreview = document.getElementById('peEditCurrentProofPreview');
+            const proofReplaceNote = document.getElementById('peEditProofReplaceNote');
+            
+            if (paymentEntry.has_payment_proof && paymentEntry.payment_proof_exists) {
+                currentProofSection.style.display = 'block';
+                proofReplaceNote.style.display = 'inline';
+                
+                // Keep payment proof section collapsed by default
+                // Users can manually expand using the toggle button
+                
+                const proofPath = paymentEntry.payment_proof_full_path;
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(proofPath);
+                
+                if (isImage) {
+                    currentProofPreview.innerHTML = `
+                        <img src="${proofPath}" alt="Current Payment Proof" style="max-width: 100px; max-height: 80px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                        <p class="mb-0 text-muted small mt-1">Current payment proof</p>
+                    `;
+                } else {
+                    currentProofPreview.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-pdf text-danger me-2" style="font-size: 2rem;"></i>
+                            <div>
+                                <p class="mb-0 fw-medium">PDF Document</p>
+                                <p class="mb-0 text-muted small">Current payment proof</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Set up view current proof button
+                document.getElementById('peEditViewCurrentProof').onclick = function() {
+                    window.open(proofPath, '_blank');
+                };
+                
+                // Set up remove current proof button
+                document.getElementById('peEditRemoveCurrentProof').onclick = function() {
+                    if (confirm('Are you sure you want to remove the current payment proof?')) {
+                        currentProofSection.style.display = 'none';
+                        proofReplaceNote.style.display = 'none';
+                        // Add hidden field to indicate removal
+                        let removeInput = document.getElementById('peEditRemoveProof');
+                        if (!removeInput) {
+                            removeInput = document.createElement('input');
+                            removeInput.type = 'hidden';
+                            removeInput.id = 'peEditRemoveProof';
+                            removeInput.name = 'remove_current_proof';
+                            document.getElementById('paymentEntryEditForm').appendChild(removeInput);
+                        }
+                        removeInput.value = 'true';
+                    }
+                };
+            } else {
+                currentProofSection.style.display = 'none';
+                proofReplaceNote.style.display = 'none';
+            }
+            
+            // Populate recipients display
+            populateRecipientsDisplay(paymentEntry);
+            
+            // Set up file preview for new uploads
+            setupFilePreview();
+        }
+        
+        function populateRecipientsDisplay(paymentEntry) {
+            const recipientsDisplay = document.getElementById('peEditRecipientsDisplay');
+            const recipientsCount = document.getElementById('peEditRecipientsCount');
+            
+            recipientsCount.textContent = paymentEntry.recipients_count || 0;
+            
+            if (!paymentEntry.has_recipients || !paymentEntry.recipients || paymentEntry.recipients.length === 0) {
+                recipientsDisplay.innerHTML = `
+                    <div class="text-center py-3 text-muted">
+                        <i class="fas fa-users-slash mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                        <p class="mb-0">No recipients found for this payment entry</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let recipientsHtml = '';
+            paymentEntry.recipients.forEach(recipient => {
+                recipientsHtml += `
+                    <div class="pe-edit-recipient-item">
+                        <div class="pe-edit-recipient-info">
+                            <div class="pe-edit-recipient-name">${escapeHtml(recipient.name)}</div>
+                            <div class="pe-edit-recipient-details">
+                                ${escapeHtml(recipient.display_category)} • ${escapeHtml(recipient.display_type)}
+                                ${recipient.payment_for ? ' • ' + escapeHtml(recipient.payment_for) : ''}
+                            </div>
+                        </div>
+                        <div class="pe-edit-recipient-amount">${recipient.formatted_amount}</div>
+                    </div>
+                `;
+            });
+            
+            recipientsDisplay.innerHTML = recipientsHtml;
+        }
+        
+        function setupFilePreview() {
+            const fileInput = document.getElementById('peEditPaymentProof');
+            const newProofPreview = document.getElementById('peEditNewProofPreview');
+            
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                
+                if (!file) {
+                    newProofPreview.style.display = 'none';
+                    return;
+                }
+                
+                // Validate file
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Invalid file type. Only JPG, PNG, and PDF files are allowed.');
+                    fileInput.value = '';
+                    newProofPreview.style.display = 'none';
+                    return;
+                }
+                
+                if (file.size > maxSize) {
+                    alert('File too large. Maximum size is 5MB.');
+                    fileInput.value = '';
+                    newProofPreview.style.display = 'none';
+                    return;
+                }
+                
+                // Show preview
+                const isImage = file.type.startsWith('image/');
+                
+                if (isImage) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        newProofPreview.innerHTML = `
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="${e.target.result}" alt="New Payment Proof" style="max-width: 80px; max-height: 60px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <p class="mb-0 fw-medium text-success">New file selected: ${file.name}</p>
+                                    <p class="mb-0 text-muted small">Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                </div>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    newProofPreview.innerHTML = `
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas fa-file-pdf text-danger" style="font-size: 2rem;"></i>
+                            <div>
+                                <p class="mb-0 fw-medium text-success">New file selected: ${file.name}</p>
+                                <p class="mb-0 text-muted small">Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                newProofPreview.style.display = 'block';
+            });
+        }
+        
+        function retryLoadPaymentEntryForEdit() {
+            const paymentId = document.getElementById('peEditPaymentId').value;
+            if (paymentId) {
+                showPaymentEditLoadingState();
+                loadPaymentEntryForEdit(paymentId);
+            }
+        }
+        
+        function savePaymentEntryChanges() {
+            const form = document.getElementById('paymentEntryEditForm');
+            
+            // Clear previous validation states
+            clearValidationStates();
+            
+            // Validate required fields
+            const validationResults = validatePaymentEditForm();
+            
+            if (!validationResults.isValid) {
+                // Show validation errors
+                showValidationErrors(validationResults.errors);
+                return;
+            }
+            
+            // Show saving state
+            const saveBtn = document.getElementById('peEditSaveChanges');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            saveBtn.disabled = true;
+            
+            // Create FormData for submission (supports file uploads)
+            const formData = new FormData(form);
+            
+            // Submit the form
+            fetch('../api/update_payment_entry.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reset save button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+                if (data.status === 'success') {
+                    // Show success message
+                    showPaymentEditSuccessState(data.message || 'Payment entry updated successfully!');
+                    
+                    // Refresh the payment entries list in the main dashboard
+                    setTimeout(() => {
+                        refreshEntryData();
+                    }, 1000);
+                    
+                    // Close modal after a delay
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('paymentEntryEditModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                    }, 2500);
+                } else {
+                    alert('Error updating payment entry: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                // Reset save button
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                
+                console.error('Error saving payment entry:', error);
+                let errorMessage = 'Network error. Please check your connection and try again.';
+                
+                if (error.message.includes('HTTP error')) {
+                    errorMessage = 'Server error. Please try again later or contact support.';
+                }
+                
+                alert(errorMessage);
+            });
+        }
+        
+        function validatePaymentEditForm() {
+            const errors = [];
+            let isValid = true;
+            
+            // Required field validations
+            const requiredFields = [
+                { id: 'peEditProjectId', name: 'Project', type: 'select' },
+                { id: 'peEditPaymentDate', name: 'Payment Date', type: 'date' },
+                { id: 'peEditPaymentAmount', name: 'Payment Amount', type: 'number' },
+                { id: 'peEditPaymentMode', name: 'Payment Mode', type: 'select' },
+                { id: 'peEditPaymentVia', name: 'Payment Done Via', type: 'select' }
+            ];
+            
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const value = element.value.trim();
+                
+                if (!value) {
+                    errors.push({ field: field.id, message: `${field.name} is required` });
+                    isValid = false;
+                } else {
+                    // Additional validations based on type
+                    if (field.type === 'number') {
+                        const numValue = parseFloat(value);
+                        if (isNaN(numValue) || numValue <= 0) {
+                            errors.push({ field: field.id, message: `${field.name} must be a positive number` });
+                            isValid = false;
+                        }
+                    } else if (field.type === 'date') {
+                        const dateValue = new Date(value);
+                        if (isNaN(dateValue.getTime())) {
+                            errors.push({ field: field.id, message: `${field.name} must be a valid date` });
+                            isValid = false;
+                        }
+                    }
+                }
+            });
+            
+            // Split payment validation
+            const paymentMode = document.getElementById('peEditPaymentMode').value;
+            if (paymentMode === 'split_payment') {
+                const splitAmounts = document.querySelectorAll('.pe-split-amount');
+                const splitModes = document.querySelectorAll('.pe-split-mode');
+                
+                if (splitAmounts.length === 0) {
+                    errors.push({ field: 'peEditPaymentMode', message: 'At least one split payment is required for split payment mode' });
+                    isValid = false;
+                } else {
+                    let totalSplit = 0;
+                    let hasEmptyAmount = false;
+                    let hasEmptyMode = false;
+                    
+                    splitAmounts.forEach((amountInput, index) => {
+                        const amount = parseFloat(amountInput.value) || 0;
+                        const mode = splitModes[index].value;
+                        
+                        if (amount <= 0) {
+                            hasEmptyAmount = true;
+                        } else {
+                            totalSplit += amount;
+                        }
+                        
+                        if (!mode) {
+                            hasEmptyMode = true;
+                        }
+                    });
+                    
+                    if (hasEmptyAmount) {
+                        errors.push({ field: 'peEditPaymentMode', message: 'All split payment amounts must be greater than 0' });
+                        isValid = false;
+                    }
+                    
+                    if (hasEmptyMode) {
+                        errors.push({ field: 'peEditPaymentMode', message: 'All split payment modes must be selected' });
+                        isValid = false;
+                    }
+                    
+                    const mainAmount = parseFloat(document.getElementById('peEditPaymentAmount').value) || 0;
+                    if (Math.abs(totalSplit - mainAmount) > 0.01) {
+                        errors.push({ field: 'peEditPaymentMode', message: 'Split payment amounts must equal the main payment amount' });
+                        isValid = false;
+                    }
+                }
+            }
+            
+            // File validation if uploaded
+            const fileInput = document.getElementById('peEditPaymentProof');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                
+                if (!allowedTypes.includes(file.type)) {
+                    errors.push({ field: 'peEditPaymentProof', message: 'Only JPG, PNG, and PDF files are allowed' });
+                    isValid = false;
+                }
+                
+                if (file.size > maxSize) {
+                    errors.push({ field: 'peEditPaymentProof', message: 'File size must be less than 5MB' });
+                    isValid = false;
+                }
+            }
+            
+            return { isValid, errors };
+        }
+        
+        function clearValidationStates() {
+            const inputs = document.querySelectorAll('.pe-edit-input, .pe-edit-select');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid', 'is-valid');
+            });
+            
+            const feedbacks = document.querySelectorAll('.pe-edit-feedback');
+            feedbacks.forEach(feedback => feedback.remove());
+        }
+        
+        function showValidationErrors(errors) {
+            errors.forEach(error => {
+                const element = document.getElementById(error.field);
+                if (element) {
+                    element.classList.add('is-invalid');
+                    
+                    // Add error message
+                    const feedback = document.createElement('div');
+                    feedback.className = 'pe-edit-feedback invalid';
+                    feedback.textContent = error.message;
+                    
+                    element.parentNode.appendChild(feedback);
+                }
+            });
+            
+            // Focus on first invalid field
+            if (errors.length > 0) {
+                const firstErrorField = document.getElementById(errors[0].field);
+                if (firstErrorField) {
+                    firstErrorField.focus();
+                    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // ========== TOGGLE SECTION FUNCTIONS ==========
+        
+        function toggleSection(contentId, toggleBtn) {
+            const content = document.getElementById(contentId);
+            const icon = toggleBtn.querySelector('i');
+            const text = toggleBtn.querySelector('span');
+            
+            if (content.style.display === 'none' || content.style.display === '') {
+                // Show content
+                content.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+                text.textContent = 'Hide';
+                toggleBtn.classList.remove('btn-outline-secondary');
+                toggleBtn.classList.add('btn-outline-primary');
+                
+                // Add smooth slide down animation
+                content.style.opacity = '0';
+                content.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    content.style.transition = 'all 0.3s ease';
+                    content.style.opacity = '1';
+                    content.style.transform = 'translateY(0)';
+                }, 10);
+            } else {
+                // Hide content
+                content.style.transition = 'all 0.3s ease';
+                content.style.opacity = '0';
+                content.style.transform = 'translateY(-10px)';
+                
+                setTimeout(() => {
+                    content.style.display = 'none';
+                    icon.className = 'fas fa-chevron-down';
+                    text.textContent = 'Show';
+                    toggleBtn.classList.remove('btn-outline-primary');
+                    toggleBtn.classList.add('btn-outline-secondary');
+                }, 300);
+            }
+        }
+        
+        // ========== SPLIT PAYMENT FUNCTIONS ==========
+        
+        function setupPaymentModeHandler(paymentId) {
+            const paymentModeSelect = document.getElementById('peEditPaymentMode');
+            if (paymentModeSelect) {
+                paymentModeSelect.addEventListener('change', function() {
+                    const selectedMode = this.value;
+                    if (selectedMode === 'split_payment') {
+                        showSplitPaymentSection();
+                        loadExistingSplitPayments(paymentId);
+                    } else {
+                        hideSplitPaymentSection();
+                    }
+                });
+            }
+        }
+        
+        function showSplitPaymentSection() {
+            const splitSection = document.getElementById('peEditSplitPaymentSection');
+            if (splitSection) {
+                splitSection.style.display = 'block';
+                
+                // Keep split payment content collapsed by default
+                // Users can manually expand using the toggle button if needed
+            }
+        }
+        
+        function hideSplitPaymentSection() {
+            const splitSection = document.getElementById('peEditSplitPaymentSection');
+            if (splitSection) {
+                splitSection.style.display = 'none';
+                // Clear existing splits
+                const splitsContainer = document.getElementById('peEditNewSplitsList');
+                if (splitsContainer) {
+                    splitsContainer.innerHTML = '';
+                }
+                // Hide summary
+                const summarySection = document.getElementById('peEditSplitSummary');
+                if (summarySection) {
+                    summarySection.style.display = 'none';
+                }
+                updateSplitSummary();
+            }
+        }
+        
+        function loadExistingSplitPayments(paymentId) {
+            fetch(`../api/get_main_payment_splits.php?payment_id=${paymentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const splitsContainer = document.getElementById('peEditNewSplitsList');
+                        if (splitsContainer && data.splits) {
+                            splitsContainer.innerHTML = '';
+                            
+                            data.splits.forEach(split => {
+                                addSplitPaymentForm(split);
+                            });
+                            
+                            updateSplitSummary();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading split payments:', error);
+                });
+        }
+        
+        function addSplitPaymentForm(existingData = null) {
+            const splitsContainer = document.getElementById('peEditNewSplitsList');
+            if (!splitsContainer) {
+                console.error('Split container not found');
+                return;
+            }
+            
+            const splitIndex = splitsContainer.children.length;
+            const splitId = existingData ? existingData.main_split_id : 'new_' + Date.now();
+            
+            const splitDiv = document.createElement('div');
+            splitDiv.className = 'pe-split-payment-item';
+            splitDiv.setAttribute('data-split-id', splitId);
+            
+            splitDiv.innerHTML = `
+                <div class="pe-split-payment-header">
+                    <h6 class="pe-split-payment-title">Split Payment ${splitIndex + 1}</h6>
+                    <button type="button" class="pe-split-remove-btn" onclick="removeSplitPayment(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="pe-edit-label">Amount</label>
+                        <input type="number" class="pe-edit-input pe-split-amount" 
+                               name="split_amounts[]" 
+                               value="${existingData ? existingData.amount : ''}" 
+                               placeholder="Enter amount" 
+                               step="0.01" 
+                               onchange="updateSplitSummary()" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="pe-edit-label">Payment Mode</label>
+                        <select class="pe-edit-select pe-split-mode" name="split_modes[]" required>
+                            <option value="">Select mode...</option>
+                            <option value="cash" ${existingData && existingData.payment_mode === 'cash' ? 'selected' : ''}>Cash</option>
+                            <option value="cheque" ${existingData && existingData.payment_mode === 'cheque' ? 'selected' : ''}>Cheque</option>
+                            <option value="online_transfer" ${existingData && existingData.payment_mode === 'online_transfer' ? 'selected' : ''}>Online Transfer</option>
+                            <option value="upi" ${existingData && existingData.payment_mode === 'upi' ? 'selected' : ''}>UPI</option>
+                            <option value="credit_card" ${existingData && existingData.payment_mode === 'credit_card' ? 'selected' : ''}>Credit Card</option>
+                            <option value="debit_card" ${existingData && existingData.payment_mode === 'debit_card' ? 'selected' : ''}>Debit Card</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="pe-edit-label">Proof File</label>
+                        <input type="file" class="pe-edit-input pe-split-proof" 
+                               name="split_proofs[]" 
+                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        ${existingData && existingData.proof_file ? `
+                            <div class="pe-split-existing-proof">
+                                <small class="text-muted">Current: ${existingData.proof_file}</small>
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" 
+                                        onclick="viewSplitProof('${existingData.proof_file_path}', '${existingData.proof_file}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <input type="hidden" name="split_ids[]" value="${splitId}">
+            `;
+            
+            splitsContainer.appendChild(splitDiv);
+            
+            // Show the summary section
+            const summarySection = document.getElementById('peEditSplitSummary');
+            if (summarySection) {
+                summarySection.style.display = 'block';
+            }
+            
+            updateSplitSummary();
+        }
+        
+        function removeSplitPayment(button) {
+            const splitItem = button.closest('.pe-split-payment-item');
+            if (splitItem) {
+                if (confirm('Are you sure you want to remove this split payment?')) {
+                    splitItem.remove();
+                    updateSplitSummary();
+                    updateSplitPaymentNumbers();
+                }
+            }
+        }
+        
+        function updateSplitPaymentNumbers() {
+            const splitItems = document.querySelectorAll('.pe-split-payment-item');
+            splitItems.forEach((item, index) => {
+                const title = item.querySelector('.pe-split-payment-title');
+                if (title) {
+                    title.textContent = `Split Payment ${index + 1}`;
+                }
+            });
+        }
+        
+        function updateSplitSummary() {
+            const amounts = document.querySelectorAll('.pe-split-amount');
+            let totalSplit = 0;
+            
+            amounts.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                totalSplit += value;
+            });
+            
+            const mainAmount = parseFloat(document.getElementById('peEditPaymentAmount').value) || 0;
+            const remaining = mainAmount - totalSplit;
+            
+            // Update individual summary elements
+            const totalSplitElement = document.getElementById('peEditTotalSplitAmount');
+            const mainPaymentElement = document.getElementById('peEditMainPaymentAmount');
+            
+            if (totalSplitElement) {
+                totalSplitElement.textContent = `₹${totalSplit.toFixed(2)}`;
+            }
+            
+            if (mainPaymentElement) {
+                mainPaymentElement.textContent = `₹${mainAmount.toFixed(2)}`;
+            }
+            
+            // Update validation message
+            const validationElement = document.getElementById('peEditSplitValidation');
+            if (validationElement) {
+                if (remaining !== 0) {
+                    validationElement.innerHTML = `
+                        <div class="alert alert-warning small mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Split amounts must equal the main payment amount. Remaining: ₹${remaining.toFixed(2)}
+                        </div>
+                    `;
+                } else {
+                    validationElement.innerHTML = `
+                        <div class="alert alert-success small mb-0">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Split amounts match the main payment amount.
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        function viewSplitProof(proofPath, proofName) {
+            if (proofPath) {
+                // Ensure the file path is correctly formatted
+                let fullProofPath = proofPath;
+                if (!fullProofPath.startsWith('http') && !fullProofPath.startsWith('/')) {
+                    fullProofPath = '../' + fullProofPath;
+                }
+                window.open(fullProofPath, '_blank');
+            } else {
+                alert('Proof file not found.');
+            }
+        }
+        
+        function updateSplitPaymentNumbers() {
+            const splitItems = document.querySelectorAll('.pe-split-payment-item');
+            splitItems.forEach((item, index) => {
+                const title = item.querySelector('.pe-split-payment-title');
+                if (title) {
+                    title.textContent = `Split Payment ${index + 1}`;
+                }
+            });
+        }
+        
+        function updateSplitSummary() {
+            const amounts = document.querySelectorAll('.pe-split-amount');
+            let totalSplit = 0;
+            
+            amounts.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                totalSplit += value;
+            });
+            
+            const mainAmount = parseFloat(document.getElementById('peEditPaymentAmount').value) || 0;
+            const remaining = mainAmount - totalSplit;
+            
+            // Update individual summary elements
+            const totalSplitElement = document.getElementById('peEditTotalSplitAmount');
+            const mainPaymentElement = document.getElementById('peEditMainPaymentAmount');
+            
+            if (totalSplitElement) {
+                totalSplitElement.textContent = `₹${totalSplit.toFixed(2)}`;
+            }
+            
+            if (mainPaymentElement) {
+                mainPaymentElement.textContent = `₹${mainAmount.toFixed(2)}`;
+            }
+            
+            // Update validation message
+            const validationElement = document.getElementById('peEditSplitValidation');
+            if (validationElement) {
+                if (remaining !== 0) {
+                    validationElement.innerHTML = `
+                        <div class="alert alert-warning small mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Split amounts must equal the main payment amount. Remaining: ₹${remaining.toFixed(2)}
+                        </div>
+                    `;
+                } else {
+                    validationElement.innerHTML = `
+                        <div class="alert alert-success small mb-0">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Split amounts match the main payment amount.
+                        </div>
+                    `;
+                }
             }
         }
     </script>

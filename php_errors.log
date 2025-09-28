@@ -1,0 +1,29 @@
+[25-Sep-2025 13:45:08 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 12
+[25-Sep-2025 13:45:08 Europe/Berlin] PHP Warning:  Undefined array key "current_resubmission_count" in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 102
+[25-Sep-2025 13:45:08 Europe/Berlin] PHP Warning:  Undefined array key "max_allowed_resubmissions" in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 103
+[25-Sep-2025 13:45:08 Europe/Berlin] PHP Warning:  Undefined array key "root_expense_id" in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 104
+[25-Sep-2025 13:45:08 Europe/Berlin] Error resubmitting travel expense: Maximum resubmissions reached. This expense has already been resubmitted  times (limit: ). in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 107
+[25-Sep-2025 13:45:26 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\hr\resubmit_travel_expense.php:133
+Stack trace:
+#0 C:\xampp\htdocs\hr\resubmit_travel_expense.php(133): mysqli_stmt->bind_param('isssssddssiiiii', 36, 'Site visit', 'Bike', 'Dilshad garden', 'Office', '2025-07-07', '7.40', '25.90', '', '', 371, 1, 371, 3)
+#1 {main}
+  thrown in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 133
+[25-Sep-2025 13:45:49 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 12
+[25-Sep-2025 13:45:49 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\hr\resubmit_travel_expense.php:133
+Stack trace:
+#0 C:\xampp\htdocs\hr\resubmit_travel_expense.php(133): mysqli_stmt->bind_param('isssssddssiiiii', 36, 'Site material', 'Bike', 'Banghel paint m...', 'Sec 89', '2025-06-05', '4.50', '16.00', '', '', 19, 1, 19, 3)
+#1 C:\xampp\htdocs\hr\test_resubmit_direct.php(28): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 133
+[25-Sep-2025 13:46:04 Europe/Berlin] PHP Notice:  session_start(): Ignoring session_start() because a session is already active in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 12
+[25-Sep-2025 13:46:04 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\hr\resubmit_travel_expense.php:133
+Stack trace:
+#0 C:\xampp\htdocs\hr\resubmit_travel_expense.php(133): mysqli_stmt->bind_param('isssssddssiiiii', 36, 'Site material', 'Bike', 'Banghel paint m...', 'Sec 89', '2025-06-05', '4.50', '16.00', '', '', 19, 1, 19, 3)
+#1 C:\xampp\htdocs\hr\test_resubmit_direct.php(28): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 133
+[25-Sep-2025 13:46:21 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\hr\resubmit_travel_expense.php:133
+Stack trace:
+#0 C:\xampp\htdocs\hr\resubmit_travel_expense.php(133): mysqli_stmt->bind_param('isssssddssiiiii', 36, 'Site material', 'Bike', 'Dallupura', 'Dilshad garden', '2025-07-07', '9.30', '32.55', '', '', 373, 1, 373, 3)
+#1 {main}
+  thrown in C:\xampp\htdocs\hr\resubmit_travel_expense.php on line 133

@@ -762,7 +762,28 @@ $backUrl = $isHR ? 'hr_project_list.php' : 'projects.php';
 
         // Bind stage-level events
         container.querySelectorAll('.stage-assign').forEach(el => el.addEventListener('change', e => {
-            const i = +e.target.dataset.idx; stagesState[i].assignTo = e.target.value; stagesState[i].assigned_to = e.target.value; }));
+            const i = +e.target.dataset.idx;
+            stagesState[i].assignTo = e.target.value;
+            stagesState[i].assigned_to = e.target.value;
+            
+            // Auto-assign substages that are currently unassigned
+            const stage = stagesState[i];
+            if (stage.sub_stages) {
+                stage.sub_stages.forEach((substage, sidx) => {
+                    // Check if substage is unassigned (value "0" or empty)
+                    if (!substage.assigned_to || substage.assigned_to === "0") {
+                        substage.assigned_to = e.target.value;
+                        substage.assignTo = e.target.value;
+                        
+                        // Update the UI for this substage
+                        const subAssignSelect = document.querySelector(`.sub-assign[data-stage="${i}"][data-idx="${sidx}"]`);
+                        if (subAssignSelect) {
+                            subAssignSelect.value = e.target.value;
+                        }
+                    }
+                });
+            }
+        }));
         container.querySelectorAll('.stage-start').forEach(el => el.addEventListener('change', e => {
             const i = +e.target.dataset.idx; stagesState[i].start_date = e.target.value; stagesState[i].startDate = e.target.value; }));
         container.querySelectorAll('.stage-end').forEach(el => el.addEventListener('change', e => {

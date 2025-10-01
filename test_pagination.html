@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagination Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .vendor-pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px 0;
+        }
+
+        .pagination-controls {
+            display: flex;
+            list-style: none;
+            gap: 8px;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+        }
+
+        .pagination-item {
+            list-style: none;
+        }
+
+        .pagination-link {
+            padding: 10px 16px;
+            border: 1px solid #eef2f7;
+            border-radius: 8px;
+            color: #6c757d;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+
+        .pagination-link:hover {
+            background-color: #f8f9fa;
+            color: #2c7be5;
+            border-color: #d1d1d1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .pagination-link.active {
+            background-color: #2c7be5;
+            color: #ffffff;
+            border-color: #2c7be5;
+            box-shadow: 0 4px 8px rgba(44, 123, 229, 0.2);
+        }
+
+        .pagination-link.active:hover {
+            background-color: #1a68d1;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .vendor-pagination {
+                margin-top: 25px;
+                padding: 15px 0;
+            }
+
+            .pagination-controls {
+                gap: 6px;
+            }
+
+            .pagination-link {
+                padding: 8px 12px;
+                font-size: 13px;
+                min-width: 36px;
+                border-radius: 6px;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .vendor-pagination {
+                margin-top: 20px;
+                padding: 12px 0;
+            }
+
+            .pagination-controls {
+                gap: 4px;
+            }
+
+            .pagination-link {
+                padding: 6px 10px;
+                font-size: 12px;
+                min-width: 32px;
+                border-radius: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Professional Pagination Test</h1>
+    <p>This demonstrates the new professional pagination design with unique class names.</p>
+    
+    <div class="vendor-pagination">
+        <ul class="pagination-controls">
+            <li class="pagination-item"><a href="#" class="pagination-link">Previous</a></li>
+            <li class="pagination-item"><a href="#" class="pagination-link">1</a></li>
+            <li class="pagination-item"><a href="#" class="pagination-link active">2</a></li>
+            <li class="pagination-item"><a href="#" class="pagination-link">3</a></li>
+            <li class="pagination-item"><a href="#" class="pagination-link">4</a></li>
+            <li class="pagination-item"><a href="#" class="pagination-link">5</a></li>
+            <li class="pagination-item"><a href="#" class="pagination-link">Next</a></li>
+        </ul>
+    </div>
+</body>
+</html>

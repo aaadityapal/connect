@@ -837,9 +837,35 @@ try {
             rows.forEach(row => {
                 const checkbox = row.querySelector('.row-check');
                 if (checkbox && checkbox.checked) {
-                    const date = row.cells[1].textContent; // human date string
-                    const dateObj = new Date(date);
-                    const isoDate = dateObj.toISOString().split('T')[0];
+                    // Use the ISO date directly from the data attribute to avoid timezone issues
+                    const isoDate = row.cells[1].getAttribute('data-iso-date') || '';
+                    // Fallback to the parsing method if data-iso-date is not available
+                    if (!isoDate) {
+                        // Fix for date conversion issue - use the original date string directly
+                        // instead of converting through Date object which can cause timezone issues
+                        const dateCellText = row.cells[1].textContent; // human date string
+                        // Extract the date in YYYY-MM-DD format directly from the date string
+                        // This avoids timezone conversion issues with toISOString()
+                        const dateMatch = dateCellText.match(/\w{3} (\w{3}) (\d{1,2}) (\d{4})/);
+                        let isoDate = '';
+                        if (dateMatch) {
+                            const [, month, day, year] = dateMatch;
+                            // Convert month name to month number
+                            const months = {
+                                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                                'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                            };
+                            const monthNum = months[month] || '01';
+                            const dayPadded = day.padStart(2, '0');
+                            isoDate = `${year}-${monthNum}-${dayPadded}`;
+                        } else {
+                            // Fallback to original method if regex doesn't match
+                            const dateObj = new Date(dateCellText);
+                            isoDate = dateObj.toISOString().split('T')[0];
+                        }
+                    }
+                    
                     const leaveTypeName = row.querySelector('.row-leave-type').value;
                     const leaveTypeId = leaveTypeMap[leaveTypeName] || parseInt(leaveTypeName, 10) || null;
                     const dayType = row.querySelector('.row-day-type').value;
@@ -1084,7 +1110,7 @@ try {
 
                 tr.innerHTML = `
                     <td><input type="checkbox" class="row-check" checked></td>
-                    <td>${dateObj.toDateString()}</td>
+                    <td data-iso-date="${date}">${dateObj.toDateString()}</td>
                     <td>${dateObj.toLocaleDateString(undefined, { weekday: 'long' })}</td>
                     <td>
                         <select class="form-select row-leave-type" data-date="${date}" data-month="${month}" ${shouldLockAutoType ? 'data-locked="1" title="'+lockReason+'"' : ''}>

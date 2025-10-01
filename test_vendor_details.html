@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Details Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .vendor-details-container {
+            background-color: #ffffff;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            padding: 0;
+            margin: 15px 0 25px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        
+        .vendor-details-header {
+            background-color: #f8fafc;
+            padding: 18px 25px;
+            border-bottom: 1px solid #eef2f7;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .vendor-details-header i {
+            color: #2c7be5;
+            font-size: 20px;
+        }
+        
+        .vendor-details-content {
+            padding: 25px;
+        }
+        
+        .vendor-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .detail-section {
+            padding: 0;
+            border-bottom: none;
+        }
+        
+        .detail-section h6 {
+            border-bottom: none;
+            padding: 0 0 15px 0;
+            margin: 0 0 20px 0;
+            color: #333333;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .detail-section h6 i {
+            font-size: 18px;
+            color: #2c7be5;
+            background-color: #e3f2fd;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .detail-section p {
+            margin: 12px 0;
+            font-size: 15px;
+            line-height: 1.6;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .detail-section strong {
+            color: #6c757d;
+            font-weight: 500;
+            min-width: 170px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-section strong i {
+            font-size: 14px;
+            width: 20px;
+            text-align: center;
+            color: #2c7be5;
+        }
+        
+        .detail-section span {
+            color: #212529;
+            font-weight: 500;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            background-color: #2c7be5;
+            color: white;
+            margin: 20px;
+        }
+        
+        .btn:hover {
+            background-color: #1a68d1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vendor Details Section Test</h1>
+    
+    <button class="btn" onclick="toggleDetails()">
+        <i class="fas fa-chevron-down"></i> Toggle Details
+    </button>
+    
+    <div id="vendorDetails" style="display: none;">
+        <div class="vendor-details-container">
+            <div class="vendor-details-header">
+                <i class="fas fa-info-circle"></i>
+                Vendor Details
+            </div>
+            <div class="vendor-details-content">
+                <div class="vendor-details-grid">
+                    <div class="detail-section">
+                        <h6><i class="fas fa-address-card"></i> Contact Information</h6>
+                        <p><strong><i class="fas fa-phone"></i> Phone:</strong> <span>+1 234 567 8900</span></p>
+                        <p><strong><i class="fas fa-mobile-alt"></i> Alt Phone:</strong> <span>+1 234 567 8901</span></p>
+                        <p><strong><i class="fas fa-envelope"></i> Email:</strong> <span>vendor@example.com</span></p>
+                    </div>
+                    <div class="detail-section">
+                        <h6><i class="fas fa-university"></i> Banking Information</h6>
+                        <p><strong><i class="fas fa-building"></i> Bank Name:</strong> <span>Global Bank</span></p>
+                        <p><strong><i class="fas fa-credit-card"></i> Account Number:</strong> <span>**** **** **** 1234</span></p>
+                        <p><strong><i class="fas fa-barcode"></i> Routing Number:</strong> <span>**** **** 5678</span></p>
+                        <p><strong><i class="fas fa-piggy-bank"></i> Account Type:</strong> <span>Business Checking</span></p>
+                    </div>
+                    <div class="detail-section">
+                        <h6><i class="fas fa-map-marker-alt"></i> Address</h6>
+                        <p><strong><i class="fas fa-road"></i> Street:</strong> <span>123 Business Ave</span></p>
+                        <p><strong><i class="fas fa-city"></i> City:</strong> <span>New York</span></p>
+                        <p><strong><i class="fas fa-flag"></i> State:</strong> <span>NY</span></p>
+                        <p><strong><i class="fas fa-mail-bulk"></i> ZIP:</strong> <span>10001</span></p>
+                        <p><strong><i class="fas fa-globe-americas"></i> Country:</strong> <span>USA</span></p>
+                    </div>
+                    <div class="detail-section">
+                        <h6><i class="fas fa-file-invoice"></i> GST Information</h6>
+                        <p><strong><i class="fas fa-id-card"></i> GST Number:</strong> <span>GST123456789</span></p>
+                        <p><strong><i class="fas fa-calendar-alt"></i> Registration Date:</strong> <span>2023-01-15</span></p>
+                        <p><strong><i class="fas fa-map-pin"></i> State:</strong> <span>New York</span></p>
+                        <p><strong><i class="fas fa-tags"></i> Type:</strong> <span>Registered</span></p>
+                    </div>
+                    <div class="detail-section">
+                        <h6><i class="fas fa-info-circle"></i> Additional Information</h6>
+                        <p><strong><i class="fas fa-user-tag"></i> Vendor Type:</strong> <span>Supplier</span></p>
+                        <p><strong><i class="fas fa-layer-group"></i> Category:</strong> <span>Office Supplies</span></p>
+                        <p><strong><i class="fas fa-sticky-note"></i> Notes:</strong> <span>Preferred vendor for office supplies</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDetails() {
+            const details = document.getElementById('vendorDetails');
+            const btn = document.querySelector('.btn');
+            const icon = btn.querySelector('i');
+            
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Toggle Details';
+            } else {
+                details.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Toggle Details';
+            }
+        }
+    </script>
+</body>
+</html>

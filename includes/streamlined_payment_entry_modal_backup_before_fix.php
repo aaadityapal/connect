@@ -173,6 +173,447 @@
                                         <p>PDF, JPG, PNG • Max 5MB</p>
                                     </div>
                                 </div>
+                                <input type="file" id="streamlinedPaymentProof" name="paymentProof" accept="image/*,application/pdf" onchange="handleFileUpload(this)">
+                            </div>
+                        </div>
+
+                        <!-- Payment Details -->
+                        <div class="col-12 single-payment-field">
+                            <label for="streamlinedPaymentDetails" class="streamlined-label">
+                                <i class="fas fa-file-lines streamlined-icon-gray"></i>
+                                Payment Details
+                            </label>
+                            <textarea class="streamlined-input" id="streamlinedPaymentDetails" name="paymentDetails" rows="4"></textarea>
+                        </div>
+
+                        <!-- Additional Payment Details (Hidden by default) -->
+                        <div class="col-12" id="paymentDetailsSection" style="display: none;">
+                            <div class="payment-details-container">
+                                <div id="paymentEntriesList">
+                                    <!-- First payment entry -->
+                                    <div class="payment-entry-row" data-entry-index="0">
+                                        <button type="button" class="remove-entry-btn" onclick="removePaymentEntry(this)" title="Remove this entry">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="row g-2">
+                                            <!-- Project Type -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <div class="form-group">
+                                                    <label for="streamlinedProjectType_0" class="streamlined-label-small">
+                                                        <i class="fas fa-building-columns streamlined-icon-blue"></i>
+                                                        Project Type
+                                                    </label>
+                                                    <select class="streamlined-input-small" id="streamlinedProjectType_0" name="projectType[]" onchange="handleProjectTypeChange(0, this.value)">
+                                                        <option value="">Select Project Type</option>
+                                                        <option value="architecture">🏛️ Architecture</option>
+                                                        <option value="interior">🎨 Interior</option>
+                                                        <option value="construction">🏗️ Construction</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Date -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <div class="form-group">
+                                                    <label for="streamlinedPaymentDate_0" class="streamlined-label-small">
+                                                        <i class="fas fa-calendar-alt streamlined-icon-purple"></i>
+                                                        Date
+                                                    </label>
+                                                    <input type="date" class="streamlined-input-small" id="streamlinedPaymentDate_0" name="paymentDate[]" required>
+                                                </div>
+                                            </div>
+
+                                            <!-- Amount -->
+                                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                                                <div class="form-group">
+                                                    <label for="streamlinedPaymentAmount_0" class="streamlined-label-small">
+                                                        <i class="fas fa-coins streamlined-icon-amber"></i>
+                                                        Amount
+                                                    </label>
+                                                    <div class="amount-input-wrapper-small">
+                                                        <span class="currency-symbol-small">₹</span>
+                                                        <input type="number" class="streamlined-input-small amount-input-small" id="streamlinedPaymentAmount_0" name="paymentAmount[]" 
+                                                               placeholder="0.00" step="0.01" min="0" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Payment Done Via -->
+                                            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
+                                                <div class="form-group">
+                                                    <label for="streamlinedPaymentDoneVia_0" class="streamlined-label-small">
+                                                        <i class="fas fa-user-tie streamlined-icon-red"></i>
+                                                        Payment Done Via
+                                                    </label>
+                                                    <select class="streamlined-input-small" id="streamlinedPaymentDoneVia_0" name="paymentDoneVia[]">
+                                                        <option value="">Loading authorized users...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Payment Mode -->
+                                            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
+                                                <div class="form-group">
+                                                    <label for="streamlinedEntryPaymentMode_0" class="streamlined-label-small">
+                                                        <i class="fas fa-credit-card streamlined-icon-emerald"></i>
+                                                        Payment Mode
+                                                    </label>
+                                                    <select class="streamlined-input-small" id="streamlinedEntryPaymentMode_0" name="entryPaymentMode[]">
+                                                        <option value="">Select Payment Method</option>
+                                                        <!-- Cash & Traditional Methods -->
+                                                        <option value="cash">💵 Cash</option>
+                                                        <option value="cheque">📄 Cheque</option>
+                                                        <option value="demand_draft">📜 Demand Draft (DD)</option>
+                                                        <option value="pay_order">📋 Pay Order</option>
+                                                        <option value="bankers_cheque">📄 Banker's Cheque</option>
+                                                        <option value="money_order">📮 Money Order</option>
+                                                        <option value="postal_order">📮 Postal Order</option>
+                                                        
+                                                        <!-- Banking Transfer Methods -->
+                                                        <option value="rtgs">🌐 RTGS (Real Time Gross Settlement)</option>
+                                                        <option value="neft">💳 NEFT (National Electronic Funds Transfer)</option>
+                                                        <option value="imps">⚡ IMPS (Immediate Payment Service)</option>
+                                                        <option value="net_banking">🌐 Net Banking</option>
+                                                        <option value="bank_transfer">🏦 Bank Transfer</option>
+                                                        <option value="wire_transfer">💰 Wire Transfer</option>
+                                                        <option value="swift">🌍 SWIFT Transfer</option>
+                                                        <option value="ach">🏦 ACH (Automated Clearing House)</option>
+                                                        <option value="ecs">🏦 ECS (Electronic Clearing Service)</option>
+                                                        <option value="nach">🏦 NACH (National Automated Clearing House)</option>
+                                                        
+                                                        <!-- UPI & Digital Payments -->
+                                                        <option value="upi">📱 UPI (Unified Payments Interface)</option>
+                                                        <option value="bhim">📱 BHIM UPI</option>
+                                                        <option value="paytm">📱 Paytm</option>
+                                                        <option value="phonepe">📱 PhonePe</option>
+                                                        <option value="googlepay">📱 Google Pay (GPay)</option>
+                                                        <option value="amazonpay">📱 Amazon Pay</option>
+                                                        <option value="mobikwik">💱 MobiKwik</option>
+                                                        <option value="freecharge">💱 FreeCharge</option>
+                                                        <option value="airtel_money">📱 Airtel Money</option>
+                                                        <option value="jio_money">📱 Jio Money</option>
+                                                        <option value="olamoney">📱 Ola Money</option>
+                                                        <option value="payumoney">💱 PayUmoney</option>
+                                                        <option value="payzapp">📱 PayZapp (HDFC)</option>
+                                                        <option value="icici_pockets">📱 Pockets (ICICI)</option>
+                                                        <option value="sbi_buddy">📱 SBI Buddy</option>
+                                                        <option value="axis_pay">📱 Axis Pay</option>
+                                                        
+                                                        <!-- Card Payments -->
+                                                        <option value="credit_card">💳 Credit Card</option>
+                                                        <option value="debit_card">💳 Debit Card</option>
+                                                        <option value="rupay">💳 RuPay Card</option>
+                                                        <option value="visa">💳 Visa Card</option>
+                                                        <option value="mastercard">💳 Mastercard</option>
+                                                        <option value="maestro">💳 Maestro Card</option>
+                                                        <option value="amex">💳 American Express</option>
+                                                        <option value="diners">💳 Diners Club</option>
+                                                        <option value="forex_card">💳 Forex Card</option>
+                                                        
+                                                        <!-- Other Methods -->
+                                                        <option value="cash_deposit">💵 Cash Deposit</option>
+                                                        <option value="barter">🔄 Barter/Exchange</option>
+                                                        <option value="adjustment">📊 Adjustment</option>
+                                                        <option value="offset">🔄 Offset</option>
+                                                        <option value="other">❓ Other</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Add Another Payment Entry Button -->
+                                <div class="add-payment-entry-section">
+                                    <button type="button" class="add-payment-entry-btn" onclick="addAnotherPaymentEntry()">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Add Another Payment Entry
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer streamlined-footer">
+                <button type="button" class="streamlined-btn streamlined-btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button type="button" class="streamlined-btn streamlined-btn-primary" onclick="submitStreamlinedPaymentEntry()">
+                    <i class="fas fa-check"></i>
+                    Save Payment Entry
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add another payment entry
+function addAnotherPaymentEntry() {
+    const paymentEntriesList = document.getElementById('paymentEntriesList');
+    const currentEntries = paymentEntriesList.querySelectorAll('.payment-entry-row');
+    const newIndex = currentEntries.length;
+    
+    // Create new payment entry with proper Bootstrap structure
+    const newEntry = document.createElement('div');
+    newEntry.className = 'payment-entry-row adding';
+    newEntry.setAttribute('data-entry-index', newIndex);
+    
+    newEntry.innerHTML = `
+        <button type="button" class="remove-entry-btn" onclick="removePaymentEntry(this)" title="Remove this entry">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="row g-2">
+            <!-- Project Type -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedProjectType_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-building-columns streamlined-icon-blue"></i>
+                        Project Type
+                    </label>
+                    <select class="streamlined-input-small" id="streamlinedProjectType_${newIndex}" name="projectType[]" onchange="handleProjectTypeChange(${newIndex}, this.value)">
+                        <option value="">Select Project Type</option>
+                        <option value="architecture">🏛️ Architecture</option>
+                        <option value="interior">🎨 Interior</option>
+                        <option value="construction">🏗️ Construction</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Date -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedPaymentDate_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-calendar-alt streamlined-icon-purple"></i>
+                        Date
+                    </label>
+                    <input type="date" class="streamlined-input-small" id="streamlinedPaymentDate_${newIndex}" name="paymentDate[]" required>
+                </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                <div class="form-group">
+                    <label for="streamlinedPaymentAmount_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-coins streamlined-icon-amber"></i>
+                        Amount
+                    </label>
+                    <div class="amount-input-wrapper-small">
+                        <span class="currency-symbol-small">₹</span>
+                        <input type="number" class="streamlined-input-small amount-input-small" id="streamlinedPaymentAmount_${newIndex}" name="paymentAmount[]" 
+                               placeholder="0.00" step="0.01" min="0" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Done Via -->
+            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
+                <div class="form-group">
+                    <label for="streamlinedPaymentDoneVia_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-user-tie streamlined-icon-red"></i>
+                        Payment Done Via
+                    </label>
+                    <select class="streamlined-input-small" id="streamlinedPaymentDoneVia_${newIndex}" name="paymentDoneVia[]">
+                        <option value="">Loading authorized users...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Payment Mode -->
+            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
+                <div class="form-group">
+                    <label for="streamlinedEntryPaymentMode_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-credit-card streamlined-icon-emerald"></i>
+                        Payment Mode
+                    </label>
+                    <select class="streamlined-input-small" id="streamlinedEntryPaymentMode_${newIndex}" name="entryPaymentMode[]">
+                        <option value="">Select Payment Method</option>
+                        <!-- Cash & Traditional Methods -->
+                        <option value="cash">💵 Cash</option>
+                        <option value="cheque">📄 Cheque</option>
+                        <option value="demand_draft">📜 Demand Draft (DD)</option>
+                        <option value="pay_order">📋 Pay Order</option>
+                        <option value="bankers_cheque">📄 Banker's Cheque</option>
+                        <option value="money_order">📮 Money Order</option>
+                        <option value="postal_order">📮 Postal Order</option>
+                        
+                        <!-- Banking Transfer Methods -->
+                        <option value="rtgs">🌐 RTGS (Real Time Gross Settlement)</option>
+                        <option value="neft">💳 NEFT (National Electronic Funds Transfer)</option>
+                        <option value="imps">⚡ IMPS (Immediate Payment Service)</option>
+                        <option value="net_banking">🌐 Net Banking</option>
+                        <option value="bank_transfer">🏦 Bank Transfer</option>
+                        <option value="wire_transfer">💰 Wire Transfer</option>
+                        <option value="swift">🌍 SWIFT Transfer</option>
+                        <option value="ach">🏦 ACH (Automated Clearing House)</option>
+                        <option value="ecs">🏦 ECS (Electronic Clearing Service)</option>
+                        <option value="nach">🏦 NACH (National Automated Clearing House)</option>
+                        
+                        <!-- UPI & Digital Payments -->
+                        <option value="upi">📱 UPI (Unified Payments Interface)</option>
+                        <option value="bhim">📱 BHIM UPI</option>
+                        <option value="paytm">📱 Paytm</option>
+                        <option value="phonepe">📱 PhonePe</option>
+                        <option value="googlepay">📱 Google Pay (GPay)</option>
+                        <option value="amazonpay">📱 Amazon Pay</option>
+                        <option value="mobikwik">💱 MobiKwik</option>
+                        <option value="freecharge">💱 FreeCharge</option>
+                        <option value="airtel_money">📱 Airtel Money</option>
+                        <option value="jio_money">📱 Jio Money</option>
+                        <option value="olamoney">📱 Ola Money</option>
+                        <option value="payumoney">💱 PayUmoney</option>
+                        <option value="payzapp">📱 PayZapp (HDFC)</option>
+                        <option value="icici_pockets">📱 Pockets (ICICI)</option>
+                        <option value="sbi_buddy">📱 SBI Buddy</option>
+                        <option value="axis_pay">📱 Axis Pay</option>
+                        
+                        <!-- Card Payments -->
+                        <option value="credit_card">💳 Credit Card</option>
+                        <option value="debit_card">💳 Debit Card</option>
+                        <option value="rupay">💳 RuPay Card</option>
+                        <option value="visa">💳 Visa Card</option>
+                        <option value="mastercard">💳 Mastercard</option>
+                        <option value="maestro">💳 Maestro Card</option>
+                        <option value="amex">💳 American Express</option>
+                        <option value="diners">💳 Diners Club</option>
+                        <option value="forex_card">💳 Forex Card</option>
+                        
+                        <!-- Other Methods -->
+                        <option value="cash_deposit">💵 Cash Deposit</option>
+                        <option value="barter">🔄 Barter/Exchange</option>
+                        <option value="adjustment">📊 Adjustment</option>
+                        <option value="offset">🔄 Offset</option>
+                        <option value="other">❓ Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add the new entry to the list
+    paymentEntriesList.appendChild(newEntry);
+    
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById(`streamlinedPaymentDate_${newIndex}`).value = today;
+    
+    // Set default payment mode based on main payment mode
+    const paymentModeSelect = document.getElementById('streamlinedPaymentMode');
+    const newEntryPaymentModeSelect = document.getElementById(`streamlinedEntryPaymentMode_${newIndex}`);
+    if (paymentModeSelect && newEntryPaymentModeSelect) {
+        if (paymentModeSelect.value === 'cash' || paymentModeSelect.value === 'split_payment') {
+            newEntryPaymentModeSelect.value = 'cash';
+        } else if (paymentModeSelect.value && paymentModeSelect.value !== 'split_payment') {
+            newEntryPaymentModeSelect.value = paymentModeSelect.value;
+        }
+    }
+    
+    // Load authorized users for this entry
+    loadAuthorizedUsersForEntry(newIndex);
+    
+    // Remove adding animation class after animation completes
+    setTimeout(() => {
+        newEntry.classList.remove('adding');
+    }, 400);
+    
+    // Scroll to new entry
+    setTimeout(() => {
+        newEntry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+}
+
+// Remove a payment entry
+function removePaymentEntry(button) {
+    const entry = button.parentElement;
+    entry.classList.add('removing');
+    setTimeout(() => {
+        entry.remove();
+    }, 400);
+}
+
+// Handle project type change
+function handleProjectTypeChange(index, projectType) {
+    const projectNameSelect = document.getElementById(`streamlinedProjectName_${index}`);
+    projectNameSelect.innerHTML = '<option value="">Loading projects...</option>';
+    projectNameSelect.disabled = true;
+    fetch(`/api/projects?projectType=${projectType}`)
+        .then(response => response.json())
+        .then(data => {
+            projectNameSelect.innerHTML = '<option value="">Select Project Name</option>';
+            data.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project.id;
+                option.textContent = project.name;
+                projectNameSelect.appendChild(option);
+            });
+            projectNameSelect.disabled = false;
+        })
+        .catch(error => {
+            projectNameSelect.innerHTML = '<option value="">Failed to load projects</option>';
+            projectNameSelect.disabled = true;
+        });
+}
+
+// Handle file upload
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (file) {
+        const fileSize = file.size / 1024 / 1024; // Convert to MB
+        if (fileSize > 5) {
+            alert('File size exceeds 5MB limit.');
+            input.value = ''; // Clear the file input
+        }
+    }
+}
+
+// Toggle payment type
+function togglePaymentType() {
+    const paymentTypeToggle = document.getElementById('paymentTypeToggle');
+    const singlePaymentFields = document.querySelectorAll('.single-payment-field');
+    const multiplePaymentFields = document.querySelectorAll('.multiple-payment-field');
+    if (paymentTypeToggle.checked) {
+        singlePaymentFields.forEach(field => field.style.display = 'none');
+        multiplePaymentFields.forEach(field => field.style.display = 'block');
+        addAnotherPaymentEntry();
+    } else {
+        singlePaymentFields.forEach(field => field.style.display = 'block');
+        multiplePaymentFields.forEach(field => field.style.display = 'none');
+    }
+}
+
+// Toggle payment details
+function togglePaymentDetails() {
+    const paymentModeSelect = document.getElementById('streamlinedPaymentMode');
+    const paymentDetailsField = document.querySelector('.single-payment-field textarea');
+    if (paymentModeSelect.value === 'split_payment') {
+        paymentDetailsField.style.display = 'none';
+    } else {
+        paymentDetailsField.style.display = 'block';
+    }
+}
+
+// Load authorized users for a specific entry
+function loadAuthorizedUsersForEntry(index) {
+    const paymentDoneViaSelect = document.getElementById(`streamlinedPaymentDoneVia_${index}`);
+    paymentDoneViaSelect.innerHTML = '<option value="">Loading authorized users...</option>';
+    fetch('/api/authorized-users')
+        .then(response => response.json())
+        .then(data => {
+            paymentDoneViaSelect.innerHTML = '<option value="">Select Authorized User</option>';
+            data.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                paymentDoneViaSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            paymentDoneViaSelect.innerHTML = '<option value="">Failed to load authorized users</option>';
+        });
+}
+                                </div>
                                 <input type="file" class="file-input" id="streamlinedPaymentProof" name="paymentProof" 
                                        accept=".pdf,.jpg,.jpeg,.png" onchange="handleFileSelection(this)">
                                 <div id="selectedFileName" class="selected-file-small" style="display: none;">
@@ -1646,6 +2087,553 @@ input:checked + .slider:before {
 .multiple-payment-field {
     display: none;
 }
+
+/* ========== STREAMLINED MODAL STYLES ========== */
+
+/* Modal Container */
+.streamlined-modal {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+/* Custom Modal Sizing for Better Screen Utilization */
+@media (min-width: 1200px) {
+    #streamlinedPaymentEntryModal .modal-xl {
+        max-width: 1400px;
+    }
+}
+
+/* Header */
+.streamlined-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 25px 30px;
+    position: relative;
+}
+
+.streamlined-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-icon-wrapper {
+    background: rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.streamlined-close {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px;
+    opacity: 1;
+    transition: all 0.2s ease;
+}
+
+.streamlined-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.streamlined-close::before {
+    content: "✕";
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Body */
+.modal-body {
+    padding: 30px;
+    background: #f8fafc;
+}
+
+/* Payment Type Toggle */
+.payment-type-toggle-container {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.toggle-label {
+    font-weight: 600;
+    color: #718096;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 12px;
+}
+
+.toggle-label.active {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Form Elements */
+.streamlined-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+.streamlined-label-small {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.8rem;
+}
+
+.required-star {
+    color: #e53e3e;
+}
+
+.streamlined-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    outline: none;
+}
+
+.streamlined-input-small {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    outline: none;
+}
+
+.streamlined-input:focus,
+.streamlined-input-small:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+.amount-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.amount-input-wrapper-small {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 12px;
+    color: #718096;
+    font-weight: 600;
+    z-index: 2;
+}
+
+.currency-symbol-small {
+    position: absolute;
+    left: 12px;
+    color: #718096;
+    font-weight: 600;
+    z-index: 2;
+    font-size: 0.8rem;
+}
+
+.amount-input {
+    padding-left: 28px !important;
+}
+
+.amount-input-small {
+    padding-left: 24px !important;
+}
+
+/* Icon Colors */
+.streamlined-icon-blue { color: #63b3ed; }
+.streamlined-icon-green { color: #68d391; }
+.streamlined-icon-purple { color: #b794f6; }
+.streamlined-icon-orange { color: #f6ad55; }
+.streamlined-icon-red { color: #fc8181; }
+.streamlined-icon-indigo { color: #7f9cf5; }
+.streamlined-icon-teal { color: #81e6d9; }
+.streamlined-icon-gray { color: #a0aec0; }
+.streamlined-icon-amber { color: #f6e05e; }
+.streamlined-icon-emerald { color: #4fd1c5; }
+.streamlined-icon-pink { color: #ed64a6; }
+.streamlined-icon-cyan { color: #76e4f7; }
+.streamlined-icon-lime { color: #bdf24f; }
+
+/* File Upload Area */
+.streamlined-upload-area-small {
+    border: 2px dashed #cbd5e0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: white;
+    cursor: pointer;
+}
+
+.streamlined-upload-area-small:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.03);
+}
+
+.upload-content-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.upload-icon-wrapper-small {
+    width: 50px;
+    height: 50px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #667eea;
+    font-size: 1.5rem;
+}
+
+.upload-text-small h6 {
+    margin: 0;
+    color: #4a5568;
+    font-weight: 600;
+}
+
+.upload-text-small p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.85rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.selected-file-small {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f0fff4;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    border: 1px solid #c6f6d5;
+}
+
+.remove-file-small {
+    background: #fed7d7;
+    border: none;
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f56565;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.remove-file-small:hover {
+    background: #feb2b2;
+}
+
+/* Payment Details Container */
+.payment-details-container {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.payment-entry-row {
+    position: relative;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.payment-entry-row:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.payment-entry-row.adding {
+    animation: slideIn 0.4s ease;
+}
+
+.payment-entry-row.removing {
+    animation: slideOut 0.4s ease forwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}
+
+.remove-entry-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #fed7d7;
+    border: none;
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f56565;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    z-index: 10;
+}
+
+.remove-entry-btn:hover {
+    background: #feb2b2;
+    transform: scale(1.1);
+}
+
+.add-payment-entry-section {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.add-payment-entry-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.add-payment-entry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Footer */
+.streamlined-footer {
+    background: white;
+    border: none;
+    padding: 20px 30px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Buttons */
+.streamlined-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    outline: none;
+}
+
+.streamlined-btn-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.streamlined-btn-secondary:hover {
+    background: #cbd5e0;
+    transform: translateY(-1px);
+}
+
+.streamlined-btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.streamlined-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .streamlined-modal {
+        margin: 10px;
+        border-radius: 16px;
+    }
+    
+    .streamlined-header {
+        padding: 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .streamlined-footer {
+        padding: 15px 20px;
+        flex-direction: column;
+    }
+    
+    .streamlined-btn {
+        justify-content: center;
+    }
+    
+    .upload-content {
+        gap: 12px;
+    }
+    
+    .upload-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Animation Effects */
+.streamlined-modal {
+    animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Loading States */
+.streamlined-input:disabled {
+    background: #f7fafc;
+    color: #a0aec0;
+    cursor: not-allowed;
+}
+
+/* Focus Ring for Accessibility */
+.streamlined-input:focus,
+.streamlined-btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
 </style>
 
 <script>
@@ -1777,239 +2765,34 @@ function addAnotherPaymentEntry() {
             <i class="fas fa-times"></i>
         </button>
         <div class="row g-2">
-            <!-- Payment Type -->
+            <!-- Project Type -->
             <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
                 <div class="form-group">
-                    <label for="streamlinedPaymentType_${newIndex}" class="streamlined-label-small">
-                        <i class="fas fa-tag streamlined-icon-pink"></i>
-                        Type
+                    <label for="streamlinedProjectType_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-building-columns streamlined-icon-blue"></i>
+                        Project Type
                     </label>
-                    <select class="streamlined-input-small" id="streamlinedPaymentType_${newIndex}" name="paymentType[]" onchange="handlePaymentTypeChange(${newIndex}, this.value)">
-                        <option value="">Select Type</option>
-                        <option value="advance">💰 Advance</option>
-                        <option value="allowance">💼 Allowance</option>
-                        <option value="bonus">🎁 Bonus</option>
-                        <option value="commission">📈 Commission</option>
-                        <option value="compensation">⚖️ Compensation</option>
-                        <option value="consultant_fee">🎯 Consultant Fee</option>
-                        <option value="contractor">🏗️ Contractor</option>
-                        <option value="deposit">🏦 Deposit</option>
-                        <option value="emergency">🚨 Emergency Payment</option>
-                        <option value="equipment">⚙️ Equipment Payment</option>
-                        <option value="expense_reimbursement">📄 Expense Reimbursement</option>
-                        <option value="fine">⚠️ Fine/Penalty</option>
-                        <option value="full">✅ Full Payment</option>
-                        <option value="incentive">🏆 Incentive</option>
-                        <option value="insurance">🛡️ Insurance</option>
-                        <option value="labour">👷 Labour</option>
-                        <option value="loan">💳 Loan</option>
-                        <option value="maintenance">🔧 Maintenance</option>
-                        <option value="material_supplier">🧱 Material Supplier</option>
-                        <option value="overtime">⏰ Overtime</option>
-                        <option value="partial">📊 Partial</option>
-                        <option value="petty_cash">💵 Petty Cash</option>
-                        <option value="professional_fee">👨‍💼 Professional Fee</option>
-                        <option value="refund">🔄 Refund</option>
-                        <option value="rent">🏠 Rent</option>
-                        <option value="salary">💰 Salary</option>
-                        <option value="service_charge">⚡ Service Charge</option>
-                        <option value="tax">📋 Tax Payment</option>
-                        <option value="transportation">🚚 Transportation</option>
-                        <option value="utility">💡 Utility Bill</option>
-                        <option value="vendor">🏢 Vendor</option>
-                        <option value="wages">💸 Wages</option>
+                    <select class="streamlined-input-small" id="streamlinedProjectType_${newIndex}" name="projectType[]" onchange="handleProjectTypeChange(${newIndex}, this.value)">
+                        <option value="">Select Project Type</option>
+                        <option value="architecture">🏛️ Architecture</option>
+                        <option value="interior">🎨 Interior</option>
+                        <option value="construction">🏗️ Construction</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Payment To -->
+            <!-- Date -->
             <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
                 <div class="form-group">
-                    <label for="streamlinedPaymentTo_${newIndex}" class="streamlined-label-small">
-                        <i class="fas fa-user-friends streamlined-icon-cyan"></i>
-                        To
+                    <label for="streamlinedPaymentDate_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-calendar-alt streamlined-icon-purple"></i>
+                        Date
                     </label>
-                    <!-- Default dropdown -->
-                    <select class="streamlined-input-small" id="streamlinedPaymentTo_${newIndex}" name="paymentTo[]" style="display: block;">
-                        <option value="">Select Recipient</option>
-                        <option value="labour">👷 Labour/Workers</option>
-                        <option value="contractor">🏗️ Contractor</option>
-                        <option value="subcontractor">🔧 Sub-contractor</option>
-                        <option value="architect">📐 Architect</option>
-                        <option value="engineer">⚙️ Engineer</option>
-                        <option value="supervisor">👨‍💼 Site Supervisor</option>
-                        <option value="foreman">👷‍♂️ Foreman</option>
-                        <option value="material_supplier">🧱 Material Supplier</option>
-                        <option value="cement_supplier">🏭 Cement Supplier</option>
-                        <option value="steel_supplier">🔩 Steel/Iron Supplier</option>
-                        <option value="sand_supplier">⛱️ Sand Supplier</option>
-                        <option value="brick_supplier">🧱 Brick Supplier</option>
-                        <option value="tile_supplier">🪟 Tile Supplier</option>
-                        <option value="paint_supplier">🎨 Paint Supplier</option>
-                        <option value="hardware_supplier">🔨 Hardware Supplier</option>
-                        <option value="electrical_supplier">⚡ Electrical Supplier</option>
-                        <option value="plumbing_supplier">🚿 Plumbing Supplier</option>
-                        <option value="vendor">🏢 General Vendor</option>
-                        <option value="equipment_vendor">🚛 Equipment Vendor</option>
-                        <option value="transport_vendor">🚚 Transport Vendor</option>
-                        <option value="rental_vendor">📦 Equipment Rental</option>
-                        <option value="security_vendor">🛡️ Security Vendor</option>
-                        <option value="cleaning_vendor">🧹 Cleaning Vendor</option>
-                        <option value="catering_vendor">🍽️ Catering Vendor</option>
-                        <option value="employee">👨‍💼 Employee</option>
-                        <option value="manager">👔 Manager</option>
-                        <option value="accountant">📊 Accountant</option>
-                        <option value="hr_staff">👥 HR Staff</option>
-                        <option value="office_staff">🏢 Office Staff</option>
-                        <option value="sales_team">💼 Sales Team</option>
-                        <option value="consultant">🎯 Consultant</option>
-                        <option value="legal_advisor">⚖️ Legal Advisor</option>
-                        <option value="ca_auditor">📋 CA/Auditor</option>
-                        <option value="designer">🎨 Designer</option>
-                        <option value="surveyor">📏 Surveyor</option>
-                        <option value="government">🏛️ Government Authority</option>
-                        <option value="municipality">🏘️ Municipality</option>
-                        <option value="electricity_board">⚡ Electricity Board</option>
-                        <option value="water_department">💧 Water Department</option>
-                        <option value="tax_department">💰 Tax Department</option>
-                        <option value="bank">🏦 Bank</option>
-                        <option value="insurance_company">🛡️ Insurance Company</option>
-                        <option value="loan_provider">💳 Loan Provider</option>
-                        <option value="client">👤 Client</option>
-                        <option value="landlord">🏠 Landlord/Property Owner</option>
-                        <option value="utility_company">💡 Utility Company</option>
-                        <option value="other">❓ Other</option>
-                    </select>
-                    
-                    <!-- Search input -->
-                    <div class="payment-to-search-container" id="paymentToSearchContainer_${newIndex}" style="display: none; position: relative;">
-                        <input type="text" class="streamlined-input-small payment-to-search" 
-                               id="paymentToSearch_${newIndex}" 
-                               name="paymentToName[]" 
-                               placeholder="Search and select..." 
-                               autocomplete="off"
-                               oninput="searchPaymentRecipient(${newIndex}, this.value)">
-                        <div class="search-suggestions" id="searchSuggestions_${newIndex}"></div>
-                        <input type="hidden" id="paymentToId_${newIndex}" name="paymentToId[]">
-                    </div>
+                    <input type="date" class="streamlined-input-small" id="streamlinedPaymentDate_${newIndex}" name="paymentDate[]" required>
                 </div>
             </div>
 
-            <!-- Payment For -->
-            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
-                <div class="form-group">
-                    <label for="streamlinedPaymentFor_${newIndex}" class="streamlined-label-small">
-                        <i class="fas fa-clipboard-list streamlined-icon-lime"></i>
-                        For
-                    </label>
-                    <input type="text" class="streamlined-input-small" id="streamlinedPaymentFor_${newIndex}" name="paymentFor[]" placeholder="Describe what this payment is for..." style="display: block;">
-                    
-                    <!-- Labour Payment For Dropdown (hidden by default) -->
-                    <div class="labour-payment-for-container" id="labourPaymentForContainer_${newIndex}" style="display: none; position: relative;">
-                        <select class="streamlined-input-small" id="labourPaymentForSelect_${newIndex}" name="labourPaymentFor[]" onchange="handleLabourPaymentForChange(${newIndex}, this.value)">
-                            <option value="">Select Labour Payment Purpose</option>
-                            <option value="daily_wage">💰 Daily Wage</option>
-                            <option value="overtime_wage">⏰ Overtime Wage</option>
-                            <option value="food">🍽️ Food</option>
-                            <option value="transportation">🚚 Transportation</option>
-                            <option value="travelling">✈️ Travelling</option>
-                            <option value="custom">✏️ Custom (Write your own)</option>
-                        </select>
-                        
-                        <!-- Custom Text Input (hidden by default) -->
-                        <div class="custom-payment-for-container" id="customPaymentForContainer_${newIndex}" style="display: none;">
-                            <div class="custom-input-wrapper">
-                                <button type="button" class="back-button" onclick="backToLabourDropdown(${newIndex})" title="Back to options">
-                                    <i class="fas fa-arrow-left"></i>
-                                </button>
-                                <input type="text" class="streamlined-input-small custom-payment-input" id="customPaymentFor_${newIndex}" name="customPaymentFor[]" placeholder="Enter custom payment purpose...">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Vendor Payment For Dropdown (hidden by default) -->
-                    <div class="vendor-payment-for-container" id="vendorPaymentForContainer_${newIndex}" style="display: none; position: relative;">
-                        <select class="streamlined-input-small" id="vendorPaymentForSelect_${newIndex}" name="vendorPaymentFor[]" onchange="handleVendorPaymentForChange(${newIndex}, this.value)">
-                            <option value="">Select Vendor Payment Purpose</option>
-                            <option value="material">🧱 Material</option>
-                            <option value="transport">🚚 Transport</option>
-                            <option value="food">🍽️ Food & Catering</option>
-                            <option value="labour">👷 Labour Services</option>
-                            <option value="equipment">⚙️ Equipment</option>
-                            <option value="rental">📦 Equipment Rental</option>
-                            <option value="maintenance">🔧 Maintenance</option>
-                            <option value="security">🛡️ Security Services</option>
-                            <option value="cleaning">🧹 Cleaning Services</option>
-                            <option value="utilities">💡 Utilities</option>
-                            <option value="office_supplies">🗺️ Office Supplies</option>
-                            <option value="software">💻 Software & Licenses</option>
-                            <option value="professional_services">👨‍💼 Professional Services</option>
-                            <option value="consultation">🎯 Consultation</option>
-                            <option value="insurance">🛡️ Insurance</option>
-                            <option value="advertising">📰 Advertising & Marketing</option>
-                            <option value="travel">✈️ Travel & Accommodation</option>
-                            <option value="fuel">⛽ Fuel & Gas</option>
-                            <option value="raw_materials">🛢️ Raw Materials</option>
-                            <option value="custom">✏️ Custom (Write your own)</option>
-                        </select>
-                        
-                        <!-- Custom Text Input for Vendor (hidden by default) -->
-                        <div class="custom-vendor-payment-for-container" id="customVendorPaymentForContainer_${newIndex}" style="display: none;">
-                            <div class="custom-input-wrapper">
-                                <button type="button" class="back-button" onclick="backToVendorDropdown(${newIndex})" title="Back to options">
-                                    <i class="fas fa-arrow-left"></i>
-                                </button>
-                                <input type="text" class="streamlined-input-small custom-payment-input" id="customVendorPaymentFor_${newIndex}" name="customVendorPaymentFor[]" placeholder="Enter custom vendor payment purpose...">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Material Supplier Payment For Dropdown (hidden by default) -->
-                    <div class="material-payment-for-container" id="materialPaymentForContainer_${newIndex}" style="display: none; position: relative;">
-                        <select class="streamlined-input-small" id="materialPaymentForSelect_${newIndex}" name="materialPaymentFor[]" onchange="handleMaterialPaymentForChange(${newIndex}, this.value)">
-                            <option value="">Select Building Material</option>
-                            <option value="cement">🏭 Cement</option>
-                            <option value="sand">🗺️ Sand</option>
-                            <option value="brick">🧱 Brick</option>
-                            <option value="dust">🌫️ Stone Dust</option>
-                            <option value="gravel">🪨 Gravel</option>
-                            <option value="steel">🔩 Steel/Iron Bars</option>
-                            <option value="tiles">🪟 Tiles</option>
-                            <option value="marble">✨ Marble</option>
-                            <option value="granite">🗿 Granite</option>
-                            <option value="paint">🎨 Paint</option>
-                            <option value="wood">🌲 Wood/Timber</option>
-                            <option value="plywood">🪚 Plywood</option>
-                            <option value="glass">🪟 Glass</option>
-                            <option value="aluminium">🔩 Aluminium</option>
-                            <option value="pipes">🔧 Pipes (PVC/Metal)</option>
-                            <option value="electrical_wire">⚡ Electrical Wire</option>
-                            <option value="roofing">🏠 Roofing Material</option>
-                            <option value="insulation">🧱 Insulation Material</option>
-                            <option value="concrete">🏭 Concrete Mix</option>
-                            <option value="mortar">🧱 Mortar</option>
-                            <option value="hardware">🔨 Hardware (Nuts/Bolts)</option>
-                            <option value="waterproofing">💧 Waterproofing Material</option>
-                            <option value="adhesive">🥅 Adhesive/Glue</option>
-                            <option value="sealant">🔧 Sealant</option>
-                            <option value="flooring">🗺️ Flooring Material</option>
-                            <option value="custom">✏️ Custom (Write your own)</option>
-                        </select>
-                        
-                        <!-- Custom Text Input for Material (hidden by default) -->
-                        <div class="custom-material-payment-for-container" id="customMaterialPaymentForContainer_${newIndex}" style="display: none;">
-                            <div class="custom-input-wrapper">
-                                <button type="button" class="back-button" onclick="backToMaterialDropdown(${newIndex})" title="Back to options">
-                                    <i class="fas fa-arrow-left"></i>
-                                </button>
-                                <input type="text" class="streamlined-input-small custom-payment-input" id="customMaterialPaymentFor_${newIndex}" name="customMaterialPaymentFor[]" placeholder="Enter custom building material...">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Amount -->
+            <!-- Amount -->
             <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
                 <div class="form-group">
                     <label for="streamlinedPaymentAmount_${newIndex}" class="streamlined-label-small">
@@ -2019,13 +2802,26 @@ function addAnotherPaymentEntry() {
                     <div class="amount-input-wrapper-small">
                         <span class="currency-symbol-small">₹</span>
                         <input type="number" class="streamlined-input-small amount-input-small" id="streamlinedPaymentAmount_${newIndex}" name="paymentAmount[]" 
-                               placeholder="0.00" step="0.01" min="0">
+                               placeholder="0.00" step="0.01" min="0" required>
                     </div>
                 </div>
             </div>
 
+            <!-- Payment Done Via -->
+            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
+                <div class="form-group">
+                    <label for="streamlinedPaymentDoneVia_${newIndex}" class="streamlined-label-small">
+                        <i class="fas fa-user-tie streamlined-icon-red"></i>
+                        Payment Done Via
+                    </label>
+                    <select class="streamlined-input-small" id="streamlinedPaymentDoneVia_${newIndex}" name="paymentDoneVia[]">
+                        <option value="">Loading authorized users...</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Payment Mode -->
-            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4">
+            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col-3">
                 <div class="form-group">
                     <label for="streamlinedEntryPaymentMode_${newIndex}" class="streamlined-label-small">
                         <i class="fas fa-credit-card streamlined-icon-emerald"></i>
@@ -2285,6 +3081,99 @@ function showFileError(message, type = 'error') {
     }, hideDelay);
 }
 
+// Handle project type change for loading projects
+function handleProjectTypeChange(index, projectType) {
+    const projectNameSelect = document.getElementById(`streamlinedProjectName_${index}`);
+    
+    // Clear and disable project name select
+    projectNameSelect.innerHTML = '<option value="">Loading projects...</option>';
+    projectNameSelect.disabled = true;
+    
+    if (projectType) {
+        // Fetch projects from API
+        fetchProjectsByType(projectType)
+            .then(projects => {
+                projectNameSelect.innerHTML = '<option value="">Select a project</option>';
+                
+                if (projects && projects.length > 0) {
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = project.title;
+                        projectNameSelect.appendChild(option);
+                    });
+                    projectNameSelect.disabled = false;
+                } else {
+                    projectNameSelect.innerHTML = '<option value="">No projects found</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching projects:', error);
+                projectNameSelect.innerHTML = '<option value="">Error loading projects</option>';
+                showFileError('Failed to load projects. Please try again.');
+            });
+    } else {
+        projectNameSelect.innerHTML = '<option value="">First select project type</option>';
+        projectNameSelect.disabled = true;
+    }
+}
+
+// Load authorized users for a specific payment entry
+function loadAuthorizedUsersForEntry(index) {
+    const paymentDoneViaSelect = document.getElementById(`streamlinedPaymentDoneVia_${index}`);
+    
+    if (!paymentDoneViaSelect) {
+        console.error(`Payment Done Via select element not found for index ${index}`);
+        return;
+    }
+    
+    fetch('../api/get_authorized_users.php', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.users) {
+            // Clear loading option
+            paymentDoneViaSelect.innerHTML = '<option value="">Select Authorized User</option>';
+            
+            // Add role icons mapping
+            const roleIcons = {
+                'site supervisor': '👷‍♂️',
+                'purchase manager': '📋', 
+                'senior manager (site)': '👨‍💼',
+                'coordinator': '🎯'
+            };
+            
+            // Populate with real users
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                const roleIcon = roleIcons[user.role.toLowerCase()] || '👤';
+                const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                option.textContent = `${roleIcon} ${user.username} (${roleName})`;
+                paymentDoneViaSelect.appendChild(option);
+            });
+            
+            console.log(`Loaded ${data.users.length} authorized users for entry ${index}`);
+        } else {
+            throw new Error(data.message || 'No authorized users found');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading authorized users:', error);
+        paymentDoneViaSelect.innerHTML = '<option value="">Error loading users</option>';
+        showFileError('Failed to load authorized users. Please try again.');
+    });
+}
+
 // Project type change handler
 document.addEventListener('DOMContentLoaded', function() {
     const projectTypeSelect = document.getElementById('streamlinedProjectType');
@@ -2425,6 +3314,18 @@ function loadAuthorizedUsers() {
                 paymentDoneViaSelect.appendChild(option);
             });
             
+            console.log(`Loaded ${data.users.length} authorized users`);
+        } else {
+            throw new Error(data.message || 'No authorized users found');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading authorized users:', error);
+        paymentDoneViaSelect.innerHTML = '<option value="">Error loading users</option>';
+        showFileError('Failed to load authorized users. Please try again.');
+    });
+}
+
             console.log(`Loaded ${data.users.length} authorized users`);
         } else {
             throw new Error(data.message || 'No authorized users found');
@@ -3013,6 +3914,99 @@ function updateRecipientAfterAdd(recipientId, recipientName, recipientType) {
         // Clear the stored info
         window.currentRecipientToUpdate = null;
     }
+}
+
+// Handle project type change for loading projects
+function handleProjectTypeChange(index, projectType) {
+    const projectNameSelect = document.getElementById(`streamlinedProjectName_${index}`);
+    
+    // Clear and disable project name select
+    projectNameSelect.innerHTML = '<option value="">Loading projects...</option>';
+    projectNameSelect.disabled = true;
+    
+    if (projectType) {
+        // Fetch projects from API
+        fetchProjectsByType(projectType)
+            .then(projects => {
+                projectNameSelect.innerHTML = '<option value="">Select a project</option>';
+                
+                if (projects && projects.length > 0) {
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = project.title;
+                        projectNameSelect.appendChild(option);
+                    });
+                    projectNameSelect.disabled = false;
+                } else {
+                    projectNameSelect.innerHTML = '<option value="">No projects found</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching projects:', error);
+                projectNameSelect.innerHTML = '<option value="">Error loading projects</option>';
+                showFileError('Failed to load projects. Please try again.');
+            });
+    } else {
+        projectNameSelect.innerHTML = '<option value="">First select project type</option>';
+        projectNameSelect.disabled = true;
+    }
+}
+
+// Load authorized users for a specific payment entry
+function loadAuthorizedUsersForEntry(index) {
+    const paymentDoneViaSelect = document.getElementById(`streamlinedPaymentDoneVia_${index}`);
+    
+    if (!paymentDoneViaSelect) {
+        console.error(`Payment Done Via select element not found for index ${index}`);
+        return;
+    }
+    
+    fetch('../api/get_authorized_users.php', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.users) {
+            // Clear loading option
+            paymentDoneViaSelect.innerHTML = '<option value="">Select Authorized User</option>';
+            
+            // Add role icons mapping
+            const roleIcons = {
+                'site supervisor': '👷‍♂️',
+                'purchase manager': '📋', 
+                'senior manager (site)': '👨‍💼',
+                'coordinator': '🎯'
+            };
+            
+            // Populate with real users
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                const roleIcon = roleIcons[user.role.toLowerCase()] || '👤';
+                const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                option.textContent = `${roleIcon} ${user.username} (${roleName})`;
+                paymentDoneViaSelect.appendChild(option);
+            });
+            
+            console.log(`Loaded ${data.users.length} authorized users for entry ${index}`);
+        } else {
+            throw new Error(data.message || 'No authorized users found');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading authorized users:', error);
+        paymentDoneViaSelect.innerHTML = '<option value="">Error loading users</option>';
+        showFileError('Failed to load authorized users. Please try again.');
+    });
 }
 
 // Hide suggestions when clicking outside

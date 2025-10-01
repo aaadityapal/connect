@@ -2437,6 +2437,94 @@ function loadAuthorizedUsers() {
     });
 }
 
+// File selection handler
+function handleFileSelection(input) {
+    const fileNameDisplay = document.getElementById('selectedFileName');
+    const fileName = document.getElementById('fileName');
+    const uploadArea = input.closest('.streamlined-upload-area-small') || input.closest('.streamlined-upload-area');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        fileName.textContent = file.name;
+        fileNameDisplay.style.display = 'flex';
+        uploadArea.style.borderColor = '#38b2ac';
+        uploadArea.style.background = '#f0fdfa';
+        
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            showFileError('File size must be less than 5MB');
+            input.value = '';
+            fileNameDisplay.style.display = 'none';
+            resetUploadArea(uploadArea);
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            showFileError('Only PDF, JPG, and PNG files are allowed');
+            input.value = '';
+            fileNameDisplay.style.display = 'none';
+            resetUploadArea(uploadArea);
+            return;
+        }
+    } else {
+        fileNameDisplay.style.display = 'none';
+        resetUploadArea(uploadArea);
+    }
+}
+
+// Show success notification
+function showSuccessNotification(message) {
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+        color: #22543d;
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-weight: 500;
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        z-index: 9999;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 350px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle" style="color: #38a169;"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(successDiv);
+    setTimeout(() => successDiv.style.transform = 'translateX(0)', 100);
+    
+    // Auto hide after 4 seconds
+    setTimeout(() => {
+        successDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (successDiv.parentNode) {
+                successDiv.parentNode.removeChild(successDiv);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Handle payment type change to show/hide search input
+function handlePaymentTypeChange(index, paymentType) {
+    const searchInput = document.getElementById(`paymentSearchInput-${index}`);
+    if (paymentType === 'search') {
+        searchInput.style.display = 'inline-block';
+    } else {
+        searchInput.style.display = 'none';
+    }
+}
+
 // Form submission handler (placeholder for future implementation)
 function submitStreamlinedPaymentEntry() {
     const form = document.getElementById('streamlinedPaymentEntryForm');
@@ -2503,22 +2591,146 @@ function resetFormAndSections() {
     paymentDetailsSection.style.display = 'none';
 }
 
-// Show success notification
-function showSuccessNotification(message) {
-    const successDiv = document.createElement('div');
-    successDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
-        color: #22543d;
-        padding: 16px 20px;
-        border-radius: 12px;
-        font-weight: 500;
-        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
-        z-index: 9999;
-        transform: translateX(100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+// Update entry indices after removal
+function updateEntryIndices() {
+    const paymentEntriesList = document.getElementById('paymentEntriesList');
+    const entries = paymentEntriesList.querySelectorAll('.payment-entry-row');
+    
+    entries.forEach((entry, index) => {
+        entry.setAttribute('data-entry-index', index);
+        
+        // Update all form field IDs and names in this entry
+        const fields = entry.querySelectorAll('input, select');
+        fields.forEach(field => {
+            const baseId = field.id.split('_')[0];
+            field.id = `${baseId}_${index}`;
+            
+            // Update corresponding label
+            const label = entry.querySelector(`label[for="${field.id}"]`);
+            if (label) {
+                label.setAttribute('for', field.id);
+            }
+        });
+        
+        // Update placeholder for reference field
+        const refField = entry.querySelector('input[placeholder^="REF-"]');
+        if (refField) {
+            refField.placeholder = `REF-${String(index + 1).padStart(3, '0')}`;
+        }
+    });
+}
+
+// Handle project type change for multiple payment entries
+function handleProjectTypeChange(index, projectType) {
+    const projectNameSelect = document.getElementById(`streamlinedProjectName_${index}`);
+    
+    // Clear and disable project name select
+    projectNameSelect.innerHTML = '<option value="">Loading projects...</option>';
+    projectNameSelect.disabled = true;
+    
+    if (projectType) {
+        // Fetch projects from API
+        fetchProjectsByType(projectType)
+            .then(projects => {
+                projectNameSelect.innerHTML = '<option value="">Select a project</option>';
+                
+                if (projects && projects.length > 0) {
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = project.title;
+                        projectNameSelect.appendChild(option);
+                    });
+                    projectNameSelect.disabled = false;
+                } else {
+                    projectNameSelect.innerHTML = '<option value="">No projects found</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching projects:', error);
+                projectNameSelect.innerHTML = '<option value="">Error loading projects</option>';
+                showFileError('Failed to load projects. Please try again.');
+            });
+    } else {
+        projectNameSelect.innerHTML = '<option value="">First select project type</option>';
+        projectNameSelect.disabled = true;
+    }
+}
+
+// Load authorized users for Payment Done Via dropdown in multiple payment entries
+function loadAuthorizedUsersForEntry(index) {
+    const paymentDoneViaSelect = document.getElementById(`streamlinedPaymentDoneVia_${index}`);
+    
+    if (!paymentDoneViaSelect) {
+        console.error('Payment Done Via select element not found for index:', index);
+        return;
+    }
+    
+    // Show loading state
+    paymentDoneViaSelect.innerHTML = '<option value="">Loading authorized users...</option>';
+    
+    fetch('../api/get_authorized_users.php', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success && data.users) {
+            // Clear loading option
+            paymentDoneViaSelect.innerHTML = '<option value="">Select Authorized User</option>';
+            
+            // Add role icons mapping
+            const roleIcons = {
+                'site supervisor': '👷‍♂️',
+                'purchase manager': '📋', 
+                'senior manager (site)': '👨‍💼',
+                'coordinator': '🎯'
+            };
+            
+            // Populate with real users
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                const roleIcon = roleIcons[user.role.toLowerCase()] || '👤';
+                const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                option.textContent = `${roleIcon} ${user.username} (${roleName})`;
+                paymentDoneViaSelect.appendChild(option);
+            });
+            
+            console.log(`Loaded ${data.users.length} authorized users for entry ${index}`);
+        } else {
+            throw new Error(data.message || 'No authorized users found');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading authorized users:', error);
+        paymentDoneViaSelect.innerHTML = '<option value="">Error loading users</option>';
+        showFileError('Failed to load authorized users. Please try again.');
+    });
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', function(event) {
+    const searchContainers = document.querySelectorAll('.payment-to-search-container');
+    searchContainers.forEach(container => {
+        if (!container.contains(event.target)) {
+            const suggestions = container.querySelector('.search-suggestions');
+            if (suggestions) {
+                suggestions.classList.remove('show');
+            }
+        }
+    });
+});
+
+// File selection handler
+function handleFileSelection(input) {
         max-width: 350px;
         display: flex;
         align-items: center;

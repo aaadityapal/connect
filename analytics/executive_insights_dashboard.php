@@ -3362,11 +3362,13 @@
         
         // View All Functions
         function viewAllVendors() {
-            alert('Redirecting to all vendors page...');
+            // Redirect to the vendors management page
+            window.location.href = '../vendor_management.php';
         }
         
         function viewAllLabours() {
-            alert('Redirecting to all labours page...');
+            // Redirect to the labour information page
+            window.location.href = '../labour_info.php';
         }
         
         function viewAllEntries() {

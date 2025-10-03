@@ -1264,92 +1264,653 @@ if (isset($_SESSION['user_id'])) {
             }
         }
         
-        .greeting-actions {
-            margin-top: 15px;
+        /* Diwali Theme Styles */
+        .diwali-theme {
+            position: relative;
+            overflow: hidden;
         }
         
-        .action-badges-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-top: 10px;
-            gap: 10px;  /* Add gap between elements in the container */
+        /* Sparkling lights effect */
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ffd700;
+            box-shadow: 0 0 10px 2px #ffd700, 0 0 20px 4px #ff8c00;
+            animation: sparkle-animation 2s infinite;
+            z-index: 1;
         }
         
-        .punch-button-container {
-            display: flex;
-            align-items: center;
-            margin-top: 8px;
+        .sparkle:nth-child(2n) {
+            background-color: #ff8c00;
+            box-shadow: 0 0 10px 2px #ff8c00, 0 0 20px 4px #ff4500;
+            animation-delay: 0.5s;
         }
         
-        /* User's Pending Attendance Badge Styles */
-        .user-pending-badge {
-            margin-bottom: 5px;
+        .sparkle:nth-child(3n) {
+            background-color: #ff1493;
+            box-shadow: 0 0 10px 2px #ff1493, 0 0 20px 4px #ff00ff;
+            animation-delay: 1s;
         }
         
-        .pending-badge {
-            display: flex;
-            align-items: center;
-            background-color: #f8d7da;
-            border-left: 4px solid #dc3545;
-            padding: 4px 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            animation: pulse-red 2s infinite;
-            font-size: 0.8rem;
-        }
-        
-        @keyframes pulse-red {
+        @keyframes sparkle-animation {
             0% {
-                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+                opacity: 0;
+                transform: scale(0.5);
             }
-            70% {
-                box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
             }
             100% {
-                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+                opacity: 0;
+                transform: scale(0.5);
             }
         }
         
-        .pending-badge i {
-            color: #dc3545;
+        /* Diya elements */
+        .diya {
+            position: absolute;
+            width: 20px;
+            height: 30px;
+            background: linear-gradient(to bottom, #ff8c00, #ff4500);
+            border-radius: 50% 50% 20% 20%;
+            bottom: 10px;
+            z-index: 2;
+            box-shadow: 0 0 10px #ff8c00, 0 0 20px #ff4500;
+        }
+        
+        .diya::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 15px;
+            background: #f5f5f5;
+            border-radius: 2px;
+        }
+        
+        .diya::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: #ffff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px #ffff00;
+            animation: flame-flicker 1.5s infinite alternate;
+        }
+        
+        @keyframes flame-flicker {
+            0% {
+                box-shadow: 0 0 10px 2px #ffff00;
+            }
+            100% {
+                box-shadow: 0 0 15px 4px #ff8c00, 0 0 25px 6px #ff4500;
+            }
+        }
+        
+        /* Firecracker elements */
+        .firecracker {
+            position: absolute;
+            width: 12px;
+            height: 25px;
+            background: linear-gradient(to bottom, #ff0000, #8b0000);
+            border-radius: 5px;
+            z-index: 2;
+        }
+        
+        .firecracker::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 10px;
+            background: #f5f5f5;
+            border-radius: 1px;
+        }
+        
+        .firecracker::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #ffff00;
+            border-radius: 50%;
+            animation: explode 3s infinite;
+        }
+        
+        @keyframes explode {
+            0% {
+                opacity: 0.7;
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.5);
+            }
+            100% {
+                opacity: 0.7;
+                transform: translateX(-50%) scale(1);
+            }
+        }
+        
+        /* Festival greeting text */
+        .festival-greeting {
+            position: absolute;
+            top: 10px;
+            right: 20px;
             font-size: 0.9rem;
-            margin-right: 6px;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 5px #ff8c00;
+            z-index: 3;
+            animation: text-glow 2s infinite alternate;
         }
         
-        .pending-badge .badge-text {
-            font-weight: 500;
-            color: #721c24;
-            font-size: 0.8rem;
-        }
-        
-        /* Mobile responsive styles for punch buttons */
-        @media (max-width: 576px) {
-            .punch-button-container button {
-                padding: 6px 15px !important;
-                font-size: 0.9rem;
-                width: 100%;
-                margin-left: 0 !important;
+        @keyframes text-glow {
+            from {
+                text-shadow: 0 0 5px #ffd700, 0 0 10px #ff8c00;
             }
-            
-            .action-badges-container {
-                width: 100%;
-            }
-            
-            .user-pending-badge {
-                width: 100%;
-            }
-            
-            .pending-badge {
-                width: 100%;
-                justify-content: center;
+            to {
+                text-shadow: 0 0 10px #ffd700, 0 0 20px #ff8c00, 0 0 30px #ff4500;
             }
         }
         
+        /* Position decorative elements */
+        .diya.left {
+            left: 20px;
+        }
+        
+        .diya.right {
+            right: 20px;
+        }
+        
+        .firecracker.left {
+            left: 60px;
+            bottom: 30px;
+        }
+        
+        .firecracker.right {
+            right: 60px;
+            bottom: 30px;
+        }
+        
+        /* Responsive adjustments for Diwali elements */
         @media (max-width: 768px) {
-            .greeting-text {
-                font-size: 1.2rem;
+            .festival-greeting {
+                font-size: 0.8rem;
+                right: 10px;
             }
+            
+            .diya.left {
+                left: 10px;
+            }
+            
+            .diya.right {
+                right: 10px;
+            }
+            
+            .firecracker.left {
+                left: 40px;
+                bottom: 25px;
+            }
+            
+            .firecracker.right {
+                right: 40px;
+                bottom: 25px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .festival-greeting {
+                top: 5px;
+                font-size: 0.7rem;
+            }
+            
+            .diya {
+                width: 15px;
+                height: 22px;
+                bottom: 5px;
+            }
+            
+            .firecracker {
+                width: 8px;
+                height: 18px;
+                bottom: 20px;
+            }
+        }
+        
+        /* Enhanced Diwali Lights */
+        .diwali-lights-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .light-string {
+            position: absolute;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .light-string.top {
+            top: 5px;
+        }
+        
+        .light-string.bottom {
+            bottom: 5px;
+        }
+        
+        .diwali-light {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: light-sparkle 2s infinite;
+        }
+        
+        .diwali-light:nth-child(2n) {
+            animation-delay: 0.5s;
+        }
+        
+        .diwali-light:nth-child(3n) {
+            animation-delay: 1s;
+        }
+        
+        .diwali-light:nth-child(4n) {
+            animation-delay: 1.5s;
+        }
+        
+        @keyframes light-sparkle {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+                box-shadow: 0 0 5px 1px currentColor;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+                box-shadow: 0 0 15px 3px currentColor;
+            }
+            100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+                box-shadow: 0 0 5px 1px currentColor;
+            }
+        }
+        
+        /* Different colored lights */
+        .light-gold {
+            background-color: #ffd700;
+            color: #ffd700;
+        }
+        
+        .light-orange {
+            background-color: #ff8c00;
+            color: #ff8c00;
+        }
+        
+        .light-red {
+            background-color: #ff4500;
+            color: #ff4500;
+        }
+        
+        .light-pink {
+            background-color: #ff1493;
+            color: #ff1493;
+        }
+        
+        .light-purple {
+            background-color: #9932cc;
+            color: #9932cc;
+        }
+        
+        /* Blasting Firecrackers */
+        .firecracker-blast {
+            position: absolute;
+            width: 6px;
+            height: 20px;
+            background: linear-gradient(to bottom, #ff0000, #8b0000);
+            border-radius: 3px;
+            z-index: 3;
+        }
+        
+        .firecracker-blast::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 8px;
+            background: #f5f5f5;
+            border-radius: 1px;
+        }
+        
+        .blast-effect {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ff8c00;
+            box-shadow: 0 0 8px 2px #ff8c00;
+            animation: blast-animation 1.5s infinite;
+            z-index: 2;
+        }
+        
+        .blast-effect.large {
+            width: 12px;
+            height: 12px;
+            animation-delay: 0.3s;
+        }
+        
+        .blast-effect.small {
+            width: 5px;
+            height: 5px;
+            animation-delay: 0.6s;
+        }
+        
+        @keyframes blast-animation {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+                box-shadow: 0 0 8px 2px #ff8c00;
+            }
+            50% {
+                transform: scale(2);
+                opacity: 0.7;
+                box-shadow: 0 0 20px 8px #ff4500, 0 0 30px 12px #ff0000;
+            }
+            100% {
+                transform: scale(0.5);
+                opacity: 0;
+                box-shadow: 0 0 8px 2px #ff8c00;
+            }
+        }
+        
+        /* Position for firecrackers */
+        .firecracker-blast.left-top {
+            top: 20px;
+            left: 30px;
+        }
+        
+        .firecracker-blast.right-top {
+            top: 20px;
+            right: 30px;
+        }
+        
+        .firecracker-blast.left-bottom {
+            bottom: 20px;
+            left: 30px;
+        }
+        
+        .firecracker-blast.right-bottom {
+            bottom: 20px;
+            right: 30px;
+        }
+        
+        /* Position for blast effects */
+        .blast-effect.left-top-1 {
+            top: 10px;
+            left: 25px;
+        }
+        
+        .blast-effect.left-top-2 {
+            top: 15px;
+            left: 35px;
+        }
+        
+        .blast-effect.right-top-1 {
+            top: 10px;
+            right: 25px;
+        }
+        
+        .blast-effect.right-top-2 {
+            top: 15px;
+            right: 35px;
+        }
+        
+        .blast-effect.left-bottom-1 {
+            bottom: 10px;
+            left: 25px;
+        }
+        
+        .blast-effect.left-bottom-2 {
+            bottom: 15px;
+            left: 35px;
+        }
+        
+        .blast-effect.right-bottom-1 {
+            bottom: 10px;
+            right: 25px;
+        }
+        
+        .blast-effect.right-bottom-2 {
+            bottom: 15px;
+            right: 35px;
+        }
+        
+        /* Happy Diwali Text Style */
+        .diwali-text {
+            display: inline-block;
+            margin-left: 15px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 
+                0 0 5px #ff8c00,
+                0 0 10px #ff4500,
+                0 0 15px #ff0000;
+            animation: diwali-text-glow 1.5s infinite alternate;
+            vertical-align: middle;
+        }
+        
+        @keyframes diwali-text-glow {
+            0% {
+                text-shadow: 
+                    0 0 5px #ff8c00,
+                    0 0 10px #ff4500,
+                    0 0 15px #ff0000;
+                transform: scale(1);
+            }
+            100% {
+                text-shadow: 
+                    0 0 10px #ffd700,
+                    0 0 20px #ff8c00,
+                    0 0 30px #ff4500,
+                    0 0 40px #ff0000;
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Realistic Firecrackers */
+        .real-firecracker {
+            position: absolute;
+            width: 8px;
+            height: 25px;
+            background: linear-gradient(to bottom, #8B0000, #FF0000, #8B0000);
+            border-radius: 4px;
+            z-index: 4;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+        
+        .real-firecracker::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 10px;
+            background: #f5f5f5;
+            border-radius: 2px;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .real-firecracker::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #FF8C00, 0 0 10px #FF4500;
+        }
+        
+        /* Enhanced Blast Effects */
+        .real-blast {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 3;
+            transform: scale(0);
+        }
+        
+        .real-blast.particle-1 {
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            box-shadow: 0 0 10px #FF8C00, 0 0 20px #FF4500;
+        }
+        
+        .real-blast.particle-2 {
+            width: 8px;
+            height: 8px;
+            background: #FF8C00;
+            box-shadow: 0 0 8px #FF4500, 0 0 15px #FF0000;
+        }
+        
+        .real-blast.particle-3 {
+            width: 6px;
+            height: 6px;
+            background: #FF4500;
+            box-shadow: 0 0 6px #FF0000, 0 0 12px #8B0000;
+        }
+        
+        .real-blast.particle-4 {
+            width: 12px;
+            height: 12px;
+            background: #FF1493;
+            box-shadow: 0 0 12px #FF00FF, 0 0 20px #8B008B;
+        }
+        
+        .real-blast.particle-5 {
+            width: 7px;
+            height: 7px;
+            background: #9932CC;
+            box-shadow: 0 0 7px #8B008B, 0 0 14px #4B0082;
+        }
+        
+        /* Blast Animations */
+        @keyframes blast-animation-1 {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3) translate(-20px, -30px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes blast-animation-2 {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3) translate(25px, -20px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes blast-animation-3 {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3) translate(-15px, 25px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes blast-animation-4 {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3) translate(20px, 30px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes blast-animation-5 {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(3) translate(0, -35px);
+                opacity: 0;
+            }
+        }
+        
+        /* Position for realistic firecrackers */
+        .real-firecracker.top-left {
+            top: 25px;
+            left: 40px;
+        }
+        
+        .real-firecracker.top-right {
+            top: 25px;
+            right: 40px;
+        }
+        
+        .real-firecracker.bottom-left {
+            bottom: 25px;
+            left: 40px;
+        }
+        
+        .real-firecracker.bottom-right {
+            bottom: 25px;
+            right: 40px;
         }
     </style>
 </head>
@@ -1369,11 +1930,83 @@ if (isset($_SESSION['user_id'])) {
             <!-- Greetings Section -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="dashboard-card greeting-section">
+                    <div class="dashboard-card greeting-section diwali-theme">
+                        <!-- Enhanced Diwali Lights -->
+                        <div class="diwali-lights-container">
+                            <!-- Top light string -->
+                            <div class="light-string top">
+                                <div class="diwali-light light-gold" style="left: 5%;"></div>
+                                <div class="diwali-light light-orange" style="left: 15%;"></div>
+                                <div class="diwali-light light-red" style="left: 25%;"></div>
+                                <div class="diwali-light light-pink" style="left: 35%;"></div>
+                                <div class="diwali-light light-purple" style="left: 45%;"></div>
+                                <div class="diwali-light light-gold" style="left: 55%;"></div>
+                                <div class="diwali-light light-orange" style="left: 65%;"></div>
+                                <div class="diwali-light light-red" style="left: 75%;"></div>
+                                <div class="diwali-light light-pink" style="left: 85%;"></div>
+                                <div class="diwali-light light-purple" style="left: 95%;"></div>
+                            </div>
+                            
+                            <!-- Bottom light string -->
+                            <div class="light-string bottom">
+                                <div class="diwali-light light-purple" style="left: 5%;"></div>
+                                <div class="diwali-light light-pink" style="left: 15%;"></div>
+                                <div class="diwali-light light-red" style="left: 25%;"></div>
+                                <div class="diwali-light light-orange" style="left: 35%;"></div>
+                                <div class="diwali-light light-gold" style="left: 45%;"></div>
+                                <div class="diwali-light light-purple" style="left: 55%;"></div>
+                                <div class="diwali-light light-pink" style="left: 65%;"></div>
+                                <div class="diwali-light light-red" style="left: 75%;"></div>
+                                <div class="diwali-light light-orange" style="left: 85%;"></div>
+                                <div class="diwali-light light-gold" style="left: 95%;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Realistic Firecrackers -->
+                        <div class="real-firecracker top-left"></div>
+                        <div class="real-firecracker top-right"></div>
+                        <div class="real-firecracker bottom-left"></div>
+                        <div class="real-firecracker bottom-right"></div>
+                        
+                        <!-- Realistic Blast Effects -->
+                        <!-- Top Left Blast -->
+                        <div class="real-blast particle-1" style="top: 25px; left: 40px; animation: blast-animation-1 1.8s infinite;"></div>
+                        <div class="real-blast particle-2" style="top: 25px; left: 40px; animation: blast-animation-2 1.8s infinite 0.2s;"></div>
+                        <div class="real-blast particle-3" style="top: 25px; left: 40px; animation: blast-animation-3 1.8s infinite 0.4s;"></div>
+                        <div class="real-blast particle-4" style="top: 25px; left: 40px; animation: blast-animation-4 1.8s infinite 0.6s;"></div>
+                        <div class="real-blast particle-5" style="top: 25px; left: 40px; animation: blast-animation-5 1.8s infinite 0.8s;"></div>
+                        
+                        <!-- Top Right Blast -->
+                        <div class="real-blast particle-1" style="top: 25px; right: 40px; animation: blast-animation-1 1.8s infinite 0.3s;"></div>
+                        <div class="real-blast particle-2" style="top: 25px; right: 40px; animation: blast-animation-2 1.8s infinite 0.5s;"></div>
+                        <div class="real-blast particle-3" style="top: 25px; right: 40px; animation: blast-animation-3 1.8s infinite 0.7s;"></div>
+                        <div class="real-blast particle-4" style="top: 25px; right: 40px; animation: blast-animation-4 1.8s infinite 0.9s;"></div>
+                        <div class="real-blast particle-5" style="top: 25px; right: 40px; animation: blast-animation-5 1.8s infinite 1.1s;"></div>
+                        
+                        <!-- Bottom Left Blast -->
+                        <div class="real-blast particle-1" style="bottom: 25px; left: 40px; animation: blast-animation-1 1.8s infinite 0.6s;"></div>
+                        <div class="real-blast particle-2" style="bottom: 25px; left: 40px; animation: blast-animation-2 1.8s infinite 0.8s;"></div>
+                        <div class="real-blast particle-3" style="bottom: 25px; left: 40px; animation: blast-animation-3 1.8s infinite 1.0s;"></div>
+                        <div class="real-blast particle-4" style="bottom: 25px; left: 40px; animation: blast-animation-4 1.8s infinite 1.2s;"></div>
+                        <div class="real-blast particle-5" style="bottom: 25px; left: 40px; animation: blast-animation-5 1.8s infinite 1.4s;"></div>
+                        
+                        <!-- Bottom Right Blast -->
+                        <div class="real-blast particle-1" style="bottom: 25px; right: 40px; animation: blast-animation-1 1.8s infinite 0.9s;"></div>
+                        <div class="real-blast particle-2" style="bottom: 25px; right: 40px; animation: blast-animation-2 1.8s infinite 1.1s;"></div>
+                        <div class="real-blast particle-3" style="bottom: 25px; right: 40px; animation: blast-animation-3 1.8s infinite 1.3s;"></div>
+                        <div class="real-blast particle-4" style="bottom: 25px; right: 40px; animation: blast-animation-4 1.8s infinite 1.5s;"></div>
+                        <div class="real-blast particle-5" style="bottom: 25px; right: 40px; animation: blast-animation-5 1.8s infinite 1.7s;"></div>
+                        
+                        <!-- Original decorative elements -->
+                        <div class="diya left"></div>
+                        <div class="diya right"></div>
+                        <div class="firecracker left"></div>
+                        <div class="firecracker right"></div>
+                        
                         <div class="row align-items-center">
                             <div class="col-12">
                                 <h2 class="greeting-text">
-                                    <i id="greeting-icon" class="fas fa-sun"></i> <span id="greeting-time">Good morning</span>, <span class="greeting-name"><?php echo htmlspecialchars($username); ?></span>!
+                                    <i id="greeting-icon" class="fas fa-sun"></i> <span id="greeting-time">Good morning</span>, <span class="greeting-name"><?php echo htmlspecialchars($username); ?></span>! <span class="diwali-text">Happy Diwali</span>
                                 </h2>
                                 <div class="greeting-small-time">
                                     <i class="fas fa-clock"></i> <span id="small-current-time">Loading time...</span>

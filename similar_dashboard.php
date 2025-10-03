@@ -2315,36 +2315,35 @@ if ($shift_details && $shift_details['end_time']) {
         }
 
         
-        <style>
-            .year-dropdown,
-            .month-dropdown {
-                max-height: 250px;
-                overflow-y: auto;
-                scrollbar-width: thin;
-            }
-            
-            .year-dropdown::-webkit-scrollbar,
-            .month-dropdown::-webkit-scrollbar {
-                width: 6px;
-            }
-            
-            .year-dropdown::-webkit-scrollbar-track,
-            .month-dropdown::-webkit-scrollbar-track {
-                background: #f1f1f1;
-                border-radius: 10px;
-            }
-            
-            .year-dropdown::-webkit-scrollbar-thumb,
-            .month-dropdown::-webkit-scrollbar-thumb {
-                background: #888;
-                border-radius: 10px;
-            }
-            
-            .year-dropdown::-webkit-scrollbar-thumb:hover,
-            .month-dropdown::-webkit-scrollbar-thumb:hover {
-                background: #555;
-            }
-        </style>
+        /* Year dropdown styles */
+        .year-dropdown,
+        .month-dropdown {
+            max-height: 250px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        
+        .year-dropdown::-webkit-scrollbar,
+        .month-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .year-dropdown::-webkit-scrollbar-track,
+        .month-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .year-dropdown::-webkit-scrollbar-thumb,
+        .month-dropdown::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .year-dropdown::-webkit-scrollbar-thumb:hover,
+        .month-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
     
     <!-- Add CSS for kanban filters -->

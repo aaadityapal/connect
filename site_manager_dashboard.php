@@ -562,8 +562,125 @@ if ($currentHour < 12) {
             border-radius: 50%;
             display: flex;
             align-items: center;
+        }
+        
+        .greeting-section {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: visible;
+            width: 100%;
+            box-sizing: border-box;
+            /* Diwali Theme Background */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 215, 0, 0.1) 0px, transparent 2px),
+                radial-gradient(circle at 20% 80%, rgba(255, 69, 0, 0.1) 0px, transparent 2px),
+                radial-gradient(circle at 80% 30%, rgba(255, 215, 0, 0.1) 0px, transparent 2px),
+                radial-gradient(circle at 60% 70%, rgba(255, 69, 0, 0.1) 0px, transparent 2px);
+            background-size: 100px 100px;
+        }
+        
+        /* Diwali Decorations */
+        .diwali-decoration {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .diya {
+            width: 24px;
+            height: 30px;
+            background: linear-gradient(to bottom, #FFD700, #FF8C00);
+            border-radius: 50% 50% 20% 20%;
+            position: relative;
+            box-shadow: 0 0 8px #FFD700, 0 0 20px #FF8C00;
+            animation: diyaGlow 2s infinite alternate;
+        }
+        
+        .diya::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 12px;
+            background: #8B4513;
+        }
+        
+        .diya::after {
+            content: '';
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 12px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #FFD700, 0 0 20px #FF8C00;
+            animation: flameFlicker 0.5s infinite alternate;
+        }
+        
+        .firecracker {
+            position: absolute;
+            width: 6px;
+            height: 20px;
+            background: linear-gradient(to bottom, #FF4500, #8B0000);
+            border-radius: 3px;
+            animation: firecrackerExplode 3s infinite;
+        }
+        
+        .firecracker::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #FFD700;
+        }
+        
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #FFD700;
+            animation: sparkleTwinkle 1.5s infinite alternate;
+        }
+        
+        @keyframes diyaGlow {
+            0% { box-shadow: 0 0 8px #FFD700, 0 0 20px #FF8C00; }
+            100% { box-shadow: 0 0 12px #FFD700, 0 0 25px #FF8C00, 0 0 35px #FF8C00; }
+        }
+        
+        @keyframes flameFlicker {
+            0% { box-shadow: 0 0 10px #FFD700, 0 0 20px #FF8C00; }
+            100% { box-shadow: 0 0 15px #FFD700, 0 0 25px #FF8C00, 0 0 35px #FF8C00; }
+        }
+        
+        @keyframes firecrackerExplode {
+            0% { transform: translateY(0); opacity: 1; }
+            50% { transform: translateY(-20px); opacity: 0.8; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+        
+        @keyframes sparkleTwinkle {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+            display: flex;
+            align-items: center;
             justify-content: center;
-            margin-right: 12px;
+            margin-right: 12px; 
             color: white;
             flex-shrink: 0;
         }
@@ -1492,6 +1609,25 @@ function updateWorkReportWordCount(textarea, displayElement) {
         <div class="main-content" id="mainContent">
             <!-- Greeting Section -->
             <div class="greeting-section">
+                <!-- Diwali Decorations -->
+                <div class="diwali-decoration" style="top: 10px; left: 10px;">
+                    <div class="diya"></div>
+                </div>
+                <div class="diwali-decoration" style="top: 10px; right: 10px;">
+                    <div class="diya"></div>
+                </div>
+                <div class="diwali-decoration" style="bottom: 10px; left: 150px;">
+                    <div class="sparkle"></div>
+                </div>
+                <div class="diwali-decoration" style="bottom: 30px; right: 120px;">
+                    <div class="sparkle"></div>
+                </div>
+                <div class="diwali-decoration" style="top: 40px; right: 200px;">
+                    <div class="sparkle"></div>
+                </div>
+                <div class="diwali-decoration" style="bottom: 50px; left: 200px;">
+                    <div class="firecracker"></div>
+                </div>
                 <div class="greeting-container">
                     <div class="greeting-text">
                         <h1>

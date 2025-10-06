@@ -174,7 +174,6 @@ if ($shift_details && $shift_details['end_time']) {
     <link rel="stylesheet" href="assets/css/task-overview.css">
     <script src="assets/js/task-overview-manager.js"></script>
     <link rel="stylesheet" href="assets/css/notification-system.css">
-    <script src="assets/js/notification-handler.js" defer></script>
 
     <style>
         .dashboard-container {

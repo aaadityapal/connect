@@ -301,6 +301,57 @@ if (empty($user_geofence_locations)) {
         'is_primary' => 1
     ];
 }
+
+// Get count of missing punches in the last 15 days (including today)
+$missing_punches_count = 0;
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $date_15_days_ago = date('Y-m-d', strtotime('-15 days'));
+    $today = date('Y-m-d');
+    
+    // Query to get count of missing punches
+    // This query finds records that exist but have missing punch_in or punch_out
+    $missing_punches_query = "
+        SELECT COUNT(*) as missing_count
+        FROM attendance 
+        WHERE user_id = ? 
+        AND date >= ?
+        AND (punch_in IS NULL OR punch_out IS NULL)
+    ";
+    
+    $stmt = $conn->prepare($missing_punches_query);
+    if ($stmt) {
+        $stmt->bind_param("is", $user_id, $date_15_days_ago);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            $missing_punches_count = $row['missing_count'];
+        }
+    }
+    
+    // Also check if there's no record for today (which means today is also missing)
+    $today_query = "
+        SELECT COUNT(*) as today_count
+        FROM attendance 
+        WHERE user_id = ? 
+        AND date = ?
+    ";
+    
+    $today_stmt = $conn->prepare($today_query);
+    if ($today_stmt) {
+        $today_stmt->bind_param("is", $user_id, $today);
+        $today_stmt->execute();
+        $today_result = $today_stmt->get_result();
+        
+        if ($today_row = $today_result->fetch_assoc()) {
+            // If there's no record for today, increment the missing count
+            if ($today_row['today_count'] == 0) {
+                $missing_punches_count++;
+            }
+        }
+    }
+}
 ?>
 
 <!-- Compact Recent Time Information Widget -->
@@ -465,6 +516,25 @@ if (empty($user_geofence_locations)) {
                 }
             ?></span>
         </button>
+        
+        <!-- Notification Bell Icon -->
+        <div class="notification-bell-container">
+            <i class="fas fa-bell notification-bell"></i>
+            <span class="notification-badge" id="notificationBadge"><?php echo $missing_punches_count; ?></span>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+                <div class="notification-header">
+                    <h3>Notifications</h3>
+                    <span class="notification-count"><?php echo $missing_punches_count; ?> new</span>
+                </div>
+                <div class="notification-list">
+                    <!-- Notifications will be populated dynamically by JavaScript -->
+                </div>
+                <div class="notification-footer">
+                    <a href="#" class="view-all-notifications">View All Notifications</a>
+                </div>
+            </div>
+        </div>
         
         <!-- User Avatar with Dropdown Menu -->
         <div class="user-avatar-container">
@@ -1000,7 +1070,7 @@ if (empty($user_geofence_locations)) {
     position: relative;
     display: flex;
     align-items: center;
-    overflow: hidden; /* Contain decorations */
+    overflow: visible; /* Allow dropdowns to extend beyond boundaries */
 }
 
 /* Diwali Theme - Time-specific gradients with festive colors */
@@ -1046,6 +1116,231 @@ if (empty($user_geofence_locations)) {
     align-items: center;
     gap: 15px;
     margin-left: 20px;
+}
+
+/* Notification Bell Icon Styles */
+.notification-bell-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #ffffff, #f0f4f8);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.notification-bell-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(145deg, #f0f4f8, #e2e8f0);
+}
+
+.notification-bell {
+    font-size: 18px;
+    color: #4361ee;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Notification Dropdown Styles */
+.notification-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 350px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.notification-dropdown.show {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notification-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.notification-count {
+    background: #4361ee;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: #f8f9fa;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.notification-icon.warning {
+    background: rgba(255, 159, 67, 0.15);
+    color: #ff9f43;
+}
+
+.notification-icon.info {
+    background: rgba(67, 97, 238, 0.15);
+    color: #4361ee;
+}
+
+.notification-icon.success {
+    background: rgba(52, 199, 89, 0.15);
+    color: #34c759;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.notification-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 8px;
+}
+
+.notification-status.new {
+    background-color: #4361ee;
+    color: white;
+}
+
+.notification-status.submitted {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.notification-status.read {
+    background-color: #6c757d;
+    color: white;
+}
+
+.notification-message {
+    margin: 0 0 5px 0;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.notification-time {
+    font-size: 11px;
+    color: #999;
+}
+
+.notification-footer {
+    padding: 12px 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.view-all-notifications {
+    color: #4361ee;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.view-all-notifications:hover {
+    text-decoration: underline;
+}
+
+/* Diwali Theme Adjustments for Notifications */
+.notification-dropdown {
+    background: linear-gradient(145deg, #fff8e1, #fff);
+    border: 1px solid #ffd54f;
+}
+
+.notification-header {
+    background: linear-gradient(145deg, #fff3e0, #fff8e1);
+    border-bottom: 1px solid #ffd54f;
+}
+
+.notification-item {
+    border-bottom: 1px solid #ffecb3;
+}
+
+.notification-item:hover {
+    background: linear-gradient(145deg, #fff8e1, #ffecb3);
+}
+
+.notification-footer {
+    border-top: 1px solid #ffd54f;
+    background: linear-gradient(145deg, #fff8e1, #fff);
 }
 
 /* Punch-In Button Styles with Diwali Theme */
@@ -1551,6 +1846,41 @@ if (empty($user_geofence_locations)) {
         top: 15px;
         right: 65px;
     }
+    
+    /* Notification bell responsive styles */
+    .notification-bell-container {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .notification-bell {
+        font-size: 16px;
+    }
+    
+    .notification-badge {
+        width: 18px;
+        height: 18px;
+        font-size: 9px;
+    }
+    
+    /* Notification dropdown responsive styles */
+    .notification-dropdown {
+        width: 300px;
+        right: -30px;
+        z-index: 10000;
+    }
+    
+    .notification-header h3 {
+        font-size: 16px;
+    }
+    
+    .notification-title {
+        font-size: 13px;
+    }
+    
+    .notification-message {
+        font-size: 12px;
+    }
 
     /* Shift timer positioning at bottom */
     .shift-timer {
@@ -1856,6 +2186,25 @@ if (empty($user_geofence_locations)) {
         background-color: #ffffff;
         color: #f44336;
         box-shadow: 0 2px 8px rgba(244, 67, 54, 0.25);
+    }
+    
+    /* Notification dropdown on small screens */
+    .notification-dropdown {
+        width: 280px;
+        right: -60px;
+        z-index: 10000;
+    }
+    
+    .notification-list {
+        max-height: 250px;
+    }
+    
+    .notification-title {
+        font-size: 12px;
+    }
+    
+    .notification-message {
+        font-size: 11px;
     }
     
     .submit-punch-btn {
@@ -3056,6 +3405,12 @@ if (empty($user_geofence_locations)) {
 }
 </style>
 
+<!-- Include the Missing Punch In Modal -->
+<?php include __DIR__ . '/../../modals/missing_punch_modal.php'; ?>
+
+<!-- Include the Missing Punch Out Modal -->
+<?php include __DIR__ . '/../../modals/missing_punch_out_modal.php'; ?>
+
 <!-- Add JavaScript for live time update, avatar dropdown, and punch-in button -->
 <script>
     // Pass PHP geofence locations to JavaScript
@@ -3064,6 +3419,244 @@ if (empty($user_geofence_locations)) {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener for notification bell
+        const notificationBell = document.querySelector('.notification-bell-container');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationList = document.querySelector('.notification-list');
+        const notificationCount = document.querySelector('.notification-count');
+        const notificationBadge = document.getElementById('notificationBadge');
+        
+        if (notificationBell && notificationDropdown) {
+            notificationBell.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event from bubbling up
+                notificationDropdown.classList.toggle('show');
+                
+                // Fetch missing punches when dropdown is opened
+                if (notificationDropdown.classList.contains('show')) {
+                    fetchMissingPunches();
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!notificationBell.contains(e.target)) {
+                    notificationDropdown.classList.remove('show');
+                }
+            });
+        }
+        
+        // Function to fetch missing punches from the last 15 days
+        function fetchMissingPunches() {
+            fetch('ajax_handlers/get_missing_punches.php', { 
+                credentials: 'same-origin' 
+            })
+                .then(response => {
+                    // Check if response is ok
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // After fetching missing punches, check which ones have been read or submitted
+                        checkNotificationReadStatus(data.data).then(statusData => {
+                            updateNotificationList(data.data, statusData);
+                            // Update notification count
+                            notificationCount.textContent = data.count + ' new';
+                            notificationBadge.textContent = data.count;
+                        });
+                    } else {
+                        console.error('Error fetching missing punches:', data.message);
+                        // Show error in notification list
+                        notificationList.innerHTML = `
+                            <div class="notification-item">
+                                <div class="notification-icon warning">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <p class="notification-title">Error</p>
+                                    <p class="notification-message">Failed to load notifications. Please try again.</p>
+                                    <span class="notification-time">Just now</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching missing punches:', error);
+                    // Show error in notification list
+                    notificationList.innerHTML = `
+                        <div class="notification-item">
+                            <div class="notification-icon warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-title">Error</p>
+                                <p class="notification-message">Failed to load notifications. Please try again.</p>
+                                <span class="notification-time">Just now</span>
+                            </div>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Function to check notification read status
+        function checkNotificationReadStatus(missingPunches) {
+            const dates = missingPunches.map(punch => punch.date);
+            
+            if (dates.length === 0) {
+                return Promise.resolve({read_dates: [], submitted_dates: []});
+            }
+            
+            return fetch('ajax_handlers/check_notification_read_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'dates[]=' + dates.join('&dates[]='),
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    return {
+                        read_dates: data.read_dates || [],
+                        submitted_dates: data.submitted_dates || []
+                    };
+                } else {
+                    console.error('Error checking read status:', data.message);
+                    return {read_dates: [], submitted_dates: []};
+                }
+            })
+            .catch(error => {
+                console.error('Error checking read status:', error);
+                return {read_dates: [], submitted_dates: []};
+            });
+        }
+        
+        // Function to update notification list with real data
+        function updateNotificationList(missingPunches, statusData = {read_dates: [], submitted_dates: []}) {
+            const {read_dates = [], submitted_dates = []} = statusData;
+            
+            if (missingPunches.length === 0) {
+                notificationList.innerHTML = `
+                    <div class="notification-item">
+                        <div class="notification-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p class="notification-title">All Good!</p>
+                            <p class="notification-message">No missing punches in the last 15 days.</p>
+                            <span class="notification-time">Just now</span>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let notificationHTML = '';
+
+            missingPunches.forEach(punch => {
+                const punchDate = new Date(punch.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const punchDateNormalized = new Date(punchDate);
+                punchDateNormalized.setHours(0, 0, 0, 0);
+
+                const formattedDate = punchDate.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+
+                // Check if this notification has been submitted or read
+                const isSubmitted = submitted_dates.includes(punch.date);
+                const isRead = read_dates.includes(punch.date) && !isSubmitted;
+                
+                // Only show status tag if it's not "new"
+                let statusTag = '';
+                if (isSubmitted) {
+                    statusTag = '<span class="notification-status submitted">submitted</span>';
+                } else if (isRead) {
+                    statusTag = '<span class="notification-status read">read</span>';
+                }
+                // If neither submitted nor read, don't show any status tag (no "new" tag)
+
+                let message = '';
+                let iconClass = 'warning';
+                let icon = 'fa-exclamation-circle';
+                let punchType = '';
+
+                // Special handling for today
+                if (punchDateNormalized.getTime() === today.getTime()) {
+                    if (punch.punch_in === null) {
+                        message = `You haven't punched in today`;
+                        punchType = 'missing_punch_in';
+                    } else if (punch.punch_out === null) {
+                        message = `You haven't punched out today`;
+                        punchType = 'missing_punch_out';
+                    }
+                } else {
+                    // For past dates
+                    if (punch.punch_in === null) {
+                        message = `Missing punch-in on ${formattedDate}`;
+                        punchType = 'missing_punch_in';
+                    } else if (punch.punch_out === null) {
+                        message = `Missing punch-out on ${formattedDate}`;
+                        punchType = 'missing_punch_out';
+                    }
+                }
+
+                notificationHTML += `
+                    <div class="notification-item" data-date="${punch.date}" data-type="${punchType}">
+                        <div class="notification-icon ${iconClass}">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p class="notification-title">Attendance Reminder ${statusTag}</p>
+                            <p class="notification-message">${message}</p>
+                            <span class="notification-time">${formattedDate}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            notificationList.innerHTML = notificationHTML;
+
+            // Add click event listeners to notification items
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const date = this.getAttribute('data-date');
+                    const type = this.getAttribute('data-type');
+                    
+                    // If this is a missing punch-in notification, open the missing punch modal
+                    if (type === 'missing_punch_in') {
+                        // Close the notification dropdown
+                        notificationDropdown.classList.remove('show');
+                        
+                        // Open the missing punch modal with the date
+                        if (typeof openMissingPunchModal === 'function') {
+                            openMissingPunchModal(date);
+                        } else {
+                            console.error('openMissingPunchModal function not found');
+                        }
+                    }
+                    // If this is a missing punch-out notification, open the missing punch-out modal
+                    else if (type === 'missing_punch_out') {
+                        // Close the notification dropdown
+                        notificationDropdown.classList.remove('show');
+                        
+                        // Open the missing punch-out modal with the date
+                        if (typeof openMissingPunchOutModal === 'function') {
+                            openMissingPunchOutModal(date);
+                        } else {
+                            console.error('openMissingPunchOutModal function not found');
+                        }
+                    }
+                });
+            });
+        }
         // Create enhanced firework effect for Diwali theme
         function createFirework() {
             const widget = document.querySelector('.compact-time-widget');

@@ -126,7 +126,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
                 
                 // Format the attendance info
                 if ($record) {
-                    if ($record['status'] === 'present') {
+                    if ($record['is_weekly_off']) {
+                        // Even if it's a weekly off, show actual working hours if available
+                        if ($record['punch_in_time'] && $record['punch_out_time']) {
+                            // Convert 24-hour format to 12-hour format
+                            $punch_in_12hr = date("h:i A", strtotime($record['punch_in_time']));
+                            $punch_out_12hr = date("h:i A", strtotime($record['punch_out_time']));
+                            $attendance_info = $punch_in_12hr . ' - ' . $punch_out_12hr . ' (Weekly OFF)';
+                        } else {
+                            $attendance_info = "Weekly OFF";
+                        }
+                    } elseif ($record['status'] === 'present') {
                         if ($record['punch_in_time'] && $record['punch_out_time']) {
                             // Convert 24-hour format to 12-hour format
                             $punch_in_12hr = date("h:i A", strtotime($record['punch_in_time']));
@@ -143,10 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
                         $attendance_info = "HOLIDAY";
                     } else {
                         $attendance_info = ucfirst($record['status']);
-                    }
-                    
-                    if ($record['is_weekly_off']) {
-                        $attendance_info = "Weekly OFF";
                     }
                 } else {
                     $attendance_info = "";

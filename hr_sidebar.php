@@ -201,6 +201,10 @@
                 <i class="bi bi-calendar-check-fill"></i>
                 Leave Request
             </a>
+            <a href="admin/missing_punch_requests.php" class="nav-link">
+                <i class="bi bi-clock-fill"></i>
+                Missing Punch Requests
+            </a>
             <a href="manage_leave_balance.php" class="nav-link">
                 <i class="bi bi-briefcase-fill"></i>
                 Recruitment

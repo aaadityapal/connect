@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Punch In — Success Modal (Minimal)</title>
+  <style>
+    :root{
+      --bg: #0f1724;
+      --card: #ffffff;
+      --accent: #06b6d4;
+      --muted: #657488;
+      --backdrop: rgba(4,6,11,0.6);
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(2,6,23,0.5);
+      --transition: 240ms cubic-bezier(.2,.9,.3,1);
+    }
+
+    /* Basic page layout for demo */
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:1rem;
+      background: linear-gradient(180deg,#0b1220 0%, #07101a 100%);
+      color:var(--card);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:2rem;
+    }
+
+    button.demo-btn{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--card);
+      padding:0.6rem 1rem;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      letter-spacing:0.2px;
+      transition:transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+    }
+    button.demo-btn:hover{ transform: translateY(-3px); }
+
+    /* Backdrop */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      display:grid;
+      place-items:center;
+      background:var(--backdrop);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity var(--transition);
+      z-index:1000;
+    }
+    .modal-backdrop.open{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* Modal card */
+    .modal{
+      width:min(420px, 92%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), #ffffff 100%);
+      border-radius:var(--radius);
+      padding:1.6rem;
+      box-shadow:var(--shadow);
+      transform: translateY(8px) scale(.98);
+      opacity:0;
+      transition: transform var(--transition), opacity var(--transition);
+      display:flex;
+      gap:1rem;
+      align-items:center;
+      justify-content:flex-start;
+    }
+    .modal.open{
+      transform: translateY(0) scale(1);
+      opacity:1;
+    }
+
+    /* Visual: circular check area */
+    .badge{
+      min-width:72px;
+      min-height:72px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.06));
+      border: 1px solid rgba(6,182,212,0.14);
+      flex-shrink:0;
+    }
+
+    .modal-content{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .modal h3{
+      margin:0;
+      font-size:1.05rem;
+      color:#06122b;
+      letter-spacing:0.2px;
+    }
+    .modal p{
+      margin:0;
+      font-size:0.88rem;
+      color:var(--muted);
+    }
+
+    /* Small close button */
+    .close-btn{
+      margin-left:auto;
+      background:transparent;
+      border:0;
+      color:var(--muted);
+      font-size:0.95rem;
+      cursor:pointer;
+      padding:6px;
+      border-radius:8px;
+      transition: background var(--transition), color var(--transition);
+    }
+    .close-btn:hover{ background: #f3f7fb; color:#000; }
+
+    /* Success check animation using SVG stroke-dash */
+    .check-svg{
+      width:48px;
+      height:48px;
+      display:block;
+    }
+    .check-circle{
+      fill:none;
+      stroke:var(--accent);
+      stroke-width:2.5;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray: 180;
+      stroke-dashoffset: 180;
+      transition: stroke-dashoffset 450ms cubic-bezier(.2,.9,.3,1);
+    }
+    .check-tick{
+      fill:none;
+      stroke:var(--accent);
+      stroke-width:3;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+      transition: stroke-dashoffset 420ms cubic-bezier(.2,.9,.3,1) 160ms;
+    }
+
+    /* When modal opens, animate SVG */
+    .modal.open .check-circle{ stroke-dashoffset: 0; }
+    .modal.open .check-tick{ stroke-dashoffset: 0; }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      :root{ --transition: 120ms ease; }
+      .modal, .modal-backdrop, .check-circle, .check-tick { transition:none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="demo-btn" id="punchBtn">Punch In</button>
+  <button class="demo-btn" id="demoAutoBtn">Punch In (auto-close)</button>
+
+  <!-- Modal markup (hidden by default) -->
+  <div class="modal-backdrop" id="successBackdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="successTitle">
+    <div class="modal" role="document" aria-describedby="successDesc">
+      <div class="badge" aria-hidden="true">
+        <!-- SVG checkmark -->
+        <svg class="check-svg" viewBox="0 0 52 52" aria-hidden="true">
+          <path class="check-circle" d="M26 4.5C14.7 4.5 5.5 13.7 5.5 25s9.2 20.5 20.5 20.5S46.5 36.3 46.5 25 37.3 4.5 26 4.5z"></path>
+          <path class="check-tick" d="M16.5 27.5l6.2 6.2 12.8-13.5"></path>
+        </svg>
+      </div>
+
+      <div class="modal-content">
+        <h3 id="successTitle">Punch In Successful</h3>
+        <p id="successDesc">You're marked present. Time: <span id="timeStamp">--:--</span></p>
+      </div>
+
+      <button class="close-btn" id="closeModal" aria-label="Close success dialog">Close</button>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const backdrop = document.getElementById('successBackdrop');
+      const modal = backdrop.querySelector('.modal');
+      const punchBtn = document.getElementById('punchBtn');
+      const demoAutoBtn = document.getElementById('demoAutoBtn');
+      const closeBtn = document.getElementById('closeModal');
+      const timeStampEl = document.getElementById('timeStamp');
+
+      // Show modal with optional message and autoClose (ms). Returns a handle object.
+      function showSuccessModal(message = 'Punch In Successful', { autoClose = 0 } = {}) {
+        // update text
+        document.getElementById('successTitle').textContent = message;
+        timeStampEl.textContent = (new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // show
+        backdrop.classList.add('open');
+        modal.classList.add('open');
+        backdrop.setAttribute('aria-hidden', 'false');
+
+        // trap focus
+        const focusable = Array.from(backdrop.querySelectorAll('button, [href], input, textarea, [tabindex]:not([tabindex="-1"])'))
+                              .filter(el => !el.hasAttribute('disabled'));
+        let previouslyFocused = document.activeElement;
+        focusable[0]?.focus();
+
+        function restoreFocus(){
+          previouslyFocused?.focus?.();
+        }
+
+        // Close function
+        let closed = false;
+        function close() {
+          if (closed) return;
+          closed = true;
+          modal.classList.remove('open');
+          backdrop.classList.remove('open');
+          backdrop.setAttribute('aria-hidden', 'true');
+          restoreFocus();
+          // remove listeners
+          document.removeEventListener('keydown', onKeyDown);
+          closeBtn.removeEventListener('click', close);
+          backdrop.removeEventListener('click', onBackdropClick);
+        }
+
+        // keyboard handler (Esc) and focus trap (Tab)
+        function onKeyDown(e){
+          if (e.key === 'Escape') { e.preventDefault(); close(); }
+          if (e.key === 'Tab'){
+            // simple focus trap
+            if (!focusable.length) return;
+            const first = focusable[0], last = focusable[focusable.length-1];
+            if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+          }
+        }
+
+        // click outside to close (but not when clicking inside modal)
+        function onBackdropClick(e){
+          if (e.target === backdrop) close();
+        }
+
+        document.addEventListener('keydown', onKeyDown);
+        closeBtn.addEventListener('click', close);
+        backdrop.addEventListener('click', onBackdropClick);
+
+        // auto close if requested
+        let autoCloseTimer = null;
+        if (autoClose && typeof autoClose === 'number' && autoClose > 0){
+          autoCloseTimer = setTimeout(close, autoClose);
+        }
+
+        return { close, restoreFocus, cancelAutoClose: () => clearTimeout(autoCloseTimer) };
+      }
+
+      // demo button handlers
+      punchBtn.addEventListener('click', () => {
+        showSuccessModal('Punch In Successful', { autoClose: 0 });
+      });
+      demoAutoBtn.addEventListener('click', () => {
+        showSuccessModal('Punch In Successful', { autoClose: 2200 }); // auto-close after 2.2s
+      });
+
+      // Expose to global for integration from other scripts
+      window.showSuccessModal = showSuccessModal;
+    })();
+  </script>
+</body>
+</html>

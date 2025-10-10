@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AJAX</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Test AJAX Call</h1>
+    <button id="testBtn">Test AJAX</button>
+    <div id="result"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#testBtn').click(function() {
+                $.get('get_salary_details.php', {
+                    user_id: 1,
+                    month: '2023-10'
+                }, function(response) {
+                    $('#result').html('<pre>' + JSON.stringify(response, null, 2) + '</pre>');
+                }).fail(function() {
+                    $('#result').html('<p class="text-danger">Error loading salary details.</p>');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

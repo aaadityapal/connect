@@ -2168,7 +2168,11 @@ try {
                                         imgContainer.onclick = function() {
                                             // Open photo in modal
                                             const photoModal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
-                                            document.getElementById('photoViewerImage').src = data.photo;
+                                            const imgElement = document.getElementById('photoViewerImage');
+                                            
+                                            // Try to load the image with fallback paths
+                                            // First try the primary path
+                                            imgElement.src = data.photo;
                                             
                                             // Set appropriate title based on type
                                             let modalTitle = 'Photo';
@@ -2178,11 +2182,42 @@ try {
                                             else if (type === 'meter-end') modalTitle = 'Meter End Photo';
                                             
                                             document.getElementById('photoViewerModalLabel').textContent = modalTitle;
+                                            
+                                            // Add fallback mechanism for the photo viewer modal if fallback path is provided
+                                            if (data.photo_fallback) {
+                                                imgElement.onerror = function() {
+                                                    console.log('Primary image path failed in photo viewer, trying fallback path:', data.photo_fallback);
+                                                    imgElement.src = data.photo_fallback;
+                                                    
+                                                    // If fallback also fails, show a placeholder
+                                                    imgElement.onerror = function() {
+                                                        console.log('Both image paths failed in photo viewer, showing placeholder');
+                                                        imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                                                    };
+                                                };
+                                            }
+                                            
                                             photoModal.show();
                                         };
                                         
                                         const img = document.createElement('img');
+                                        // Try to load the image with fallback paths
+                                        // First try the primary path
                                         img.src = data.photo;
+                                        
+                                        // If primary path fails, try the fallback path if provided
+                                        if (data.photo_fallback) {
+                                            img.onerror = function() {
+                                                console.log('Primary image path failed, trying fallback path:', data.photo_fallback);
+                                                img.src = data.photo_fallback;
+                                                
+                                                // If fallback also fails, show a placeholder
+                                                img.onerror = function() {
+                                                    console.log('Both image paths failed, showing placeholder');
+                                                    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                                                };
+                                            };
+                                        }
                                         
                                         // Set appropriate alt text based on type
                                         if (type === 'punch-in') img.alt = 'Punch In Photo';

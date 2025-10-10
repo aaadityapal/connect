@@ -735,6 +735,7 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
                                                         if (!empty($record['punch_in_photo'])) {
                                                             echo ' <a href="#" class="photo-folder-link" data-toggle="modal" data-target="#photoModal" 
                                                                 data-photo="' . htmlspecialchars($record['punch_in_photo']) . '" 
+                                                                data-photo-fallback="uploads/attendance/' . htmlspecialchars($record['punch_in_photo']) . '"
                                                                 data-title="Punch In Photo" 
                                                                 data-date="' . htmlspecialchars($record['date']) . '"
                                                                 data-time="' . date('h:i A', strtotime($record['punch_in'])) . '"
@@ -775,10 +776,11 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
                                                         if (!empty($record['punch_out_photo'])) {
                                                             echo ' <a href="#" class="photo-folder-link" data-toggle="modal" data-target="#photoModal" 
                                                                 data-photo="' . htmlspecialchars($record['punch_out_photo']) . '" 
+                                                                data-photo-fallback="uploads/attendance/' . htmlspecialchars($record['punch_out_photo']) . '"
                                                                 data-title="Punch Out Photo" 
                                                                 data-date="' . htmlspecialchars($record['date']) . '"
                                                                 data-time="' . date('h:i A', strtotime($record['punch_out'])) . '"
-                                                                data-address="' . htmlspecialchars($record['punch_out_address']) . '"
+                                                                data-address="' . htmlspecialchars($record['punch_out_address'] ?? $record['address'] ?? '') . '"
                                                                 data-type="out"><i class="fas fa-folder text-primary"></i></a>';
                                                         }
                                                     } else {
@@ -798,6 +800,18 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
                                                         }
                                                         
                                                         echo htmlspecialchars($punch_out_address);
+                                                        echo '</span>';
+                                                    } else if (!empty($record['address'])) {
+                                                        // Fallback to the general address column
+                                                        echo '<span data-toggle="tooltip" title="' . htmlspecialchars($record['address']) . '">';
+                                                        
+                                                        // Truncate address text
+                                                        $address = $record['address'];
+                                                        if (strlen($address) > 20) {
+                                                            $address = substr($address, 0, 17) . '...';
+                                                        }
+                                                        
+                                                        echo htmlspecialchars($address);
                                                         echo '</span>';
                                                     } else {
                                                         echo '-';
@@ -1283,21 +1297,41 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
             `;
             document.head.appendChild(style);
             
-            // Handle opening the modal
+            // Handle opening the modal with fallback image loading
             $('#photoModal').on('show.bs.modal', function (event) {
                 const link = $(event.relatedTarget);
                 const photoUrl = link.data('photo');
+                const photoFallbackUrl = link.data('photo-fallback');
                 const photoDate = link.data('date');
                 const photoTime = link.data('time');
                 const photoType = link.data('type');
                 const photoAddress = link.data('address');
                 
-                // Set photo source and show photo view
-                $('#attendancePhoto').attr('src', photoUrl);
+                // Set photo information
                 $('#photoDate').text(photoDate);
                 $('#photoTime').text(photoTime);
                 $('#photoType').text(photoType === 'in' ? 'Punch In' : 'Punch Out');
-                $('#photoAddress').text(photoAddress || 'Address not available');
+                
+                // Use the provided address or fallback to a default message
+                $('#photoAddress').text(photoAddress && photoAddress !== 'null' ? photoAddress : 'Address not available');
+                
+                // Try to load the image with fallback paths
+                const imgElement = $('#attendancePhoto')[0];
+                
+                // First try the primary path
+                imgElement.src = photoUrl;
+                
+                // If primary path fails, try the fallback path
+                imgElement.onerror = function() {
+                    console.log('Primary image path failed, trying fallback path:', photoFallbackUrl);
+                    imgElement.src = photoFallbackUrl;
+                    
+                    // If fallback also fails, show a placeholder
+                    imgElement.onerror = function() {
+                        console.log('Both image paths failed, showing placeholder');
+                        imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                    };
+                };
             });
         });
         

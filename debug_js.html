@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug JavaScript</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Debug JavaScript</h1>
+    <button id="testBtn">Test jQuery</button>
+    <div id="result"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#testBtn').click(function() {
+                $('#result').html('<p>jQuery is working correctly!</p>');
+            });
+        });
+    </script>
+</body>
+</html>

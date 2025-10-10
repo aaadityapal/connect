@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Recent Time Widget</title>
+</head>
+<body>
+    <h1>Testing Recent Time Widget JavaScript</h1>
+    <p>This page tests if the JavaScript in recent_time_widget.php is working correctly.</p>
+    
+    <!-- Include the widget -->
+    <?php 
+    session_start();
+    $_SESSION['user_id'] = 1; // Test user ID
+    include 'components/dashboard_widgets/recent_time_widget.php'; 
+    ?>
+    
+    <script>
+        // Test if the functions are accessible
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            
+            // Test if markNotificationAsRead function exists
+            if (typeof markNotificationAsRead === 'function') {
+                console.log('markNotificationAsRead function is accessible');
+            } else {
+                console.error('markNotificationAsRead function is NOT accessible');
+            }
+            
+            // Test if fetchMissingPunches function exists
+            if (typeof fetchMissingPunches === 'function') {
+                console.log('fetchMissingPunches function is accessible');
+            } else {
+                console.error('fetchMissingPunches function is NOT accessible');
+            }
+            
+            console.log('Test complete');
+        });
+    </script>
+</body>
+</html>

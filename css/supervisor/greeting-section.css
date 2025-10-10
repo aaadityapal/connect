@@ -99,6 +99,21 @@
     padding-bottom: 0;
 }
 
+/* Disable hover effects when notification dropdown is open */
+.greeting-section.no-hover-effects {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.03) !important;
+    transform: none !important;
+}
+
+.greeting-section.no-hover-effects:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.03) !important;
+    transform: none !important;
+}
+
+.greeting-section.no-hover-effects:hover .greeting-name::after {
+    transform: scaleX(0) !important;
+}
+
 /* Shift time remaining styles */
 .shift-time-remaining {
     font-size: 0.85rem;

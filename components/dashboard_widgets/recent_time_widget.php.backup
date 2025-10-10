@@ -4376,9 +4376,7 @@ if (isset($_SESSION['user_id'])) {
                 }
             })
             .catch(error => {
-                showErrorMessage("Error submitting punch. Please try again.");
-            });
-        });
+        }
         
         // Function to mark a notification as read
         function markNotificationAsRead(date) {
@@ -4399,9 +4397,29 @@ if (isset($_SESSION['user_id'])) {
                 }
             })
             .catch(error => {
+                showErrorMessage("Error submitting punch. Please try again.");
+            });
+        });
+        if (notification) {
+            fetch(`${API_URL}/notifications/${notification.id}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+            })
+            .catch(error => {
                 console.error('Error marking notification as read:', error);
             });
         }
+                showErrorMessage("Error submitting punch. Please try again.");
+            });
+        });
         
         // Check if submit should be enabled
         function checkSubmitEnabled() {

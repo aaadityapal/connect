@@ -333,6 +333,11 @@
 <script>
 // Function to open the missing punch out modal with a specific date
 function openMissingPunchOutModal(date) {
+    openMissingPunchOutModalInternal(date);
+}
+
+// Function to open the missing punch out modal with a specific date (internal)
+function openMissingPunchOutModalInternal(date) {
     const modal = document.getElementById('missingPunchOutModal');
     const dateInput = document.getElementById('missingPunchOutDate');
     const timeInput = document.getElementById('missingPunchOutTime');
@@ -344,25 +349,31 @@ function openMissingPunchOutModal(date) {
     const submitButton = document.getElementById('submitMissingPunchOut');
     
     // Set the date in the modal
-    dateInput.value = date;
+    if (dateInput) {
+        dateInput.value = date;
+    }
     
     // Clear previous values
-    timeInput.value = '';
-    reasonInput.value = '';
-    workReportInput.value = '';
-    reasonWordCount.textContent = '0';
-    workReportWordCount.textContent = '0';
-    confirmCheckbox.checked = false;
-    submitButton.disabled = true;
+    if (timeInput) timeInput.value = '';
+    if (reasonInput) reasonInput.value = '';
+    if (workReportInput) workReportInput.value = '';
+    if (reasonWordCount) reasonWordCount.textContent = '0';
+    if (workReportWordCount) workReportWordCount.textContent = '0';
+    if (confirmCheckbox) confirmCheckbox.checked = false;
+    if (submitButton) submitButton.disabled = true;
     
     // Show the modal
-    modal.style.display = 'block';
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 // Close modal function
 function closeMissingPunchOutModal() {
     const modal = document.getElementById('missingPunchOutModal');
-    modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 // Word counting function
@@ -509,8 +520,10 @@ function initMissingPunchOutModal() {
                     alert('Missing punch-out submitted successfully!');
                     closeMissingPunchOutModal();
                     
-                    // Optionally refresh the notification count
-                    // This would require calling the notification update function
+                    // Refresh notifications to show submitted status
+                    if (typeof fetchMissingPunches === 'function') {
+                        setTimeout(fetchMissingPunches, 1000); // Small delay to ensure DB is updated
+                    }
                 } else {
                     alert('Error: ' + data.message);
                 }
@@ -548,5 +561,7 @@ function updatePunchOutSubmitButton() {
 }
 
 // Initialize the modal when the script loads
-initMissingPunchOutModal();
+if (typeof initMissingPunchOutModal === 'function') {
+    initMissingPunchOutModal();
+}
 </script>

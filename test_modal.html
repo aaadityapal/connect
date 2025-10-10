@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Modal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Test Modal Selectors</h1>
+        
+        <!-- Salary Detail Modal -->
+        <div class="modal fade" id="salaryDetailModal" tabindex="-1" aria-labelledby="salaryDetailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="salaryDetailModalLabel">Salary Details - Loading...</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Employee information will be loaded here -->
+                                <div id="employee-info-target"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Salary summary will be loaded here -->
+                                <div id="salary-summary-target"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <!-- Deduction breakdown will be loaded here -->
+                                <div id="deduction-target"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <!-- Earnings will be loaded here -->
+                                <div id="earnings-target"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Print Salary Slip</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary" id="testModal">Test Modal</button>
+        <button class="btn btn-secondary" id="testSelectors">Test Selectors</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#testSelectors').click(function() {
+                var output = '';
+                
+                // Test selectors
+                output += '<p>Testing selectors:</p>';
+                output += '<p>$(".modal-body .col-md-6:first").length: ' + $('.modal-body .col-md-6:first').length + '</p>';
+                output += '<p>$(".modal-body .col-md-6:last").length: ' + $('.modal-body .col-md-6:last').length + '</p>';
+                output += '<p>$(".modal-body .col-12:first").length: ' + $('.modal-body .col-12:first').length + '</p>';
+                output += '<p>$(".modal-body .col-12:last").length: ' + $('.modal-body .col-12:last').length + '</p>';
+                
+                $('#output').html(output);
+            });
+            
+            $('#testModal').click(function() {
+                // Show loading message
+                $('#salaryDetailModal .modal-body').html('<div class="row"><div class="col-md-6"><p>Loading salary details...</p></div><div class="col-md-6"></div></div><div class="row mt-4"><div class="col-12"></div></div><div class="row mt-4"><div class="col-12"></div></div>');
+                $('#salaryDetailModal .modal-title').text('Salary Details - Loading...');
+                $('#salaryDetailModal').modal('show');
+                
+                // Simulate data after a delay
+                setTimeout(function() {
+                    // Test data
+                    var data = {
+                        unique_id: 'EMP001',
+                        username: 'John Doe',
+                        role: 'Developer',
+                        base_salary: 50000,
+                        working_days: 22,
+                        present_days: 20,
+                        leave_taken: 2,
+                        late_days: 3,
+                        net_salary: 45000,
+                        late_deduction_amount: 1000,
+                        one_hour_late_count: 1,
+                        one_hour_late_deduction_amount: 500,
+                        leave_deduction_amount: 0,
+                        penalty: 0.5,
+                        salary_days_calculated: 20,
+                        excess_days: 0,
+                        excess_day_salary: 0
+                    };
+                    
+                    // Update modal title
+                    $('#salaryDetailModal .modal-title').text('Salary Details - ' + data.username);
+                    
+                    // Update employee information
+                    var employeeInfoHtml = '<h6>Employee Information</h6>';
+                    employeeInfoHtml += '<table class="table table-sm">';
+                    employeeInfoHtml += '<tr><td><strong>Employee ID:</strong></td><td>' + data.unique_id + '</td></tr>';
+                    employeeInfoHtml += '<tr><td><strong>Name:</strong></td><td>' + data.username + '</td></tr>';
+                    employeeInfoHtml += '<tr><td><strong>Role:</strong></td><td>' + data.role + '</td></tr>';
+                    employeeInfoHtml += '<tr><td><strong>Status:</strong></td><td><span class="badge badge-success">Active</span></td></tr>';
+                    employeeInfoHtml += '</table>';
+                    $('#salaryDetailModal .modal-body .col-md-6:first').html(employeeInfoHtml);
+                    
+                    // Update salary summary
+                    var salarySummaryHtml = '<h6>Salary Summary</h6>';
+                    salarySummaryHtml += '<table class="table table-sm">';
+                    salarySummaryHtml += '<tr><td><strong>Base Salary:</strong></td><td>₹' + parseFloat(data.base_salary || 0).toFixed(2) + '</td></tr>';
+                    salarySummaryHtml += '<tr><td><strong>Working Days:</strong></td><td>' + data.working_days + '</td></tr>';
+                    salarySummaryHtml += '<tr><td><strong>Present Days:</strong></td><td>' + data.present_days + '</td></tr>';
+                    salarySummaryHtml += '<tr><td><strong>Leave Taken:</strong></td><td>' + parseFloat(data.leave_taken || 0).toFixed(1) + ' days</td></tr>';
+                    salarySummaryHtml += '<tr><td><strong>Late Days:</strong></td><td>' + data.late_days + '</td></tr>';
+                    salarySummaryHtml += '<tr><td><strong>Net Salary:</strong></td><td>₹' + parseFloat(data.net_salary || 0).toFixed(2) + '</td></tr>';
+                    salarySummaryHtml += '</table>';
+                    $('#salaryDetailModal .modal-body .col-md-6:last').html(salarySummaryHtml);
+                    
+                    // Update deduction breakdown
+                    var deductionHtml = '<h6>Deduction Breakdown</h6>';
+                    deductionHtml += '<table class="table table-bordered">';
+                    deductionHtml += '<thead class="thead-light"><tr><th>Description</th><th>Days</th><th>Amount</th></tr></thead>';
+                    deductionHtml += '<tbody>';
+                    deductionHtml += '<tr><td>Late Punch In</td><td>' + (data.late_days || 0) + ' days</td><td>₹' + parseFloat(data.late_deduction_amount || 0).toFixed(2) + '</td></tr>';
+                    deductionHtml += '<tr><td>1+ Hour Late</td><td>' + (data.one_hour_late_count || 0) + ' days</td><td>₹' + parseFloat(data.one_hour_late_deduction_amount || 0).toFixed(2) + '</td></tr>';
+                    deductionHtml += '<tr><td>Leave Deduction</td><td>' + parseFloat(data.leave_taken || 0).toFixed(1) + ' days</td><td>₹' + parseFloat(data.leave_deduction_amount || 0).toFixed(2) + '</td></tr>';
+                    deductionHtml += '<tr><td>Penalty</td><td>' + parseFloat(data.penalty || 0).toFixed(1) + ' days</td><td>₹' + (parseFloat(data.penalty || 0) * (parseFloat(data.base_salary || 0) / parseFloat(data.working_days || 1))).toFixed(2) + '</td></tr>';
+                    deductionHtml += '<tr><td><strong>Total Deductions</strong></td><td><strong>' + (parseFloat(data.late_days || 0) + parseFloat(data.one_hour_late_count || 0) + parseFloat(data.leave_taken || 0) + parseFloat(data.penalty || 0)).toFixed(1) + ' days</strong></td><td><strong>₹' + (parseFloat(data.late_deduction_amount || 0) + parseFloat(data.one_hour_late_deduction_amount || 0) + parseFloat(data.leave_deduction_amount || 0) + (parseFloat(data.penalty || 0) * (parseFloat(data.base_salary || 0) / parseFloat(data.working_days || 1)))).toFixed(2) + '</strong></td></tr>';
+                    deductionHtml += '</tbody></table>';
+                    $('#salaryDetailModal .modal-body .col-12:first').html(deductionHtml);
+                    
+                    // Update earnings
+                    var earningsHtml = '<h6>Earnings</h6>';
+                    earningsHtml += '<table class="table table-bordered">';
+                    earningsHtml += '<thead class="thead-light"><tr><th>Description</th><th>Days</th><th>Amount</th></tr></thead>';
+                    earningsHtml += '<tbody>';
+                    earningsHtml += '<tr><td>Base Salary</td><td>' + parseFloat(data.salary_days_calculated || 0).toFixed(1) + ' days</td><td>₹' + parseFloat(data.net_salary || 0).toFixed(2) + '</td></tr>';
+                    earningsHtml += '<tr><td>Excess Day Salary</td><td>' + parseFloat(data.excess_days || 0).toFixed(1) + ' days</td><td>₹' + parseFloat(data.excess_day_salary || 0).toFixed(2) + '</td></tr>';
+                    earningsHtml += '<tr><td><strong>Total Earnings</strong></td><td><strong>' + (parseFloat(data.salary_days_calculated || 0) + parseFloat(data.excess_days || 0)).toFixed(1) + ' days</strong></td><td><strong>₹' + (parseFloat(data.net_salary || 0) + parseFloat(data.excess_day_salary || 0)).toFixed(2) + '</strong></td></tr>';
+                    earningsHtml += '</tbody></table>';
+                    $('#salaryDetailModal .modal-body .col-12:last').html(earningsHtml);
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>

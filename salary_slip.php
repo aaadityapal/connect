@@ -1,34 +1,22 @@
 <?php
-// session_start();
+session_start();
 
 // Check if user is logged in
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: login.php");
-//     exit;
-// }
-
-// For testing purposes, we'll bypass the session check
-// In production, uncomment the above lines
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 
 // Include database connection
 require_once 'config/db_connect.php';
 
-header('Content-Type: application/json');
-
-// Check if request method is GET
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-    exit;
-}
-
-// Get GET data
+// Get parameters
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 $month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
 
 // Validate required fields
 if (!$user_id || !$month) {
-    echo json_encode(['success' => false, 'error' => 'User ID and month are required']);
-    exit;
+    die("User ID and month are required");
 }
 
 try {
@@ -55,8 +43,7 @@ try {
     $employee = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$employee) {
-        echo json_encode(['success' => false, 'error' => 'Employee not found']);
-        exit;
+        die("Employee not found");
     }
     
     // Calculate working days for the employee
@@ -671,10 +658,405 @@ try {
         $employee['grace_time'] = '09:15:00';
     }
     
-    // Return the employee data
-    echo json_encode(['success' => true, 'data' => $employee]);
 } catch (PDOException $e) {
     error_log("Error fetching employee salary details: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+    die("Database error occurred");
 }
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Slip - <?php echo htmlspecialchars($employee['username']); ?> - <?php echo htmlspecialchars($month); ?></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <style>
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        
+        .salary-slip {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .slip-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .employee-info {
+            background-color: #f1f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin: 20px 0 10px 0;
+        }
+        
+        .table th {
+            background-color: #e9ecef;
+        }
+        
+        .total-row {
+            font-weight: bold;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .signature-box {
+            text-align: center;
+            width: 45%;
+        }
+        
+        .stamp {
+            border: 1px dashed #999;
+            padding: 10px;
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="salary-slip">
+        <div class="header">
+            <div class="company-name">Architecture Studio</div>
+            <div class="slip-title">SALARY SLIP</div>
+            <div>For the month of <?php echo date('F Y', strtotime($month)); ?></div>
+        </div>
+        
+        <div class="employee-info">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Employee ID:</strong></td>
+                            <td><?php echo !empty($employee['unique_id']) ? htmlspecialchars($employee['unique_id']) : ''; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Employee Name:</strong></td>
+                            <td><?php echo !empty($employee['username']) ? htmlspecialchars($employee['username']) : ''; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Designation:</strong></td>
+                            <td><?php echo !empty($employee['role']) ? htmlspecialchars($employee['role']) : ''; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Department:</strong></td>
+                            <td><?php echo ''; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Joining Date:</strong></td>
+                            <td><?php echo ''; ?></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Working Days:</strong></td>
+                            <td><?php echo !empty($employee['working_days']) ? $employee['working_days'] : '0'; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Present Days:</strong></td>
+                            <td><?php echo !empty($employee['present_days']) ? $employee['present_days'] : '0'; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Payable Days:</strong></td>
+                            <td><?php echo !empty($employee['salary_days_calculated']) ? number_format($employee['salary_days_calculated'], 1) : '0.0'; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bank Name:</strong></td>
+                            <td><?php echo ''; ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Account Number:</strong></td>
+                            <td><?php echo ''; ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-title">Pay Summary</div>
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Basic Salary:</strong></td>
+                        <td class="text-right">₹<?php echo !empty($employee['base_salary']) ? number_format($employee['base_salary'], 2) : '0.00'; ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Allowances:</strong></td>
+                        <td class="text-right">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gross Salary:</strong></td>
+                        <td class="text-right">₹<?php echo !empty($employee['base_salary']) ? number_format($employee['base_salary'], 2) : '0.00'; ?></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Total Deductions:</strong></td>
+                        <td class="text-right">₹<?php echo number_format(
+                            $employee['late_deduction_amount'] + 
+                            $employee['one_hour_late_deduction_amount'] + 
+                            $employee['leave_deduction_amount'] + 
+                            ($employee['penalty'] * $per_day_salary), 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Net Payable:</strong></td>
+                        <td class="text-right">₹<?php 
+                            $netPayable = ($employee['net_salary'] + $employee['excess_day_salary']) - 
+                                ($employee['late_deduction_amount'] + 
+                                $employee['one_hour_late_deduction_amount'] + 
+                                $employee['leave_deduction_amount'] + 
+                                ($employee['penalty'] * $per_day_salary));
+                            echo number_format($netPayable, 2);
+                        ?></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="section-title">Earnings</div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Days</th>
+                    <th>Rate (₹)</th>
+                    <th>Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Basic Salary</td>
+                    <td><?php echo number_format($employee['salary_days_calculated'], 1); ?></td>
+                    <td><?php echo number_format($per_day_salary, 2); ?></td>
+                    <td><?php echo number_format($employee['net_salary'], 2); ?></td>
+                </tr>
+                <?php if ($employee['excess_days'] > 0): ?>
+                <tr>
+                    <td>Excess Day Salary</td>
+                    <td><?php echo number_format($employee['excess_days'], 1); ?></td>
+                    <td><?php echo number_format($per_day_salary, 2); ?></td>
+                    <td><?php echo number_format($employee['excess_day_salary'], 2); ?></td>
+                </tr>
+                <?php endif; ?>
+                <tr class="total-row">
+                    <td colspan="3" class="text-right"><strong>Total Earnings:</strong></td>
+                    <td><strong><?php echo number_format($employee['net_salary'] + $employee['excess_day_salary'], 2); ?></strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="section-title">Deductions</div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Days</th>
+                    <th>Rate (₹)</th>
+                    <th>Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($employee['late_deduction_amount'] > 0): ?>
+                <tr>
+                    <td>Late Punch In Deduction</td>
+                    <td><?php echo number_format($employee['adjusted_late_days_deduction'], 1); ?></td>
+                    <td><?php echo number_format($per_day_salary / 2, 2); ?></td>
+                    <td><?php echo number_format($employee['late_deduction_amount'], 2); ?></td>
+                </tr>
+                <?php endif; ?>
+                
+                <?php if ($employee['one_hour_late_deduction_amount'] > 0): ?>
+                <tr>
+                    <td>1+ Hour Late Deduction</td>
+                    <td><?php echo $employee['adjusted_one_hour_late_count']; ?></td>
+                    <td><?php echo number_format($per_day_salary / 2, 2); ?></td>
+                    <td><?php echo number_format($employee['one_hour_late_deduction_amount'], 2); ?></td>
+                </tr>
+                <?php endif; ?>
+                
+                <?php if ($employee['leave_deduction_amount'] > 0): ?>
+                <tr>
+                    <td>Leave Deduction</td>
+                    <td><?php echo number_format($employee['leave_taken'], 1); ?></td>
+                    <td><?php echo number_format($per_day_salary, 2); ?></td>
+                    <td><?php echo number_format($employee['leave_deduction_amount'], 2); ?></td>
+                </tr>
+                <?php endif; ?>
+                
+                <?php if ($employee['penalty'] > 0): ?>
+                <tr>
+                    <td>Penalty</td>
+                    <td><?php echo number_format($employee['penalty'], 1); ?></td>
+                    <td><?php echo number_format($per_day_salary, 2); ?></td>
+                    <td><?php echo number_format($employee['penalty'] * $per_day_salary, 2); ?></td>
+                </tr>
+                <?php endif; ?>
+                
+                <tr class="total-row">
+                    <td colspan="3" class="text-right"><strong>Total Deductions:</strong></td>
+                    <td><strong><?php echo number_format(
+                        $employee['late_deduction_amount'] + 
+                        $employee['one_hour_late_deduction_amount'] + 
+                        $employee['leave_deduction_amount'] + 
+                        ($employee['penalty'] * $per_day_salary), 2); ?></strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="section-title">Leave Details</div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Days</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Leave Taken</td>
+                    <td><?php echo number_format($employee['leave_taken'], 1); ?></td>
+                </tr>
+                <tr>
+                    <td>Late Days</td>
+                    <td><?php echo $employee['late_days']; ?></td>
+                </tr>
+                <tr>
+                    <td>1+ Hour Late</td>
+                    <td><?php echo $employee['one_hour_late_count']; ?></td>
+                </tr>
+                <tr>
+                    <td>Short Leave</td>
+                    <td><?php echo number_format($employee['short_leave_days'], 1); ?></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="section-title">Net Payable Amount</div>
+                <table class="table table-bordered">
+                    <tr>
+                        <td><strong>Gross Earnings:</strong></td>
+                        <td class="text-right">₹<?php echo number_format($employee['net_salary'] + $employee['excess_day_salary'], 2); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Deductions:</strong></td>
+                        <td class="text-right">₹<?php echo number_format(
+                            $employee['late_deduction_amount'] + 
+                            $employee['one_hour_late_deduction_amount'] + 
+                            $employee['leave_deduction_amount'] + 
+                            ($employee['penalty'] * $per_day_salary), 2); ?></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>Net Salary:</strong></td>
+                        <td class="text-right"><strong>₹<?php 
+                            $netPayable = ($employee['net_salary'] + $employee['excess_day_salary']) - 
+                                ($employee['late_deduction_amount'] + 
+                                $employee['one_hour_late_deduction_amount'] + 
+                                $employee['leave_deduction_amount'] + 
+                                ($employee['penalty'] * $per_day_salary));
+                            echo number_format($netPayable, 2);
+                        ?></strong></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <div class="section-title">Attendance Summary</div>
+                <table class="table table-bordered">
+                    <tr>
+                        <td>Working Days</td>
+                        <td><?php echo $employee['working_days']; ?></td>
+                    </tr>
+                    <tr>
+                        <td>Present Days</td>
+                        <td><?php echo $employee['present_days']; ?></td>
+                    </tr>
+                    <tr>
+                        <td>Leave Days</td>
+                        <td><?php echo number_format($employee['leave_taken'], 1); ?></td>
+                    </tr>
+                    <tr>
+                        <td>Payable Days</td>
+                        <td><?php echo number_format($employee['salary_days_calculated'], 1); ?></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="signature-section">
+            <div class="signature-box">
+                <div>___________________________</div>
+                <div>Employee Signature</div>
+            </div>
+            <div class="signature-box">
+                <div>___________________________</div>
+                <div>Authorized Signature</div>
+                <div class="stamp">Company Stamp</div>
+            </div>
+        </div>
+        
+        <div class="text-center no-print mt-4">
+            <button class="btn btn-primary" onclick="window.print()">Print Salary Slip</button>
+            <a href="salary_page.php" class="btn btn-secondary">Back to Salary Page</a>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() {
+        //     window.print();
+        // };
+    </script>
+</body>
+</html>

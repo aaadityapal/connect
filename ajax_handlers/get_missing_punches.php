@@ -188,20 +188,52 @@ try {
         if (isset($attendance_map[$date])) {
             // Record exists, check if it's incomplete
             $record = $attendance_map[$date];
-            if ($record['punch_in'] === null || $record['punch_out'] === null) {
+            // If both punch_in and punch_out are missing, create two separate entries
+            if ($record['punch_in'] === null && $record['punch_out'] === null) {
+                // Create separate entry for missing punch in
+                $missing_punch_in = $record;
+                $missing_punch_in['type'] = 'punch_in';
+                $missing_punches[] = $missing_punch_in;
+                
+                // Create separate entry for missing punch out
+                $missing_punch_out = $record;
+                $missing_punch_out['type'] = 'punch_out';
+                $missing_punches[] = $missing_punch_out;
+            } else if ($record['punch_in'] === null) {
+                // Only punch in is missing
+                $record['type'] = 'punch_in';
+                $missing_punches[] = $record;
+            } else if ($record['punch_out'] === null) {
+                // Only punch out is missing
+                $record['type'] = 'punch_out';
                 $missing_punches[] = $record;
             }
         } else {
             // No record for this date, it's a completely missed day
-            $missing_punches[] = [
+            // Create separate entries for both punch in and punch out
+            $missing_punch_in = [
                 'id' => 0,
                 'user_id' => $user_id,
                 'date' => $date,
                 'punch_in' => null,
                 'punch_out' => null,
                 'approval_status' => null,
-                'created_at' => date('Y-m-d H:i:s')
+                'created_at' => date('Y-m-d H:i:s'),
+                'type' => 'punch_in'
             ];
+            $missing_punches[] = $missing_punch_in;
+            
+            $missing_punch_out = [
+                'id' => 0,
+                'user_id' => $user_id,
+                'date' => $date,
+                'punch_in' => null,
+                'punch_out' => null,
+                'approval_status' => null,
+                'created_at' => date('Y-m-d H:i:s'),
+                'type' => 'punch_out'
+            ];
+            $missing_punches[] = $missing_punch_out;
         }
     }
     

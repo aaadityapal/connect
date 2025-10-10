@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Modals</title>
+</head>
+<body>
+    <h1>Test Modals</h1>
+    <button onclick="testMissingPunchModal()">Test Missing Punch Modal</button>
+    <button onclick="testMissingPunchOutModal()">Test Missing Punch Out Modal</button>
+
+    <!-- Include the modals -->
+    <?php include 'modals/missing_punch_modal.php'; ?>
+    <?php include 'modals/missing_punch_out_modal.php'; ?>
+
+    <script>
+        function testMissingPunchModal() {
+            if (typeof openMissingPunchModal === 'function') {
+                openMissingPunchModal('2025-10-10');
+            } else {
+                alert('Missing punch modal function not found');
+            }
+        }
+
+        function testMissingPunchOutModal() {
+            if (typeof openMissingPunchOutModal === 'function') {
+                openMissingPunchOutModal('2025-10-10');
+            } else {
+                alert('Missing punch out modal function not found');
+            }
+        }
+    </script>
+</body>
+</html>

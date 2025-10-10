@@ -79,6 +79,7 @@ try {
         
         // Process photo data
         $photo = null;
+        $photo_fallback = null;
         if (!empty($row['photo'])) {
             $photo = $row['photo'];
             
@@ -93,11 +94,18 @@ try {
                 // Check if it's a URL
                 else if (filter_var($photo, FILTER_VALIDATE_URL)) {
                     // Keep as is - it's already a valid URL
+                    // Also create a fallback path
+                    $photo_filename = basename($photo);
+                    $photo_fallback = 'uploads/attendance/' . $photo_filename;
                 }
                 // If it's not a data URL, file path, or URL, it might be a base64 string without the prefix
                 else if (base64_encode(base64_decode($photo, true)) === $photo) {
                     // It's likely a base64 string without the prefix
                     $photo = 'data:image/jpeg;base64,' . $photo;
+                }
+                // For other cases, create a fallback path
+                else {
+                    $photo_fallback = 'uploads/attendance/' . $photo;
                 }
             }
         }
@@ -142,6 +150,7 @@ try {
         echo json_encode([
             'success' => $has_photo,
             'photo' => $has_photo ? $photo : null,
+            'photo_fallback' => $photo_fallback, // Include fallback path
             'date' => $formatted_date,
             'time' => $formatted_time,
             'formatted_address' => $formatted_address,
@@ -171,4 +180,4 @@ try {
         'error' => 'Database error: ' . $e->getMessage()
     ]);
 }
-?> 
+?>

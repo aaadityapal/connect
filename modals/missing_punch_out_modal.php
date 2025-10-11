@@ -362,6 +362,9 @@ function openMissingPunchOutModalInternal(date) {
     if (confirmCheckbox) confirmCheckbox.checked = false;
     if (submitButton) submitButton.disabled = true;
     
+    // Reset submission flag when modal is opened
+    isMissingPunchOutSubmitting = false;
+    
     // Show the modal
     if (modal) {
         modal.style.display = 'block';
@@ -374,6 +377,9 @@ function closeMissingPunchOutModal() {
     if (modal) {
         modal.style.display = 'none';
     }
+    
+    // Reset submission flag when modal is closed
+    isMissingPunchOutSubmitting = false;
 }
 
 // Word counting function
@@ -391,6 +397,9 @@ function countWords(text) {
         return word.length > 0 && /[a-zA-Z0-9]/.test(word);
     }).length;
 }
+
+// Add a flag to track submission status
+let isMissingPunchOutSubmitting = false;
 
 // Function to initialize event listeners for the missing punch out modal
 function initMissingPunchOutModal() {
@@ -473,7 +482,22 @@ function initMissingPunchOutModal() {
     
     // Submit button click handler
     if (submitButton) {
-        submitButton.addEventListener('click', function() {
+        submitButton.addEventListener('click', function(event) {
+            // Prevent default form submission
+            event.preventDefault();
+            
+            // Check if already submitting
+            if (isMissingPunchOutSubmitting) {
+                console.log('Submission already in progress, ignoring duplicate click');
+                return;
+            }
+            
+            // Set submitting flag
+            isMissingPunchOutSubmitting = true;
+            
+            // Disable the submit button to prevent double submission
+            submitButton.disabled = true;
+            
             const date = document.getElementById('missingPunchOutDate').value;
             const time = document.getElementById('missingPunchOutTime').value;
             const reason = document.getElementById('missingPunchOutReason').value;
@@ -484,21 +508,29 @@ function initMissingPunchOutModal() {
             // Validate inputs
             if (!time) {
                 alert('Please enter the punch-out time.');
+                isMissingPunchOutSubmitting = false;
+                submitButton.disabled = false;
                 return;
             }
             
             if (reasonWordCount < 15) {
                 alert('Please provide a reason with at least 15 words.');
+                isMissingPunchOutSubmitting = false;
+                submitButton.disabled = false;
                 return;
             }
             
             if (workReportWordCount < 20) {
                 alert('Please provide a work report with at least 20 words.');
+                isMissingPunchOutSubmitting = false;
+                submitButton.disabled = false;
                 return;
             }
             
             if (!confirmCheckbox.checked) {
                 alert('Please confirm that the information provided is accurate.');
+                isMissingPunchOutSubmitting = false;
+                submitButton.disabled = false;
                 return;
             }
             
@@ -526,11 +558,17 @@ function initMissingPunchOutModal() {
                     }
                 } else {
                     alert('Error: ' + data.message);
+                    // Re-enable the submit button on error
+                    isMissingPunchOutSubmitting = false;
+                    submitButton.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while submitting the missing punch-out. Please try again.');
+                // Re-enable the submit button on error
+                isMissingPunchOutSubmitting = false;
+                submitButton.disabled = false;
             });
         });
     }

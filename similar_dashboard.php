@@ -6424,7 +6424,8 @@ if ($shift_details && $shift_details['end_time']) {
         // Always block closing until success
         blockClosing();
 
-        // Check if password change is required
+        // Check if password change is required (commented out to prevent automatic showing)
+        /*
         fetch('password_change_handler.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -6436,7 +6437,8 @@ if ($shift_details && $shift_details['end_time']) {
                 showModal();
             }
         })
-        .catch(() => { /* silent */ });
+        .catch(() => { // silent // });
+        */
 
         // Handle submit
         if (submitBtn) {
@@ -6481,6 +6483,9 @@ if ($shift_details && $shift_details['end_time']) {
         }
     });
     </script>
+
+    <!-- Include the instant modal -->
+    <?php include 'instant_modal.php'; ?>
 
 </body>
 </html>

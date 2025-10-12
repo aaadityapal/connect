@@ -37,7 +37,7 @@
                     <label for="missingPunchOutWorkReport"><i class="fas fa-file-alt"></i> Work Report (min 20 words):</label>
                     <textarea id="missingPunchOutWorkReport" maxlength="1000" placeholder="Please provide a detailed work report (minimum 20 words)" required></textarea>
                     <div class="word-counter">
-                        <span id="workReportWordCount">0</span>/20 words minimum
+                        <span id="missingPunchOutWorkReportWordCount">0</span>/20 words minimum
                     </div>
                 </div>
                 <div class="missing-punch-out-confirmation">
@@ -344,7 +344,7 @@ function openMissingPunchOutModalInternal(date) {
     const reasonInput = document.getElementById('missingPunchOutReason');
     const workReportInput = document.getElementById('missingPunchOutWorkReport');
     const reasonWordCount = document.getElementById('missingPunchOutWordCount');
-    const workReportWordCount = document.getElementById('workReportWordCount');
+    const workReportWordCount = document.getElementById('missingPunchOutWorkReportWordCount');
     const confirmCheckbox = document.getElementById('missingPunchOutConfirm');
     const submitButton = document.getElementById('submitMissingPunchOut');
     
@@ -455,7 +455,7 @@ function initMissingPunchOutModal() {
     if (workReportInput) {
         workReportInput.addEventListener('input', function() {
             const wordCount = countWords(this.value);
-            const wordCountElement = document.getElementById('workReportWordCount');
+            const wordCountElement = document.getElementById('missingPunchOutWorkReportWordCount');
             if (wordCountElement) {
                 wordCountElement.textContent = wordCount;
                 

@@ -727,6 +727,34 @@ if ($currentHour < 12) {
             transition: background-color 0.3s ease;
         }
 
+        /* Badge styles for notification status */
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .badge-success {
+            color: #fff;
+            background-color: #28a745;
+        }
+
+        .badge-secondary {
+            color: #fff;
+            background-color: #6c757d;
+        }
+
+        .ml-2 {
+            margin-left: 0.5rem;
+        }
+
         .dropdown-item:hover {
             background-color: rgba(0, 0, 0, 0.02);
         }
@@ -1604,8 +1632,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
 
     <div class="main-container">
         <!-- Include left panel -->
-        <?php include_once('includes/manager_panel.php'); ?>
-        
+        <?php include_once('includes/manager_panel.php'); ?> 
         <!-- Main Content Area -->
         <div class="main-content" id="mainContent">
             <!-- Greeting Section -->
@@ -3806,6 +3833,198 @@ function updateWorkReportWordCount(textarea, displayElement) {
         function hidePreloader() {
             preloaderOverlay.style.display = 'none';
         }
+        
+        // Function to fetch missing punches and populate notification dropdown
+        function fetchMissingPunches() {
+            // Clear existing notifications except header and footer
+            const notificationContainer = document.querySelector('.notification-items-container');
+            if (!notificationContainer) return;
+            
+            // Clear existing items
+            notificationContainer.innerHTML = `
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <p class="notification-text">Loading notifications...</p>
+                    </div>
+                </div>
+            `;
+            
+            // Fetch missing punches from the server
+            fetch('ajax_handlers/get_missing_punches.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear the container
+                    notificationContainer.innerHTML = '';
+                    
+                    // Update notification badge
+                    const notificationBadge = document.querySelector('.notification-badge');
+                    if (notificationBadge) {
+                        notificationBadge.textContent = data.count;
+                        notificationBadge.style.display = data.count > 0 ? 'block' : 'none';
+                    }
+                    
+                    if (data.count === 0) {
+                        // No missing punches
+                        notificationContainer.innerHTML = `
+                            <div class="notification-item">
+                                <div class="notification-content">
+                                    <p class="notification-text">No missing attendance records</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Get all unique dates for checking read status
+                        const dates = [...new Set(data.data.map(punch => punch.date))];
+                        
+                        // Check read status for all dates
+                        return fetch('ajax_handlers/check_notification_read_status.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'dates[]=' + dates.join('&dates[]=')
+                        })
+                        .then(response => response.json())
+                        .then(statusData => {
+                            // Process the missing punches data
+                            data.data.forEach(punch => {
+                                // Format the date for display
+                                const dateObj = new Date(punch.date);
+                                const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                });
+                                
+                                // Determine notification type and message
+                                let title, message;
+                                if (punch.type === 'punch_in') {
+                                    title = "Missing Punch In";
+                                    message = "Punch in not recorded";
+                                } else if (punch.type === 'punch_out') {
+                                    title = "Missing Punch Out";
+                                    message = "Punch out not recorded";
+                                } else {
+                                    // Fallback for old format
+                                    title = "Missing Attendance";
+                                    message = "Attendance record incomplete";
+                                }
+                                
+                                // Check if this notification is read
+                                const isRead = statusData.read_dates && statusData.read_dates.includes(punch.date);
+                                
+                                // Check if this notification is submitted
+                                let isSubmitted = false;
+                                if (punch.type === 'punch_in') {
+                                    isSubmitted = statusData.submitted_punch_in_dates && statusData.submitted_punch_in_dates.includes(punch.date);
+                                } else if (punch.type === 'punch_out') {
+                                    isSubmitted = statusData.submitted_punch_out_dates && statusData.submitted_punch_out_dates.includes(punch.date);
+                                }
+                                
+                                // Create notification item
+                                const notificationItem = document.createElement('div');
+                                notificationItem.className = 'notification-item ' + (isRead ? '' : 'unread');
+                                notificationItem.setAttribute('data-date', punch.date);
+                                notificationItem.setAttribute('data-type', punch.type);
+                                
+                                // Add status tags
+                                let statusTags = '';
+                                if (isSubmitted) {
+                                    statusTags = '<span class="badge badge-success ml-2">Submitted</span>';
+                                } else if (isRead) {
+                                    statusTags = '<span class="badge badge-secondary ml-2">Read</span>';
+                                }
+                                
+                                notificationItem.innerHTML = `
+                                    <div class="notification-icon bg-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <p class="notification-text">${title}${statusTags}</p>
+                                        <p class="notification-text">${message} on ${formattedDate}</p>
+                                        <p class="notification-time">${punch.date}</p>
+                                    </div>
+                                `;
+                                
+                                // Add click event to handle notification
+                                notificationItem.addEventListener('click', function() {
+                                    // Mark as read when clicked (if not already read or submitted)
+                                    if (!isRead && !isSubmitted) {
+                                        this.classList.remove('unread');
+                                        
+                                        // Mark notification as read on server
+                                        markNotificationAsRead(punch.date);
+                                    }
+                                    
+                                    // Open appropriate modal based on notification type
+                                    if (isSubmitted) {
+                                        // Show message for already submitted requests
+                                        alert(`${title} on ${punch.date} has already been submitted.`);
+                                    } else {
+                                        // Open the appropriate modal
+                                        if (punch.type === 'punch_in') {
+                                            openMissingPunchModal(punch.date);
+                                        } else if (punch.type === 'punch_out') {
+                                            openMissingPunchOutModal(punch.date);
+                                        }
+                                    }
+                                });
+                                
+                                notificationContainer.appendChild(notificationItem);
+                            });
+                        });
+                    }
+                } else {
+                    // Error fetching data
+                    notificationContainer.innerHTML = `
+                        <div class="notification-item">
+                            <div class="notification-content">
+                                <p class="notification-text">Error loading notifications: ${data.message}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching missing punches:', error);
+                notificationContainer.innerHTML = `
+                    <div class="notification-item">
+                        <div class="notification-content">
+                            <p class="notification-text">Error loading notifications</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Function to mark a notification as read
+        function markNotificationAsRead(date) {
+            // Send request to mark the notification as read
+            fetch('ajax_handlers/mark_attendance_notification_read.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'date=' + encodeURIComponent(date)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Notification for date ' + date + ' marked as read');
+                } else {
+                    console.error('Error marking notification as read: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read: ' + error);
+            });
+        }
     </script>
     <script>
         // Toggle Panel Function
@@ -4081,6 +4300,9 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 const isVisible = notificationMenu.classList.toggle('show');
                 
                 if (isVisible) {
+                    // Fetch missing punches when opening the dropdown
+                    fetchMissingPunches();
+                    
                     // Make sure menu is completely visible
                     ensureMenuVisible(notificationMenu, notificationBell);
                     
@@ -4128,6 +4350,8 @@ function updateWorkReportWordCount(textarea, displayElement) {
 </body>
 
 <?php include_once('modals/travel_expense_modal_new.php'); ?>
+<?php include_once('modals/missing_punch_modal.php'); ?>
+<?php include_once('modals/missing_punch_out_modal.php'); ?>
 
 <!-- Event Details Modal -->
 <div id="eventDetailsModal" class="event-details-modal">

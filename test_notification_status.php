@@ -1,54 +1,56 @@
 <?php
-/**
- * Test script to verify notification status functionality
- */
+// Simple test file to verify the notification status functionality
+require_once 'config/db_connect.php';
 
-// Include database connection
-require_once __DIR__ . '/config/db_connect.php';
+// Test data
+$user_id = 1; // Test user ID
+$test_dates = ['2025-10-10', '2025-10-09', '2025-10-08'];
 
-header('Content-Type: application/json');
+echo "Testing notification status functionality...\n";
 
+// Check read status
 try {
-    global $conn;
+    $placeholders = str_repeat('?,', count($test_dates) - 1) . '?';
+    $read_query = "
+        SELECT attendance_date 
+        FROM attendance_notification_read 
+        WHERE user_id = ? 
+        AND attendance_date IN ($placeholders)
+    ";
     
-    // Test user ID (you may need to change this)
-    $user_id = 1;
+    $params = array_merge([$user_id], $test_dates);
+    $stmt = $pdo->prepare($read_query);
+    $stmt->execute($params);
+    $read_dates = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    // Test dates
-    $test_dates = ['2025-10-01', '2025-10-02', '2025-10-03'];
-    
-    // Insert test data into missing_punch_in table with pending status
-    foreach ($test_dates as $date) {
-        $query = "INSERT IGNORE INTO missing_punch_in (user_id, date, punch_in_time, reason, confirmed, status) VALUES (?, ?, '09:00:00', 'Test reason', 1, 'pending')";
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$user_id, $date]);
-    }
-    
-    // Test the check_notification_read_status.php functionality
-    // Simulate POST request
-    $_POST['dates'] = $test_dates;
-    $_SESSION['user_id'] = $user_id;
-    
-    // Include the check script
-    ob_start();
-    include 'ajax_handlers/check_notification_read_status.php';
-    $output = ob_get_clean();
-    
-    echo "Test Results:\n";
-    echo "Inserted test data for dates: " . implode(', ', $test_dates) . "\n";
-    echo "Response from check_notification_read_status.php:\n";
-    echo $output;
-    
-    // Clean up test data
-    foreach ($test_dates as $date) {
-        $query = "DELETE FROM missing_punch_in WHERE user_id = ? AND date = ? AND reason = 'Test reason'";
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$user_id, $date]);
-    }
-    
-    echo "\nTest data cleaned up.\n";
-    
+    echo "Read dates: " . implode(', ', $read_dates) . "\n";
 } catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
+    echo "Error checking read status: " . $e->getMessage() . "\n";
 }
+
+// Check submitted status for missing punch in
+try {
+    $placeholders = str_repeat('?,', count($test_dates) - 1) . '?';
+    $submitted_query = "
+        SELECT date, 'in' as type FROM missing_punch_in 
+        WHERE user_id = ? AND date IN ($placeholders) AND status IS NOT NULL
+        UNION
+        SELECT date, 'out' as type FROM missing_punch_out 
+        WHERE user_id = ? AND date IN ($placeholders) AND status IS NOT NULL
+    ";
+    
+    $submitted_params = array_merge([$user_id], $test_dates, [$user_id], $test_dates);
+    $submitted_stmt = $pdo->prepare($submitted_query);
+    $submitted_stmt->execute($submitted_params);
+    $submitted_records = $submitted_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo "Submitted records: " . count($submitted_records) . "\n";
+    foreach ($submitted_records as $record) {
+        echo "  Date: " . $record['date'] . ", Type: " . $record['type'] . "\n";
+    }
+} catch (Exception $e) {
+    echo "Error checking submitted status: " . $e->getMessage() . "\n";
+}
+
+echo "Test completed.\n";
 ?>

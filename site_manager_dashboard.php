@@ -4383,6 +4383,371 @@ function updateWorkReportWordCount(textarea, displayElement) {
   </div>
 </div>
 
+<!-- Include Instant Modal for Missing Punch Records -->
+    <?php include 'instant_modal.php'; ?>
+    
+    <!-- Fix for Instant Modal positioning -->
+    <style>
+    #instantModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        z-index: 3000 !important;
+        justify-content: center !important;
+        align-items: center !important;
+        display: none !important;
+        backdrop-filter: blur(3px);
+    }
+    
+    #instantModal.active {
+        display: flex !important;
+    }
+    
+    .work-report-content {
+        background: #ffffff;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease forwards;
+        overflow: hidden;
+        border: none;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.97);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .work-report-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #eef2f7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+        color: white;
+    }
+    
+    .work-report-header h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .work-report-header h3 i {
+        font-size: 1.2rem;
+    }
+    
+    .close-modal {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+        font-size: 1rem;
+    }
+    
+    .close-modal:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+    
+    .work-report-body {
+        padding: 20px;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+    
+    .work-report-footer {
+        padding: 16px 20px;
+        border-top: 1px solid #eef2f7;
+        display: flex;
+        flex-direction: column;
+        background: #f8fafc;
+    }
+    
+    .modal-suppression-checkbox {
+        margin-bottom: 16px;
+    }
+    
+    .modal-suppression-checkbox label {
+        font-size: 0.85rem;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    
+    .modal-suppression-checkbox input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+        accent-color: #4a6cf7;
+        cursor: pointer;
+    }
+    
+    .submit-btn {
+        background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+        border: none;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 3px 5px rgba(74, 108, 247, 0.3);
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 10px rgba(74, 108, 247, 0.4);
+    }
+    
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Enhanced styles for missing punch items */
+    .missing-punch-item {
+        display: flex;
+        align-items: center;
+        padding: 14px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border-left: 3px solid #4a6cf7;
+        transition: all 0.3s ease;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .missing-punch-item:hover {
+        background: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        border-left-width: 4px;
+    }
+    
+    .missing-punch-item.punch-out {
+        border-left-color: #10b981;
+    }
+    
+    .missing-punch-item i {
+        font-size: 1.1rem;
+        margin-right: 12px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(74, 108, 247, 0.1);
+        color: #4a6cf7;
+    }
+    
+    .missing-punch-item.punch-out i {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .missing-punch-details {
+        flex: 1;
+    }
+    
+    .missing-punch-date {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 4px;
+        font-size: 0.95rem;
+    }
+    
+    .missing-punch-type {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+    
+    .missing-punch-status {
+        font-weight: 600;
+        color: #ef4444;
+        font-size: 0.8rem;
+        background: rgba(239, 68, 68, 0.1);
+        padding: 3px 8px;
+        border-radius: 20px;
+    }
+    
+    .missing-punch-timer {
+        font-size: 0.75rem;
+        color: #ef4444;
+        font-weight: 500;
+        background: rgba(254, 226, 226, 0.7);
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-top: 6px;
+        display: inline-block;
+    }
+    
+    .missing-punch-timer.warning {
+        color: #f59e0b;
+        background: rgba(255, 243, 205, 0.7);
+    }
+    
+    .missing-punch-timer.safe {
+        color: #10b981;
+        background: rgba(209, 250, 229, 0.7);
+    }
+    
+    /* Alert box styling */
+    .alert-box {
+        margin-bottom: 20px;
+        padding: 16px;
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        border-radius: 8px;
+        border: 1px solid #fde68a;
+        color: #92400e;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .alert-box i {
+        margin-right: 8px;
+        font-size: 1rem;
+    }
+    
+    /* Scrollable content */
+    .scrollable-content {
+        max-height: 350px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+    
+    /* Custom scrollbar */
+    .scrollable-content::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 8px;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Loading content */
+    .loading-content {
+        text-align: center;
+        padding: 30px 16px;
+    }
+    
+    .loading-content i {
+        font-size: 2.5rem;
+        color: #4a6cf7;
+        margin-bottom: 16px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .loading-content h4 {
+        margin-bottom: 12px;
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .loading-content p {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+    
+    /* Error message */
+    .error-message {
+        text-align: center;
+        padding: 30px 16px;
+        background: #fef2f2;
+        border-radius: 8px;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+    }
+    
+    .error-message i {
+        font-size: 2.5rem;
+        color: #ef4444;
+        margin-bottom: 16px;
+    }
+    
+    .error-message h4 {
+        margin-bottom: 12px;
+        color: #b91c1c;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .error-message p {
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+    
+    /* No missing punches */
+    .no-missing-punches {
+        text-align: center;
+        padding: 40px 16px;
+        background: #f0fdf4;
+        border-radius: 8px;
+    }
+    
+    .no-missing-punches i {
+        font-size: 2.5rem;
+        color: #10b981;
+        margin-bottom: 16px;
+    }
+    
+    .no-missing-punches h4 {
+        margin-bottom: 12px;
+        color: #047857;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .no-missing-punches p {
+        color: #065f46;
+        font-size: 0.85rem;
+    }
+    </style>
+
 </body>
 </html>
 

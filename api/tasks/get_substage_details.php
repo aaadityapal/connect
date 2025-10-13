@@ -26,7 +26,8 @@ try {
             s.updated_at,
             s.priority,
             s.start_date,
-            s.end_date
+            s.end_date,
+            s.assignee_id
         FROM task_substages s
         WHERE s.id = ?
     ");
@@ -122,7 +123,8 @@ try {
             'updated_at' => $substage['updated_at'],
             'priority' => $substage['priority'],
             'start_date' => $substage['start_date'],
-            'end_date' => $substage['end_date']
+            'end_date' => $substage['end_date'],
+            'assignee_id' => $substage['assignee_id']
         ],
         'history' => $history,
         'files' => $files

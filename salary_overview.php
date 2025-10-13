@@ -1030,7 +1030,7 @@ function getWeeklyOffs($conn, $userId, $date) {
                     <i class="fas fa-calendar-alt"></i>
                     Edit Leave
                 </a>
-                <a href="salary.php" class="btn btn-primary">
+                <a href="salary_page.php" class="btn btn-primary">
                     <i class="fas fa-info-circle"></i>
                     Salary Info
                 </a>

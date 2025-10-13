@@ -538,6 +538,33 @@ class StageDetailModal {
         return null;
     }
 
+    // Check if a substage is assigned to the current user
+    isSubstageAssignedToCurrentUser(substage) {
+        // If no current user ID, return false
+        if (!this.currentUserId) {
+            return false;
+        }
+        
+        // Check if the substage has an assigned user (handle both project and task substages)
+        const assignedTo = substage.assigned_to || substage.assignee_id;
+        if (!assignedTo) {
+            return false;
+        }
+        
+        // Convert both values to strings for comparison
+        const currentUserIdStr = this.currentUserId.toString();
+        const assignedToIdStr = assignedTo.toString();
+        
+        // Handle comma-separated list of IDs
+        if (assignedToIdStr.includes(',')) {
+            return assignedToIdStr.split(',').some(id => 
+                id.toString().trim() === currentUserIdStr);
+        }
+        
+        // Simple ID comparison
+        return assignedToIdStr === currentUserIdStr;
+    }
+
     // Get the current user role from a data attribute or session
     getCurrentUserRole() {
         // Try to get from data attribute on body if available
@@ -1689,6 +1716,27 @@ class StageDetailModal {
         if (substageUploadBtn) {
             substageUploadBtn.addEventListener('click', () => {
                 const substageId = substageUploadBtn.dataset.substageId;
+                
+                // Check if the substage is assigned to the current user
+                let isAssignedToCurrentUser = false;
+                
+                // Find the substage in the current data
+                if (this.currentSubstage && this.currentSubstage.id == substageId) {
+                    isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(this.currentSubstage);
+                } else if (this.currentStage && this.currentStage.substages) {
+                    // Look for the substage in the current stage's substages
+                    const substage = this.currentStage.substages.find(s => s.id == substageId);
+                    if (substage) {
+                        isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
+                    }
+                }
+                
+                // If not assigned, show an error and return
+                if (!isAssignedToCurrentUser) {
+                    alert('This substage is not assigned to you. You cannot upload files to it.');
+                    return;
+                }
+                
                 const uploadForm = this.modalContainer.querySelector('.substage_detail_file_upload_form');
                 
                 // Toggle form visibility
@@ -2398,10 +2446,32 @@ class StageDetailModal {
         try {
             console.log('Starting substage file upload process');
             
+            const formData = new FormData(form);
+            const substageId = formData.get('substage_id');
+            
+            // Check if the substage is assigned to the current user
+            let isAssignedToCurrentUser = false;
+            
+            // Find the substage in the current data
+            if (this.currentSubstage && this.currentSubstage.id == substageId) {
+                isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(this.currentSubstage);
+            } else if (this.currentStage && this.currentStage.substages) {
+                // Look for the substage in the current stage's substages
+                const substage = this.currentStage.substages.find(s => s.id == substageId);
+                if (substage) {
+                    isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
+                }
+            }
+            
+            // If not assigned, show an error and return
+            if (!isAssignedToCurrentUser) {
+                this.showNotification('Error', 'This substage is not assigned to you. You cannot upload files to it.', 'error');
+                return;
+            }
+            
             // Show loading indicator
             this.showNotification('Uploading', 'Uploading file, please wait...', 'info');
             
-            const formData = new FormData(form);
             const fileInput = form.querySelector('input[type="file"]');
             
             // Basic client-side validation

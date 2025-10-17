@@ -538,33 +538,6 @@ class StageDetailModal {
         return null;
     }
 
-    // Check if a substage is assigned to the current user
-    isSubstageAssignedToCurrentUser(substage) {
-        // If no current user ID, return false
-        if (!this.currentUserId) {
-            return false;
-        }
-        
-        // Check if the substage has an assigned user (handle both project and task substages)
-        const assignedTo = substage.assigned_to || substage.assignee_id;
-        if (!assignedTo) {
-            return false;
-        }
-        
-        // Convert both values to strings for comparison
-        const currentUserIdStr = this.currentUserId.toString();
-        const assignedToIdStr = assignedTo.toString();
-        
-        // Handle comma-separated list of IDs
-        if (assignedToIdStr.includes(',')) {
-            return assignedToIdStr.split(',').some(id => 
-                id.toString().trim() === currentUserIdStr);
-        }
-        
-        // Simple ID comparison
-        return assignedToIdStr === currentUserIdStr;
-    }
-
     // Get the current user role from a data attribute or session
     getCurrentUserRole() {
         // Try to get from data attribute on body if available
@@ -1050,21 +1023,7 @@ class StageDetailModal {
                             </div>
                             <div class="stage_detail_info_item">
                                 <span class="stage_detail_info_label"><i class="fas fa-user"></i> Assigned To</span>
-                                <span class="stage_detail_info_value">
-                                    ${stage.assigned_to_profile ? 
-                                    `<img src="${stage.assigned_to_profile}" alt="${stage.assigned_to_name}" class="user-avatar-small" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 5px; vertical-align: middle;">` : 
-                                    `<span class="user-initials-small" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background-color: #3b82f6; color: white; border-radius: 50%; font-size: 10px; margin-right: 5px; vertical-align: middle;">${this.getInitials(stage.assigned_to_name)}</span>`}
-                                    ${stage.assigned_to_name || 'Unassigned'}
-                                </span>
-                            </div>
-                            <div class="stage_detail_info_item">
-                                <span class="stage_detail_info_label"><i class="fas fa-user-plus"></i> Assigned By</span>
-                                <span class="stage_detail_info_value">
-                                    ${stage.created_by_profile ? 
-                                    `<img src="${stage.created_by_profile}" alt="${stage.created_by_name}" class="user-avatar-small" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 5px; vertical-align: middle;">` : 
-                                    `<span class="user-initials-small" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background-color: #10b981; color: white; border-radius: 50%; font-size: 10px; margin-right: 5px; vertical-align: middle;">${this.getInitials(stage.created_by_name)}</span>`}
-                                    ${stage.created_by_name || 'Not specified'}
-                                </span>
+                                <span class="stage_detail_info_value">${stage.assigned_to_name || 'Unassigned'}</span>
                             </div>
                         </div>
                     </div>
@@ -1261,21 +1220,7 @@ class StageDetailModal {
                             </div>
                             <div class="stage_detail_info_item">
                                 <span class="stage_detail_info_label"><i class="fas fa-user"></i> Assigned To</span>
-                                <span class="stage_detail_info_value">
-                                    ${substage.assigned_to_profile ? 
-                                    `<img src="${substage.assigned_to_profile}" alt="${substage.assigned_to_name}" class="user-avatar-small" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 5px; vertical-align: middle;">` : 
-                                    `<span class="user-initials-small" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background-color: #3b82f6; color: white; border-radius: 50%; font-size: 10px; margin-right: 5px; vertical-align: middle;">${this.getInitials(substage.assigned_to_name)}</span>`}
-                                    ${substage.assigned_to_name || 'Unassigned'}
-                                </span>
-                            </div>
-                            <div class="stage_detail_info_item">
-                                <span class="stage_detail_info_label"><i class="fas fa-user-plus"></i> Assigned By</span>
-                                <span class="stage_detail_info_value">
-                                    ${substage.created_by_profile ? 
-                                    `<img src="${substage.created_by_profile}" alt="${substage.created_by_name}" class="user-avatar-small" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 5px; vertical-align: middle;">` : 
-                                    `<span class="user-initials-small" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background-color: #10b981; color: white; border-radius: 50%; font-size: 10px; margin-right: 5px; vertical-align: middle;">${this.getInitials(substage.created_by_name)}</span>`}
-                                    ${substage.created_by_name || 'Not specified'}
-                                </span>
+                                <span class="stage_detail_info_value">${substage.assigned_to_name || 'Unassigned'}</span>
                             </div>
                             ${substage.drawing_number ? `
                             <div class="stage_detail_info_item">
@@ -1422,20 +1367,7 @@ class StageDetailModal {
                                 <span class="stage_detail_status_badge ${substage.status}">${this.formatStatus(substage.status)}</span>
                             </div>
                             <div class="stage_detail_substage_meta">
-                                <span>
-                                    <i class="fas fa-user"></i>Assigned To:
-                                    ${substage.assigned_to_profile ? 
-                                    `<img src="${substage.assigned_to_profile}" alt="${substage.assigned_to_name}" class="user-avatar-small" style="width: 18px; height: 18px; border-radius: 50%; margin-right: 2px; vertical-align: middle;">` : 
-                                    ''}
-                                    ${substage.assigned_to_name || 'Unassigned'}
-                                </span>
-                                <span>
-                                    <i class="fas fa-user-plus"></i>Assigned By:
-                                    ${substage.created_by_profile ? 
-                                    `<img src="${substage.created_by_profile}" alt="${substage.created_by_name}" class="user-avatar-small" style="width: 18px; height: 18px; border-radius: 50%; margin-right: 2px; vertical-align: middle;">` : 
-                                    ''}
-                                    ${substage.created_by_name || 'Unknown'}
-                                </span>
+                                <span><i class="fas fa-user"></i> ${substage.assigned_to_name || 'Unassigned'}</span>
                                 <span><i class="fas fa-calendar"></i> Due: ${this.formatDateTime(substage.end_date) || 'Not set'} ${overdueMark}</span>
                                 ${substage.drawing_number ? `<span><i class="fas fa-file-alt"></i> Drawing: ${substage.drawing_number}</span>` : ''}
                             </div>
@@ -1716,27 +1648,6 @@ class StageDetailModal {
         if (substageUploadBtn) {
             substageUploadBtn.addEventListener('click', () => {
                 const substageId = substageUploadBtn.dataset.substageId;
-                
-                // Check if the substage is assigned to the current user
-                let isAssignedToCurrentUser = false;
-                
-                // Find the substage in the current data
-                if (this.currentSubstage && this.currentSubstage.id == substageId) {
-                    isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(this.currentSubstage);
-                } else if (this.currentStage && this.currentStage.substages) {
-                    // Look for the substage in the current stage's substages
-                    const substage = this.currentStage.substages.find(s => s.id == substageId);
-                    if (substage) {
-                        isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                    }
-                }
-                
-                // If not assigned, show an error and return
-                if (!isAssignedToCurrentUser) {
-                    alert('This substage is not assigned to you. You cannot upload files to it.');
-                    return;
-                }
-                
                 const uploadForm = this.modalContainer.querySelector('.substage_detail_file_upload_form');
                 
                 // Toggle form visibility
@@ -2446,32 +2357,10 @@ class StageDetailModal {
         try {
             console.log('Starting substage file upload process');
             
-            const formData = new FormData(form);
-            const substageId = formData.get('substage_id');
-            
-            // Check if the substage is assigned to the current user
-            let isAssignedToCurrentUser = false;
-            
-            // Find the substage in the current data
-            if (this.currentSubstage && this.currentSubstage.id == substageId) {
-                isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(this.currentSubstage);
-            } else if (this.currentStage && this.currentStage.substages) {
-                // Look for the substage in the current stage's substages
-                const substage = this.currentStage.substages.find(s => s.id == substageId);
-                if (substage) {
-                    isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                }
-            }
-            
-            // If not assigned, show an error and return
-            if (!isAssignedToCurrentUser) {
-                this.showNotification('Error', 'This substage is not assigned to you. You cannot upload files to it.', 'error');
-                return;
-            }
-            
             // Show loading indicator
             this.showNotification('Uploading', 'Uploading file, please wait...', 'info');
             
+            const formData = new FormData(form);
             const fileInput = form.querySelector('input[type="file"]');
             
             // Basic client-side validation

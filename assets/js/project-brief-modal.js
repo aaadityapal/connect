@@ -44,40 +44,6 @@ class ProjectBriefModal {
                 border-color: #3b82f6;
                 box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
             }
-            
-            .unassigned-substage {
-                opacity: 0.7;
-                background-color: #f8f9fa;
-            }
-            
-            .unassigned-substage .project_brief_substage_title {
-                color: #6c757d;
-            }
-            
-            .unassigned-substage .project_brief_substage_actions .project_brief_substage_action_btn {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-            
-            .unassigned-substage .project_brief_substage_actions .project_brief_substage_action_btn:not(.disabled) {
-                opacity: 1;
-                cursor: pointer;
-            }
-            
-            .unassigned-badge {
-                background-color: #ffc107;
-                color: #212529;
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-size: 12px;
-                margin-left: 8px;
-                font-weight: bold;
-            }
-            
-            .project_brief_substage_file_empty small {
-                color: #6c757d;
-                font-style: italic;
-            }
         `;
         
         // Append style element to document head
@@ -94,33 +60,6 @@ class ProjectBriefModal {
     getCurrentUserRole() {
         const userRoleElement = document.querySelector('meta[name="user-role"]');
         return userRoleElement ? userRoleElement.getAttribute('content') : null;
-    }
-
-    // Check if a substage is assigned to the current user
-    isSubstageAssignedToCurrentUser(substage) {
-        // If no current user ID, return false
-        if (!this.currentUserId) {
-            return false;
-        }
-        
-        // Check if the substage has an assigned user (handle both project and task substages)
-        const assignedTo = substage.assigned_to || substage.assignee_id;
-        if (!assignedTo) {
-            return false;
-        }
-        
-        // Convert both values to strings for comparison
-        const currentUserIdStr = this.currentUserId.toString();
-        const assignedToIdStr = assignedTo.toString();
-        
-        // Handle comma-separated list of IDs
-        if (assignedToIdStr.includes(',')) {
-            return assignedToIdStr.split(',').some(id => 
-                id.toString().trim() === currentUserIdStr);
-        }
-        
-        // Simple ID comparison
-        return assignedToIdStr === currentUserIdStr;
     }
 
     // Check if current user is an admin
@@ -445,15 +384,11 @@ class ProjectBriefModal {
                             <div class="project_brief_substages_container">
                                 <div class="project_brief_substages_list">
                                     ${stage.substages.map(substage => {
-                                        // Check if substage is assigned to current user
-                                        const isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                                        
                                         return `
-                                            <div class="project_brief_substage_item ${!isAssignedToCurrentUser ? 'unassigned-substage' : ''}" data-assigned="${isAssignedToCurrentUser}">
+                                            <div class="project_brief_substage_item">
                                                 <div class="project_brief_substage_title">
                                                     <span class="substage_number">Substage ${substage.substage_number}</span>
                                                     <span class="substage_title">${this.escapeHtml(substage.title)}</span>
-                                                    ${!isAssignedToCurrentUser ? '<span class="unassigned-badge">Not Assigned</span>' : ''}
                                                 </div>
                                                 <div class="project_brief_substage_meta">
                                                     <div class="project_brief_substage_date">
@@ -475,7 +410,7 @@ class ProjectBriefModal {
                                                         <button class="project_brief_substage_action_btn activity" title="Activity Log" data-stage-id="${stage.id}" data-substage-id="${substage.id}">
                                                             <i class="fas fa-history"></i>
                                                         </button>
-                                                        <button class="project_brief_substage_action_btn files ${!isAssignedToCurrentUser ? 'disabled' : ''}" title="${!isAssignedToCurrentUser ? 'Substage not assigned to you' : 'View Files'}" data-stage-id="${stage.id}" data-substage-id="${substage.id}" ${!isAssignedToCurrentUser ? 'disabled' : ''}>
+                                                        <button class="project_brief_substage_action_btn files" title="View Files" data-stage-id="${stage.id}" data-substage-id="${substage.id}">
                                                             <i class="far fa-file-alt"></i>
                                                         </button>
                                                         <button class="project_brief_substage_view_btn" data-stage-id="${stage.id}" data-substage-id="${substage.id}">
@@ -829,22 +764,6 @@ class ProjectBriefModal {
                 const stageId = button.dataset.stageId;
                 const substageId = button.dataset.substageId;
                 
-                // Check if button is disabled (for unassigned substages)
-                if (button.disabled || button.classList.contains('disabled')) {
-                    alert('This substage is not assigned to you. You cannot perform file operations on it.');
-                    return;
-                }
-                
-                // Additional check using data-assigned attribute
-                const substageItem = button.closest('.project_brief_substage_item');
-                if (substageItem) {
-                    const isAssigned = substageItem.dataset.assigned === 'true';
-                    if (!isAssigned) {
-                        alert('This substage is not assigned to you. You cannot perform file operations on it.');
-                        return;
-                    }
-                }
-                
                 if (!stageId || !substageId) {
                     console.error('Missing stageId or substageId', { stageId, substageId, button });
                     return;
@@ -909,7 +828,7 @@ class ProjectBriefModal {
         });
 
         // Add event delegation for file send buttons
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', function(e) {
             // Check if the clicked element is a send button
             if (e.target && (e.target.classList.contains('project_brief_substage_file_btn') && 
                              e.target.classList.contains('send') || 
@@ -923,19 +842,6 @@ class ProjectBriefModal {
                 // Get the file item
                 const fileItem = sendBtn.closest('.project_brief_substage_file_item');
                 if (fileItem) {
-                    // Check if the substage is assigned to the current user
-                    const substageItem = fileItem.closest('.project_brief_substage_item');
-                    if (substageItem) {
-                        // More robust check for assignment status
-                        const assignedValue = substageItem.dataset.assigned;
-                        const isAssigned = assignedValue === 'true' || assignedValue === true;
-                        if (!isAssigned) {
-                            alert('This substage is not assigned to you. You cannot perform file operations on it.');
-                            e.preventDefault();
-                            return;
-                        }
-                    }
-                    
                     const fileId = fileItem.dataset.fileId;
                     if (fileId) {
                         showSendForApprovalPopup(parseInt(fileId));
@@ -1111,32 +1017,6 @@ class ProjectBriefModal {
     // Fetch substage files
     async fetchSubstageFiles(projectId, stageId, substageId, container) {
         try {
-            // First, check if the substage is assigned to the current user
-            // Find the substage in the current project data
-            let isAssignedToCurrentUser = false;
-            if (this.currentProject && this.currentProject.stages) {
-                for (const stage of this.currentProject.stages) {
-                    if (stage.id == stageId && stage.substages) {
-                        for (const substage of stage.substages) {
-                            if (substage.id == substageId) {
-                                isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                                break;
-                            }
-                        }
-                        if (isAssignedToCurrentUser) break;
-                    }
-                }
-            }
-            
-            // If not assigned, show an error and return
-            if (!isAssignedToCurrentUser) {
-                const fileContent = container.querySelector('.files_content');
-                const fileLoading = container.querySelector('.files_loading');
-                fileLoading.style.display = 'none';
-                fileContent.innerHTML = `<div class="project_brief_substage_file_empty">You are not assigned to this substage. File operations are not allowed.</div>`;
-                return;
-            }
-            
             const fileLoading = container.querySelector('.files_loading');
             const fileContent = container.querySelector('.files_content');
             
@@ -1220,149 +1100,56 @@ class ProjectBriefModal {
                     if (addMoreBtn) {
                         addMoreBtn.addEventListener('click', (e) => {
                             e.preventDefault();
-                            
-                            // Check if substage is assigned to current user before opening upload modal
-                            let isAssignedToCurrentUser = false;
-                            if (this.currentProject && this.currentProject.stages) {
-                                for (const stage of this.currentProject.stages) {
-                                    if (stage.id == stageId && stage.substages) {
-                                        for (const substage of stage.substages) {
-                                            if (substage.id == substageId) {
-                                                isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                                                break;
-                                            }
-                                        }
-                                        if (isAssignedToCurrentUser) break;
-                                    }
-                                }
-                            }
-                            
-                            if (!isAssignedToCurrentUser) {
-                                alert('This substage is not assigned to you. You cannot upload files to it.');
-                                return;
-                            }
-                            
                             this.openFileUploadModal(projectId, stageId, substageId, container);
                         });
                     }
                 } else {
                     // No files found - show the + button
-                    // First, check if the substage is assigned to the current user
-                    // Find the substage in the current project data
-                    let isAssignedToCurrentUser = false;
-                    if (this.currentProject && this.currentProject.stages) {
-                        for (const stage of this.currentProject.stages) {
-                            if (stage.id == stageId && stage.substages) {
-                                for (const substage of stage.substages) {
-                                    if (substage.id == substageId) {
-                                        isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                                        break;
-                                    }
-                                }
-                                if (isAssignedToCurrentUser) break;
-                            }
-                        }
+                    // Add floating upload button container
+                    const floatingBtnContainer = document.createElement('div');
+                    floatingBtnContainer.className = 'floating_upload_btn_container';
+                    floatingBtnContainer.innerHTML = `
+                        <button class="floating_upload_btn" title="Upload New File" data-stage-id="${stageId}" data-substage-id="${substageId}" id="upload_btn_${substageId}">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    `;
+                    container.appendChild(floatingBtnContainer);
+                    
+                    // Add event listener for floating upload button
+                    const floatingUploadBtn = floatingBtnContainer.querySelector('.floating_upload_btn');
+                    if (floatingUploadBtn) {
+                        console.log('Adding click event listener to upload button', floatingUploadBtn);
+                        
+                        // First remove any existing event listeners
+                        const newBtn = floatingUploadBtn.cloneNode(true);
+                        floatingUploadBtn.parentNode.replaceChild(newBtn, floatingUploadBtn);
+                        
+                        newBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation(); // Prevent event bubbling
+                            console.log('Upload button clicked for substage:', substageId);
+                            
+                            this.openFileUploadModal(projectId, stageId, substageId, container);
+                        });
                     }
                     
-                    // Only show upload buttons if substage is assigned to current user
-                    if (isAssignedToCurrentUser) {
-                        // Add floating upload button container
-                        const floatingBtnContainer = document.createElement('div');
-                        floatingBtnContainer.className = 'floating_upload_btn_container';
-                        floatingBtnContainer.innerHTML = `
-                            <button class="floating_upload_btn" title="Upload New File" data-stage-id="${stageId}" data-substage-id="${substageId}" id="upload_btn_${substageId}">
-                                <i class="fas fa-plus"></i>
+                    // No files found
+                    fileContent.innerHTML = `
+                        <div class="project_brief_substage_file_empty">
+                            No files attached to this substage.
+                            <button class="substage_file_upload_btn" data-stage-id="${stageId}" data-substage-id="${substageId}">
+                                <i class="fas fa-plus"></i> Add File
                             </button>
-                        `;
-                        container.appendChild(floatingBtnContainer);
-                        
-                        // Add event listener for floating upload button
-                        const floatingUploadBtn = floatingBtnContainer.querySelector('.floating_upload_btn');
-                        if (floatingUploadBtn) {
-                            console.log('Adding click event listener to upload button', floatingUploadBtn);
-                            
-                            // First remove any existing event listeners
-                            const newBtn = floatingUploadBtn.cloneNode(true);
-                            floatingUploadBtn.parentNode.replaceChild(newBtn, floatingUploadBtn);
-                            
-                            newBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation(); // Prevent event bubbling
-                                console.log('Upload button clicked for substage:', substageId);
-                                
-                                // Check if substage is assigned to current user before opening upload modal
-                                let isAssignedToCurrentUser = false;
-                                if (this.currentProject && this.currentProject.stages) {
-                                    for (const stage of this.currentProject.stages) {
-                                        if (stage.id == stageId && stage.substages) {
-                                            for (const substage of stage.substages) {
-                                                if (substage.id == substageId) {
-                                                    isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                                                    break;
-                                                }
-                                            }
-                                            if (isAssignedToCurrentUser) break;
-                                        }
-                                    }
-                                }
-                                
-                                if (!isAssignedToCurrentUser) {
-                                    alert('This substage is not assigned to you. You cannot upload files to it.');
-                                    return;
-                                }
-                                
-                                this.openFileUploadModal(projectId, stageId, substageId, container);
-                            });
-                        }
-                        
-                        // No files found
-                        fileContent.innerHTML = `
-                            <div class="project_brief_substage_file_empty">
-                                No files attached to this substage.
-                                <button class="substage_file_upload_btn" data-stage-id="${stageId}" data-substage-id="${substageId}">
-                                    <i class="fas fa-plus"></i> Add File
-                                </button>
-                            </div>
-                        `;
-                        
-                        // Add event listener to the "Add File" button in the empty state
-                        const uploadBtn = fileContent.querySelector('.substage_file_upload_btn');
-                        if (uploadBtn) {
-                            uploadBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                
-                                // Check if substage is assigned to current user before opening upload modal
-                                let isAssignedToCurrentUser = false;
-                                if (this.currentProject && this.currentProject.stages) {
-                                    for (const stage of this.currentProject.stages) {
-                                        if (stage.id == stageId && stage.substages) {
-                                            for (const substage of stage.substages) {
-                                                if (substage.id == substageId) {
-                                                    isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                                                    break;
-                                                }
-                                            }
-                                            if (isAssignedToCurrentUser) break;
-                                        }
-                                    }
-                                }
-                                
-                                if (!isAssignedToCurrentUser) {
-                                    alert('This substage is not assigned to you. You cannot upload files to it.');
-                                    return;
-                                }
-                                
-                                this.openFileUploadModal(projectId, stageId, substageId, container);
-                            });
-                        }
-                    } else {
-                        // Substage not assigned to current user
-                        fileContent.innerHTML = `
-                            <div class="project_brief_substage_file_empty">
-                                No files attached to this substage.<br>
-                                <small>You are not assigned to this substage. File operations are not allowed.</small>
-                            </div>
-                        `;
+                        </div>
+                    `;
+                    
+                    // Add event listener to the "Add File" button in the empty state
+                    const uploadBtn = fileContent.querySelector('.substage_file_upload_btn');
+                    if (uploadBtn) {
+                        uploadBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            this.openFileUploadModal(projectId, stageId, substageId, container);
+                        });
                     }
                 }
             } else {
@@ -1380,29 +1167,6 @@ class ProjectBriefModal {
 
     // Helper method to open the file upload modal
     openFileUploadModal(projectId, stageId, substageId, container) {
-        // First, check if the substage is assigned to the current user
-        // Find the substage in the current project data
-        let isAssignedToCurrentUser = false;
-        if (this.currentProject && this.currentProject.stages) {
-            for (const stage of this.currentProject.stages) {
-                if (stage.id == stageId && stage.substages) {
-                    for (const substage of stage.substages) {
-                        if (substage.id == substageId) {
-                            isAssignedToCurrentUser = this.isSubstageAssignedToCurrentUser(substage);
-                            break;
-                        }
-                    }
-                    if (isAssignedToCurrentUser) break;
-                }
-            }
-        }
-        
-        // If not assigned, show an error and return
-        if (!isAssignedToCurrentUser) {
-            alert('This substage is not assigned to you. You cannot upload files to it.');
-            return;
-        }
-        
         console.log('DEBUG: Opening file upload modal', { projectId, stageId, substageId });
         
         // Create overlay first to prevent interaction with other elements

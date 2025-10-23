@@ -1,4 +1,7 @@
 <?php
+// Set timezone to match other files
+date_default_timezone_set('Asia/Kolkata');
+
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -1803,12 +1806,30 @@ try {
                                     }
                                 }
                                 
-                                // Check if today is Wednesday to Saturday
+                                // Check if current time is outside allowed approval window
+                                // Allowed window: Sunday 00:01 to Wednesday 13:00
                                 $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
-                                $isLockDay = ($currentDay >= 3 && $currentDay <= 6); // Wednesday to Saturday
+                                $currentHour = date('H'); // 00 to 23
+                                $currentMinute = date('i'); // 00 to 59
                                 
-                                // MODIFIED: Lock all expenses if today is Wednesday to Saturday, regardless of travel date
-                                $isLockedDueToWeekday = $isLockDay;
+                                // Check if current time is within approval window
+                                $isApprovalTime = false;
+                                
+                                // Sunday (day 7) - approval starts at 00:01
+                                if ($currentDay == 7 && ($currentHour > 0 || ($currentHour == 0 && $currentMinute >= 1))) {
+                                    $isApprovalTime = true;
+                                }
+                                // Monday (day 1), Tuesday (day 2)
+                                elseif ($currentDay == 1 || $currentDay == 2) {
+                                    $isApprovalTime = true;
+                                }
+                                // Wednesday (day 3) - approval ends at 13:00
+                                elseif ($currentDay == 3 && ($currentHour < 13 || ($currentHour == 13 && $currentMinute == 0))) {
+                                    $isApprovalTime = true;
+                                }
+                                
+                                // Lock all expenses if outside approval window
+                                $isLockedDueToWeekday = !$isApprovalTime;
                                 
                                 // Lock row if:
                                 // 1. Both Accountant and HR haven't approved AND all expenses aren't rejected, OR
@@ -1870,10 +1891,10 @@ try {
                                                     $pendingParts[] = "Accountant";
                                                 }
                                                 
-                                                // Check if it's locked due to weekday (Wed-Sat)
+                                                // Check if it's locked due to time window
                                                 if ($isLockedDueToWeekday) {
-                                                    // If it's locked due to being Wed-Sat
-                                                    $awaitingText = "Locked (System locked on Wed-Sat)";
+                                                    // If it's locked due to being outside approval time window
+                                                    $awaitingText = "Locked (System locked outside Sun 00:01 - Wed 13:00)";
                                                 } else if (!empty($pendingParts)) {
                                                     $awaitingText = "Awaiting " . implode(" & ", $pendingParts);
                                                     

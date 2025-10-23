@@ -1,4 +1,7 @@
 <?php
+// Set timezone to match other files
+date_default_timezone_set('Asia/Kolkata');
+
 session_start();
 require_once 'config.php';
 

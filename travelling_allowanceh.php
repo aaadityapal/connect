@@ -1,4 +1,7 @@
 <?php
+// Set timezone to match other files
+date_default_timezone_set('Asia/Kolkata');
+
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -1674,12 +1677,30 @@ try {
                                         'uploads/profile_pictures/' . $expense['profile_picture'] : 
                                         'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
                                     
-                                    // Check if today is Wednesday to Thursday
+                                    // Check if current time is within approval window
+                                    // Approval window: Thursday 00:01 to Monday 17:00
                                     $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
-                                    $isLockDay = ($currentDay >= 3 && $currentDay <= 4); // Wednesday to Thursday
+                                    $currentHour = date('H'); // 00 to 23
+                                    $currentMinute = date('i'); // 00 to 59
                                     
-                                    // MODIFIED: Lock all expenses if today is Wednesday or Thursday, regardless of travel date
-                                    $isLocked = $isLockDay;
+                                    // Calculate if current time is within approval window
+                                    $isApprovalTime = false;
+                                    
+                                    // Thursday (day 4) - approval starts at 00:01
+                                    if ($currentDay == 4 && ($currentHour > 0 || ($currentHour == 0 && $currentMinute >= 1))) {
+                                        $isApprovalTime = true;
+                                    }
+                                    // Friday (day 5), Saturday (day 6), Sunday (day 7)
+                                    elseif ($currentDay >= 5 && $currentDay <= 7) {
+                                        $isApprovalTime = true;
+                                    }
+                                    // Monday (day 1) - approval ends at 17:00
+                                    elseif ($currentDay == 1 && $currentHour < 17) {
+                                        $isApprovalTime = true;
+                                    }
+                                    
+                                    // Lock all expenses if outside approval window
+                                    $isLocked = !$isApprovalTime;
                                     $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
                                     $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
                             ?>
@@ -1703,7 +1724,7 @@ try {
                                             <div class="d-flex flex-column gap-1 mt-1">
                                                 <?php
                                                 // Prepare awaiting text if locked
-                                                $awaitingText = "Locked (System locked on Wed-Thu)";
+                                                $awaitingText = "Locked (System locked outside Thu 00:01 - Mon 17:00)";
                                                 ?>
                                                 <div class="locked-indicator">
                                                     <i class="bi bi-lock-fill text-secondary me-1"></i>

@@ -2760,7 +2760,7 @@ try {
                 <i class="bi bi-key-fill"></i>
                 Password Reset
             </a>
-            <a href="work_report_hr.php" class="nav-link">
+            <a href="user_work_report_dashboard.php" class="nav-link">
                 <i class="bi bi-file-earmark-text-fill"></i>
                 Work Report
             </a>

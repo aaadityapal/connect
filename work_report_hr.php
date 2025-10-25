@@ -59,7 +59,6 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="work_report.css">
     <style>
         :root {
             --primary: #4F46E5;
@@ -72,6 +71,7 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
             --gray: #6B7280;
             --light: #F3F4F6;
             --sidebar-width: 280px;
+            --sidebar-collapsed-width: 80px;
         }
 
         body {
@@ -90,13 +90,18 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
             position: fixed;
             top: 0;
             left: 0;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 1000;
             padding: 2rem;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
             overflow-y: auto;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+            padding: 2rem 1rem;
         }
         
         /* Hide scrollbar for Chrome, Safari and Opera */
@@ -112,6 +117,16 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed .sidebar-logo {
+            justify-content: center;
+            gap: 0;
+        }
+        
+        .sidebar.collapsed .sidebar-logo span {
+            display: none;
         }
 
         .nav-link {
@@ -124,6 +139,17 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
             text-decoration: none;
             display: flex;
             align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 0.875rem 0;
+        }
+        
+        .sidebar.collapsed .nav-link span {
+            display: none;
         }
 
         .nav-link:hover, .nav-link.active {
@@ -133,6 +159,12 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         .nav-link i {
             margin-right: 0.75rem;
+            min-width: 1.5rem;
+            text-align: center;
+        }
+        
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
         }
 
         /* Logout button styles */
@@ -152,6 +184,11 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
             padding: 2rem;
             height: 100vh;
             overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content.sidebar-collapsed {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
         /* Header */
@@ -309,6 +346,33 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+        
+        /* Toggle button */
+        .toggle-btn {
+            position: fixed;
+            top: 1rem;
+            left: calc(var(--sidebar-width) - 20px);
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed ~ .toggle-btn {
+            left: calc(var(--sidebar-collapsed-width) - 20px);
+        }
+        
+        .toggle-btn i {
+            transition: transform 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -316,80 +380,85 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <i class="bi bi-hexagon-fill"></i>
-            HR Portal
+            <span>HR Portal</span>
         </div>
         
         <nav>
             <a href="hr_dashboard.php" class="nav-link">
                 <i class="bi bi-grid-1x2-fill"></i>
-                Dashboard
+                <span>Dashboard</span>
             </a>
             <a href="employee.php" class="nav-link">
                 <i class="bi bi-people-fill"></i>
-                Employees
+                <span>Employees</span>
             </a>
             <a href="hr_attendance_report.php" class="nav-link">
                 <i class="bi bi-calendar-check-fill"></i>
-                Attendance
+                <span>Attendance</span>
             </a>
             <a href="shifts.php" class="nav-link">
                 <i class="bi bi-clock-history"></i>
-                Shifts
+                <span>Shifts</span>
             </a>
             <a href="manager_payouts.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>
-                Manager Payouts
+                <span>Manager Payouts</span>
             </a>
             <a href="company_analytics_dashboard.php" class="nav-link">
                 <i class="bi bi-graph-up"></i>
-                Company Stats
+                <span>Company Stats</span>
             </a>
             <a href="salary_overview.php" class="nav-link">
                 <i class="bi bi-cash-coin"></i>
-                Salary
+                <span>Salary</span>
             </a>
             <a href="edit_leave.php" class="nav-link">
                 <i class="bi bi-calendar-check-fill"></i>
-                Leave Request
+                <span>Leave Request</span>
             </a>
             <a href="admin/manage_geofence_locations.php" class="nav-link">
                 <i class="bi bi-map"></i>
-                Geofence Locations
+                <span>Geofence Locations</span>
             </a>
             <a href="travelling_allowanceh.php" class="nav-link">
                 <i class="bi bi-car-front-fill"></i>
-                Travel Expenses
+                <span>Travel Expenses</span>
             </a>
             <a href="hr_overtime_approval.php" class="nav-link">
                 <i class="bi bi-clock"></i>
-                Overtime Approval
+                <span>Overtime Approval</span>
             </a>
             <a href="hr_project_list.php" class="nav-link">
                 <i class="bi bi-diagram-3-fill"></i>
-                Projects
+                <span>Projects</span>
             </a>
             <a href="hr_password_reset.php" class="nav-link">
                 <i class="bi bi-key-fill"></i>
-                Password Reset
+                <span>Password Reset</span>
             </a>
             <a href="hr_work_report.php" class="nav-link active">
                 <i class="bi bi-file-earmark-text-fill"></i>
-                Work Report
+                <span>Work Report</span>
             </a>
             <a href="hr_settings.php" class="nav-link">
                 <i class="bi bi-gear-fill"></i>
-                Settings
+                <span>Settings</span>
             </a>
             <!-- Added Logout Button -->
             <a href="logout.php" class="nav-link logout-link">
                 <i class="bi bi-box-arrow-right"></i>
-                Logout
+                <span>Logout</span>
             </a>
         </nav>
     </div>
+    
+    <!-- Toggle Button -->
+    <div class="toggle-btn" id="toggle-btn">
+        <i class="fas fa-chevron-left"></i>
+    </div>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" id="main-content">
         <div class="container-fluid">
             <div class="header">
                 <h1><i class="fas fa-file-invoice"></i> Work Reports</h1>
@@ -482,6 +551,172 @@ $users = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <script src="work_report.js"></script>
+    <script>
+        // Enhanced Work Report JS
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggle-btn');
+            const mainContent = document.getElementById('main-content');
+            const reportCards = document.querySelectorAll('.report-card');
+            
+            // Check for saved sidebar state
+            const savedSidebarState = localStorage.getItem('sidebarCollapsed');
+            if (savedSidebarState === 'true') {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+                updateToggleIcon(true);
+            }
+            
+            // Toggle sidebar collapse/expand with animation
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    const isCollapsing = !sidebar.classList.contains('collapsed');
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('sidebar-collapsed');
+                    
+                    // Save state to localStorage
+                    localStorage.setItem('sidebarCollapsed', isCollapsing);
+                    
+                    // Update icon
+                    updateToggleIcon(isCollapsing);
+                });
+            }
+            
+            function updateToggleIcon(isCollapsed) {
+                const icon = toggleBtn.querySelector('i');
+                if (icon) {
+                    if (isCollapsed) {
+                        icon.classList.remove('fa-chevron-left');
+                        icon.classList.add('fa-chevron-right');
+                    } else {
+                        icon.classList.remove('fa-chevron-right');
+                        icon.classList.add('fa-chevron-left');
+                    }
+                }
+            }
+            
+            // For mobile: click outside to close expanded sidebar
+            document.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile && sidebar && !sidebar.contains(e.target) && sidebar.classList.contains('expanded')) {
+                    sidebar.classList.remove('expanded');
+                }
+            });
+            
+            // For mobile: toggle expanded class
+            if (window.innerWidth <= 768 && sidebar) {
+                sidebar.addEventListener('click', function(e) {
+                    if (e.target.closest('a')) return; // Allow clicking links
+                    
+                    if (!sidebar.classList.contains('expanded')) {
+                        e.stopPropagation();
+                        sidebar.classList.add('expanded');
+                    }
+                });
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768 && sidebar) {
+                    sidebar.classList.remove('expanded');
+                }
+            });
+
+            // Date validation and enhanced UX
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const filterForm = document.querySelector('.filters');
+            const applyFiltersBtn = document.querySelector('.apply-filters');
+            const exportBtn = document.getElementById('export-excel');
+
+            // Set default dates if not already set
+            if (startDate && !startDate.value) {
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                startDate.value = formatDate(firstDay);
+            }
+            
+            if (endDate && !endDate.value) {
+                const today = new Date();
+                endDate.value = formatDate(today);
+            }
+
+            // Ensure end date is not before start date
+            if (startDate) {
+                startDate.addEventListener('change', function() {
+                    if (endDate && endDate.value && this.value > endDate.value) {
+                        endDate.value = this.value;
+                    }
+                    if (endDate) {
+                        endDate.min = this.value;
+                    }
+                });
+            }
+
+            if (endDate) {
+                endDate.addEventListener('change', function() {
+                    if (startDate && startDate.value && this.value < startDate.value) {
+                        startDate.value = this.value;
+                    }
+                    if (startDate) {
+                        startDate.max = this.value;
+                    }
+                });
+            }
+            
+            // Add loading state to filter form
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    if (applyFiltersBtn) {
+                        applyFiltersBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                        applyFiltersBtn.disabled = true;
+                    }
+                });
+            }
+
+            // Export to Excel
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    const start = document.getElementById('start_date')?.value || '';
+                    const end = document.getElementById('end_date')?.value || '';
+                    const user = document.getElementById('user_id')?.value || '';
+
+                    const params = new URLSearchParams();
+                    if (start) params.set('start_date', start);
+                    if (end) params.set('end_date', end);
+                    if (user) params.set('user_id', user);
+
+                    const url = `manager_work_export_excel.php?${params.toString()}`;
+                    window.location.href = url;
+                });
+            }
+            
+            // Helper function to format date as YYYY-MM-DD
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // Add staggered animation to report cards
+            if (reportCards.length > 0) {
+                reportCards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, index * 100);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

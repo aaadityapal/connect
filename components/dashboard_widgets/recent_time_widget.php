@@ -370,7 +370,7 @@ if (isset($_SESSION['user_id'])) {
             <div class="icon-container">
                 <i class="greeting-icon <?php echo $greeting_icon; ?>"></i>
             </div>
-            <span class="greeting-text"><?php echo $greeting; ?> - Happy Diwali!</span>
+            <span class="greeting-text"><?php echo $greeting; ?></span>
             <?php if (!empty($username)): ?>
                 <span class="username-text">, <?php echo htmlspecialchars($username); ?></span>
             <?php endif; ?>

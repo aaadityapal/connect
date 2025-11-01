@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `attendance` (
   `accuracy` FLOAT DEFAULT NULL,
   `address` TEXT DEFAULT NULL,
   `overtime` TIME DEFAULT NULL,
-  `status` ENUM('present', 'absent', 'half_day', 'leave') DEFAULT 'present',
+  `status` ENUM('present', 'absent', 'half_day', 'leave', 'holiday') DEFAULT 'present',
   `remarks` TEXT DEFAULT NULL,
   `modified_by` INT(11) DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

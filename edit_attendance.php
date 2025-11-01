@@ -97,7 +97,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue;
             }
 
+            // Get the status value - now 'holiday' is a valid ENUM value
             $status = $data['status'];
+            
+            // Ensure status is one of the valid ENUM values
+            if (!in_array($status, ['present', 'absent', 'half_day', 'leave', 'holiday'])) {
+                $status = 'present'; // Default to 'present' if invalid
+            }
+
             $punch_in = !empty($data['punch_in']) ? date('Y-m-d H:i:s', strtotime("$date {$data['punch_in']}")) : null;
             $punch_out = !empty($data['punch_out']) ? date('Y-m-d H:i:s', strtotime("$date {$data['punch_out']}")) : null;
             $shift_time = !empty($data['shift_time']) ? $data['shift_time'] : null;
@@ -1061,6 +1068,7 @@ while ($row = $result->fetch_assoc()) {
                                             <option value="present" <?php echo ($record && $record['status'] === 'present') ? 'selected' : ''; ?>>Present</option>
                                             <option value="absent" <?php echo ($record && $record['status'] === 'absent') ? 'selected' : ''; ?>>Absent</option>
                                             <option value="leave" <?php echo ($record && $record['status'] === 'leave') ? 'selected' : ''; ?>>Leave</option>
+                                            <option value="half_day" <?php echo ($record && $record['status'] === 'half_day') ? 'selected' : ''; ?>>Half Day</option>
                                             <option value="holiday" <?php echo ($record && $record['status'] === 'holiday') ? 'selected' : ''; ?>>Holiday</option>
                                         </select>
                                     </td>
@@ -1206,7 +1214,7 @@ while ($row = $result->fetch_assoc()) {
                     const inputs = row.querySelectorAll('input[type="time"]');
                     const overtimeInput = row.querySelector('.overtime');
                     
-                    if (this.value === 'absent' || this.value === 'holiday' || this.value === 'leave') {
+                    if (this.value === 'absent' || this.value === 'leave' || this.value === 'half_day' || this.value === 'holiday') {
                         inputs.forEach(input => {
                             input.value = '';
                             input.disabled = true;

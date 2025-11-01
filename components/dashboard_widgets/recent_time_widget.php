@@ -359,88 +359,10 @@ if (isset($_SESSION['user_id'])) {
     <!-- Diwali Decorations -->
     <div class="diwali-overlay">
         <!-- String lights across the top -->
-        <div class="string-lights">
-            <div class="string-wire"></div>
-            <!-- Generate 15 light bulbs -->
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-        </div>
-        <div class="diyas-container">
-            <div class="diya"></div>
-            <div class="diya"></div>
-            <div class="diya"></div>
-        </div>
-        <!-- Additional diya containers for more festive look -->
-        <div class="diyas-container" style="top: 25px; left: 10px;">
-            <div class="diya"></div>
-            <div class="diya"></div>
-        </div>
-        <div class="diyas-container" style="bottom: 20px; right: 10px; top: auto;">
-            <div class="diya"></div>
-            <div class="diya"></div>
-        </div>
-        <div class="diyas-container" style="bottom: 20px; left: 10px; top: auto;">
-            <div class="diya"></div>
-            <div class="diya"></div>
-        </div>
-        <div class="diwali-greeting">Happy Diwali!</div>
-        <!-- Additional diya containers -->
-        <div class="diyas-container" style="bottom: 25px; left: 50%; transform: translateX(-50%); top: auto;">
-            <div class="diya"></div>
-            <div class="diya"></div>
-            <div class="diya"></div>
-        </div>
-        <!-- More diya containers for enhanced Diwali atmosphere -->
-        <div class="diyas-container" style="top: 60px; left: 30px;">
-            <div class="diya"></div>
-        </div>
-        <div class="diyas-container" style="top: 60px; right: 30px;">
-            <div class="diya"></div>
-        </div>
-        <!-- More diya containers for enhanced Diwali atmosphere -->
-        <div class="diyas-container" style="top: 50%; left: 5px; transform: translateY(-50%);">
-            <div class="diya"></div>
-        </div>
-        <div class="diyas-container" style="top: 50%; right: 5px; transform: translateY(-50%);">
-            <div class="diya"></div>
-        </div>
-        <div class="diyas-container" style="top: 10px; left: 50%; transform: translateX(-50%);">
-            <div class="diya"></div>
-            <div class="diya"></div>
-        </div>
-        <!-- String lights across the bottom -->
-        <div class="string-lights" style="top: auto; bottom: 0;">
-            <div class="string-wire"></div>
-            <!-- Generate 15 light bulbs -->
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-            <div class="light-bulb"></div>
-        </div>
+        
+        
+        
+        
     </div>
     
     <div class="widget-content">

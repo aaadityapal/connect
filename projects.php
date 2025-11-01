@@ -834,13 +834,18 @@
         error_log("Search term: " . $search);
     }
     
+    // Pagination variables
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $recordsPerPage = 15;
+    $offset = ($page - 1) * $recordsPerPage;
+    
     // Enable error reporting for debugging
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
     
     // Build a simpler SQL query with fewer joins to identify issues
-    $sql = "SELECT p.id, 
+    $sql = "SELECT DISTINCT p.id, 
                    p.title,
                    p.description,
                    p.client_name,
@@ -857,32 +862,46 @@
             FROM projects p
             WHERE p.deleted_at IS NULL";
     
+    // For counting total records
+    $countSql = "SELECT COUNT(DISTINCT p.id) as total FROM projects p WHERE p.deleted_at IS NULL";
+    
     $params = [];
+    $countParams = [];
     
     // Apply filters if set
     if (!empty($dateFrom)) {
         $sql .= " AND p.start_date >= :dateFrom";
+        $countSql .= " AND p.start_date >= :dateFrom";
         $params[':dateFrom'] = $dateFrom;
+        $countParams[':dateFrom'] = $dateFrom;
     }
     
     if (!empty($dateTo)) {
         $sql .= " AND p.start_date <= :dateTo";
+        $countSql .= " AND p.start_date <= :dateTo";
         $params[':dateTo'] = $dateTo;
+        $countParams[':dateTo'] = $dateTo;
     }
     
     if (!empty($status)) {
         $sql .= " AND p.status = :status";
+        $countSql .= " AND p.status = :status";
         $params[':status'] = $status;
+        $countParams[':status'] = $status;
     }
     
     if (!empty($projectType)) {
         $sql .= " AND p.project_type = :projectType";
+        $countSql .= " AND p.project_type = :projectType";
         $params[':projectType'] = $projectType;
+        $countParams[':projectType'] = $projectType;
     }
     
     if (!empty($categoryId)) {
         $sql .= " AND p.category_id = :categoryId";
+        $countSql .= " AND p.category_id = :categoryId";
         $params[':categoryId'] = $categoryId;
+        $countParams[':categoryId'] = $categoryId;
     }
     
     if (!empty($search)) {
@@ -891,14 +910,18 @@
         
         // Use separate parameter names for each condition to avoid parameter number issues
         $sql .= " AND (p.title LIKE :search_title OR p.client_name LIKE :search_client)";
+        $countSql .= " AND (p.title LIKE :search_title OR p.client_name LIKE :search_client)";
         $params[':search_title'] = "%$search%";
         $params[':search_client'] = "%$search%";
+        $countParams[':search_title'] = "%$search%";
+        $countParams[':search_client'] = "%$search%";
         
         // Log the final SQL query for debugging
         error_log("Final SQL query: " . $sql);
     }
     
-    $sql .= " ORDER BY p.start_date DESC, p.created_at DESC";
+    // Add ordering and limit for pagination
+    $sql .= " ORDER BY p.start_date DESC, p.created_at DESC LIMIT :limit OFFSET :offset";
     
     // Get distinct project types and statuses for filter dropdowns
     $projectTypesQuery = "SELECT DISTINCT project_type FROM projects WHERE deleted_at IS NULL ORDER BY project_type";
@@ -912,6 +935,8 @@
     $projectTypes = [];
     $statuses = [];
     $categories = [];
+    $totalProjects = 0;
+    $totalPages = 0;
     
     try {
         // First, try to get the categories (simplest query)
@@ -941,7 +966,17 @@
             error_log("Error fetching statuses: " . $e->getMessage());
         }
         
-        // Finally, execute the main projects query
+        // Get total count of projects for pagination
+        $countStmt = $pdo->prepare($countSql);
+        foreach ($countParams as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+        $countStmt->execute();
+        $totalResult = $countStmt->fetch(PDO::FETCH_ASSOC);
+        $totalProjects = $totalResult['total'];
+        $totalPages = ceil($totalProjects / $recordsPerPage);
+        
+        // Finally, execute the main projects query with pagination
         $stmt = $pdo->prepare($sql);
         
         // Log the SQL query for debugging
@@ -954,12 +989,24 @@
             error_log("Bound parameter $key with value: " . (is_array($value) ? json_encode($value) : $value));
         }
         
+        // Bind pagination parameters
+        $stmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
         // Execute the query
         $stmt->execute();
         $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Log success
         error_log("Successfully fetched " . count($projects) . " projects");
+        error_log("Project IDs: " . implode(', ', array_column($projects, 'id')));
+        
+        // Check for duplicates in the fetched data
+        $projectIds = array_column($projects, 'id');
+        $duplicateIds = array_diff_assoc($projectIds, array_unique($projectIds));
+        if (!empty($duplicateIds)) {
+            error_log("Duplicate project IDs found: " . implode(', ', $duplicateIds));
+        }
         
         // Fetch related data for each project
         foreach ($projects as &$project) {
@@ -1031,9 +1078,11 @@
         $projectTypes = [];
         $statuses = [];
         $categories = [];
+        $totalProjects = 0;
+        $totalPages = 0;
     }
     
-    // Count total projects
+    // Count total projects (for display purposes)
     $projectCount = count($projects);
     ?>
 
@@ -1192,6 +1241,7 @@
                     <div class="collapse show" id="filterCollapse">
                         <div class="card-body">
                             <form id="filterForm" method="GET" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                                <input type="hidden" name="page" value="1">
                                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="dateFrom" class="form-label">Date From</label>
@@ -1276,7 +1326,7 @@
                     <div>
                         <p class="mb-0">
                             <i class="bi bi-clipboard-data me-2"></i> 
-                            Showing <strong><?= $projectCount ?></strong> project<?= $projectCount !== 1 ? 's' : '' ?>
+                            Showing <strong><?= $projectCount ?></strong> of <strong><?= $totalProjects ?></strong> project<?= $totalProjects !== 1 ? 's' : '' ?>
                             <?= !empty($search) || !empty($status) || !empty($projectType) || !empty($categoryId) || !empty($dateFrom) || !empty($dateTo) ? '<span class="badge bg-primary ms-2">Filtered</span>' : '' ?>
                         </p>
                     </div>
@@ -1314,7 +1364,18 @@
                                         </td>
                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($projects as $project): ?>
+                                    <?php foreach ($projects as $index => $project): ?>
+                                        <?php 
+                                        // Check if this is the last project and if it's a duplicate of the previous one
+                                        $isDuplicate = false;
+                                        if ($index > 0) {
+                                            $previousProject = $projects[$index - 1];
+                                            if ($project['id'] == $previousProject['id']) {
+                                                $isDuplicate = true;
+                                            }
+                                        }
+                                        ?>
+                                        <?php if (!$isDuplicate): ?>
                                         <tr class="project-type-<?= strtolower($project['project_type']) ?>">
                                             <td><?= htmlspecialchars($project['id']) ?></td>
                                             <td><?= htmlspecialchars(date('M d, Y', strtotime($project['start_date'] ?? $project['created_at']))) ?></td>
@@ -1387,7 +1448,8 @@
                                                     </button>
                                                 </div>
                                             </td>
-                    </tr>
+                                        </tr>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
                             </tbody>
@@ -1395,6 +1457,112 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Pagination Controls -->
+            <?php if ($totalPages > 1): ?>
+            <div class="d-flex justify-content-center mt-4">
+                <nav aria-label="Projects pagination">
+                    <ul class="pagination">
+                        <!-- Previous button -->
+                        <?php if ($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?= $page - 1 ?><?php 
+                                    if (!empty($dateFrom)) echo '&dateFrom=' . urlencode($dateFrom);
+                                    if (!empty($dateTo)) echo '&dateTo=' . urlencode($dateTo);
+                                    if (!empty($status)) echo '&status=' . urlencode($status);
+                                    if (!empty($projectType)) echo '&projectType=' . urlencode($projectType);
+                                    if (!empty($categoryId)) echo '&categoryId=' . urlencode($categoryId);
+                                    if (!empty($search)) echo '&search=' . urlencode($search);
+                                ?>" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&laquo;</span>
+                            </li>
+                        <?php endif; ?>
+
+                        <!-- Page numbers -->
+                        <?php
+                        $startPage = max(1, $page - 2);
+                        $endPage = min($totalPages, $page + 2);
+                        
+                        // Show first page and ellipsis if needed
+                        if ($startPage > 1) {
+                            echo '<li class="page-item"><a class="page-link" href="?page=1';
+                            if (!empty($dateFrom)) echo '&dateFrom=' . urlencode($dateFrom);
+                            if (!empty($dateTo)) echo '&dateTo=' . urlencode($dateTo);
+                            if (!empty($status)) echo '&status=' . urlencode($status);
+                            if (!empty($projectType)) echo '&projectType=' . urlencode($projectType);
+                            if (!empty($categoryId)) echo '&categoryId=' . urlencode($categoryId);
+                            if (!empty($search)) echo '&search=' . urlencode($search);
+                            echo '">1</a></li>';
+                            
+                            if ($startPage > 2) {
+                                echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            }
+                        }
+                        
+                        // Show page numbers
+                        for ($i = $startPage; $i <= $endPage; $i++) {
+                            if ($i == $page) {
+                                echo '<li class="page-item active"><span class="page-link">' . $i . '</span></li>';
+                            } else {
+                                echo '<li class="page-item"><a class="page-link" href="?page=' . $i;
+                                if (!empty($dateFrom)) echo '&dateFrom=' . urlencode($dateFrom);
+                                if (!empty($dateTo)) echo '&dateTo=' . urlencode($dateTo);
+                                if (!empty($status)) echo '&status=' . urlencode($status);
+                                if (!empty($projectType)) echo '&projectType=' . urlencode($projectType);
+                                if (!empty($categoryId)) echo '&categoryId=' . urlencode($categoryId);
+                                if (!empty($search)) echo '&search=' . urlencode($search);
+                                echo '">' . $i . '</a></li>';
+                            }
+                        }
+                        
+                        // Show last page and ellipsis if needed
+                        if ($endPage < $totalPages) {
+                            if ($endPage < $totalPages - 1) {
+                                echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            }
+                            
+                            echo '<li class="page-item"><a class="page-link" href="?page=' . $totalPages;
+                            if (!empty($dateFrom)) echo '&dateFrom=' . urlencode($dateFrom);
+                            if (!empty($dateTo)) echo '&dateTo=' . urlencode($dateTo);
+                            if (!empty($status)) echo '&status=' . urlencode($status);
+                            if (!empty($projectType)) echo '&projectType=' . urlencode($projectType);
+                            if (!empty($categoryId)) echo '&categoryId=' . urlencode($categoryId);
+                            if (!empty($search)) echo '&search=' . urlencode($search);
+                            echo '">' . $totalPages . '</a></li>';
+                        }
+                        ?>
+
+                        <!-- Next button -->
+                        <?php if ($page < $totalPages): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?= $page + 1 ?><?php 
+                                    if (!empty($dateFrom)) echo '&dateFrom=' . urlencode($dateFrom);
+                                    if (!empty($dateTo)) echo '&dateTo=' . urlencode($dateTo);
+                                    if (!empty($status)) echo '&status=' . urlencode($status);
+                                    if (!empty($projectType)) echo '&projectType=' . urlencode($projectType);
+                                    if (!empty($categoryId)) echo '&categoryId=' . urlencode($categoryId);
+                                    if (!empty($search)) echo '&search=' . urlencode($search);
+                                ?>" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&raquo;</span>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </nav>
+            </div>
+            <div class="text-center text-muted mb-4">
+                Showing <?= (($page - 1) * $recordsPerPage) + 1 ?> to <?= min($page * $recordsPerPage, $totalProjects) ?> of <?= $totalProjects ?> projects
+            </div>
+            <?php endif; ?>
 
             <!-- Project Detail Modal -->
             <div class="modal fade" id="projectDetailModal" tabindex="-1" aria-labelledby="projectDetailModalLabel" aria-hidden="true">

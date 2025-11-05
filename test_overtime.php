@@ -1,68 +1,59 @@
 <?php
-require_once 'includes/db_connect.php';  // adjust path as needed
+session_start();
+require_once 'config/db_connect.php';
 
-// Basic styling for readability
-echo "<style>
-    body { font-family: Arial; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .debug { background: #f9f9f9; padding: 10px; margin: 10px 0; }
-</style>";
+// Set a test user ID for debugging
+$_SESSION['user_id'] = 1;
 
-// Test Query
-$query = "SELECT 
-    a.id,
-    a.date,
-    a.overtime_hours,
-    u.username
-FROM attendance a
-JOIN users u ON a.user_id = u.id
-ORDER BY a.date DESC
-LIMIT 12";  // just get last 10 records
+// Simulate the data that would be sent
+$testData = [
+    'attendance_id' => 1209,
+    'date' => '2025-11-01',
+    'shift_end_time' => '18:00:00',
+    'punch_out_time' => '20:00:00',
+    'overtime_hours' => 2.0,
+    'work_report' => 'Test work report',
+    'overtime_description' => 'Test overtime description with at least fifteen words to meet the requirement',
+    'manager_id' => 2
+];
 
+// Log the test data
+error_log('Test data: ' . print_r($testData, true));
+
+// Try to insert the data directly
 try {
+    $query = "INSERT INTO overtime_requests (
+                user_id, 
+                attendance_id, 
+                date, 
+                shift_end_time, 
+                punch_out_time, 
+                overtime_hours, 
+                work_report, 
+                overtime_description, 
+                manager_id, 
+                status
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+    
     $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Debug: Show the query
-    echo "<div class='debug'>";
-    echo "<strong>Query used:</strong><br>";
-    echo htmlspecialchars($query);
-    echo "</div>";
-
-    // Debug: Show raw data
-    echo "<div class='debug'>";
-    echo "<strong>Raw Data:</strong><br>";
-    echo "<pre>";
-    print_r($records);
-    echo "</pre>";
-    echo "</div>";
-
-    // Display in table format
-    echo "<h2>Last 10 Attendance Records</h2>";
-    echo "<table>";
-    echo "<tr>
-            <th>ID</th>
-            <th>Date</th>
-            <th>Username</th>
-            <th>Overtime Hours</th>
-            <th>Raw Value</th>
-          </tr>";
-
-    foreach ($records as $record) {
-        echo "<tr>";
-        echo "<td>" . $record['id'] . "</td>";
-        echo "<td>" . $record['date'] . "</td>";
-        echo "<td>" . $record['username'] . "</td>";
-        echo "<td>" . ($record['overtime_hours'] ?? '00:00:00') . "</td>";
-        echo "<td><pre>" . print_r($record['overtime_hours'], true) . "</pre></td>";
-        echo "</tr>";
+    $result = $stmt->execute([
+        $_SESSION['user_id'],
+        $testData['attendance_id'],
+        $testData['date'],
+        $testData['shift_end_time'],
+        $testData['punch_out_time'],
+        $testData['overtime_hours'],
+        $testData['work_report'],
+        $testData['overtime_description'],
+        $testData['manager_id']
+    ]);
+    
+    if ($result) {
+        echo "Test successful: Overtime request inserted";
+    } else {
+        echo "Test failed: " . print_r($stmt->errorInfo(), true);
     }
-    echo "</table>";
-
-} catch (PDOException $e) {
-    echo "Error: " . $e->getMessage();
+} catch (Exception $e) {
+    echo "Test failed with exception: " . $e->getMessage();
 }
-?> 
+?>

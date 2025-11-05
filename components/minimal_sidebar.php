@@ -178,7 +178,7 @@
                     <span class="msb-icon msb-amber">🧾</span>
                     <span class="msb-label">Travel Expenses</span>
                 </a>
-                <a class="msb-item" href="employee_overtime.php" <?php echo $__currentPage==='employee_overtime.php' ? 'aria-current="page"' : '';?>>
+                <a class="msb-item" href="new_page.php" <?php echo $__currentPage==='new_page.php' ? 'aria-current="page"' : '';?>>
                     <span class="msb-icon msb-pink">⏱️</span>
                     <span class="msb-label">Overtime</span>
                 </a>

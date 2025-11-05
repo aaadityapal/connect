@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Time Conversion Test</title>
+</head>
+<body>
+    <h1>Time Conversion Test</h1>
+    <script>
+        /**
+         * Convert 12-hour format to 24-hour format
+         */
+        function convertTo24HourFormat(time12h) {
+            console.log('Converting time:', time12h);
+            
+            if (!time12h || time12h === 'N/A') {
+                console.log('Returning default time');
+                return '00:00:00';
+            }
+            
+            // Remove extra spaces and trim
+            time12h = time12h.replace(/\s+/g, ' ').trim();
+            console.log('After trimming:', time12h);
+            
+            // Split time and period
+            const parts = time12h.split(' ');
+            console.log('Parts:', parts);
+            
+            if (parts.length !== 2) {
+                console.log('Invalid format, returning default');
+                return '00:00:00';
+            }
+            
+            let [time, period] = parts;
+            let [hours, minutes] = time.split(':');
+            
+            // Convert to integers
+            hours = parseInt(hours);
+            minutes = minutes ? parseInt(minutes) : 0;
+            
+            console.log('Parsed hours:', hours, 'minutes:', minutes, 'period:', period);
+            
+            // Convert to 24-hour format
+            if (period.toUpperCase() === 'AM') {
+                if (hours === 12) {
+                    hours = 0;
+                }
+            } else if (period.toUpperCase() === 'PM') {
+                if (hours !== 12) {
+                    hours += 12;
+                }
+            }
+            
+            // Format as HH:MM:SS
+            const result = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+            console.log('Converted time result:', result);
+            return result;
+        }
+        
+        // Test cases
+        console.log('Testing time conversions:');
+        console.log('5:30 PM ->', convertTo24HourFormat('5:30 PM'));
+        console.log('7:15 PM ->', convertTo24HourFormat('7:15 PM'));
+        console.log('12:00 AM ->', convertTo24HourFormat('12:00 AM'));
+        console.log('12:00 PM ->', convertTo24HourFormat('12:00 PM'));
+        console.log('1:30 AM ->', convertTo24HourFormat('1:30 AM'));
+    </script>
+</body>
+</html>

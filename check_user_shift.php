@@ -1,68 +1,50 @@
 <?php
-require_once 'config.php';
-
-$user_id = 21;
-$currentDate = date('Y-m-d');
-
-echo "Checking shift data for user ID: $user_id\n";
-echo "Current date: $currentDate\n\n";
+// Include database connection
+require_once 'config/db_connect.php';
 
 try {
-    // Check user_shifts table
-    $query = "SELECT us.*, s.shift_name, s.start_time, s.end_time 
+    // Query to get shift information for user ID 21 on date 2025-08-06
+    $query = "SELECT s.*, us.effective_from, us.effective_to 
               FROM user_shifts us 
               JOIN shifts s ON us.shift_id = s.id 
-              WHERE us.user_id = :user_id 
-              ORDER BY us.effective_from DESC";
-    
+              WHERE us.user_id = ? 
+              AND ? BETWEEN us.effective_from AND COALESCE(us.effective_to, '9999-12-31')";
     $stmt = $pdo->prepare($query);
-    $stmt->execute([':user_id' => $user_id]);
+    $stmt->execute([21, '2025-08-06']);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $shifts = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    if (empty($shifts)) {
-        echo "No shifts found for user ID: $user_id\n";
-    } else {
-        echo "Found " . count($shifts) . " shift record(s):\n";
-        foreach ($shifts as $shift) {
-            echo "Shift ID: " . $shift['shift_id'] . "\n";
-            echo "Shift Name: " . $shift['shift_name'] . "\n";
-            echo "Start Time: " . $shift['start_time'] . "\n";
-            echo "End Time: " . $shift['end_time'] . "\n";
-            echo "Effective From: " . $shift['effective_from'] . "\n";
-            echo "Effective To: " . ($shift['effective_to'] ?: 'NULL') . "\n";
-            echo "Weekly Offs: " . $shift['weekly_offs'] . "\n";
-            echo "------------------------\n";
+    if ($result) {
+        echo "Shift information for User ID 21 on 2025-08-06:\n";
+        echo "==========================================\n";
+        foreach ($result as $key => $value) {
+            echo "$key: $value\n";
         }
-    }
-    
-    // Check if current date falls within any effective period
-    $query = "SELECT us.*, s.shift_name, s.start_time, s.end_time 
-              FROM user_shifts us 
-              JOIN shifts s ON us.shift_id = s.id 
-              WHERE us.user_id = :user_id 
-              AND us.effective_from <= :current_date
-              AND (us.effective_to IS NULL OR us.effective_to >= :current_date)";
-    
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([
-        ':user_id' => $user_id,
-        ':current_date' => $currentDate
-    ]);
-    
-    $currentShift = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($currentShift) {
-        echo "\nCurrent active shift:\n";
-        echo "Shift ID: " . $currentShift['shift_id'] . "\n";
-        echo "Shift Name: " . $currentShift['shift_name'] . "\n";
-        echo "Start Time: " . $currentShift['start_time'] . "\n";
-        echo "End Time: " . $currentShift['end_time'] . "\n";
-        echo "Effective From: " . $currentShift['effective_from'] . "\n";
-        echo "Effective To: " . ($currentShift['effective_to'] ?: 'NULL') . "\n";
-        echo "Weekly Offs: " . $currentShift['weekly_offs'] . "\n";
     } else {
-        echo "\nNo active shift found for current date\n";
+        echo "No shift information found for User ID 21 on 2025-08-06\n";
+        
+        // Let's check all shifts for this user
+        $query2 = "SELECT s.*, us.effective_from, us.effective_to 
+                   FROM user_shifts us 
+                   JOIN shifts s ON us.shift_id = s.id 
+                   WHERE us.user_id = ? 
+                   ORDER BY us.effective_from";
+        $stmt2 = $pdo->prepare($query2);
+        $stmt2->execute([21]);
+        $results = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+        
+        if ($results) {
+            echo "\nAll shift information for User ID 21:\n";
+            echo "====================================\n";
+            foreach ($results as $i => $result) {
+                echo "Shift " . ($i + 1) . ":\n";
+                foreach ($result as $key => $value) {
+                    echo "  $key: $value\n";
+                }
+                echo "\n";
+            }
+        } else {
+            echo "No shift information found for User ID 21\n";
+        }
     }
     
 } catch (Exception $e) {

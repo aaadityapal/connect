@@ -46,7 +46,13 @@ if ($user_id) {
     // Calculate statistics
     foreach ($overtime_data as $record) {
         $status = strtolower($record['status']);
-        $hours = floatval($record['ot_hours']);
+        
+        // For approved records, use accepted overtime hours instead of calculated hours
+        if ($status === 'approved' && !empty($record['accepted_overtime_hours'])) {
+            $hours = floatval($record['accepted_overtime_hours']);
+        } else {
+            $hours = floatval($record['ot_hours']);
+        }
         
         switch ($status) {
             case 'pending':
@@ -102,40 +108,45 @@ function getOvertimeData($pdo, $user_id, $month, $year, $shift_end_time) {
         
         // Query to fetch overtime data with the new rule:
         // Only show records where punch_out time is at least 1.5 hours after shift end time
-        // We need to handle two cases:
-        // 1. Same day punch out (punch_out > shift_end_time + 1.5 hours)
-        // 2. Next day punch out (punch_out < shift_end_time, meaning they worked past midnight)
         $query = "SELECT 
-                    id as attendance_id,
-                    date,
-                    punch_out,
-                    overtime_hours,
-                    work_report,
-                    overtime_status
-                  FROM attendance 
-                  WHERE user_id = ? 
-                  AND date BETWEEN ? AND ?
-                  AND overtime_status IS NOT NULL
-                  AND (
-                    -- Case 1: Punch out on same day and at least 1.5 hours after shift end
-                    (TIME_TO_SEC(punch_out) >= TIME_TO_SEC(?) + 5400)
-                    OR
-                    -- Case 2: Punch out on next day (before shift end time)
-                    (TIME_TO_SEC(punch_out) < TIME_TO_SEC(?))
-                  )
-                  ORDER BY date DESC";
+                    a.id as attendance_id,
+                    a.date,
+                    a.punch_out,
+                    a.overtime_hours,
+                    a.work_report,
+                    a.overtime_status,
+                    o.status as request_status,
+                    o.overtime_description,
+                    o.overtime_hours as accepted_overtime_hours
+                  FROM attendance a
+                  LEFT JOIN overtime_requests o ON a.id = o.attendance_id
+                  WHERE a.user_id = ? 
+                  AND a.date BETWEEN ? AND ?
+                  AND a.overtime_status IS NOT NULL
+                  AND TIME_TO_SEC(a.punch_out) >= TIME_TO_SEC(?) + 5400
+                  ORDER BY a.date DESC";
         
         $stmt = $pdo->prepare($query);
-        $stmt->execute([$user_id, $first_day, $last_day, $shift_end_time, $shift_end_time]);
+        $stmt->execute([$user_id, $first_day, $last_day, $shift_end_time]);
         
         $data = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             // Calculate overtime hours dynamically based on shift end time and punch out time
             $calculated_ot_hours = calculateOvertimeHours($shift_end_time, $row['punch_out']);
             
+            // Determine the correct status to display
+            // Priority: 1. overtime_requests.status if exists, 2. attendance.overtime_status
+            $status = 'Pending';
+            if (!empty($row['request_status'])) {
+                // Use status from overtime_requests table if available
+                $status = ucfirst($row['request_status']);
+            } else if (!empty($row['overtime_status'])) {
+                // Fallback to attendance.overtime_status
+                $status = ucfirst($row['overtime_status']);
+            }
+            
             // Check if there's a corresponding overtime request in the overtime_requests table
             $overtime_description = '';
-            $status = ucfirst($row['overtime_status'] ?? 'pending');
             
             // Check if the record is expired (older than 15 days)
             $record_date = new DateTime($row['date']);
@@ -153,16 +164,11 @@ function getOvertimeData($pdo, $user_id, $month, $year, $shift_end_time) {
                 $overtime_description = 'Overtime request period has expired (older than 15 days).';
             } else if ($record_date >= $nov_2025) {
                 // For records from November 2025 and later, if an overtime request exists, 
-                // always display the status as 'Submitted' regardless of its actual database value
+                // use its status and description
                 if ($status_lower !== 'expired') { // Only check if not already expired
-                    $check_request_query = "SELECT id, overtime_description FROM overtime_requests WHERE attendance_id = ? LIMIT 1";
-                    $check_stmt = $pdo->prepare($check_request_query);
-                    $check_stmt->execute([$row['attendance_id']]);
-                    $request_result = $check_stmt->fetch();
-                    
-                    if ($request_result) {
-                        $status = 'Submitted';
-                        $overtime_description = $request_result['overtime_description'];
+                    if (!empty($row['request_status'])) {
+                        // Use the description from overtime_requests table
+                        $overtime_description = $row['overtime_description'] ?? '';
                     } else if ($status_lower === 'pending') {
                         // For pending status with no submission, show appropriate message
                         $overtime_description = 'Overtime not yet submitted. Please submit your overtime request.';
@@ -192,7 +198,8 @@ function getOvertimeData($pdo, $user_id, $month, $year, $shift_end_time) {
                 'ot_hours' => $calculated_ot_hours,
                 'work_report' => $row['work_report'] ?? '',
                 'overtime_description' => $overtime_description,
-                'status' => $status
+                'status' => $status,
+                'accepted_overtime_hours' => $row['accepted_overtime_hours'] ?? null
             ];
         }
         
@@ -218,12 +225,16 @@ function calculateOvertimeHours($shiftEndTime, $punchOutTime) {
     // Calculate overtime in seconds
     $overtimeSeconds = 0;
     
+    // Only calculate overtime if punch out time is after shift end time
     if ($punchOutSeconds > $shiftEndSeconds) {
-        // Same day punch out
+        // Same day punch out - calculate overtime as difference
         $overtimeSeconds = $punchOutSeconds - $shiftEndSeconds;
-    } else if ($punchOutSeconds < $shiftEndSeconds) {
-        // Next day punch out (worked past midnight)
-        $overtimeSeconds = (24 * 3600 - $shiftEndSeconds) + $punchOutSeconds;
+    }
+    // If punchOutSeconds <= shiftEndSeconds, overtimeSeconds remains 0
+    
+    // If no overtime, return 0
+    if ($overtimeSeconds <= 0) {
+        return '0.0';
     }
     
     // Convert seconds to minutes
@@ -315,7 +326,8 @@ function getSampleOvertimeData() {
             'ot_hours' => '4.0',
             'work_report' => 'Completed backend API integration',
             'overtime_description' => 'Overtime details not yet provided.',
-            'status' => 'Pending'
+            'status' => 'Pending',
+            'accepted_overtime_hours' => null
         ],
         [
             'attendance_id' => 2,
@@ -324,7 +336,8 @@ function getSampleOvertimeData() {
             'ot_hours' => '2.5',
             'work_report' => 'Resolved customer support tickets',
             'overtime_description' => 'System deployment and testing',
-            'status' => 'Approved'
+            'status' => 'Approved',
+            'accepted_overtime_hours' => '2.5'
         ],
         [
             'attendance_id' => 3,
@@ -333,7 +346,8 @@ function getSampleOvertimeData() {
             'ot_hours' => '3.0',
             'work_report' => 'Database optimization tasks',
             'overtime_description' => 'Overtime details not yet provided.',
-            'status' => 'Pending'
+            'status' => 'Pending',
+            'accepted_overtime_hours' => null
         ],
         [
             'attendance_id' => 4,
@@ -342,7 +356,8 @@ function getSampleOvertimeData() {
             'ot_hours' => '1.5',
             'work_report' => 'Weekly report compilation',
             'overtime_description' => 'System deployment and testing',
-            'status' => 'Rejected'
+            'status' => 'Rejected',
+            'accepted_overtime_hours' => '1.0'
         ],
         [
             'attendance_id' => 5,
@@ -351,7 +366,8 @@ function getSampleOvertimeData() {
             'ot_hours' => '2.0',
             'work_report' => 'Client meeting and presentation',
             'overtime_description' => 'Overtime request period has expired (older than 15 days).',
-            'status' => 'Expired'
+            'status' => 'Expired',
+            'accepted_overtime_hours' => null
         ],
         [
             'attendance_id' => 6,
@@ -360,7 +376,8 @@ function getSampleOvertimeData() {
             'ot_hours' => '3.5',
             'work_report' => 'Project deployment and testing',
             'overtime_description' => 'Completed server migration and database optimization tasks.',
-            'status' => 'Submitted'
+            'status' => 'Submitted',
+            'accepted_overtime_hours' => '3.0'
         ]
     ];
 }
@@ -538,8 +555,8 @@ function formatDate($date) {
             </div>
         </section>
 
-        <!-- 3. Four Cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- 3. Three Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             
             <!-- Card 1: Pending Requests -->
             <div class="bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-l-4 border-l-indigo-500">
@@ -612,32 +629,6 @@ function formatDate($date) {
                     </p>
                 </div>
             </div>
-
-            <!-- Card 4: Estimated Cost -->
-            <div class="bg-white p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-l-4 border-l-gray-500">
-                <div class="flex items-start justify-between">
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Est. OT Cost (Month)</p>
-                        <p id="estimated-cost" class="text-3xl font-bold text-gray-800">$<?php echo number_format($estimated_cost, 2); ?></p>
-                        <p class="text-sm text-gray-500">based on approved hours</p>
-                    </div>
-                    <div class="p-3 bg-gray-200 rounded-full">
-                        <svg class="w-6 h-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659M12 21l-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659L12 21zm-3-2.818l.879.659c1.171.879 3.07.879 4.242 0l.879-.659M12 3l3 2.818l-.879-.659c-1.171-.879-3.07-.879-4.242 0l-.879.659L12 3z" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <p class="text-xs text-gray-500 flex items-center">
-                        <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Financial overview
-                    </p>
-                </div>
-            </div>
-        </section>
-            </div>
         </section>
 
         <!-- 4. Table -->
@@ -661,7 +652,17 @@ function formatDate($date) {
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Punch Out Time</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OT Hours</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calculated OT Hours</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="flex items-center">
+                                    <span>Accepted OT Hours</span>
+                                    <button id="accepted-ot-info" class="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Report</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overtime Report</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -676,11 +677,36 @@ function formatDate($date) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($shift_end_time); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($row['punch_out_time']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900"><?php echo htmlspecialchars($row['ot_hours']); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 bg-blue-100"><?php echo !empty($row['accepted_overtime_hours']) ? htmlspecialchars($row['accepted_overtime_hours']) : '-'; ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate work-report-cell" data-full-text="<?php echo htmlspecialchars($row['work_report']); ?>" title="<?php echo htmlspecialchars($row['work_report']); ?>">
-                                    <?php echo !empty($row['work_report']) ? htmlspecialchars($row['work_report']) : 'No work report submitted'; ?>
+                                    <?php 
+                                    // Truncate work report to first 4-5 words
+                                    $work_report_display = !empty($row['work_report']) ? htmlspecialchars($row['work_report']) : 'No work report submitted';
+                                    if (!empty($row['work_report'])) {
+                                        $words = explode(' ', $row['work_report']);
+                                        if (count($words) > 5) {
+                                            $work_report_display = htmlspecialchars(implode(' ', array_slice($words, 0, 5))) . '...';
+                                        } else {
+                                            $work_report_display = htmlspecialchars($row['work_report']);
+                                        }
+                                    }
+                                    echo $work_report_display;
+                                    ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate overtime-report-cell" data-full-text="<?php echo htmlspecialchars($row['overtime_description']); ?>" title="<?php echo !empty($row['overtime_description']) ? htmlspecialchars($row['overtime_description']) : 'System deployment and testing'; ?>">
-                                    <?php echo !empty($row['overtime_description']) ? htmlspecialchars($row['overtime_description']) : 'System deployment and testing'; ?>
+                                    <?php 
+                                    // Truncate overtime description to first 4-5 words
+                                    $overtime_desc_display = !empty($row['overtime_description']) ? htmlspecialchars($row['overtime_description']) : 'System deployment and testing';
+                                    if (!empty($row['overtime_description'])) {
+                                        $words = explode(' ', $row['overtime_description']);
+                                        if (count($words) > 5) {
+                                            $overtime_desc_display = htmlspecialchars(implode(' ', array_slice($words, 0, 5))) . '...';
+                                        } else {
+                                            $overtime_desc_display = htmlspecialchars($row['overtime_description']);
+                                        }
+                                    }
+                                    echo $overtime_desc_display;
+                                    ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <?php 
@@ -741,7 +767,7 @@ function formatDate($date) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                                <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
                                     No overtime data found for the selected period.
                                 </td>
                             </tr>
@@ -861,6 +887,13 @@ function formatDate($date) {
                     </div>
                     <div class="flex items-center border-b border-gray-100 pb-2">
                         <svg class="h-4 w-4 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-sm font-medium text-gray-500 w-24">Accepted OT Hours</span>
+                        <span class="text-sm font-semibold text-gray-900" id="details-accepted-ot-hours">-</span>
+                    </div>
+                    <div class="flex items-center border-b border-gray-100 pb-2">
+                        <svg class="h-4 w-4 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span class="text-sm font-medium text-gray-500 w-24">Status</span>
@@ -889,6 +922,55 @@ function formatDate($date) {
             <div class="bg-gray-50 px-6 py-3 rounded-b-lg">
                 <div class="flex justify-end">
                     <button id="details-modal-close-btn" type="button" class="bg-white px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+      Accepted OT Hours Info Modal (Hidden by default)
+      Used to display information about accepted OT hours.
+    -->
+    <div id="accepted-ot-info-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center p-4 hidden visibility-hidden opacity-0 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all scale-95 opacity-0" id="accepted-ot-info-modal-content">
+            <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center bg-blue-50">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Accepted OT Hours
+                </h3>
+                <button id="accepted-ot-info-modal-close" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <div class="text-sm text-gray-700">
+                    <p class="mb-3">
+                        You submitted overtime requests with calculated hours, but your manager may have accepted only a portion of those hours.
+                    </p>
+                    <p class="mb-3">
+                        The "Accepted OT Hours" column shows the actual hours that have been approved by your manager. This may differ from the "Calculated OT Hours" based on company policy or other considerations.
+                    </p>
+                    <p>
+                        If there's a discrepancy between calculated and accepted hours, please contact your manager for clarification.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 rounded-b-lg">
+                <div class="flex justify-end">
+                    <button id="accepted-ot-info-modal-close-btn" type="button" class="bg-white px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
                         <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -1140,6 +1222,13 @@ function formatDate($date) {
             const textModalTitle = document.getElementById('text-modal-title');
             const textModalContentText = document.getElementById('text-modal-content-text');
 
+            // Modal Elements (Accepted OT Hours Info Modal)
+            const acceptedOtInfoModal = document.getElementById('accepted-ot-info-modal');
+            const acceptedOtInfoModalContent = document.getElementById('accepted-ot-info-modal-content');
+            const acceptedOtInfoModalClose = document.getElementById('accepted-ot-info-modal-close');
+            const acceptedOtInfoModalCloseBtn = document.getElementById('accepted-ot-info-modal-close-btn');
+            const acceptedOtInfoButton = document.getElementById('accepted-ot-info');
+
             let currentAction = null;
             let currentRowId = null;
 
@@ -1365,11 +1454,12 @@ function formatDate($date) {
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${shiftEndTime}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.punch_out_time}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${row.ot_hours}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 bg-blue-100">${row.accepted_overtime_hours || '-'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate work-report-cell" data-full-text="${row.work_report || ''}" title="${row.work_report || 'No work report submitted'}">
-                                ${row.work_report || 'No work report submitted'}
+                                ${truncateText(row.work_report || 'No work report submitted', 5)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate overtime-report-cell" data-full-text="${row.overtime_description || ''}" title="${row.overtime_description || 'System deployment and testing'}">
-                                ${row.overtime_description || 'System deployment and testing'}
+                                ${truncateText(row.overtime_description || 'System deployment and testing', 5)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="status-badge px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
@@ -1387,7 +1477,7 @@ function formatDate($date) {
                     // Show no data message
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colspan="9" class="px-6 py-4 text-center text-sm text-gray-500">
                             No overtime data found for the selected period.
                         </td>
                     `;
@@ -1406,7 +1496,14 @@ function formatDate($date) {
                 
                 data.forEach(row => {
                     const status = row.status.toLowerCase();
-                    const hours = parseFloat(row.ot_hours) || 0;
+                    
+                    // For approved records, use accepted overtime hours instead of calculated hours
+                    let hours = 0;
+                    if (status === 'approved' && row.accepted_overtime_hours) {
+                        hours = parseFloat(row.accepted_overtime_hours) || 0;
+                    } else {
+                        hours = parseFloat(row.ot_hours) || 0;
+                    }
                     
                     switch (status) {
                         case 'pending':
@@ -1525,7 +1622,7 @@ function formatDate($date) {
                 }
                 
                 // Check if the record is expired or already submitted
-                const statusElement = row.cells[6] ? row.cells[6].querySelector('.status-badge') : null;
+                const statusElement = row.cells[7] ? row.cells[7].querySelector('.status-badge') : null; // Status is at index 7
                 const status = statusElement ? statusElement.textContent.trim() : '-';
                 if (status.toLowerCase() === 'expired') {
                     alert('This overtime request has expired (older than 15 days) and cannot be submitted.');
@@ -1540,7 +1637,8 @@ function formatDate($date) {
                 // Extract data from the row
                 const date = row.cells[0] ? row.cells[0].textContent : '-';
                 const otHours = row.cells[3] ? row.cells[3].textContent : '-';
-                const workReport = row.cells[4] ? row.cells[4].textContent : '-';
+                const workReportCell = row.cells[5]; // Work Report cell is at index 5
+                const workReport = workReportCell ? (workReportCell.getAttribute('data-full-text') || workReportCell.textContent) : '-';
                 
                 // Update modal content
                 if (document.getElementById('send-date')) {
@@ -1615,8 +1713,10 @@ function formatDate($date) {
                 const shiftEnd = row.cells[1] ? row.cells[1].textContent : '-';
                 const punchOut = row.cells[2] ? row.cells[2].textContent : '-';
                 const otHours = row.cells[3] ? row.cells[3].textContent : '-';
-                const workReport = row.cells[4] ? row.cells[4].textContent : '-';
-                const statusElement = row.cells[6] ? row.cells[6].querySelector('.status-badge') : null;
+                const acceptedOtHours = row.cells[4] ? row.cells[4].textContent : '-';
+                const workReportCell = row.cells[5]; // Work Report cell
+                const workReport = workReportCell ? (workReportCell.getAttribute('data-full-text') || workReportCell.textContent) : '-';
+                const statusElement = row.cells[7] ? row.cells[7].querySelector('.status-badge') : null; // Status is at index 7
                 const status = statusElement ? statusElement.textContent.trim() : '-';
                 const overtimeDescription = row.dataset.overtimeDescription || '';
                 
@@ -1632,6 +1732,9 @@ function formatDate($date) {
                 }
                 if (document.getElementById('details-ot-hours')) {
                     document.getElementById('details-ot-hours').textContent = otHours;
+                }
+                if (document.getElementById('details-accepted-ot-hours')) {
+                    document.getElementById('details-accepted-ot-hours').textContent = acceptedOtHours;
                 }
                 if (document.getElementById('details-work-report')) {
                     document.getElementById('details-work-report').textContent = workReport;
@@ -1661,6 +1764,31 @@ function formatDate($date) {
                 detailsModal.classList.add('opacity-0');
                 setTimeout(() => {
                     detailsModal.classList.add('hidden', 'visibility-hidden');
+                }, 300); // Match transition duration
+            }
+
+            // --- Accepted OT Hours Info Modal Logic ---
+            function showAcceptedOtInfoModal() {
+                if (!acceptedOtInfoModal || !acceptedOtInfoModalContent) {
+                    console.error('Accepted OT Info modal elements not found');
+                    return;
+                }
+                
+                // Show modal with transition
+                acceptedOtInfoModal.classList.remove('hidden');
+                setTimeout(() => {
+                    acceptedOtInfoModal.classList.remove('visibility-hidden', 'opacity-0');
+                    acceptedOtInfoModalContent.classList.remove('scale-95', 'opacity-0');
+                }, 20);
+            }
+
+            function hideAcceptedOtInfoModal() {
+                if (!acceptedOtInfoModal || !acceptedOtInfoModalContent) return;
+                
+                acceptedOtInfoModalContent.classList.add('scale-95', 'opacity-0');
+                acceptedOtInfoModal.classList.add('opacity-0');
+                setTimeout(() => {
+                    acceptedOtInfoModal.classList.add('hidden', 'visibility-hidden');
                 }, 300); // Match transition duration
             }
 
@@ -1717,7 +1845,8 @@ function formatDate($date) {
                 const attendanceId = row.dataset.attendanceId || 0;
                 const date = row.cells[0] ? row.cells[0].textContent : '-';
                 const otHours = row.cells[3] ? row.cells[3].textContent : '-';
-                const workReport = row.cells[4] ? row.cells[4].textContent : '';
+                const workReportCell = row.cells[5]; // Work Report cell is at index 5
+                const workReport = workReportCell ? (workReportCell.getAttribute('data-full-text') || workReportCell.textContent) : '';
                 const overtimeDescription = row.dataset.overtimeDescription || '';
                 
                 // Update modal content
@@ -2074,6 +2203,20 @@ function formatDate($date) {
                 textModalCloseBtn.addEventListener('click', hideTextModal);
             }
             
+            // Modal buttons (Accepted OT Hours Info Modal)
+            if (acceptedOtInfoButton) {
+                acceptedOtInfoButton.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event from bubbling up
+                    showAcceptedOtInfoModal();
+                });
+            }
+            if (acceptedOtInfoModalClose) {
+                acceptedOtInfoModalClose.addEventListener('click', hideAcceptedOtInfoModal);
+            }
+            if (acceptedOtInfoModalCloseBtn) {
+                acceptedOtInfoModalCloseBtn.addEventListener('click', hideAcceptedOtInfoModal);
+            }
+            
             // Close modals when clicking outside
             if (modal) {
                 modal.addEventListener('click', (e) => {
@@ -2114,6 +2257,14 @@ function formatDate($date) {
                     }
                 });
             }
+            
+            if (acceptedOtInfoModal) {
+                acceptedOtInfoModal.addEventListener('click', (e) => {
+                    if (e.target === acceptedOtInfoModal) {
+                        hideAcceptedOtInfoModal();
+                    }
+                });
+            }
 
             // Close modals with Escape key
             document.addEventListener('keydown', (e) => {
@@ -2133,10 +2284,29 @@ function formatDate($date) {
                     if (textModal && !textModal.classList.contains('hidden')) {
                         hideTextModal();
                     }
+                    if (acceptedOtInfoModal && !acceptedOtInfoModal.classList.contains('hidden')) {
+                        hideAcceptedOtInfoModal();
+                    }
                 }
             });
 
             // --- Helper Functions ---
+            /**
+             * Truncate text to specified number of words and add ellipsis
+             */
+            function truncateText(text, maxWords) {
+                if (!text || text === 'No work report submitted' || text === 'System deployment and testing') {
+                    return text;
+                }
+                
+                const words = text.split(' ');
+                if (words.length <= maxWords) {
+                    return text;
+                }
+                
+                return words.slice(0, maxWords).join(' ') + '...';
+            }
+            
             /**
              * Submit overtime request to the server
              */

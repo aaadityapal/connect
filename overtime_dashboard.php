@@ -26,7 +26,7 @@ $filter_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y'); // default
 $pending_requests = 0;
 $approved_hours = 0;
 $rejected_requests = 0;
-$estimated_cost = 0;
+$approved_requests = 0;
 
 // Fetch user's role
 try {
@@ -89,6 +89,11 @@ try {
                     WHEN a.date < '2025-11-01' AND a.overtime_status = 'approved' THEN a.overtime_hours
                     ELSE 0
                 END) as approved_hours,
+                SUM(CASE 
+                    WHEN a.date >= '2025-11-01' AND oreq.status = 'approved' THEN 1
+                    WHEN a.date < '2025-11-01' AND a.overtime_status = 'approved' THEN 1
+                    ELSE 0
+                END) as approved_count,
                 SUM(CASE WHEN a.overtime_status = 'rejected' THEN 1 ELSE 0 END) as rejected_count
               FROM attendance a
               LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
@@ -100,11 +105,8 @@ try {
     
     $pending_requests = $stats['pending_count'] ?? 0;
     $approved_hours = floatval($stats['approved_hours'] ?? 0);
+    $approved_requests = $stats['approved_count'] ?? 0;
     $rejected_requests = $stats['rejected_count'] ?? 0;
-    
-    // Calculate estimated cost based on approved hours (assuming $15/hour rate)
-    $hourly_rate = 15;
-    $estimated_cost = $approved_hours * $hourly_rate;
 } catch (Exception $e) {
     error_log("Error fetching statistics: " . $e->getMessage());
 }
@@ -600,22 +602,22 @@ try {
                 </div>
             </div>
 
-            <!-- Card 4: Estimated Cost -->
+            <!-- Card 4: Accepted Requests -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-gray-500 uppercase tracking-wider flex items-center">
-                            <i class="fas fa-dollar-sign mr-1"></i>
-                            Est. Cost
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Accepted Requests
                         </p>
-                        <p id="estimated-cost" class="text-3xl font-bold text-gray-800">$<?php echo number_format($estimated_cost, 2); ?></p>
+                        <p id="accepted-requests" class="text-3xl font-bold text-green-600"><?php echo $approved_requests; ?></p>
                         <p class="text-sm text-gray-500 flex items-center">
                             <i class="fas fa-info-circle mr-1 text-xs"></i>
-                            based on approved hours
+                            total approved requests
                         </p>
                     </div>
-                    <div class="p-3 bg-gray-200 rounded-lg">
-                        <i class="fas fa-dollar-sign text-gray-800 text-xl"></i>
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
                     </div>
                 </div>
             </div>
@@ -799,7 +801,10 @@ try {
                                 Reason for Rejection (Minimum 10 words required)
                             </label>
                             <textarea id="rejectReason" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Please provide a detailed reason for rejecting this overtime request..."></textarea>
-                            <div id="rejectReasonError" class="text-red-500 text-sm mt-1 hidden">Reason is required and must be at least 10 words.</div>
+                            <div class="flex justify-between items-center mt-1">
+                                <div id="rejectReasonError" class="text-red-500 text-sm hidden">Reason is required and must be at least 10 words.</div>
+                                <div id="rejectWordCount" class="text-gray-500 text-sm">Words: 0</div>
+                            </div>
                         </div>
                         
                         <div class="mb-6">
@@ -959,7 +964,7 @@ try {
                 const yearFilter = document.getElementById('year-filter').value;
                 
                 // Build URL for AJAX request
-                const url = `fetch_employee_overtime_data.php?location=${location}&user=${userFilter}&status=${statusFilter}&month=${monthFilter}&year=${yearFilter}`;
+                const url = `fetch_overtime_data.php?location=${location}&user=${userFilter}&status=${statusFilter}&month=${monthFilter}&year=${yearFilter}`;
                 
                 // Fetch data via AJAX
                 fetch(url)
@@ -1260,6 +1265,10 @@ try {
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Calculated Hours:</span>
                                     <span class="font-medium">${details.calculated_ot_hours} hours</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Approved OT Hours:</span>
+                                    <span class="font-medium">${details.submitted_ot_hours} hours</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Status:</span>
@@ -1611,26 +1620,39 @@ try {
                 `;
                 
                 // Add event listeners for the form buttons
-                document.getElementById('cancelApprovalBtn').addEventListener('click', function() {
-                    // Reload the overtime request details
-                    openAcceptOvertimeModal(attendanceId);
-                });
+                const cancelApprovalBtn = document.getElementById('cancelApprovalBtn');
+                if (cancelApprovalBtn) {
+                    cancelApprovalBtn.addEventListener('click', function() {
+                        // Reload the overtime request details
+                        openAcceptOvertimeModal(attendanceId);
+                    });
+                }
                 
-                document.getElementById('submitApprovalBtn').addEventListener('click', function() {
-                    // Get form values
-                    const reason = document.getElementById('approvalReason').value;
-                    const confirmHours = document.getElementById('confirmHours').checked;
-                    const confirmPolicy = document.getElementById('confirmPolicy').checked;
-                    
-                    // Validate mandatory checkboxes
-                    if (!confirmHours || !confirmPolicy) {
-                        alert('Please confirm both checkboxes before approving the request.');
-                        return;
-                    }
-                    
-                    // Proceed with approval
-                    confirmAcceptOvertime(attendanceId, reason);
-                });
+                const submitApprovalBtn = document.getElementById('submitApprovalBtn');
+                if (submitApprovalBtn) {
+                    submitApprovalBtn.addEventListener('click', function() {
+                        // Get form values
+                        const approvalReason = document.getElementById('approvalReason');
+                        const reason = approvalReason ? approvalReason.value : '';
+                        const confirmHours = document.getElementById('confirmHours');
+                        const confirmPolicy = document.getElementById('confirmPolicy');
+                        
+                        // Validate mandatory checkboxes
+                        if (!confirmHours || !confirmPolicy) {
+                            alert('Please confirm both checkboxes before approving the request.');
+                            return;
+                        }
+                        
+                        // Check if checkboxes are actually checked
+                        if (!confirmHours.checked || !confirmPolicy.checked) {
+                            alert('Please confirm both checkboxes before approving the request.');
+                            return;
+                        }
+                        
+                        // Proceed with approval
+                        confirmAcceptOvertime(attendanceId, reason);
+                    });
+                }
             }
             
             // Function to show the edit OT hours form
@@ -1903,55 +1925,112 @@ try {
             // Function to open reject overtime modal
             function openRejectOvertimeModal(attendanceId) {
                 // Reset form
-                document.getElementById('rejectReason').value = '';
-                document.getElementById('confirmHoursReject').checked = false;
-                document.getElementById('confirmPolicyReject').checked = false;
-                document.getElementById('rejectReasonError').classList.add('hidden');
-                document.getElementById('rejectCheckError').classList.add('hidden');
+                const rejectReason = document.getElementById('rejectReason');
+                if (rejectReason) rejectReason.value = '';
+                
+                const confirmHoursReject = document.getElementById('confirmHoursReject');
+                if (confirmHoursReject) confirmHoursReject.checked = false;
+                
+                const confirmPolicyReject = document.getElementById('confirmPolicyReject');
+                if (confirmPolicyReject) confirmPolicyReject.checked = false;
+                
+                const rejectReasonError = document.getElementById('rejectReasonError');
+                if (rejectReasonError) rejectReasonError.classList.add('hidden');
+                
+                const rejectCheckError = document.getElementById('rejectCheckError');
+                if (rejectCheckError) rejectCheckError.classList.add('hidden');
+                
+                // Reset word count
+                const rejectWordCount = document.getElementById('rejectWordCount');
+                if (rejectWordCount) rejectWordCount.textContent = 'Words: 0';
                 
                 // Set attendance ID
-                document.getElementById('rejectAttendanceId').value = attendanceId;
+                const rejectAttendanceId = document.getElementById('rejectAttendanceId');
+                if (rejectAttendanceId) rejectAttendanceId.value = attendanceId;
                 
                 // Show modal
-                rejectOvertimeModal.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden');
+                if (rejectOvertimeModal) {
+                    rejectOvertimeModal.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                }
+            }
+            
+            // Function to count words in a text
+            function countWords(text) {
+                if (!text) return 0;
+                return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            }
+            
+            // Add event listener for reject reason text area to update word count
+            const rejectReasonElement = document.getElementById('rejectReason');
+            if (rejectReasonElement) {
+                rejectReasonElement.addEventListener('input', function() {
+                    const wordCount = countWords(this.value);
+                    const rejectWordCount = document.getElementById('rejectWordCount');
+                    if (rejectWordCount) {
+                        rejectWordCount.textContent = `Words: ${wordCount}`;
+                    }
+                    
+                    // Show error if word count is less than 10
+                    const rejectReasonError = document.getElementById('rejectReasonError');
+                    if (wordCount >= 10 && rejectReasonError) {
+                        rejectReasonError.classList.add('hidden');
+                    }
+                });
             }
             
             // Function to close reject overtime modal
             function closeRejectOvertimeModal() {
-                rejectOvertimeModal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
+                if (rejectOvertimeModal) {
+                    rejectOvertimeModal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }
             }
             
             // Function to confirm reject overtime request
             function confirmRejectOvertime() {
-                const attendanceId = document.getElementById('rejectAttendanceId').value;
-                const reason = document.getElementById('rejectReason').value.trim();
-                const confirmHours = document.getElementById('confirmHoursReject').checked;
-                const confirmPolicy = document.getElementById('confirmPolicyReject').checked;
+                const rejectAttendanceId = document.getElementById('rejectAttendanceId');
+                const rejectReason = document.getElementById('rejectReason');
+                const confirmHoursReject = document.getElementById('confirmHoursReject');
+                const confirmPolicyReject = document.getElementById('confirmPolicyReject');
+                
+                if (!rejectAttendanceId || !rejectReason || !confirmHoursReject || !confirmPolicyReject) {
+                    console.error('Required elements not found');
+                    return;
+                }
+                
+                const attendanceId = rejectAttendanceId.value;
+                const reason = rejectReason.value.trim();
+                const confirmHours = confirmHoursReject.checked;
+                const confirmPolicy = confirmPolicyReject.checked;
                 
                 // Validate reason (minimum 10 words)
-                const wordCount = reason.split(/\s+/).filter(word => word.length > 0).length;
+                const wordCount = countWords(reason);
+                const rejectReasonError = document.getElementById('rejectReasonError');
                 if (wordCount < 10) {
-                    document.getElementById('rejectReasonError').classList.remove('hidden');
+                    if (rejectReasonError) rejectReasonError.classList.remove('hidden');
                     return;
                 } else {
-                    document.getElementById('rejectReasonError').classList.add('hidden');
+                    if (rejectReasonError) rejectReasonError.classList.add('hidden');
                 }
                 
                 // Validate checkboxes
+                const rejectCheckError = document.getElementById('rejectCheckError');
                 if (!confirmHours || !confirmPolicy) {
-                    document.getElementById('rejectCheckError').classList.remove('hidden');
+                    if (rejectCheckError) rejectCheckError.classList.remove('hidden');
                     return;
                 } else {
-                    document.getElementById('rejectCheckError').classList.add('hidden');
+                    if (rejectCheckError) rejectCheckError.classList.add('hidden');
                 }
                 
                 // Show loading state in the button
                 const confirmBtn = document.getElementById('confirmRejectBtn');
-                const originalText = confirmBtn.innerHTML;
-                confirmBtn.innerHTML = '<div class="spinner mr-2"></div>Rejecting...';
-                confirmBtn.disabled = true;
+                let originalText = '';
+                if (confirmBtn) {
+                    originalText = confirmBtn.innerHTML;
+                    confirmBtn.innerHTML = '<div class="spinner mr-2"></div>Rejecting...';
+                    confirmBtn.disabled = true;
+                }
                 
                 // Send request to reject the overtime
                 fetch('reject_overtime_request.php', {
@@ -1967,13 +2046,15 @@ try {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        rejectOvertimeContent.innerHTML = `
-                            <div class="text-center py-8">
-                                <i class="fas fa-check-circle text-green-500 text-4xl mb-4"></i>
-                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Request Rejected</h3>
-                                <p class="text-gray-600">${data.message}</p>
-                            </div>
-                        `;
+                        if (rejectOvertimeContent) {
+                            rejectOvertimeContent.innerHTML = `
+                                <div class="text-center py-8">
+                                    <i class="fas fa-check-circle text-green-500 text-4xl mb-4"></i>
+                                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Request Rejected</h3>
+                                    <p class="text-gray-600">${data.message}</p>
+                                </div>
+                            `;
+                        }
                         
                         // Close the modal after a delay and refresh the data
                         setTimeout(() => {
@@ -1983,11 +2064,38 @@ try {
                         }, 2000);
                     } else {
                         // Show error message
+                        if (rejectOvertimeContent) {
+                            rejectOvertimeContent.innerHTML = `
+                                <div class="text-center py-8">
+                                    <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Error Rejecting Request</h3>
+                                    <p class="text-gray-600">${data.error || 'Failed to reject overtime request.'}</p>
+                                    <div class="mt-4">
+                                        <button id="retryRejectBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150 ease-in-out">
+                                            Retry
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Add event listener for retry button
+                        const retryRejectBtn = document.getElementById('retryRejectBtn');
+                        if (retryRejectBtn) {
+                            retryRejectBtn.addEventListener('click', function() {
+                                confirmRejectOvertime();
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error rejecting overtime request:', error);
+                    if (rejectOvertimeContent) {
                         rejectOvertimeContent.innerHTML = `
                             <div class="text-center py-8">
                                 <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
-                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Error Rejecting Request</h3>
-                                <p class="text-gray-600">${data.error || 'Failed to reject overtime request.'}</p>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Connection Error</h3>
+                                <p class="text-gray-600">Failed to connect to the server. Please try again.</p>
                                 <div class="mt-4">
                                     <button id="retryRejectBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150 ease-in-out">
                                         Retry
@@ -1995,36 +2103,19 @@ try {
                                 </div>
                             </div>
                         `;
-                        
-                        // Add event listener for retry button
-                        document.getElementById('retryRejectBtn').addEventListener('click', function() {
+                    }
+                    
+                    // Add event listener for retry button
+                    const retryRejectBtn = document.getElementById('retryRejectBtn');
+                    if (retryRejectBtn) {
+                        retryRejectBtn.addEventListener('click', function() {
                             confirmRejectOvertime();
                         });
                     }
                 })
-                .catch(error => {
-                    console.error('Error rejecting overtime request:', error);
-                    rejectOvertimeContent.innerHTML = `
-                        <div class="text-center py-8">
-                            <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Connection Error</h3>
-                            <p class="text-gray-600">Failed to connect to the server. Please try again.</p>
-                            <div class="mt-4">
-                                <button id="retryRejectBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150 ease-in-out">
-                                    Retry
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Add event listener for retry button
-                    document.getElementById('retryRejectBtn').addEventListener('click', function() {
-                        confirmRejectOvertime();
-                    });
-                })
                 .finally(() => {
                     // Restore button state if there was an error
-                    if (!document.querySelector('#retryRejectBtn')) {
+                    if (!document.querySelector('#retryRejectBtn') && confirmBtn) {
                         confirmBtn.innerHTML = originalText;
                         confirmBtn.disabled = false;
                     }
@@ -2225,33 +2316,47 @@ try {
             });
             
             // Close reject overtime modal when clicking the X button
-            closeRejectModal.addEventListener('click', closeRejectOvertimeModal);
+            if (closeRejectModal) {
+                closeRejectModal.addEventListener('click', closeRejectOvertimeModal);
+            }
             
             // Close reject overtime modal when clicking the Cancel button
-            closeRejectModalBtn.addEventListener('click', closeRejectOvertimeModal);
+            if (closeRejectModalBtn) {
+                closeRejectModalBtn.addEventListener('click', closeRejectOvertimeModal);
+            }
             
             // Close reject overtime modal when clicking outside the modal content
-            rejectOvertimeModal.addEventListener('click', function(e) {
-                if (e.target === rejectOvertimeModal) {
-                    closeRejectOvertimeModal();
-                }
-            });
+            if (rejectOvertimeModal) {
+                rejectOvertimeModal.addEventListener('click', function(e) {
+                    if (e.target === rejectOvertimeModal) {
+                        closeRejectOvertimeModal();
+                    }
+                });
+            }
             
             // Close edit overtime hours modal when clicking the X button
-            closeEditHoursModal.addEventListener('click', closeEditOvertimeHoursModal);
+            if (closeEditHoursModal) {
+                closeEditHoursModal.addEventListener('click', closeEditOvertimeHoursModal);
+            }
             
             // Close edit overtime hours modal when clicking the Cancel button
-            closeEditHoursModalBtn.addEventListener('click', closeEditOvertimeHoursModal);
+            if (closeEditHoursModalBtn) {
+                closeEditHoursModalBtn.addEventListener('click', closeEditOvertimeHoursModal);
+            }
             
             // Close edit overtime hours modal when clicking outside the modal content
-            editOvertimeHoursModal.addEventListener('click', function(e) {
-                if (e.target === editOvertimeHoursModal) {
-                    closeEditOvertimeHoursModal();
-                }
-            });
+            if (editOvertimeHoursModal) {
+                editOvertimeHoursModal.addEventListener('click', function(e) {
+                    if (e.target === editOvertimeHoursModal) {
+                        closeEditOvertimeHoursModal();
+                    }
+                });
+            }
             
             // Add event listener for the confirm reject button
-            confirmRejectBtn.addEventListener('click', confirmRejectOvertime);
+            if (confirmRejectBtn) {
+                confirmRejectBtn.addEventListener('click', confirmRejectOvertime);
+            }
             
             // Event delegation for work report clicks and action buttons
             employeeActivityBody.addEventListener('click', function(e) {

@@ -45,14 +45,14 @@ try {
     // Add location filter based on roles
     if ($filter_location === 'studio') {
         // For studio, exclude specific roles
-        $where_conditions[] = "u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing')";
+        $where_conditions[] = "u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
     } else if ($filter_location === 'site') {
         // For site, only include specific roles
-        $where_conditions[] = "u.role IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing')";
+        $where_conditions[] = "u.role IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
     }
     
     $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
-    
+
     // Query to fetch overtime data with user information
     // Calculate overtime in 30-minute increments, only showing records with at least 1.5 hours
     // Also fetch overtime report based on date condition:
@@ -68,16 +68,14 @@ try {
                 a.work_report,
                 a.overtime_status,
                 s.end_time as shift_end_time,
-                TIMESTAMPDIFF(SECOND, 
-                    STR_TO_DATE(CONCAT(a.date, ' ', s.end_time), '%Y-%m-%d %H:%i:%s'),
-                    STR_TO_DATE(CONCAT(
-                        CASE 
-                            WHEN TIME(a.punch_out) < TIME(s.end_time) THEN DATE_ADD(a.date, INTERVAL 1 DAY)
-                            ELSE a.date
-                        END, 
-                        ' ', a.punch_out
-                    ), '%Y-%m-%d %H:%i:%s')
-                ) as overtime_seconds,
+                CASE 
+                    WHEN a.punch_out IS NULL OR s.end_time IS NULL THEN 0
+                    WHEN TIME(a.punch_out) <= TIME(s.end_time) THEN 0
+                    ELSE TIMESTAMPDIFF(SECOND, 
+                        STR_TO_DATE(CONCAT(a.date, ' ', s.end_time), '%Y-%m-%d %H:%i:%s'),
+                        STR_TO_DATE(CONCAT(a.date, ' ', a.punch_out), '%Y-%m-%d %H:%i:%s')
+                    )
+                END as overtime_seconds,
                 CASE 
                     WHEN a.date < '2025-11-01' THEN 
                         COALESCE(onot.message, 'System deployment and testing')
@@ -92,7 +90,7 @@ try {
               LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
               LEFT JOIN overtime_notifications onot ON a.id = onot.overtime_id
               $where_clause
-              HAVING overtime_seconds >= 5400 /* At least 1.5 hours (90 minutes) */
+              HAVING overtime_seconds >= 5400 /* Only include records with at least 1.5 hours of overtime */
               ORDER BY a.date DESC
               LIMIT 50"; /* Limit to 50 records for performance */
     
@@ -105,8 +103,33 @@ try {
         $overtime_seconds = intval($row['overtime_seconds']);
         $overtime_minutes = $overtime_seconds / 60;
         
-        // Apply proper rounding: minimum 1.5 hours, round down to nearest 30-minute increment
-        $overtime_hours = roundOvertimeHours($overtime_minutes);
+        // Apply proper rounding: minimum 1.5 hours for positive overtime
+        // If overtime is 0 or negative, return 0
+        if ($overtime_seconds <= 0) {
+            $overtime_hours = 0;
+        } else {
+            $overtime_hours = roundOvertimeHours($overtime_minutes);
+        }
+        
+        // Determine the correct status to display
+        $status = ucfirst($row['overtime_status'] ?? 'pending');
+        $date = new DateTime($row['date']);
+        $nov2025 = new DateTime('2025-11-01');
+        
+        // For records from November 2025 and later, check if there's a corresponding request
+        // and use its status if it exists
+        if ($date >= $nov2025 && !empty($row['submitted_ot_hours'])) {
+            // Check if there's a corresponding record in overtime_requests table
+            $check_request_query = "SELECT status FROM overtime_requests WHERE attendance_id = ? LIMIT 1";
+            $check_stmt = $pdo->prepare($check_request_query);
+            $check_stmt->execute([$row['attendance_id']]);
+            $request_result = $check_stmt->fetch();
+            
+            if ($request_result) {
+                // Use the status from overtime_requests table
+                $status = ucfirst($request_result['status']);
+            }
+        }
         
         // Format the data for the response
         $overtime_data[] = [
@@ -120,7 +143,7 @@ try {
             'submitted_ot_hours' => !empty($row['submitted_ot_hours']) ? number_format(floatval($row['submitted_ot_hours']), 1) : 'N/A',
             'work_report' => !empty($row['work_report']) && trim($row['work_report']) !== '' ? $row['work_report'] : 'No work report submitted for this date',
             'overtime_report' => !empty($row['overtime_report']) ? $row['overtime_report'] : 'System deployment and testing',
-            'status' => ucfirst($row['overtime_status'] ?? 'pending')
+            'status' => $status
         ];
     }
     
@@ -142,10 +165,16 @@ try {
 
 /**
  * Round overtime hours according to the specified rules:
- * - Minimum 1.5 hours
+ * - If 0 minutes, return 0 (no overtime)
+ * - Minimum 1.5 hours for positive overtime
  * - Round down to nearest 30-minute increment
  */
 function roundOvertimeHours($minutes) {
+    // If no overtime, return 0
+    if ($minutes <= 0) {
+        return 0;
+    }
+    
     // If less than 1.5 hours (90 minutes), return 1.5 (minimum threshold)
     if ($minutes < 90) {
         return 1.5;

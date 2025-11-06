@@ -21,12 +21,14 @@ $filter_user = isset($_GET['user']) ? (int)$_GET['user'] : 0;
 $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
 $filter_month = isset($_GET['month']) ? (int)$_GET['month'] : date('n') - 1; // 0-11, default to current month
 $filter_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y'); // default to current year
+$filter_location = isset($_GET['location']) ? $_GET['location'] : 'studio'; // default to studio
 
 // Initialize statistics variables
 $pending_requests = 0;
 $approved_hours = 0;
 $rejected_requests = 0;
 $approved_requests = 0;
+$expired_requests = 0;
 
 // Fetch user's role
 try {
@@ -40,9 +42,16 @@ try {
     $user_role = 'N/A';
 }
 
-// Fetch all users for the filter dropdown
+// Fetch all users for the filter dropdown based on location
 try {
-    $query = "SELECT id, username, position FROM users WHERE status = 'active' ORDER BY username";
+    if ($filter_location === 'studio') {
+        // For studio, exclude specific roles
+        $query = "SELECT id, username, position FROM users WHERE status = 'active' AND role NOT IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing') ORDER BY username";
+    } else {
+        // For site, only include specific roles
+        $query = "SELECT id, username, position FROM users WHERE status = 'active' AND role IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Graphic Designer', 'Social Media Marketing') ORDER BY username";
+    }
+    
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -71,9 +80,15 @@ try {
     }
     
     // Add status filter if specified
+    // Special handling for "expired" status since it's computed, not stored
     if (!empty($filter_status)) {
-        $where_conditions[] = "a.overtime_status = ?";
-        $params[] = $filter_status;
+        if (strtolower($filter_status) === 'expired') {
+            // For expired status, we need to filter for pending records that are 15+ days old
+            $where_conditions[] = "a.overtime_status = 'pending' AND DATEDIFF(NOW(), a.date) >= 15";
+        } else {
+            $where_conditions[] = "a.overtime_status = ?";
+            $params[] = $filter_status;
+        }
     }
     
     $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
@@ -94,7 +109,11 @@ try {
                     WHEN a.date < '2025-11-01' AND a.overtime_status = 'approved' THEN 1
                     ELSE 0
                 END) as approved_count,
-                SUM(CASE WHEN a.overtime_status = 'rejected' THEN 1 ELSE 0 END) as rejected_count
+                SUM(CASE WHEN a.overtime_status = 'rejected' THEN 1 ELSE 0 END) as rejected_count,
+                SUM(CASE 
+                    WHEN a.overtime_status = 'pending' AND DATEDIFF(NOW(), a.date) >= 15 THEN 1 
+                    ELSE 0 
+                END) as expired_count
               FROM attendance a
               LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
               $where_clause";
@@ -107,7 +126,12 @@ try {
     $approved_hours = floatval($stats['approved_hours'] ?? 0);
     $approved_requests = $stats['approved_count'] ?? 0;
     $rejected_requests = $stats['rejected_count'] ?? 0;
+    $expired_requests = $stats['expired_count'] ?? 0;
 } catch (Exception $e) {
+    error_log("Error fetching statistics: " . $e->getMessage());
+}
+?>
+
     error_log("Error fetching statistics: " . $e->getMessage());
 }
 ?>
@@ -488,6 +512,7 @@ try {
                         <option value="rejected" <?php echo $filter_status === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                         <option value="submitted" <?php echo $filter_status === 'submitted' ? 'selected' : ''; ?>>Submitted</option>
                         <option value="expired" <?php echo $filter_status === 'expired' ? 'selected' : ''; ?>>Expired</option>
+                        <option value="expired" <?php echo $filter_status === 'expired' ? 'selected' : ''; ?>>Expired</option>
                     </select>
                 </div>
                 
@@ -541,7 +566,7 @@ try {
         </section>
         
         <!-- Quick Overview Section -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <!-- Card 1: Pending Requests -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
@@ -618,6 +643,26 @@ try {
                     </div>
                     <div class="p-3 bg-green-100 rounded-lg">
                         <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 5: Expired Requests -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
+                <div class="flex items-start justify-between">
+                    <div class="space-y-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-clock mr-1"></i>
+                            Expired Requests
+                        </p>
+                        <p id="expired-requests" class="text-3xl font-bold text-orange-600"><?php echo $expired_requests; ?></p>
+                        <p class="text-sm text-gray-500 flex items-center">
+                            <i class="fas fa-info-circle mr-1 text-xs"></i>
+                            pending for 15+ days
+                        </p>
+                    </div>
+                    <div class="p-3 bg-orange-100 rounded-lg">
+                        <i class="fas fa-clock text-orange-600 text-xl"></i>
                     </div>
                 </div>
             </div>
@@ -989,6 +1034,8 @@ try {
                                         statusClass = 'bg-red-100 text-red-800';
                                     } else if (record.status.toLowerCase() === 'submitted') {
                                         statusClass = 'bg-blue-100 text-blue-800';
+                                    } else if (record.status.toLowerCase() === 'expired') {
+                                        statusClass = 'bg-orange-100 text-orange-800';
                                     }
                                     
                                     // Use the overtime report fetched from the database
@@ -1052,6 +1099,9 @@ try {
                                     </tr>
                                 `;
                             }
+                            
+                            // After loading data, also refresh the user filter dropdown
+                            fetchUserFilterOptions(location);
                         } else {
                             // Error occurred
                             employeeActivityBody.innerHTML = `
@@ -1075,10 +1125,46 @@ try {
                     });
             }
             
+            // Function to fetch user filter options based on location
+            function fetchUserFilterOptions(location = 'studio') {
+                fetch(`fetch_user_options.php?location=${location}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const userFilter = document.getElementById('user-filter');
+                            const currentValue = userFilter.value;
+                            
+                            // Clear existing options except the first one
+                            while (userFilter.options.length > 1) {
+                                userFilter.remove(1);
+                            }
+                            
+                            // Add new options
+                            data.users.forEach(user => {
+                                const option = document.createElement('option');
+                                option.value = user.id;
+                                option.text = user.username + (user.position ? ' (' + user.position + ')' : '');
+                                if (user.id == currentValue) {
+                                    option.selected = true;
+                                }
+                                userFilter.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user options:', error);
+                    });
+            }
+            
             if (studioToggle && siteToggle) {
                 studioToggle.addEventListener('click', function() {
                     studioToggle.classList.add('active');
                     siteToggle.classList.remove('active');
+                    
+                    // Update URL with location parameter
+                    const url = new URL(window.location);
+                    url.searchParams.set('location', 'studio');
+                    window.history.replaceState({}, '', url);
                     
                     // Fetch data for studio
                     fetchEmployeeActivity('studio');
@@ -1088,13 +1174,31 @@ try {
                     siteToggle.classList.add('active');
                     studioToggle.classList.remove('active');
                     
+                    // Update URL with location parameter
+                    const url = new URL(window.location);
+                    url.searchParams.set('location', 'site');
+                    window.history.replaceState({}, '', url);
+                    
                     // Fetch data for site
                     fetchEmployeeActivity('site');
                 });
             }
             
-            // Initial load of employee activity data
-            fetchEmployeeActivity('studio');
+            // Initial load of employee activity data based on URL parameter or default to studio
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialLocation = urlParams.get('location') || 'studio';
+            
+            // Set the correct toggle button as active
+            if (initialLocation === 'site') {
+                siteToggle.classList.add('active');
+                studioToggle.classList.remove('active');
+            } else {
+                studioToggle.classList.add('active');
+                siteToggle.classList.remove('active');
+            }
+            
+            // Fetch data for the initial location
+            fetchEmployeeActivity(initialLocation);
             
             // Report Modal Functionality
             const reportModal = document.getElementById('reportModal');

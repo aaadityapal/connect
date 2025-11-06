@@ -42,6 +42,7 @@ function calculateOvertimeStatistics($overtime_data) {
     $pending_requests = 0;
     $approved_hours = 0;
     $rejected_requests = 0;
+    $expired_requests = 0;
     
     foreach ($overtime_data as $record) {
         $status = strtolower($record['status']);
@@ -63,6 +64,9 @@ function calculateOvertimeStatistics($overtime_data) {
             case 'rejected':
                 $rejected_requests++;
                 break;
+            case 'expired':
+                $expired_requests++;
+                break;
         }
     }
     
@@ -74,6 +78,7 @@ function calculateOvertimeStatistics($overtime_data) {
         'pending_requests' => $pending_requests,
         'approved_hours' => round($approved_hours, 1),
         'rejected_requests' => $rejected_requests,
+        'expired_requests' => $expired_requests,
         'estimated_cost' => round($estimated_cost, 2)
     ];
 }
@@ -103,9 +108,15 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
         }
         
         // Add status filter if specified
+        // Special handling for "expired" status since it's computed, not stored
         if (!empty($filter_status)) {
-            $where_conditions[] = "a.overtime_status = ?";
-            $params[] = $filter_status;
+            if (strtolower($filter_status) === 'expired') {
+                // For expired status, we need to filter for pending records that are 15+ days old
+                $where_conditions[] = "a.overtime_status = 'pending' AND DATEDIFF(NOW(), a.date) >= 15";
+            } else {
+                $where_conditions[] = "a.overtime_status = ?";
+                $params[] = $filter_status;
+            }
         }
         
         // Add location filter based on roles
@@ -195,6 +206,27 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
                     // Use the status from overtime_requests table
                     $status = ucfirst($request_result['status']);
                 }
+            }
+            
+            // Check if the record should be marked as expired
+            // Only pending records that are 15 days old or more should be marked as expired
+            // But only if we're not specifically filtering for expired records
+            // (because when filtering for expired, we've already filtered the data)
+            if (strtolower($filter_status) !== 'expired' && strtolower($status) === 'pending') {
+                $record_date = new DateTime($row['date']);
+                $current_date = new DateTime();
+                $interval = $current_date->diff($record_date);
+                $days_old = $interval->days;
+                
+                // If the record is 15 days old or more, mark it as expired
+                if ($days_old >= 15) {
+                    $status = 'Expired';
+                }
+            }
+            
+            // If we're filtering for expired records, ensure status is set to Expired
+            if (strtolower($filter_status) === 'expired') {
+                $status = 'Expired';
             }
             
             // Format the data for the response

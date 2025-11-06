@@ -1,0 +1,8 @@
+[2025-11-06 08:17:22] Starting October overtime data export process
+[2025-11-06 08:17:22] Found 4 attendance records with overtime for October
+[2025-11-06 08:17:22] Updated existing record for attendance ID 1389 (Role: Draughtsman, Hours: 1)
+[2025-11-06 08:17:22] Updated existing record for attendance ID 1438 (Role: Draughtsman, Hours: 2)
+[2025-11-06 08:17:22] Inserted new record for attendance ID 1482 (Role: Site Supervisor, Hours: 1.5)
+[2025-11-06 08:17:22] Updated existing record for attendance ID 1439 (Role: Draughtsman, Hours: 2.5)
+[2025-11-06 08:17:22] Export completed successfully
+[2025-11-06 08:17:22] Summary: Inserted: 1, Updated: 3, Skipped: 0, Errors: 0

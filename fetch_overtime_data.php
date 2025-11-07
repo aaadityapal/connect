@@ -24,7 +24,7 @@ try {
     $overtime_data = getOvertimeData($pdo, $filter_user, $filter_status, $filter_month, $filter_year, $filter_location);
     
     // Calculate statistics
-    $statistics = calculateOvertimeStatistics($overtime_data);
+    $statistics = calculateOvertimeStatistics($overtime_data, $pdo, $filter_user, $filter_status, $filter_month, $filter_year, $filter_location);
     
     echo json_encode([
         'success' => true,
@@ -38,49 +38,118 @@ try {
 /**
  * Calculate overtime statistics
  */
-function calculateOvertimeStatistics($overtime_data) {
-    $pending_requests = 0;
-    $approved_hours = 0;
-    $rejected_requests = 0;
-    $expired_requests = 0;
-    
-    foreach ($overtime_data as $record) {
-        $status = strtolower($record['status']);
-        // Use submitted_ot_hours for approved records, otherwise use calculated ot_hours
-        $hours = 0;
-        if ($status === 'approved' && !empty($record['submitted_ot_hours'])) {
-            $hours = floatval($record['submitted_ot_hours']);
-        } else {
-            $hours = floatval($record['ot_hours']);
+function calculateOvertimeStatistics($overtime_data, $pdo, $filter_user, $filter_status, $month, $year, $location) {
+    try {
+        // Calculate the first and last day of the selected month
+        $first_day = sprintf('%04d-%02d-01', $year, $month + 1);
+        $last_day = date('Y-m-t', strtotime($first_day));
+        
+        // Build query based on filters
+        $where_conditions = [];
+        $params = [];
+        
+        // Add date range filter
+        $where_conditions[] = "a.date BETWEEN ? AND ?";
+        $params[] = $first_day;
+        $params[] = $last_day;
+        
+        // Add user filter if specified
+        if ($filter_user > 0) {
+            $where_conditions[] = "a.user_id = ?";
+            $params[] = $filter_user;
         }
         
-        switch ($status) {
-            case 'pending':
-                $pending_requests++;
-                break;
-            case 'approved':
-                $approved_hours += $hours;
-                break;
-            case 'rejected':
-                $rejected_requests++;
-                break;
-            case 'expired':
-                $expired_requests++;
-                break;
+        // Add status filter if specified
+        // Special handling for "expired" status since it's computed, not stored
+        if (!empty($filter_status)) {
+            if (strtolower($filter_status) === 'expired') {
+                // For expired status, we need to filter for pending records that are 15+ days old
+                $where_conditions[] = "a.overtime_status = 'pending' AND DATEDIFF(NOW(), a.date) >= 15";
+            } else {
+                $where_conditions[] = "a.overtime_status = ?";
+                $params[] = $filter_status;
+            }
         }
+        
+        // Add location filter based on roles
+        if ($location === 'studio') {
+            // For studio, exclude specific roles
+            $where_conditions[] = "u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
+        } else if ($location === 'site') {
+            // For site, only include specific roles
+            $where_conditions[] = "u.role IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
+        }
+        
+        $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
+        
+        // Query to fetch statistics
+        // For records after October 2025, use overtime_requests table for all status counts
+        // For records before October 2025, use attendance table
+        $query = "SELECT 
+                    COUNT(*) as total_requests,
+                    SUM(CASE 
+                        WHEN a.date >= '2025-10-01' AND oreq.status = 'submitted' THEN 1
+                        WHEN a.date < '2025-10-01' AND a.overtime_status = 'submitted' THEN 1
+                        ELSE 0
+                    END) as pending_count,
+                    SUM(CASE 
+                        WHEN a.date >= '2025-10-01' AND oreq.status = 'approved' THEN oreq.overtime_hours
+                        WHEN a.date < '2025-10-01' AND a.overtime_status = 'approved' THEN a.overtime_hours
+                        ELSE 0
+                    END) as approved_hours,
+                    SUM(CASE 
+                        WHEN a.date >= '2025-10-01' AND oreq.status = 'approved' THEN 1
+                        WHEN a.date < '2025-10-01' AND a.overtime_status = 'approved' THEN 1
+                        ELSE 0
+                    END) as approved_count,
+                    SUM(CASE 
+                        WHEN a.date >= '2025-10-01' AND oreq.status = 'rejected' THEN 1
+                        WHEN a.date < '2025-10-01' AND a.overtime_status = 'rejected' THEN 1
+                        ELSE 0
+                    END) as rejected_count,
+                    SUM(CASE 
+                        WHEN a.date >= '2025-10-01' AND oreq.status = 'pending' AND DATEDIFF(NOW(), a.date) >= 15 THEN 1
+                        WHEN a.date < '2025-10-01' AND a.overtime_status = 'pending' AND DATEDIFF(NOW(), a.date) >= 15 THEN 1
+                        ELSE 0
+                    END) as expired_count
+                  FROM attendance a
+                  JOIN users u ON a.user_id = u.id
+                  LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
+                  $where_clause";
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $pending_requests = $stats['pending_count'] ?? 0;
+        $approved_hours = floatval($stats['approved_hours'] ?? 0);
+        $approved_requests = $stats['approved_count'] ?? 0;
+        $rejected_requests = $stats['rejected_count'] ?? 0;
+        $expired_requests = $stats['expired_count'] ?? 0;
+        
+        // Calculate estimated cost based on approved hours (assuming $15/hour rate)
+        $hourly_rate = 15;
+        $estimated_cost = $approved_hours * $hourly_rate;
+        
+        return [
+            'pending_requests' => $pending_requests,
+            'approved_hours' => round($approved_hours, 1),
+            'rejected_requests' => $rejected_requests,
+            'approved_count' => $approved_requests,
+            'expired_requests' => $expired_requests,
+            'estimated_cost' => round($estimated_cost, 2)
+        ];
+    } catch (Exception $e) {
+        error_log("Error calculating overtime statistics: " . $e->getMessage());
+        return [
+            'pending_requests' => 0,
+            'approved_hours' => 0,
+            'rejected_requests' => 0,
+            'approved_count' => 0,
+            'expired_requests' => 0,
+            'estimated_cost' => 0
+        ];
     }
-    
-    // Calculate estimated cost based on approved hours (assuming $15/hour rate)
-    $hourly_rate = 15;
-    $estimated_cost = $approved_hours * $hourly_rate;
-    
-    return [
-        'pending_requests' => $pending_requests,
-        'approved_hours' => round($approved_hours, 1),
-        'rejected_requests' => $rejected_requests,
-        'expired_requests' => $expired_requests,
-        'estimated_cost' => round($estimated_cost, 2)
-    ];
 }
 
 /**
@@ -154,7 +223,7 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
                         )
                     END as overtime_seconds,
                     CASE 
-                        WHEN a.date < '2025-11-01' THEN 
+                        WHEN a.date < '2025-10-01' THEN 
                             COALESCE(onot.message, 'System deployment and testing')
                         ELSE 
                             COALESCE(oreq.overtime_description, 'Generated automatically')
@@ -191,11 +260,11 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
             // Determine the correct status to display
             $status = ucfirst($row['overtime_status'] ?? 'pending');
             $date = new DateTime($row['date']);
-            $nov2025 = new DateTime('2025-11-01');
+            $oct2025 = new DateTime('2025-10-01');
             
-            // For records from November 2025 and later, check if there's a corresponding request
+            // For records from October 2025 and later, check if there's a corresponding request
             // and use its status if it exists
-            if ($date >= $nov2025 && !empty($row['submitted_ot_hours'])) {
+            if ($date >= $oct2025 && !empty($row['submitted_ot_hours'])) {
                 // Check if there's a corresponding record in overtime_requests table
                 $check_request_query = "SELECT status FROM overtime_requests WHERE attendance_id = ? LIMIT 1";
                 $check_stmt = $pdo->prepare($check_request_query);
@@ -205,7 +274,13 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
                 if ($request_result) {
                     // Use the status from overtime_requests table
                     $status = ucfirst($request_result['status']);
+                } else {
+                    // If no request found but submitted_ot_hours exists, it's submitted
+                    $status = 'Submitted';
                 }
+            } else if ($date >= $oct2025 && empty($row['submitted_ot_hours'])) {
+                // For records from October 2025 onwards with no submitted hours, it's pending
+                $status = 'Pending';
             }
             
             // Check if the record should be marked as expired

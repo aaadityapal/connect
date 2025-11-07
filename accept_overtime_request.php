@@ -15,7 +15,7 @@ try {
         throw new Exception('Invalid attendance ID');
     }
     
-    // Check if the attendance date is from November 2025 onwards
+    // Check if the attendance date is from October 2025 onwards
     $date_check_query = "SELECT date FROM attendance WHERE id = ?";
     $date_stmt = $pdo->prepare($date_check_query);
     $date_stmt->execute([$attendance_id]);
@@ -26,11 +26,11 @@ try {
     }
     
     $attendance_date = new DateTime($date_row['date']);
-    $nov2025 = new DateTime('2025-11-01');
+    $oct2025 = new DateTime('2025-10-01');
     
-    // Only accept overtime requests for records from November 2025 onwards
-    if ($attendance_date < $nov2025) {
-        throw new Exception('Overtime requests can only be accepted for records from November 2025 onwards');
+    // Only accept overtime requests for records from October 2025 onwards
+    if ($attendance_date < $oct2025) {
+        throw new Exception('Overtime requests can only be accepted for records from October 2025 onwards');
     }
     
     // Get current user ID (manager ID)

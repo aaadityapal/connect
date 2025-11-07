@@ -181,10 +181,10 @@ function formatHours($time) {
  */
 function determineDisplayStatus($row) {
     $date = new DateTime($row['date']);
-    $nov2025 = new DateTime('2025-11-01');
+    $oct2025 = new DateTime('2025-10-01');
     
-    // For records from November 2025 and later
-    if ($date >= $nov2025) {
+    // For records from October 2025 and later
+    if ($date >= $oct2025) {
         // Always display 'Submitted' if a corresponding request exists
         if (!empty($row['overtime_request_id'])) {
             return 'Submitted';

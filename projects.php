@@ -1154,7 +1154,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="overtime_reports.php">
+                    <a href="overtime_dashboard.php">
                         <i class="fas fa-hourglass-half"></i>
                         <span class="sidebar-text"> Overtime Reports</span>
                     </a>

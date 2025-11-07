@@ -77,7 +77,7 @@ try {
                     )
                 END as overtime_seconds,
                 CASE 
-                    WHEN a.date < '2025-11-01' THEN 
+                    WHEN a.date < '2025-10-01' THEN 
                         COALESCE(onot.message, 'System deployment and testing')
                     ELSE 
                         COALESCE(oreq.overtime_description, 'Generated automatically')
@@ -114,11 +114,11 @@ try {
         // Determine the correct status to display
         $status = ucfirst($row['overtime_status'] ?? 'pending');
         $date = new DateTime($row['date']);
-        $nov2025 = new DateTime('2025-11-01');
+        $oct2025 = new DateTime('2025-10-01');
         
-        // For records from November 2025 and later, check if there's a corresponding request
+        // For records from October 2025 and later, check if there's a corresponding request
         // and use its status if it exists
-        if ($date >= $nov2025 && !empty($row['submitted_ot_hours'])) {
+        if ($date >= $oct2025 && !empty($row['submitted_ot_hours'])) {
             // Check if there's a corresponding record in overtime_requests table
             $check_request_query = "SELECT status FROM overtime_requests WHERE attendance_id = ? LIMIT 1";
             $check_stmt = $pdo->prepare($check_request_query);
@@ -128,7 +128,13 @@ try {
             if ($request_result) {
                 // Use the status from overtime_requests table
                 $status = ucfirst($request_result['status']);
+            } else {
+                // If no request found but submitted_ot_hours exists, it's submitted
+                $status = 'Submitted';
             }
+        } else if ($date >= $oct2025 && empty($row['submitted_ot_hours'])) {
+            // For records from October 2025 onwards with no submitted hours, it's pending
+            $status = 'Pending';
         }
         
         // Format the data for the response

@@ -45,7 +45,7 @@ try {
               WHERE MONTH(a.date) = 10 
               AND a.punch_out IS NOT NULL
               AND a.overtime_hours IS NOT NULL
-              AND a.overtime_hours > '00:00:00'
+              AND a.overtime_hours > 0
               ORDER BY a.date, a.user_id";
     
     $stmt = $pdo->prepare($query);
@@ -60,28 +60,7 @@ try {
     
     foreach ($attendance_records as $record) {
         // Skip records with no overtime hours
-        if (empty($record['overtime_hours']) || $record['overtime_hours'] <= '00:00:00') {
-            $skipped_count++;
-            continue;
-        }
-        
-        // Convert overtime_hours from TIME to DECIMAL(5,2)
-        // TIME format is 'HH:MM:SS', we need to convert to decimal hours
-        $overtime_hours_time = $record['overtime_hours'];
-        $overtime_hours_parts = explode(':', $overtime_hours_time);
-        $overtime_hours_decimal = 0;
-        
-        if (count($overtime_hours_parts) >= 2) {
-            $hours = (int)$overtime_hours_parts[0];
-            $minutes = (int)$overtime_hours_parts[1];
-            $overtime_hours_decimal = $hours + ($minutes / 60);
-            
-            // Round to 2 decimal places
-            $overtime_hours_decimal = round($overtime_hours_decimal, 2);
-        }
-        
-        // If the converted value is 0 or less, skip
-        if ($overtime_hours_decimal <= 0) {
+        if (empty($record['overtime_hours']) || $record['overtime_hours'] <= 0) {
             $skipped_count++;
             continue;
         }
@@ -130,7 +109,7 @@ try {
                 $record['date'],
                 $shift_end_time,
                 $record['punch_out'],
-                $overtime_hours_decimal,
+                $record['overtime_hours'],
                 $record['work_report'],
                 $overtime_description,
                 $record['overtime_approved_by'],
@@ -170,7 +149,7 @@ try {
                 $record['date'],
                 $shift_end_time,
                 $record['punch_out'],
-                $overtime_hours_decimal,
+                $record['overtime_hours'],
                 $record['work_report'],
                 $overtime_description,
                 $record['overtime_approved_by'],

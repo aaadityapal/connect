@@ -99,20 +99,11 @@ try {
         }
     }
     
-    // Add location filter based on roles
-    if ($filter_location === 'studio') {
-        // For studio, exclude specific roles
-        $where_conditions[] = "u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
-    } else if ($filter_location === 'site') {
-        // For site, only include specific roles
-        $where_conditions[] = "u.role IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
-    }
-    
     $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
     
     // Query to fetch statistics
-    // For records after October 2025, use overtime_requests table for all status counts
-    // For records before October 2025, use attendance table
+    // For approved hours after November 2025, use overtime_requests table
+    // For approved hours before October 2025, use attendance table
     $query = "SELECT 
                 COUNT(*) as total_requests,
                 SUM(CASE 
@@ -141,7 +132,6 @@ try {
                     ELSE 0
                 END) as expired_count
               FROM attendance a
-              JOIN users u ON a.user_id = u.id
               LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
               $where_clause";
     
@@ -201,20 +191,6 @@ try {
             flex-direction: column;
             transition: all 0.22s ease;
             z-index: 100;
-        }
-        
-        .nav-menu {
-            padding: 12px;
-            flex: 1;
-            overflow-y: auto;
-            /* Hide scrollbar for Chrome, Safari and Opera */
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .nav-menu::-webkit-scrollbar {
-            display: none;
         }
         
         .sidebar.collapsed {
@@ -448,97 +424,29 @@ try {
         </div>
         
         <nav class="nav-menu">
-            <a href="real.php" class="nav-item active">
+            <a href="overtime_dashboard.php" class="nav-item active">
                 <div class="nav-icon">
-                    <i class="fas fa-chart-line" style="color: #f44336;"></i>
+                    <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="nav-text">Dashboard</div>
             </a>
-            <a href="#" class="nav-item">
+            <a href="new_page.php" class="nav-item">
                 <div class="nav-icon">
-                    <i class="fas fa-leaf" style="color: #f44336;"></i>
+                    <i class="fas fa-business-time"></i>
                 </div>
-                <div class="nav-text">Leaves</div>
+                <div class="nav-text">Overtime Requests</div>
             </a>
             <a href="#" class="nav-item">
                 <div class="nav-icon">
-                    <i class="fas fa-users" style="color: #f44336;"></i>
+                    <i class="fas fa-file-alt"></i>
                 </div>
-                <div class="nav-text">Employees</div>
+                <div class="nav-text">Reports</div>
             </a>
-            <a href="projects.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-project-diagram" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Projects</div>
-            </a>
-            <div class="nav-text font-weight-bold mt-3 px-3 text-uppercase text-muted small">Analytics</div>
             <a href="#" class="nav-item">
                 <div class="nav-icon">
-                    <i class="fas fa-chart-bar" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Employee Reports</div>
-            </a>
-            <a href="work_report.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-file-alt" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Work Reports</div>
-            </a>
-            <a href="attendance_reports.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-calendar-check" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Attendance Reports</div>
-            </a>
-            <a href="attendance_approval.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-check-circle" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Attendance Approval</div>
-            </a>
-            <a href="overtime_dashboard.php" class="nav-item" style="background-color: #ffcdd2; border-left: 3px solid #f44336;">
-                <div class="nav-icon">
-                    <i class="fas fa-business-time" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Overtime Reports</div>
-            </a>
-            <a href="travelling_allowancest.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-suitcase" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Travel Reports</div>
-            </a>
-            <div class="nav-text font-weight-bold mt-3 px-3 text-uppercase text-muted small">Settings</div>
-            <a href="manager_profile.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-user" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Profile</div>
-            </a>
-            <a href="notifications.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-bell" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Notifications</div>
-            </a>
-            <a href="manager_settings.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-cog" style="color: #f44336;"></i>
+                    <i class="fas fa-cog"></i>
                 </div>
                 <div class="nav-text">Settings</div>
-            </a>
-            <a href="reset_password.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-lock" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Reset Password</div>
-            </a>
-            <a href="logout.php" class="nav-item mt-auto">
-                <div class="nav-icon">
-                    <i class="fas fa-sign-out-alt" style="color: #f44336;"></i>
-                </div>
-                <div class="nav-text">Logout</div>
             </a>
         </nav>
         
@@ -1160,83 +1068,6 @@ try {
                                     const workReport = truncateToWords(fullWorkReport, 5);
                                     const displayOvertimeReport = truncateToWords(fullOvertimeReport, 5);
                                     
-                                    // Determine if user can perform actions based on their role and the current view
-                                    const userRole = '<?php echo $user_role; ?>';
-                                    const isStudioView = location === 'studio';
-                                    const isSiteView = location === 'site';
-                                    
-                                    // Check if user can perform actions based on their role and view
-                                    const canPerformActions = 
-                                        (userRole === 'Senior Manager (Studio)' && isStudioView) ||
-                                        (userRole === 'Senior Manager (Site)' && isSiteView);
-                                    
-                                    // Determine which buttons should be enabled based on status
-                                    const recordStatus = record.status.toLowerCase();
-                                    let canAccept = false;
-                                    let canReject = false;
-                                    let canEdit = false;
-                                    let canView = true; // View is always enabled
-                                    
-                                    // Logic based on status:
-                                    // Approved: Only reject, edit, and view enabled (regardless of role)
-                                    // Rejected: Only view enabled
-                                    // Expired: Only view enabled
-                                    // Pending: No actions enabled until submitted
-                                    // Submitted: All actions enabled based on role/view
-                                    
-                                    if (recordStatus === 'approved') {
-                                        canAccept = false;
-                                        canReject = true; // Always enabled for approved records
-                                        canEdit = true;   // Always enabled for approved records
-                                        canView = true;
-                                    } else if (recordStatus === 'rejected') {
-                                        canAccept = false;
-                                        canReject = false;
-                                        canEdit = false;
-                                        canView = true;
-                                    } else if (recordStatus === 'expired') {
-                                        canAccept = false;
-                                        canReject = false;
-                                        canEdit = false;
-                                        canView = true;
-                                    } else if (recordStatus === 'pending') {
-                                        // Pending status - no actions enabled
-                                        canAccept = false;
-                                        canReject = false;
-                                        canEdit = false;
-                                        canView = true;
-                                    } else if (recordStatus === 'submitted') {
-                                        // Submitted status - actions enabled based on role/view
-                                        canAccept = canPerformActions;
-                                        canReject = canPerformActions;
-                                        canEdit = canPerformActions;
-                                        canView = true;
-                                    } else {
-                                        // For any other status, disable actions
-                                        canAccept = false;
-                                        canReject = false;
-                                        canEdit = false;
-                                        canView = true;
-                                    }
-                                    
-                                    // Apply role restrictions to approved records
-                                    if (recordStatus === 'approved') {
-                                        // Even for approved records, still check role restrictions
-                                        if (!canPerformActions) {
-                                            canReject = false;
-                                            canEdit = false;
-                                            // View is always enabled
-                                        }
-                                    }
-                                    
-                                    // Button classes and titles
-                                    const acceptButtonClass = canAccept ? 'text-green-600 hover:text-green-900' : 'text-green-300 cursor-not-allowed';
-                                    const rejectButtonClass = canReject ? 'text-red-600 hover:text-red-900' : 'text-red-300 cursor-not-allowed';
-                                    const editButtonClass = canEdit ? 'text-blue-600 hover:text-blue-900' : 'text-blue-300 cursor-not-allowed';
-                                    const acceptButtonTitle = canAccept ? 'Accept' : (recordStatus === 'approved' ? 'Already approved' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : recordStatus === 'submitted' ? 'Cannot approve - viewing cross-team requests' : 'Action not available');
-                                    const rejectButtonTitle = canReject ? 'Reject' : (recordStatus === 'approved' ? 'Reject approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : recordStatus === 'submitted' ? 'Cannot reject - viewing cross-team requests' : 'Action not available');
-                                    const editButtonTitle = canEdit ? 'Edit' : (recordStatus === 'approved' ? 'Edit approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : recordStatus === 'submitted' ? 'Cannot edit - viewing cross-team requests' : 'Action not available');
-                                    
                                     row.innerHTML = `
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.username}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.date}</td>
@@ -1253,13 +1084,13 @@ try {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium w-32">
                                             <div class="flex space-x-2">
-                                                <button class="${acceptButtonClass}" title="${acceptButtonTitle}" ${canAccept ? '' : 'disabled'}>
+                                                <button class="text-green-600 hover:text-green-900" title="Accept">
                                                     <i class="fas fa-check-circle"></i>
                                                 </button>
-                                                <button class="${rejectButtonClass}" title="${rejectButtonTitle}" ${canReject ? '' : 'disabled'}>
+                                                <button class="text-red-600 hover:text-red-900" title="Reject">
                                                     <i class="fas fa-times-circle"></i>
                                                 </button>
-                                                <button class="${editButtonClass}" title="${editButtonTitle}" ${canEdit ? '' : 'disabled'}>
+                                                <button class="text-blue-600 hover:text-blue-900" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <button class="text-gray-600 hover:text-gray-900 view-details" data-id="${record.attendance_id}" title="View">
@@ -1284,9 +1115,6 @@ try {
                             
                             // After loading data, also refresh the user filter dropdown
                             fetchUserFilterOptions(location);
-                            
-                            // Update statistics cards
-                            updateStatisticsCards(data.statistics);
                         } else {
                             // Error occurred
                             employeeActivityBody.innerHTML = `
@@ -1308,17 +1136,6 @@ try {
                             </tr>
                         `;
                     });
-            }
-            
-            // Function to update statistics cards with new data
-            function updateStatisticsCards(statistics) {
-                if (statistics) {
-                    document.getElementById('pending-count').textContent = statistics.pending_requests || 0;
-                    document.getElementById('approved-hours').textContent = (statistics.approved_hours || 0).toFixed(1);
-                    document.getElementById('rejected-requests').textContent = statistics.rejected_requests || 0;
-                    document.getElementById('accepted-requests').textContent = statistics.approved_count || 0;
-                    document.getElementById('expired-requests').textContent = statistics.expired_requests || 0;
-                }
             }
             
             // Function to fetch user filter options based on location
@@ -1384,22 +1201,8 @@ try {
             const urlParams = new URLSearchParams(window.location.search);
             const initialLocation = urlParams.get('location') || 'studio';
             
-            // Set the correct toggle button as active based on user role and URL parameters
-            // Senior Manager (Studio) defaults to Studio view
-            // Senior Manager (Site) defaults to Site view
-            const userRole = '<?php echo $user_role; ?>';
-            let defaultLocation = initialLocation;
-            
-            if (!urlParams.has('location')) {
-                // If no location parameter in URL, set default based on user role
-                if (userRole === 'Senior Manager (Site)') {
-                    defaultLocation = 'site';
-                } else {
-                    defaultLocation = 'studio';
-                }
-            }
-            
-            if (defaultLocation === 'site') {
+            // Set the correct toggle button as active
+            if (initialLocation === 'site') {
                 siteToggle.classList.add('active');
                 studioToggle.classList.remove('active');
             } else {
@@ -1408,7 +1211,7 @@ try {
             }
             
             // Fetch data for the initial location
-            fetchEmployeeActivity(defaultLocation);
+            fetchEmployeeActivity(initialLocation);
             
             // Report Modal Functionality
             const reportModal = document.getElementById('reportModal');
@@ -2695,12 +2498,6 @@ try {
                 // Handle edit action
                 else if (e.target.classList.contains('fa-edit') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-edit'))) {
                     const button = e.target.classList.contains('fa-edit') ? e.target.parentElement : e.target.parentElement.parentElement;
-                    
-                    // Check if button is disabled (cross-team view)
-                    if (button.hasAttribute('disabled')) {
-                        return; // Prevent action
-                    }
-                    
                     const row = button.closest('tr');
                     const attendanceId = row.querySelector('.view-details').getAttribute('data-id');
                     const submittedHours = parseFloat(row.cells[5].textContent) || 0; // Submitted OT Hours column
@@ -2709,24 +2506,12 @@ try {
                 // Handle accept action
                 else if (e.target.classList.contains('fa-check-circle') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-check-circle'))) {
                     const button = e.target.classList.contains('fa-check-circle') ? e.target.parentElement : e.target.parentElement.parentElement;
-                    
-                    // Check if button is disabled (cross-team view)
-                    if (button.hasAttribute('disabled')) {
-                        return; // Prevent action
-                    }
-                    
                     const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
                     openAcceptOvertimeModal(attendanceId);
                 }
                 // Handle reject action
                 else if (e.target.classList.contains('fa-times-circle') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-times-circle'))) {
                     const button = e.target.classList.contains('fa-times-circle') ? e.target.parentElement : e.target.parentElement.parentElement;
-                    
-                    // Check if button is disabled (cross-team view)
-                    if (button.hasAttribute('disabled')) {
-                        return; // Prevent action
-                    }
-                    
                     const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
                     openRejectOvertimeModal(attendanceId);
                 }

@@ -20,6 +20,10 @@ $filter_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $filter_location = isset($_GET['location']) ? $_GET['location'] : 'studio'; // Default to studio
 
 try {
+    // Fetch user's shift end time
+    $user_shift = getUserShiftEndTime($pdo, $user_id);
+    $shift_end_time = $user_shift ? formatTime($user_shift['end_time']) : 'N/A';
+    
     // Fetch overtime data
     $overtime_data = getOvertimeData($pdo, $filter_user, $filter_status, $filter_month, $filter_year, $filter_location);
     
@@ -29,7 +33,8 @@ try {
     echo json_encode([
         'success' => true,
         'data' => $overtime_data,
-        'statistics' => $statistics
+        'statistics' => $statistics,
+        'shift_end_time' => $shift_end_time
     ]);
 } catch (Exception $e) {
     echo json_encode(['error' => 'Failed to fetch data: ' . $e->getMessage()]);

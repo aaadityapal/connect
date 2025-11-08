@@ -2,13 +2,11 @@
 session_start();
 // Include database connection
 require_once 'config/db_connect.php';
-
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
 }
-
 // Check if user has the correct role
 $allowed_roles = ['Senior Manager (Studio)', 'Senior Manager (Site)', 'HR'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
@@ -16,28 +14,23 @@ if (!in_array($_SESSION['role'], $allowed_roles)) {
     header('Location: unauthorized.php');
     exit;
 }
-
 // Get current user ID from session
 $user_id = $_SESSION['user_id'];
-
 // Initialize variables
 $user_role = 'N/A';
 $users = [];
-
 // Get filter parameters
 $filter_user = isset($_GET['user']) ? (int)$_GET['user'] : 0;
 $filter_status = isset($_GET['status']) ? $_GET['status'] : '';
 $filter_month = isset($_GET['month']) ? (int)$_GET['month'] : date('n') - 1; // 0-11, default to current month
 $filter_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y'); // default to current year
 $filter_location = isset($_GET['location']) ? $_GET['location'] : 'studio'; // default to studio
-
 // Initialize statistics variables
 $pending_requests = 0;
 $approved_hours = 0;
 $rejected_requests = 0;
 $approved_requests = 0;
 $expired_requests = 0;
-
 // Fetch user's role
 try {
     $query = "SELECT role FROM users WHERE id = ?";
@@ -49,7 +42,6 @@ try {
     error_log("Error fetching user role: " . $e->getMessage());
     $user_role = 'N/A';
 }
-
 // Fetch all users for the filter dropdown based on location
 try {
     if ($filter_location === 'studio') {
@@ -67,7 +59,6 @@ try {
     error_log("Error fetching users: " . $e->getMessage());
     $users = [];
 }
-
 // Fetch statistics based on filters
 try {
     // Build query based on filters
@@ -99,11 +90,20 @@ try {
         }
     }
     
+    // Add location filter based on roles
+    if ($filter_location === 'studio') {
+        // For studio, exclude specific roles
+        $where_conditions[] = "u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
+    } else if ($filter_location === 'site') {
+        // For site, only include specific roles
+        $where_conditions[] = "u.role IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
+    }
+    
     $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
     
     // Query to fetch statistics
-    // For approved hours after November 2025, use overtime_requests table
-    // For approved hours before October 2025, use attendance table
+    // For records after October 2025, use overtime_requests table for all status counts
+    // For records before October 2025, use attendance table
     $query = "SELECT 
                 COUNT(*) as total_requests,
                 SUM(CASE 
@@ -132,6 +132,7 @@ try {
                     ELSE 0
                 END) as expired_count
               FROM attendance a
+              JOIN users u ON a.user_id = u.id
               LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
               $where_clause";
     
@@ -148,203 +149,19 @@ try {
     error_log("Error fetching statistics: " . $e->getMessage());
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Overtime Dashboard</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Inter font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Load Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Apply Inter font */
         body {
             font-family: 'Inter', sans-serif;
-        }
-        
-        /* Custom sidebar styles */
-        :root {
-            --sidebar-bg: #ffffff;
-            --sidebar-width: 240px;
-            --sidebar-collapsed-width: 64px;
-            --sidebar-border: #e5e7eb;
-            --sidebar-text: #0f172a;
-            --sidebar-text-dim: #475569;
-            --sidebar-accent: #2563eb;
-            --sidebar-hover: #f3f4f6;
-        }
-        
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--sidebar-border);
-            display: flex;
-            flex-direction: column;
-            transition: all 0.22s ease;
-            z-index: 100;
-        }
-        
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            border-bottom: 1px solid var(--sidebar-border);
-        }
-        
-        .logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #2563eb, #0ea5e9);
-            box-shadow: 0 4px 12px rgba(37,99,235,0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-        }
-        
-        .logo-text {
-            margin-left: 12px;
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--sidebar-text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .sidebar.collapsed .logo-text {
-            display: none;
-        }
-        
-        .nav-menu {
-            padding: 12px;
-            flex: 1;
-            overflow-y: auto;
-        }
-        
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: var(--sidebar-text);
-            text-decoration: none;
-            margin-bottom: 4px;
-            transition: all 0.15s ease;
-        }
-        
-        .nav-item:hover {
-            background: var(--sidebar-hover);
-        }
-        
-        .nav-item.active {
-            background: #eef2ff;
-            color: #1d4ed8;
-        }
-        
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        
-        .nav-text {
-            margin-left: 12px;
-            font-size: 14px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .sidebar.collapsed .nav-text {
-            display: none;
-        }
-        
-        .sidebar-footer {
-            padding: 12px;
-            border-top: 1px solid var(--sidebar-border);
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #6b7280;
-        }
-        
-        .user-details {
-            margin-left: 10px;
-        }
-        
-        .user-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--sidebar-text);
-        }
-        
-        .user-role {
-            font-size: 12px;
-            color: var(--sidebar-text-dim);
-        }
-        
-        .sidebar.collapsed .user-details {
-            display: none;
-        }
-        
-        .toggle-btn {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: 1px solid var(--sidebar-border);
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 110;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.22s ease;
-        }
-        
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 24px;
-            transition: margin-left 0.22s ease;
-        }
-        
-        .sidebar.collapsed ~ .main-content {
-            margin-left: var(--sidebar-collapsed-width);
         }
         
         /* Custom spinner */
@@ -387,90 +204,13 @@ try {
             background-color: #e5e7eb;
         }
         
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding-top: 60px;
-            }
-            
-            .sidebar ~ .main-content {
-                margin-left: 0;
-            }
-            
-            .toggle-btn {
-                left: 12px;
-                top: 12px;
-            }
-        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Custom Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="logo-text">Overtime Manager</div>
-        </div>
-        
-        <nav class="nav-menu">
-            <a href="overtime_dashboard.php" class="nav-item active">
-                <div class="nav-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="nav-text">Dashboard</div>
-            </a>
-            <a href="new_page.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-business-time"></i>
-                </div>
-                <div class="nav-text">Overtime Requests</div>
-            </a>
-            <a href="#" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="nav-text">Reports</div>
-            </a>
-            <a href="#" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <div class="nav-text">Settings</div>
-            </a>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?php echo substr($_SESSION['username'] ?? 'U', 0, 1); ?>
-                </div>
-                <div class="user-details">
-                    <div class="user-name"><?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></div>
-                    <div class="user-role"><?php echo htmlspecialchars($user_role); ?></div>
-                </div>
-            </div>
-        </div>
-    </aside>
     
-    <!-- Toggle Button -->
-    <button class="toggle-btn" id="toggleSidebar">
-        <i class="fas fa-bars"></i>
-    </button>
+    <?php include 'includes/manager_panel.php'; ?>
     
-    <!-- Main Content -->
     <main class="main-content">
-        <!-- Header -->
         <header class="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
             <h1 class="text-2xl font-bold text-gray-900 flex items-center">
                 <i class="fas fa-chart-line mr-3 text-blue-600"></i>
@@ -482,7 +222,6 @@ try {
             </p>
         </header>
         
-        <!-- Filters Section -->
         <section class="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -496,7 +235,6 @@ try {
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- User Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                         <i class="fas fa-user mr-1 text-gray-500"></i>
@@ -512,7 +250,6 @@ try {
                     </select>
                 </div>
                 
-                <!-- Status Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                         <i class="fas fa-tasks mr-1 text-gray-500"></i>
@@ -529,7 +266,6 @@ try {
                     </select>
                 </div>
                 
-                <!-- Month Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                         <i class="fas fa-calendar-alt mr-1 text-gray-500"></i>
@@ -549,7 +285,6 @@ try {
                     </select>
                 </div>
                 
-                <!-- Year Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                         <i class="fas fa-calendar mr-1 text-gray-500"></i>
@@ -567,7 +302,6 @@ try {
                     </select>
                 </div>
                 
-                <!-- Apply Button -->
                 <div class="flex items-end">
                     <button id="apply-filters" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition duration-150 ease-in-out flex items-center justify-center">
                         <i class="fas fa-check mr-2"></i>
@@ -578,9 +312,7 @@ try {
             </div>
         </section>
         
-        <!-- Quick Overview Section -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <!-- Card 1: Pending Requests -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
@@ -599,8 +331,6 @@ try {
                     </div>
                 </div>
             </div>
-
-            <!-- Card 2: Approved Hours -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
@@ -619,8 +349,6 @@ try {
                     </div>
                 </div>
             </div>
-
-            <!-- Card 3: Rejected Requests -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
@@ -639,8 +367,6 @@ try {
                     </div>
                 </div>
             </div>
-
-            <!-- Card 4: Accepted Requests -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
@@ -660,7 +386,6 @@ try {
                 </div>
             </div>
             
-            <!-- Card 5: Expired Requests -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
@@ -681,7 +406,6 @@ try {
             </div>
         </section>
         
-        <!-- Recent Activity Section -->
         <section class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -689,7 +413,6 @@ try {
                     Recent Employee Activity
                 </h2>
                 
-                <!-- Studio/Site Toggle -->
                 <div class="mt-4 md:mt-0">
                     <div class="toggle-group">
                         <button type="button" class="toggle-button active studio-toggle" data-location="studio">
@@ -751,7 +474,6 @@ try {
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200" id="employee-activity-body">
-                        <!-- Data will be loaded here via AJAX -->
                         <tr>
                             <td colspan="10" class="px-6 py-4 text-center text-gray-500">
                                 <div class="flex justify-center items-center">
@@ -765,7 +487,6 @@ try {
             </div>
         </section>
         
-        <!-- Report Detail Modal -->
         <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -785,7 +506,6 @@ try {
             </div>
         </div>
         
-        <!-- Overtime Details Modal -->
         <div id="overtimeDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-blue-50">
@@ -811,7 +531,6 @@ try {
             </div>
         </div>
         
-        <!-- Accept Overtime Request Modal -->
         <div id="acceptOvertimeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-green-50">
@@ -840,7 +559,6 @@ try {
             </div>
         </div>
         
-        <!-- Reject Overtime Request Modal -->
         <div id="rejectOvertimeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-red-50">
@@ -890,7 +608,6 @@ try {
                             <div id="rejectCheckError" class="text-red-500 text-sm mt-1 hidden">Please confirm both checkboxes before rejecting.</div>
                         </div>
                         
-                        <!-- Hidden input to store attendance ID -->
                         <input type="hidden" id="rejectAttendanceId" value="">
                     </div>
                 </div>
@@ -905,7 +622,6 @@ try {
             </div>
         </div>
         
-        <!-- Edit Overtime Hours Modal -->
         <div id="editOvertimeHoursModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
                 <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-blue-50">
@@ -942,7 +658,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Hidden inputs to store data -->
                         <input type="hidden" id="editAttendanceId" value="">
                         <input type="hidden" id="currentHoursInput" value="">
                         <input type="hidden" id="newHoursInput" value="">
@@ -962,14 +677,6 @@ try {
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar toggle functionality
-            const toggleBtn = document.getElementById('toggleSidebar');
-            const sidebar = document.getElementById('sidebar');
-            
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-            });
-            
             // Apply filters button
             const applyFiltersBtn = document.getElementById('apply-filters');
             const filterSpinner = document.getElementById('filter-spinner');
@@ -985,12 +692,23 @@ try {
                 const monthFilter = document.getElementById('month-filter').value;
                 const yearFilter = document.getElementById('year-filter').value;
                 
+                // Get current location from URL or active toggle button
+                const urlParams = new URLSearchParams(window.location.search);
+                let currentLocation = urlParams.get('location');
+                
+                // If location not in URL, determine from active toggle button
+                if (!currentLocation) {
+                    const siteToggleActive = document.querySelector('.site-toggle.active');
+                    currentLocation = siteToggleActive ? 'site' : 'studio';
+                }
+                
                 // Build URL with filters
                 const url = new URL(window.location);
                 url.searchParams.set('user', userFilter);
                 url.searchParams.set('status', statusFilter);
                 url.searchParams.set('month', monthFilter);
                 url.searchParams.set('year', yearFilter);
+                url.searchParams.set('location', currentLocation);
                 
                 // Redirect to the new URL
                 window.location.href = url.toString();
@@ -1068,6 +786,84 @@ try {
                                     const workReport = truncateToWords(fullWorkReport, 5);
                                     const displayOvertimeReport = truncateToWords(fullOvertimeReport, 5);
                                     
+                                    // Determine if user can perform actions based on their role and the current view
+                                    const userRole = '<?php echo $user_role; ?>';
+                                    const isStudioView = location === 'studio';
+                                    const isSiteView = location === 'site';
+                                    
+                                    // Check if user can perform actions based on their role and view
+                                    const canPerformActions = 
+                                        (userRole === 'Senior Manager (Studio)' && isStudioView) ||
+                                        (userRole === 'Senior Manager (Site)' && isSiteView);
+                                    
+                                    // Determine which buttons should be enabled based on status
+                                    const recordStatus = record.status.toLowerCase();
+                                    let canAccept = false;
+                                    let canReject = false;
+                                    let canEdit = false;
+                                    let canView = true; // View is always enabled
+                                    
+                                    // Logic based on status:
+                                    // Approved: Only reject, edit, and view enabled (regardless of role)
+                                    // Rejected: Only view enabled
+                                    // Expired: Only view enabled
+                                    // Pending: No actions enabled until submitted
+                                    // Submitted: All actions enabled based on role/view
+                                    // Resubmitted: All actions enabled based on role/view (treated like submitted)
+                                    
+                                    if (recordStatus === 'approved') {
+                                        canAccept = false;
+                                        canReject = true; // Always enabled for approved records
+                                        canEdit = true;   // Always enabled for approved records
+                                        canView = true;
+                                    } else if (recordStatus === 'rejected') {
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    } else if (recordStatus === 'expired') {
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    } else if (recordStatus === 'pending') {
+                                        // Pending status - no actions enabled
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
+                                        // Submitted or resubmitted status - actions enabled based on role/view
+                                        canAccept = canPerformActions;
+                                        canReject = canPerformActions;
+                                        canEdit = canPerformActions;
+                                        canView = true;
+                                    } else {
+                                        // For any other status, disable actions
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    }
+                                    
+                                    // Apply role restrictions to approved records
+                                    if (recordStatus === 'approved') {
+                                        // Even for approved records, still check role restrictions
+                                        if (!canPerformActions) {
+                                            canReject = false;
+                                            canEdit = false;
+                                            // View is always enabled
+                                        }
+                                    }
+                                    
+                                    // Button classes and titles
+                                    const acceptButtonClass = canAccept ? 'text-green-600 hover:text-green-900' : 'text-green-300 cursor-not-allowed';
+                                    const rejectButtonClass = canReject ? 'text-red-600 hover:text-red-900' : 'text-red-300 cursor-not-allowed';
+                                    const editButtonClass = canEdit ? 'text-blue-600 hover:text-blue-900' : 'text-blue-300 cursor-not-allowed';
+                                    const acceptButtonTitle = canAccept ? 'Accept' : (recordStatus === 'approved' ? 'Already approved' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot approve - viewing cross-team requests' : 'Action not available');
+                                    const rejectButtonTitle = canReject ? 'Reject' : (recordStatus === 'approved' ? 'Reject approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot reject - viewing cross-team requests' : 'Action not available');
+                                    const editButtonTitle = canEdit ? 'Edit' : (recordStatus === 'approved' ? 'Edit approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot edit - viewing cross-team requests' : 'Action not available');
+                                    
                                     row.innerHTML = `
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.username}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.date}</td>
@@ -1084,13 +880,13 @@ try {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium w-32">
                                             <div class="flex space-x-2">
-                                                <button class="text-green-600 hover:text-green-900" title="Accept">
+                                                <button class="${acceptButtonClass}" title="${acceptButtonTitle}" ${canAccept ? '' : 'disabled'}>
                                                     <i class="fas fa-check-circle"></i>
                                                 </button>
-                                                <button class="text-red-600 hover:text-red-900" title="Reject">
+                                                <button class="${rejectButtonClass}" title="${rejectButtonTitle}" ${canReject ? '' : 'disabled'}>
                                                     <i class="fas fa-times-circle"></i>
                                                 </button>
-                                                <button class="text-blue-600 hover:text-blue-900" title="Edit">
+                                                <button class="${editButtonClass}" title="${editButtonTitle}" ${canEdit ? '' : 'disabled'}>
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <button class="text-gray-600 hover:text-gray-900 view-details" data-id="${record.attendance_id}" title="View">
@@ -1115,6 +911,9 @@ try {
                             
                             // After loading data, also refresh the user filter dropdown
                             fetchUserFilterOptions(location);
+                            
+                            // Update statistics cards
+                            updateStatisticsCards(data.statistics);
                         } else {
                             // Error occurred
                             employeeActivityBody.innerHTML = `
@@ -1136,6 +935,17 @@ try {
                             </tr>
                         `;
                     });
+            }
+            
+            // Function to update statistics cards with new data
+            function updateStatisticsCards(statistics) {
+                if (statistics) {
+                    document.getElementById('pending-count').textContent = statistics.pending_requests || 0;
+                    document.getElementById('approved-hours').textContent = (statistics.approved_hours || 0).toFixed(1);
+                    document.getElementById('rejected-requests').textContent = statistics.rejected_requests || 0;
+                    document.getElementById('accepted-requests').textContent = statistics.approved_count || 0;
+                    document.getElementById('expired-requests').textContent = statistics.expired_requests || 0;
+                }
             }
             
             // Function to fetch user filter options based on location
@@ -1201,8 +1011,22 @@ try {
             const urlParams = new URLSearchParams(window.location.search);
             const initialLocation = urlParams.get('location') || 'studio';
             
-            // Set the correct toggle button as active
-            if (initialLocation === 'site') {
+            // Set the correct toggle button as active based on user role and URL parameters
+            // Senior Manager (Studio) defaults to Studio view
+            // Senior Manager (Site) defaults to Site view
+            const userRole = '<?php echo $user_role; ?>';
+            let defaultLocation = initialLocation;
+            
+            if (!urlParams.has('location')) {
+                // If no location parameter in URL, set default based on user role
+                if (userRole === 'Senior Manager (Site)') {
+                    defaultLocation = 'site';
+                } else {
+                    defaultLocation = 'studio';
+                }
+            }
+            
+            if (defaultLocation === 'site') {
                 siteToggle.classList.add('active');
                 studioToggle.classList.remove('active');
             } else {
@@ -1211,7 +1035,7 @@ try {
             }
             
             // Fetch data for the initial location
-            fetchEmployeeActivity(initialLocation);
+            fetchEmployeeActivity(defaultLocation);
             
             // Report Modal Functionality
             const reportModal = document.getElementById('reportModal');
@@ -1306,7 +1130,6 @@ try {
             function displayOvertimeDetails(details) {
                 overtimeDetailsContent.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Employee Information -->
                         <div class="bg-blue-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-user mr-2"></i>
@@ -1328,7 +1151,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Date Information -->
                         <div class="bg-blue-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-calendar mr-2"></i>
@@ -1350,7 +1172,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Shift Information -->
                         <div class="bg-blue-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-clock mr-2"></i>
@@ -1372,7 +1193,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Overtime Information -->
                         <div class="bg-blue-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-business-time mr-2"></i>
@@ -1404,7 +1224,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Punch Information -->
                         <div class="bg-blue-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-fingerprint mr-2"></i>
@@ -1422,7 +1241,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Work Report -->
                         <div class="bg-blue-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-file-alt mr-2"></i>
@@ -1431,7 +1249,6 @@ try {
                             <p class="text-gray-700 whitespace-pre-wrap">${details.work_report}</p>
                         </div>
                         
-                        <!-- Overtime Description -->
                         <div class="bg-blue-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-file-contract mr-2"></i>
@@ -1440,7 +1257,6 @@ try {
                             <p class="text-gray-700 whitespace-pre-wrap">${details.overtime_description}</p>
                         </div>
                         
-                        <!-- Overtime Reason -->
                         <div class="bg-blue-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-question-circle mr-2"></i>
@@ -1449,7 +1265,6 @@ try {
                             <p class="text-gray-700 whitespace-pre-wrap">${details.overtime_reason}</p>
                         </div>
                         
-                        <!-- Manager Comments -->
                         <div class="bg-blue-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-blue-800 mb-3">
                                 <i class="fas fa-comment mr-2"></i>
@@ -1512,7 +1327,6 @@ try {
             function displayOvertimeRequestDetails(details) {
                 acceptOvertimeContent.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Employee Information -->
                         <div class="bg-green-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-user mr-2"></i>
@@ -1530,7 +1344,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Request Information -->
                         <div class="bg-green-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-file-alt mr-2"></i>
@@ -1552,7 +1365,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Time Information -->
                         <div class="bg-green-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-clock mr-2"></i>
@@ -1577,7 +1389,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Timestamps -->
                         <div class="bg-green-50 rounded-lg p-4">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-calendar mr-2"></i>
@@ -1599,7 +1410,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Work Report -->
                         <div class="bg-green-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-file-alt mr-2"></i>
@@ -1608,7 +1418,6 @@ try {
                             <p class="text-gray-700 whitespace-pre-wrap">${details.work_report}</p>
                         </div>
                         
-                        <!-- Overtime Description -->
                         <div class="bg-green-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-file-contract mr-2"></i>
@@ -1617,7 +1426,6 @@ try {
                             <p class="text-gray-700 whitespace-pre-wrap">${details.overtime_description}</p>
                         </div>
                         
-                        <!-- Manager Comments -->
                         <div class="bg-green-50 rounded-lg p-4 md:col-span-2">
                             <h4 class="text-lg font-semibold text-green-800 mb-3">
                                 <i class="fas fa-comment mr-2"></i>
@@ -1626,7 +1434,6 @@ try {
                             <p class="text-gray-700 whitespace-pre-wrap">${details.manager_comments}</p>
                         </div>
                         
-                        <!-- Hidden input to store attendance ID -->
                         <input type="hidden" name="attendance_id" value="${details.attendance_id}">
                     </div>
                 `;
@@ -1720,7 +1527,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Hidden input to store attendance ID -->
                         <input type="hidden" id="attendanceIdInput" value="${attendanceId}">
                     </div>
                 `;
@@ -1801,7 +1607,6 @@ try {
                             </div>
                         </div>
                         
-                        <!-- Hidden input to store attendance ID and current hours -->
                         <input type="hidden" id="attendanceIdInput" value="${attendanceId}">
                         <input type="hidden" id="currentHoursInput" value="${currentHours}">
                         <input type="hidden" id="newHoursInput" value="${currentHours}">
@@ -2498,6 +2303,12 @@ try {
                 // Handle edit action
                 else if (e.target.classList.contains('fa-edit') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-edit'))) {
                     const button = e.target.classList.contains('fa-edit') ? e.target.parentElement : e.target.parentElement.parentElement;
+                    
+                    // Check if button is disabled (cross-team view)
+                    if (button.hasAttribute('disabled')) {
+                        return; // Prevent action
+                    }
+                    
                     const row = button.closest('tr');
                     const attendanceId = row.querySelector('.view-details').getAttribute('data-id');
                     const submittedHours = parseFloat(row.cells[5].textContent) || 0; // Submitted OT Hours column
@@ -2506,31 +2317,29 @@ try {
                 // Handle accept action
                 else if (e.target.classList.contains('fa-check-circle') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-check-circle'))) {
                     const button = e.target.classList.contains('fa-check-circle') ? e.target.parentElement : e.target.parentElement.parentElement;
+                    
+                    // Check if button is disabled (cross-team view)
+                    if (button.hasAttribute('disabled')) {
+                        return; // Prevent action
+                    }
+                    
                     const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
                     openAcceptOvertimeModal(attendanceId);
                 }
                 // Handle reject action
                 else if (e.target.classList.contains('fa-times-circle') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-times-circle'))) {
                     const button = e.target.classList.contains('fa-times-circle') ? e.target.parentElement : e.target.parentElement.parentElement;
+                    
+                    // Check if button is disabled (cross-team view)
+                    if (button.hasAttribute('disabled')) {
+                        return; // Prevent action
+                    }
+                    
                     const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
                     openRejectOvertimeModal(attendanceId);
                 }
             });
             
-            // Mobile menu toggle
-            function isMobile() {
-                return window.matchMedia('(max-width: 768px)').matches;
-            }
-            
-            if (isMobile()) {
-                sidebar.classList.add('collapsed');
-            }
-            
-            window.addEventListener('resize', function() {
-                if (isMobile()) {
-                    sidebar.classList.add('collapsed');
-                }
-            });
         });
     </script>
 </body>

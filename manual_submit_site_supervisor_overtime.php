@@ -1,8 +1,8 @@
 <?php
 /**
- * Manual Submit OT Hours for Site Supervisor
+ * Manual Submit OT Hours for Site Supervisor and Purchase Manager
  * 
- * This script allows manual submission of overtime hours for Site Supervisor users
+ * This script allows manual submission of overtime hours for Site Supervisor and Purchase Manager users
  * directly to the overtime_requests table.
  */
 
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $attendance_id = $_POST['attendance_id'] ?? null;
     $overtime_hours = $_POST['overtime_hours'] ?? null;
     $work_report = $_POST['work_report'] ?? '';
-    $overtime_description = $_POST['overtime_description'] ?? 'Manual submission for Site Supervisor';
+    $overtime_description = $_POST['overtime_description'] ?? 'Manual submission for Site Supervisor/Purchase Manager';
     $status = $_POST['status'] ?? 'pending';
     
     // Validate inputs
@@ -130,19 +130,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get Site Supervisor users
-$users_query = "SELECT id, username FROM users WHERE role = 'Site Supervisor' AND status = 'active' ORDER BY username";
+// Get Site Supervisor and Purchase Manager users
+$users_query = "SELECT id, username FROM users WHERE role IN ('Site Supervisor', 'Purchase Manager') AND status = 'active' ORDER BY username";
 $users_stmt = $pdo->prepare($users_query);
 $users_stmt->execute();
 $site_supervisors = $users_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get attendance records for Site Supervisors in October 2025 that don't have overtime_requests
+// Get attendance records for Site Supervisors and Purchase Managers in November 2025 that don't have overtime_requests
 $attendance_query = "SELECT a.id as attendance_id, a.user_id, u.username, a.date, a.punch_out, a.overtime_hours 
                      FROM attendance a 
                      JOIN users u ON a.user_id = u.id 
                      LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id 
-                     WHERE u.role = 'Site Supervisor' 
-                     AND MONTH(a.date) = 10 
+                     WHERE u.role IN ('Site Supervisor', 'Purchase Manager') 
+                     AND MONTH(a.date) = 11 
                      AND YEAR(a.date) = 2025 
                      AND a.overtime_hours IS NOT NULL 
                      AND a.overtime_hours > '00:00:00' 
@@ -158,7 +158,7 @@ $attendance_records = $attendance_stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Submit OT Hours - Site Supervisor</title>
+    <title>Manual Submit OT Hours - Site Supervisor & Purchase Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -167,10 +167,10 @@ $attendance_records = $attendance_stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h1 class="text-2xl font-bold text-gray-800 mb-2">
                 <i class="fas fa-business-time text-blue-600 mr-2"></i>
-                Manual Submit OT Hours for Site Supervisors
+                Manual Submit OT Hours for Site Supervisors & Purchase Managers
             </h1>
             <p class="text-gray-600 mb-6">
-                Submit overtime hours manually for Site Supervisor users who may not have their data properly recorded.
+                Submit overtime hours manually for Site Supervisor and Purchase Manager users who may not have their data properly recorded.
             </p>
             
             <?php if (isset($success)): ?>
@@ -192,10 +192,10 @@ $attendance_records = $attendance_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             <i class="fas fa-user mr-1"></i>
-                            Site Supervisor
+                            User
                         </label>
                         <select name="user_id" id="user_id" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                            <option value="">Select a Site Supervisor</option>
+                            <option value="">Select a Site Supervisor or Purchase Manager</option>
                             <?php foreach ($site_supervisors as $supervisor): ?>
                                 <option value="<?php echo $supervisor['id']; ?>" <?php echo (isset($_POST['user_id']) && $_POST['user_id'] == $supervisor['id']) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($supervisor['username']); ?>
@@ -242,6 +242,7 @@ $attendance_records = $attendance_stmt->fetchAll(PDO::FETCH_ASSOC);
                         </label>
                         <select name="status" id="status" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
                             <option value="pending" <?php echo (isset($_POST['status']) && $_POST['status'] == 'pending') ? 'selected' : ''; ?>>Pending</option>
+                            <option value="submitted" <?php echo (isset($_POST['status']) && $_POST['status'] == 'submitted') ? 'selected' : ''; ?>>Submitted</option>
                             <option value="approved" <?php echo (isset($_POST['status']) && $_POST['status'] == 'approved') ? 'selected' : ''; ?>>Approved</option>
                             <option value="rejected" <?php echo (isset($_POST['status']) && $_POST['status'] == 'rejected') ? 'selected' : ''; ?>>Rejected</option>
                         </select>
@@ -265,7 +266,7 @@ $attendance_records = $attendance_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </label>
                     <textarea name="overtime_description" id="overtime_description" rows="2" 
                               class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                              placeholder="Enter overtime description"><?php echo isset($_POST['overtime_description']) ? htmlspecialchars($_POST['overtime_description']) : 'Manual submission for Site Supervisor'; ?></textarea>
+                              placeholder="Enter overtime description"><?php echo isset($_POST['overtime_description']) ? htmlspecialchars($_POST['overtime_description']) : 'Manual submission for Site Supervisor/Purchase Manager'; ?></textarea>
                 </div>
                 
                 <div class="flex justify-end">
@@ -280,13 +281,13 @@ $attendance_records = $attendance_stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4">
                 <i class="fas fa-list mr-2"></i>
-                Site Supervisor Attendance Records (October 2025)
+                Site Supervisor & Purchase Manager Attendance Records (November 2025)
             </h2>
             
             <?php if (empty($attendance_records)): ?>
                 <div class="text-center py-8 text-gray-500">
                     <i class="fas fa-info-circle text-4xl mb-4"></i>
-                    <p>No attendance records found for Site Supervisors in October 2025 that need manual submission.</p>
+                    <p>No attendance records found for Site Supervisors and Purchase Managers in November 2025 that need manual submission.</p>
                 </div>
             <?php else: ?>
                 <div class="overflow-x-auto">

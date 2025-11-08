@@ -429,17 +429,6 @@ function formatDate($date) {
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        /* Fix for content overflow */
-        .msb-content {
-            transition: margin-left 0.22s ease, width 0.22s ease;
-            width: calc(100% - var(--msb-width-collapsed, 64px));
-            overflow-x: hidden;
-            margin-left: var(--msb-width-collapsed, 64px);
-        }
-        .msb-content.is-expanded {
-            width: calc(100% - var(--msb-width, 240px));
-            margin-left: var(--msb-width, 240px);
-        }
         /* Ensure the table container doesn't cause overflow */
         .table-container {
             overflow-x: auto;
@@ -472,10 +461,10 @@ function formatDate($date) {
     </style>
 </head>
 <body class="bg-gray-100">
-    <?php include 'components/minimal_sidebar.php'; ?>
+    <?php include 'includes/supervisor_panel.php'; ?>
 
     <!-- Main Content Area -->
-    <main class="msb-content is-expanded" id="mainContent">
+    <main class="main-content" id="mainContent">
         <!-- 1. Header -->
         <header class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -1360,46 +1349,6 @@ function formatDate($date) {
 
             let currentAction = null;
             let currentRowId = null;
-
-            // --- Initialize sidebar to collapsed state ---
-            function initializeSidebar() {
-                const sidebar = document.getElementById('msbSidebar');
-                if (sidebar) {
-                    // Set sidebar to collapsed state by default
-                    sidebar.classList.add('is-collapsed');
-                    // Update main content to match
-                    if (mainContent) {
-                        mainContent.classList.add('is-expanded');
-                    }
-                }
-            }
-
-            // --- Handle Sidebar Resize Events ---
-            function handleSidebarResize() {
-                const sidebar = document.getElementById('msbSidebar');
-                if (sidebar && mainContent) {
-                    // Check if sidebar is collapsed
-                    if (sidebar.classList.contains('is-collapsed')) {
-                        mainContent.classList.add('is-expanded');
-                    } else {
-                        mainContent.classList.remove('is-expanded');
-                    }
-                }
-            }
-
-            // Listen for sidebar toggle events
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('#msbToggle')) {
-                    // Delay to allow sidebar animation to complete
-                    setTimeout(handleSidebarResize, 250);
-                }
-            });
-
-            // Also handle window resize events
-            window.addEventListener('resize', handleSidebarResize);
-
-            // Initialize sidebar state
-            initializeSidebar();
 
             // --- 1. Populate Filters ---
             function populateFilters() {

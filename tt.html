@@ -1,1 +1,367 @@
-heloo there i am good and what about yous
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Architecture & Interior Courses — Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --surface:#ffffff;
+    --text:#111827; /* gray-900 */
+    --muted:#6b7280; /* gray-500 */
+    --border:#e5e7eb; /* gray-200 */
+    --accent:#0a84ff; /* subtle blue */
+    --accent-ink:#0b1a2b;
+    --ok:#059669; /* green-600 */
+    --danger:#dc2626; /* red-600 */
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 16px 96px}
+
+  /* Header */
+  .hero{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}
+  .title{font-size:clamp(24px,4.2vw,40px);font-weight:800;letter-spacing:.1px;margin:6px 0}
+  .subtitle{color:var(--muted);max-width:720px}
+  .badge-deal{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--border);padding:6px 10px;border-radius:999px;font-weight:600;color:var(--muted)}
+  .timer{font-variant-numeric:tabular-nums}
+
+  /* Controls */
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+  .toggle{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+  .toggle button{border:0;background:transparent;padding:10px 14px;color:var(--muted);cursor:pointer}
+  .toggle button.active{background:#f3f4f6;color:var(--text)}
+  .coupon{display:flex;gap:8px}
+  .coupon input{border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:220px;outline:none}
+  .coupon button{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#111827;color:#fff;cursor:pointer}
+
+  /* Cards grid */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:transform .15s ease}
+  .card:hover{transform:translateY(-2px)}
+  .plan-title{font-weight:800;font-size:18px;margin:2px 0 4px}
+  .muted{color:var(--muted);font-size:14px}
+  .price{display:flex;align-items:flex-end;gap:8px;margin:12px 0 8px}
+  .price .value{font-size:32px;font-weight:800;letter-spacing:.2px}
+  .price .unit{font-size:13px;color:var(--muted);margin-bottom:6px}
+  .strike{color:#9ca3af;text-decoration:line-through}
+  .emi{font-size:12px;color:#374151}
+  .tagline{margin:6px 0 10px;color:#111827}
+  .features{display:grid;gap:8px;margin:12px 0}
+  .feat{display:flex;gap:10px;align-items:flex-start}
+  .tick{flex:0 0 20px;height:20px;border-radius:6px;border:1px solid var(--border);display:grid;place-items:center;font-weight:800;font-size:12px}
+  .tick.ok{color:var(--ok)}
+  .tick.mid{color:#92400e}
+  .tick.no{color:var(--danger)}
+  .cta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .cta .btn{flex:1 1 auto;min-width:150px;border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-weight:700;cursor:pointer;background:#111827;color:#fff}
+  .cta .btn.secondary{background:#fff;color:#111827}
+  .note{font-size:12px;color:var(--muted)}
+  .badge-pop{position:absolute;top:12px;right:12px;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;color:#111827;background:#f3f4f6}
+
+  /* Highlights */
+  .highlights{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+  @media (max-width:900px){.highlights{grid-template-columns:1fr}}
+  .highlight{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
+  .highlight strong{display:block;font-size:16px}
+
+  /* Comparison */
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px;background:#fff}
+  table{width:100%;border-collapse:collapse;min-width:780px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left}
+  th{background:#f9fafb;position:sticky;top:0}
+  .center{text-align:center}
+
+  /* FAQ */
+  .faq{margin:26px 0}
+  .qa{border:1px solid var(--border);border-radius:12px;margin:10px 0;background:#fff}
+  .q{display:flex;justify-content:space-between;gap:12px;padding:12px;cursor:pointer}
+  .a{display:none;padding:0 12px 12px;color:var(--muted)}
+  .qa.open .a{display:block}
+
+  /* Sticky CTA */
+  .sticky-cta{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--border);background:#ffffffcc;backdrop-filter:saturate(150%) blur(6px);padding:10px 12px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;z-index:10}
+  .sticky-cta .btn{border:1px solid var(--border);border-radius:999px;padding:10px 16px;font-weight:800;cursor:pointer}
+  .primary{background:#111827;color:#fff}
+  .ghost{background:#fff;color:#111827}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <div class="badge-deal">Offer ends in <span class="timer" id="timer">00:00:00</span></div>
+      <div class="title">Architecture & Interior Career Tracks</div>
+      <div class="subtitle">Four minimalist, mentor-led plans for students & fresh graduates. From AutoCAD to Revit/BIM, SketchUp + V‑Ray, BOQ & Estimation, site coordination, and portfolio + interview prep. Prices in ₹ with optional EMI.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="toggle" id="billingToggle" aria-label="Choose billing mode">
+      <button data-mode="one-time" class="active">One‑Time</button>
+      <button data-mode="emi">EMI (₹/month)</button>
+    </div>
+    <div class="coupon">
+      <input id="couponInput" placeholder="Coupon (STUDENT10 / DIWALI15)" />
+      <button id="applyCoupon">Apply</button>
+    </div>
+  </div>
+
+  <div class="grid" id="plansGrid"><!-- injected --></div>
+
+  <div class="highlights">
+    <div class="highlight"><strong>What you build</strong> Sheets & details, BIM models, renders, BOQ & cost sheet, site checklists, and a clean portfolio.</div>
+    <div class="highlight"><strong>Roles you target</strong> Draftsperson, Junior Architect, Interior Designer, BIM Modeller, Estimation Engineer, Coordinator.</div>
+    <div class="highlight"><strong>Mentor support</strong> Weekly critiques, live doubts, NBC/IS pointers, and recordings for every session.</div>
+  </div>
+
+  <div class="table-wrap" aria-label="Feature comparison">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="center">3M</th>
+          <th class="center">6M</th>
+          <th class="center">9M</th>
+          <th class="center">12M</th>
+        </tr>
+      </thead>
+      <tbody id="compareBody"><!-- rows injected --></tbody>
+    </table>
+  </div>
+
+  <div class="faq">
+    <div style="font-size:22px;font-weight:800;margin:18px 0 6px">FAQs</div>
+    <div class="qa"><div class="q"><strong>Do I get certificates?</strong><div>＋</div></div><div class="a">Yes — module certificates + a final completion certificate with mentor remarks.</div></div>
+    <div class="qa"><div class="q"><strong>Beginner friendly?</strong><div>＋</div></div><div class="a">We start from drafting basics and ramp to BIM, rendering, and estimation.</div></div>
+    <div class="qa"><div class="q"><strong>EMI options?</strong><div>＋</div></div><div class="a">Switch to EMI mode above to see per‑month estimates. Zero‑cost options available during offers.</div></div>
+    <div class="qa"><div class="q"><strong>Placement help?</strong><div>＋</div></div><div class="a">Resume/portfolio polish, mock interviews, and referrals through partner studios.</div></div>
+  </div>
+</div>
+
+<div class="sticky-cta">
+  <button class="btn primary" onclick="scrollToPlans()">Choose Your Plan</button>
+  <button class="btn ghost" onclick="openChat()">Talk to Admissions</button>
+</div>
+
+<script>
+  // ===== Data =====
+  const PLANS = [
+    { id:'p3', months:3,  name:'Starter (3 Months)',  popular:false, mrp:14999, price:9999,
+      tagline:'CAD foundations + essential visualization',
+      features:[
+        'AutoCAD 2D Drafting Pro',
+        'SketchUp Basics + V‑Ray intro',
+        '2 Portfolio Sheets + 1 Render',
+        'Site basics & materials 101',
+        'BOQ & Estimation — intro',
+        'Weekly live doubt‑clearing',
+        'Class recordings access'
+      ],
+      partial:['Revit/BIM — overview','Placement prep — CV template'],
+      missing:['Advanced BIM coordination','Dedicated interview referrals']
+    },
+    { id:'p6', months:6,  name:'Professional (6 Months)', popular:true, mrp:25999, price:17999,
+      tagline:'CAD → BIM workflows with strong visuals',
+      features:[
+        'AutoCAD Advanced + standards',
+        'Revit (Architecture) core workflows',
+        'SketchUp + V‑Ray Essentials',
+        'BOQ & Estimation fundamentals',
+        '3 Portfolio Sheets + 3 Renders',
+        'Weekly critiques & code refs (NBC/IS)',
+        'Placement prep + mock interview 1'
+      ],
+      partial:['Quantity takeoff semi‑manual','Basic site coordination checklists'],
+      missing:['Complex multi‑discipline BIM']
+    },
+    { id:'p9', months:9,  name:'Expert (9 Months)',  popular:false, mrp:35999, price:24999,
+      tagline:'Production drawings, BIM, realistic renders, BOQ',
+      features:[
+        'AutoCAD + Revit Advanced',
+        'SketchUp Pro + V‑Ray Pro',
+        'Comprehensive BOQ & Estimation',
+        'Full set: plans, sections, details',
+        '5 Portfolio Sheets + 6 Renders',
+        'Site coordination & RFIs',
+        '2 Mock interviews + referrals'
+      ],
+      partial:['Navisworks clash overview'],
+      missing:[]
+    },
+    { id:'p12', months:12, name:'Mastery (12 Months)', popular:false, mrp:44999, price:29999,
+      tagline:'End‑to‑end: BIM, estimation, tendering & placement',
+      features:[
+        'AutoCAD + Revit + BIM Management',
+        'SketchUp + V‑Ray Masterclass',
+        'Advanced BOQ, Estimation & Tender Docs',
+        'Clash detection (Navisworks) — hands‑on',
+        'Studio‑style Capstone with mentor',
+        '8 Portfolio Sheets + 8 Renders',
+        '3 Mock interviews + strong referrals'
+      ],
+      partial:['Primavera/MSP timeline overview'],
+      missing:[]
+    }
+  ];
+
+  const COUPONS = { 'STUDENT10':10, 'DIWALI15':15, 'FRESHER5':5 };
+  const formatINR = n => '₹' + n.toLocaleString('en-IN');
+  const calcEmi = (total, months) => Math.ceil(total / months);
+
+  const grid = document.getElementById('plansGrid');
+  let billingMode = 'one-time';
+  let appliedCoupon = null;
+
+  function effectivePrice(p){
+    if(!appliedCoupon) return p;
+    const off = COUPONS[appliedCoupon]||0;
+    return Math.max(999, Math.round(p * (100-off)/100));
+  }
+
+  function renderCards(){
+    grid.innerHTML = '';
+    PLANS.forEach(plan=>{
+      const priceNow = effectivePrice(plan.price);
+      const emi = calcEmi(priceNow, plan.months);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-plan', plan.id);
+
+      const priceBlock = billingMode === 'emi'
+        ? `<div class="price"><div class="value">${formatINR(emi)}</div><div class="unit">/month × ${plan.months}</div></div>
+           <div class="emi">Total: <strong>${formatINR(priceNow)}</strong></div>`
+        : `<div class="price"><div class="value">${formatINR(priceNow)}</div><div class="unit">one‑time</div></div>
+           <div class="emi">As low as ${formatINR(emi)}/mo</div>`;
+
+      const feats = plan.features.map(f=>`<div class="feat"><div class="tick ok">✓</div><div>${f}</div></div>`).join('');
+      const partial = (plan.partial||[]).map(f=>`<div class="feat"><div class="tick mid">~</div><div>${f}</div></div>`).join('');
+      const miss = (plan.missing||[]).map(f=>`<div class="feat"><div class="tick no">×</div><div>${f}</div></div>`).join('');
+
+      card.innerHTML = `
+        ${plan.popular ? '<div class="badge-pop">Most popular</div>' : ''}
+        <div class="plan-title">${plan.name}</div>
+        <div class="muted">${plan.months}-month guided track</div>
+        <div class="tagline">${plan.tagline}</div>
+        <div class="muted strike">${formatINR(plan.mrp)}</div>
+        ${priceBlock}
+        <div class="features">${feats}${partial}${miss}</div>
+        <div class="cta">
+          <button class="btn" onclick="enroll('${plan.id}')">Enroll Now</button>
+          <button class="btn secondary" onclick="syllabus('${plan.id}')">View Syllabus</button>
+        </div>
+        <div class="note">GST invoice • 7‑day refund window*</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Comparison
+  const compareBody = document.getElementById('compareBody');
+  function boolIcon(b){return b? '✓' : '—';}
+  function buildComparison(){
+    const rows = [
+      {label:'AutoCAD Advanced', map:p=>p.months>=6},
+      {label:'Revit / BIM core', map:p=>p.months>=6},
+      {label:'SketchUp + V‑Ray (Pro)', map:p=>p.months>=9},
+      {label:'Comprehensive BOQ & Estimation', map:p=>p.months>=9},
+      {label:'Clash Detection (Navisworks)', map:p=>p.months>=12},
+      {label:'Portfolio Sheets (count)', raw:true, map:p=>({3:2,6:3,9:5,12:8}[p.months])},
+      {label:'Renders (count)', raw:true, map:p=>({3:1,6:3,9:6,12:8}[p.months])},
+      {label:'Mock Interviews', raw:true, map:p=>({3:0,6:1,9:2,12:3}[p.months])},
+      {label:'Placement Referrals', map:p=>p.months>=9},
+      {label:'Capstone (studio‑style)', map:p=>p.months>=12},
+    ];
+    compareBody.innerHTML = rows.map(r=>{
+      const cols = PLANS.map(p=>`<td class="center">${r.raw? r.map(p) : boolIcon(r.map(p))}</td>`).join('');
+      return `<tr><td>${r.label}</td>${cols}</tr>`;
+    }).join('');
+  }
+
+  // Billing toggle
+  document.getElementById('billingToggle').addEventListener('click', (e)=>{
+    if(e.target.tagName!=='BUTTON') return;
+    [...e.currentTarget.children].forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    billingMode = e.target.dataset.mode;
+    renderCards();
+  });
+
+  // Coupons
+  document.getElementById('applyCoupon').addEventListener('click', ()=>{
+    const code = (document.getElementById('couponInput').value||'').trim().toUpperCase();
+    if(!(code in COUPONS)){
+      alert('Invalid coupon. Try STUDENT10 or DIWALI15.');
+      appliedCoupon = null;
+    } else {
+      appliedCoupon = code;
+      alert(code+' applied — '+COUPONS[code]+'% off');
+    }
+    renderCards();
+  });
+
+  // FAQ toggle
+  document.querySelectorAll('.qa .q').forEach(q=>{
+    q.addEventListener('click', ()=> q.parentElement.classList.toggle('open'));
+  });
+
+  // Sticky CTA actions
+  function scrollToPlans(){
+    document.getElementById('plansGrid').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function openChat(){
+    alert('An admissions advisor will contact you. (Wire WhatsApp/Chat here.)');
+  }
+  window.scrollToPlans = scrollToPlans;
+  window.openChat = openChat;
+
+  // Enroll/Syllabus
+  window.enroll = function(planId){
+    const plan = PLANS.find(p=>p.id===planId);
+    const pay = effectivePrice(plan.price);
+    const msg = `Enroll in ${plan.name} for ${formatINR(pay)}${billingMode==='emi' ? ' (EMI available)' : ''}. Proceed to checkout?`;
+    if(confirm(msg)) alert('Redirecting to secure payment...');
+  };
+  window.syllabus = function(planId){
+    const plan = PLANS.find(p=>p.id===planId);
+    const lines = [
+      'Module 1: Drafting Fundamentals (AutoCAD)',
+      'Module 2: Architectural Standards & Detailing',
+      'Module 3: Revit/BIM Workflows',
+      'Module 4: SketchUp + V‑Ray Visualization',
+      'Module 5: BOQ, Quantity Takeoff & Estimation',
+      'Module 6: Site Coordination, RFIs & QA/QC',
+      'Module 7: Portfolio & Interview Prep'
+    ];
+    alert(`${plan.name} – Syllabus Overview:\n\n`+lines.slice(0, Math.min(7, Math.ceil(plan.months/2))).join('\n'));
+  };
+
+  // Countdown (simple)
+  function startTimer(hours=48){
+    const end = Date.now() + hours*60*60*1000;
+    const el = document.getElementById('timer');
+    function tick(){
+      const diff = end - Date.now();
+      if(diff<=0){ el.textContent = 'Ended'; return; }
+      const h = Math.floor(diff/3.6e6);
+      const m = Math.floor((diff%3.6e6)/6e4);
+      const s = Math.floor((diff%6e4)/1e3);
+      el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      requestAnimationFrame(()=>setTimeout(tick, 250));
+    }
+    tick();
+  }
+
+  // Init
+  renderCards();
+  buildComparison();
+  startTimer(48);
+</script>
+</body>
+</html>

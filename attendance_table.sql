@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `attendance` (
   `approval_timestamp` DATETIME DEFAULT NULL,
   `manager_comments` TEXT DEFAULT NULL,
   `work_report` TEXT DEFAULT NULL,
-  `overtime_status` ENUM('pending', 'approved', 'rejected', 'submitted', 'expired') DEFAULT 'pending',
+  `overtime_status` ENUM('pending', 'approved', 'rejected', 'submitted', 'expired', 'resubmitted') DEFAULT 'pending',
   `Overtime_approval_status` ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   `overtime_approved_by` INT(11) DEFAULT NULL,
   `Manager_who_approved_rejected_overtime` INT(11) DEFAULT NULL,

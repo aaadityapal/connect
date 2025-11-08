@@ -1183,6 +1183,7 @@ try {
                                     // Expired: Only view enabled
                                     // Pending: No actions enabled until submitted
                                     // Submitted: All actions enabled based on role/view
+                                    // Resubmitted: All actions enabled based on role/view (treated like submitted)
                                     
                                     if (recordStatus === 'approved') {
                                         canAccept = false;
@@ -1205,8 +1206,8 @@ try {
                                         canReject = false;
                                         canEdit = false;
                                         canView = true;
-                                    } else if (recordStatus === 'submitted') {
-                                        // Submitted status - actions enabled based on role/view
+                                    } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
+                                        // Submitted or resubmitted status - actions enabled based on role/view
                                         canAccept = canPerformActions;
                                         canReject = canPerformActions;
                                         canEdit = canPerformActions;
@@ -1233,9 +1234,9 @@ try {
                                     const acceptButtonClass = canAccept ? 'text-green-600 hover:text-green-900' : 'text-green-300 cursor-not-allowed';
                                     const rejectButtonClass = canReject ? 'text-red-600 hover:text-red-900' : 'text-red-300 cursor-not-allowed';
                                     const editButtonClass = canEdit ? 'text-blue-600 hover:text-blue-900' : 'text-blue-300 cursor-not-allowed';
-                                    const acceptButtonTitle = canAccept ? 'Accept' : (recordStatus === 'approved' ? 'Already approved' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : recordStatus === 'submitted' ? 'Cannot approve - viewing cross-team requests' : 'Action not available');
-                                    const rejectButtonTitle = canReject ? 'Reject' : (recordStatus === 'approved' ? 'Reject approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : recordStatus === 'submitted' ? 'Cannot reject - viewing cross-team requests' : 'Action not available');
-                                    const editButtonTitle = canEdit ? 'Edit' : (recordStatus === 'approved' ? 'Edit approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : recordStatus === 'submitted' ? 'Cannot edit - viewing cross-team requests' : 'Action not available');
+                                    const acceptButtonTitle = canAccept ? 'Accept' : (recordStatus === 'approved' ? 'Already approved' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot approve - viewing cross-team requests' : 'Action not available');
+                                    const rejectButtonTitle = canReject ? 'Reject' : (recordStatus === 'approved' ? 'Reject approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot reject - viewing cross-team requests' : 'Action not available');
+                                    const editButtonTitle = canEdit ? 'Edit' : (recordStatus === 'approved' ? 'Edit approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot edit - viewing cross-team requests' : 'Action not available');
                                     
                                     row.innerHTML = `
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.username}</td>

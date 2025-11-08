@@ -33,7 +33,7 @@
         <span class="menu-text">Attendance Overview</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_manager_ot_approval.php' ? 'active' : ''; ?>" onclick="window.location.href='site_manager_ot_approval.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'overtime_dashboard_site.php' ? 'active' : ''; ?>" onclick="window.location.href='overtime_dashboard_site.php'">
         <i class="fas fa-clock"></i>
         <span class="menu-text">Overtime Approval</span>
     </div>
@@ -108,7 +108,7 @@
         <i class="fas fa-calendar-alt"></i>
         <span class="menu-text">Apply Leaves</span>
     </div>
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'pm_overtime.php' ? 'active' : ''; ?>" onclick="window.location.href='pm_overtime.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'coordinator_and_purchase_manager_overtime.php' ? 'active' : ''; ?>" onclick="window.location.href='coordinator_and_purchase_manager_overtime.php'">
         <i class="fas fa-tachometer-alt"></i>
         <span class="menu-text">Overtime</span>
     </div>

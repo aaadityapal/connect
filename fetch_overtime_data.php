@@ -233,7 +233,8 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
                         ELSE 
                             COALESCE(oreq.overtime_description, 'Generated automatically')
                     END as overtime_report,
-                    oreq.overtime_hours as submitted_ot_hours
+                    oreq.overtime_hours as submitted_ot_hours,
+                    oreq.payment_status as payment_status
                   FROM attendance a
                   JOIN users u ON a.user_id = u.id
                   LEFT JOIN user_shifts us ON u.id = us.user_id AND a.date BETWEEN us.effective_from AND COALESCE(us.effective_to, '9999-12-31')
@@ -321,7 +322,8 @@ function getOvertimeData($pdo, $filter_user, $filter_status, $month, $year, $loc
                 'submitted_ot_hours' => !empty($row['submitted_ot_hours']) ? number_format(floatval($row['submitted_ot_hours']), 1) : 'N/A',
                 'work_report' => !empty($row['work_report']) && trim($row['work_report']) !== '' ? $row['work_report'] : 'No work report submitted for this date',
                 'overtime_report' => !empty($row['overtime_report']) ? $row['overtime_report'] : 'System deployment and testing',
-                'status' => $status
+                'status' => $status,
+                'payment_status' => !empty($row['payment_status']) ? $row['payment_status'] : 'unpaid'
             ];
         }
         

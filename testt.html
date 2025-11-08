@@ -1,247 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Footer</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap');
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Open Sans', sans-serif;
-    }
-    .footer {
-      background: #E8E6E6;
-      border-top: 1px solid white;
-      border-bottom: 1px solid white;
-      padding: 20px 0;
-    }
-    .footer .footer-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 1.5rem;
-      padding: 20px;
-    }
-    .footer .footer-col h2 {
-      color: red;
-      font-size: 24px;
-      font-weight: 600;
-    }
-    .footer .links {
-      margin-top: 20px;
-    }
-    .footer .links li {
-      list-style: none;
-      margin-bottom: 10px;
-    }
-    .footer .links li a {
-      text-decoration: none;
-      color: black;
-    }
-    .footer .links li a:hover {
-      color: red;
-    }
-    .footer p {
-      margin: 20px 0;
-      color: black;
-      max-width: 300px;
-    }
-    .footer form {
-      display: flex;
-      gap: 5px;
-    }
-    .footer input {
-      height: 40px;
-      border-radius: 6px;
-      background: none;
-      width: 100%;
-      outline: none;
-      border: 1px solid #7489C6;
-      caret-color: #E8E6E6;
-      color: #E8E6E6;
-      padding-left: 10px;
-    }
-    .footer input::placeholder {
-      color: black;
-    }
-    .footer form button {
-      background: #fff;
-      outline: none;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: 0.2s ease;
-    }
-    .footer form button:hover {
-      background: black;
-      color: white;
-    }
-    .footer .icons {
-      font-size: 22px;
-      display: flex;
-      margin-top: 30px;
-      gap: 30px;
-      cursor: pointer;
-    }
-    .footer .icons a {
-      color: black;
-    }
-    .footer .icons a:hover {
-      color: red;
-    }
-    
-    /* Adding brand colors for social media icons */
-    .footer .icons a.facebook {
-      color: #4267B2; /* Facebook blue */
-    }
-    .footer .icons a.linkedin {
-      color: #0077B5; /* LinkedIn blue */
-    }
-    .footer .icons a.map {
-      color: #EA4335; /* Google Maps red */
-    }
-    .footer .icons a.instagram {
-      color: #E1306C; /* Instagram pink */
-    }
-    .footer .icons a.youtube {
-      color: #FF0000; /* YouTube red */
-    }
-    .privacy-policy {
-      background: #E8E6E6;
-      color: black;
-      padding: 20px;
-      max-width: 600px;
-      border-radius: 8px;
-      margin-left: -20px;
-    }
-    h2 {
-      color: red;
-    }
-    a {
-      color: black;
-      text-decoration: none; 
-      transition: color 0.3s, text-decoration 0.3s; 
-    }
-    a:hover, a:focus {
-      color: #FF6347; 
-      text-decoration: underline; 
-    }
-    .copyright {
-      text-align: center;
-      width: 1200px;
-      text-wrap: wrap;
-      color: white;
-      margin-top: 10px;
-      padding-left: 620px; /* Added padding to the right */
-    }
-    hr {
-      border-top: 1px solid white;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  </style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: #ffffff;
+            color: #333;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .logo {
+            padding: 25px 20px;
+            border-bottom: 1px solid #eaeaea;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            color: #555;
+            font-size: 15px;
+        }
+
+        .nav-item:hover {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .nav-item.active {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            color: #2196f3;
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            margin-right: 15px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item span {
+            font-size: 15px;
+        }
+
+        .logout-section {
+            padding: 20px;
+            border-top: 1px solid #eaeaea;
+            margin-top: 10px;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .logout-btn:hover {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .logout-btn i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .logout-btn span {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eaeaea;
+        }
+
+        .content-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .content-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .nav-items {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            
+            .nav-item {
+                flex: 0 0 48%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="footer">
-    <div class="footer-row">
-      <div class="footer-col">
-        <h2>Head Office</h2>
-        <p>F-52, First Floor, <br> Near Gurudwara, <br>Madhu Vihar, I.P. Extension, <br>Delhi-110092</p>
-        <p>+91 7503468992 <br> +91 9958600397</p>
-        <p>contact@architectshive.com</p>
-        <h2>Info</h2>
-        <ul class="links residences">
-          <li><a href="https://www.architectshive.com/construct" target="_blank">CNSTRCT</a></li>
-          <li><a href="https://www.architectshive.com/" target="_blank">DeSIGN</a></li>
-          <li><a href="https://ahive-intiria.netlify.app/" target="_blank">Intiria</a></li>
-          <li><a href="https://www.architectshive.com/project" target="_blank">Projects</a></li>
-          <li><a href="https://www.architectshive.com/services" target="_blank">Services</a></li>
-          <li><a href="https://www.architectshive.com/blogs" target="_blank">Blogs</a></li>
-          <li><a href="https://www.architectshive.com/about-us" target="_blank">About Us</a></li>
-          <li><a href="https://www.architectshive.com/contact-us" target="_blank">Contact Us</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h2>Residential Projects</h2>
-        <ul class="links residences">
-          <li><a href="https://www.architectshive.com/project/mrsonu-residence" target="_blank">Residence At Jewar Greater Noida</a></li>
-          <li><a href="https://www.architectshive.com/sector-12residence" target="_blank">Residential Project in Sector 12, Noida</a></li>
-          <li><a href="https://www.architectshive.com/project/kuldeepsharmaresidence" target="_blank">Residential Project In Loni</a></li>
-          <li><a href="https://www.architectshive.com/project/gupta-villa" target="_blank">Residential Project In Rohtak</a></li>
-          <li><a href="https://www.architectshive.com/project/lalit-bhist-residence" target="_blank">Residential Project In Muradnagar</a></li>
-          <li><a href="https://www.architectshive.com/project/mr-manoj-agrawal-residence">Residential Project In Sector-40, Noida</a></li>
-        </ul>
-        <h2>Commercial Projects</h2>
-        <ul class="links residences">
-          <li><a href="https://www.architectshive.com/project/ingress" target="_blank">Commercial Project In Gurgaon</a></li>
-          <li><a href="https://www.architectshive.com/project/office-at-greenpark" target="_blank">Commercial Project in Green Park, Delhi</a></li>
-          <li><a href="https://www.architectshive.com/project/ri-style" target="_blank">Commercial Project in Rohtak</a></li>
-          <li><a href="https://www.architectshive.com/titan-eyeplus" target="_blank">Commercial Project Showroom in Kohat Enclave </a></li>
-          <li><a href="https://www.architectshive.com/project/avery-dennison-gurgaon" target="_blank">Commercial Project in Gurgaon</a></li>
-          <li><a href="https://www.architectshive.com/project/inayat-saloon" target="_blank">Commercial Project Studio in Delhi</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h2>Hotels / Restaurants / Healthcare</h2>
-        <ul class="links residences">
-          <li><a href="https://www.architectshive.com/project/ginger-hotel-mumbai" target="_blank">Hotel In  Mumbai</a></li>
-          <li><a href="https://www.architectshive.com/project/daily-dose-restraunt" target="_blank">Cafe In Dwarka</a></li>
-          <li><a href="#">OYO Hotel At Hosiyarpur </a></li>
-          <li><a href="https://www.architectshive.com/project/annapurna-sweet-shop" target="_blank">Sweet Shop In Delhi</a></li>
-          <li><a href="https://www.architectshive.com/project/lotus-labs-rohtak" target="_blank">Labs In Rohtak</a></li>
-          <li><a href="https://www.architectshive.com/project/bharatpur-rajasthan-hospital" target="_blank">Hospital In Bharatpur</a></li>
-        </ul>
-
-        <h2>Resorts / Farmhouse / Marriage Home</h2>
-        <ul class="links residences">
-          <li><a href="https://www.architectshive.com/project/afzalpur-resort" target="_blank">Resort At Afzalpur</a></li>
-          <li><a href="https://www.architectshive.com/project/rohtak-resort" target="_blank">Resort At Rohtak</a></li>
-          <li><a href="https://www.architectshive.com/project/dehradun-farmhouse" target="_blank">Resort At Dehradun</a></li>
-          <li><a href="https://www.architectshive.com/project/marriage-home" target="_blank">Marriage Home at Afzalpur</a></li>
-          <li><a href="https://www.architectshive.com/project/gurgaon-marriage-home" target="_blank">Marriage Home at Gurugram </a></li>
-        </ul>
-
-      </div>
-      <div class="footer-col">
-        <h2>Follow Us</h2>
-        <div class="icons">
-          <a href="https://www.facebook.com/profile.php?id=100089457390637" target="_blank" class="facebook"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://www.linkedin.com/in/architectshive-cnstrct-1399b6322/" target="_blank" class="linkedin"><i class="fab fa-linkedin"></i></a>
-          <a href="https://maps.app.goo.gl/fZPzTcsSJqkrFDD7A" target="_blank" class="map"><i class="fas fa-map-marker-alt"></i></a>
-          <a href="https://www.instagram.com/architectshive_official" target="_blank" class="instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://www.youtube.com/channel/architectshive" target="_blank" class="youtube"><i class="fab fa-youtube"></i></a>
+    <div class="sidebar">
+        <div class="logo">
+            <h1>HR Portal</h1>
         </div>
-        <div class="privacy-policy">
-          <ul>
-            <li><a href="https://www.architectshive.com/privacy-policy" target="_blank">Privacy Policy</a></li>
-            <li><a href="https://www.architectshive.com/terms-and-condition" target="_blank">Terms Of Service</a></li>
-            <li><a href="https://www.architectshive.com/shipping-policy" target="_blank">Shipping Policy</a></li>
-            <li><a href="https://www.architectshive.com/disclaimer" target="_blank">Disclaimer</a></li>
-          </ul>
+        
+        <div class="nav-items">
+            <div class="nav-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Employees</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-calendar-check"></i>
+                <span>Attendance</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-clock"></i>
+                <span>Shifts</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Manager Payouts</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Company Stats</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-money-check"></i>
+                <span>Salary</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-calendar-minus"></i>
+                <span>Leave Request</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Geofence Locations</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-plane"></i>
+                <span>Travel Expenses</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-business-time"></i>
+                <span>Overtime Approval</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-key"></i>
+                <span>Password Reset</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
         </div>
-        <p>Enter your email to get further updates:</p>
-        <form action="#">
-          <input type="text" placeholder="Your email" required>
-          <button type="submit">SUBSCRIBE</button>
-        </form>
-        <br>
-        <div class="gif-icons">
-          <img src="https://static.wixstatic.com/media/3c0ec6_74f6cc9ce84d40f1923a189e2bdd71e5~mv2.gif" alt="GIF 1" style="width: 40px; height: 40px;">
-          <img src="https://static.wixstatic.com/media/3c0ec6_9a86349597994e21855539524b5cb9ad~mv2.gif" alt="GIF 2" style="width: 40px; height: 40px;">
-          <img src="https://static.wixstatic.com/media/3c0ec6_3c77712cd8bf4f6787464d4aa8e12216~mv2.gif" alt="GIF 3" style="width: 40px; height: 40px;">
-          <img src="https://static.wixstatic.com/media/3c0ec6_f6e29cd5f8474babb868b9f8995f3ba7~mv2.gif" alt="GIF 4" style="width: 40px; height: 40px;">
-          <img src="https://static.wixstatic.com/media/3c0ec6_9c1a8a7c281f4df5a48c42b01e5c98ca~mv2.gif" alt="GIF 5" style="width: 40px; height: 40px;">
-          <!-- Add more GIFs if needed -->
-      </div>
-      </div>
+        
+        <div class="logout-section">
+            <div class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </div>
+        </div>
     </div>
-    <hr>
-  </div>
+    
+    <div class="main-content">
+        <div class="header">
+            <h2>Dashboard</h2>
+        </div>
+        
+        <div class="content-card">
+            <h3>Welcome to HR Portal</h3>
+            <p>This is the main content area. Select a menu item from the sidebar to view different sections of the HR portal.</p>
+            <p style="margin-top: 15px;">The sidebar design matches the screenshot with a clean, professional appearance and appropriate icons for each menu item.</p>
+        </div>
+    </div>
+
+    <script>
+        // Add active class to clicked nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Update the main content header based on selection
+                const headerText = this.querySelector('span').textContent;
+                document.querySelector('.header h2').textContent = headerText;
+            });
+        });
+    </script>
 </body>
 </html>

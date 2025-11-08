@@ -2748,7 +2748,7 @@ try {
                 <i class="bi bi-car-front-fill"></i>
                 Travel Expenses
             </a>
-            <a href="hr_overtime_approval.php" class="nav-link">
+            <a href="overtime_dashboard_HR.php" class="nav-link">
                 <i class="bi bi-clock"></i>
                 Overtime Approval
             </a>

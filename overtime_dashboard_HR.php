@@ -99,11 +99,20 @@ try {
         }
     }
     
+    // Add location filter based on roles
+    if ($filter_location === 'studio') {
+        // For studio, exclude specific roles
+        $where_conditions[] = "u.role NOT IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
+    } else if ($filter_location === 'site') {
+        // For site, only include specific roles
+        $where_conditions[] = "u.role IN ('Site Supervisor', 'Site Coordinator', 'Sales', 'Graphic Designer', 'Social Media Marketing', 'Purchase Manager')";
+    }
+    
     $where_clause = !empty($where_conditions) ? "WHERE " . implode(" AND ", $where_conditions) : "";
     
     // Query to fetch statistics
-    // For approved hours after November 2025, use overtime_requests table
-    // For approved hours before October 2025, use attendance table
+    // For records after October 2025, use overtime_requests table for all status counts
+    // For records before October 2025, use attendance table
     $query = "SELECT 
                 COUNT(*) as total_requests,
                 SUM(CASE 
@@ -132,6 +141,7 @@ try {
                     ELSE 0
                 END) as expired_count
               FROM attendance a
+              JOIN users u ON a.user_id = u.id
               LEFT JOIN overtime_requests oreq ON a.id = oreq.attendance_id
               $where_clause";
     
@@ -165,186 +175,6 @@ try {
         /* Apply Inter font */
         body {
             font-family: 'Inter', sans-serif;
-        }
-        
-        /* Custom sidebar styles */
-        :root {
-            --sidebar-bg: #ffffff;
-            --sidebar-width: 240px;
-            --sidebar-collapsed-width: 64px;
-            --sidebar-border: #e5e7eb;
-            --sidebar-text: #0f172a;
-            --sidebar-text-dim: #475569;
-            --sidebar-accent: #2563eb;
-            --sidebar-hover: #f3f4f6;
-        }
-        
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--sidebar-border);
-            display: flex;
-            flex-direction: column;
-            transition: all 0.22s ease;
-            z-index: 100;
-        }
-        
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            border-bottom: 1px solid var(--sidebar-border);
-        }
-        
-        .logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #2563eb, #0ea5e9);
-            box-shadow: 0 4px 12px rgba(37,99,235,0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-        }
-        
-        .logo-text {
-            margin-left: 12px;
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--sidebar-text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .sidebar.collapsed .logo-text {
-            display: none;
-        }
-        
-        .nav-menu {
-            padding: 12px;
-            flex: 1;
-            overflow-y: auto;
-        }
-        
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: var(--sidebar-text);
-            text-decoration: none;
-            margin-bottom: 4px;
-            transition: all 0.15s ease;
-        }
-        
-        .nav-item:hover {
-            background: var(--sidebar-hover);
-        }
-        
-        .nav-item.active {
-            background: #eef2ff;
-            color: #1d4ed8;
-        }
-        
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        
-        .nav-text {
-            margin-left: 12px;
-            font-size: 14px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .sidebar.collapsed .nav-text {
-            display: none;
-        }
-        
-        .sidebar-footer {
-            padding: 12px;
-            border-top: 1px solid var(--sidebar-border);
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #6b7280;
-        }
-        
-        .user-details {
-            margin-left: 10px;
-        }
-        
-        .user-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--sidebar-text);
-        }
-        
-        .user-role {
-            font-size: 12px;
-            color: var(--sidebar-text-dim);
-        }
-        
-        .sidebar.collapsed .user-details {
-            display: none;
-        }
-        
-        .toggle-btn {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: 1px solid var(--sidebar-border);
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 110;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.22s ease;
-        }
-        
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 24px;
-            transition: margin-left 0.22s ease;
-        }
-        
-        .sidebar.collapsed ~ .main-content {
-            margin-left: var(--sidebar-collapsed-width);
         }
         
         /* Custom spinner */
@@ -386,90 +216,11 @@ try {
         .toggle-button:not(.active):hover {
             background-color: #e5e7eb;
         }
-        
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding-top: 60px;
-            }
-            
-            .sidebar ~ .main-content {
-                margin-left: 0;
-            }
-            
-            .toggle-btn {
-                left: 12px;
-                top: 12px;
-            }
-        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Custom Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="logo-text">Overtime Manager</div>
-        </div>
-        
-        <nav class="nav-menu">
-            <a href="overtime_dashboard.php" class="nav-item active">
-                <div class="nav-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="nav-text">Dashboard</div>
-            </a>
-            <a href="new_page.php" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-business-time"></i>
-                </div>
-                <div class="nav-text">Overtime Requests</div>
-            </a>
-            <a href="#" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="nav-text">Reports</div>
-            </a>
-            <a href="#" class="nav-item">
-                <div class="nav-icon">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <div class="nav-text">Settings</div>
-            </a>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <?php echo substr($_SESSION['username'] ?? 'U', 0, 1); ?>
-                </div>
-                <div class="user-details">
-                    <div class="user-name"><?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></div>
-                    <div class="user-role"><?php echo htmlspecialchars($user_role); ?></div>
-                </div>
-            </div>
-        </div>
-    </aside>
-    
-    <!-- Toggle Button -->
-    <button class="toggle-btn" id="toggleSidebar">
-        <i class="fas fa-bars"></i>
-    </button>
-    
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="p-6">
         <!-- Header -->
         <header class="mb-8 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
             <h1 class="text-2xl font-bold text-gray-900 flex items-center">
@@ -744,6 +495,10 @@ try {
                                 <i class="fas fa-tasks mr-1"></i>
                                 Status
                             </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-rupee-sign mr-1"></i>
+                                Payment Status
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                                 <i class="fas fa-cog mr-1"></i>
                                 Action
@@ -753,7 +508,7 @@ try {
                     <tbody class="bg-white divide-y divide-gray-200" id="employee-activity-body">
                         <!-- Data will be loaded here via AJAX -->
                         <tr>
-                            <td colspan="10" class="px-6 py-4 text-center text-gray-500">
+                            <td colspan="11" class="px-6 py-4 text-center text-gray-500">
                                 <div class="flex justify-center items-center">
                                     <div class="spinner mr-2"></div>
                                     Loading employee activity data...
@@ -958,18 +713,40 @@ try {
                 </div>
             </div>
         </div>
+        
+        <!-- Mark as Paid Modal -->
+        <div id="markPaidModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-purple-50">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <span style="font-size: 20px; font-weight: bold; color: #9333ea;" class="mr-2">₹</span>
+                        Mark Overtime as Paid
+                    </h3>
+                    <button id="closePaidModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="px-6 py-4 flex-grow overflow-y-auto" id="markPaidContent">
+                    <div class="flex justify-center items-center h-64">
+                        <div class="spinner mr-2"></div>
+                        <span class="text-gray-500">Loading overtime details...</span>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-2">
+                    <button id="closePaidModalBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-150 ease-in-out">
+                        Cancel
+                    </button>
+                    <button id="confirmPaidBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-150 ease-in-out">
+                        <span style="font-size: 16px; font-weight: bold;" class="mr-2">₹</span>
+                        Mark as Paid
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar toggle functionality
-            const toggleBtn = document.getElementById('toggleSidebar');
-            const sidebar = document.getElementById('sidebar');
-            
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-            });
-            
             // Apply filters button
             const applyFiltersBtn = document.getElementById('apply-filters');
             const filterSpinner = document.getElementById('filter-spinner');
@@ -1064,9 +841,87 @@ try {
                                         overtimeReport : 
                                         'No overtime report available for this date';
                                     
-                                    // Truncate reports to 5 words
-                                    const workReport = truncateToWords(fullWorkReport, 5);
-                                    const displayOvertimeReport = truncateToWords(fullOvertimeReport, 5);
+                                    // Truncate reports to 2-3 words
+                                    const workReport = truncateToWords(fullWorkReport, 3);
+                                    const displayOvertimeReport = truncateToWords(fullOvertimeReport, 3);
+                                    
+                                    // Determine if user can perform actions based on their role and the current view
+                                    const userRole = '<?php echo $user_role; ?>';
+                                    const isStudioView = location === 'studio';
+                                    const isSiteView = location === 'site';
+                                    
+                                    // Check if user can perform actions based on their role and view
+                                    const canPerformActions = 
+                                        (userRole === 'Senior Manager (Studio)' && isStudioView) ||
+                                        (userRole === 'Senior Manager (Site)' && isSiteView);
+                                    
+                                    // Determine which buttons should be enabled based on status
+                                    const recordStatus = record.status.toLowerCase();
+                                    let canAccept = false;
+                                    let canReject = false;
+                                    let canEdit = false;
+                                    let canView = true; // View is always enabled
+                                    
+                                    // Logic based on status:
+                                    // Approved: Only reject, edit, and view enabled (regardless of role)
+                                    // Rejected: Only view enabled
+                                    // Expired: Only view enabled
+                                    // Pending: No actions enabled until submitted
+                                    // Submitted: All actions enabled based on role/view
+                                    // Resubmitted: All actions enabled based on role/view (treated like submitted)
+                                    
+                                    if (recordStatus === 'approved') {
+                                        canAccept = false;
+                                        canReject = true; // Always enabled for approved records
+                                        canEdit = true;   // Always enabled for approved records
+                                        canView = true;
+                                    } else if (recordStatus === 'rejected') {
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    } else if (recordStatus === 'expired') {
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    } else if (recordStatus === 'pending') {
+                                        // Pending status - no actions enabled
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
+                                        // Submitted or resubmitted status - actions enabled based on role/view
+                                        canAccept = canPerformActions;
+                                        canReject = canPerformActions;
+                                        canEdit = canPerformActions;
+                                        canView = true;
+                                    } else {
+                                        // For any other status, disable actions
+                                        canAccept = false;
+                                        canReject = false;
+                                        canEdit = false;
+                                        canView = true;
+                                    }
+                                    
+                                    // Apply role restrictions to approved records
+                                    if (recordStatus === 'approved') {
+                                        // Even for approved records, still check role restrictions
+                                        if (!canPerformActions) {
+                                            canReject = false;
+                                            canEdit = false;
+                                            // View is always enabled
+                                        }
+                                    }
+                                    
+                                    // Button classes and titles
+                                    const acceptButtonClass = canAccept ? 'text-green-600 hover:text-green-900' : 'text-green-300 cursor-not-allowed';
+                                    const rejectButtonClass = canReject ? 'text-red-600 hover:text-red-900' : 'text-red-300 cursor-not-allowed';
+                                    const editButtonClass = canEdit ? 'text-blue-600 hover:text-blue-900' : 'text-blue-300 cursor-not-allowed';
+                                    const acceptButtonTitle = canAccept ? 'Accept' : (recordStatus === 'approved' ? 'Already approved' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot approve - viewing cross-team requests' : 'Action not available');
+                                    const rejectButtonTitle = canReject ? 'Reject' : (recordStatus === 'approved' ? 'Reject approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot reject - viewing cross-team requests' : 'Action not available');
+                                    const editButtonTitle = canEdit ? 'Edit' : (recordStatus === 'approved' ? 'Edit approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot edit - viewing cross-team requests' : 'Action not available');
                                     
                                     row.innerHTML = `
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.username}</td>
@@ -1082,15 +937,24 @@ try {
                                                 ${record.status}
                                             </span>
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                ${record.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                                ${record.payment_status}
+                                            </span>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium w-32">
                                             <div class="flex space-x-2">
-                                                <button class="text-green-600 hover:text-green-900" title="Accept">
+                                                <button class="text-purple-600 hover:text-purple-900 rupee-button" data-id="${record.attendance_id}" title="Rupee">
+                                                    <span style="font-size: 16px; font-weight: bold;">₹</span>
+                                                </button>
+                                                <button class="${acceptButtonClass}" title="${acceptButtonTitle}" ${canAccept ? '' : 'disabled'}>
                                                     <i class="fas fa-check-circle"></i>
                                                 </button>
-                                                <button class="text-red-600 hover:text-red-900" title="Reject">
+                                                <button class="${rejectButtonClass}" title="${rejectButtonTitle}" ${canReject ? '' : 'disabled'}>
                                                     <i class="fas fa-times-circle"></i>
                                                 </button>
-                                                <button class="text-blue-600 hover:text-blue-900" title="Edit">
+                                                <button class="${editButtonClass}" title="${editButtonTitle}" ${canEdit ? '' : 'disabled'}>
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <button class="text-gray-600 hover:text-gray-900 view-details" data-id="${record.attendance_id}" title="View">
@@ -1106,7 +970,7 @@ try {
                                 // No data found
                                 employeeActivityBody.innerHTML = `
                                     <tr>
-                                        <td colspan="10" class="px-6 py-4 text-center text-gray-500">
+                                        <td colspan="11" class="px-6 py-4 text-center text-gray-500">
                                             No employee activity found for the selected filters.
                                         </td>
                                     </tr>
@@ -1115,11 +979,14 @@ try {
                             
                             // After loading data, also refresh the user filter dropdown
                             fetchUserFilterOptions(location);
+                            
+                            // Update statistics cards
+                            updateStatisticsCards(data.statistics);
                         } else {
                             // Error occurred
                             employeeActivityBody.innerHTML = `
                                 <tr>
-                                    <td colspan="10" class="px-6 py-4 text-center text-red-500">
+                                    <td colspan="11" class="px-6 py-4 text-center text-red-500">
                                         Error loading data: ${data.error}
                                     </td>
                                 </tr>
@@ -1130,12 +997,23 @@ try {
                         console.error('Error fetching employee activity:', error);
                         employeeActivityBody.innerHTML = `
                             <tr>
-                                <td colspan="10" class="px-6 py-4 text-center text-red-500">
+                                <td colspan="11" class="px-6 py-4 text-center text-red-500">
                                     Error loading data. Please try again.
                                 </td>
                             </tr>
                         `;
                     });
+            }
+            
+            // Function to update statistics cards with new data
+            function updateStatisticsCards(statistics) {
+                if (statistics) {
+                    document.getElementById('pending-count').textContent = statistics.pending_requests || 0;
+                    document.getElementById('approved-hours').textContent = (statistics.approved_hours || 0).toFixed(1);
+                    document.getElementById('rejected-requests').textContent = statistics.rejected_requests || 0;
+                    document.getElementById('accepted-requests').textContent = statistics.approved_count || 0;
+                    document.getElementById('expired-requests').textContent = statistics.expired_requests || 0;
+                }
             }
             
             // Function to fetch user filter options based on location
@@ -1201,8 +1079,22 @@ try {
             const urlParams = new URLSearchParams(window.location.search);
             const initialLocation = urlParams.get('location') || 'studio';
             
-            // Set the correct toggle button as active
-            if (initialLocation === 'site') {
+            // Set the correct toggle button as active based on user role and URL parameters
+            // Senior Manager (Studio) defaults to Studio view
+            // Senior Manager (Site) defaults to Site view
+            const userRole = '<?php echo $user_role; ?>';
+            let defaultLocation = initialLocation;
+            
+            if (!urlParams.has('location')) {
+                // If no location parameter in URL, set default based on user role
+                if (userRole === 'Senior Manager (Site)') {
+                    defaultLocation = 'site';
+                } else {
+                    defaultLocation = 'studio';
+                }
+            }
+            
+            if (defaultLocation === 'site') {
                 siteToggle.classList.add('active');
                 studioToggle.classList.remove('active');
             } else {
@@ -1211,7 +1103,7 @@ try {
             }
             
             // Fetch data for the initial location
-            fetchEmployeeActivity(initialLocation);
+            fetchEmployeeActivity(defaultLocation);
             
             // Report Modal Functionality
             const reportModal = document.getElementById('reportModal');
@@ -1238,6 +1130,13 @@ try {
             const closeRejectModalBtn = document.getElementById('closeRejectModalBtn');
             const confirmRejectBtn = document.getElementById('confirmRejectBtn');
             const rejectOvertimeContent = document.getElementById('rejectOvertimeContent');
+            
+            // Mark as Paid Modal
+            const markPaidModal = document.getElementById('markPaidModal');
+            const closePaidModal = document.getElementById('closePaidModal');
+            const closePaidModalBtn = document.getElementById('closePaidModalBtn');
+            const confirmPaidBtn = document.getElementById('confirmPaidBtn');
+            const markPaidContent = document.getElementById('markPaidContent');
             
             // Function to truncate text to specified number of words
             function truncateToWords(text, wordCount) {
@@ -1966,7 +1865,7 @@ try {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
+                        },
                     body: JSON.stringify({
                         attendance_id: attendanceId,
                         reason: reason
@@ -2102,6 +2001,260 @@ try {
                     rejectOvertimeModal.classList.add('hidden');
                     document.body.classList.remove('overflow-hidden');
                 }
+            }
+            
+            // Function to open mark paid modal
+            function openMarkPaidModal(attendanceId) {
+                // Show loading state
+                markPaidContent.innerHTML = `
+                    <div class="flex justify-center items-center h-64">
+                        <div class="spinner mr-2"></div>
+                        <span class="text-gray-500">Loading overtime details...</span>
+                    </div>
+                `;
+                
+                markPaidModal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+                
+                // Fetch overtime details
+                fetch(`fetch_overtime_details.php?attendance_id=${attendanceId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            displayPaidOvertimeDetails(data.data, attendanceId);
+                        } else {
+                            markPaidContent.innerHTML = `
+                                <div class="text-center py-8">
+                                    <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Error Loading Details</h3>
+                                    <p class="text-gray-600">${data.error || 'Failed to load overtime details.'}</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching overtime details:', error);
+                        markPaidContent.innerHTML = `
+                            <div class="text-center py-8">
+                                <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Connection Error</h3>
+                                <p class="text-gray-600">Failed to connect to the server. Please try again.</p>
+                            </div>
+                        `;
+                    });
+            }
+            
+            // Function to display overtime details in paid modal
+            function displayPaidOvertimeDetails(details, attendanceId) {
+                markPaidContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Employee Information -->
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3">
+                                <i class="fas fa-user mr-2"></i>
+                                Employee Information
+                            </h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Name:</span>
+                                    <span class="font-medium">${details.username}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Employee ID:</span>
+                                    <span class="font-medium">${details.employee_id || 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Role:</span>
+                                    <span class="font-medium">${details.role}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Date Information -->
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3">
+                                <i class="fas fa-calendar mr-2"></i>
+                                Date Information
+                            </h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Date:</span>
+                                    <span class="font-medium">${details.date}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Status:</span>
+                                    <span class="font-medium px-2 py-1 rounded-full text-xs 
+                                        ${details.status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' : 
+                                          details.status.toLowerCase() === 'rejected' ? 'bg-red-100 text-red-800' : 
+                                          details.status.toLowerCase() === 'submitted' ? 'bg-blue-100 text-blue-800' : 
+                                          details.status.toLowerCase() === 'paid' ? 'bg-purple-100 text-purple-800' :
+                                          'bg-yellow-100 text-yellow-800'}">
+                                        ${details.status}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Overtime Information -->
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3">
+                                <i class="fas fa-business-time mr-2"></i>
+                                Overtime Information
+                            </h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Calculated Hours:</span>
+                                    <span class="font-medium">${details.calculated_ot_hours} hours</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Approved OT Hours:</span>
+                                    <span class="font-medium">${details.submitted_ot_hours} hours</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Information -->
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3">
+                                <span style="font-size: 18px; font-weight: bold; color: #9333ea;" class="mr-2">₹</span>
+                                Payment Information
+                            </h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Payment Status:</span>
+                                    <span class="font-medium px-2 py-1 rounded-full text-xs 
+                                        ${details.status.toLowerCase() === 'paid' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
+                                        ${details.status.toLowerCase() === 'paid' ? 'Paid' : 'Unpaid'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Work Report -->
+                        <div class="bg-purple-50 rounded-lg p-4 md:col-span-2">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3">
+                                <i class="fas fa-file-alt mr-2"></i>
+                                Work Report
+                            </h4>
+                            <p class="text-gray-700 whitespace-pre-wrap">${details.work_report || 'No work report available'}</p>
+                        </div>
+                        
+                        <!-- Overtime Description -->
+                        <div class="bg-purple-50 rounded-lg p-4 md:col-span-2">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3">
+                                <i class="fas fa-file-contract mr-2"></i>
+                                Overtime Description
+                            </h4>
+                            <p class="text-gray-700 whitespace-pre-wrap">${details.overtime_description || 'No overtime description available'}</p>
+                        </div>
+                        
+                        <!-- Hidden input to store attendance ID -->
+                        <input type="hidden" id="paidAttendanceId" value="${attendanceId}">
+                    </div>
+                `;
+            }
+            
+            // Function to close mark paid modal
+            function closeMarkPaidModal() {
+                if (markPaidModal) {
+                    markPaidModal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }
+            }
+            
+            // Function to confirm mark as paid
+            function confirmMarkAsPaid() {
+                const attendanceId = document.getElementById('paidAttendanceId');
+                if (!attendanceId) {
+                    alert('Attendance ID not found.');
+                    return;
+                }
+                
+                const attendanceIdValue = attendanceId.value;
+                
+                // Show loading state in the button
+                const confirmBtn = document.getElementById('confirmPaidBtn');
+                const originalText = confirmBtn.innerHTML;
+                confirmBtn.innerHTML = '<div class="spinner mr-2"></div>Marking as Paid...';
+                confirmBtn.disabled = true;
+                
+                // Send request to mark as paid
+                fetch('mark_overtime_paid.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        attendance_id: attendanceIdValue
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        markPaidContent.innerHTML = `
+                            <div class="text-center py-8">
+                                <span style="font-size: 48px; font-weight: bold; color: #9333ea;" class="mb-4">₹</span>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Overtime Marked as Paid</h3>
+                                <p class="text-gray-600">${data.message || 'The overtime has been successfully marked as paid.'}</p>
+                            </div>
+                        `;
+                        
+                        // Close the modal after a delay and refresh the data
+                        setTimeout(() => {
+                            closeMarkPaidModal();
+                            // Refresh the employee activity data
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const currentLocation = urlParams.get('location') || 'studio';
+                            fetchEmployeeActivity(currentLocation);
+                        }, 2000);
+                    } else {
+                        // Show error message
+                        markPaidContent.innerHTML = `
+                            <div class="text-center py-8">
+                                <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-2">Error Marking as Paid</h3>
+                                <p class="text-gray-600">${data.error || 'Failed to mark overtime as paid.'}</p>
+                                <div class="mt-4">
+                                    <button id="retryPaidBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-150 ease-in-out">
+                                        Retry
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add event listener for retry button
+                        document.getElementById('retryPaidBtn').addEventListener('click', function() {
+                            confirmMarkAsPaid();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking overtime as paid:', error);
+                    markPaidContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Connection Error</h3>
+                            <p class="text-gray-600">Failed to connect to the server. Please try again.</p>
+                            <div class="mt-4">
+                                <button id="retryPaidBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-150 ease-in-out">
+                                    Retry
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add event listener for retry button
+                    document.getElementById('retryPaidBtn').addEventListener('click', function() {
+                        confirmMarkAsPaid();
+                    });
+                })
+                .finally(() => {
+                    // Restore button state if there was an error
+                    if (!document.querySelector('#retryPaidBtn') && confirmBtn) {
+                        confirmBtn.innerHTML = originalText;
+                        confirmBtn.disabled = false;
+                    }
+                });
             }
             
             // Function to confirm reject overtime request
@@ -2403,6 +2556,10 @@ try {
                     closeOvertimeDetailsModal();
                 } else if (e.key === 'Escape' && !acceptOvertimeModal.classList.contains('hidden')) {
                     closeAcceptOvertimeModal();
+                } else if (e.key === 'Escape' && rejectOvertimeModal && !rejectOvertimeModal.classList.contains('hidden')) {
+                    closeRejectOvertimeModal();
+                } else if (e.key === 'Escape' && markPaidModal && !markPaidModal.classList.contains('hidden')) {
+                    closeMarkPaidModal();
                 }
             });
             
@@ -2470,6 +2627,30 @@ try {
                 });
             }
             
+            // Close mark paid modal when clicking the X button
+            if (closePaidModal) {
+                closePaidModal.addEventListener('click', closeMarkPaidModal);
+            }
+            
+            // Close mark paid modal when clicking the Cancel button
+            if (closePaidModalBtn) {
+                closePaidModalBtn.addEventListener('click', closeMarkPaidModal);
+            }
+            
+            // Close mark paid modal when clicking outside the modal content
+            if (markPaidModal) {
+                markPaidModal.addEventListener('click', function(e) {
+                    if (e.target === markPaidModal) {
+                        closeMarkPaidModal();
+                    }
+                });
+            }
+            
+            // Add event listener for the confirm paid button
+            if (confirmPaidBtn) {
+                confirmPaidBtn.addEventListener('click', confirmMarkAsPaid);
+            }
+            
             // Add event listener for the confirm reject button
             if (confirmRejectBtn) {
                 confirmRejectBtn.addEventListener('click', confirmRejectOvertime);
@@ -2498,6 +2679,12 @@ try {
                 // Handle edit action
                 else if (e.target.classList.contains('fa-edit') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-edit'))) {
                     const button = e.target.classList.contains('fa-edit') ? e.target.parentElement : e.target.parentElement.parentElement;
+                    
+                    // Check if button is disabled (cross-team view)
+                    if (button.hasAttribute('disabled')) {
+                        return; // Prevent action
+                    }
+                    
                     const row = button.closest('tr');
                     const attendanceId = row.querySelector('.view-details').getAttribute('data-id');
                     const submittedHours = parseFloat(row.cells[5].textContent) || 0; // Submitted OT Hours column
@@ -2506,29 +2693,37 @@ try {
                 // Handle accept action
                 else if (e.target.classList.contains('fa-check-circle') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-check-circle'))) {
                     const button = e.target.classList.contains('fa-check-circle') ? e.target.parentElement : e.target.parentElement.parentElement;
+                    
+                    // Check if button is disabled (cross-team view)
+                    if (button.hasAttribute('disabled')) {
+                        return; // Prevent action
+                    }
+                    
                     const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
                     openAcceptOvertimeModal(attendanceId);
                 }
                 // Handle reject action
                 else if (e.target.classList.contains('fa-times-circle') || (e.target.parentElement && e.target.parentElement.classList.contains('fa-times-circle'))) {
                     const button = e.target.classList.contains('fa-times-circle') ? e.target.parentElement : e.target.parentElement.parentElement;
+                    
+                    // Check if button is disabled (cross-team view)
+                    if (button.hasAttribute('disabled')) {
+                        return; // Prevent action
+                    }
+                    
                     const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
                     openRejectOvertimeModal(attendanceId);
                 }
-            });
-            
-            // Mobile menu toggle
-            function isMobile() {
-                return window.matchMedia('(max-width: 768px)').matches;
-            }
-            
-            if (isMobile()) {
-                sidebar.classList.add('collapsed');
-            }
-            
-            window.addEventListener('resize', function() {
-                if (isMobile()) {
-                    sidebar.classList.add('collapsed');
+                // Handle rupee button action
+                else if (e.target.classList.contains('rupee-button') || (e.target.parentElement && e.target.parentElement.classList.contains('rupee-button')) || e.target.textContent === '₹' || (e.target.tagName === 'SPAN' && e.target.textContent === '₹')) {
+                    const button = e.target.classList.contains('rupee-button') ? e.target : 
+                                  (e.target.parentElement && e.target.parentElement.classList.contains('rupee-button')) ? e.target.parentElement :
+                                  e.target.closest('.rupee-button');
+                    
+                    if (button) {
+                        const attendanceId = button.getAttribute('data-id');
+                        openMarkPaidModal(attendanceId);
+                    }
                 }
             });
         });

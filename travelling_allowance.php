@@ -1443,7 +1443,7 @@ try {
                                         'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
                                     
                                     // Check if current time is within approval window
-                                    // Approval window: Thursday 00:01 to Monday 17:00
+                                    // Approval window: Thursday 00:01 to Tuesday 17:00
                                     $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
                                     $currentHour = date('H'); // 00 to 23
                                     $currentMinute = date('i'); // 00 to 59
@@ -1459,8 +1459,12 @@ try {
                                     elseif ($currentDay >= 5 && $currentDay <= 7) {
                                         $isApprovalTime = true;
                                     }
-                                    // Monday (day 1) - approval ends at 17:00
-                                    elseif ($currentDay == 1 && $currentHour < 17) {
+                                    // Monday (day 1) - approval continues all day
+                                    elseif ($currentDay == 1) {
+                                        $isApprovalTime = true;
+                                    }
+                                    // Tuesday (day 2) - approval ends at 17:00
+                                    elseif ($currentDay == 2 && $currentHour < 17) {
                                         $isApprovalTime = true;
                                     }
                                     
@@ -1489,7 +1493,7 @@ try {
                                             <div class="d-flex flex-column gap-1 mt-1">
                                                 <?php
                                                 // Prepare awaiting text if locked
-                                                $awaitingText = "Locked (System locked outside Thu 00:01 - Mon 17:00)";
+                                                $awaitingText = "Locked (System locked outside Thu 00:01 - Tue 17:00)";
                                                 ?>
                                                 <div class="locked-indicator">
                                                     <i class="bi bi-lock-fill text-secondary me-1"></i>

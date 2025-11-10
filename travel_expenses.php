@@ -758,6 +758,33 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
         }
         
         /* iPhone XR and SE specific styles */
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: opacity 0.3s ease;
+        }
+        
+        .notification.success {
+            background-color: #28a745;
+        }
+        
+        .notification.error {
+            background-color: #dc3545;
+        }
+        
+        .notification.warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
         @media only screen 
             and (device-width: 414px) 
             and (device-height: 896px),
@@ -987,7 +1014,11 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                                                     <button class="btn btn-sm btn-outline-primary view-expense" data-id="<?php echo $expense['id']; ?>">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <?php if ($expense['status'] !== 'approved'): ?>
+                                                    <?php if ($expense['status'] === 'rejected'): ?>
+                                                    <button class="btn btn-sm btn-outline-warning resubmit-expense" data-id="<?php echo $expense['id']; ?>">
+                                                        <i class="fas fa-redo"></i> Resubmit
+                                                    </button>
+                                                    <?php elseif ($expense['status'] !== 'approved'): ?>
                                                     <button class="btn btn-sm btn-outline-info edit-expense" data-id="<?php echo $expense['id']; ?>">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
@@ -1089,7 +1120,11 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                                             <button class="btn btn-sm btn-outline-primary view-expense" data-id="<?php echo $expense['id']; ?>">
                                                 <i class="fas fa-eye"></i> View Details
                                             </button>
-                                            <?php if ($expense['status'] !== 'approved'): ?>
+                                            <?php if ($expense['status'] === 'rejected'): ?>
+                                            <button class="btn btn-sm btn-outline-warning resubmit-expense" data-id="<?php echo $expense['id']; ?>">
+                                                <i class="fas fa-redo"></i> Resubmit
+                                            </button>
+                                            <?php elseif ($expense['status'] !== 'approved'): ?>
                                             <button class="btn btn-sm btn-outline-info edit-expense" data-id="<?php echo $expense['id']; ?>">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
@@ -2075,6 +2110,69 @@ $filterPeriod = date('F', mktime(0, 0, 0, $filterMonth, 1)) . ' ' . $filterYear;
                     }
                     
                     openEditExpenseModal(expenseId);
+                });
+            });
+            
+            // Resubmit expense functionality
+            const resubmitExpenseBtns = document.querySelectorAll('.resubmit-expense');
+            resubmitExpenseBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const expenseId = this.getAttribute('data-id');
+                    
+                    // Confirm resubmission
+                    if (!confirm('Are you sure you want to resubmit this rejected expense? This will update the existing record and change its status to pending.')) {
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const originalHtml = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resubmitting...';
+                    this.disabled = true;
+                    
+                    // Send resubmit request
+                    fetch('api/resubmit_travel_expense_update.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            expense_id: expenseId
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            showNotification(data.message || 'Expense resubmitted successfully', 'success');
+                            
+                            // Reload page after 1.5 seconds
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            // Show error message
+                            showNotification(data.message || 'Failed to resubmit expense', 'error');
+                            
+                            // Reset button state
+                            this.innerHTML = originalHtml;
+                            this.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification(`Failed to resubmit expense: ${error.message}`, 'error');
+                        
+                        // Reset button state
+                        this.innerHTML = originalHtml;
+                        this.disabled = false;
+                    });
                 });
             });
             

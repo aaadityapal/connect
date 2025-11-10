@@ -1,0 +1,125 @@
+/* Basic Reset and Font */
+body {
+    font-family: 'Inter', 'Roboto', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7fa; /* Light background for the overall page */
+    color: #333;
+}
+
+.container {
+    display: flex; /* Flexbox for the two-column layout */
+    min-height: 100vh;
+}
+
+/* --- A. Minimalistic Sidebar Styling --- */
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50; /* Darker, professional color */
+    color: white;
+    padding: 20px 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Subtle shadow */
+    position: fixed; /* Keep it fixed on scroll */
+    height: 100%;
+}
+
+.logo {
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+nav ul li a {
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #b3c5d6; /* Lighter color for non-active links */
+    transition: background-color 0.2s;
+}
+
+nav ul li a:hover {
+    background-color: #34495e; /* Subtle hover effect */
+    color: white;
+}
+
+.active a {
+    background-color: #3498db; /* The accent color */
+    color: white !important;
+    border-left: 5px solid #2980b9; /* Highlight the active page */
+}
+
+/* --- B. Main Content and Form Styling --- */
+.main-content {
+    margin-left: 250px; /* Offset the main content to the right of the fixed sidebar */
+    flex-grow: 1;
+    padding: 40px;
+    max-width: 800px; /* Constrain the form for better readability */
+}
+
+header h1 {
+    font-size: 2em;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+header p {
+    color: #7f8c8d;
+    margin-bottom: 30px;
+}
+
+.reimbursement-form {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Soft, minimal elevation */
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.form-group input, .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important for padding/width */
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+    border-color: #3498db; /* Focus highlight */
+    outline: none;
+}
+
+/* Submit Button Style (The main CTA) */
+.submit-button {
+    background-color: #3498db; /* Accent color */
+    color: white;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    width: 100%; /* Full width for emphasis */
+    margin-top: 10px;
+}
+
+.submit-button:hover {
+    background-color: #2980b9;
+}

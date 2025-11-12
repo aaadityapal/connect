@@ -7,16 +7,23 @@ $month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
 $year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 $type = isset($_GET['type']) ? $_GET['type'] : 'studio'; // 'studio' or 'site'
+$attendance_type = isset($_GET['attendance_type']) ? $_GET['attendance_type'] : 'late'; // 'late' or 'all'
 
-// Build the query to fetch late attendance records
+// Build the query to fetch attendance records
 $sql = "SELECT 
             a.id,
             a.user_id,
             u.username,
+            u.role,
             a.date,
             TIME(a.punch_in) as punch_in_time,
+            a.address as punch_in_address,
+            a.punch_in_photo,
             s.start_time as shift_start_time,
-            ROUND(TIME_TO_SEC(TIMEDIFF(TIME(a.punch_in), s.start_time)) / 60) as minutes_late,
+            CASE 
+                WHEN a.punch_in IS NOT NULL THEN ROUND(TIME_TO_SEC(TIMEDIFF(TIME(a.punch_in), s.start_time)) / 60)
+                ELSE 0
+            END as minutes_late,
             a.modified_at as actioned_at,
             CASE 
                 WHEN a.waved_off = 1 THEN 'Waved Off'
@@ -32,8 +39,7 @@ $sql = "SELECT
             u.status = 'Active' 
             AND MONTH(a.date) = ? 
             AND YEAR(a.date) = ?
-            AND a.punch_in IS NOT NULL
-            AND TIME_TO_SEC(TIMEDIFF(TIME(a.punch_in), s.start_time)) >= 960";
+            AND a.punch_in IS NOT NULL";
 
 $params = [$month, $year];
 $types = "ii";
@@ -45,6 +51,12 @@ if ($type === 'studio') {
 } elseif ($type === 'site') {
     // Include only site-related roles for site view
     $sql .= " AND u.role IN ('Site Supervisor', 'Site Coordinator', 'Purchase Manager', 'Social Media Marketing', 'Sales', 'Graphic Designer', 'Site Trainees')";
+}
+
+// Add attendance type filter
+if ($attendance_type === 'late') {
+    // Only show late attendance (16 minutes or more)
+    $sql .= " AND TIME_TO_SEC(TIMEDIFF(TIME(a.punch_in), s.start_time)) >= 960";
 }
 
 // Add user filter if specific user is selected

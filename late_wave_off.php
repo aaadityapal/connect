@@ -248,6 +248,26 @@ if ($result->num_rows > 0) {
             <h2 class="text-3xl font-bold text-gray-900">Late Coming Waveoff Page</h2>
         </header>
 
+        <!-- Image Modal -->
+        <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-3xl w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Punch In Photo</h3>
+                    <button id="close-image-modal" class="text-gray-400 hover:text-gray-500">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="mb-4 flex justify-center">
+                    <img id="punch-in-image" src="" alt="Punch In Photo" class="max-h-[70vh] object-contain">
+                </div>
+                <div class="flex justify-end">
+                    <button id="close-image-modal-button" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Success Modal -->
         <div id="success-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg shadow-xl p-6 w-96">
@@ -293,7 +313,14 @@ if ($result->num_rows > 0) {
 
         <!-- Filter Section -->
         <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div>
+                    <label for="attendance-type" class="block text-sm font-medium text-gray-700 mb-1">Attendance Type</label>
+                    <select id="attendance-type" class="w-full p-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
+                        <option value="late">Late Attendance</option>
+                        <option value="all">All Attendance</option>
+                    </select>
+                </div>
                 <div>
                     <label for="month" class="block text-sm font-medium text-gray-700 mb-1">Month</label>
                     <select id="month" class="w-full p-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
@@ -354,6 +381,7 @@ if ($result->num_rows > 0) {
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Start Time</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Punch In Time</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Punch In Address</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Minutes Late</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actioned At</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -364,12 +392,44 @@ if ($result->num_rows > 0) {
                     <!-- Data will be loaded here via JavaScript -->
                 </tbody>
             </table>
+            
+            <!-- Pagination Controls -->
+            <div id="pagination-controls" class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+                <div class="flex flex-1 justify-between sm:hidden">
+                    <button id="prev-page-mobile" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</button>
+                    <button id="next-page-mobile" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</button>
+                </div>
+                <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span id="page-info-start">0</span> to <span id="page-info-end">0</span> of <span id="page-info-total">0</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                            <button id="prev-page" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                <span class="sr-only">Previous</span>
+                                <i data-lucide="chevron-left" class="h-5 w-5"></i>
+                            </button>
+                            <span id="page-numbers" class="flex items-center"></span>
+                            <button id="next-page" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                                <span class="sr-only">Next</span>
+                                <i data-lucide="chevron-right" class="h-5 w-5"></i>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // Global variable to track current toggle state
         let currentToggle = '<?php echo $default_toggle; ?>';
+        let currentPage = 1;
+        const recordsPerPage = 35;
+        let totalRecords = 0;
+        let allData = [];
         
         // Initialize Lucide icons
         lucide.createIcons();
@@ -413,6 +473,7 @@ if ($result->num_rows > 0) {
         document.getElementById('month').addEventListener('change', loadAttendanceData);
         document.getElementById('year').addEventListener('change', loadAttendanceData);
         document.getElementById('user').addEventListener('change', loadAttendanceData);
+        document.getElementById('attendance-type').addEventListener('change', loadAttendanceData);
         
         // Add event listeners for toggle buttons
         document.getElementById('studio-toggle').addEventListener('click', function() {
@@ -517,6 +578,10 @@ if ($result->num_rows > 0) {
             const month = document.getElementById('month').value;
             const year = document.getElementById('year').value;
             const userId = document.getElementById('user').value;
+            const attendanceType = document.getElementById('attendance-type').value;
+            
+            // Reset to first page when filters change
+            currentPage = 1;
             
             // Build query string
             const params = new URLSearchParams();
@@ -524,12 +589,16 @@ if ($result->num_rows > 0) {
             if (year) params.append('year', year);
             if (userId) params.append('user_id', userId);
             params.append('type', currentToggle || 'studio');
+            params.append('attendance_type', attendanceType);
             
             // Fetch data from backend
             fetch(`fetch_late_attendance_data.php?${params.toString()}`)
                 .then(response => response.json())
                 .then(data => {
-                    updateTable(data);
+                    allData = data;
+                    totalRecords = data.length;
+                    updateTable();
+                    updatePaginationControls();
                 })
                 .catch(error => {
                     console.error('Error fetching attendance data:', error);
@@ -537,7 +606,7 @@ if ($result->num_rows > 0) {
         }
 
         // Function to update the table with fetched data
-        function updateTable(data) {
+        function updateTable() {
             const tableBody = document.getElementById('attendance-table-body');
             tableBody.innerHTML = '';
             
@@ -545,12 +614,18 @@ if ($result->num_rows > 0) {
             const isStudioManager = '<?php echo $user_role; ?>' === 'Senior Manager (Studio)';
             const currentViewType = currentToggle;
             
-            if (data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No late attendance records found</td></tr>`;
+            // Calculate pagination indices
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, allData.length);
+            const paginatedData = allData.slice(startIndex, endIndex);
+            
+            if (paginatedData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="10" class="px-6 py-4 text-center text-sm text-gray-500">No attendance records found</td></tr>`;
                 return;
             }
             
-            data.forEach((record, index) => {
+            paginatedData.forEach((record, index) => {
+                const globalIndex = startIndex + index;
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 
@@ -597,11 +672,17 @@ if ($result->num_rows > 0) {
                 }
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${index + 1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${globalIndex + 1}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.username}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.shift_start_time}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${punchInTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${punchInTime}
+                        <button class="ml-2 text-gray-500 hover:text-gray-700 folder-icon" data-record-id="${record.id}" data-user-id="${record.user_id}" data-username="${record.username}" data-date="${record.date}">
+                            <i data-lucide="folder" class="w-4 h-4 inline"></i>
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title="${record.punch_in_address || ''}">${record.punch_in_address || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.minutes_late}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${actionedAt}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -617,8 +698,222 @@ if ($result->num_rows > 0) {
             
             // Reinitialize Lucide icons for new elements
             lucide.createIcons();
+            
+            // Add event listeners to folder icons
+            document.querySelectorAll('.folder-icon').forEach(button => {
+                button.addEventListener('click', function() {
+                    const recordId = this.getAttribute('data-record-id');
+                    const userId = this.getAttribute('data-user-id');
+                    const username = this.getAttribute('data-username');
+                    const date = this.getAttribute('data-date');
+                    handleFolderIconClick(recordId, username, date);
+                });
+            });
         }
-
+        
+        // Function to handle folder icon clicks
+        function handleFolderIconClick(recordId, username, date) {
+            // Find the record in allData
+            const record = allData.find(item => item.id == recordId);
+            
+            // Log the record for debugging
+            console.log('Record data:', record);
+            
+            // Check if we have the photo data directly in the record
+            if (record && record.punch_in_photo) {
+                // Check if it's a file path that needs to be converted to a data URL
+                if (record.punch_in_photo.startsWith('data:image')) {
+                    // It's already a data URL, use it directly
+                    showImageModal(record.punch_in_photo, username, date);
+                } else if (record.punch_in_photo.startsWith('http')) {
+                    // It's a URL, use it directly
+                    showImageModal(record.punch_in_photo, username, date);
+                } else {
+                    // It might be a file path, try to construct the full path
+                    // Try with uploads/attendance/ prefix first
+                    const fullPath = 'uploads/attendance/' + record.punch_in_photo;
+                    showImageModal(fullPath, username, date);
+                }
+            } 
+            // If we don't have photo data in the record or it's empty, fetch it from the endpoint
+            else if (record) {
+                fetchAttendancePhoto(record.user_id, record.date, username, date);
+            } else {
+                // Show a message if no record is found
+                alert('No record found for this entry.');
+            }
+        }
+        
+        // Function to show the image in the modal
+        function showImageModal(imageSrc, username, date) {
+            const imageModal = document.getElementById('image-modal');
+            const imageElement = document.getElementById('punch-in-image');
+            
+            // Set the image source
+            imageElement.src = imageSrc;
+            imageElement.alt = `Punch in photo for ${username} on ${date}`;
+            
+            // Add error handling for the image
+            imageElement.onerror = function() {
+                console.error('Failed to load image:', imageSrc);
+                alert('Failed to load the punch-in photo. The image may not exist or be accessible.');
+                closeImageModal();
+            };
+            
+            // Show the modal
+            imageModal.classList.remove('hidden');
+            
+            // Reinitialize Lucide icons
+            lucide.createIcons();
+        }
+        
+        // Function to fetch photo from the dedicated endpoint
+        function fetchAttendancePhoto(userId, travelDate, username, date) {
+            // Show loading state
+            const imageElement = document.getElementById('punch-in-image');
+            imageElement.src = ''; // Clear previous image
+            imageElement.alt = 'Loading...';
+            
+            // Show the modal immediately
+            const imageModal = document.getElementById('image-modal');
+            imageModal.classList.remove('hidden');
+            
+            // Fetch the photo from the get_attendance_photo.php endpoint
+            fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Photo data received:', data);
+                    if (data.success && data.photo) {
+                        showImageModal(data.photo, username, date);
+                    } else {
+                        // Show a message if no image is available
+                        imageElement.alt = 'No punch in photo available for this record.';
+                        imageElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                        alert('No punch in photo available for this record.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching photo:', error);
+                    imageElement.alt = 'Error loading punch in photo.';
+                    imageElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yIExvYWRpbmcgSW1hZ2U8L3RleHQ+PC9zdmc+';
+                    alert('Error fetching punch in photo: ' + error.message);
+                });
+        }
+        
+        // Function to close the image modal
+        function closeImageModal() {
+            const imageModal = document.getElementById('image-modal');
+            const imageElement = document.getElementById('punch-in-image');
+            
+            // Hide the modal
+            imageModal.classList.add('hidden');
+            
+            // Clear the image source
+            imageElement.src = '';
+        }
+        
+        // Add event listeners for image modal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close modal when clicking the close button
+            document.getElementById('close-image-modal').addEventListener('click', closeImageModal);
+            document.getElementById('close-image-modal-button').addEventListener('click', closeImageModal);
+            
+            // Close modal when clicking outside the modal content
+            document.getElementById('image-modal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeImageModal();
+                }
+            });
+        });
+        
+        // Function to update pagination controls
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(totalRecords / recordsPerPage);
+            
+            // Update page info text
+            const startIndex = totalRecords > 0 ? (currentPage - 1) * recordsPerPage + 1 : 0;
+            const endIndex = Math.min(currentPage * recordsPerPage, totalRecords);
+            
+            document.getElementById('page-info-start').textContent = startIndex;
+            document.getElementById('page-info-end').textContent = endIndex;
+            document.getElementById('page-info-total').textContent = totalRecords;
+            
+            // Update pagination buttons
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('prev-page-mobile').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
+            document.getElementById('next-page-mobile').disabled = currentPage === totalPages || totalPages === 0;
+            
+            // Update page numbers display
+            const pageNumbersContainer = document.getElementById('page-numbers');
+            pageNumbersContainer.innerHTML = '';
+            
+            // Show up to 5 page numbers centered around current page
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            // Adjust if at the start or end
+            if (endPage - startPage < 4) {
+                if (startPage === 1) {
+                    endPage = Math.min(totalPages, startPage + 4);
+                } else if (endPage === totalPages) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+            }
+            
+            // Create page number buttons
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0`;
+                if (i === currentPage) {
+                    pageButton.classList.add('bg-red-500', 'text-white');
+                } else {
+                    pageButton.classList.add('bg-white', 'text-gray-700');
+                }
+                pageButton.textContent = i;
+                pageButton.onclick = () => goToPage(i);
+                pageNumbersContainer.appendChild(pageButton);
+            }
+        }
+        
+        // Function to go to a specific page
+        function goToPage(page) {
+            const totalPages = Math.ceil(totalRecords / recordsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            updateTable();
+            updatePaginationControls();
+        }
+        
+        // Function to go to the next page
+        function nextPage() {
+            const totalPages = Math.ceil(totalRecords / recordsPerPage);
+            if (currentPage < totalPages) {
+                goToPage(currentPage + 1);
+            }
+        }
+        
+        // Function to go to the previous page
+        function prevPage() {
+            if (currentPage > 1) {
+                goToPage(currentPage - 1);
+            }
+        }
+        
+        // Add event listeners for pagination controls
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('prev-page').addEventListener('click', prevPage);
+            document.getElementById('next-page').addEventListener('click', nextPage);
+            document.getElementById('prev-page-mobile').addEventListener('click', prevPage);
+            document.getElementById('next-page-mobile').addEventListener('click', nextPage);
+        });
+        
         // Function to wave off late coming
         function waveOff(id) {
             showConfirmModal('Are you sure you want to wave off this late coming?', function() {

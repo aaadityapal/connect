@@ -41,6 +41,10 @@
         <i class="fas fa-calendar-check"></i>
         <span class="menu-text">Attendance Approval</span>
     </div>
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'late_wave_off.php' ? 'active' : ''; ?>" onclick="window.location.href='late_wave_off.php'">
+        <i class="fas fa-calendar-check"></i>
+        <span class="menu-text">Late Attendance</span>
+    </div>
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'site_in_out_logs.php' ? 'active' : ''; ?>" onclick="window.location.href='site_in_out_logs.php'">
         <i class="fas fa-calendar-check"></i>
         <span class="menu-text">Site In/Out Logs</span>

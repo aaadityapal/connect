@@ -80,6 +80,7 @@ if (empty($leave_types_formatted)) {
 // Fetch attendance records with work reports
 $query = "SELECT 
     a.*,
+    a.waved_off,
     us.shift_id,
     DATE_FORMAT(a.date, '%d-%m-%Y') as formatted_date,
     TIME_FORMAT(a.punch_in, '%h:%i %p') as formatted_punch_in,
@@ -158,9 +159,6 @@ $result = $stmt->get_result();
 
 // Calculate stats for the overview section
 $total_present = 0;
-$total_late_punches = 0;
-$adjusted_late_count = 0;
-$late_punches = 0;
 $leave_types = [];
 
 // Count the number of Short Leaves used in this month
@@ -177,15 +175,6 @@ $short_leaves_available = max(0, 2 - $short_leaves_used);
 // Debug string for late punches
 $late_punch_debug = [];
 $all_punches_debug = [];
-$adjusted_late_punches = [];
-
-// First pass - count all late punches
-$result->data_seek(0);
-while ($row = $result->fetch_assoc()) {
-    if ($row['status'] == 'present' && $row['is_late'] == 1) {
-        $total_late_punches++;
-    }
-}
 
 // Reset result pointer
 $result->data_seek(0);
@@ -205,44 +194,43 @@ while ($row = $result->fetch_assoc()) {
         'status' => $row['status'],
         'shift_id' => $row['shift_id']
     ];
+}
 
-    if ($row['status'] == 'present') {
-        $total_present++;
-        if ($row['is_late'] == 1) {
-            // Store every late punch for potential adjustment
-            $late_punch_data = [
-                'date' => $row['formatted_date'],
-                'punch_in' => $row['formatted_punch_in'],
-                'shift_start' => $row['shift_start'],
-                'time_diff_seconds' => isset($row['punch_in_seconds']) && isset($row['shift_start_seconds']) ? 
-                    ($row['punch_in_seconds'] - $row['shift_start_seconds']) : 'N/A',
-                'time_diff_minutes' => isset($row['punch_in_seconds']) && isset($row['shift_start_seconds']) ? 
-                    round(($row['punch_in_seconds'] - $row['shift_start_seconds'])/60, 1) : 'N/A',
-                'adjusted' => false
-            ];
-            $late_punch_debug[] = $late_punch_data;
-            
-            // Only count this as a late punch if we don't have available short leaves
-            if ($short_leaves_available > 0) {
-                $short_leaves_available--;
-                $late_punch_data['adjusted'] = true;
-                $adjusted_late_punches[] = $late_punch_data;
-                $adjusted_late_count++;
+// Calculate the final adjusted late punches count
+// Now we use the waved_off column from the database instead of the adjusted_late_count
+$late_punches = 0;
+$waved_off_count = 0;
+$total_late_punches = 0;
+
+// Initialize variables to ensure they have values
+if (!isset($short_leaves_used)) {
+    $short_leaves_used = 0;
+}
+
+// Count late punches and waved off punches
+if ($result) {
+    $result->data_seek(0);
+    while ($row = $result->fetch_assoc()) {
+        if ($row['status'] == 'present' && $row['is_late'] == 1) {
+            $total_late_punches++;
+            // If waved_off is 1, increment the waved_off_count
+            if (isset($row['waved_off']) && $row['waved_off'] == 1) {
+                $waved_off_count++;
             } else {
+                // If not waved off, count it as a late punch
                 $late_punches++;
             }
         }
     }
 }
 
-// Calculate the final adjusted late punches count
-$late_punches = $total_late_punches - $adjusted_late_count;
-
 // Use the leave data from the leave request table
 $total_leaves = $total_leave_days;
 
 // Reset result for template rendering
-$result->data_seek(0);
+if ($result) {
+    $result->data_seek(0);
+}
 
 // Add adjusted late punches to debug info
 $debug_info = [
@@ -252,16 +240,18 @@ $debug_info = [
     'end_date' => $end_date,
     'late_punches' => $late_punches,
     'total_late_punches' => $total_late_punches,
-    'adjusted_late_count' => $adjusted_late_count,
+    'waved_off_count' => $waved_off_count,
     'late_punch_details' => $late_punch_debug,
     'all_punches' => $all_punches_debug,
-    'adjusted_late_punches' => $adjusted_late_punches,
     'short_leaves_used' => $short_leaves_used,
     'short_leaves_available' => max(0, 2 - $short_leaves_used),
     'total_leaves' => $total_leaves,
     'leave_types' => $leave_types_formatted,
     'query' => $query
 ];
+
+// Debug output to see what values we have
+// error_log("Late punches debug: late_punches=$late_punches, total_late_punches=$total_late_punches, waved_off_count=$waved_off_count");
 ?>
 
 <!DOCTYPE html>
@@ -1166,7 +1156,26 @@ $debug_info = [
                 width: 15%;
             }
         }
-    </style>
+    
+    /* Add styles for the new Late Wave Off column */
+    .late-wave-off {
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.75rem;
+    }
+    
+    .late-wave-off.waved {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+    
+    .late-wave-off.not-waved {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+</style>
 </head>
 <body>
     <?php include 'components/minimal_sidebar.php'; ?>
@@ -1313,6 +1322,7 @@ $debug_info = [
                                        onclick="exportWorkReportsToExcel()" 
                                        title="Export work reports to Excel"></i>
                                 </th>
+                                <th>Late Wave Off</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -1348,6 +1358,22 @@ $debug_info = [
                                     </td>
                                     <td>
                                         <?php 
+                                        // Determine late wave off status
+                                        $late_wave_off = 'Not Waved Off';
+                                        $wave_class = 'not-waved';
+                                        if (isset($row['is_late']) && $row['is_late'] == 1) {
+                                            // Check if this late punch was adjusted by short leave
+                                            // Now we check the waved_off column from the database
+                                            if (isset($row['waved_off']) && $row['waved_off'] == 1) {
+                                                $late_wave_off = 'Waved Off';
+                                                $wave_class = 'waved';
+                                            }
+                                        }
+                                        echo '<span class="late-wave-off ' . $wave_class . '">' . $late_wave_off . '</span>';
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
                                         // Determine status badge styling and label
                                         $status = strtolower($row['status']);
                                         $status_class = 'status-' . $status;
@@ -1375,13 +1401,19 @@ $debug_info = [
                                             $status_class = 'status-sickleave';
                                             $status_label = 'Sick Leave';
                                         } elseif ($status == 'present' && isset($row['is_late']) && $row['is_late'] == 1) {
-                                            $status_class = 'status-late';
-                                            $status_label = 'Late';
+                                            // Check if this late punch was waved off using the database column
+                                            if (isset($row['waved_off']) && $row['waved_off'] == 1) {
+                                                $status_class = 'status-present';
+                                                $status_label = 'Present';
+                                            } else {
+                                                $status_class = 'status-late';
+                                                $status_label = 'Late';
+                                            }
                                         }
                                         
                                         // Add an icon based on status
                                         $status_icon = '';
-                                        if ($status == 'present') {
+                                        if ($status == 'present' || $status_label == 'Present') {
                                             $status_icon = '<i class="fas fa-check-circle" style="margin-right: 0.25rem;"></i>';
                                         } elseif ($status == 'absent') {
                                             $status_icon = '<i class="fas fa-times-circle" style="margin-right: 0.25rem;"></i>';
@@ -1393,6 +1425,8 @@ $debug_info = [
                                             $status_icon = '<i class="fas fa-calendar-day" style="margin-right: 0.25rem;"></i>';
                                         } elseif ($status == 'holiday') {
                                             $status_icon = '<i class="fas fa-gifts" style="margin-right: 0.25rem;"></i>';
+                                        } elseif ($status_label == 'Late') {
+                                            $status_icon = '<i class="fas fa-clock" style="margin-right: 0.25rem;"></i>';
                                         }
                                         ?>
                                         <span class="status-badge <?php echo $status_class; ?>">
@@ -1425,7 +1459,7 @@ $debug_info = [
         let phpDebugInfo = <?php echo json_encode($debug_info); ?>;
         let latePunchesCount = <?php echo $late_punches; ?>;
         let totalLatePunches = <?php echo $total_late_punches; ?>;
-        let adjustedLatePunches = <?php echo $adjusted_late_count; ?>;
+        let wavedOffCount = <?php echo $waved_off_count; ?>;
         let totalLeavesCount = <?php echo $total_leaves; ?>;
         let shortLeavesUsed = <?php echo $short_leaves_used; ?>;
         let shortLeavesAvailable = <?php echo max(0, 2 - $short_leaves_used); ?>;
@@ -1461,7 +1495,9 @@ $debug_info = [
                 const punchOutCell = row.querySelector('td:nth-child(4)');
                 const hoursCell = row.querySelector('td:nth-child(5)');
                 const overtimeCell = row.querySelector('td:nth-child(6)');
-                const statusCell = row.querySelector('td:nth-child(8) .status-badge');
+                const workReportCell = row.querySelector('td:nth-child(7)');
+                const lateWaveOffCell = row.querySelector('td:nth-child(8)');
+                const statusCell = row.querySelector('td:nth-child(9) .status-badge');
                 
                 if (dateCell && hoursCell && overtimeCell && statusCell) {
                     const date = dateCell.textContent.trim();
@@ -1558,7 +1594,7 @@ $debug_info = [
                 const dateKey = `${item.year}-${item.month}-${item.day}`;
                 workDatesMap[dateKey] = item.status.toLowerCase();
                 
-                if (item.status.includes('present') || item.status === 'late') {
+                if (item.status.includes('present') || item.status.includes('late')) {
                     presentDays++;
                     
                     // Calculate total work minutes
@@ -1712,8 +1748,8 @@ $debug_info = [
             // Update short leave adjustment text
             const shortLeaveAdjustment = document.getElementById('shortLeaveAdjustment');
             if (shortLeaveAdjustment) {
-                if (adjustedLatePunches > 0) {
-                    shortLeaveAdjustment.textContent = `${totalLatePunches} total - ${adjustedLatePunches} covered = ${latePunchesCount} counted`;
+                if (wavedOffCount > 0) {
+                    shortLeaveAdjustment.textContent = `${totalLatePunches} total - ${wavedOffCount} waved off = ${latePunchesCount} counted`;
                 } else if (shortLeavesAvailable > 0) {
                     shortLeaveAdjustment.textContent = `${shortLeavesAvailable} Short Leave${shortLeavesAvailable > 1 ? 's' : ''} available`;
                 } else {
@@ -1890,7 +1926,7 @@ $debug_info = [
             rows.forEach((row) => {
                 const dateCell = row.querySelector('td:nth-child(1)');
                 const workReportCell = row.querySelector('td:nth-child(7)');
-                const statusCell = row.querySelector('td:nth-child(8) .status-badge');
+                const statusCell = row.querySelector('td:nth-child(9) .status-badge');
                 
                 if (dateCell && workReportCell) {
                     const date = dateCell.textContent.trim();

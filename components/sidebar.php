@@ -11,8 +11,8 @@
     </div>
     
     <ul class="sidebar-menu">
-        <li class="active">
-            <a href="#">
+        <li <?php echo basename($_SERVER['PHP_SELF']) == 'real.php' ? 'class="active"' : ''; ?>>
+            <a href="real.php">
                 <i class="fas fa-tachometer-alt"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
@@ -64,6 +64,12 @@
             <a href="attendance_approval.php">
                 <i class="fas fa-calendar-check"></i>
                 <span class="sidebar-text"> Attendance Approval</span>
+            </a>
+        </li>
+        <li <?php echo basename($_SERVER['PHP_SELF']) == 'late_wave_off.php' ? 'class="active"' : ''; ?>>
+            <a href="late_wave_off.php">
+                <i class="fas fa-clock"></i>
+                <span class="sidebar-text"> Late/Wave Off</span>
             </a>
         </li>
         <li>

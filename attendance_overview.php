@@ -553,6 +553,16 @@ try {
             color: #8e44ad !important;
         }
         
+        .waved-off {
+            color: #2ecc71 !important;
+            font-weight: bold;
+        }
+        
+        .not-waved-off {
+            color: #e74c3c !important;
+            font-weight: bold;
+        }
+        
         .attendance-table-container {
             margin-top: 30px;
             margin-bottom: 30px;
@@ -1268,7 +1278,6 @@ try {
                                     <th>Date</th>
                                     <th>Username</th>
                                     <th>Shift</th>
-                                    <th>Weekly Off</th>
                                     <th>Punch In</th>
                                     <th>Punch In Address</th>
                                     <th>Punch Out</th>
@@ -1276,6 +1285,7 @@ try {
                                     <th>Working Hours</th>
                                     <th>Overtime</th>
                                     <th>Status</th>
+                                    <th>Late Waved Off</th>
                                     <th>Work Report</th>
                                 </tr>
                             </thead>
@@ -1298,7 +1308,6 @@ try {
                                         <td><?php echo date('Y-m-d', strtotime($record['date'])); ?></td>
                                         <td><?php echo htmlspecialchars($record['username']); ?></td>
                                         <td><?php echo htmlspecialchars($record['shift_name'] ?? 'Regular'); ?></td>
-                                        <td><?php echo isset($record['is_weekly_off']) && $record['is_weekly_off'] ? 'Yes' : 'No'; ?></td>
                                         <td>
                                             <?php echo formatTime($record['punch_in']); ?>
                                             <?php if (!empty($record['punch_in_photo'])): ?>
@@ -1321,6 +1330,19 @@ try {
                                         <td><?php echo formatHours($record['overtime_hours']); ?></td>
                                         <td class="status-<?php echo strtolower($record['status'] ?? 'unknown'); ?>">
                                             <?php echo htmlspecialchars($record['status'] ?? 'Unknown'); ?>
+                                        </td>
+                                        <td>
+                                            <?php 
+                                            if (isset($record['waved_off'])) {
+                                                if ($record['waved_off'] == 1) {
+                                                    echo '<span class="waved-off">Waved Off</span>';
+                                                } else {
+                                                    echo '<span class="not-waved-off">Not Waved Off</span>';
+                                                }
+                                            } else {
+                                                echo '<span class="not-waved-off">Not Waved Off</span>';
+                                            }
+                                            ?>
                                         </td>
                                         <td>
                                             <?php if (!empty($record['work_report'])): ?>

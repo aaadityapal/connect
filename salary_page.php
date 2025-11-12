@@ -525,6 +525,22 @@ try {
                 // Store leave deduction amount
                 $employee['leave_deduction_amount'] = round($leave_deduction_amount, 2);
                 
+                // Calculate unpaid leave days for salary days calculation
+                $unpaid_leave_days = 0;
+                foreach ($leave_requests as $leave) {
+                    if (stripos($leave['leave_type_name'], 'Unpaid') !== false) {
+                        if ($leave['duration_type'] == 'half_day') {
+                            $unpaid_leave_days += 0.5;
+                        } else {
+                            $start = new DateTime(max($leave['start_date'], $month_start));
+                            $end = new DateTime(min($leave['end_date'], $month_end));
+                            $interval = $start->diff($end);
+                            $unpaid_leave_days += $interval->days + 1;
+                        }
+                    }
+                }
+                $employee['unpaid_leave_days'] = $unpaid_leave_days;
+                
                 // Calculate half day leaves for salary days calculation
                 $half_day_leaves = 0;
                 foreach ($leave_requests as $leave) {
@@ -541,7 +557,8 @@ try {
                 }
                 $employee['half_day_leaves'] = $half_day_leaves;
                 
-                // Calculate salary days: present days + casual leaves - (half day leaves * 0.5) - (adjusted 1+ hour late count * 0.5) - (adjusted late days deduction)
+                // Calculate salary days: working days - (unpaid leave days) - (adjusted late days deduction) - (adjusted 1+ hour late count * 0.5)
+                // Casual and compensate leaves are not deducted as they are paid leaves
                 // Use adjusted counts after short leave reduction
                 
                 // Count casual leaves for addition to salary days
@@ -569,7 +586,10 @@ try {
                 // Calculate deduction for adjusted 1+ hour late days (after short leave reduction)
                 $adjusted_one_hour_late_deduction = $reduced_one_hour_late_count * 0.5;
                 
-                $salary_days = $employee['present_days'] + $casual_leaves - ($half_day_leaves * 0.5) - $adjusted_one_hour_late_deduction - $adjusted_late_days_deduction;
+                // Calculate salary days from working days as per new requirement
+                // Working days - deductions (unpaid leave + late deductions)
+                // Casual and compensate leaves are not deducted as they are paid leaves
+                $salary_days = $employee['working_days'] - $unpaid_leave_days - $adjusted_late_days_deduction - $adjusted_one_hour_late_deduction;
                 $employee['salary_days_calculated_before_deduction'] = max(0, $salary_days);
                 
                 // Check for missing punch out on 4th Saturday
@@ -623,16 +643,33 @@ try {
                 if ($employee['working_days'] > 0) {
                     $per_day_salary = ($employee['base_salary'] ?? 0) / $employee['working_days'];
                 }
-                $net_salary = $salary_days * $per_day_salary;
+                
+                // Calculate salary days after penalty
+                $salary_days_after_penalty = max(0, $salary_days - $employee['penalty']);
+                
+                // Net salary is now (salary days after penalty * per day salary)
+                $net_salary = $salary_days_after_penalty * $per_day_salary;
+                
                 $employee['net_salary'] = round($net_salary, 2);
+                $employee['net_salary_before_penalty'] = round($salary_days * $per_day_salary, 2);
                 $employee['salary_days_calculated'] = max(0, $salary_days);
+                $employee['salary_days_after_penalty'] = $salary_days_after_penalty;
+                
+                // Fetch existing penalty value for this employee and month
+                try {
+                    $penalty_query = "SELECT penalty_amount FROM penalty_reasons WHERE user_id = ? AND penalty_date = ?";
+                    $penalty_stmt = $pdo->prepare($penalty_query);
+                    $penalty_stmt->execute([$employee['id'], $month_start]);
+                    $penalty_result = $penalty_stmt->fetch(PDO::FETCH_ASSOC);
+                    $employee['penalty'] = $penalty_result['penalty_amount'] ?? 0;
+                } catch (PDOException $e) {
+                    error_log("Error fetching penalty data for user " . $employee['id'] . ": " . $e->getMessage());
+                    $employee['penalty'] = 0;
+                }
                 
                 // Calculate excess days (when present days > working days)
                 $employee['excess_days'] = max(0, $employee['present_days'] - $employee['working_days']);
                 $employee['excess_day_salary'] = $employee['excess_days'] * $per_day_salary;
-                
-                // Initialize penalty value
-                $employee['penalty'] = 0;
                 
                 // Store late days deduction for reference
                 $employee['late_days_deduction'] = $adjusted_late_days_deduction;
@@ -896,6 +933,7 @@ try {
                                     <th>1+ Hour Late Deduction</th>
                                     <th>4th Punch Out Missing</th>
                                     <th>Salary Days Calculated</th>
+                                    <th>Salary Days After Penalty</th>
                                     <th>Penalty</th>
                                     <th>Net Salary</th>
                                     <th>Excess Day Salary</th>
@@ -974,6 +1012,9 @@ try {
                                             <?php endif; ?>
                                         </td>
                                         <td>
+                                            <?= number_format($employee['salary_days_calculated'] - $employee['penalty'], 1) ?> days
+                                        </td>
+                                        <td>
                                             <div class="d-flex align-items-center">
                                                 <button class="btn btn-sm btn-outline-danger penalty-decrease" 
                                                         data-user-id="<?= $employee['id'] ?>" 
@@ -989,7 +1030,7 @@ try {
                                             </div>
                                         </td>
                                         <td id="net-salary-<?= $employee['id'] ?>" 
-                                            data-original-salary="<?= $employee['net_salary'] ?? 0 ?>" 
+                                            data-original-salary="<?= $employee['net_salary_before_penalty'] ?? $employee['net_salary'] ?? 0 ?>" 
                                             data-per-day-salary="<?= $per_day_salary ?? 0 ?>">₹<?= number_format($employee['net_salary'] ?? 0, 2) ?></td>
                                         <td>₹<?= number_format($employee['excess_day_salary'] ?? 0, 2) ?></td>
                                         <td>
@@ -1676,17 +1717,38 @@ try {
                     netSalaryElement.data('original-salary', currentNetSalary);
                 }
                 
-                // Get per day salary from data attributes
+                // If this is the first adjustment after page load, we might need to account for existing penalties
+                // Check if the displayed salary matches what we expect after penalty deduction
+                var displayedSalary = parseFloat(netSalaryElement.text().replace(/[^\d.-]/g, '')) || 0;
                 var perDaySalary = parseFloat(netSalaryElement.data('per-day-salary')) || 0;
                 
-                // If per day salary is not available, calculate a default value
+                // If per day salary is not available, try to calculate it from original salary and working days
                 if (perDaySalary <= 0) {
-                    perDaySalary = 1000; // Default fallback
+                    var workingDays = parseInt(netSalaryElement.closest('tr').find('td:eq(4)').text()) || 0;
+                    if (workingDays > 0) {
+                        perDaySalary = currentNetSalary / workingDays;
+                    } else {
+                        perDaySalary = 0; // Cannot calculate without working days
+                    }
                 }
                 
-                // Calculate new net salary (deduct penalty days * per day salary)
-                var penaltyAmount = newPenalty * perDaySalary;
-                var newNetSalary = currentNetSalary - penaltyAmount;
+                var expectedSalaryWithCurrentPenalty = currentNetSalary - (currentPenalty * perDaySalary);
+                if (Math.abs(displayedSalary - expectedSalaryWithCurrentPenalty) > 1) {
+                    // There's a mismatch, likely due to existing penalties on page load
+                    // Adjust the original salary to account for this
+                    currentNetSalary = displayedSalary + (currentPenalty * perDaySalary);
+                    netSalaryElement.data('original-salary', currentNetSalary);
+                }
+                
+                // Calculate new net salary (salary days after penalty * per day salary)
+                // Get working days from the table
+                var workingDays = parseInt(netSalaryElement.closest('tr').find('td:eq(4)').text()) || 0;
+                // Get salary days calculated from the table (14th column)
+                var salaryDaysCalculated = parseFloat(netSalaryElement.closest('tr').find('td:eq(14)').text().match(/[\d.]+/g)?.pop() || 0);
+                // Calculate salary days after penalty
+                var salaryDaysAfterPenalty = Math.max(0, salaryDaysCalculated - newPenalty);
+                // Calculate new net salary
+                var newNetSalary = salaryDaysAfterPenalty * perDaySalary;
                 
                 // Update the net salary display
                 netSalaryElement.text('₹' + newNetSalary.toFixed(2));
@@ -1729,17 +1791,38 @@ try {
                     netSalaryElement.data('original-salary', currentNetSalary);
                 }
                 
-                // Get per day salary from data attributes
+                // If this is the first adjustment after page load, we might need to account for existing penalties
+                // Check if the displayed salary matches what we expect after penalty deduction
+                var displayedSalary = parseFloat(netSalaryElement.text().replace(/[^\d.-]/g, '')) || 0;
                 var perDaySalary = parseFloat(netSalaryElement.data('per-day-salary')) || 0;
                 
-                // If per day salary is not available, calculate a default value
+                // If per day salary is not available, try to calculate it from original salary and working days
                 if (perDaySalary <= 0) {
-                    perDaySalary = 1000; // Default fallback
+                    var workingDays = parseInt(netSalaryElement.closest('tr').find('td:eq(4)').text()) || 0;
+                    if (workingDays > 0) {
+                        perDaySalary = currentNetSalary / workingDays;
+                    } else {
+                        perDaySalary = 0; // Cannot calculate without working days
+                    }
                 }
                 
-                // Calculate new net salary (deduct penalty days * per day salary)
-                var penaltyAmount = newPenalty * perDaySalary;
-                var newNetSalary = currentNetSalary - penaltyAmount;
+                var expectedSalaryWithCurrentPenalty = currentNetSalary - (currentPenalty * perDaySalary);
+                if (Math.abs(displayedSalary - expectedSalaryWithCurrentPenalty) > 1) {
+                    // There's a mismatch, likely due to existing penalties on page load
+                    // Adjust the original salary to account for this
+                    currentNetSalary = displayedSalary + (currentPenalty * perDaySalary);
+                    netSalaryElement.data('original-salary', currentNetSalary);
+                }
+                
+                // Calculate new net salary (salary days after penalty * per day salary)
+                // Get working days from the table
+                var workingDays = parseInt(netSalaryElement.closest('tr').find('td:eq(4)').text()) || 0;
+                // Get salary days calculated from the table (14th column)
+                var salaryDaysCalculated = parseFloat(netSalaryElement.closest('tr').find('td:eq(14)').text().match(/[\d.]+/g)?.pop() || 0);
+                // Calculate salary days after penalty
+                var salaryDaysAfterPenalty = Math.max(0, salaryDaysCalculated - newPenalty);
+                // Calculate new net salary
+                var newNetSalary = salaryDaysAfterPenalty * perDaySalary;
                 
                 // Update the net salary display
                 netSalaryElement.text('₹' + newNetSalary.toFixed(2));
@@ -1802,7 +1885,7 @@ try {
                             salary_days_calculated: parseFloat($(this).find('td:eq(14)').text().match(/[\d.]+/g)?.pop() || 0),
                             penalty: penaltyValue,
                             net_salary: netSalaryValue,
-                            excess_day_salary: parseFloat($(this).find('td:eq(16)').text().replace(/[^\d.-]/g, '')) || 0
+                            excess_day_salary: parseFloat($(this).find('td:eq(17)').text().replace(/[^\d.-]/g, '')) || 0
                         };
                         salaryData.push(employeeData);
                     }

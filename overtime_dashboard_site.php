@@ -204,6 +204,66 @@ try {
             background-color: #e5e7eb;
         }
         
+        /* Table lock overlay styles */
+        .table-container {
+            position: relative;
+            min-height: 200px;
+        }
+        
+        .table-lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            min-height: 300px;
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(0.6px);
+            -webkit-backdrop-filter: blur(0.6px);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        
+        .table-lock-overlay.hidden {
+            display: none;
+        }
+        
+        .lock-icon {
+            font-size: 64px;
+            color: #6b7280;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .lock-message {
+            font-size: 20px;
+            font-weight: 700;
+            color: #374151;
+            text-align: center;
+            padding: 0 20px;
+            letter-spacing: 0.5px;
+        }
+        
+        .table-locked {
+            filter: blur(0.4px);
+            pointer-events: none;
+            user-select: none;
+        }
+        
     </style>
 </head>
 <body class="bg-gray-50">
@@ -427,7 +487,17 @@ try {
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto table-container" id="table-container">
+                <!-- Lock Overlay -->
+                <div class="table-lock-overlay hidden" id="table-lock-overlay">
+                    <div class="lock-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="lock-message">
+                        Open only from 25th to 3rd of every month
+                    </div>
+                </div>
+                
                 <table class="min-w-full divide-y divide-gray-200" id="employee-activity-table">
                     <thead class="bg-gray-50">
                         <tr>
@@ -719,6 +789,61 @@ try {
             const siteToggle = document.querySelector('.site-toggle');
             const employeeActivityBody = document.getElementById('employee-activity-body');
             
+            // Function to check if today's date is within the approval window (25th of current month to 3rd of next month)
+            function isCurrentlyInApprovalWindow() {
+                const today = new Date();
+                const currentDay = today.getDate();
+                
+                const windowStart = 25;
+                const windowEnd = 3;
+                
+                if (currentDay >= windowStart || currentDay <= windowEnd) {
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // Function to check if a specific date is within the approval window
+            function isWithinApprovalWindow(dateString) {
+                if (!dateString) return false;
+                
+                const recordDate = new Date(dateString);
+                if (Number.isNaN(recordDate.getTime())) {
+                    return false;
+                }
+                
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth();
+                
+                const windowStart = new Date(currentYear, currentMonth, 25);
+                const windowEnd = new Date(currentYear, currentMonth + 1, 3, 23, 59, 59);
+                
+                return recordDate >= windowStart && recordDate <= windowEnd;
+            }
+            
+            // Function to show/hide table lock overlay
+            function updateTableLock() {
+                const tableContainer = document.getElementById('table-container');
+                const tableLockOverlay = document.getElementById('table-lock-overlay');
+                const employeeActivityTable = document.getElementById('employee-activity-table');
+                
+                if (!tableContainer || !tableLockOverlay || !employeeActivityTable) {
+                    return;
+                }
+                
+                const isInWindow = isCurrentlyInApprovalWindow();
+                
+                if (isInWindow) {
+                    tableLockOverlay.classList.add('hidden');
+                    employeeActivityTable.classList.remove('table-locked');
+                } else {
+                    tableLockOverlay.classList.remove('hidden');
+                    employeeActivityTable.classList.add('table-locked');
+                }
+            }
+            
             // Function to fetch employee activity data
             function fetchEmployeeActivity(location = 'studio') {
                 // Show loading indicator
@@ -796,6 +921,8 @@ try {
                                         (userRole === 'Senior Manager (Studio)' && isStudioView) ||
                                         (userRole === 'Senior Manager (Site)' && isSiteView);
                                     
+                                    const isWithinWindow = isWithinApprovalWindow(record.date);
+                                    
                                     // Determine which buttons should be enabled based on status
                                     const recordStatus = record.status.toLowerCase();
                                     let canAccept = false;
@@ -834,7 +961,7 @@ try {
                                         canView = true;
                                     } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
                                         // Submitted or resubmitted status - actions enabled based on role/view
-                                        canAccept = canPerformActions;
+                                        canAccept = canPerformActions && isWithinWindow;
                                         canReject = canPerformActions;
                                         canEdit = canPerformActions;
                                         canView = true;
@@ -860,9 +987,35 @@ try {
                                     const acceptButtonClass = canAccept ? 'text-green-600 hover:text-green-900' : 'text-green-300 cursor-not-allowed';
                                     const rejectButtonClass = canReject ? 'text-red-600 hover:text-red-900' : 'text-red-300 cursor-not-allowed';
                                     const editButtonClass = canEdit ? 'text-blue-600 hover:text-blue-900' : 'text-blue-300 cursor-not-allowed';
-                                    const acceptButtonTitle = canAccept ? 'Accept' : (recordStatus === 'approved' ? 'Already approved' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot approve - viewing cross-team requests' : 'Action not available');
+                                    
+                                    let acceptButtonTitle = 'Accept';
+                                    if (!canAccept) {
+                                        if (recordStatus === 'approved') {
+                                            acceptButtonTitle = 'Already approved';
+                                        } else if (recordStatus === 'rejected') {
+                                            acceptButtonTitle = 'Already rejected';
+                                        } else if (recordStatus === 'expired') {
+                                            acceptButtonTitle = 'Request expired';
+                                        } else if (recordStatus === 'pending') {
+                                            acceptButtonTitle = 'Request pending submission';
+                                        } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
+                                            if (!canPerformActions) {
+                                                acceptButtonTitle = 'Cannot approve - viewing cross-team requests';
+                                            } else if (!isWithinWindow) {
+                                                acceptButtonTitle = 'Approval only allowed from 25th to 3rd of next month';
+                                            } else {
+                                                acceptButtonTitle = 'Action not available';
+                                            }
+                                        } else {
+                                            acceptButtonTitle = 'Action not available';
+                                        }
+                                    }
+                                    
                                     const rejectButtonTitle = canReject ? 'Reject' : (recordStatus === 'approved' ? 'Reject approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot reject - viewing cross-team requests' : 'Action not available');
                                     const editButtonTitle = canEdit ? 'Edit' : (recordStatus === 'approved' ? 'Edit approved request' : recordStatus === 'rejected' ? 'Already rejected' : recordStatus === 'expired' ? 'Request expired' : recordStatus === 'pending' ? 'Request pending submission' : (recordStatus === 'submitted' || recordStatus === 'resubmitted') ? 'Cannot edit - viewing cross-team requests' : 'Action not available');
+                                    
+                                    // Store the date for later use
+                                    row.setAttribute('data-record-date', record.date);
                                     
                                     row.innerHTML = `
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${record.username}</td>
@@ -914,6 +1067,9 @@ try {
                             
                             // Update statistics cards
                             updateStatisticsCards(data.statistics);
+                            
+                            // Update table lock status
+                            updateTableLock();
                         } else {
                             // Error occurred
                             employeeActivityBody.innerHTML = `
@@ -1033,6 +1189,9 @@ try {
                 studioToggle.classList.add('active');
                 siteToggle.classList.remove('active');
             }
+            
+            // Update table lock status on page load
+            updateTableLock();
             
             // Fetch data for the initial location
             fetchEmployeeActivity(defaultLocation);
@@ -2323,7 +2482,15 @@ try {
                         return; // Prevent action
                     }
                     
-                    const attendanceId = button.closest('tr').querySelector('.view-details').getAttribute('data-id');
+                    const row = button.closest('tr');
+                    const attendanceId = row.querySelector('.view-details').getAttribute('data-id');
+                    const recordDate = row.getAttribute('data-record-date');
+                    
+                    if (!isWithinApprovalWindow(recordDate)) {
+                        alert('Approval is only allowed for overtime requests from the 25th of the current month to the 3rd of the next month.');
+                        return;
+                    }
+                    
                     openAcceptOvertimeModal(attendanceId);
                 }
                 // Handle reject action

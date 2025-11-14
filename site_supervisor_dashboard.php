@@ -2739,6 +2739,8 @@ if (isset($_SESSION['user_id'])) {
                                             <option value="Bike">Bike</option>
                                             <option value="Public Transport">Public Transport</option>
                                             <option value="Taxi">Taxi</option>
+                                            <option value="Metro">Metro</option>
+                                            <option value="Aeroplane">Aeroplane</option>
                                             <option value="Other">Other</option>
                                         </select>
                                     </div>
@@ -2784,6 +2786,16 @@ if (isset($_SESSION['user_id'])) {
                             <div class="form-group">
                                 <label for="expenseNotes">Notes (Optional)</label>
                                 <textarea class="form-control" id="expenseNotes" rows="2"></textarea>
+                            </div>
+                            
+                            <!-- Bill Upload Section (shown only for Aeroplane) -->
+                            <div class="form-group" id="billUploadSection" style="display: none;">
+                                <label for="billFile">Upload Bill (Required)<span class="text-danger">*</span></label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="billFile" accept=".jpg,.jpeg,.png,.pdf">
+                                    <label class="custom-file-label" for="billFile">Choose file...</label>
+                                </div>
+                                <small class="form-text text-muted">Please upload bill receipt (JPG, PNG, or PDF only)</small>
                             </div>
                             
                             <div class="text-right">

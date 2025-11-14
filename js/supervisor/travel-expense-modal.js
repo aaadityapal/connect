@@ -95,47 +95,78 @@ document.addEventListener('DOMContentLoaded', function() {
     let travelExpenses = [];
     let entryIdCounter = 1;
     
-    // Add file upload container
-    const fileUploadContainer = document.createElement('div');
-    fileUploadContainer.id = 'billUploadContainer';
-    fileUploadContainer.className = 'form-group bill-upload-container';
-    fileUploadContainer.style.display = 'none';
-    fileUploadContainer.innerHTML = `
-        <label for="billFile">Upload Taxi Bill (Required)<span class="text-danger">*</span></label>
-        <div class="custom-file">
-            <input type="file" class="custom-file-input" id="billFile" accept=".jpg,.jpeg,.png,.pdf" required>
-            <label class="custom-file-label" for="billFile">Choose file...</label>
-        </div>
-        <small class="form-text text-muted">Please upload taxi bill receipt (JPG, PNG, or PDF only)</small>
-        <div class="bill-preview mt-2" style="display: none;">
-            <div class="card">
-                <div class="card-body p-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="bill-file-name">No file selected</span>
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-bill-btn">
-                            <i class="fas fa-times"></i> Remove
-                        </button>
+    // Check if bill upload section already exists in HTML, otherwise create it
+    let fileUploadContainer = document.getElementById('billUploadSection');
+    
+    if (!fileUploadContainer) {
+        // Add file upload container if it doesn't exist
+        fileUploadContainer = document.createElement('div');
+        fileUploadContainer.id = 'billUploadContainer';
+        fileUploadContainer.className = 'form-group bill-upload-container';
+        fileUploadContainer.style.display = 'none';
+        fileUploadContainer.innerHTML = `
+            <label for="billFile">Upload Bill (Required)<span class="text-danger">*</span></label>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="billFile" accept=".jpg,.jpeg,.png,.pdf" required>
+                <label class="custom-file-label" for="billFile">Choose file...</label>
+            </div>
+            <small class="form-text text-muted">Please upload bill receipt (JPG, PNG, or PDF only)</small>
+            <div class="bill-preview mt-2" style="display: none;">
+                <div class="card">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="bill-file-name">No file selected</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-bill-btn">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
+                        <div class="bill-thumbnail mt-2" style="display: none;"></div>
                     </div>
-                    <div class="bill-thumbnail mt-2" style="display: none;"></div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    // Insert before the notes field
-    if (notesInput && notesInput.parentNode) {
-        notesInput.parentNode.parentNode.insertBefore(fileUploadContainer, notesInput.parentNode);
+        `;
+        
+        // Insert before the notes field
+        if (notesInput && notesInput.parentNode) {
+            notesInput.parentNode.parentNode.insertBefore(fileUploadContainer, notesInput.parentNode);
+        }
     }
     
     // Listen for mode of transport changes
     modeInput.addEventListener('change', function() {
-        if (this.value === 'Taxi') {
+        if (this.value === 'Taxi' || this.value === 'Aeroplane') {
             fileUploadContainer.style.display = 'block';
-            // Make expense field editable for Taxi
+            // Update label based on mode
+            const billLabel = fileUploadContainer.querySelector('label[for="billFile"]');
+            if (billLabel) {
+                billLabel.innerHTML = `Upload ${this.value} Bill (Required)<span class="text-danger">*</span>`;
+            }
+            // Make expense field editable for Taxi and Aeroplane
+            expenseInput.readOnly = false;
+        } else if (this.value === 'Metro') {
+            // Metro: No bill upload needed
+            fileUploadContainer.style.display = 'none';
+            // Reset file input when mode is Metro
+            const billFileInput = document.getElementById('billFile');
+            if (billFileInput) {
+                billFileInput.value = '';
+                const billPreview = document.querySelector('.bill-preview');
+                if (billPreview) billPreview.style.display = 'none';
+                const billThumbnail = document.querySelector('.bill-thumbnail');
+                if (billThumbnail) {
+                    billThumbnail.style.display = 'none';
+                    billThumbnail.innerHTML = '';
+                }
+                const billFileNameElem = document.querySelector('.bill-file-name');
+                if (billFileNameElem) billFileNameElem.textContent = 'No file selected';
+                const fileLabel = document.querySelector('.custom-file-label');
+                if (fileLabel) fileLabel.textContent = 'Choose file...';
+            }
+            // Make expense field editable for Metro
             expenseInput.readOnly = false;
         } else {
             fileUploadContainer.style.display = 'none';
-            // Reset file input when mode is not Taxi
+            // Reset file input when mode is not Taxi or Aeroplane
             const billFileInput = document.getElementById('billFile');
             if (billFileInput) {
                 billFileInput.value = '';

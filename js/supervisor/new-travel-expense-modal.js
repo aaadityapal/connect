@@ -75,6 +75,14 @@ document.addEventListener('DOMContentLoaded', function() {
         $(newTravelExpenseModal).modal('show');
     });
     
+    // Handle modal shown event to check and update mode visibility
+    $(newTravelExpenseModal).on('shown.bs.modal', function() {
+        // Trigger mode change to ensure bill upload visibility is correct
+        if (modeInput.value) {
+            handleModeChange();
+        }
+    });
+    
     // Mode of transport change
     modeInput.addEventListener('change', function() {
         handleModeChange();
@@ -180,8 +188,8 @@ document.addEventListener('DOMContentLoaded', function() {
             removeMeterPhoto('end');
         }
         
-        // Show/hide bill upload for Taxi, Bus, Train and Other
-        if (selectedMode === 'Taxi' || selectedMode === 'Bus' || selectedMode === 'Train' || selectedMode === 'Other') {
+        // Show/hide bill upload for Taxi, Bus, Train, Aeroplane and Other
+        if (selectedMode === 'Taxi' || selectedMode === 'Bus' || selectedMode === 'Train' || selectedMode === 'Aeroplane' || selectedMode === 'Other') {
             billUploadContainer.style.display = 'block';
             // Update label based on mode
             const billLabel = document.querySelector('label[for="billFile"]');
@@ -443,8 +451,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Validate bill file for Taxi, Bus, Train and Other
-        const requiresBill = ['Taxi', 'Bus', 'Train', 'Other'].includes(modeInput.value);
+        // Validate bill file for Taxi, Bus, Train, Aeroplane and Other
+        const requiresBill = ['Taxi', 'Bus', 'Train', 'Aeroplane', 'Other'].includes(modeInput.value);
         if (requiresBill && (!billFileInput.files || billFileInput.files.length === 0)) {
             showError(billFileInput, `Bill file is required for ${modeInput.value} expenses`);
             isValid = false;
@@ -539,8 +547,8 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         }
         
-        // Add bill file info for Taxi, Bus, Train and Other
-        if (['Taxi', 'Bus', 'Train', 'Other'].includes(modeInput.value) && billFileInput.files && billFileInput.files.length > 0) {
+        // Add bill file info for Taxi, Bus, Train, Aeroplane and Other
+        if (['Taxi', 'Bus', 'Train', 'Aeroplane', 'Other'].includes(modeInput.value) && billFileInput.files && billFileInput.files.length > 0) {
             const file = billFileInput.files[0];
             expense.billFile = {
                 name: file.name,
@@ -608,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Copy bill file if it's a mode that requires a bill
-            if (['Taxi', 'Bus', 'Train', 'Other'].includes(expense.mode) && expense.billFile) {
+            if (['Taxi', 'Bus', 'Train', 'Aeroplane', 'Other'].includes(expense.mode) && expense.billFile) {
                 returnExpense.billFile = expense.billFile;
             }
             
@@ -978,8 +986,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 expense.meterEndPhotoIndex = index;
             }
             
-            // Handle file uploads for Taxi, Bus, Train and Other expenses
-            if (['Taxi', 'Bus', 'Train', 'Other'].includes(expense.mode) && expense.billFile && expense.billFile.file) {
+            // Handle file uploads for Taxi, Bus, Train, Aeroplane and Other expenses
+            if (['Taxi', 'Bus', 'Train', 'Aeroplane', 'Other'].includes(expense.mode) && expense.billFile && expense.billFile.file) {
                 formData.append(`bill_file_${index}`, expense.billFile.file, expense.billFile.name);
                 
                 // Create a clean version without the file object

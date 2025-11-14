@@ -68,6 +68,8 @@
                                 <option value="Taxi">Taxi</option>
                                 <option value="Bus">Bus</option>
                                 <option value="Train">Train</option>
+                                <option value="Metro">Metro</option>
+                                <option value="Aeroplane">Aeroplane</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>

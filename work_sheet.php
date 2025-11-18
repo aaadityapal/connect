@@ -317,22 +317,7 @@ $debug_info = [
             --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--background-color);
-            margin: 0;
-            padding: 0;
-            color: var(--text-primary);
-            line-height: 1.5;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding: 1.5rem 2rem;
-            border-radius: var(--radius-lg);
+                                    
             background-color: var(--card-background);
             box-shadow: var(--shadow-md);
         }
@@ -1157,24 +1142,7 @@ $debug_info = [
             }
         }
     
-    /* Add styles for the new Late Wave Off column */
-    .late-wave-off {
-        font-weight: 500;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        text-align: center;
-        font-size: 0.75rem;
-    }
     
-    .late-wave-off.waved {
-        background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-    
-    .late-wave-off.not-waved {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
 </style>
 </head>
 <body>
@@ -1322,7 +1290,7 @@ $debug_info = [
                                        onclick="exportWorkReportsToExcel()" 
                                        title="Export work reports to Excel"></i>
                                 </th>
-                                <th>Late Wave Off</th>
+                                
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -1356,22 +1324,7 @@ $debug_info = [
                                             -
                                         <?php endif; ?>
                                     </td>
-                                    <td>
-                                        <?php 
-                                        // Determine late wave off status
-                                        $late_wave_off = 'Not Waved Off';
-                                        $wave_class = 'not-waved';
-                                        if (isset($row['is_late']) && $row['is_late'] == 1) {
-                                            // Check if this late punch was adjusted by short leave
-                                            // Now we check the waved_off column from the database
-                                            if (isset($row['waved_off']) && $row['waved_off'] == 1) {
-                                                $late_wave_off = 'Waved Off';
-                                                $wave_class = 'waved';
-                                            }
-                                        }
-                                        echo '<span class="late-wave-off ' . $wave_class . '">' . $late_wave_off . '</span>';
-                                        ?>
-                                    </td>
+                                    
                                     <td>
                                         <?php 
                                         // Determine status badge styling and label
@@ -1488,7 +1441,7 @@ $debug_info = [
             
             attendanceData = []; // Clear existing data
             
-            rows.forEach((row) => {
+                rows.forEach((row) => {
                 const dateCell = row.querySelector('td:nth-child(1)');
                 const shiftCell = row.querySelector('td:nth-child(2)');
                 const punchInCell = row.querySelector('td:nth-child(3)');
@@ -1496,8 +1449,7 @@ $debug_info = [
                 const hoursCell = row.querySelector('td:nth-child(5)');
                 const overtimeCell = row.querySelector('td:nth-child(6)');
                 const workReportCell = row.querySelector('td:nth-child(7)');
-                const lateWaveOffCell = row.querySelector('td:nth-child(8)');
-                const statusCell = row.querySelector('td:nth-child(9) .status-badge');
+                const statusCell = row.querySelector('td:nth-child(8) .status-badge');
                 
                 if (dateCell && hoursCell && overtimeCell && statusCell) {
                     const date = dateCell.textContent.trim();
@@ -1926,7 +1878,7 @@ $debug_info = [
             rows.forEach((row) => {
                 const dateCell = row.querySelector('td:nth-child(1)');
                 const workReportCell = row.querySelector('td:nth-child(7)');
-                const statusCell = row.querySelector('td:nth-child(9) .status-badge');
+                const statusCell = row.querySelector('td:nth-child(8) .status-badge');
                 
                 if (dateCell && workReportCell) {
                     const date = dateCell.textContent.trim();

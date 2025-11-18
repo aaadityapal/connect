@@ -714,7 +714,6 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
                                         <th class="address-column">Punch Out Address</th>
                                         <th class="hours-column">Working Hours</th>
                                         <th class="status-column">Status</th>
-                                        <th class="status-column">Late Wave Off</th>
                                         <th class="hours-column">Overtime Hours <i class="fas fa-info-circle" data-toggle="tooltip" title="Counted when working ≥ 1hr 30min beyond shift end. Overtime between 1:30-2:00 is counted as 1:30."></i></th>
                                         <th class="report-column">Work Report <button id="exportWorkReportsBtn" class="btn btn-sm btn-outline-success ml-2" title="Export Work Reports"><i class="fas fa-file-excel"></i></button></th>
                                     </tr>
@@ -722,7 +721,7 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
                                 <tbody>
                                     <?php if (empty($attendance_records)): ?>
                                     <tr>
-                                        <td colspan="10" class="text-center">No attendance records found for the selected period.</td>
+                                        <td colspan="9" class="text-center">No attendance records found for the selected period.</td>
                                     </tr>
                                     <?php else: ?>
                                         <?php foreach ($attendance_records as $record): ?>
@@ -861,18 +860,7 @@ $formatted_overtime_hours = $format_hours_text($total_overtime_hours);
                                                     echo '<span class="badge ' . $status_class . '">' . ucfirst($status_text) . '</span>';
                                                 ?>
                                             </td>
-                                            <td>
-                                                <?php 
-                                                    // Display waved off status for late punches
-                                                    if (isset($record['waved_off']) && $record['waved_off'] == 1) {
-                                                        echo '<span class="badge badge-success">Waved Off</span>';
-                                                    } else if (isset($record['status']) && $record['status'] == 'late') {
-                                                        echo '<span class="badge badge-warning">Not Waved Off</span>';
-                                                    } else {
-                                                        echo '<span class="badge badge-secondary">Not Waved Off</span>';
-                                                    }
-                                                ?>
-                                            </td>
+                                            
                                             <td>
                                                 <?php 
                                                     if (!empty($record['overtime_hours'])) {

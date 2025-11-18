@@ -503,7 +503,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-row {
             display: grid;
-            grid-template-columns: 1fr 1.2fr 1.2fr 1fr 1fr 0.8fr 1fr;
+            grid-template-columns: 0.8fr 1.2fr 1fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
             gap: 15px;
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
@@ -518,7 +518,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-row-header {
             display: grid;
-            grid-template-columns: 1fr 1.2fr 1.2fr 1fr 1fr 0.8fr 1fr;
+            grid-template-columns: 0.8fr 1.2fr 1fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
             gap: 15px;
             padding: 15px;
             background-color: #f7fafc;
@@ -905,9 +905,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 </div>
 
                 <div class="tab-content" id="entries-tab">
-                    <div class="empty-state">
-                        <i class="fas fa-receipt"></i>
-                        <p>No payment entries added yet. Click "Add Payment Entry" to get started.</p>
+                    <div id="entriesContainer">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Loading payment entries...</p>
+                        </div>
                     </div>
                 </div>
 
@@ -964,6 +966,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
     <!-- Include Add Labour Modal -->
     <?php include 'modals/add_labour_modal.php'; ?>
+
+    <!-- Include Add Payment Entry Modal -->
+    <?php include 'modals/add_payment_entry_modal.php'; ?>
+
+    <!-- Include Payment Entry Details Modal -->
+    <?php include 'modals/payment_entry_details_modal.php'; ?>
 
     <script>
         // Vendor action functions
@@ -1055,6 +1063,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         // Global state for labour pagination
         let labourPaginationState = {
+            currentPage: 1,
+            limit: 10,
+            totalPages: 1,
+            search: '',
+            status: ''
+        };
+
+        // Global state for payment entries pagination
+        let entriesPaginationState = {
             currentPage: 1,
             limit: 10,
             totalPages: 1,
@@ -1323,6 +1340,181 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 });
         }
 
+        // Function to fetch and display payment entries
+        function loadPaymentEntries(limit = 10, page = 1, search = '', status = '') {
+            entriesPaginationState.limit = limit;
+            entriesPaginationState.currentPage = page;
+            entriesPaginationState.search = search;
+            entriesPaginationState.status = status;
+
+            const offset = (page - 1) * limit;
+            const entriesContainer = document.getElementById('entriesContainer');
+            
+            // Show loading state
+            entriesContainer.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner"></i>
+                    <p>Loading payment entries...</p>
+                </div>
+            `;
+
+            // Build query parameters
+            const params = new URLSearchParams({
+                limit: limit,
+                offset: offset,
+                search: search,
+                status: status
+            });
+
+            // Fetch payment entries from API
+            fetch(`get_payment_entries.php?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        let html = '<div class="vendor-table-wrapper">';
+                        html += '<div class="vendor-row-header">';
+                        html += '<div>Entry ID</div>';
+                        html += '<div>Project Name</div>';
+                        html += '<div>Payment Date</div>';
+                        html += '<div>Main Amount</div>';
+                        html += '<div>Grand Total</div>';
+                        html += '<div>Payment Mode</div>';
+                        html += '<div>Status</div>';
+                        html += '<div>Files</div>';
+                        html += '<div>Actions</div>';
+                        html += '</div>';
+
+                        data.data.forEach(entry => {
+                            const statusClass = entry.status.toLowerCase();
+                            const mainAmount = '₹' + parseFloat(entry.main_amount).toFixed(2);
+                            const grandTotal = '₹' + parseFloat(entry.grand_total).toFixed(2);
+                            
+                            html += '<div class="vendor-row">';
+                            html += `<div class="vendor-cell"><strong>#${entry.payment_entry_id}</strong></div>`;
+                            html += `<div class="vendor-cell">${entry.project_name}</div>`;
+                            html += `<div class="vendor-cell"><small>${entry.payment_date}</small></div>`;
+                            html += `<div class="vendor-cell" style="font-weight: 600; color: #2a4365;">${mainAmount}</div>`;
+                            html += `<div class="vendor-cell" style="font-weight: 700; color: #38a169; font-size: 0.95em;">${grandTotal}</div>`;
+                            html += `<div class="vendor-cell"><small style="background: #f0f4f8; padding: 4px 8px; border-radius: 4px; display: inline-block;">${entry.payment_mode.replace(/_/g, ' ').toUpperCase()}</small></div>`;
+                            html += `<div class="vendor-cell"><span class="vendor-status ${statusClass}">${entry.status.toUpperCase()}</span></div>`;
+                            html += `<div class="vendor-cell"><span style="background: #edf2f7; color: #2a4365; padding: 6px 10px; border-radius: 4px; font-size: 0.85em; font-weight: 600;"><i class="fas fa-file"></i> ${entry.files_attached}</span></div>`;
+                            html += '<div class="vendor-actions">';
+                            html += `<button class="view-btn" title="View Details" onclick="viewPaymentEntry(${entry.payment_entry_id})" style="background: #ebf8ff; color: #3182ce; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-eye"></i></button>`;
+                            html += `<button class="edit-btn" title="Edit" onclick="editPaymentEntry(${entry.payment_entry_id})" style="background: #fef5e7; color: #d69e2e; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-edit"></i></button>`;
+                            html += `<button class="delete-btn" title="Delete" onclick="deletePaymentEntry(${entry.payment_entry_id})" style="background: #fff5f5; color: #e53e3e; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-trash"></i></button>`;
+                            html += '</div>';
+                            html += '</div>';
+                        });
+
+                        html += '</div>';
+
+                        // Add pagination
+                        if (data.pagination.totalPages > 1) {
+                            html += '<div class="pagination-container">';
+                            html += `<div class="pagination-info"><strong>Page ${data.pagination.currentPage} of ${data.pagination.totalPages}</strong> (Total: <strong>${data.pagination.total}</strong> entries)</div>`;
+                            
+                            // Previous button
+                            html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="loadPaymentEntries(10, ${page > 1 ? page - 1 : 1})">
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </button>`;
+
+                            // Page numbers
+                            let startPage = Math.max(1, page - 2);
+                            let endPage = Math.min(data.pagination.totalPages, page + 2);
+
+                            if (startPage > 1) {
+                                html += `<button class="pagination-btn" onclick="loadPaymentEntries(10, 1)">1</button>`;
+                                if (startPage > 2) {
+                                    html += `<span style="color: #a0aec0; margin: 0 5px;">...</span>`;
+                                }
+                            }
+
+                            for (let i = startPage; i <= endPage; i++) {
+                                html += `<button class="pagination-btn ${i === page ? 'active' : ''}" onclick="loadPaymentEntries(10, ${i})">${i}</button>`;
+                            }
+
+                            if (endPage < data.pagination.totalPages) {
+                                if (endPage < data.pagination.totalPages - 1) {
+                                    html += `<span style="color: #a0aec0; margin: 0 5px;">...</span>`;
+                                }
+                                html += `<button class="pagination-btn" onclick="loadPaymentEntries(10, ${data.pagination.totalPages})">${data.pagination.totalPages}</button>`;
+                            }
+
+                            // Next button
+                            html += `<button class="pagination-btn" ${page === data.pagination.totalPages ? 'disabled' : ''} onclick="loadPaymentEntries(10, ${page < data.pagination.totalPages ? page + 1 : page})">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>`;
+
+                            html += '</div>';
+                        }
+
+                        entriesContainer.innerHTML = html;
+                        entriesPaginationState.totalPages = data.pagination.totalPages;
+                    } else if (data.success) {
+                        entriesContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-receipt"></i>
+                                <p>No payment entries added yet. Click "Add Payment Entry" to get started.</p>
+                            </div>
+                        `;
+                    } else {
+                        entriesContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <p>Error loading payment entries. Please try again.</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading payment entries:', error);
+                    entriesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading payment entries. Please try again.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Payment Entry action functions
+        function viewPaymentEntry(entryId) {
+            console.log('Viewing payment entry:', entryId);
+            openPaymentEntryDetailsModal(entryId);
+        }
+
+        function editPaymentEntry(entryId) {
+            console.log('Editing payment entry:', entryId);
+            alert('Edit payment entry for ID: ' + entryId);
+            // TODO: Open payment entry edit modal
+        }
+
+        function deletePaymentEntry(entryId) {
+            if (confirm('Are you sure you want to delete this payment entry? This action cannot be undone.')) {
+                console.log('Deleting payment entry:', entryId);
+                fetch(`delete_payment_entry.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ payment_entry_id: entryId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Payment entry deleted successfully');
+                        loadPaymentEntries(10, 1, '', ''); // Reload entries
+                    } else {
+                        alert('Error deleting payment entry: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting payment entry');
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Load vendors when vendors tab is clicked
             const vendorsTabBtn = document.querySelector('[data-tab="vendors-tab"]');
@@ -1339,6 +1531,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             if (laboursTabBtn) {
                 laboursTabBtn.addEventListener('click', function() {
                     loadLabours(10, 1, '', '');
+                });
+            }
+
+            // Load payment entries when entries tab is clicked
+            const entriesTabBtn = document.querySelector('[data-tab="entries-tab"]');
+            if (entriesTabBtn) {
+                entriesTabBtn.addEventListener('click', function() {
+                    loadPaymentEntries(10, 1, '', '');
                 });
             }
 
@@ -1431,8 +1631,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             if (addPaymentBtn) {
                 addPaymentBtn.addEventListener('click', function() {
                     console.log('Add Payment Entry clicked');
-                    alert('Redirecting to Add Payment Entry page');
-                    // window.location.href = 'add_payment.php';
+                    openPaymentEntryModal();
                 });
             }
 

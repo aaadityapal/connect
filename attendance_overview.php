@@ -1285,20 +1285,19 @@ try {
                                     <th>Working Hours</th>
                                     <th>Overtime</th>
                                     <th>Status</th>
-                                    <th>Late Waved Off</th>
                                     <th>Work Report</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (isset($error_message)): ?>
                                 <tr>
-                                    <td colspan="12" style="text-align: center; color: #721c24;">
+                                    <td colspan="11" style="text-align: center; color: #721c24;">
                                         Database error occurred. Please contact the administrator.
                                     </td>
                                 </tr>
                                 <?php elseif (empty($attendanceRecords)): ?>
                                 <tr>
-                                    <td colspan="12" style="text-align: center;">
+                                    <td colspan="11" style="text-align: center;">
                                         No attendance records found for this period
                                     </td>
                                 </tr>
@@ -1330,19 +1329,6 @@ try {
                                         <td><?php echo formatHours($record['overtime_hours']); ?></td>
                                         <td class="status-<?php echo strtolower($record['status'] ?? 'unknown'); ?>">
                                             <?php echo htmlspecialchars($record['status'] ?? 'Unknown'); ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            if (isset($record['waved_off'])) {
-                                                if ($record['waved_off'] == 1) {
-                                                    echo '<span class="waved-off">Waved Off</span>';
-                                                } else {
-                                                    echo '<span class="not-waved-off">Not Waved Off</span>';
-                                                }
-                                            } else {
-                                                echo '<span class="not-waved-off">Not Waved Off</span>';
-                                            }
-                                            ?>
                                         </td>
                                         <td>
                                             <?php if (!empty($record['work_report'])): ?>

@@ -204,61 +204,67 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle file selection
-    document.getElementById('billFile').addEventListener('change', function(e) {
-        const fileName = e.target.files[0]?.name || 'No file selected';
-        const fileLabel = document.querySelector('.custom-file-label');
-        const billPreview = document.querySelector('.bill-preview');
-        const billThumbnail = document.querySelector('.bill-thumbnail');
-        const billFileNameElem = document.querySelector('.bill-file-name');
-        
-        if (fileLabel) fileLabel.textContent = fileName;
-        if (billFileNameElem) billFileNameElem.textContent = fileName;
-        
-        // Show the preview container
-        if (billPreview) billPreview.style.display = 'block';
-        
-        // If it's an image, show a thumbnail
-        if (e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
+    const billFileInput = document.getElementById('billFile');
+    if (billFileInput) {
+        billFileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'No file selected';
+            const fileLabel = document.querySelector('.custom-file-label');
+            const billPreview = document.querySelector('.bill-preview');
+            const billThumbnail = document.querySelector('.bill-thumbnail');
+            const billFileNameElem = document.querySelector('.bill-file-name');
+            
+            if (fileLabel) fileLabel.textContent = fileName;
+            if (billFileNameElem) billFileNameElem.textContent = fileName;
+            
+            // Show the preview container
+            if (billPreview) billPreview.style.display = 'block';
+            
+            // If it's an image, show a thumbnail
+            if (e.target.files[0]) {
+                const file = e.target.files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        if (billThumbnail) {
+                            billThumbnail.style.display = 'block';
+                            billThumbnail.innerHTML = `<img src="${event.target.result}" class="img-thumbnail" style="max-height: 100px;" alt="Bill preview">`;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'application/pdf') {
+                    // For PDFs, just show an icon
                     if (billThumbnail) {
                         billThumbnail.style.display = 'block';
-                        billThumbnail.innerHTML = `<img src="${event.target.result}" class="img-thumbnail" style="max-height: 100px;" alt="Bill preview">`;
+                        billThumbnail.innerHTML = `<div class="pdf-icon"><i class="fas fa-file-pdf text-danger" style="font-size: 2rem;"></i><span class="ml-2">${file.name}</span></div>`;
                     }
-                };
-                reader.readAsDataURL(file);
-            } else if (file.type === 'application/pdf') {
-                // For PDFs, just show an icon
-                if (billThumbnail) {
-                    billThumbnail.style.display = 'block';
-                    billThumbnail.innerHTML = `<div class="pdf-icon"><i class="fas fa-file-pdf text-danger" style="font-size: 2rem;"></i><span class="ml-2">${file.name}</span></div>`;
                 }
             }
-        }
-    });
+        });
+    }
     
     // Handle remove bill button click
-    document.querySelector('.remove-bill-btn').addEventListener('click', function() {
-        const billFileInput = document.getElementById('billFile');
-        if (billFileInput) billFileInput.value = '';
-        
-        const fileLabel = document.querySelector('.custom-file-label');
-        if (fileLabel) fileLabel.textContent = 'Choose file...';
-        
-        const billPreview = document.querySelector('.bill-preview');
-        if (billPreview) billPreview.style.display = 'none';
-        
-        const billThumbnail = document.querySelector('.bill-thumbnail');
-        if (billThumbnail) {
-            billThumbnail.style.display = 'none';
-            billThumbnail.innerHTML = '';
-        }
-        
-        const billFileNameElem = document.querySelector('.bill-file-name');
-        if (billFileNameElem) billFileNameElem.textContent = 'No file selected';
-    });
+    const removeBillBtn = document.querySelector('.remove-bill-btn');
+    if (removeBillBtn) {
+        removeBillBtn.addEventListener('click', function() {
+            const billFileInput = document.getElementById('billFile');
+            if (billFileInput) billFileInput.value = '';
+            
+            const fileLabel = document.querySelector('.custom-file-label');
+            if (fileLabel) fileLabel.textContent = 'Choose file...';
+            
+            const billPreview = document.querySelector('.bill-preview');
+            if (billPreview) billPreview.style.display = 'none';
+            
+            const billThumbnail = document.querySelector('.bill-thumbnail');
+            if (billThumbnail) {
+                billThumbnail.style.display = 'none';
+                billThumbnail.innerHTML = '';
+            }
+            
+            const billFileNameElem = document.querySelector('.bill-file-name');
+            if (billFileNameElem) billFileNameElem.textContent = 'No file selected';
+        });
+    }
     
     /**
      * Formats a date in YYYY-MM-DD format

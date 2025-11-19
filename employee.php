@@ -797,6 +797,14 @@ foreach ($managers as $manager) {
             align-items: center;
             gap: 0.75rem;
             margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .access-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
         }
 
         /* Toggle Switch */
@@ -858,6 +866,20 @@ foreach ($managers as $manager) {
         .status-text {
             font-size: 14px;
             font-weight: 500;
+        }
+
+        .access-text {
+            font-size: 13px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .access-text.access-on {
+            color: #059669;
+        }
+
+        .access-text.access-off {
+            color: #9CA3AF;
         }
 
         .role-indicator {
@@ -1087,6 +1109,18 @@ foreach ($managers as $manager) {
                                     <?php if (!empty($employee['status_changed_date'])): ?>
                                     <small class="status-date">Changed: <?php echo date('d M Y', strtotime($employee['status_changed_date'])); ?></small>
                                     <?php endif; ?>
+                                </div>
+                                <div class="access-container">
+                                    <label class="switch">
+                                        <input type="checkbox" 
+                                               class="access-toggle" 
+                                               data-employee-id="<?php echo $employee['id']; ?>"
+                                               <?php echo (!empty($employee['access']) && (strtolower($employee['access']) === 'on' || $employee['access'] == 1)) ? 'checked' : ''; ?>>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span class="access-text access-<?php echo (!empty($employee['access']) && (strtolower($employee['access']) === 'on' || $employee['access'] == 1)) ? 'on' : 'off'; ?>">
+                                        <?php echo (!empty($employee['access']) && (strtolower($employee['access']) === 'on' || $employee['access'] == 1)) ? 'On' : 'Off'; ?>
+                                    </span>
                                 </div>
                                 <?php endif; ?>
                             </div>

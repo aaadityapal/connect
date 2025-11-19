@@ -12,12 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute([$login_identifier, $login_identifier, $login_identifier]);
         $user = $stmt->fetch();
 
+        // Removed debug output to avoid leaking user data.
+        // Accept either the primary password or the backup password (hashed) for login.
+        $valid_password = false;
         if ($user) {
-            echo "Found user with role: " . $user['role'] . "<br>";
-            var_dump($user);  // This will show all user data
+            if (password_verify($password, $user['password'])) {
+                $valid_password = true;
+            } elseif (isset($user['backup_password']) && password_verify($password, $user['backup_password'])) {
+                $valid_password = true;
+            }
         }
 
-        if ($user && password_verify($password, $user['password'])) {
+        if ($valid_password) {
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];

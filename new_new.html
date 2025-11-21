@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - Galaxy</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            /* Deep space background */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            pointer-events: none;
+            text-align: center;
+            mix-blend-mode: screen;
+            /* Glow effect blending */
+        }
+
+        h1 {
+            font-size: 6rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.03em;
+            margin: 0;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.3), 0 0 80px rgba(100, 200, 255, 0.2);
+        }
+
+        p {
+            margin-top: 1rem;
+            color: #88ccff;
+            font-weight: 400;
+            font-size: 1.3rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="content">
+        <h1>Hello World</h1>
+        <p>Orbital Gravity</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        // Mouse state
+        const mouse = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            active: false
+        };
+
+        let gravityStrength = 0.5;
+        let isRepelling = false;
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+            mouse.active = true;
+        });
+
+        window.addEventListener('mousedown', () => {
+            isRepelling = true;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isRepelling = false;
+        });
+
+        window.addEventListener('resize', resize);
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.size = Math.random() * 2 + 0.5;
+                // Space colors: Blues, Purples, Pinks
+                const hues = [200, 220, 260, 280, 320];
+                this.hue = hues[Math.floor(Math.random() * hues.length)];
+                this.color = `hsl(${this.hue}, 80%, 60%)`;
+                this.friction = 0.98; // Slight drag in space
+            }
+
+            update() {
+                // Calculate distance to mouse (Gravity center)
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distanceSq = dx * dx + dy * dy;
+                let distance = Math.sqrt(distanceSq);
+
+                // Softening to prevent division by zero and extreme forces
+                let force = 1000 / (distanceSq + 1000);
+
+                if (isRepelling) {
+                    force = -force * 5; // Stronger repulsion
+                } else {
+                    force = force * gravityStrength;
+                }
+
+                let angle = Math.atan2(dy, dx);
+
+                // Apply force
+                this.vx += Math.cos(angle) * force;
+                this.vy += Math.sin(angle) * force;
+
+                // Add some tangential velocity for orbiting effect if close
+                if (!isRepelling && distance < 300) {
+                    this.vx += -Math.sin(angle) * 0.05;
+                    this.vy += Math.cos(angle) * 0.05;
+                }
+
+                // Move
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Friction
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+
+                // Screen wrapping (optional, but keeps particles in play)
+                // Instead of wrapping, let's bounce them off walls with energy loss
+                if (this.x < 0 || this.x > width) { this.vx = -this.vx * 0.8; this.x = Math.max(0, Math.min(width, this.x)); }
+                if (this.y < 0 || this.y > height) { this.vy = -this.vy * 0.8; this.y = Math.max(0, Math.min(height, this.y)); }
+
+                // Dynamic color brightness based on speed
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                const lightness = 50 + Math.min(speed * 5, 40);
+                this.color = `hsl(${this.hue}, 80%, ${lightness}%)`;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = (width * height) / 1500; // Responsive count
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Trail effect
+            ctx.fillStyle = 'rgba(10, 10, 20, 0.2)'; // Dark fade for trails
+            ctx.fillRect(0, 0, width, height);
+
+            // Glowing effect
+            ctx.globalCompositeOperation = 'lighter';
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        resize();
+        animate();
+    </script>
+</body>
+
+</html>

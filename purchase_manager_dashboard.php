@@ -46,33 +46,33 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             flex: 1;
             margin-left: 280px;
             transition: margin-left 0.3s ease;
-            padding: 40px;
+            padding: 20px 30px;
         }
 
         .header {
-            margin-bottom: 40px;
+            margin-bottom: 25px;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            font-weight: 300;
+            font-size: 2em;
+            font-weight: 400;
             color: #2a4365;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
+            margin-bottom: 5px;
+            letter-spacing: -0.3px;
         }
 
         .header p {
-            font-size: 1em;
+            font-size: 0.9em;
             color: #718096;
-            font-weight: 300;
+            font-weight: 400;
         }
 
         .filter-section {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
             transition: all 0.3s ease;
         }
 
@@ -80,15 +80,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .filter-header h3 {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #2a4365;
-            font-weight: 500;
+            font-weight: 600;
             margin: 0;
         }
 
@@ -96,15 +96,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             background: #2a4365;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 500;
+            font-size: 0.8em;
+            font-weight: 600;
             transition: background 0.2s ease, transform 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .toggle-filter-btn:hover {
@@ -113,7 +113,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .toggle-filter-btn i {
-            font-size: 0.9em;
+            font-size: 0.8em;
             transition: transform 0.3s ease;
         }
 
@@ -134,8 +134,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
         }
 
         .filter-group {
@@ -144,20 +144,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .filter-group label {
-            font-size: 0.9em;
+            font-size: 0.75em;
             color: #2a4365;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-weight: 700;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .filter-group input,
         .filter-group select {
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 0.95em;
+            border-radius: 4px;
+            font-size: 0.9em;
             font-family: inherit;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -181,18 +181,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .filter-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 25px;
-            padding-top: 20px;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 12px;
             border-top: 1px solid #e2e8f0;
         }
 
         .filter-btn {
-            padding: 12px 25px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 6px;
-            font-size: 0.95em;
-            font-weight: 500;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -217,10 +217,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .records-section {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
             transition: all 0.3s ease;
         }
 
@@ -228,15 +228,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .records-header h3 {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #2a4365;
-            font-weight: 500;
+            font-weight: 600;
             margin: 0;
         }
 
@@ -244,15 +244,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             background: #2a4365;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 500;
+            font-size: 0.8em;
+            font-weight: 600;
             transition: background 0.2s ease, transform 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .toggle-records-btn:hover {
@@ -261,7 +261,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .toggle-records-btn i {
-            font-size: 0.9em;
+            font-size: 0.8em;
             transition: transform 0.3s ease;
         }
 
@@ -282,17 +282,17 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .records-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
         }
 
         .record-btn {
             background: white;
             color: #2a4365;
             border: 2px solid #e2e8f0;
-            padding: 25px 20px;
-            border-radius: 8px;
-            font-size: 0.95em;
+            padding: 15px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -300,7 +300,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             text-decoration: none;
         }
@@ -312,7 +312,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .record-btn i {
-            font-size: 1.8em;
+            font-size: 1.4em;
             opacity: 0.8;
         }
 
@@ -380,40 +380,105 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .recent-records-section {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .recent-records-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .recent-records-header {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #2a4365;
-            font-weight: 500;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .records-date-filter-minimal {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .mini-date-input {
+            padding: 7px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-family: inherit;
+            width: 130px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mini-date-input:focus {
+            outline: none;
+            border-color: #2a4365;
+            box-shadow: 0 0 0 2px rgba(42, 67, 101, 0.08);
+        }
+
+        .mini-filter-btn {
+            padding: 7px 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            background: white;
+            color: #2a4365;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            min-width: unset;
+        }
+
+        .mini-filter-btn:hover {
+            border-color: #2a4365;
+        }
+
+        .mini-filter-btn.apply:hover {
+            background: #e6f2ff;
+            color: #2a4365;
+        }
+
+        .mini-filter-btn.reset:hover {
+            background: #fff5f5;
+            color: #e53e3e;
         }
 
         .tabs-container {
             display: flex;
             gap: 0;
             border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
         .tab-btn {
             background: transparent;
             border: none;
-            padding: 12px 20px;
-            font-size: 0.9em;
-            font-weight: 500;
+            padding: 10px 16px;
+            font-size: 0.8em;
+            font-weight: 600;
             color: #a0aec0;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             border-bottom: 2px solid transparent;
             margin-bottom: -1px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .tab-btn:hover {
@@ -427,8 +492,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .tab-btn i {
             display: inline-block;
-            margin-right: 8px;
-            font-size: 0.9em;
+            margin-right: 6px;
+            font-size: 0.8em;
         }
 
         .tab-content {
@@ -451,19 +516,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .empty-state {
             text-align: center;
-            padding: 30px 20px;
+            padding: 20px 15px;
             color: #a0aec0;
         }
 
         .empty-state i {
-            font-size: 2.5em;
+            font-size: 2em;
             color: #cbd5e0;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: block;
         }
 
         .empty-state p {
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .records-table {
@@ -477,20 +542,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .records-table th {
-            padding: 15px;
+            padding: 12px;
             text-align: left;
-            font-weight: 600;
+            font-weight: 700;
             color: #2a4365;
-            font-size: 0.9em;
+            font-size: 0.8em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .records-table td {
-            padding: 15px;
+            padding: 12px;
             border-bottom: 1px solid #e2e8f0;
             color: #4a5568;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .records-table tbody tr:hover {
@@ -503,29 +568,29 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-row {
             display: grid;
-            grid-template-columns: 0.8fr 1.2fr 1fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
-            gap: 15px;
-            padding: 15px;
+            grid-template-columns: 1.5fr 1.2fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
+            gap: 12px;
+            padding: 12px;
             border-bottom: 1px solid #e2e8f0;
-            align-items: center;
-            font-size: 0.9em;
+            align-items: start;
+            font-size: 0.85em;
             transition: background-color 0.2s ease;
         }
 
         .vendor-row:hover {
-            background-color: #f7fafc;
+            background-color: #f9fafb;
         }
 
         .vendor-row-header {
             display: grid;
-            grid-template-columns: 0.8fr 1.2fr 1fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
-            gap: 15px;
-            padding: 15px;
+            grid-template-columns: 1.5fr 1.2fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
+            gap: 12px;
+            padding: 12px;
             background-color: #f7fafc;
             border-bottom: 2px solid #e2e8f0;
             font-weight: 600;
             color: #2a4365;
-            font-size: 0.9em;
+            font-size: 0.8em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -536,14 +601,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-cell {
             word-break: break-word;
+            font-weight: 600;
         }
 
         .vendor-status {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
             text-transform: capitalize;
         }
 
@@ -569,7 +635,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
         }
 
@@ -578,15 +644,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             border: none;
             color: #2a4365;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 0.9em;
             transition: color 0.2s ease, transform 0.2s ease;
-            padding: 5px;
-            width: 30px;
-            height: 30px;
+            padding: 4px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .vendor-actions button:hover {
@@ -637,29 +703,29 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin-top: 25px;
-            padding-top: 20px;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 12px;
             border-top: 1px solid #e2e8f0;
             flex-wrap: wrap;
         }
 
         .pagination-info {
             color: #718096;
-            font-size: 0.9em;
-            margin-right: 15px;
+            font-size: 0.8em;
+            margin-right: 10px;
         }
 
         .pagination-btn {
             background: white;
             border: 1px solid #e2e8f0;
             color: #2a4365;
-            padding: 8px 12px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.8em;
             transition: all 0.2s ease;
-            min-width: 35px;
+            min-width: 32px;
             text-align: center;
         }
 
@@ -678,23 +744,70 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             background: #2a4365;
             color: white;
             border-color: #2a4365;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .content-section {
             background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .content-section h3 {
-            font-size: 1.3em;
+            font-size: 1.1em;
             color: #2a4365;
-            margin-bottom: 25px;
-            font-weight: 400;
+            margin-bottom: 15px;
+            font-weight: 600;
             border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 15px;
+            padding-bottom: 10px;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .quick-action-btn {
+            padding: 14px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            color: #2a4365;
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-action-btn i {
+            font-size: 1.4em;
+            color: #2a4365;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-btn:hover {
+            border-color: #2a4365;
+            background: #f8f9fa;
+            box-shadow: 0 4px 12px rgba(42, 67, 101, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .quick-action-btn:hover i {
+            transform: scale(1.1);
+            color: #1a365d;
+        }
+
+        .quick-action-btn:active {
+            transform: translateY(0);
         }
 
         .action-list {
@@ -702,11 +815,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .action-list li {
-            padding: 15px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             transition: padding-left 0.2s ease;
+            font-size: 0.9em;
         }
 
         .action-list li:last-child {
@@ -714,26 +828,119 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .action-list li:hover {
-            padding-left: 10px;
+            padding-left: 8px;
         }
 
         .action-list i {
             color: #2a4365;
-            margin-right: 15px;
-            width: 20px;
+            margin-right: 12px;
+            width: 18px;
             text-align: center;
         }
 
         .action-list a {
             color: #2a4365;
             text-decoration: none;
-            font-size: 0.95em;
+            font-size: 0.9em;
             transition: color 0.2s ease;
         }
 
         .action-list a:hover {
             color: #1a365d;
             text-decoration: underline;
+        }
+
+        .project-filter-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-filter-btn {
+            background: none;
+            border: none;
+            color: #2a4365;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 0;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .project-filter-btn:hover {
+            color: #1a365d;
+        }
+
+        .project-filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 200px;
+            display: none;
+            margin-top: 8px;
+        }
+
+        .project-filter-dropdown.active {
+            display: block;
+        }
+
+        .filter-option {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 0.9em;
+            color: #2a4365;
+        }
+
+        .filter-option:last-child {
+            border-bottom: none;
+        }
+
+        .filter-option:hover {
+            background-color: #f7fafc;
+        }
+
+        .filter-option.active {
+            background-color: #ebf8ff;
+            color: #3182ce;
+            font-weight: 600;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .paid-to-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .paid-to-item {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #f0f4f8;
+            border-radius: 3px;
+            font-size: 0.8em;
+            color: #2a4365;
+            border-left: 2px solid #2a4365;
+        }
+
+        .paid-to-item.vendor {
+            border-left-color: #3182ce;
+        }
+
+        .paid-to-item.labour {
+            border-left-color: #d69e2e;
         }
 
         /* Responsive adjustments */
@@ -755,6 +962,39 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             .stats-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
+            }
+
+            .recent-records-header-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .records-date-filter-minimal {
+                width: 100%;
+                gap: 6px;
+            }
+
+            .mini-date-input {
+                flex: 1;
+                min-width: 100px;
+            }
+
+            .mini-filter-btn {
+                flex-shrink: 0;
+            }
+
+            .quick-actions-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 10px;
+            }
+
+            .quick-action-btn {
+                padding: 15px 10px;
+                font-size: 0.8em;
+            }
+
+            .quick-action-btn i {
+                font-size: 1.5em;
             }
         }
     </style>
@@ -867,18 +1107,77 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
             <!-- Recently Added Records Section -->
             <div class="recent-records-section">
-                <h3 class="recent-records-header">Recently Added Records</h3>
+                <div class="recent-records-header-container">
+                    <h3 class="recent-records-header">Recently Added Records</h3>
+                    
+                    <!-- Minimalist Date Range Filter -->
+                    <div class="records-date-filter-minimal">
+                        <input type="date" id="recordsDateFrom" name="recordsDateFrom" class="mini-date-input" placeholder="From">
+                        <input type="date" id="recordsDateTo" name="recordsDateTo" class="mini-date-input" placeholder="To">
+                        <button class="mini-filter-btn apply" id="applyRecordsFilterBtn" title="Apply Filter">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="mini-filter-btn reset" id="resetRecordsFilterBtn" title="Reset Filter">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs Navigation - Only Recent Entries -->
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="entries-tab">
+                        <i class="fas fa-receipt"></i>Recent Entries
+                    </button>
+                </div>
+
+                <!-- Tab Contents - Only Recent Entries -->
+                <div class="tab-content active" id="entries-tab">
+                    <div id="entriesContainer">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Loading payment entries...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" style="margin-top: 40px;">
+                <h3>Quick Actions</h3>
+                
+                <!-- Quick Action Buttons -->
+                <div class="quick-actions-grid">
+                    <button class="quick-action-btn" onclick="scrollToTab('vendors-tab')" title="View all vendors in the system">
+                        <i class="fas fa-users"></i>
+                        <span>View Vendors</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="scrollToTab('labours-tab')" title="View all labour records">
+                        <i class="fas fa-hard-hat"></i>
+                        <span>View Labours</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="scrollToTab('entries-tab')" title="View recent payment entries">
+                        <i class="fas fa-receipt"></i>
+                        <span>View Payment Entries</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="alert('Budget Overview feature coming soon')" title="View budget and spending analytics">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Budget Overview</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vendors, Labours and Reports Section -->
+            <div class="recent-records-section" style="margin-top: 40px;">
+                <div class="recent-records-header-container">
+                    <h3 class="recent-records-header">Management</h3>
+                </div>
 
                 <!-- Tabs Navigation -->
                 <div class="tabs-container">
-                    <button class="tab-btn active" data-tab="vendors-tab">
+                    <button class="tab-btn" data-tab="vendors-tab">
                         <i class="fas fa-user-tie"></i>Vendors
                     </button>
                     <button class="tab-btn" data-tab="labours-tab">
                         <i class="fas fa-hard-hat"></i>Labours
-                    </button>
-                    <button class="tab-btn" data-tab="entries-tab">
-                        <i class="fas fa-receipt"></i>Recent Entries
                     </button>
                     <button class="tab-btn" data-tab="reports-tab">
                         <i class="fas fa-chart-bar"></i>Reports
@@ -886,11 +1185,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 </div>
 
                 <!-- Tab Contents -->
-                <div class="tab-content active" id="vendors-tab">
+                <div class="tab-content" id="vendors-tab">
                     <div id="vendorsContainer">
                         <div class="empty-state">
                             <i class="fas fa-user-tie"></i>
-                            <p>Loading vendors...</p>
+                            <p>Click on the Vendors tab to load data</p>
                         </div>
                     </div>
                 </div>
@@ -904,47 +1203,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     </div>
                 </div>
 
-                <div class="tab-content" id="entries-tab">
-                    <div id="entriesContainer">
-                        <div class="empty-state">
-                            <i class="fas fa-receipt"></i>
-                            <p>Loading payment entries...</p>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="tab-content" id="reports-tab">
                     <div class="empty-state">
                         <i class="fas fa-chart-bar"></i>
                         <p>No reports available yet. Click "View Report" to generate one.</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="content-section" style="margin-top: 40px;">
-                <h3>Quick Actions</h3>
-                <ul class="action-list">
-                    <li>
-                        <i class="fas fa-plus-circle"></i>
-                        <a href="#create-order">Create New Purchase Order</a>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <a href="#approval-queue">Review Approval Queue</a>
-                    </li>
-                    <li>
-                        <i class="fas fa-chart-bar"></i>
-                        <a href="#reports">View Purchase Reports</a>
-                    </li>
-                    <li>
-                        <i class="fas fa-users"></i>
-                        <a href="#vendors">Manage Vendors</a>
-                    </li>
-                    <li>
-                        <i class="fas fa-receipt"></i>
-                        <a href="#invoices">Track Invoices</a>
-                    </li>
-                </ul>
             </div>
         </div>
     </div>
@@ -972,6 +1236,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
     <!-- Include Payment Entry Details Modal -->
     <?php include 'modals/payment_entry_details_modal.php'; ?>
+
+    <!-- Include Payment Entry Files Registry Modal -->
+    <?php include 'modals/payment_entry_files_registry_modal.php'; ?>
+
+    <!-- Include Recipient Files Modal -->
+    <?php include 'modals/recipient_files_modal.php'; ?>
 
     <script>
         // Vendor action functions
@@ -1076,11 +1346,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             limit: 10,
             totalPages: 1,
             search: '',
-            status: ''
+            status: '',
+            dateFrom: '',
+            dateTo: '',
+            projectType: ''
         };
 
         // Function to fetch and display vendors
-        function loadVendors(limit = 10, page = 1, search = '', status = '') {
+        function loadVendors(limit = 10, page = 1, search = '', status = '', dateFrom = '', dateTo = '') {
             vendorPaginationState.limit = limit;
             vendorPaginationState.currentPage = page;
             vendorPaginationState.search = search;
@@ -1102,7 +1375,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 limit: limit,
                 offset: offset,
                 search: search,
-                status: status
+                status: status,
+                dateFrom: dateFrom,
+                dateTo: dateTo
             });
 
             // Fetch vendors from API
@@ -1210,7 +1485,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         // Function to fetch and display labours
-        function loadLabours(limit = 10, page = 1, search = '', status = '') {
+        function loadLabours(limit = 10, page = 1, search = '', status = '', dateFrom = '', dateTo = '') {
             labourPaginationState.limit = limit;
             labourPaginationState.currentPage = page;
             labourPaginationState.search = search;
@@ -1232,7 +1507,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 limit: limit,
                 offset: offset,
                 search: search,
-                status: status
+                status: status,
+                dateFrom: dateFrom,
+                dateTo: dateTo
             });
 
             // Fetch labours from API
@@ -1341,11 +1618,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         // Function to fetch and display payment entries
-        function loadPaymentEntries(limit = 10, page = 1, search = '', status = '') {
+        function loadPaymentEntries(limit = 10, page = 1, search = '', status = '', dateFrom = '', dateTo = '', projectType = '', vendorCategory = '') {
             entriesPaginationState.limit = limit;
             entriesPaginationState.currentPage = page;
             entriesPaginationState.search = search;
             entriesPaginationState.status = status;
+            entriesPaginationState.dateFrom = dateFrom;
+            entriesPaginationState.dateTo = dateTo;
+            entriesPaginationState.projectType = projectType;
+            entriesPaginationState.vendorCategory = vendorCategory;
 
             const offset = (page - 1) * limit;
             const entriesContainer = document.getElementById('entriesContainer');
@@ -1363,46 +1644,145 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 limit: limit,
                 offset: offset,
                 search: search,
-                status: status
+                status: status,
+                dateFrom: dateFrom,
+                dateTo: dateTo,
+                projectType: projectType,
+                vendorCategory: vendorCategory
             });
 
             // Fetch payment entries from API
             fetch(`get_payment_entries.php?${params.toString()}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success && data.data.length > 0) {
+                    if (data.success && data.data && data.data.length > 0) {
                         let html = '<div class="vendor-table-wrapper">';
                         html += '<div class="vendor-row-header">';
-                        html += '<div>Entry ID</div>';
-                        html += '<div>Project Name</div>';
+                        html += '<div class="project-filter-container"><span>Project Name</span><button class="project-filter-btn" id="projectFilterToggle" title="Filter by Project Type"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown" id="projectFilterDropdown"><div class="filter-option" data-type="">All Projects</div><div class="filter-option" data-type="Architecture"><input type="checkbox"> Architecture</div><div class="filter-option" data-type="Interior"><input type="checkbox"> Interior</div><div class="filter-option" data-type="Construction"><input type="checkbox"> Construction</div></div></div>';
+                        html += '<div class="project-filter-container"><span>Paid To</span><button class="project-filter-btn" id="vendorCategoryFilterToggle" title="Filter by Vendor Category"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown" id="vendorCategoryFilterDropdown"><div class="filter-option" data-vendor-category="">All Categories</div></div></div>';
                         html += '<div>Payment Date</div>';
-                        html += '<div>Main Amount</div>';
                         html += '<div>Grand Total</div>';
                         html += '<div>Payment Mode</div>';
-                        html += '<div>Status</div>';
                         html += '<div>Files</div>';
                         html += '<div>Actions</div>';
                         html += '</div>';
 
                         data.data.forEach(entry => {
                             const statusClass = entry.status.toLowerCase();
-                            const mainAmount = '₹' + parseFloat(entry.main_amount).toFixed(2);
                             const grandTotal = '₹' + parseFloat(entry.grand_total).toFixed(2);
+                            const paymentDate = entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A';
+                            
+                            // Build Paid To list
+                            let paidToHtml = '<div class="paid-to-list">';
+                            if (entry.paid_to && entry.paid_to.length > 0) {
+                                entry.paid_to.forEach(recipient => {
+                                    const categoryBracket = recipient.vendor_category ? ` [${recipient.vendor_category}]` : '';
+                                    paidToHtml += `<div class="paid-to-item ${recipient.type}">${recipient.type === 'vendor' ? '👤' : '👷'} ${recipient.name}${categoryBracket}</div>`;
+                                });
+                            } else {
+                                paidToHtml += '<div class="paid-to-item" style="border-left-color: #a0aec0;">No data</div>';
+                            }
+                            paidToHtml += '</div>';
                             
                             html += '<div class="vendor-row">';
-                            html += `<div class="vendor-cell"><strong>#${entry.payment_entry_id}</strong></div>`;
                             html += `<div class="vendor-cell">${entry.project_name}</div>`;
-                            html += `<div class="vendor-cell"><small>${entry.payment_date}</small></div>`;
-                            html += `<div class="vendor-cell" style="font-weight: 600; color: #2a4365;">${mainAmount}</div>`;
+                            html += `<div class="vendor-cell">${paidToHtml}</div>`;
+                            html += `<div class="vendor-cell"><small>${paymentDate}</small></div>`;
                             html += `<div class="vendor-cell" style="font-weight: 700; color: #38a169; font-size: 0.95em;">${grandTotal}</div>`;
                             html += `<div class="vendor-cell"><small style="background: #f0f4f8; padding: 4px 8px; border-radius: 4px; display: inline-block;">${entry.payment_mode.replace(/_/g, ' ').toUpperCase()}</small></div>`;
-                            html += `<div class="vendor-cell"><span class="vendor-status ${statusClass}">${entry.status.toUpperCase()}</span></div>`;
-                            html += `<div class="vendor-cell"><span style="background: #edf2f7; color: #2a4365; padding: 6px 10px; border-radius: 4px; font-size: 0.85em; font-weight: 600;"><i class="fas fa-file"></i> ${entry.files_attached}</span></div>`;
+                            html += `<div class="vendor-cell"><span style="background: #edf2f7; color: #2a4365; padding: 6px 10px; border-radius: 4px; font-size: 0.85em; font-weight: 600; cursor: pointer;" onclick="openPaymentFilesModal(${entry.payment_entry_id})"><i class="fas fa-file"></i> ${entry.files_attached}</span></div>`;
                             html += '<div class="vendor-actions">';
+                            html += `<button class="expand-btn" title="Expand Details" onclick="togglePaymentEntryExpand(${entry.payment_entry_id})" style="background: none; border: none; color: #718096; cursor: pointer; padding: 8px; font-size: 1.1em; transition: all 0.3s;"><i class="fas fa-chevron-down"></i></button>`;
                             html += `<button class="view-btn" title="View Details" onclick="viewPaymentEntry(${entry.payment_entry_id})" style="background: #ebf8ff; color: #3182ce; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-eye"></i></button>`;
                             html += `<button class="edit-btn" title="Edit" onclick="editPaymentEntry(${entry.payment_entry_id})" style="background: #fef5e7; color: #d69e2e; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-edit"></i></button>`;
                             html += `<button class="delete-btn" title="Delete" onclick="deletePaymentEntry(${entry.payment_entry_id})" style="background: #fff5f5; color: #e53e3e; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-trash"></i></button>`;
                             html += '</div>';
+                            html += '</div>';
+                            
+                            // Add expandable details row - Minimalistic Design
+                            html += `<div class="entry-details-container" id="entry-details-${entry.payment_entry_id}" style="display: grid; grid-column: 1 / -1; background: #f9fafb; border: 3px solid #2a4365; border-radius: 8px; padding: 20px; margin: 8px 0; box-shadow: 0 2px 8px rgba(42, 67, 101, 0.1);">`;
+                            
+                            // Top row with main details
+                            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;">';
+                            
+                            // Project Name
+                            html += '<div style="border-left: 3px solid #3182ce; padding: 8px 12px; background: white; border-radius: 3px;">';
+                            html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PROJECT NAME</div>`;
+                            html += `<div style="font-weight: 700; color: #1a365d; font-size: 0.9em;">${entry.project_name || 'N/A'}</div>`;
+                            html += '</div>';
+                            
+                            // Project Type
+                            html += '<div style="border-left: 3px solid #38a169; padding: 8px 12px; background: white; border-radius: 3px;">';
+                            html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PROJECT TYPE</div>`;
+                            html += `<div style="font-weight: 700; color: #276749; font-size: 0.9em; text-transform: capitalize;">${entry.project_type || 'N/A'}</div>`;
+                            html += '</div>';
+                            
+                            // Main Amount
+                            html += '<div style="border-left: 3px solid #d69e2e; padding: 8px 12px; background: white; border-radius: 3px;">';
+                            html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">MAIN AMOUNT</div>`;
+                            html += `<div style="font-weight: 700; color: #7c2d12; font-size: 0.9em;">₹${parseFloat(entry.grand_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+                            html += '</div>';
+                            
+                            // Payment Date
+                            html += '<div style="border-left: 3px solid #d53f8c; padding: 8px 12px; background: white; border-radius: 3px;">';
+                            html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PAYMENT DATE</div>`;
+                            html += `<div style="font-weight: 700; color: #6b2142; font-size: 0.9em;">${entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A'}</div>`;
+                            html += '</div>';
+                            
+                            html += '</div>';
+                            
+                            // Paid To section with small items
+                            if (entry.paid_to && entry.paid_to.length > 0) {
+                                entry.paid_to.forEach((recipient, index) => {
+                                    html += '<div style="display: grid; grid-template-columns: 1fr 0.8fr 1.2fr 0.9fr 0.8fr 0.7fr; gap: 12px; margin-bottom: 12px; align-items: center; background: white; padding: 12px; border-radius: 6px; border: 2px solid #e2e8f0; transition: all 0.2s ease;">';
+                                    
+                                    // Paid To Name
+                                    html += '<div style="border-left: 4px solid #6b5b95; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
+                                    html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PAID TO</div>`;
+                                    html += `<div style="font-weight: 700; color: #2d1b3d; font-size: 0.9em;">${recipient.name || 'N/A'}</div>`;
+                                    html += '</div>';
+                                    
+                                    // Type
+                                    html += '<div style="border-left: 4px solid #0284c7; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
+                                    html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TYPE</div>`;
+                                    html += `<div style="font-weight: 700; color: #0a4a6f; font-size: 0.9em; text-transform: capitalize;">${recipient.type || 'N/A'}</div>`;
+                                    html += '</div>';
+                                    
+                                    // Amount
+                                    html += '<div style="border-left: 4px solid #16a34a; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
+                                    html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">AMOUNT PAID</div>`;
+                                    html += `<div style="font-weight: 700; color: #15803d; font-size: 0.95em;">₹${parseFloat(recipient.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+                                    html += '</div>';
+                                    
+                                    // Category
+                                    html += '<div style="border-left: 4px solid #d53f8c; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
+                                    html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">CATEGORY</div>`;
+                                    html += `<div style="font-weight: 700; color: #6b2142; font-size: 0.9em; text-transform: capitalize;">${recipient.category || recipient.vendor_category || 'N/A'}</div>`;
+                                    html += '</div>';
+                                    
+                                    // Payment Mode - Show acceptance methods if multiple, otherwise main mode
+                                    const paymentModes = (recipient.acceptance_methods && recipient.acceptance_methods.length > 0) 
+                                        ? recipient.acceptance_methods.join(', ') 
+                                        : (entry.payment_mode ? entry.payment_mode.replace(/_/g, ' ') : 'N/A');
+                                    
+                                    html += '<div style="border-left: 4px solid #ea580c; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
+                                    html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PAYMENT MODE</div>`;
+                                    html += `<div style="font-weight: 700; color: #7c2d12; font-size: 0.9em; text-transform: capitalize;">${paymentModes}</div>`;
+                                    html += '</div>';
+                                    
+                                    // View Proofs Button
+                                    html += '<div style="padding: 8px; text-align: center;">';
+                                    const recipientJsonStr = JSON.stringify(recipient).replace(/"/g, '&quot;');
+                                    html += `<button onclick="openRecipientFilesModal(${entry.payment_entry_id}, ${index}, '${recipientJsonStr}');" style="background: #fbbf24; color: #78350f; border: 2px solid #f59e0b; padding: 8px 12px; border-radius: 4px; font-size: 0.8em; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);"><i class="fas fa-paperclip"></i> Proofs</button>`;
+                                    html += '</div>';
+                                    
+                                    html += '</div>';
+                                });
+                            }
+                            
+                            // Payment Mode (kept for reference, but hidden in expanded view since it's now per recipient)
+                            // Removed from here as it's now displayed for each recipient
+                            
                             html += '</div>';
                         });
 
@@ -1413,8 +1793,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += '<div class="pagination-container">';
                             html += `<div class="pagination-info"><strong>Page ${data.pagination.currentPage} of ${data.pagination.totalPages}</strong> (Total: <strong>${data.pagination.total}</strong> entries)</div>`;
                             
+                            // Encode filter parameters safely
+                            const encodedSearch = encodeURIComponent(search || '');
+                            const encodedStatus = encodeURIComponent(status || '');
+                            const encodedDateFrom = encodeURIComponent(dateFrom || '');
+                            const encodedDateTo = encodeURIComponent(dateTo || '');
+                            const encodedProjectType = encodeURIComponent(projectType || '');
+                            const encodedVendorCategory = encodeURIComponent(vendorCategory || '');
+                            
                             // Previous button
-                            html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="loadPaymentEntries(10, ${page > 1 ? page - 1 : 1})">
+                            html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-page="${page > 1 ? page - 1 : 1}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" class="pagination-btn pagination-prev">
                                 <i class="fas fa-chevron-left"></i> Prev
                             </button>`;
 
@@ -1423,25 +1811,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             let endPage = Math.min(data.pagination.totalPages, page + 2);
 
                             if (startPage > 1) {
-                                html += `<button class="pagination-btn" onclick="loadPaymentEntries(10, 1)">1</button>`;
+                                html += `<button class="pagination-btn" data-page="1" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}">1</button>`;
                                 if (startPage > 2) {
                                     html += `<span style="color: #a0aec0; margin: 0 5px;">...</span>`;
                                 }
                             }
 
                             for (let i = startPage; i <= endPage; i++) {
-                                html += `<button class="pagination-btn ${i === page ? 'active' : ''}" onclick="loadPaymentEntries(10, ${i})">${i}</button>`;
+                                html += `<button class="pagination-btn ${i === page ? 'active' : ''}" data-page="${i}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}">${i}</button>`;
                             }
 
                             if (endPage < data.pagination.totalPages) {
                                 if (endPage < data.pagination.totalPages - 1) {
                                     html += `<span style="color: #a0aec0; margin: 0 5px;">...</span>`;
                                 }
-                                html += `<button class="pagination-btn" onclick="loadPaymentEntries(10, ${data.pagination.totalPages})">${data.pagination.totalPages}</button>`;
+                                html += `<button class="pagination-btn" data-page="${data.pagination.totalPages}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}">${data.pagination.totalPages}</button>`;
                             }
 
                             // Next button
-                            html += `<button class="pagination-btn" ${page === data.pagination.totalPages ? 'disabled' : ''} onclick="loadPaymentEntries(10, ${page < data.pagination.totalPages ? page + 1 : page})">
+                            html += `<button class="pagination-btn" ${page === data.pagination.totalPages ? 'disabled' : ''} data-page="${page < data.pagination.totalPages ? page + 1 : page}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" class="pagination-btn pagination-next">
                                 Next <i class="fas fa-chevron-right"></i>
                             </button>`;
 
@@ -1450,7 +1838,145 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
                         entriesContainer.innerHTML = html;
                         entriesPaginationState.totalPages = data.pagination.totalPages;
+
+                        // Initialize expanded buttons to show chevron in rotated state
+                        initializeExpandButtons();
+
+                        // Add event listeners for project type filter
+                        const projectFilterToggle = document.getElementById('projectFilterToggle');
+                        const projectFilterDropdown = document.getElementById('projectFilterDropdown');
+                        const filterOptions = document.querySelectorAll('.filter-option:not([data-vendor-category])');
+
+                        if (projectFilterToggle && projectFilterDropdown) {
+                            projectFilterToggle.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                projectFilterDropdown.classList.toggle('active');
+                            });
+
+                            filterOptions.forEach(option => {
+                                option.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    const projectType = this.getAttribute('data-type');
+                                    
+                                    filterOptions.forEach(opt => opt.classList.remove('active'));
+                                    this.classList.add('active');
+                                    projectFilterDropdown.classList.remove('active');
+                                    
+                                    // Get current filter states
+                                    const mainSearch = entriesPaginationState.search || '';
+                                    const mainStatus = entriesPaginationState.status || '';
+                                    const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                    const mainDateTo = entriesPaginationState.dateTo || '';
+                                    const mainVendorCategory = entriesPaginationState.vendorCategory || '';
+                                    
+                                    loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, projectType, mainVendorCategory);
+                                });
+                            });
+
+                            document.addEventListener('click', function(e) {
+                                if (!e.target.closest('.project-filter-container') && e.target.id !== 'projectFilterToggle') {
+                                    projectFilterDropdown.classList.remove('active');
+                                }
+                            });
+                        }
+
+                        // Load vendor categories for filter
+                        fetch('get_vendor_categories.php')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success && data.data && data.data.length > 0) {
+                                    const vendorCategoryDropdown = document.getElementById('vendorCategoryFilterDropdown');
+                                    if (vendorCategoryDropdown) {
+                                        // Clear existing options except the first one
+                                        while (vendorCategoryDropdown.children.length > 1) {
+                                            vendorCategoryDropdown.removeChild(vendorCategoryDropdown.lastChild);
+                                        }
+
+                                        data.data.forEach(category => {
+                                            const option = document.createElement('div');
+                                            option.className = 'filter-option';
+                                            option.setAttribute('data-vendor-category', category);
+                                            option.innerHTML = `<input type="checkbox"> ${category}`;
+                                            vendorCategoryDropdown.appendChild(option);
+                                        });
+
+                                        // Add click handlers to vendor category filters
+                                        const vendorCategoryOptions = document.querySelectorAll('.filter-option[data-vendor-category]');
+                                        const vendorCategoryFilterToggle = document.getElementById('vendorCategoryFilterToggle');
+
+                                        if (vendorCategoryFilterToggle) {
+                                            vendorCategoryFilterToggle.addEventListener('click', function(e) {
+                                                e.stopPropagation();
+                                                vendorCategoryDropdown.classList.toggle('active');
+                                            });
+
+                                            vendorCategoryOptions.forEach(option => {
+                                                option.addEventListener('click', function(e) {
+                                                    e.stopPropagation();
+                                                    const vendorCategory = this.getAttribute('data-vendor-category');
+                                                    
+                                                    vendorCategoryOptions.forEach(opt => opt.classList.remove('active'));
+                                                    this.classList.add('active');
+                                                    vendorCategoryDropdown.classList.remove('active');
+                                                    
+                                                    // Get current filter states from the main filter section
+                                                    const mainSearch = entriesPaginationState.search || '';
+                                                    const mainStatus = entriesPaginationState.status || '';
+                                                    const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                                    const mainDateTo = entriesPaginationState.dateTo || '';
+                                                    const mainProjectType = entriesPaginationState.projectType || '';
+                                                    
+                                                    loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, vendorCategory);
+                                                });
+                                            });
+
+                                            // Close dropdown when clicking outside
+                                            document.addEventListener('click', function(e) {
+                                                if (!e.target.closest('.project-filter-container') && e.target.id !== 'vendorCategoryFilterToggle') {
+                                                    vendorCategoryDropdown.classList.remove('active');
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading vendor categories:', error);
+                            });
+
+                        // Add event listeners for pagination buttons
+                        document.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const pageNum = parseInt(this.getAttribute('data-page'));
+                                const searchVal = decodeURIComponent(this.getAttribute('data-search') || '');
+                                const statusVal = decodeURIComponent(this.getAttribute('data-status') || '');
+                                const dateFromVal = decodeURIComponent(this.getAttribute('data-datefrom') || '');
+                                const dateToVal = decodeURIComponent(this.getAttribute('data-dateto') || '');
+                                const projectTypeVal = decodeURIComponent(this.getAttribute('data-projecttype') || '');
+                                const vendorCategoryVal = decodeURIComponent(this.getAttribute('data-vendorcategory') || '');
+                                
+                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal);
+                            });
+                        });
                     } else if (data.success) {
+                        // Add event listeners for pagination buttons
+                        document.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const pageNum = parseInt(this.getAttribute('data-page'));
+                                const searchVal = decodeURIComponent(this.getAttribute('data-search') || '');
+                                const statusVal = decodeURIComponent(this.getAttribute('data-status') || '');
+                                const dateFromVal = decodeURIComponent(this.getAttribute('data-datefrom') || '');
+                                const dateToVal = decodeURIComponent(this.getAttribute('data-dateto') || '');
+                                const projectTypeVal = decodeURIComponent(this.getAttribute('data-projecttype') || '');
+                                const vendorCategoryVal = decodeURIComponent(this.getAttribute('data-vendorcategory') || '');
+                                
+                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal);
+                            });
+                        });
+                    } else if (data.success) {
+                        // success but no data
                         entriesContainer.innerHTML = `
                             <div class="empty-state">
                                 <i class="fas fa-receipt"></i>
@@ -1458,10 +1984,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             </div>
                         `;
                     } else {
+                        // API error
+                        console.error('API Error:', data);
                         entriesContainer.innerHTML = `
                             <div class="empty-state">
                                 <i class="fas fa-exclamation-circle"></i>
-                                <p>Error loading payment entries. Please try again.</p>
+                                <p>Error loading payment entries. ${data.message || 'Please try again.'}</p>
                             </div>
                         `;
                     }
@@ -1475,6 +2003,44 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         </div>
                     `;
                 });
+        }
+
+        // Toggle payment entry expand/collapse
+        function togglePaymentEntryExpand(entryId) {
+            const detailsContainer = document.getElementById(`entry-details-${entryId}`);
+            const expandBtn = event.target.closest('.expand-btn');
+            
+            if (detailsContainer) {
+                const isHidden = detailsContainer.style.display === 'none';
+                
+                if (isHidden) {
+                    // Expand
+                    detailsContainer.style.display = 'grid';
+                    if (expandBtn) {
+                        expandBtn.style.transform = 'rotate(180deg)';
+                        expandBtn.querySelector('i').style.transform = 'rotate(180deg)';
+                    }
+                } else {
+                    // Collapse
+                    detailsContainer.style.display = 'none';
+                    if (expandBtn) {
+                        expandBtn.style.transform = 'rotate(0deg)';
+                        expandBtn.querySelector('i').style.transform = 'rotate(0deg)';
+                    }
+                }
+            }
+        }
+
+        // Initialize all chevrons to expanded state on page load
+        function initializeExpandButtons() {
+            const expandBtns = document.querySelectorAll('.expand-btn');
+            expandBtns.forEach(btn => {
+                btn.style.transform = 'rotate(180deg)';
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
         }
 
         // Payment Entry action functions
@@ -1503,7 +2069,17 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 .then(data => {
                     if (data.success) {
                         alert('Payment entry deleted successfully');
-                        loadPaymentEntries(10, 1, '', ''); // Reload entries
+                        // Reload entries with current filter state
+                        loadPaymentEntries(
+                            entriesPaginationState.limit,
+                            entriesPaginationState.currentPage,
+                            entriesPaginationState.search,
+                            entriesPaginationState.status,
+                            entriesPaginationState.dateFrom,
+                            entriesPaginationState.dateTo,
+                            entriesPaginationState.projectType,
+                            entriesPaginationState.vendorCategory
+                        );
                     } else {
                         alert('Error deleting payment entry: ' + (data.message || 'Unknown error'));
                     }
@@ -1515,32 +2091,78 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
         }
 
+        // Global state for records date filters
+        let recordsDateFilterState = {
+            dateFrom: '',
+            dateTo: ''
+        };
+
+        // Function to scroll to Recently Added Records section and activate a tab
+        function scrollToTab(tabName) {
+            // Find and scroll to the recent-records-section
+            const recentRecordsSection = document.querySelector('.recent-records-section');
+            if (recentRecordsSection) {
+                recentRecordsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Wait for scroll to complete, then activate the tab
+                setTimeout(function() {
+                    const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+                    if (tabBtn) {
+                        // Trigger click to activate the tab
+                        tabBtn.click();
+                    }
+                }, 500);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Load vendors when vendors tab is clicked
-            const vendorsTabBtn = document.querySelector('[data-tab="vendors-tab"]');
-            if (vendorsTabBtn) {
-                vendorsTabBtn.addEventListener('click', function() {
-                    loadVendors(10, 1, '', '');
-                });
-                // Load vendors on page load
-                loadVendors(10, 1, '', '');
-            }
+            // Load payment entries on page load (Recent Entries tab)
+            loadPaymentEntries(10, 1, '', '', '', '');
 
-            // Load labours when labours tab is clicked
-            const laboursTabBtn = document.querySelector('[data-tab="labours-tab"]');
-            if (laboursTabBtn) {
-                laboursTabBtn.addEventListener('click', function() {
-                    loadLabours(10, 1, '', '');
+            // Attach click event listeners to all tabs
+            const allTabBtns = document.querySelectorAll('.tab-btn');
+            allTabBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Find the parent section for this tab
+                    const parentSection = this.closest('.recent-records-section');
+                    if (!parentSection) return;
+                    
+                    // Remove active class from all buttons and contents in this section only
+                    parentSection.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    parentSection.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabElement = document.getElementById(tabName);
+                    if (tabElement) {
+                        // Clear the container before loading new data
+                        const container = tabElement.querySelector('[id$="Container"]');
+                        if (container) {
+                            container.innerHTML = `
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner"></i>
+                                    <p>Loading...</p>
+                                </div>
+                            `;
+                        }
+                        tabElement.classList.add('active');
+                    }
+                    
+                    // Load data based on tab name
+                    if (tabName === 'vendors-tab') {
+                        loadVendors(10, 1, '', '', '', '');
+                    } else if (tabName === 'labours-tab') {
+                        loadLabours(10, 1, '', '', '', '');
+                    } else if (tabName === 'entries-tab') {
+                        loadPaymentEntries(10, 1, '', '', '', '');
+                    }
                 });
-            }
-
-            // Load payment entries when entries tab is clicked
-            const entriesTabBtn = document.querySelector('[data-tab="entries-tab"]');
-            if (entriesTabBtn) {
-                entriesTabBtn.addEventListener('click', function() {
-                    loadPaymentEntries(10, 1, '', '');
-                });
-            }
+            });
 
             const toggleFilterBtn = document.getElementById('toggleFilterBtn');
             const filterContent = document.getElementById('filterContent');
@@ -1642,30 +2264,71 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     // window.location.href = 'view_report.php';
                 });
             }
-        });
 
-        // Tab switching functionality
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        if (tabBtns.length > 0) {
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    
-                    // Remove active class from all buttons and contents
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    
-                    // Add active class to clicked button and corresponding content
-                    this.classList.add('active');
-                    const tabElement = document.getElementById(tabName);
-                    if (tabElement) {
-                        tabElement.classList.add('active');
+            // Records date filter functionality
+            const applyRecordsFilterBtn = document.getElementById('applyRecordsFilterBtn');
+            const resetRecordsFilterBtn = document.getElementById('resetRecordsFilterBtn');
+            const recordsDateFromInput = document.getElementById('recordsDateFrom');
+            const recordsDateToInput = document.getElementById('recordsDateTo');
+
+            if (applyRecordsFilterBtn) {
+                applyRecordsFilterBtn.addEventListener('click', function() {
+                    const dateFrom = recordsDateFromInput.value;
+                    const dateTo = recordsDateToInput.value;
+
+                    // Validate dates
+                    if (dateFrom && dateTo && dateFrom > dateTo) {
+                        alert('From Date cannot be after To Date');
+                        return;
                     }
-                });
-            });
-        }
 
+                    // Store filter state
+                    recordsDateFilterState.dateFrom = dateFrom;
+                    recordsDateFilterState.dateTo = dateTo;
+
+                    // Get active tab and reload data with filters
+                    const activeTab = document.querySelector('.tab-btn.active');
+                    if (activeTab) {
+                        const tabName = activeTab.getAttribute('data-tab');
+                        
+                        if (tabName === 'vendors-tab') {
+                            loadVendors(10, 1, '', '', dateFrom, dateTo);
+                        } else if (tabName === 'labours-tab') {
+                            loadLabours(10, 1, '', '', dateFrom, dateTo);
+                        } else if (tabName === 'entries-tab') {
+                            loadPaymentEntries(10, 1, '', '', dateFrom, dateTo);
+                        }
+                    }
+
+                    console.log('Records filter applied:', { dateFrom, dateTo });
+                });
+            }
+
+            if (resetRecordsFilterBtn) {
+                resetRecordsFilterBtn.addEventListener('click', function() {
+                    recordsDateFromInput.value = '';
+                    recordsDateToInput.value = '';
+
+                    recordsDateFilterState.dateFrom = '';
+                    recordsDateFilterState.dateTo = '';
+
+                    // Get active tab and reload data without filters
+                    const activeTab = document.querySelector('.tab-btn.active');
+                    if (activeTab) {
+                        const tabName = activeTab.getAttribute('data-tab');
+                        
+                        if (tabName === 'vendors-tab') {
+                            loadVendors(10, 1, '', '', '', '');
+                        } else if (tabName === 'labours-tab') {
+                            loadLabours(10, 1, '', '', '', '');
+                        } else if (tabName === 'entries-tab') {
+                            loadPaymentEntries(10, 1, '', '', '', '');
+                        }
+                    }
+
+                    console.log('Records filter reset');
+                });
+            }
+        });
 
     </script>

@@ -1503,6 +1503,61 @@
         });
     }
 
+    // Validate that total entry amounts don't exceed main payment amount
+    function validateEntryAmounts() {
+        const mainAmount = parseFloat(paymentAmountInput.value) || 0;
+        const entries = additionalEntriesContainer.querySelectorAll('.payment-entry-additional-entry');
+        let totalEntryAmount = 0;
+        let hasError = false;
+
+        entries.forEach(entry => {
+            const entryAmountInput = entry.querySelector('.entry-amount');
+            if (entryAmountInput && entryAmountInput.value) {
+                const entryAmount = parseFloat(entryAmountInput.value) || 0;
+                totalEntryAmount += entryAmount;
+
+                // Check if individual entry exceeds main amount
+                if (entryAmount > mainAmount) {
+                    entryAmountInput.style.borderColor = '#e53e3e';
+                    entryAmountInput.style.backgroundColor = '#fff5f5';
+                    hasError = true;
+                } else {
+                    entryAmountInput.style.borderColor = '#e2e8f0';
+                    entryAmountInput.style.backgroundColor = 'white';
+                }
+            }
+        });
+
+        // Show warning if total entries exceed main amount
+        if (totalEntryAmount > mainAmount && mainAmount > 0) {
+            const warning = document.createElement('div');
+            warning.className = 'entry-total-validation-warning';
+            
+            // Remove previous warning if exists
+            const prevWarning = additionalEntriesContainer.querySelector('.entry-total-validation-warning');
+            if (prevWarning) {
+                prevWarning.remove();
+            }
+
+            const excess = totalEntryAmount - mainAmount;
+            warning.style.cssText = 'padding: 12px 15px; background-color: #fff5f5; border-left: 4px solid #e53e3e; border-radius: 4px; margin-bottom: 15px; color: #e53e3e; font-size: 0.9em; font-weight: 600; display: flex; align-items: center; gap: 8px;';
+            warning.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="font-size: 1em;"></i>
+                <span>Total entry amount (₹${totalEntryAmount.toFixed(2)}) exceeds main payment amount (₹${mainAmount.toFixed(2)}) by ₹${excess.toFixed(2)}</span>
+            `;
+            
+            additionalEntriesContainer.insertBefore(warning, additionalEntriesContainer.firstChild);
+            return false;
+        } else {
+            // Remove warning if exists and amounts are valid
+            const prevWarning = additionalEntriesContainer.querySelector('.entry-total-validation-warning');
+            if (prevWarning) {
+                prevWarning.remove();
+            }
+            return true;
+        }
+    }
+
     // Submit single payment
     function submitSinglePayment() {
         const projectType = paymentProjectTypeSelect.value;
@@ -1571,6 +1626,13 @@
             }
         }
 
+        // Validate that total entry amounts don't exceed main payment amount
+        const entryValidation = validateEntryAmounts();
+        if (!entryValidation) {
+            alert('Total entry amounts cannot exceed the main payment amount. Please adjust entry amounts.');
+            isValid = false;
+        }
+
         if (!isValid) {
             return;
         }
@@ -1624,9 +1686,8 @@
         // Collect additional entries
         const additionalEntries = [];
         const entryDivs = additionalEntriesContainer.querySelectorAll('.payment-entry-additional-entry');
-        let fileIndex = 0;
         
-        entryDivs.forEach(entry => {
+        entryDivs.forEach((entry, entry_index) => {
             const typeSelect = entry.querySelector('.entry-type');
             const recipientSelect = entry.querySelector('.entry-recipient');
             const descriptionInput = entry.querySelector('.entry-description');
@@ -1654,7 +1715,7 @@
                     const methodRows = entry.querySelectorAll('.entry-acceptance-method-row');
                     const acceptanceMethods = [];
                     
-                    methodRows.forEach((methodRow, methodIndex) => {
+                    methodRows.forEach((methodRow, method_index) => {
                         const methodSelect = methodRow.querySelector('.entry-method-select');
                         const amountInputMethod = methodRow.querySelector('.entry-method-amount');
                         const mediaInputMethod = methodRow.querySelector('.entry-method-media');
@@ -1665,12 +1726,12 @@
                                 amount: amountInputMethod.value
                             };
 
-                            // Add media file if present
+                            // Add media file if present - Use correct file key matching backend
                             if (mediaInputMethod && mediaInputMethod.files.length > 0) {
                                 const file = mediaInputMethod.files[0];
-                                formData.append(`entryMethodMedia_${fileIndex}`, file);
-                                methodData.mediaFile = `entryMethodMedia_${fileIndex}`;
-                                fileIndex++;
+                                const fileKey = `entryMethodMedia_${entry_index}_${method_index}`;
+                                formData.append(fileKey, file);
+                                methodData.mediaFile = fileKey;
                             }
 
                             acceptanceMethods.push(methodData);
@@ -1682,12 +1743,12 @@
                     }
                 }
 
-                // Add media file if present
+                // Add entry media file if present
                 if (mediaFileInput && mediaFileInput.files.length > 0) {
                     const file = mediaFileInput.files[0];
-                    formData.append(`entryMedia_${fileIndex}`, file);
-                    entryData.mediaFile = `entryMedia_${fileIndex}`;
-                    fileIndex++;
+                    const fileKey = `entryMedia_${entry_index}`;
+                    formData.append(fileKey, file);
+                    entryData.mediaFile = fileKey;
                 }
 
                 additionalEntries.push(entryData);
@@ -1926,6 +1987,17 @@
             });
         }
 
+        // Add event listener to entry amount for validation against main payment amount
+        const entryAmountInput = entryDiv.querySelector('.entry-amount');
+        if (entryAmountInput) {
+            entryAmountInput.addEventListener('change', function() {
+                validateEntryAmounts();
+            });
+            entryAmountInput.addEventListener('input', function() {
+                validateEntryAmounts();
+            });
+        }
+
         // Add event listener to "Add Method" button
         const addMethodBtn = entryDiv.querySelector('.payment-entry-btn-add-entry-method');
         if (addMethodBtn) {
@@ -2140,19 +2212,27 @@
         recipientSelect.disabled = true;
 
         let endpoint = '';
+        let showAddLabour = false;
+        let showAddVendor = false;
         
         if (type === 'labour') {
             endpoint = 'get_labour_recipients.php?type=labour';
+            showAddLabour = true;
         } else if (type === 'labour_skilled') {
             endpoint = 'get_vendor_recipients.php?type=labour_skilled';
+            showAddLabour = true;
         } else if (type === 'material_steel') {
             endpoint = 'get_vendor_recipients.php?type=material_steel';
+            showAddVendor = true;
         } else if (type === 'material_bricks') {
             endpoint = 'get_vendor_recipients.php?type=material_bricks';
+            showAddVendor = true;
         } else if (type === 'supplier_cement') {
             endpoint = 'get_vendor_recipients.php?type=supplier_cement';
+            showAddVendor = true;
         } else if (type === 'supplier_sand_aggregate') {
             endpoint = 'get_vendor_recipients.php?type=supplier_sand_aggregate';
+            showAddVendor = true;
         }
 
         if (!endpoint) {
@@ -2170,10 +2250,34 @@
                     data.recipients.forEach(recipient => {
                         html += `<option value="${recipient.id}">${recipient.name}</option>`;
                     });
+                    
+                    // Add divider and quick add options
+                    html += '<option disabled>─────────────────</option>';
+                    if (showAddLabour) {
+                        html += '<option value="add_labour_quick">+ Add Labour</option>';
+                    }
+                    if (showAddVendor) {
+                        html += '<option value="add_vendor_quick">+ Add Vendor</option>';
+                    }
+                    
                     recipientSelect.innerHTML = html;
                 } else {
-                    recipientSelect.innerHTML = '<option value="">No recipients found</option>';
+                    let html = '<option value="">No recipients found</option>';
+                    
+                    // Add divider and quick add options even if no recipients
+                    html += '<option disabled>─────────────────</option>';
+                    if (showAddLabour) {
+                        html += '<option value="add_labour_quick">+ Add Labour</option>';
+                    }
+                    if (showAddVendor) {
+                        html += '<option value="add_vendor_quick">+ Add Vendor</option>';
+                    }
+                    
+                    recipientSelect.innerHTML = html;
                 }
+                
+                // Add event listener to handle quick add options
+                recipientSelect.addEventListener('change', handleQuickAddOption, { once: true });
             })
             .catch(error => {
                 console.error('Error loading recipients:', error);
@@ -2181,6 +2285,52 @@
                 recipientSelect.innerHTML = '<option value="">Error loading recipients</option>';
             });
     }
+    
+    // Handle quick add options for vendor and labour
+    function handleQuickAddOption(event) {
+        const recipientSelect = event.target;
+        const selectedValue = recipientSelect.value;
+        
+        if (selectedValue === 'add_vendor_quick') {
+            // Open add vendor modal
+            if (window.openAddVendorModal) {
+                window.openAddVendorModal();
+            } else if (document.getElementById('addVendorModal')) {
+                document.getElementById('addVendorModal').classList.add('active');
+            }
+            // Reset the dropdown
+            recipientSelect.value = '';
+        } else if (selectedValue === 'add_labour_quick') {
+            // Open add labour modal
+            if (window.openAddLabourModal) {
+                window.openAddLabourModal();
+            } else if (document.getElementById('addLabourModal')) {
+                document.getElementById('addLabourModal').classList.add('active');
+            }
+            // Reset the dropdown
+            recipientSelect.value = '';
+        }
+        
+        // Re-attach the event listener for next change
+        recipientSelect.addEventListener('change', handleQuickAddOption, { once: true });
+    }
+    
+    // Refresh recipient dropdowns after adding new vendor or labour
+    function refreshEntryRecipients() {
+        const allEntries = document.querySelectorAll('.payment-entry-additional-entry');
+        allEntries.forEach(entry => {
+            const typeSelect = entry.querySelector('.entry-type');
+            const recipientSelect = entry.querySelector('.entry-recipient');
+            
+            if (typeSelect && recipientSelect && typeSelect.value) {
+                // Reload recipients for this entry
+                loadRecipientsByTypeForEntry(typeSelect.value, recipientSelect);
+            }
+        });
+    }
+    
+    // Expose refreshEntryRecipients globally so add_labour_modal and add_vendor_modal can call it
+    window.refreshEntryRecipients = refreshEntryRecipients;
 
     // Add payment row for multiple payments
     if (addPaymentRowBtn) {

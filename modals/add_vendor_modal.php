@@ -820,6 +820,11 @@
                         document.getElementById('qrFileName').classList.remove('active');
                         addVendorModal.classList.remove('active');
                         
+                        // Refresh recipient dropdowns in payment entry modal
+                        if (window.refreshEntryRecipients) {
+                            window.refreshEntryRecipients();
+                        }
+                        
                         // Optionally reload the page to refresh vendor list
                         // setTimeout(() => location.reload(), 1000);
                     } else {

@@ -282,14 +282,23 @@ try {
 
             $entry_file_key = 'entryMedia_' . $entry_index;
             if (isset($_FILES[$entry_file_key]) && $_FILES[$entry_file_key]['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES[$entry_file_key];
-                $file_info = handleFileUpload($file, 'entry_media');
-                
-                if ($file_info) {
-                    $entry_media_path = $file_info['path'];
-                    $entry_media_filename = $file_info['filename'];
-                    $entry_media_size = $file_info['size'];
-                    $entry_media_type = $file_info['mime'];
+                try {
+                    $file = $_FILES[$entry_file_key];
+                    $file_info = handleFileUpload($file, 'entry_media');
+                    
+                    if ($file_info) {
+                        $entry_media_path = $file_info['path'];
+                        $entry_media_filename = $file_info['filename'];
+                        $entry_media_size = $file_info['size'];
+                        $entry_media_type = $file_info['mime'];
+                    }
+                } catch (Exception $fe) {
+                    error_log('Entry media upload error for ' . $entry_file_key . ': ' . $fe->getMessage());
+                    // Continue without file
+                }
+            } else {
+                if (isset($_FILES[$entry_file_key])) {
+                    error_log('Entry media file error for ' . $entry_file_key . ': error code = ' . $_FILES[$entry_file_key]['error']);
                 }
             }
 
@@ -381,14 +390,23 @@ try {
 
                     $line_method_file_key = 'entryMethodMedia_' . $entry_index . '_' . $method_index;
                     if (isset($_FILES[$line_method_file_key]) && $_FILES[$line_method_file_key]['error'] === UPLOAD_ERR_OK) {
-                        $file = $_FILES[$line_method_file_key];
-                        $file_info = handleFileUpload($file, 'entry_method_media');
-                        
-                        if ($file_info) {
-                            $line_method_media_path = $file_info['path'];
-                            $line_method_media_filename = $file_info['filename'];
-                            $line_method_media_size = $file_info['size'];
-                            $line_method_media_type = $file_info['mime'];
+                        try {
+                            $file = $_FILES[$line_method_file_key];
+                            $file_info = handleFileUpload($file, 'entry_method_media');
+                            
+                            if ($file_info) {
+                                $line_method_media_path = $file_info['path'];
+                                $line_method_media_filename = $file_info['filename'];
+                                $line_method_media_size = $file_info['size'];
+                                $line_method_media_type = $file_info['mime'];
+                            }
+                        } catch (Exception $fe) {
+                            error_log('File upload error for ' . $line_method_file_key . ': ' . $fe->getMessage());
+                            // Continue without file
+                        }
+                    } else {
+                        if (isset($_FILES[$line_method_file_key])) {
+                            error_log('File upload error for ' . $line_method_file_key . ': error code = ' . $_FILES[$line_method_file_key]['error']);
                         }
                     }
 

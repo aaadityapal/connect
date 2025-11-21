@@ -381,6 +381,11 @@
                         el.classList.remove('active');
                     });
 
+                    // Refresh recipient lists in payment entry modal
+                    if (window.refreshEntryRecipients) {
+                        window.refreshEntryRecipients();
+                    }
+
                     // Close modal after brief delay
                     setTimeout(closeModal, 1500);
                 } else if (data.is_duplicate) {

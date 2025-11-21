@@ -268,6 +268,7 @@ try {
             $description = $entry['description'] ?? null;
             $line_amount = floatval($entry['amount'] ?? 0);
             $line_payment_mode = $entry['paymentMode'] ?? 'cash';
+            $line_paid_via_user_id = intval($entry['paidViaUserId'] ?? 0);
             $line_sequence = intval($entry['lineNumber'] ?? $entry_index + 1);
 
             if (!$recipient_type || $line_amount <= 0) {
@@ -312,6 +313,7 @@ try {
                     payment_description_notes,
                     line_item_amount,
                     line_item_payment_mode,
+                    line_item_paid_via_user_id,
                     line_item_sequence_number,
                     line_item_media_upload_path,
                     line_item_media_original_filename,
@@ -325,6 +327,7 @@ try {
                     :description,
                     :line_amount,
                     :line_payment_mode,
+                    :line_paid_via_user_id,
                     :line_sequence,
                     :entry_media_path,
                     :entry_media_filename,
@@ -341,6 +344,7 @@ try {
                 ':description' => $description,
                 ':line_amount' => $line_amount,
                 ':line_payment_mode' => $line_payment_mode,
+                ':line_paid_via_user_id' => $line_paid_via_user_id > 0 ? $line_paid_via_user_id : null,
                 ':line_sequence' => $line_sequence,
                 ':entry_media_path' => $entry_media_path,
                 ':entry_media_filename' => $entry_media_filename,
@@ -516,7 +520,15 @@ try {
 
     $total_line_items = floatval($line_items_result['total_line_items'] ?? 0);
     $total_acceptance = floatval($acceptance_result['total_acceptance'] ?? 0);
-    $grand_total = $amount + $total_line_items + $total_acceptance;
+    
+    // VALIDATION: Check if line items exceed main payment amount
+    if ($total_line_items > $amount) {
+        throw new Exception('Total line item amount (₹' . number_format($total_line_items, 2) . ') exceeds main payment amount (₹' . number_format($amount, 2) . '). Line items must be within the main payment budget.');
+    }
+    
+    // FIXED: Grand total is the main payment amount only
+    // Line items and acceptance methods are breakdowns of this amount, not additions to it
+    $grand_total = $amount;
 
     // Insert summary
     $stmt = $pdo->prepare("

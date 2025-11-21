@@ -397,6 +397,39 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             border-bottom: 1px solid #e2e8f0;
         }
 
+        .recent-records-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recent-records-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 4px;
+            color: #4a5568;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recent-records-toggle-btn:hover {
+            background-color: #edf2f7;
+            color: #2a4365;
+        }
+
+        .recent-records-toggle-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .recent-records-toggle-btn.collapsed i {
+            transform: rotate(-90deg);
+        }
+
         .recent-records-header {
             font-size: 1em;
             color: #2a4365;
@@ -463,6 +496,24 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             gap: 0;
             border-bottom: 1px solid #e2e8f0;
             margin-bottom: 15px;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .tabs-container.collapsed {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-bottom: 0;
+        }
+
+        .tab-content.collapsed,
+        [id$="Container"].collapsed {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 0;
+            padding-top: 0;
+            padding-bottom: 0;
         }
 
         .tab-btn {
@@ -568,7 +619,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-row {
             display: grid;
-            grid-template-columns: 1.5fr 1.2fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
+            grid-template-columns: 1.2fr 1.3fr 0.8fr 0.9fr 0.9fr 0.8fr 0.8fr 0.7fr 0.7fr;
             gap: 12px;
             padding: 12px;
             border-bottom: 1px solid #e2e8f0;
@@ -583,7 +634,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-row-header {
             display: grid;
-            grid-template-columns: 1.5fr 1.2fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr;
+            grid-template-columns: 1.2fr 1.3fr 0.8fr 0.9fr 0.9fr 0.8fr 0.8fr 0.7fr 0.7fr;
             gap: 12px;
             padding: 12px;
             background-color: #f7fafc;
@@ -631,6 +682,32 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         .vendor-status.archived {
             background-color: #cbd5e0;
             color: #2d3748;
+        }
+
+        /* Payment Entry Status Badges */
+        .vendor-status.draft {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .vendor-status.submitted {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .vendor-status.pending {
+            background-color: #dbeafe;
+            color: #0c4a6e;
+        }
+
+        .vendor-status.approved {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .vendor-status.rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
         }
 
         .vendor-actions {
@@ -919,6 +996,104 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             cursor: pointer;
         }
 
+        /* Excel-style Filter Dropdown */
+        .excel-filter-dropdown {
+            width: 280px !important;
+            min-width: 280px !important;
+        }
+
+        .excel-filter-header {
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .excel-filter-search {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .excel-filter-search:focus {
+            outline: none;
+            border-color: #2a4365;
+            box-shadow: 0 0 0 3px rgba(42, 67, 101, 0.1);
+        }
+
+        .excel-filter-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .excel-filter-apply-btn,
+        .excel-filter-clear-btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .excel-filter-apply-btn {
+            background: #2a4365;
+            color: white;
+            border-color: #2a4365;
+        }
+
+        .excel-filter-apply-btn:hover {
+            background: #1a365d;
+            border-color: #1a365d;
+        }
+
+        .excel-filter-clear-btn {
+            background: white;
+            color: #e53e3e;
+            border-color: #e53e3e;
+        }
+
+        .excel-filter-clear-btn:hover {
+            background: #fff5f5;
+        }
+
+        .excel-filter-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .excel-filter-list .filter-option {
+            padding: 10px 15px;
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .excel-filter-list .filter-option:hover {
+            background-color: #f7fafc;
+        }
+
+        .excel-filter-list .filter-option.active {
+            background-color: #ebf8ff;
+        }
+
+        .excel-filter-list .filter-option input[type="checkbox"] {
+            margin-right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
         .paid-to-list {
             display: flex;
             flex-direction: column;
@@ -1108,7 +1283,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             <!-- Recently Added Records Section -->
             <div class="recent-records-section">
                 <div class="recent-records-header-container">
-                    <h3 class="recent-records-header">Recently Added Records</h3>
+                    <div class="recent-records-title-wrapper">
+                        <button class="recent-records-toggle-btn" id="recentRecordsToggleBtn" title="Collapse/Expand Records">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <h3 class="recent-records-header">Recently Added Records</h3>
+                    </div>
                     
                     <!-- Minimalist Date Range Filter -->
                     <div class="records-date-filter-minimal">
@@ -1349,7 +1529,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             status: '',
             dateFrom: '',
             dateTo: '',
-            projectType: ''
+            projectType: '',
+            vendorCategory: '',
+            paidBy: ''
         };
 
         // Function to fetch and display vendors
@@ -1618,7 +1800,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         // Function to fetch and display payment entries
-        function loadPaymentEntries(limit = 10, page = 1, search = '', status = '', dateFrom = '', dateTo = '', projectType = '', vendorCategory = '') {
+        function loadPaymentEntries(limit = 10, page = 1, search = '', status = '', dateFrom = '', dateTo = '', projectType = '', vendorCategory = '', paidBy = '') {
             entriesPaginationState.limit = limit;
             entriesPaginationState.currentPage = page;
             entriesPaginationState.search = search;
@@ -1627,6 +1809,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             entriesPaginationState.dateTo = dateTo;
             entriesPaginationState.projectType = projectType;
             entriesPaginationState.vendorCategory = vendorCategory;
+            entriesPaginationState.paidBy = paidBy;
 
             const offset = (page - 1) * limit;
             const entriesContainer = document.getElementById('entriesContainer');
@@ -1648,7 +1831,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 dateFrom: dateFrom,
                 dateTo: dateTo,
                 projectType: projectType,
-                vendorCategory: vendorCategory
+                vendorCategory: vendorCategory,
+                paidBy: paidBy
             });
 
             // Fetch payment entries from API
@@ -1658,10 +1842,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     if (data.success && data.data && data.data.length > 0) {
                         let html = '<div class="vendor-table-wrapper">';
                         html += '<div class="vendor-row-header">';
-                        html += '<div class="project-filter-container"><span>Project Name</span><button class="project-filter-btn" id="projectFilterToggle" title="Filter by Project Type"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown" id="projectFilterDropdown"><div class="filter-option" data-type="">All Projects</div><div class="filter-option" data-type="Architecture"><input type="checkbox"> Architecture</div><div class="filter-option" data-type="Interior"><input type="checkbox"> Interior</div><div class="filter-option" data-type="Construction"><input type="checkbox"> Construction</div></div></div>';
-                        html += '<div class="project-filter-container"><span>Paid To</span><button class="project-filter-btn" id="vendorCategoryFilterToggle" title="Filter by Vendor Category"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown" id="vendorCategoryFilterDropdown"><div class="filter-option" data-vendor-category="">All Categories</div></div></div>';
+                        html += '<div class="project-filter-container"><span>Project Name</span><button class="project-filter-btn" id="projectFilterToggle" title="Filter by Project Type"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="projectFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="projectFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="projectFilterApply">Apply</button><button class="excel-filter-clear-btn" id="projectFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-type="">All Projects</div><div class="filter-option" data-type="Architecture"><input type="checkbox"> Architecture</div><div class="filter-option" data-type="Interior"><input type="checkbox"> Interior</div><div class="filter-option" data-type="Construction"><input type="checkbox"> Construction</div></div></div></div>';
+                        html += '<div class="project-filter-container"><span>Paid To</span><button class="project-filter-btn" id="vendorCategoryFilterToggle" title="Filter by Vendor Category"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="vendorCategoryFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="vendorCategoryFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="vendorCategoryFilterApply">Apply</button><button class="excel-filter-clear-btn" id="vendorCategoryFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-vendor-category="">All Categories</div></div></div></div>';
+                        html += '<div class="project-filter-container"><span>Paid By</span><button class="project-filter-btn" id="paidByFilterToggle" title="Filter by User"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="paidByFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="paidByFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="paidByFilterApply">Apply</button><button class="excel-filter-clear-btn" id="paidByFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-paid-by="">All Users</div></div></div></div>';
                         html += '<div>Payment Date</div>';
                         html += '<div>Grand Total</div>';
+                        html += '<div>Status</div>';
                         html += '<div>Payment Mode</div>';
                         html += '<div>Files</div>';
                         html += '<div>Actions</div>';
@@ -1687,8 +1873,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += '<div class="vendor-row">';
                             html += `<div class="vendor-cell">${entry.project_name}</div>`;
                             html += `<div class="vendor-cell">${paidToHtml}</div>`;
+                            html += `<div class="vendor-cell"><small style="background: #e0e7ff; padding: 4px 8px; border-radius: 4px; display: inline-block; color: #3730a3; font-weight: 600;">${entry.authorized_by || 'N/A'}</small></div>`;
                             html += `<div class="vendor-cell"><small>${paymentDate}</small></div>`;
                             html += `<div class="vendor-cell" style="font-weight: 700; color: #38a169; font-size: 0.95em;">${grandTotal}</div>`;
+                            html += `<div class="vendor-cell"><span class="vendor-status ${statusClass}">${entry.status.toUpperCase()}</span></div>`;
                             html += `<div class="vendor-cell"><small style="background: #f0f4f8; padding: 4px 8px; border-radius: 4px; display: inline-block;">${entry.payment_mode.replace(/_/g, ' ').toUpperCase()}</small></div>`;
                             html += `<div class="vendor-cell"><span style="background: #edf2f7; color: #2a4365; padding: 6px 10px; border-radius: 4px; font-size: 0.85em; font-weight: 600; cursor: pointer;" onclick="openPaymentFilesModal(${entry.payment_entry_id})"><i class="fas fa-file"></i> ${entry.files_attached}</span></div>`;
                             html += '<div class="vendor-actions">';
@@ -1729,12 +1917,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += `<div style="font-weight: 700; color: #6b2142; font-size: 0.9em;">${entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A'}</div>`;
                             html += '</div>';
                             
+                            // Status
+                            html += '<div style="border-left: 3px solid #9333ea; padding: 8px 12px; background: white; border-radius: 3px;">';
+                            html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">STATUS</div>`;
+                            html += `<div><span class="vendor-status ${statusClass}" style="display: inline-block;">${entry.status.toUpperCase()}</span></div>`;
+                            html += '</div>';
+                            
                             html += '</div>';
                             
                             // Paid To section with small items
                             if (entry.paid_to && entry.paid_to.length > 0) {
                                 entry.paid_to.forEach((recipient, index) => {
-                                    html += '<div style="display: grid; grid-template-columns: 1fr 0.8fr 1.2fr 0.9fr 0.8fr 0.7fr; gap: 12px; margin-bottom: 12px; align-items: center; background: white; padding: 12px; border-radius: 6px; border: 2px solid #e2e8f0; transition: all 0.2s ease;">';
+                                    html += '<div style="display: grid; grid-template-columns: 1fr 0.8fr 1.2fr 0.9fr 0.8fr 0.9fr 0.7fr; gap: 12px; margin-bottom: 12px; align-items: center; background: white; padding: 12px; border-radius: 6px; border: 2px solid #e2e8f0; transition: all 0.2s ease;">';
                                     
                                     // Paid To Name
                                     html += '<div style="border-left: 4px solid #6b5b95; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
@@ -1770,6 +1964,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                     html += `<div style="font-weight: 700; color: #7c2d12; font-size: 0.9em; text-transform: capitalize;">${paymentModes}</div>`;
                                     html += '</div>';
                                     
+                                    // Paid By User
+                                    html += '<div style="border-left: 4px solid #7c3aed; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
+                                    html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PAID BY</div>`;
+                                    html += `<div style="font-weight: 700; color: #5b21b6; font-size: 0.9em;">${recipient.paid_by_user || 'N/A'}</div>`;
+                                    html += '</div>';
+                                    
                                     // View Proofs Button
                                     html += '<div style="padding: 8px; text-align: center;">';
                                     const recipientJsonStr = JSON.stringify(recipient).replace(/"/g, '&quot;');
@@ -1800,9 +2000,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             const encodedDateTo = encodeURIComponent(dateTo || '');
                             const encodedProjectType = encodeURIComponent(projectType || '');
                             const encodedVendorCategory = encodeURIComponent(vendorCategory || '');
+                            const encodedPaidBy = encodeURIComponent(paidBy || '');
                             
                             // Previous button
-                            html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-page="${page > 1 ? page - 1 : 1}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" class="pagination-btn pagination-prev">
+                            html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-page="${page > 1 ? page - 1 : 1}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" data-paidby="${encodedPaidBy}" class="pagination-btn pagination-prev">
                                 <i class="fas fa-chevron-left"></i> Prev
                             </button>`;
 
@@ -1811,25 +2012,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             let endPage = Math.min(data.pagination.totalPages, page + 2);
 
                             if (startPage > 1) {
-                                html += `<button class="pagination-btn" data-page="1" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}">1</button>`;
+                                html += `<button class="pagination-btn" data-page="1" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" data-paidby="${encodedPaidBy}">1</button>`;
                                 if (startPage > 2) {
                                     html += `<span style="color: #a0aec0; margin: 0 5px;">...</span>`;
                                 }
                             }
 
                             for (let i = startPage; i <= endPage; i++) {
-                                html += `<button class="pagination-btn ${i === page ? 'active' : ''}" data-page="${i}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}">${i}</button>`;
+                                html += `<button class="pagination-btn ${i === page ? 'active' : ''}" data-page="${i}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" data-paidby="${encodedPaidBy}">${i}</button>`;
                             }
 
                             if (endPage < data.pagination.totalPages) {
                                 if (endPage < data.pagination.totalPages - 1) {
                                     html += `<span style="color: #a0aec0; margin: 0 5px;">...</span>`;
                                 }
-                                html += `<button class="pagination-btn" data-page="${data.pagination.totalPages}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}">${data.pagination.totalPages}</button>`;
+                                html += `<button class="pagination-btn" data-page="${data.pagination.totalPages}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" data-paidby="${encodedPaidBy}">${data.pagination.totalPages}</button>`;
                             }
 
                             // Next button
-                            html += `<button class="pagination-btn" ${page === data.pagination.totalPages ? 'disabled' : ''} data-page="${page < data.pagination.totalPages ? page + 1 : page}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" class="pagination-btn pagination-next">
+                            html += `<button class="pagination-btn" ${page === data.pagination.totalPages ? 'disabled' : ''} data-page="${page < data.pagination.totalPages ? page + 1 : page}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" data-paidby="${encodedPaidBy}" class="pagination-btn pagination-next">
                                 Next <i class="fas fa-chevron-right"></i>
                             </button>`;
 
@@ -1842,37 +2043,85 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         // Initialize expanded buttons to show chevron in rotated state
                         initializeExpandButtons();
 
-                        // Add event listeners for project type filter
+                        // Initialize Excel-style filter for Project Type
                         const projectFilterToggle = document.getElementById('projectFilterToggle');
                         const projectFilterDropdown = document.getElementById('projectFilterDropdown');
-                        const filterOptions = document.querySelectorAll('.filter-option:not([data-vendor-category])');
+                        const projectFilterSearch = document.getElementById('projectFilterSearch');
+                        const projectFilterApply = document.getElementById('projectFilterApply');
+                        const projectFilterClear = document.getElementById('projectFilterClear');
+                        const projectFilterList = projectFilterDropdown.querySelector('.excel-filter-list');
+                        const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-type]');
 
                         if (projectFilterToggle && projectFilterDropdown) {
+                            // Toggle dropdown
                             projectFilterToggle.addEventListener('click', function(e) {
                                 e.stopPropagation();
                                 projectFilterDropdown.classList.toggle('active');
+                                projectFilterSearch.focus();
                             });
 
-                            filterOptions.forEach(option => {
-                                option.addEventListener('click', function(e) {
-                                    e.stopPropagation();
-                                    const projectType = this.getAttribute('data-type');
-                                    
-                                    filterOptions.forEach(opt => opt.classList.remove('active'));
-                                    this.classList.add('active');
-                                    projectFilterDropdown.classList.remove('active');
-                                    
-                                    // Get current filter states
-                                    const mainSearch = entriesPaginationState.search || '';
-                                    const mainStatus = entriesPaginationState.status || '';
-                                    const mainDateFrom = entriesPaginationState.dateFrom || '';
-                                    const mainDateTo = entriesPaginationState.dateTo || '';
-                                    const mainVendorCategory = entriesPaginationState.vendorCategory || '';
-                                    
-                                    loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, projectType, mainVendorCategory);
+                            // Search functionality
+                            projectFilterSearch.addEventListener('keyup', function(e) {
+                                const searchTerm = this.value.toLowerCase();
+                                projectFilterOptions.forEach(option => {
+                                    const text = option.textContent.toLowerCase();
+                                    option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
                                 });
                             });
 
+                            // Apply filter
+                            projectFilterApply.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const selectedTypes = Array.from(projectFilterOptions)
+                                    .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-type') !== '')
+                                    .map(opt => opt.getAttribute('data-type'))
+                                    .join(',');
+                                
+                                const mainSearch = entriesPaginationState.search || '';
+                                const mainStatus = entriesPaginationState.status || '';
+                                const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                const mainDateTo = entriesPaginationState.dateTo || '';
+                                const mainVendorCategory = entriesPaginationState.vendorCategory || '';
+                                const mainPaidBy = entriesPaginationState.paidBy || '';
+                                
+                                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, selectedTypes, mainVendorCategory, mainPaidBy);
+                                projectFilterDropdown.classList.remove('active');
+                            });
+
+                            // Clear filter
+                            projectFilterClear.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                projectFilterOptions.forEach(opt => {
+                                    opt.querySelector('input[type="checkbox"]').checked = false;
+                                    opt.classList.remove('active');
+                                    opt.style.display = 'flex';
+                                });
+                                projectFilterSearch.value = '';
+                                
+                                const mainSearch = entriesPaginationState.search || '';
+                                const mainStatus = entriesPaginationState.status || '';
+                                const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                const mainDateTo = entriesPaginationState.dateTo || '';
+                                const mainVendorCategory = entriesPaginationState.vendorCategory || '';
+                                const mainPaidBy = entriesPaginationState.paidBy || '';
+                                
+                                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, '', mainVendorCategory, mainPaidBy);
+                                projectFilterDropdown.classList.remove('active');
+                            });
+
+                            // Checkbox click handler - just toggle checkbox, don't apply yet
+                            projectFilterOptions.forEach(option => {
+                                option.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    const checkbox = this.querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = !checkbox.checked;
+                                        this.classList.toggle('active');
+                                    }
+                                });
+                            });
+
+                            // Close dropdown when clicking outside
                             document.addEventListener('click', function(e) {
                                 if (!e.target.closest('.project-filter-container') && e.target.id !== 'projectFilterToggle') {
                                     projectFilterDropdown.classList.remove('active');
@@ -1886,62 +2135,220 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             .then(data => {
                                 if (data.success && data.data && data.data.length > 0) {
                                     const vendorCategoryDropdown = document.getElementById('vendorCategoryFilterDropdown');
-                                    if (vendorCategoryDropdown) {
-                                        // Clear existing options except the first one
-                                        while (vendorCategoryDropdown.children.length > 1) {
-                                            vendorCategoryDropdown.removeChild(vendorCategoryDropdown.lastChild);
-                                        }
+                                    const vendorCategoryFilterList = vendorCategoryDropdown.querySelector('.excel-filter-list');
+                                    
+                                    // Clear existing options except the first one
+                                    while (vendorCategoryFilterList.children.length > 1) {
+                                        vendorCategoryFilterList.removeChild(vendorCategoryFilterList.lastChild);
+                                    }
 
-                                        data.data.forEach(category => {
-                                            const option = document.createElement('div');
-                                            option.className = 'filter-option';
-                                            option.setAttribute('data-vendor-category', category);
-                                            option.innerHTML = `<input type="checkbox"> ${category}`;
-                                            vendorCategoryDropdown.appendChild(option);
+                                    data.data.forEach(category => {
+                                        const option = document.createElement('div');
+                                        option.className = 'filter-option';
+                                        option.setAttribute('data-vendor-category', category);
+                                        option.innerHTML = `<input type="checkbox"> ${category}`;
+                                        vendorCategoryFilterList.appendChild(option);
+                                    });
+
+                                    // Initialize Excel-style filter for Vendor Category
+                                    const vendorCategoryFilterToggle = document.getElementById('vendorCategoryFilterToggle');
+                                    const vendorCategoryFilterSearch = document.getElementById('vendorCategoryFilterSearch');
+                                    const vendorCategoryFilterApply = document.getElementById('vendorCategoryFilterApply');
+                                    const vendorCategoryFilterClear = document.getElementById('vendorCategoryFilterClear');
+                                    const vendorCategoryFilterOptions = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
+
+                                    if (vendorCategoryFilterToggle) {
+                                        // Toggle dropdown
+                                        vendorCategoryFilterToggle.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            vendorCategoryDropdown.classList.toggle('active');
+                                            vendorCategoryFilterSearch.focus();
                                         });
 
-                                        // Add click handlers to vendor category filters
-                                        const vendorCategoryOptions = document.querySelectorAll('.filter-option[data-vendor-category]');
-                                        const vendorCategoryFilterToggle = document.getElementById('vendorCategoryFilterToggle');
+                                        // Search functionality
+                                        vendorCategoryFilterSearch.addEventListener('keyup', function(e) {
+                                            const searchTerm = this.value.toLowerCase();
+                                            vendorCategoryFilterOptions.forEach(option => {
+                                                const text = option.textContent.toLowerCase();
+                                                option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                                            });
+                                        });
 
-                                        if (vendorCategoryFilterToggle) {
-                                            vendorCategoryFilterToggle.addEventListener('click', function(e) {
+                                        // Apply filter
+                                        vendorCategoryFilterApply.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            const selectedCategories = Array.from(vendorCategoryFilterOptions)
+                                                .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-vendor-category') !== '')
+                                                .map(opt => opt.getAttribute('data-vendor-category'))
+                                                .join(',');
+                                            
+                                            const mainSearch = entriesPaginationState.search || '';
+                                            const mainStatus = entriesPaginationState.status || '';
+                                            const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                            const mainDateTo = entriesPaginationState.dateTo || '';
+                                            const mainProjectType = entriesPaginationState.projectType || '';
+                                            const mainPaidBy = entriesPaginationState.paidBy || '';
+                                            
+                                            loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, selectedCategories, mainPaidBy);
+                                            vendorCategoryDropdown.classList.remove('active');
+                                        });
+
+                                        // Clear filter
+                                        vendorCategoryFilterClear.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            vendorCategoryFilterOptions.forEach(opt => {
+                                                opt.querySelector('input[type="checkbox"]').checked = false;
+                                                opt.classList.remove('active');
+                                                opt.style.display = 'flex';
+                                            });
+                                            vendorCategoryFilterSearch.value = '';
+                                            
+                                            const mainSearch = entriesPaginationState.search || '';
+                                            const mainStatus = entriesPaginationState.status || '';
+                                            const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                            const mainDateTo = entriesPaginationState.dateTo || '';
+                                            const mainProjectType = entriesPaginationState.projectType || '';
+                                            const mainPaidBy = entriesPaginationState.paidBy || '';
+                                            
+                                            loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, '', mainPaidBy);
+                                            vendorCategoryDropdown.classList.remove('active');
+                                        });
+
+                                        // Checkbox click handler - just toggle checkbox, don't apply yet
+                                        vendorCategoryFilterOptions.forEach(option => {
+                                            option.addEventListener('click', function(e) {
                                                 e.stopPropagation();
-                                                vendorCategoryDropdown.classList.toggle('active');
-                                            });
-
-                                            vendorCategoryOptions.forEach(option => {
-                                                option.addEventListener('click', function(e) {
-                                                    e.stopPropagation();
-                                                    const vendorCategory = this.getAttribute('data-vendor-category');
-                                                    
-                                                    vendorCategoryOptions.forEach(opt => opt.classList.remove('active'));
-                                                    this.classList.add('active');
-                                                    vendorCategoryDropdown.classList.remove('active');
-                                                    
-                                                    // Get current filter states from the main filter section
-                                                    const mainSearch = entriesPaginationState.search || '';
-                                                    const mainStatus = entriesPaginationState.status || '';
-                                                    const mainDateFrom = entriesPaginationState.dateFrom || '';
-                                                    const mainDateTo = entriesPaginationState.dateTo || '';
-                                                    const mainProjectType = entriesPaginationState.projectType || '';
-                                                    
-                                                    loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, vendorCategory);
-                                                });
-                                            });
-
-                                            // Close dropdown when clicking outside
-                                            document.addEventListener('click', function(e) {
-                                                if (!e.target.closest('.project-filter-container') && e.target.id !== 'vendorCategoryFilterToggle') {
-                                                    vendorCategoryDropdown.classList.remove('active');
+                                                const checkbox = this.querySelector('input[type="checkbox"]');
+                                                if (checkbox) {
+                                                    checkbox.checked = !checkbox.checked;
+                                                    this.classList.toggle('active');
                                                 }
                                             });
-                                        }
+                                        });
+
+                                        // Close dropdown when clicking outside
+                                        document.addEventListener('click', function(e) {
+                                            if (!e.target.closest('.project-filter-container') && e.target.id !== 'vendorCategoryFilterToggle') {
+                                                vendorCategoryDropdown.classList.remove('active');
+                                            }
+                                        });
                                     }
                                 }
                             })
                             .catch(error => {
                                 console.error('Error loading vendor categories:', error);
+                            });
+
+                        // Load users for Paid By filter - fetch from database (ALL users, not just visible ones)
+                        const paidByFilterDropdown = document.getElementById('paidByFilterDropdown');
+                        const paidByFilterList = paidByFilterDropdown.querySelector('.excel-filter-list');
+
+                        // Fetch all unique paid-by users from database
+                        fetch('get_paid_by_users.php')
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success && result.data && result.data.length > 0) {
+                                    // Clear existing options except the first one (ALL USERS)
+                                    while (paidByFilterList.children.length > 1) {
+                                        paidByFilterList.removeChild(paidByFilterList.lastChild);
+                                    }
+
+                                    // Add each user from database
+                                    result.data.forEach(user => {
+                                        const option = document.createElement('div');
+                                        option.className = 'filter-option';
+                                        option.setAttribute('data-paid-by', user.username);
+                                        option.innerHTML = `<input type="checkbox"> ${user.username}`;
+                                        paidByFilterList.appendChild(option);
+                                    });
+
+                                    // Initialize Excel-style filter for Paid By
+                                    const paidByFilterToggle = document.getElementById('paidByFilterToggle');
+                                    const paidByFilterSearch = document.getElementById('paidByFilterSearch');
+                                    const paidByFilterApply = document.getElementById('paidByFilterApply');
+                                    const paidByFilterClear = document.getElementById('paidByFilterClear');
+                                    const paidByFilterOptions = paidByFilterList.querySelectorAll('.filter-option[data-paid-by]');
+
+                                    if (paidByFilterToggle) {
+                                        // Toggle dropdown
+                                        paidByFilterToggle.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            paidByFilterDropdown.classList.toggle('active');
+                                            paidByFilterSearch.focus();
+                                        });
+
+                                        // Search functionality
+                                        paidByFilterSearch.addEventListener('keyup', function(e) {
+                                            const searchTerm = this.value.toLowerCase();
+                                            paidByFilterOptions.forEach(option => {
+                                                const text = option.textContent.toLowerCase();
+                                                option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                                            });
+                                        });
+
+                                        // Apply filter
+                                        paidByFilterApply.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            const selectedUsers = Array.from(paidByFilterOptions)
+                                                .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-paid-by') !== '')
+                                                .map(opt => opt.getAttribute('data-paid-by'))
+                                                .join(',');
+                                            
+                                            const mainSearch = entriesPaginationState.search || '';
+                                            const mainStatus = entriesPaginationState.status || '';
+                                            const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                            const mainDateTo = entriesPaginationState.dateTo || '';
+                                            const mainProjectType = entriesPaginationState.projectType || '';
+                                            const mainVendorCategory = entriesPaginationState.vendorCategory || '';
+                                            
+                                            loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, mainVendorCategory, selectedUsers);
+                                            paidByFilterDropdown.classList.remove('active');
+                                        });
+
+                                        // Clear filter
+                                        paidByFilterClear.addEventListener('click', function(e) {
+                                            e.stopPropagation();
+                                            paidByFilterOptions.forEach(opt => {
+                                                opt.querySelector('input[type="checkbox"]').checked = false;
+                                                opt.classList.remove('active');
+                                                opt.style.display = 'flex';
+                                            });
+                                            paidByFilterSearch.value = '';
+                                            
+                                            const mainSearch = entriesPaginationState.search || '';
+                                            const mainStatus = entriesPaginationState.status || '';
+                                            const mainDateFrom = entriesPaginationState.dateFrom || '';
+                                            const mainDateTo = entriesPaginationState.dateTo || '';
+                                            const mainProjectType = entriesPaginationState.projectType || '';
+                                            const mainVendorCategory = entriesPaginationState.vendorCategory || '';
+                                            
+                                            loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, mainVendorCategory, '');
+                                            paidByFilterDropdown.classList.remove('active');
+                                        });
+
+                                        // Checkbox click handler - just toggle checkbox, don't apply yet
+                                        paidByFilterOptions.forEach(option => {
+                                            option.addEventListener('click', function(e) {
+                                                e.stopPropagation();
+                                                const checkbox = this.querySelector('input[type="checkbox"]');
+                                                if (checkbox) {
+                                                    checkbox.checked = !checkbox.checked;
+                                                    this.classList.toggle('active');
+                                                }
+                                            });
+                                        });
+
+                                        // Close dropdown when clicking outside
+                                        document.addEventListener('click', function(e) {
+                                            if (!e.target.closest('.project-filter-container') && e.target.id !== 'paidByFilterToggle') {
+                                                paidByFilterDropdown.classList.remove('active');
+                                            }
+                                        });
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading paid-by users:', error);
                             });
 
                         // Add event listeners for pagination buttons
@@ -1955,8 +2362,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                 const dateToVal = decodeURIComponent(this.getAttribute('data-dateto') || '');
                                 const projectTypeVal = decodeURIComponent(this.getAttribute('data-projecttype') || '');
                                 const vendorCategoryVal = decodeURIComponent(this.getAttribute('data-vendorcategory') || '');
+                                const paidByVal = decodeURIComponent(this.getAttribute('data-paidby') || '');
                                 
-                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal);
+                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal, paidByVal);
                             });
                         });
                     } else if (data.success) {
@@ -1971,8 +2379,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                 const dateToVal = decodeURIComponent(this.getAttribute('data-dateto') || '');
                                 const projectTypeVal = decodeURIComponent(this.getAttribute('data-projecttype') || '');
                                 const vendorCategoryVal = decodeURIComponent(this.getAttribute('data-vendorcategory') || '');
+                                const paidByVal = decodeURIComponent(this.getAttribute('data-paidby') || '');
                                 
-                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal);
+                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal, paidByVal);
                             });
                         });
                     } else if (data.success) {
@@ -2116,6 +2525,49 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Recently Added Records Toggle Functionality
+            const recentRecordsToggleBtn = document.getElementById('recentRecordsToggleBtn');
+            if (recentRecordsToggleBtn) {
+                // Track toggle state
+                let entriesExpanded = true;
+                
+                recentRecordsToggleBtn.addEventListener('click', function() {
+                    const recordsSection = this.closest('.recent-records-section');
+                    if (recordsSection) {
+                        const expandedRecords = recordsSection.querySelectorAll('.entry-details-container');
+                        const expandButtons = recordsSection.querySelectorAll('.expand-entry-btn');
+                        
+                        if (entriesExpanded) {
+                            // Close all expanded records
+                            expandedRecords.forEach(record => {
+                                record.style.display = 'none';
+                            });
+                            
+                            // Close all expand buttons
+                            expandButtons.forEach(btn => {
+                                btn.classList.remove('expanded');
+                                btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                            });
+                            
+                            entriesExpanded = false;
+                        } else {
+                            // Expand all records
+                            expandedRecords.forEach(record => {
+                                record.style.display = 'grid';
+                            });
+                            
+                            // Open all expand buttons
+                            expandButtons.forEach(btn => {
+                                btn.classList.add('expanded');
+                                btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                            });
+                            
+                            entriesExpanded = true;
+                        }
+                    }
+                });
+            }
+
             // Load payment entries on page load (Recent Entries tab)
             loadPaymentEntries(10, 1, '', '', '', '');
 

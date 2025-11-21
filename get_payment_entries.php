@@ -28,9 +28,10 @@ try {
     $dateTo = $_GET['dateTo'] ?? '';
     $projectType = $_GET['projectType'] ?? '';
     $vendorCategory = $_GET['vendorCategory'] ?? '';
+    $paidBy = $_GET['paidBy'] ?? '';
 
     // Log incoming parameters for debugging
-    error_log('get_payment_entries.php called with: limit=' . $limit . ', offset=' . $offset . ', vendorCategory=' . $vendorCategory);
+    error_log('get_payment_entries.php called with: limit=' . $limit . ', offset=' . $offset . ', vendorCategory=' . $vendorCategory . ', paidBy=' . $paidBy);
 
     // ===================================================================
     // Build Count Query Dynamically (Only with Filters Used)
@@ -41,6 +42,7 @@ try {
         FROM tbl_payment_entry_master_records m
         LEFT JOIN tbl_payment_entry_line_items_detail l ON m.payment_entry_id = l.payment_entry_master_id_fk
         LEFT JOIN pm_vendor_registry_master v ON l.recipient_id_reference = v.vendor_id
+        LEFT JOIN users au ON m.authorized_user_id_fk = au.id
         WHERE 1=1
     ";
 
@@ -62,14 +64,40 @@ try {
     }
 
     if (!empty($projectType)) {
-        $count_query .= " AND m.project_type_category = ?";
-        $count_params[] = $projectType;
+        // Handle multiple project types (comma-separated)
+        $projectTypes = array_map('trim', explode(',', $projectType));
+        $projectTypes = array_filter($projectTypes); // Remove empty values
+        
+        if (!empty($projectTypes)) {
+            $placeholders = implode(',', array_fill(0, count($projectTypes), '?'));
+            $count_query .= " AND m.project_type_category IN ($placeholders)";
+            $count_params = array_merge($count_params, $projectTypes);
+        }
     }
 
     if (!empty($vendorCategory)) {
-        $count_query .= " AND (v.vendor_type_category = ? OR l.recipient_type_category = ?)";
-        $count_params[] = $vendorCategory;
-        $count_params[] = $vendorCategory;
+        // Handle multiple vendor categories (comma-separated)
+        $categories = array_map('trim', explode(',', $vendorCategory));
+        $categories = array_filter($categories); // Remove empty values
+        
+        if (!empty($categories)) {
+            $placeholders = implode(',', array_fill(0, count($categories), '?'));
+            $count_query .= " AND (v.vendor_type_category IN ($placeholders) OR l.recipient_type_category IN ($placeholders))";
+            // Add each category twice (once for vendor_type_category, once for recipient_type_category)
+            $count_params = array_merge($count_params, $categories, $categories);
+        }
+    }
+
+    if (!empty($paidBy)) {
+        // Handle multiple users (comma-separated) - filter by authorized_user_id_fk
+        $users = array_map('trim', explode(',', $paidBy));
+        $users = array_filter($users); // Remove empty values
+        
+        if (!empty($users)) {
+            $placeholders = implode(',', array_fill(0, count($users), '?'));
+            $count_query .= " AND au.username IN ($placeholders)";
+            $count_params = array_merge($count_params, $users);
+        }
     }
 
     if (!empty($search)) {
@@ -112,7 +140,9 @@ try {
             m.entry_status_current,
             m.created_timestamp_utc,
             m.updated_timestamp_utc,
+            m.authorized_user_id_fk,
             u.username as created_by_username,
+            au.username as authorized_by_username,
             s.line_items_count,
             s.acceptance_methods_count,
             s.total_files_attached,
@@ -121,6 +151,7 @@ try {
             COUNT(DISTINCT f.attachment_id) as files_calculated
         FROM tbl_payment_entry_master_records m
         LEFT JOIN users u ON m.created_by_user_id = u.id
+        LEFT JOIN users au ON m.authorized_user_id_fk = au.id
         LEFT JOIN projects p ON (
             CASE 
                 WHEN m.project_id_fk > 0 THEN m.project_id_fk = p.id
@@ -131,6 +162,7 @@ try {
         LEFT JOIN tbl_payment_entry_line_items_detail l ON m.payment_entry_id = l.payment_entry_master_id_fk
         LEFT JOIN tbl_payment_entry_file_attachments_registry f ON m.payment_entry_id = f.payment_entry_master_id_fk
         LEFT JOIN pm_vendor_registry_master v ON l.recipient_id_reference = v.vendor_id
+        LEFT JOIN users u_paid ON l.line_item_paid_via_user_id = u_paid.id
         WHERE 1=1
     ";
 
@@ -152,14 +184,40 @@ try {
     }
 
     if (!empty($projectType)) {
-        $query .= " AND m.project_type_category = ?";
-        $stmt_params[] = $projectType;
+        // Handle multiple project types (comma-separated)
+        $projectTypes = array_map('trim', explode(',', $projectType));
+        $projectTypes = array_filter($projectTypes); // Remove empty values
+        
+        if (!empty($projectTypes)) {
+            $placeholders = implode(',', array_fill(0, count($projectTypes), '?'));
+            $query .= " AND m.project_type_category IN ($placeholders)";
+            $stmt_params = array_merge($stmt_params, $projectTypes);
+        }
     }
 
     if (!empty($vendorCategory)) {
-        $query .= " AND (v.vendor_type_category = ? OR l.recipient_type_category = ?)";
-        $stmt_params[] = $vendorCategory;
-        $stmt_params[] = $vendorCategory;
+        // Handle multiple vendor categories (comma-separated)
+        $categories = array_map('trim', explode(',', $vendorCategory));
+        $categories = array_filter($categories); // Remove empty values
+        
+        if (!empty($categories)) {
+            $placeholders = implode(',', array_fill(0, count($categories), '?'));
+            $query .= " AND (v.vendor_type_category IN ($placeholders) OR l.recipient_type_category IN ($placeholders))";
+            // Add each category twice (once for vendor_type_category, once for recipient_type_category)
+            $stmt_params = array_merge($stmt_params, $categories, $categories);
+        }
+    }
+
+    if (!empty($paidBy)) {
+        // Handle multiple users (comma-separated) - filter by authorized_user_id_fk
+        $users = array_map('trim', explode(',', $paidBy));
+        $users = array_filter($users); // Remove empty values
+        
+        if (!empty($users)) {
+            $placeholders = implode(',', array_fill(0, count($users), '?'));
+            $query .= " AND au.username IN ($placeholders)";
+            $stmt_params = array_merge($stmt_params, $users);
+        }
     }
 
     if (!empty($search)) {
@@ -209,6 +267,7 @@ try {
                     l.recipient_type_category,
                     l.recipient_id_reference,
                     l.recipient_name_display,
+                    l.line_item_paid_via_user_id,
                     SUM(l.line_item_amount) as total_amount,
                     CASE 
                         WHEN l.recipient_type_category LIKE '%labour%' THEN 'labour'
@@ -232,6 +291,23 @@ try {
                 $recipient_name = $recipient['recipient_name_display'];
                 $recipient_id = $recipient['recipient_id_reference'];
                 $vendor_category = '';
+                
+                // Fetch the user who made the payment
+                $paid_by_user = 'N/A';
+                if (!empty($recipient['line_item_paid_via_user_id'])) {
+                    try {
+                        $user_query = "SELECT username FROM users WHERE id = :user_id LIMIT 1";
+                        $user_stmt = $pdo->prepare($user_query);
+                        $user_stmt->bindParam(':user_id', $recipient['line_item_paid_via_user_id']);
+                        $user_stmt->execute();
+                        $user_result = $user_stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($user_result && $user_result['username']) {
+                            $paid_by_user = $user_result['username'];
+                        }
+                    } catch (Exception $ue) {
+                        error_log('Error fetching paid_by user: ' . $ue->getMessage());
+                    }
+                }
                 
                 // Try to fetch full details from vendor or labour tables if ID exists
                 if ($recipient_id) {
@@ -305,6 +381,7 @@ try {
                     'category' => $recipient['recipient_type_category'],
                     'vendor_category' => $vendor_category,
                     'amount' => floatval($recipient['total_amount'] ?? 0),
+                    'paid_by_user' => $paid_by_user,
                     'acceptance_methods' => $acceptance_methods
                 ];
             }
@@ -325,6 +402,7 @@ try {
             'payment_mode' => $entry['payment_mode_selected'],
             'status' => $entry['entry_status_current'],
             'created_by' => $entry['created_by_username'],
+            'authorized_by' => $entry['authorized_by_username'] ?? 'N/A',
             'created_at' => $entry['created_timestamp_utc'],
             'updated_at' => $entry['updated_timestamp_utc'],
             'line_items_count' => intval($entry['line_items_count'] ?? 0),
@@ -361,6 +439,7 @@ try {
     error_log('Stack Trace: ' . $e->getTraceAsString());
     error_log('Code: ' . $e->getCode());
     error_log('Vendor Category: ' . $vendorCategory);
+    error_log('Paid By: ' . $paidBy);
 
     http_response_code(400);
     echo json_encode([
@@ -369,6 +448,7 @@ try {
         'code' => $e->getCode(),
         'debug' => [
             'vendorCategory' => $vendorCategory,
+            'paidBy' => $paidBy,
             'error' => $e->getMessage()
         ]
     ]);

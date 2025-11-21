@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS `tbl_payment_entry_line_items_detail` (
     `payment_description_notes` TEXT COMMENT 'What payment is for',
     `line_item_amount` DECIMAL(15, 2) NOT NULL COMMENT 'Amount for this line item',
     `line_item_payment_mode` VARCHAR(50) NOT NULL COMMENT 'Payment mode for this item',
+    `line_item_paid_via_user_id` INT COMMENT 'User who processed this line item payment',
     `line_item_sequence_number` INT NOT NULL COMMENT 'Line item number (1, 2, 3...)',
     `line_item_media_upload_path` VARCHAR(500) COMMENT 'Path to attached media file',
     `line_item_media_original_filename` VARCHAR(255) COMMENT 'Original filename',
@@ -75,9 +76,11 @@ CREATE TABLE IF NOT EXISTS `tbl_payment_entry_line_items_detail` (
     `created_at_timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `modified_at_timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`payment_entry_master_id_fk`) REFERENCES `tbl_payment_entry_master_records`(`payment_entry_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`line_item_paid_via_user_id`) REFERENCES `users`(`id`),
     INDEX `idx_master_payment_id` (`payment_entry_master_id_fk`),
     INDEX `idx_recipient_type` (`recipient_type_category`),
-    INDEX `idx_line_sequence` (`payment_entry_master_id_fk`, `line_item_sequence_number`)
+    INDEX `idx_line_sequence` (`payment_entry_master_id_fk`, `line_item_sequence_number`),
+    INDEX `idx_paid_via_user` (`line_item_paid_via_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Line items/additional entries within each payment entry';
 
 -- ============================================================================

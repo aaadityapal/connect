@@ -66,7 +66,7 @@
                         <!-- Payment Done Via (Authorized User) -->
                         <div class="payment-entry-form-group">
                             <label for="paymentAuthorizedUser" class="payment-entry-form-label">
-                                <i class="fas fa-user-check"></i> Payment Done Via <span class="payment-entry-required">*</span>
+                                <i class="fas fa-user-check"></i> Payment Done By <span class="payment-entry-required">*</span>
                             </label>
                             <select id="paymentAuthorizedUser" name="authorizedUserId" class="payment-entry-select-field" required>
                                 <option value="">Select Authorized User</option>
@@ -1142,6 +1142,20 @@
                         html += `<option value="${user.id}" data-username="${user.username}">${user.username}</option>`;
                     });
                     paymentAuthorizedUserSelect.innerHTML = html;
+                    
+                    // Add event listener to main authorized user select to update all entry fields (one-directional)
+                    paymentAuthorizedUserSelect.addEventListener('change', function() {
+                        if (this.value) {
+                            // Update all entry "Paid Via" fields with the main field's value
+                            const allEntries = additionalEntriesContainer.querySelectorAll('.payment-entry-additional-entry');
+                            allEntries.forEach(entry => {
+                                const entryPaidViaSelect = entry.querySelector('.entry-paid-via');
+                                if (entryPaidViaSelect) {
+                                    entryPaidViaSelect.value = this.value;
+                                }
+                            });
+                        }
+                    });
                 } else {
                     paymentAuthorizedUserSelect.innerHTML = '<option value="">No active users found</option>';
                 }
@@ -1149,6 +1163,34 @@
             .catch(error => {
                 console.error('Error loading users:', error);
                 paymentAuthorizedUserSelect.innerHTML = '<option value="">Error loading users</option>';
+            });
+    }
+
+    // Load authorized users for entry "Paid Via" field
+    function loadAuthorizedUsersForEntry(selectElement) {
+        if (!selectElement) return;
+
+        selectElement.innerHTML = '<option value="">Loading users...</option>';
+        selectElement.disabled = true;
+
+        fetch('get_active_users.php')
+            .then(response => response.json())
+            .then(data => {
+                selectElement.disabled = false;
+                if (data.success && data.users.length > 0) {
+                    let html = '<option value="">Select User</option>';
+                    data.users.forEach(user => {
+                        html += `<option value="${user.id}" data-username="${user.username}">${user.username}</option>`;
+                    });
+                    selectElement.innerHTML = html;
+                } else {
+                    selectElement.innerHTML = '<option value="">No active users found</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading users for entry:', error);
+                selectElement.disabled = false;
+                selectElement.innerHTML = '<option value="">Error loading users</option>';
             });
     }
 
@@ -1693,6 +1735,7 @@
             const descriptionInput = entry.querySelector('.entry-description');
             const amountInput = entry.querySelector('.entry-amount');
             const modeSelect = entry.querySelector('.entry-mode');
+            const paidViaSelect = entry.querySelector('.entry-paid-via');
             const mediaFileInput = entry.querySelector('.entry-media-file');
 
             if (typeSelect && typeSelect.value && amountInput && amountInput.value) {
@@ -1706,7 +1749,8 @@
                     recipientName: recipientName || '',
                     description: descriptionInput.value || '',
                     amount: amountInput.value,
-                    paymentMode: modeSelect.value || ''
+                    paymentMode: modeSelect.value || '',
+                    paidViaUserId: paidViaSelect && paidViaSelect.value ? paidViaSelect.value : null
                 };
 
                 // Add multiple acceptance methods if selected
@@ -1853,7 +1897,7 @@
                 </button>
             </div>
 
-            <div class="payment-entry-form-grid payment-entry-form-grid-5col">
+            <div class="payment-entry-form-grid payment-entry-form-grid-3col">
                 <!-- Type -->
                 <div class="payment-entry-form-group">
                     <label class="payment-entry-form-label">
@@ -1880,6 +1924,16 @@
                     </select>
                 </div>
 
+                <!-- Paid Via -->
+                <div class="payment-entry-form-group">
+                    <label class="payment-entry-form-label">
+                        <i class="fas fa-user-check"></i> Payment Done Via <span class="payment-entry-required">*</span>
+                    </label>
+                    <select class="payment-entry-select-field entry-paid-via" data-entry="${entryId}">
+                        <option value="">Select User</option>
+                    </select>
+                </div>
+
                 <!-- Description -->
                 <div class="payment-entry-form-group">
                     <label class="payment-entry-form-label">
@@ -1899,7 +1953,7 @@
                 <!-- Payment Mode -->
                 <div class="payment-entry-form-group">
                     <label class="payment-entry-form-label">
-                        <i class="fas fa-credit-card"></i> Payment Mode <span class="payment-entry-required">*</span>
+                        <i class="fas fa-credit-card"></i> Mode <span class="payment-entry-required">*</span>
                     </label>
                     <select class="payment-entry-select-field entry-mode" data-entry="${entryId}">
                         <option value="">Select Payment Method</option>
@@ -1985,6 +2039,22 @@
                     multipleAcceptanceSection.style.display = 'none';
                 }
             });
+        }
+
+        // Load users for "Paid Via" dropdown
+        const paidViaSelect = entryDiv.querySelector('.entry-paid-via');
+        if (paidViaSelect) {
+            loadAuthorizedUsersForEntry(paidViaSelect);
+            
+            // Auto-populate entry "Paid Via" with main "Payment Done By" value when entry is created
+            setTimeout(function() {
+                if (paymentAuthorizedUserSelect && paymentAuthorizedUserSelect.value) {
+                    paidViaSelect.value = paymentAuthorizedUserSelect.value;
+                }
+            }, 100);
+            
+            // Entry field is independent - user can change it without affecting main field
+            // No event listener needed here - changes are local to this entry only
         }
 
         // Add event listener to entry amount for validation against main payment amount

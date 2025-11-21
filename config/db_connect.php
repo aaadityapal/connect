@@ -58,6 +58,7 @@ function handleDatabaseError($message, $error = null) {
 }
 
 // PDO Connection
+$pdo = null;
 try {
     $pdo = new PDO(
         "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -77,6 +78,7 @@ try {
     
 } catch (PDOException $e) {
     $errorMessage = handleDatabaseError("PDO Database Connection Error", $e);
+    error_log("PDO Connection failed: " . $e->getMessage());
     
     // Don't show error details in production
     if ($is_production) {

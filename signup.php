@@ -1,17 +1,31 @@
 <?php
 session_start();
-require_once 'config.php';
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/signup_error.log');
+
+try {
+    require_once __DIR__ . '/config/db_connect.php';
+} catch (Exception $e) {
+    $_SESSION['error'] = 'Database connection failed: ' . $e->getMessage();
+    error_log('Database connection error: ' . $e->getMessage());
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
-        // Debug: Print received data
-        error_log("Received POST data: " . print_r($_POST, true));
+        // Check if database connection exists
+        if (!isset($pdo)) {
+            throw new Exception("Database connection not available");
+        }
 
         // Get form data with validation
-        $username = trim($_POST['username']);
-        $email = trim($_POST['email']);
-        $password = $_POST['password'];
-        $role = trim($_POST['role']);
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $role = trim($_POST['role'] ?? '');
         $reporting_manager = isset($_POST['reporting_manager']) ? trim($_POST['reporting_manager']) : null;
 
         // Validate required fields
@@ -141,14 +155,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Get next ID number
-        $stmt = $pdo->prepare("SELECT MAX(CAST(SUBSTRING(unique_id, :len) AS UNSIGNED)) as max_id FROM users WHERE unique_id LIKE :prefix");
-        $stmt->execute([
-            'len' => strlen($prefix) + 1,
-            'prefix' => $prefix . '%'
-        ]);
-        $result = $stmt->fetch();
-        $next_id = $result['max_id'] ? $result['max_id'] + 1 : 1;
-        $unique_id = $prefix . str_pad($next_id, 3, '0', STR_PAD_LEFT);
+        try {
+            $stmt = $pdo->prepare("SELECT unique_id FROM users WHERE unique_id LIKE ? ORDER BY unique_id DESC LIMIT 1");
+            $stmt->execute([$prefix . '%']);
+            $result = $stmt->fetch();
+            
+            if ($result) {
+                $last_id = $result['unique_id'];
+                $number = intval(substr($last_id, strlen($prefix)));
+                $next_id = $number + 1;
+            } else {
+                $next_id = 1;
+            }
+            
+            $unique_id = $prefix . str_pad($next_id, 3, '0', STR_PAD_LEFT);
+        } catch (Exception $e) {
+            error_log("Error generating unique ID: " . $e->getMessage());
+            throw new Exception("Error generating employee ID");
+        }
 
         // Debug: Print values before insertion
         error_log("Inserting user with role: " . $role);
@@ -173,6 +197,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     role, 
                     unique_id, 
                     reporting_manager,
+                    designation,
+                    position,
+                    department,
                     backup_password,
                     status,
                     created_at
@@ -183,6 +210,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     :role, 
                     :unique_id, 
                     :reporting_manager,
+                    :designation,
+                    :position,
+                    :department,
                     :backup_password,
                     'active',
                     :created_at
@@ -197,6 +227,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ':role' => $role,
             ':unique_id' => $unique_id,
             ':reporting_manager' => $reporting_manager,
+            ':designation' => $role,
+            ':position' => 'Employee',
+            ':department' => 'General',
             ':backup_password' => $backup_hashed,
             ':created_at' => $current_time
         ];
@@ -268,9 +301,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
     } catch(PDOException $e) {
-        error_log("Database Error: " . $e->getMessage());
+        error_log("PDO Database Error: " . $e->getMessage());
         error_log("Error Code: " . $e->getCode());
-        throw $e;
+        $_SESSION['error'] = "Database error: " . $e->getMessage();
     } catch(Exception $e) {
         error_log("General Error: " . $e->getMessage());
         $_SESSION['error'] = $e->getMessage();

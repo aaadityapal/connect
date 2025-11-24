@@ -904,7 +904,9 @@ class StageDetailModal {
 
     createStageModalHtml(stage, project) {
         const isPastDue = this.isPastDue(stage.end_date);
-        const overdueMark = isPastDue ? '<span class="stage_detail_date_overdue">(Overdue)</span>' : '';
+        const overdueMark = this.isCompletedLate(stage.status, stage.end_date) 
+            ? this.getCompletedLateIndicator() 
+            : (isPastDue ? '<span class="stage_detail_date_overdue">(Overdue)</span>' : '');
         
         return `
             <div class="stage_detail_modal_container">
@@ -960,7 +962,7 @@ class StageDetailModal {
                                 <span class="project_overview_info_label"><i class="fas fa-calendar-check"></i> End Date</span>
                                 <span class="project_overview_info_value">
                                     ${this.formatDateTime(project.end_date) || 'Not set'} 
-                                    ${this.isPastDue(project.end_date) ? '<span class="project_overview_date_overdue">(Overdue)</span>' : ''}
+                                    ${(this.isPastDue(project.end_date) && this.getCurrentUserRole() === 'Senior Manager (Studio)') ? '<span class="project_overview_date_overdue">(Overdue)</span>' : ''}
                                 </span>
                             </div>
                             <div class="project_overview_info_item">
@@ -1070,7 +1072,9 @@ class StageDetailModal {
 
     createSubstageModalHtml(substage, stage, project) {
         const isPastDue = this.isPastDue(substage.end_date);
-        const overdueMark = isPastDue ? '<span class="stage_detail_date_overdue">(Overdue)</span>' : '';
+        const overdueMark = this.isCompletedLate(substage.status, substage.end_date)
+            ? this.getCompletedLateIndicator()
+            : (isPastDue ? '<span class="stage_detail_date_overdue">(Overdue)</span>' : '');
         
         // Create appropriate status options based on user role
         let statusOptions = '';
@@ -1153,7 +1157,7 @@ class StageDetailModal {
                                 <span class="project_overview_info_label"><i class="fas fa-calendar-check"></i> End Date</span>
                                 <span class="project_overview_info_value">
                                     ${this.formatDateTime(project.end_date) || 'Not set'} 
-                                    ${this.isPastDue(project.end_date) ? '<span class="project_overview_date_overdue">(Overdue)</span>' : ''}
+                                    ${(this.isPastDue(project.end_date) && this.getCurrentUserRole() === 'Senior Manager (Studio)') ? '<span class="project_overview_date_overdue">(Overdue)</span>' : ''}
                                 </span>
                             </div>
                             <div class="project_overview_info_item">
@@ -1358,7 +1362,8 @@ class StageDetailModal {
             <div class="stage_detail_substages_list">
                 ${filteredSubstages.map(substage => {
                     const isPastDue = this.isPastDue(substage.end_date);
-                    const overdueMark = isPastDue ? '<span class="overdue">(Overdue)</span>' : '';
+                    const isCompletedLate = this.isCompletedLate(substage.status, substage.end_date);
+                    const overdueMark = isCompletedLate ? this.getCompletedLateIndicator() : (isPastDue ? '<span class="overdue">(Overdue)</span>' : '');
                     
                     return `
                         <div class="stage_detail_substage_item" data-substage-id="${substage.id}">
@@ -2199,7 +2204,16 @@ class StageDetailModal {
         today.setHours(0, 0, 0, 0);
         return dueDate < today;
     }
-    
+
+    isCompletedLate(status, endDate) {
+        if (!status || status !== 'completed') return false;
+        return this.isPastDue(endDate);
+    }
+
+    getCompletedLateIndicator() {
+        return '🟠';
+    }
+
     escapeHtml(unsafe) {
         if (!unsafe) return '';
         return unsafe

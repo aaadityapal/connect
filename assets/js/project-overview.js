@@ -327,53 +327,38 @@ class ProjectOverview {
                 const currentUserId = typeof USER_ID !== 'undefined' ? USER_ID : null;
                 
                 this.userProjects.forEach(project => {
-                    let projectCounted = false;
+                    // SKIP unassigned projects - must be assigned to current user
+                    const isProjectAssignedToUser = project.assigned_to && 
+                        (currentUserId === null || project.assigned_to.toString() === currentUserId.toString());
                     
-                    // Check if project is assigned to current user
-                    const projectAssignedTo = project.assigned_to || '';
-                    let isProjectAssignedToUser = false;
-                    
-                    if (currentUserId) {
-                        if (typeof projectAssignedTo === 'string' && projectAssignedTo.includes(',')) {
-                            isProjectAssignedToUser = projectAssignedTo.split(',').some(id => 
-                                id.toString().trim() === currentUserId.toString());
-                        } else {
-                            isProjectAssignedToUser = projectAssignedTo.toString() === currentUserId.toString();
-                        }
+                    if (!isProjectAssignedToUser) {
+                        return;
                     }
+                    
+                    let projectCounted = false;
                     
                     // First check if project has stages with substages
                     if (project.stages && project.stages.length > 0) {
                         project.stages.forEach(stage => {
-                            let stageCounted = false;
+                            // SKIP unassigned stages - must be assigned to current user
+                            const isStageAssignedToUser = stage.assigned_to && 
+                                (currentUserId === null || stage.assigned_to.toString() === currentUserId.toString());
                             
-                            // Check if stage is assigned to current user
-                            const stageAssignedTo = stage.assigned_to || '';
-                            let isStageAssignedToUser = false;
-                            
-                            if (currentUserId) {
-                                if (typeof stageAssignedTo === 'string' && stageAssignedTo.includes(',')) {
-                                    isStageAssignedToUser = stageAssignedTo.split(',').some(id => 
-                                        id.toString().trim() === currentUserId.toString());
-                                } else {
-                                    isStageAssignedToUser = stageAssignedTo.toString() === currentUserId.toString();
-                                }
+                            if (!isStageAssignedToUser) {
+                                return;
                             }
+                            
+                            let stageCounted = false;
                             
                             // First check if stage has substages
                             if (stage.substages && stage.substages.length > 0) {
                                 stage.substages.forEach(substage => {
-                                    // Check if substage is assigned to current user
-                                    const substageAssignedTo = substage.assigned_to || '';
-                                    let isSubstageAssignedToUser = false;
+                                    // SKIP unassigned substages - must be assigned to current user
+                                    const isSubstageAssignedToUser = substage.assigned_to && 
+                                        (currentUserId === null || substage.assigned_to.toString() === currentUserId.toString());
                                     
-                                    if (currentUserId) {
-                                        if (typeof substageAssignedTo === 'string' && substageAssignedTo.includes(',')) {
-                                            isSubstageAssignedToUser = substageAssignedTo.split(',').some(id => 
-                                                id.toString().trim() === currentUserId.toString());
-                                        } else {
-                                            isSubstageAssignedToUser = substageAssignedTo.toString() === currentUserId.toString();
-                                        }
+                                    if (!isSubstageAssignedToUser) {
+                                        return;
                                     }
                                     
                                     // Only count if assigned to user, not completed, not cancelled, etc.
@@ -994,6 +979,15 @@ class ProjectOverview {
         
         // Get all items due on this date
         this.userProjects.forEach(project => {
+            // Check if project is assigned to current user - SKIP if unassigned
+            const isProjectAssignedToUser = project.assigned_to && 
+                (currentUserId === null || project.assigned_to.toString() === currentUserId.toString());
+            
+            // Skip unassigned projects
+            if (!isProjectAssignedToUser) {
+                return;
+            }
+            
             const projectEndDate = project.end_date ? new Date(project.end_date.split(' ')[0]) : null;
             const isProjectDueToday = projectEndDate && projectEndDate.getTime() === clickedDate.getTime();
             const isPastDueProject = projectEndDate && projectEndDate < today;

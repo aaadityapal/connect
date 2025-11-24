@@ -40,30 +40,79 @@
                     <option value="" disabled selected>Select Vendor Type</option>
                     
                     <!-- Labour Contractor Options -->
-                    <optgroup label="Labour Contractor">
-                        <option value="labour_skilled">Skilled Labour</option>
-                        <option value="labour_unskilled">Unskilled Labour</option>
-                        <option value="labour_semi_skilled">Semi-Skilled Labour</option>
-                        <option value="labour_specialized">Specialized Labour</option>
+                    <optgroup label="Labour Contractor" id="labourContractorGroup">
+                        <option value="labour_carpenter">Carpenter Labour Contractor</option>
+                        <option value="labour_civil">Civil Labour Contractor</option>
+                        <option value="labour_electrical">Electrical Labour Contractor</option>
+                        <option value="labour_flooring">Flooring Labour Contractor</option>
+                        <option value="labour_glass">Glass & Glazing Labour Contractor</option>
+                        <option value="labour_granite">Granite & Marble Labour Contractor</option>
+                        <option value="labour_hvac">HVAC Labour Contractor</option>
+                        <option value="labour_landscaping">Landscaping Labour Contractor</option>
+                        <option value="labour_painting">Painting Labour Contractor</option>
+                        <option value="labour_plumbing">Plumbing Labour Contractor</option>
+                        <option value="labour_pop">POP Labour Contractor</option>
+                        <option value="labour_roofing">Roofing Labour Contractor</option>
+                        <option value="labour_semi_skilled">Semi-Skilled Labour Contractor</option>
+                        <option value="labour_skilled">Skilled Labour Contractor</option>
+                        <option value="labour_specialized">Specialized Labour Contractor</option>
+                        <option value="labour_tile">Tile Labour Contractor</option>
+                        <option value="labour_unskilled">Unskilled Labour Contractor</option>
+                        <option value="labour_upvc">UPVC Labour Contractor</option>
                         <option value="labour_custom">+ Custom Labour Contractor</option>
                     </optgroup>
                     
                     <!-- Material Contractor Options -->
-                    <optgroup label="Material Contractor">
-                        <option value="material_concrete">Concrete Supplier</option>
-                        <option value="material_steel">Steel & Rebar Supplier</option>
-                        <option value="material_bricks">Bricks & Blocks Supplier</option>
-                        <option value="material_general">General Materials Contractor</option>
+                    <optgroup label="Material Contractor" id="materialContractorGroup">
+                        <option value="material_bricks">Bricks Material Contractor</option>
+                        <option value="material_cement">Cement Material Contractor</option>
+                        <option value="material_concrete">Concrete Material Contractor</option>
+                        <option value="material_doors">Doors Material Contractor</option>
+                        <option value="material_dust">Dust Material Contractor</option>
+                        <option value="material_electrical">Electrical Material Contractor</option>
+                        <option value="material_fixtures">Fixtures Material Contractor</option>
+                        <option value="material_general">General Material Contractor</option>
+                        <option value="material_glass">Glass Material Contractor</option>
+                        <option value="material_hardware">Hardware Material Contractor</option>
+                        <option value="material_hvac">HVAC Material Contractor</option>
+                        <option value="material_insulation">Insulation Material Contractor</option>
+                        <option value="material_mechanical">Mechanical Material Contractor</option>
+                        <option value="material_paints">Paints Material Contractor</option>
+                        <option value="material_plumbing">Plumbing Material Contractor</option>
+                        <option value="material_sand">Sand Material Contractor</option>
+                        <option value="material_steel">Steel Material Contractor</option>
+                        <option value="material_tiles">Tiles Material Contractor</option>
+                        <option value="material_wood">Wood Material Contractor</option>
                         <option value="material_custom">+ Custom Material Contractor</option>
                     </optgroup>
                     
                     <!-- Material Supplier Options -->
-                    <optgroup label="Material Supplier">
-                        <option value="supplier_equipment">Equipment Supplier</option>
-                        <option value="supplier_cement">Cement Supplier</option>
-                        <option value="supplier_sand_aggregate">Sand & Aggregate Supplier</option>
-                        <option value="supplier_tools">Tools & Hardware Supplier</option>
+                    <optgroup label="Material Supplier" id="materialSupplierGroup">
+                        <option value="supplier_bricks">Bricks Material Supplier</option>
+                        <option value="supplier_cement">Cement Material Supplier</option>
+                        <option value="supplier_concrete">Concrete Material Supplier</option>
+                        <option value="supplier_doors">Doors Material Supplier</option>
+                        <option value="supplier_electrical">Electrical Material Supplier</option>
+                        <option value="supplier_equipment">Equipment Material Supplier</option>
+                        <option value="supplier_fixtures">Fixtures Material Supplier</option>
+                        <option value="supplier_glass">Glass Material Supplier</option>
+                        <option value="supplier_hardware">Hardware Material Supplier</option>
+                        <option value="supplier_hvac">HVAC Material Supplier</option>
+                        <option value="supplier_insulation">Insulation Material Supplier</option>
+                        <option value="supplier_paints">Paints Material Supplier</option>
+                        <option value="supplier_plumbing">Plumbing Material Supplier</option>
+                        <option value="supplier_sand_aggregate">Sand Material Supplier</option>
+                        <option value="supplier_sanitary">Sanitary Ware Material Supplier</option>
+                        <option value="supplier_steel">Steel Material Supplier</option>
+                        <option value="supplier_tiles">Tiles Material Supplier</option>
+                        <option value="supplier_tools">Tools Material Supplier</option>
+                        <option value="supplier_windows">Windows Material Supplier</option>
+                        <option value="supplier_wood">Wood Material Supplier</option>
                         <option value="supplier_custom">+ Custom Material Supplier</option>
+                    </optgroup>
+                    
+                    <!-- Custom Vendor Types (Dynamically Populated) -->
+                    <optgroup label="Recently Added Custom Types" id="customVendorTypesGroup">
                     </optgroup>
                 </select>
             </div>
@@ -681,6 +730,9 @@
         const cancelVendorBtn = document.getElementById('cancelVendorBtn');
         const vendorForm = document.getElementById('vendorForm');
 
+        // Load custom vendor types on page load
+        loadCustomVendorTypes();
+
         if (closeVendorModal) {
             closeVendorModal.addEventListener('click', function() {
                 addVendorModal.classList.remove('active');
@@ -702,6 +754,73 @@
             });
         }
 
+        // Load custom vendor types from database
+        function loadCustomVendorTypes() {
+            fetch('handlers/get_custom_vendor_types.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && Object.keys(data.data).length > 0) {
+                        // Clear previous custom options
+                        const labourGroup = document.getElementById('labourContractorGroup');
+                        const materialGroup = document.getElementById('materialContractorGroup');
+                        const supplierGroup = document.getElementById('materialSupplierGroup');
+                        
+                        // Remove existing custom options
+                        labourGroup.querySelectorAll('option[data-custom="true"]').forEach(opt => opt.remove());
+                        materialGroup.querySelectorAll('option[data-custom="true"]').forEach(opt => opt.remove());
+                        supplierGroup.querySelectorAll('option[data-custom="true"]').forEach(opt => opt.remove());
+                        
+                        // Add custom vendor types to their respective groups
+                        for (const [category, vendors] of Object.entries(data.data)) {
+                            let targetGroup = null;
+                            
+                            if (category.toLowerCase().includes('labour')) {
+                                targetGroup = labourGroup;
+                            } else if (category.toLowerCase().includes('material contractor')) {
+                                targetGroup = materialGroup;
+                            } else if (category.toLowerCase().includes('material supplier')) {
+                                targetGroup = supplierGroup;
+                            }
+                            
+                            if (targetGroup) {
+                                // Sort vendors alphabetically
+                                const sortedVendors = vendors.sort((a, b) => a.localeCompare(b));
+                                
+                                sortedVendors.forEach(vendor => {
+                                    const newOption = document.createElement('option');
+                                    newOption.value = vendor;
+                                    newOption.textContent = vendor;
+                                    newOption.setAttribute('data-custom', 'true');
+                                    
+                                    // Find the correct position to insert alphabetically
+                                    let inserted = false;
+                                    const options = Array.from(targetGroup.querySelectorAll('option'));
+                                    
+                                    for (let i = 0; i < options.length; i++) {
+                                        const currentOptionText = options[i].textContent.toLowerCase();
+                                        const newOptionText = vendor.toLowerCase();
+                                        
+                                        if (newOptionText < currentOptionText) {
+                                            targetGroup.insertBefore(newOption, options[i]);
+                                            inserted = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // If not inserted yet, append at the end
+                                    if (!inserted) {
+                                        targetGroup.appendChild(newOption);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading custom vendor types:', error);
+                });
+        }
+
         // Handle form submission
         if (vendorForm) {
             vendorForm.addEventListener('submit', function(e) {
@@ -715,6 +834,7 @@
                 let vendorType = document.getElementById('vendorType').value;
                 let customVendorType = '';
                 let vendorCategory = '';
+                let isCustom = 0; // Track if custom vendor type
 
                 // Validate basic required fields
                 if (!vendorName) {
@@ -753,6 +873,7 @@
                         vendorCategory = 'Material Supplier';
                     }
                     vendorType = customVendorType;
+                    isCustom = 1; // Mark as custom vendor type
                 }
 
                 // Validate postal code if provided
@@ -771,6 +892,7 @@
                 formData.append('vendorAltPhone', vendorAltPhone);
                 formData.append('vendorEmail', vendorEmail);
                 formData.append('vendorType', vendorType);
+                formData.append('isCustom', isCustom); // Add custom vendor flag
                 if (vendorCategory) {
                     formData.append('vendorCategory', vendorCategory);
                 }
@@ -825,8 +947,8 @@
                             window.refreshEntryRecipients();
                         }
                         
-                        // Optionally reload the page to refresh vendor list
-                        // setTimeout(() => location.reload(), 1000);
+                        // Refresh custom vendor types after successful addition
+                        loadCustomVendorTypes();
                     } else {
                         alert('Error: ' + (data.message || 'An error occurred'));
                         console.error('Server response:', data);

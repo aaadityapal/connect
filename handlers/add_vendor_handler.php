@@ -68,6 +68,7 @@ try {
     $vendor_email_address = isset($_POST['vendorEmail']) ? trim($_POST['vendorEmail']) : '';
     $vendor_type_category = isset($_POST['vendorType']) ? trim($_POST['vendorType']) : '';
     $vendor_category = isset($_POST['vendorCategory']) ? trim($_POST['vendorCategory']) : '';
+    $is_custom = isset($_POST['isCustom']) ? (int)$_POST['isCustom'] : 0; // 1 for custom, 0 for predefined
     
     // Banking Details
     $bank_name = isset($_POST['bankName']) && !empty(trim($_POST['bankName'])) ? trim($_POST['bankName']) : null;
@@ -237,7 +238,8 @@ try {
                     `address_postal_code`,
                     `created_by_user_id`,
                     `vendor_status`,
-                    `vendor_category_type`
+                    `vendor_category_type`,
+                    `is_custom`
                 ) VALUES (
                     :vendor_full_name,
                     :vendor_phone_primary,
@@ -259,7 +261,8 @@ try {
                     :address_postal_code,
                     :created_by_user_id,
                     'active',
-                    :vendor_category_type
+                    :vendor_category_type,
+                    :is_custom
                 )";
         
         $stmt = $pdo->prepare($sql);
@@ -284,7 +287,8 @@ try {
             ':address_state' => $address_state,
             ':address_postal_code' => $address_postal_code,
             ':created_by_user_id' => $created_by_user_id,
-            ':vendor_category_type' => $vendor_category_type
+            ':vendor_category_type' => $vendor_category_type,
+            ':is_custom' => $is_custom
         ]);
         
         // Get the inserted vendor ID

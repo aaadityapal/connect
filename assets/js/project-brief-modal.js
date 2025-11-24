@@ -44,6 +44,21 @@ class ProjectBriefModal {
                 border-color: #3b82f6;
                 box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
             }
+
+            .completed_late_indicator {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background-color: #f97316;
+                margin-left: 8px;
+                vertical-align: middle;
+                font-size: 12px;
+                line-height: 10px;
+                color: white;
+                text-align: center;
+                box-shadow: 0 0 3px rgba(249, 115, 22, 0.5);
+            }
         `;
         
         // Append style element to document head
@@ -66,6 +81,12 @@ class ProjectBriefModal {
     isAdminUser() {
         const userRole = this.getCurrentUserRole();
         return userRole === 'admin';
+    }
+
+    // Check if current user is a Senior Manager (Studio) or Senior Manager (Site)
+    isSeniorManager() {
+        const userRole = this.getCurrentUserRole();
+        return userRole === 'Senior Manager (Studio)' || userRole === 'Senior Manager (Site)';
     }
 
     // Initialize event listeners
@@ -242,7 +263,7 @@ class ProjectBriefModal {
                                     <div class="project_brief_info_label">End Date</div>
                                     <div class="project_brief_info_value">
                                         ${endDate}
-                                        ${isPastDue ? '<span class="project_brief_overdue">(Overdue)</span>' : ''}
+                                        ${isPastDue && this.isSeniorManager() ? '<span class="project_brief_overdue">(Overdue)</span>' : ''}
                                     </div>
                                 </div>
                                 
@@ -342,25 +363,38 @@ class ProjectBriefModal {
         return `
             <div class="project_brief_stages_list">
                 ${stages.map(stage => {
+                    // Check if stage is assigned
+                    const isStageAssigned = stage.assigned_to_name && stage.assigned_to_name.trim() !== '';
+                    
+                    // Filter substages that are assigned
+                    const assignedSubstages = stage.substages && stage.substages.length > 0 
+                        ? stage.substages.filter(substage => substage.assigned_to_name && substage.assigned_to_name.trim() !== '')
+                        : [];
+                    
+                    // Skip stage if both stage and all substages are unassigned
+                    if (!isStageAssigned && assignedSubstages.length === 0) {
+                        return '';
+                    }
+                    
                     const startDate = this.formatDate(stage.start_date);
                     const endDate = this.formatDate(stage.end_date);
                     const isPastDue = this.isPastDue(stage.end_date);
                     
-                    // Check if stage has substages
-                    const hasSubstages = stage.substages && stage.substages.length > 0;
+                    // Check if there are assigned substages to display
+                    const hasAssignedSubstages = assignedSubstages.length > 0;
                     
                     return `
                         <div class="project_brief_stage_item" data-stage-id="${stage.id}">
                             <div class="project_brief_stage_header">
                                 <h5 class="project_brief_stage_title">
                                     Stage ${stage.stage_number}: ${this.escapeHtml(stage.title)}
-                                    ${hasSubstages ? `<span class="substage_count_badge">${stage.substages.length}</span>` : ''}
+                                    ${hasAssignedSubstages ? `<span class="substage_count_badge">${assignedSubstages.length}</span>` : ''}
                                 </h5>
                                 <div class="project_brief_status_badge ${stage.status}">${this.formatStatus(stage.status)}</div>
                             </div>
                             
                             <div class="project_brief_stage_meta">
-                                <span><i class="far fa-calendar-alt"></i> ${startDate} - ${endDate} ${isPastDue ? '<span class="overdue">(Overdue)</span>' : ''}</span>
+                                <span><i class="far fa-calendar-alt"></i> ${startDate} - ${endDate} ${this.isCompletedLate(stage.status, stage.end_date) ? this.getCompletedLateIndicator() : (isPastDue ? '<span class="overdue">(Overdue)</span>' : '')}</span>
                                 <span><i class="far fa-user"></i> ${stage.assigned_to_name || 'Unassigned'}</span>
                             </div>
                             
@@ -374,16 +408,16 @@ class ProjectBriefModal {
                                 <button class="project_brief_stage_action_btn activity" title="Activity Log" data-stage-id="${stage.id}">
                                     <i class="fas fa-history"></i>
                                 </button>
-                                ${hasSubstages ? `
+                                ${hasAssignedSubstages ? `
                                 <button class="project_brief_substage_toggle_btn" aria-label="Toggle substages">
                                     <i class="fas fa-chevron-down"></i>
                                 </button>` : ''}
                             </div>
                             
-                            ${hasSubstages ? `
+                            ${hasAssignedSubstages ? `
                             <div class="project_brief_substages_container">
                                 <div class="project_brief_substages_list">
-                                    ${stage.substages.map(substage => {
+                                    ${assignedSubstages.map(substage => {
                                         return `
                                             <div class="project_brief_substage_item">
                                                 <div class="project_brief_substage_title">
@@ -393,7 +427,7 @@ class ProjectBriefModal {
                                                 <div class="project_brief_substage_meta">
                                                     <div class="project_brief_substage_date">
                                                         <i class="far fa-calendar-alt"></i> ${this.formatDate(substage.end_date)}
-                                                        ${this.isPastDue(substage.end_date) ? '<span class="overdue">(Overdue)</span>' : ''}
+                                                        ${this.isCompletedLate(substage.status, substage.end_date) ? this.getCompletedLateIndicator() : (this.isPastDue(substage.end_date) ? '<span class="overdue">(Overdue)</span>' : '')}
                                                     </div>
                                                     <div class="project_brief_substage_assignee">
                                                         <i class="far fa-user"></i> ${substage.assigned_to_name || 'Unassigned'}
@@ -432,7 +466,7 @@ class ProjectBriefModal {
                             ` : ''}
                         </div>
                     `;
-                }).join('')}
+                }).filter(item => item !== '').join('')}
             </div>
         `;
     }
@@ -945,6 +979,15 @@ class ProjectBriefModal {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return dueDate < today;
+    }
+
+    isCompletedLate(status, endDate) {
+        if (!status || status !== 'completed') return false;
+        return this.isPastDue(endDate);
+    }
+
+    getCompletedLateIndicator() {
+        return `<span class="completed_late_indicator" title="Completed Late">🟠</span>`;
     }
 
     escapeHtml(unsafe) {

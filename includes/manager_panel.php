@@ -103,7 +103,7 @@
         <span class="menu-text">Reports & Analytics</span>
     </div>
     
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'executive_insights_dashboard.php' ? 'active' : ''; ?>" onclick="window.location.href='analytics/executive_insights_dashboard.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'purchase_manager_dashboard.php' ? 'active' : ''; ?>" onclick="window.location.href='purchase_manager_dashboard.php'">
         <i class="fas fa-chart-line"></i>
         <span class="menu-text">Executive Insights</span>
     </div>

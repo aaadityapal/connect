@@ -1,6 +1,6 @@
 <?php
 // Get Labour Recipients
-// Fetches labour records from labour_records table
+// Fetches labour records from labour_records table based on labour_type
 
 header('Content-Type: application/json');
 
@@ -8,27 +8,26 @@ try {
     // Include database connection
     require_once(__DIR__ . '/config/db_connect.php');
 
-    $type = isset($_GET['type']) ? $_GET['type'] : '';
+    $labour_type = isset($_GET['labour_type']) ? $_GET['labour_type'] : '';
 
-    if (empty($type)) {
-        echo json_encode(['success' => false, 'message' => 'Type parameter is required']);
+    if (empty($labour_type)) {
+        echo json_encode(['success' => false, 'message' => 'labour_type parameter is required']);
         exit;
     }
 
-    // Fetch active labour records using PDO
-    $query = "SELECT id, full_name AS name FROM labour_records WHERE status = 'active' ORDER BY full_name ASC";
+    // Fetch active labour records filtered by labour_type
+    $query = "SELECT id, full_name FROM labour_records 
+              WHERE status = 'active' AND labour_type = ? 
+              ORDER BY full_name ASC";
     
-    $result = $pdo->query($query);
-
-    if (!$result) {
-        throw new Exception('Query failed');
-    }
-
-    $recipients = $result->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$labour_type]);
+    $recipients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'success' => true,
-        'recipients' => $recipients
+        'recipients' => $recipients,
+        'count' => count($recipients)
     ]);
 
 } catch (Exception $e) {

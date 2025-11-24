@@ -939,6 +939,7 @@
             transform: translateX(21px);
         }
     }
+
 </style>
 
 <script>
@@ -1029,6 +1030,9 @@
 
         // Load authorized users
         loadAuthorizedUsers();
+        
+        // Load vendor categories
+        loadVendorCategoriesForTypeDropdown();
     }
 
     // Event listener for close button
@@ -1191,6 +1195,59 @@
                 console.error('Error loading users for entry:', error);
                 selectElement.disabled = false;
                 selectElement.innerHTML = '<option value="">Error loading users</option>';
+            });
+    }
+
+    // Load vendor categories and populate OptGroups in Type dropdowns
+    function loadVendorCategoriesForTypeDropdown() {
+        fetch('get_vendor_categories_for_entry.php')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Vendor Categories Response:', data);
+                
+                if (data.success && data.categories) {
+                    const categories = data.categories;
+                    console.log('Raw categories keys:', Object.keys(categories));
+                    console.log('API returned keys:', data.keys);
+                    console.log('Full categories object:', JSON.stringify(categories, null, 2));
+
+                    // Find ALL entry Type selects (both in main entry and additional entries)
+                    const allTypeSelects = document.querySelectorAll('.entry-type, #paymentType');
+                    console.log('Found type selects:', allTypeSelects.length);
+                    
+                    allTypeSelects.forEach(typeSelect => {
+                        // Find all OptGroups in this select
+                        const optGroups = typeSelect.querySelectorAll('optgroup');
+                        console.log('OptGroups in this select:', optGroups.length);
+                        
+                        optGroups.forEach(optGroup => {
+                            const label = optGroup.getAttribute('label');
+                            console.log(`Checking OptGroup: "${label}"`);
+                            
+                            // Check if this label exists in categories
+                            if (categories[label]) {
+                                const categoryArray = categories[label];
+                                console.log(`Found ${label} in categories with ${categoryArray.length} items:`, categoryArray);
+                                
+                                optGroup.innerHTML = '';
+                                
+                                categoryArray.forEach(categoryType => {
+                                    const option = document.createElement('option');
+                                    option.value = categoryType;
+                                    option.textContent = categoryType;
+                                    optGroup.appendChild(option);
+                                });
+                            } else {
+                                console.log(`"${label}" NOT found in categories. Available keys:`, Object.keys(categories));
+                            }
+                        });
+                    });
+                } else {
+                    console.error('Error loading vendor categories:', data.message || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching vendor categories:', error);
             });
     }
 
@@ -1905,12 +1962,20 @@
                     </label>
                     <select class="payment-entry-select-field entry-type" data-entry="${entryId}">
                         <option value="">Select Type</option>
-                        <option value="labour">Labour</option>
-                        <option value="labour_skilled">Labour Skilled</option>
-                        <option value="material_steel">Material Steel</option>
-                        <option value="material_bricks">Material Bricks</option>
-                        <option value="supplier_cement">Supplier Cement</option>
-                        <option value="supplier_sand_aggregate">Supplier Sand Aggregate</option>
+                        <optgroup label="Labour">
+                            <option value="Permanent">Permanent</option>
+                            <option value="Temporary">Temporary</option>
+                            <option value="Vendor">Vendor</option>
+                        </optgroup>
+                        <optgroup label="Material Supplier">
+                            <!-- Options will be loaded dynamically -->
+                        </optgroup>
+                        <optgroup label="Material Contractor">
+                            <!-- Options will be loaded dynamically -->
+                        </optgroup>
+                        <optgroup label="Labour Contractor">
+                            <!-- Options will be loaded dynamically -->
+                        </optgroup>
                     </select>
                 </div>
 
@@ -1921,6 +1986,8 @@
                     </label>
                     <select class="payment-entry-select-field entry-recipient" data-entry="${entryId}">
                         <option value="">Select Recipient</option>
+                        <option value="add_labour" disabled>─────────────────</option>
+                        <option value="add_labour">+ Add Labour</option>
                     </select>
                 </div>
 
@@ -2015,6 +2082,9 @@
             additionalEntriesContainer.appendChild(entryDiv);
         }
 
+        // Populate vendor categories for the new entry's Type dropdown
+        loadVendorCategoriesForTypeDropdown();
+
         // Add event listener to type select for loading recipients
         const typeSelect = entryDiv.querySelector('.entry-type');
         if (typeSelect) {
@@ -2082,6 +2152,23 @@
         if (mediaFileInput) {
             mediaFileInput.addEventListener('change', function(e) {
                 handleEntryMediaUpload(entryId, this.files[0]);
+            });
+        }
+
+        // Add event listener to recipient dropdown for "Add Labour" option
+        const recipientSelect = entryDiv.querySelector('.entry-recipient');
+        if (recipientSelect) {
+            recipientSelect.addEventListener('change', function() {
+                if (this.value === 'add_labour') {
+                    // Reset dropdown to empty
+                    this.value = '';
+                    // Open the Add Labour modal
+                    if (typeof window.openAddLabourModal === 'function') {
+                        window.openAddLabourModal();
+                    } else {
+                        alert('Add Labour modal not available. Please ensure add_labour_modal.php is included.');
+                    }
+                }
             });
         }
     }
@@ -2269,7 +2356,7 @@
         previewDiv.innerHTML = `<span style="color: #22863a;"><i class="fas fa-check-circle"></i> ${file.name} (${fileSize} KB)</span>`;
     }
 
-    // Load recipients for additional entries
+    // Load recipients for additional entries - fetches based on type (labour or vendor)
     function loadRecipientsByTypeForEntry(type, recipientSelect) {
         if (!recipientSelect) return;
 
@@ -2282,33 +2369,14 @@
         recipientSelect.disabled = true;
 
         let endpoint = '';
-        let showAddLabour = false;
-        let showAddVendor = false;
         
-        if (type === 'labour') {
-            endpoint = 'get_labour_recipients.php?type=labour';
-            showAddLabour = true;
-        } else if (type === 'labour_skilled') {
-            endpoint = 'get_vendor_recipients.php?type=labour_skilled';
-            showAddLabour = true;
-        } else if (type === 'material_steel') {
-            endpoint = 'get_vendor_recipients.php?type=material_steel';
-            showAddVendor = true;
-        } else if (type === 'material_bricks') {
-            endpoint = 'get_vendor_recipients.php?type=material_bricks';
-            showAddVendor = true;
-        } else if (type === 'supplier_cement') {
-            endpoint = 'get_vendor_recipients.php?type=supplier_cement';
-            showAddVendor = true;
-        } else if (type === 'supplier_sand_aggregate') {
-            endpoint = 'get_vendor_recipients.php?type=supplier_sand_aggregate';
-            showAddVendor = true;
-        }
-
-        if (!endpoint) {
-            recipientSelect.innerHTML = '<option value="">Select Recipient</option>';
-            recipientSelect.disabled = false;
-            return;
+        // For Labour types, fetch from labour_records table
+        if (type === 'Permanent' || type === 'Temporary' || type === 'Vendor') {
+            endpoint = `get_labour_recipients.php?labour_type=${encodeURIComponent(type)}`;
+        } else {
+            // For Vendor types (Material Supplier, Labour Contractor, Material Contractor)
+            // Use the type as vendor_category_type
+            endpoint = `get_vendor_recipients.php?vendor_category_type=${encodeURIComponent(type)}`;
         }
 
         fetch(endpoint)
@@ -2318,73 +2386,37 @@
                 if (data.success && data.recipients && data.recipients.length > 0) {
                     let html = '<option value="">Select Recipient</option>';
                     data.recipients.forEach(recipient => {
-                        html += `<option value="${recipient.id}">${recipient.name}</option>`;
+                        html += `<option value="${recipient.id}">${recipient.full_name}</option>`;
                     });
-                    
-                    // Add divider and quick add options
-                    html += '<option disabled>─────────────────</option>';
-                    if (showAddLabour) {
-                        html += '<option value="add_labour_quick">+ Add Labour</option>';
+                    // Add divider and Add Labour option only for labour types
+                    if (type === 'Permanent' || type === 'Temporary' || type === 'Vendor') {
+                        html += '<option value="add_labour" disabled>─────────────────</option>';
+                        html += '<option value="add_labour">+ Add Labour</option>';
                     }
-                    if (showAddVendor) {
-                        html += '<option value="add_vendor_quick">+ Add Vendor</option>';
-                    }
-                    
                     recipientSelect.innerHTML = html;
                 } else {
                     let html = '<option value="">No recipients found</option>';
-                    
-                    // Add divider and quick add options even if no recipients
-                    html += '<option disabled>─────────────────</option>';
-                    if (showAddLabour) {
-                        html += '<option value="add_labour_quick">+ Add Labour</option>';
+                    // Still show Add Labour option only for labour types even if no recipients
+                    if (type === 'Permanent' || type === 'Temporary' || type === 'Vendor') {
+                        html += '<option value="add_labour" disabled>─────────────────</option>';
+                        html += '<option value="add_labour">+ Add Labour</option>';
                     }
-                    if (showAddVendor) {
-                        html += '<option value="add_vendor_quick">+ Add Vendor</option>';
-                    }
-                    
                     recipientSelect.innerHTML = html;
                 }
-                
-                // Add event listener to handle quick add options
-                recipientSelect.addEventListener('change', handleQuickAddOption, { once: true });
             })
             .catch(error => {
                 console.error('Error loading recipients:', error);
                 recipientSelect.disabled = false;
-                recipientSelect.innerHTML = '<option value="">Error loading recipients</option>';
+                let html = '<option value="">Error loading recipients</option>';
+                // Still show Add Labour option only for labour types even on error
+                if (type === 'Permanent' || type === 'Temporary' || type === 'Vendor') {
+                    html += '<option value="add_labour" disabled>─────────────────</option>';
+                    html += '<option value="add_labour">+ Add Labour</option>';
+                }
+                recipientSelect.innerHTML = html;
             });
     }
-    
-    // Handle quick add options for vendor and labour
-    function handleQuickAddOption(event) {
-        const recipientSelect = event.target;
-        const selectedValue = recipientSelect.value;
-        
-        if (selectedValue === 'add_vendor_quick') {
-            // Open add vendor modal
-            if (window.openAddVendorModal) {
-                window.openAddVendorModal();
-            } else if (document.getElementById('addVendorModal')) {
-                document.getElementById('addVendorModal').classList.add('active');
-            }
-            // Reset the dropdown
-            recipientSelect.value = '';
-        } else if (selectedValue === 'add_labour_quick') {
-            // Open add labour modal
-            if (window.openAddLabourModal) {
-                window.openAddLabourModal();
-            } else if (document.getElementById('addLabourModal')) {
-                document.getElementById('addLabourModal').classList.add('active');
-            }
-            // Reset the dropdown
-            recipientSelect.value = '';
-        }
-        
-        // Re-attach the event listener for next change
-        recipientSelect.addEventListener('change', handleQuickAddOption, { once: true });
-    }
-    
+
     // Refresh recipient dropdowns after adding new vendor or labour
     function refreshEntryRecipients() {
         const allEntries = document.querySelectorAll('.payment-entry-additional-entry');

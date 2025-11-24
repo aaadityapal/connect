@@ -854,6 +854,19 @@
                     return;
                 }
 
+                // Determine vendor category based on selected vendor type
+                // First check which optgroup the selected option belongs to
+                const vendorTypeSelect = document.getElementById('vendorType');
+                const selectedOption = vendorTypeSelect.querySelector(`option[value="${vendorType}"]`);
+                
+                if (selectedOption) {
+                    // Get the parent optgroup label
+                    const optgroup = selectedOption.closest('optgroup');
+                    if (optgroup) {
+                        vendorCategory = optgroup.getAttribute('label');
+                    }
+                }
+
                 // Check if custom vendor type is selected
                 if (vendorType.endsWith('_custom')) {
                     customVendorType = document.getElementById('customVendorText').value.trim();
@@ -862,16 +875,8 @@
                         document.getElementById('customVendorText').focus();
                         return;
                     }
-                    // Determine vendor category based on the selected custom option
-                    if (vendorType.startsWith('labour_')) {
-                        vendorCategory = 'Labour Contractor';
-                    } else if (vendorType.startsWith('material_') && vendorType !== 'material_custom') {
-                        vendorCategory = 'Material Contractor';
-                    } else if (vendorType === 'material_custom') {
-                        vendorCategory = 'Material Supplier';
-                    } else if (vendorType.startsWith('supplier_')) {
-                        vendorCategory = 'Material Supplier';
-                    }
+                    // For custom types, use the optgroup category that was already determined
+                    // The vendorCategory was already set from the optgroup above
                     vendorType = customVendorType;
                     isCustom = 1; // Mark as custom vendor type
                 }

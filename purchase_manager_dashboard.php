@@ -2705,7 +2705,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             if (addPaymentBtn) {
                 addPaymentBtn.addEventListener('click', function() {
                     console.log('Add Payment Entry clicked');
-                    openPaymentEntryModal();
+                    if (typeof window.openPaymentEntryModal === 'function') {
+                        window.openPaymentEntryModal();
+                    } else {
+                        alert('Payment Entry modal not found. Please include modals/add_payment_entry_modal.php');
+                    }
                 });
             }
 

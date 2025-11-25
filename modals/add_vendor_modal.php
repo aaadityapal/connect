@@ -18,7 +18,7 @@
                 <div class="form-group-with-icon">
                     <label for="vendorPhone">Phone Number</label>
                     <i class="fas fa-phone"></i>
-                    <input type="tel" id="vendorPhone" name="vendorPhone" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" required>
+                    <input type="tel" id="vendorPhone" name="vendorPhone" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number">
                 </div>
                 <div class="form-group-with-icon">
                     <label for="vendorAltPhone">Alternative Number</label>
@@ -30,7 +30,7 @@
                 <div class="form-group-with-icon">
                     <label for="vendorEmail">Email Address</label>
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="vendorEmail" name="vendorEmail" placeholder="name@company.com" required>
+                    <input type="email" id="vendorEmail" name="vendorEmail" placeholder="name@company.com">
                 </div>
 
             <!-- Vendor Type Section -->
@@ -841,11 +841,13 @@
                     alert('Please enter vendor name');
                     return;
                 }
-                if (!vendorPhone || !/^[0-9]{10}$/.test(vendorPhone)) {
+                // Validate phone number only if provided
+                if (vendorPhone && !/^[0-9]{10}$/.test(vendorPhone)) {
                     alert('Please enter a valid 10-digit phone number');
                     return;
                 }
-                if (!vendorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vendorEmail)) {
+                // Validate email only if provided
+                if (vendorEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(vendorEmail)) {
                     alert('Please enter a valid email address');
                     return;
                 }

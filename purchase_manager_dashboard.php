@@ -491,6 +491,30 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             color: #e53e3e;
         }
 
+        .mini-filter-btn.export {
+            width: auto;
+            padding: 7px 14px;
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+            font-weight: 600;
+            gap: 6px;
+        }
+
+        .mini-filter-btn.export:hover {
+            background: #059669;
+            border-color: #059669;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .mini-filter-btn.export:active {
+            background: #047857;
+        }
+
+        .mini-filter-btn.export i {
+            font-size: 0.9em;
+        }
+
         .tabs-container {
             display: flex;
             gap: 0;
@@ -1299,6 +1323,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         </button>
                         <button class="mini-filter-btn reset" id="resetRecordsFilterBtn" title="Reset Filter">
                             <i class="fas fa-times"></i>
+                        </button>
+                        <button class="mini-filter-btn export" id="exportToExcelBtn" title="Export Payment Entries to Excel">
+                            <i class="fas fa-file-excel"></i> Export to Excel
                         </button>
                     </div>
                 </div>
@@ -2783,6 +2810,48 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     }
 
                     console.log('Records filter reset');
+                });
+            }
+
+            // Export to Excel functionality
+            const exportToExcelBtn = document.getElementById('exportToExcelBtn');
+            if (exportToExcelBtn) {
+                exportToExcelBtn.addEventListener('click', function() {
+                    // Get date range from filter inputs
+                    const dateFrom = document.getElementById('recordsDateFrom').value;
+                    const dateTo = document.getElementById('recordsDateTo').value;
+                    
+                    // Validate dates
+                    if (dateFrom && dateTo && dateFrom > dateTo) {
+                        alert('From Date cannot be after To Date');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const originalText = exportToExcelBtn.innerHTML;
+                    exportToExcelBtn.innerHTML = '<i class="fas fa-spinner"></i> Exporting...';
+                    exportToExcelBtn.disabled = true;
+                    
+                    // Build query parameters
+                    let params = 'export_payment_entries_excel.php?';
+                    if (dateFrom) {
+                        params += 'dateFrom=' + encodeURIComponent(dateFrom) + '&';
+                    }
+                    if (dateTo) {
+                        params += 'dateTo=' + encodeURIComponent(dateTo) + '&';
+                    }
+                    
+                    // Remove trailing &
+                    params = params.replace(/&$/, '');
+                    
+                    // Initiate download
+                    window.location.href = params;
+                    
+                    // Reset button after download starts
+                    setTimeout(function() {
+                        exportToExcelBtn.innerHTML = originalText;
+                        exportToExcelBtn.disabled = false;
+                    }, 1000);
                 });
             }
         });

@@ -91,10 +91,12 @@ try {
     if (empty($vendor_full_name)) {
         throw new Exception('Vendor full name is required');
     }
-    if (empty($vendor_phone_primary) || !preg_match('/^[0-9]{10}$/', $vendor_phone_primary)) {
+    // Validate phone number only if provided
+    if (!empty($vendor_phone_primary) && !preg_match('/^[0-9]{10}$/', $vendor_phone_primary)) {
         throw new Exception('Valid 10-digit phone number is required');
     }
-    if (empty($vendor_email_address) || !filter_var($vendor_email_address, FILTER_VALIDATE_EMAIL)) {
+    // Validate email only if provided
+    if (!empty($vendor_email_address) && !filter_var($vendor_email_address, FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Valid email address is required');
     }
     if (empty($vendor_type_category)) {

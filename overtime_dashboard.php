@@ -38,6 +38,12 @@ $rejected_requests = 0;
 $approved_requests = 0;
 $expired_requests = 0;
 
+// Determine if we're currently in the approval window (25th to 3rd of next month)
+// Using Indian Standard Time (IST = UTC+5:30) explicitly
+date_default_timezone_set('Asia/Kolkata');
+$current_day = date('j'); // Get day of month (1-31) in IST
+$is_in_approval_window = ($current_day >= 25 || $current_day <= 3);
+
 // Fetch user's role
 try {
     $query = "SELECT role FROM users WHERE id = ?";
@@ -498,6 +504,10 @@ try {
     </style>
 </head>
 <body class="bg-gray-50">
+    
+    <!-- Hidden element to store server-side approval window status -->
+    <div id="approval-window-status" data-in-window="<?php echo $is_in_approval_window ? 'true' : 'false'; ?>" style="display: none;"></div>
+    
     <!-- Custom Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -1164,7 +1174,41 @@ try {
             const employeeActivityBody = document.getElementById('employee-activity-body');
             
             // Function to check if today's date is within the approval window (25th of current month to 3rd of next month)
+            // Function to check if we can CURRENTLY approve (today is in the approval window)
+            function isApprovalWindowOpen() {
+                // Get server-side approval window status from PHP data attribute
+                const approvalWindowElement = document.getElementById('approval-window-status');
+                if (approvalWindowElement) {
+                    const isInWindow = approvalWindowElement.getAttribute('data-in-window') === 'true';
+                    console.log('Approval window open (server-side):', isInWindow);
+                    return isInWindow;
+                }
+                
+                // Fallback to client-side check if data attribute not found
+                const today = new Date();
+                const currentDay = today.getDate();
+                
+                const windowStart = 25;
+                const windowEnd = 3;
+                
+                if (currentDay >= windowStart || currentDay <= windowEnd) {
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // Function to check if today's date is within the approval window (25th of current month to 3rd of next month)
             function isCurrentlyInApprovalWindow() {
+                // Get server-side approval window status from PHP data attribute
+                const approvalWindowElement = document.getElementById('approval-window-status');
+                if (approvalWindowElement) {
+                    const isInWindow = approvalWindowElement.getAttribute('data-in-window') === 'true';
+                    console.log('Approval window status (server-side):', isInWindow);
+                    return isInWindow;
+                }
+                
+                // Fallback to client-side check if data attribute not found
                 const today = new Date();
                 const currentYear = today.getFullYear();
                 const currentMonth = today.getMonth(); // 0-11
@@ -1303,8 +1347,8 @@ try {
                                         (userRole === 'Senior Manager (Studio)' && isStudioView) ||
                                         (userRole === 'Senior Manager (Site)' && isSiteView);
                                     
-                                    // Check if the record date is within the approval window
-                                    const isWithinWindow = isWithinApprovalWindow(record.date);
+                                    // Check if TODAY is within the approval window (not the record date)
+                                    const isApprovalOpen = isApprovalWindowOpen();
                                     
                                     // Determine which buttons should be enabled based on status
                                     const recordStatus = record.status.toLowerCase();
@@ -1318,8 +1362,8 @@ try {
                                     // Rejected: Only view enabled
                                     // Expired: Only view enabled
                                     // Pending: No actions enabled until submitted
-                                    // Submitted: All actions enabled based on role/view AND date window (for approval only)
-                                    // Resubmitted: All actions enabled based on role/view AND date window (for approval only)
+                                    // Submitted: All actions enabled based on role/view AND approval window (for approval only)
+                                    // Resubmitted: All actions enabled based on role/view AND approval window (for approval only)
                                     
                                     if (recordStatus === 'approved') {
                                         canAccept = false;
@@ -1343,9 +1387,9 @@ try {
                                         canEdit = false;
                                         canView = true;
                                     } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
-                                        // Submitted or resubmitted status - actions enabled based on role/view
-                                        // Approval is only allowed within the date window (25th to 3rd of next month)
-                                        canAccept = canPerformActions && isWithinWindow;
+                                        // Submitted or resubmitted status - actions enabled based on role/view and approval window
+                                        // Approval is only allowed when TODAY is in the approval window (25th to 3rd of next month)
+                                        canAccept = canPerformActions && isApprovalOpen;
                                         canReject = canPerformActions;
                                         canEdit = canPerformActions;
                                         canView = true;
@@ -1386,7 +1430,7 @@ try {
                                         } else if (recordStatus === 'submitted' || recordStatus === 'resubmitted') {
                                             if (!canPerformActions) {
                                                 acceptButtonTitle = 'Cannot approve - viewing cross-team requests';
-                                            } else if (!isWithinWindow) {
+                                            } else if (!isApprovalOpen) {
                                                 acceptButtonTitle = 'Approval only allowed from 25th to 3rd of next month';
                                             } else {
                                                 acceptButtonTitle = 'Action not available';
@@ -2888,10 +2932,9 @@ try {
                     
                     const row = button.closest('tr');
                     const attendanceId = row.querySelector('.view-details').getAttribute('data-id');
-                    const recordDate = row.getAttribute('data-record-date'); // Get date from data attribute
                     
-                    // Check if date is within approval window
-                    if (!isWithinApprovalWindow(recordDate)) {
+                    // Check if TODAY is within approval window (not the record date)
+                    if (!isApprovalWindowOpen()) {
                         alert('Approval is only allowed for overtime requests from the 25th of the current month to the 3rd of the next month.');
                         return; // Prevent action
                     }

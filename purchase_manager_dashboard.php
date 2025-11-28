@@ -1444,6 +1444,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
     <!-- Include Payment Entry Details Modal -->
     <?php include 'modals/payment_entry_details_modal.php'; ?>
 
+    <!-- Include Payment Entry Edit Modal (Comprehensive) -->
+    <?php include 'modals/payment_entry_edit_modal_comprehensive_v2.php'; ?>
+
     <!-- Include Payment Entry Files Registry Modal -->
     <?php include 'modals/payment_entry_files_registry_modal.php'; ?>
 
@@ -1904,7 +1907,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += `<div class="vendor-cell"><small>${paymentDate}</small></div>`;
                             html += `<div class="vendor-cell" style="font-weight: 700; color: #38a169; font-size: 0.95em;">${grandTotal}</div>`;
                             html += `<div class="vendor-cell"><span class="vendor-status ${statusClass}">${entry.status.toUpperCase()}</span></div>`;
-                            html += `<div class="vendor-cell"><small style="background: #f0f4f8; padding: 4px 8px; border-radius: 4px; display: inline-block;">${entry.payment_mode.replace(/_/g, ' ').toUpperCase()}</small></div>`;
+                            html += `<div class="vendor-cell"><div style="display: flex; align-items: center; gap: 8px;"><small style="background: #f0f4f8; padding: 4px 8px; border-radius: 4px; display: inline-block;">${entry.payment_mode.replace(/_/g, ' ').toUpperCase()}</small><button style="background: none; border: none; cursor: pointer; font-size: 1.1em; color: #ea580c; transition: all 0.2s; padding: 4px 8px; border-radius: 4px;" title="View Attachments" onclick="openPaymentModeAttachmentsModal(${entry.payment_entry_id})"><i class="fas fa-paperclip"></i></button></div></div>`;
                             html += `<div class="vendor-cell"><span style="background: #edf2f7; color: #2a4365; padding: 6px 10px; border-radius: 4px; font-size: 0.85em; font-weight: 600; cursor: pointer;" onclick="openPaymentFilesModal(${entry.payment_entry_id})"><i class="fas fa-file"></i> ${entry.files_attached}</span></div>`;
                             html += '<div class="vendor-actions">';
                             html += `<button class="expand-btn" title="Expand Details" onclick="togglePaymentEntryExpand(${entry.payment_entry_id})" style="background: none; border: none; color: #718096; cursor: pointer; padding: 8px; font-size: 1.1em; transition: all 0.3s;"><i class="fas fa-chevron-down"></i></button>`;
@@ -2487,8 +2490,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         function editPaymentEntry(entryId) {
             console.log('Editing payment entry:', entryId);
-            alert('Edit payment entry for ID: ' + entryId);
-            // TODO: Open payment entry edit modal
+            openPaymentEditModal(entryId);
         }
 
         function deletePaymentEntry(entryId) {
@@ -2524,6 +2526,192 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     console.error('Error:', error);
                     alert('Error deleting payment entry');
                 });
+            }
+        }
+
+        // Open modal to show payment mode attachments
+        function openPaymentModeAttachmentsModal(paymentEntryId) {
+            // Create wrapper for modal
+            const modalWrapper = document.createElement('div');
+            modalWrapper.id = 'paymentModeAttachmentsWrapper';
+            modalWrapper.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            // Create modal content
+            const modalContent = document.createElement('div');
+            modalContent.id = 'paymentModeAttachmentsModal';
+            modalContent.style.cssText = 'background: white; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);';
+            
+            modalContent.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #1a365d; font-size: 1.3em;">
+                        <i class="fas fa-paperclip"></i> Payment Mode Attachments
+                    </h3>
+                    <button id="paymentModeAttachmentsCloseBtn" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: #718096; padding: 0; width: 30px; height: 30px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="paymentModeAttachmentsContent" style="text-align: center; padding: 40px 20px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2em; color: #cbd5e0;"></i>
+                    <p style="color: #718096; margin-top: 10px;">Loading attachments...</p>
+                </div>
+            `;
+            
+            modalWrapper.appendChild(modalContent);
+            document.body.appendChild(modalWrapper);
+            
+            // Add close button event listener
+            document.getElementById('paymentModeAttachmentsCloseBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closePaymentModeAttachmentsModal();
+            });
+            
+            // Close modal when clicking outside the content
+            modalWrapper.addEventListener('click', function(e) {
+                if (e.target === modalWrapper) {
+                    closePaymentModeAttachmentsModal();
+                }
+            });
+
+            // Fetch acceptance methods and file attachments data for this payment entry
+            fetch(`fetch_payment_acceptance_methods.php?payment_entry_id=${paymentEntryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const contentDiv = document.getElementById('paymentModeAttachmentsContent');
+                    
+                    let html = '';
+                    let hasContent = false;
+                    
+                    // Display acceptance methods first
+                    if (data.acceptance_methods && data.acceptance_methods.length > 0) {
+                        hasContent = true;
+                        data.acceptance_methods.forEach((method, index) => {
+                            html += `
+                                <div style="background: #f7fafc; border-radius: 8px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #ea580c; text-align: left;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 700; color: #1a365d; font-size: 0.95em;">
+                                                <i class="fas fa-money-bill" style="margin-right: 8px;"></i>${method.payment_method_type.toUpperCase()}
+                                            </div>
+                                            <div style="font-size: 0.85em; color: #718096; margin-top: 4px;">
+                                                Amount: <strong>₹${parseFloat(method.amount_received_value).toFixed(2)}</strong>
+                                            </div>
+                                            ${method.reference_number_cheque ? `
+                                                <div style="font-size: 0.85em; color: #718096; margin-top: 2px;">
+                                                    Reference: <strong>${method.reference_number_cheque}</strong>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    ${method.supporting_document_path ? `
+                                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                            <a href="${method.supporting_document_path}" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: #3182ce; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85em; font-weight: 600;">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <a href="${method.supporting_document_path}" download style="display: inline-flex; align-items: center; gap: 8px; background: #10b981; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85em; font-weight: 600;">
+                                                <i class="fas fa-download"></i> Download
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    // Display file attachments from registry
+                    if (data.file_attachments && data.file_attachments.length > 0) {
+                        hasContent = true;
+                        data.file_attachments.forEach((file, index) => {
+                            const fileIcon = getFileIcon(file.attachment_file_extension);
+                            const fileTypeLabel = file.attachment_type_category === 'proof_image' ? 'Payment Proof' : 'Supporting Document';
+                            
+                            html += `
+                                <div style="background: #f7fafc; border-radius: 8px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #10b981; text-align: left;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 700; color: #1a365d; font-size: 0.95em;">
+                                                <i class="${fileIcon}" style="margin-right: 8px;"></i>${fileTypeLabel}
+                                            </div>
+                                            <div style="font-size: 0.85em; color: #718096; margin-top: 4px;">
+                                                File: <strong>${file.attachment_file_original_name}</strong>
+                                            </div>
+                                            <div style="font-size: 0.85em; color: #718096; margin-top: 2px;">
+                                                Size: <strong>${formatFileSize(file.attachment_file_size_bytes)}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                        <a href="${file.attachment_file_stored_path}" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: #3182ce; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85em; font-weight: 600;">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="${file.attachment_file_stored_path}" download style="display: inline-flex; align-items: center; gap: 8px; background: #10b981; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85em; font-weight: 600;">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    if (!hasContent) {
+                        contentDiv.innerHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fas fa-inbox" style="font-size: 2em; color: #cbd5e0;"></i>
+                                <p style="color: #718096; margin-top: 10px;">No payment mode attachments found for this entry</p>
+                            </div>
+                        `;
+                    } else {
+                        contentDiv.innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading attachments:', error);
+                    const contentDiv = document.getElementById('paymentModeAttachmentsContent');
+                    contentDiv.innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 2em; color: #f56565;"></i>
+                            <p style="color: #e53e3e; margin-top: 10px;">Error loading attachments</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Helper function to get file icon based on extension
+        function getFileIcon(extension) {
+            const ext = extension.toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) {
+                return 'fas fa-image';
+            } else if (ext === 'pdf') {
+                return 'fas fa-file-pdf';
+            } else if (['doc', 'docx', 'txt'].includes(ext)) {
+                return 'fas fa-file-word';
+            } else if (['mp4', 'mov', 'avi', 'mkv'].includes(ext)) {
+                return 'fas fa-video';
+            } else {
+                return 'fas fa-file';
+            }
+        }
+
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Close payment mode attachments modal
+        function closePaymentModeAttachmentsModal() {
+            const wrapper = document.getElementById('paymentModeAttachmentsWrapper');
+            if (wrapper) {
+                wrapper.style.opacity = '0';
+                wrapper.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    if (wrapper.parentElement) {
+                        wrapper.parentElement.removeChild(wrapper);
+                    }
+                }, 300);
             }
         }
 

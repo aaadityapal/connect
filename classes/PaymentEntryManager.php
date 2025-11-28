@@ -413,7 +413,7 @@ $payment = $manager->getPaymentEntryById(1);
 
 // Get all entries with filter
 $entries = $manager->getAllPaymentEntries(1, 20, [
-    'status' => 'submitted',
+    'status' => 'pending',
     'date_from' => '2024-01-01'
 ]);
 

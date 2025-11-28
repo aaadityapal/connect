@@ -106,11 +106,8 @@ try {
         $proof_filesize = $file['size'];
         $proof_mime_type = $file['type'];
         $proof_path = UPLOAD_BASE_URL . 'payment_proofs/' . $unique_filename; // Store URL path
-    } else {
-        if ($payment_mode !== 'multiple_acceptance') {
-            throw new Exception('Proof image is required');
-        }
     }
+    // Proof image is now optional - no error if not provided
 
     // Insert main payment entry
     $stmt = $pdo->prepare("
@@ -140,7 +137,7 @@ try {
             :proof_filename,
             :proof_filesize,
             :proof_mime_type,
-            'submitted',
+            'pending',
             :created_by
         )
     ");

@@ -154,7 +154,7 @@
                         </h3>
 
                         <div class="payment-entry-file-upload-wrapper" id="paymentProofUploadArea">
-                            <input type="file" id="paymentProofImage" name="proofImage" class="payment-entry-file-input" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <input type="file" id="paymentProofImage" name="proofImage" class="payment-entry-file-input" accept=".pdf,.jpg,.jpeg,.png">
                             <label for="paymentProofImage" class="payment-entry-file-label">
                                 <div class="payment-entry-file-icon">
                                     <i class="fas fa-cloud-upload-alt"></i>
@@ -1024,14 +1024,12 @@
         const today = new Date().toISOString().split('T')[0];
         if (paymentDateInput) {
             paymentDateInput.value = today;
-            // Remove min date restriction to allow access to previous dates
-            // paymentDateInput.min = today;
         }
 
         // Load authorized users
         loadAuthorizedUsers();
         
-        // Load vendor categories
+        // Load vendor categories for all type dropdowns (this is called once on modal open)
         loadVendorCategoriesForTypeDropdown();
     }
 
@@ -1203,32 +1201,24 @@
         fetch('get_vendor_categories_for_entry.php')
             .then(response => response.json())
             .then(data => {
-                console.log('Vendor Categories Response:', data);
-                
                 if (data.success && data.categories) {
                     const categories = data.categories;
-                    console.log('Raw categories keys:', Object.keys(categories));
-                    console.log('API returned keys:', data.keys);
-                    console.log('Full categories object:', JSON.stringify(categories, null, 2));
 
                     // Find ALL entry Type selects (both in main entry and additional entries)
-                    const allTypeSelects = document.querySelectorAll('.entry-type, #paymentType');
-                    console.log('Found type selects:', allTypeSelects.length);
+                    const allTypeSelects = document.querySelectorAll('.entry-type');
                     
                     allTypeSelects.forEach(typeSelect => {
-                        // Find all OptGroups in this select
-                        const optGroups = typeSelect.querySelectorAll('optgroup');
-                        console.log('OptGroups in this select:', optGroups.length);
+                        // Only process OptGroups that are not Labour (Labour options are static)
+                        const optGroups = typeSelect.querySelectorAll('optgroup:not([label="Labour"])');
                         
                         optGroups.forEach(optGroup => {
                             const label = optGroup.getAttribute('label');
-                            console.log(`Checking OptGroup: "${label}"`);
                             
                             // Check if this label exists in categories
                             if (categories[label]) {
                                 const categoryArray = categories[label];
-                                console.log(`Found ${label} in categories with ${categoryArray.length} items:`, categoryArray);
                                 
+                                // Clear existing options (except disabled divider if present)
                                 optGroup.innerHTML = '';
                                 
                                 categoryArray.forEach(categoryType => {
@@ -1237,13 +1227,49 @@
                                     option.textContent = categoryType;
                                     optGroup.appendChild(option);
                                 });
-                            } else {
-                                console.log(`"${label}" NOT found in categories. Available keys:`, Object.keys(categories));
                             }
                         });
                     });
                 } else {
                     console.error('Error loading vendor categories:', data.message || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching vendor categories:', error);
+            });
+    }
+
+    // Load vendor categories for a specific entry dropdown only
+    function loadVendorCategoriesForEntryDropdown(typeSelect) {
+        if (!typeSelect) return;
+
+        fetch('get_vendor_categories_for_entry.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.categories) {
+                    const categories = data.categories;
+
+                    // Only process OptGroups that are not Labour (Labour options are static)
+                    const optGroups = typeSelect.querySelectorAll('optgroup:not([label="Labour"])');
+                    
+                    optGroups.forEach(optGroup => {
+                        const label = optGroup.getAttribute('label');
+                        
+                        // Check if this label exists in categories
+                        if (categories[label]) {
+                            const categoryArray = categories[label];
+                            
+                            // Clear existing options
+                            optGroup.innerHTML = '';
+                            
+                            categoryArray.forEach(categoryType => {
+                                const option = document.createElement('option');
+                                option.value = categoryType;
+                                option.textContent = categoryType;
+                                optGroup.appendChild(option);
+                            });
+                        }
+                    });
                 }
             })
             .catch(error => {
@@ -1698,11 +1724,6 @@
             isValid = false;
         }
 
-        if (!paymentProofImageInput.files || paymentProofImageInput.files.length === 0) {
-            showError('paymentProofError', 'Please upload payment proof image');
-            isValid = false;
-        }
-
         // Validate multiple acceptance if selected
         if (paymentMode === 'multiple_acceptance') {
             const methods = acceptanceMethodsContainer.querySelectorAll('.payment-entry-acceptance-method-row');
@@ -1746,7 +1767,11 @@
         formData.append('paymentDate', paymentDate);
         formData.append('authorizedUserId', authorizedUser);
         formData.append('paymentMode', paymentMode);
-        formData.append('proofImage', paymentProofImageInput.files[0]);
+        
+        // Add payment proof image only if file is selected (optional)
+        if (paymentProofImageInput.files && paymentProofImageInput.files.length > 0) {
+            formData.append('proofImage', paymentProofImageInput.files[0]);
+        }
 
         // Add multiple acceptance data if applicable
         if (paymentMode === 'multiple_acceptance') {
@@ -2082,12 +2107,12 @@
             additionalEntriesContainer.appendChild(entryDiv);
         }
 
-        // Populate vendor categories for the new entry's Type dropdown
-        loadVendorCategoriesForTypeDropdown();
-
-        // Add event listener to type select for loading recipients
+        // Populate vendor categories for the new entry's Type dropdown only
         const typeSelect = entryDiv.querySelector('.entry-type');
         if (typeSelect) {
+            loadVendorCategoriesForEntryDropdown(typeSelect);
+            
+            // Add event listener to type select for loading recipients
             typeSelect.addEventListener('change', function() {
                 const recipientSelect = entryDiv.querySelector('.entry-recipient');
                 loadRecipientsByTypeForEntry(this.value, recipientSelect);
@@ -2158,10 +2183,17 @@
         // Add event listener to recipient dropdown for "Add Labour" option
         const recipientSelect = entryDiv.querySelector('.entry-recipient');
         if (recipientSelect) {
-            recipientSelect.addEventListener('change', function() {
+            recipientSelect.addEventListener('change', function(e) {
+                // Only trigger if the change was user-initiated, not programmatic
                 if (this.value === 'add_labour') {
-                    // Reset dropdown to empty
-                    this.value = '';
+                    // Store the current selected value before resetting
+                    const previousValue = this.value;
+                    
+                    // Reset dropdown to empty after a brief delay
+                    setTimeout(() => {
+                        this.value = '';
+                    }, 50);
+                    
                     // Open the Add Labour modal
                     if (typeof window.openAddLabourModal === 'function') {
                         window.openAddLabourModal();
@@ -2169,7 +2201,7 @@
                         alert('Add Labour modal not available. Please ensure add_labour_modal.php is included.');
                     }
                 }
-            });
+            }, true); // Use capturing phase to catch event early
         }
     }
 

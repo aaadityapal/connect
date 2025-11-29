@@ -42,6 +42,7 @@ try {
         FROM tbl_payment_entry_master_records m
         LEFT JOIN tbl_payment_entry_line_items_detail l ON m.payment_entry_id = l.payment_entry_master_id_fk
         LEFT JOIN pm_vendor_registry_master v ON l.recipient_id_reference = v.vendor_id
+        LEFT JOIN labour_records lr ON l.recipient_id_reference = lr.id
         LEFT JOIN users au ON m.authorized_user_id_fk = au.id
         WHERE 1=1
     ";
@@ -76,14 +77,17 @@ try {
     }
 
     if (!empty($vendorCategory)) {
-        // Handle multiple vendor categories (comma-separated)
+        // Handle multiple vendor categories (comma-separated) - filter by vendor_type_category OR labour_type
         $categories = array_map('trim', explode(',', $vendorCategory));
         $categories = array_filter($categories); // Remove empty values
         
         if (!empty($categories)) {
             $placeholders = implode(',', array_fill(0, count($categories), '?'));
-            $count_query .= " AND (v.vendor_type_category IN ($placeholders) OR l.recipient_type_category IN ($placeholders))";
-            // Add each category twice (once for vendor_type_category, once for recipient_type_category)
+            // Match vendor_type_category from vendor table OR labour_type (as "Type Labour") from labour_records
+            $count_query .= " AND (";
+            $count_query .= "v.vendor_type_category IN ($placeholders)";
+            $count_query .= " OR CONCAT(UCASE(SUBSTRING(lr.labour_type, 1, 1)), SUBSTRING(LOWER(lr.labour_type), 2), ' Labour') IN ($placeholders)";
+            $count_query .= " )";
             $count_params = array_merge($count_params, $categories, $categories);
         }
     }
@@ -162,6 +166,7 @@ try {
         LEFT JOIN tbl_payment_entry_line_items_detail l ON m.payment_entry_id = l.payment_entry_master_id_fk
         LEFT JOIN tbl_payment_entry_file_attachments_registry f ON m.payment_entry_id = f.payment_entry_master_id_fk
         LEFT JOIN pm_vendor_registry_master v ON l.recipient_id_reference = v.vendor_id
+        LEFT JOIN labour_records lr ON l.recipient_id_reference = lr.id
         LEFT JOIN users u_paid ON l.line_item_paid_via_user_id = u_paid.id
         WHERE 1=1
     ";
@@ -196,14 +201,17 @@ try {
     }
 
     if (!empty($vendorCategory)) {
-        // Handle multiple vendor categories (comma-separated)
+        // Handle multiple vendor categories (comma-separated) - filter by vendor_type_category OR labour_type
         $categories = array_map('trim', explode(',', $vendorCategory));
         $categories = array_filter($categories); // Remove empty values
         
         if (!empty($categories)) {
             $placeholders = implode(',', array_fill(0, count($categories), '?'));
-            $query .= " AND (v.vendor_type_category IN ($placeholders) OR l.recipient_type_category IN ($placeholders))";
-            // Add each category twice (once for vendor_type_category, once for recipient_type_category)
+            // Match vendor_type_category from vendor table OR labour_type (as "Type Labour") from labour_records
+            $query .= " AND (";
+            $query .= "v.vendor_type_category IN ($placeholders)";
+            $query .= " OR CONCAT(UCASE(SUBSTRING(lr.labour_type, 1, 1)), SUBSTRING(LOWER(lr.labour_type), 2), ' Labour') IN ($placeholders)";
+            $query .= " )";
             $stmt_params = array_merge($stmt_params, $categories, $categories);
         }
     }
@@ -272,8 +280,12 @@ try {
                     CASE 
                         WHEN l.recipient_type_category LIKE '%labour%' THEN 'labour'
                         ELSE 'vendor'
-                    END as recipient_type
+                    END as recipient_type,
+                    v.vendor_type_category,
+                    lr.labour_type
                 FROM tbl_payment_entry_line_items_detail l
+                LEFT JOIN pm_vendor_registry_master v ON l.recipient_id_reference = v.vendor_id
+                LEFT JOIN labour_records lr ON l.recipient_id_reference = lr.id
                 WHERE l.payment_entry_master_id_fk = :payment_entry_id
                 AND l.recipient_type_category IS NOT NULL
                 GROUP BY l.recipient_id_reference, l.recipient_type_category
@@ -290,7 +302,7 @@ try {
                 $recipient_type = $recipient['recipient_type'];
                 $recipient_name = $recipient['recipient_name_display'];
                 $recipient_id = $recipient['recipient_id_reference'];
-                $vendor_category = '';
+                $vendor_category = $recipient['vendor_type_category'] ?? '';
                 
                 // Fetch the user who made the payment
                 $paid_by_user = 'N/A';
@@ -335,7 +347,7 @@ try {
                     } else {
                         // Not found in vendor table, check labour_records
                         $labour_query = "
-                            SELECT full_name 
+                            SELECT full_name, labour_type
                             FROM labour_records 
                             WHERE id = :id 
                             LIMIT 1
@@ -347,6 +359,9 @@ try {
                         if ($labour && $labour['full_name']) {
                             $recipient_name = $labour['full_name'];
                             $recipient_type = 'labour';
+                            // Set vendor_category from labour_type formatted as "Type Labour"
+                            $labour_type_formatted = ucfirst(strtolower($labour['labour_type'])) . ' Labour';
+                            $vendor_category = $labour_type_formatted;
                         }
                     }
                 }

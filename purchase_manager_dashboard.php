@@ -668,6 +668,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             font-size: 0.8em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            overflow: visible;
+            position: relative;
+            z-index: 10;
         }
 
         .vendor-row-header > div:last-child {
@@ -981,15 +984,28 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            min-width: 250px;
             display: none;
             margin-top: 8px;
+            overflow: visible;
         }
 
         .project-filter-dropdown.active {
             display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .filter-option {
@@ -1018,6 +1034,55 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         .filter-option input[type="checkbox"] {
             margin-right: 8px;
             cursor: pointer;
+        }
+
+        /* Optgroup styling for categorized filters */
+        .filter-optgroup {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 8px;
+        }
+
+        .filter-optgroup:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .filter-optgroup-label {
+            font-weight: 700;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #2a4365;
+            padding: 8px 12px 6px 12px;
+            background-color: #f0f4f8;
+            margin: 0 -12px 6px -12px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .filter-optgroup .filter-option {
+            padding-left: 24px;
+            background-color: transparent;
+            border: none;
+            border-bottom: none;
+        }
+
+        .filter-optgroup .filter-option:hover {
+            background-color: #f7fafc;
+            border-radius: 4px;
+            margin: 0 4px;
+            padding-left: 20px;
+        }
+
+        .filter-optgroup .filter-option.active {
+            background-color: #ebf8ff;
+            border-radius: 4px;
+            margin: 0 4px;
+            padding-left: 20px;
         }
 
         /* Excel-style Filter Dropdown */
@@ -1829,6 +1894,166 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 });
         }
 
+        // Function to setup Vendor Category Filter with robust event delegation
+        function setupVendorCategoryFilter(vendorCategoryDropdown) {
+            if (!vendorCategoryDropdown) {
+                return;
+            }
+
+            // Get the parent container which has both the button and the dropdown
+            const filterContainer = vendorCategoryDropdown.parentElement;
+            if (!filterContainer) {
+                return;
+            }
+
+            const vendorCategoryFilterToggle = filterContainer.querySelector('.project-filter-btn');
+            const vendorCategoryFilterSearch = vendorCategoryDropdown.querySelector('.excel-filter-search');
+            const vendorCategoryFilterApply = vendorCategoryDropdown.querySelector('.excel-filter-apply-btn');
+            const vendorCategoryFilterClear = vendorCategoryDropdown.querySelector('.excel-filter-clear-btn');
+            const vendorCategoryFilterList = vendorCategoryDropdown.querySelector('.excel-filter-list');
+
+            if (!vendorCategoryFilterToggle || !vendorCategoryFilterSearch || !vendorCategoryFilterApply || !vendorCategoryFilterClear) {
+                return;
+            }
+
+            // Toggle dropdown visibility
+            vendorCategoryFilterToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                vendorCategoryDropdown.classList.toggle('active');
+                // Focus search input
+                setTimeout(() => {
+                    vendorCategoryFilterSearch.focus();
+                }, 100);
+            });
+
+            // Search functionality
+            vendorCategoryFilterSearch.addEventListener('keyup', function(e) {
+                e.stopPropagation();
+                const searchTerm = this.value.toLowerCase();
+                const options = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
+                const optgroups = vendorCategoryFilterList.querySelectorAll('.filter-optgroup');
+                
+                let anyVisibleInGroup;
+                optgroups.forEach(optgroup => {
+                    anyVisibleInGroup = false;
+                    const groupOptions = optgroup.querySelectorAll('.filter-option[data-vendor-category]');
+                    
+                    groupOptions.forEach(option => {
+                        const text = option.textContent.toLowerCase();
+                        const isVisible = text.includes(searchTerm);
+                        option.style.display = isVisible ? 'flex' : 'none';
+                        if (isVisible) anyVisibleInGroup = true;
+                    });
+                    
+                    // Hide optgroup if no options match
+                    optgroup.style.display = anyVisibleInGroup ? 'flex' : 'none';
+                });
+                
+                // Also handle standalone options (if any)
+                options.forEach(option => {
+                    if (!option.closest('.filter-optgroup')) {
+                        const text = option.textContent.toLowerCase();
+                        option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                    }
+                });
+            });
+
+            // Apply filter
+            vendorCategoryFilterApply.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const vendorCategoryFilterOptions = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
+                // Get category types (group types) instead of contractor names
+                const selectedCategories = Array.from(vendorCategoryFilterOptions)
+                    .filter(opt => {
+                        const checkbox = opt.querySelector('input[type="checkbox"]');
+                        return checkbox && checkbox.checked;
+                    })
+                    .map(opt => opt.getAttribute('data-group-type'))
+                    .filter((type, index, self) => type && type !== '' && self.indexOf(type) === index) // Remove duplicates
+                    .join(',');
+
+                // Store selected categories in pagination state for later reference
+                entriesPaginationState.selectedVendorCategories = selectedCategories;
+
+                // Get current filter state
+                const mainSearch = entriesPaginationState.search || '';
+                const mainStatus = entriesPaginationState.status || '';
+                const mainDateFrom = entriesPaginationState.dateFrom || '';
+                const mainDateTo = entriesPaginationState.dateTo || '';
+                const mainProjectType = entriesPaginationState.projectType || '';
+                const mainPaidBy = entriesPaginationState.paidBy || '';
+
+                // Reload payment entries with category filter
+                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, selectedCategories, mainPaidBy);
+                vendorCategoryDropdown.classList.remove('active');
+            });
+
+            // Clear filter
+            vendorCategoryFilterClear.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const vendorCategoryFilterOptions = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
+                const optgroups = vendorCategoryFilterList.querySelectorAll('.filter-optgroup');
+                
+                vendorCategoryFilterOptions.forEach(opt => {
+                    const checkbox = opt.querySelector('input[type="checkbox"]');
+                    if (checkbox) checkbox.checked = false;
+                    opt.classList.remove('active');
+                    opt.style.display = 'flex';
+                });
+                
+                // Show all optgroups
+                optgroups.forEach(optgroup => {
+                    optgroup.style.display = 'flex';
+                });
+                
+                vendorCategoryFilterSearch.value = '';
+
+                // Get current filter state
+                const mainSearch = entriesPaginationState.search || '';
+                const mainStatus = entriesPaginationState.status || '';
+                const mainDateFrom = entriesPaginationState.dateFrom || '';
+                const mainDateTo = entriesPaginationState.dateTo || '';
+                const mainProjectType = entriesPaginationState.projectType || '';
+                const mainPaidBy = entriesPaginationState.paidBy || '';
+
+                // Reload without vendor category filter
+                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, '', mainPaidBy);
+                vendorCategoryDropdown.classList.remove('active');
+            });
+
+            // Checkbox/Option click handler using event delegation
+            vendorCategoryFilterList.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const option = e.target.closest('.filter-option[data-vendor-category]');
+                if (!option) return;
+                
+                const checkbox = option.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    option.classList.toggle('active');
+                }
+            });
+
+            // Close dropdown when clicking outside
+            const closeDropdownHandler = function(e) {
+                const isClickInsideDropdown = e.target.closest('#vendorCategoryFilterDropdown');
+                const isClickOnToggle = e.target.closest('.project-filter-btn') && filterContainer.contains(e.target);
+                
+                if (!isClickInsideDropdown && !isClickOnToggle) {
+                    vendorCategoryDropdown.classList.remove('active');
+                }
+            };
+
+            // Remove old listener if it exists
+            document.removeEventListener('click', closeDropdownHandler);
+            document.addEventListener('click', closeDropdownHandler);
+        }
+
         // Function to fetch and display payment entries
         function loadPaymentEntries(limit = 10, page = 1, search = '', status = '', dateFrom = '', dateTo = '', projectType = '', vendorCategory = '', paidBy = '') {
             entriesPaginationState.limit = limit;
@@ -1888,13 +2113,38 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             const grandTotal = '₹' + parseFloat(entry.grand_total).toFixed(2);
                             const paymentDate = entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A';
                             
-                            // Build Paid To list
+                            // Build Paid To list - filter by current vendor category filter if applied
                             let paidToHtml = '<div class="paid-to-list">';
                             if (entry.paid_to && entry.paid_to.length > 0) {
-                                entry.paid_to.forEach(recipient => {
-                                    const categoryBracket = recipient.vendor_category ? ` [${recipient.vendor_category}]` : '';
-                                    paidToHtml += `<div class="paid-to-item ${recipient.type}">${recipient.type === 'vendor' ? '👤' : '👷'} ${recipient.name}${categoryBracket}</div>`;
-                                });
+                                // Filter recipients based on current filter state
+                                let filteredRecipients = entry.paid_to;
+                                
+                                if (entriesPaginationState.vendorCategory && entriesPaginationState.vendorCategory.length > 0) {
+                                    const selectedCategories = entriesPaginationState.vendorCategory.split(',').map(c => c.trim());
+                                    filteredRecipients = entry.paid_to.filter(recipient => {
+                                        // Check if recipient's vendor_category matches any selected category
+                                        return selectedCategories.some(category => {
+                                            // For vendors: direct match with vendor_category
+                                            if (recipient.type === 'vendor' && recipient.vendor_category === category) {
+                                                return true;
+                                            }
+                                            // For labour: check if vendor_category (formatted as "Type Labour") matches
+                                            if (recipient.type === 'labour' && recipient.vendor_category === category) {
+                                                return true;
+                                            }
+                                            return false;
+                                        });
+                                    });
+                                }
+                                
+                                if (filteredRecipients.length > 0) {
+                                    filteredRecipients.forEach(recipient => {
+                                        const categoryBracket = recipient.vendor_category ? ` [${recipient.vendor_category}]` : '';
+                                        paidToHtml += `<div class="paid-to-item ${recipient.type}">${recipient.type === 'vendor' ? '👤' : '👷'} ${recipient.name}${categoryBracket}</div>`;
+                                    });
+                                } else {
+                                    paidToHtml += '<div class="paid-to-item" style="border-left-color: #a0aec0;">No data</div>';
+                                }
                             } else {
                                 paidToHtml += '<div class="paid-to-item" style="border-left-color: #a0aec0;">No data</div>';
                             }
@@ -2159,117 +2409,73 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             });
                         }
 
-                        // Load vendor categories for filter
-                        fetch('get_vendor_categories.php')
+
+
+                        // Load vendor and labour contractors for filter
+                        fetch('get_all_recipients_grouped.php')
                             .then(response => response.json())
                             .then(data => {
-                                if (data.success && data.data && data.data.length > 0) {
+                                if (data.success && data.groups && data.groups.length > 0) {
                                     const vendorCategoryDropdown = document.getElementById('vendorCategoryFilterDropdown');
+                                    
+                                    if (!vendorCategoryDropdown) {
+                                        return;
+                                    }
+                                    
                                     const vendorCategoryFilterList = vendorCategoryDropdown.querySelector('.excel-filter-list');
                                     
+                                    if (!vendorCategoryFilterList) {
+                                        return;
+                                    }
+
                                     // Clear existing options except the first one
                                     while (vendorCategoryFilterList.children.length > 1) {
                                         vendorCategoryFilterList.removeChild(vendorCategoryFilterList.lastChild);
                                     }
 
-                                    data.data.forEach(category => {
-                                        const option = document.createElement('div');
-                                        option.className = 'filter-option';
-                                        option.setAttribute('data-vendor-category', category);
-                                        option.innerHTML = `<input type="checkbox"> ${category}`;
-                                        vendorCategoryFilterList.appendChild(option);
+                                    // Create dynamic optgroups based on API response
+                                    data.groups.forEach(group => {
+                                        const groupDiv = document.createElement('div');
+                                        groupDiv.className = 'filter-optgroup';
+                                        groupDiv.setAttribute('data-group-type', group.type);
+                                        
+                                        const groupLabel = document.createElement('div');
+                                        groupLabel.className = 'filter-optgroup-label';
+                                        groupLabel.textContent = `${group.icon} ${group.display_name.toUpperCase()}`;
+                                        groupDiv.appendChild(groupLabel);
+
+                                        // Add contractors in this group
+                                        group.contractors.forEach(contractor => {
+                                            const option = document.createElement('div');
+                                            option.className = 'filter-option';
+                                            option.setAttribute('data-vendor-category', contractor.id);
+                                            option.setAttribute('data-contractor-name', contractor.name);
+                                            option.setAttribute('data-group-type', group.type);
+                                            option.innerHTML = `<input type="checkbox"> ${contractor.name}`;
+                                            
+                                            // Restore checked state if this category is in the current filter
+                                            const selectedCategories = entriesPaginationState.selectedVendorCategories || '';
+                                            if (selectedCategories && selectedCategories.includes(group.type)) {
+                                                const checkbox = option.querySelector('input[type="checkbox"]');
+                                                if (checkbox) {
+                                                    checkbox.checked = true;
+                                                    option.classList.add('active');
+                                                }
+                                            }
+                                            
+                                            groupDiv.appendChild(option);
+                                        });
+
+                                        vendorCategoryFilterList.appendChild(groupDiv);
                                     });
 
-                                    // Initialize Excel-style filter for Vendor Category
-                                    const vendorCategoryFilterToggle = document.getElementById('vendorCategoryFilterToggle');
-                                    const vendorCategoryFilterSearch = document.getElementById('vendorCategoryFilterSearch');
-                                    const vendorCategoryFilterApply = document.getElementById('vendorCategoryFilterApply');
-                                    const vendorCategoryFilterClear = document.getElementById('vendorCategoryFilterClear');
-                                    const vendorCategoryFilterOptions = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
-
-                                    if (vendorCategoryFilterToggle) {
-                                        // Toggle dropdown
-                                        vendorCategoryFilterToggle.addEventListener('click', function(e) {
-                                            e.stopPropagation();
-                                            vendorCategoryDropdown.classList.toggle('active');
-                                            vendorCategoryFilterSearch.focus();
-                                        });
-
-                                        // Search functionality
-                                        vendorCategoryFilterSearch.addEventListener('keyup', function(e) {
-                                            const searchTerm = this.value.toLowerCase();
-                                            vendorCategoryFilterOptions.forEach(option => {
-                                                const text = option.textContent.toLowerCase();
-                                                option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
-                                            });
-                                        });
-
-                                        // Apply filter
-                                        vendorCategoryFilterApply.addEventListener('click', function(e) {
-                                            e.stopPropagation();
-                                            const selectedCategories = Array.from(vendorCategoryFilterOptions)
-                                                .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-vendor-category') !== '')
-                                                .map(opt => opt.getAttribute('data-vendor-category'))
-                                                .join(',');
-                                            
-                                            const mainSearch = entriesPaginationState.search || '';
-                                            const mainStatus = entriesPaginationState.status || '';
-                                            const mainDateFrom = entriesPaginationState.dateFrom || '';
-                                            const mainDateTo = entriesPaginationState.dateTo || '';
-                                            const mainProjectType = entriesPaginationState.projectType || '';
-                                            const mainPaidBy = entriesPaginationState.paidBy || '';
-                                            
-                                            loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, selectedCategories, mainPaidBy);
-                                            vendorCategoryDropdown.classList.remove('active');
-                                        });
-
-                                        // Clear filter
-                                        vendorCategoryFilterClear.addEventListener('click', function(e) {
-                                            e.stopPropagation();
-                                            vendorCategoryFilterOptions.forEach(opt => {
-                                                opt.querySelector('input[type="checkbox"]').checked = false;
-                                                opt.classList.remove('active');
-                                                opt.style.display = 'flex';
-                                            });
-                                            vendorCategoryFilterSearch.value = '';
-                                            
-                                            const mainSearch = entriesPaginationState.search || '';
-                                            const mainStatus = entriesPaginationState.status || '';
-                                            const mainDateFrom = entriesPaginationState.dateFrom || '';
-                                            const mainDateTo = entriesPaginationState.dateTo || '';
-                                            const mainProjectType = entriesPaginationState.projectType || '';
-                                            const mainPaidBy = entriesPaginationState.paidBy || '';
-                                            
-                                            loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, '', mainPaidBy);
-                                            vendorCategoryDropdown.classList.remove('active');
-                                        });
-
-                                        // Checkbox click handler - just toggle checkbox, don't apply yet
-                                        vendorCategoryFilterOptions.forEach(option => {
-                                            option.addEventListener('click', function(e) {
-                                                e.stopPropagation();
-                                                const checkbox = this.querySelector('input[type="checkbox"]');
-                                                if (checkbox) {
-                                                    checkbox.checked = !checkbox.checked;
-                                                    this.classList.toggle('active');
-                                                }
-                                            });
-                                        });
-
-                                        // Close dropdown when clicking outside
-                                        document.addEventListener('click', function(e) {
-                                            if (!e.target.closest('.project-filter-container') && e.target.id !== 'vendorCategoryFilterToggle') {
-                                                vendorCategoryDropdown.classList.remove('active');
-                                            }
-                                        });
-                                    }
+                                    // Setup Vendor Category filter handlers using event delegation
+                                    setupVendorCategoryFilter(vendorCategoryDropdown);
                                 }
                             })
                             .catch(error => {
-                                console.error('Error loading vendor categories:', error);
-                            });
-
-                        // Load users for Paid By filter - fetch from database (ALL users, not just visible ones)
+                                console.error('Error loading recipients:', error);
+                            });                        // Load users for Paid By filter - fetch from database (ALL users, not just visible ones)
                         const paidByFilterDropdown = document.getElementById('paidByFilterDropdown');
                         const paidByFilterList = paidByFilterDropdown.querySelector('.excel-filter-list');
 

@@ -17,19 +17,18 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 try {
+    // Fetch distinct project types/categories that have payment entries
     $stmt = $pdo->prepare("
-        SELECT 
-            id,
-            title,
-            project_type,
-            description,
-            status
-        FROM projects
-        WHERE status != 'deleted' AND deleted_at IS NULL
-        ORDER BY title ASC
+        SELECT DISTINCT
+            m.project_type_category as id,
+            m.project_type_category as title
+        FROM tbl_payment_entry_master_records m
+        WHERE m.project_type_category IS NOT NULL 
+            AND m.project_type_category != ''
+        ORDER BY m.project_type_category ASC
     ");
     $stmt->execute();
-    $projects = $stmt->fetchAll();
+    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     http_response_code(200);
     echo json_encode([

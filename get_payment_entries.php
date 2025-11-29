@@ -65,14 +65,14 @@ try {
     }
 
     if (!empty($projectType)) {
-        // Handle multiple project types (comma-separated)
-        $projectTypes = array_map('trim', explode(',', $projectType));
-        $projectTypes = array_filter($projectTypes); // Remove empty values
+        // Handle multiple project IDs (comma-separated)
+        $projectIds = array_map('trim', explode(',', $projectType));
+        $projectIds = array_filter($projectIds); // Remove empty values
         
-        if (!empty($projectTypes)) {
-            $placeholders = implode(',', array_fill(0, count($projectTypes), '?'));
-            $count_query .= " AND m.project_type_category IN ($placeholders)";
-            $count_params = array_merge($count_params, $projectTypes);
+        if (!empty($projectIds)) {
+            $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
+            $count_query .= " AND m.project_id_fk IN ($placeholders)";
+            $count_params = array_merge($count_params, $projectIds);
         }
     }
 
@@ -189,14 +189,14 @@ try {
     }
 
     if (!empty($projectType)) {
-        // Handle multiple project types (comma-separated)
-        $projectTypes = array_map('trim', explode(',', $projectType));
-        $projectTypes = array_filter($projectTypes); // Remove empty values
+        // Handle multiple project IDs (comma-separated)
+        $projectIds = array_map('trim', explode(',', $projectType));
+        $projectIds = array_filter($projectIds); // Remove empty values
         
-        if (!empty($projectTypes)) {
-            $placeholders = implode(',', array_fill(0, count($projectTypes), '?'));
-            $query .= " AND m.project_type_category IN ($placeholders)";
-            $stmt_params = array_merge($stmt_params, $projectTypes);
+        if (!empty($projectIds)) {
+            $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
+            $query .= " AND m.project_id_fk IN ($placeholders)";
+            $stmt_params = array_merge($stmt_params, $projectIds);
         }
     }
 

@@ -2097,7 +2097,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     if (data.success && data.data && data.data.length > 0) {
                         let html = '<div class="vendor-table-wrapper">';
                         html += '<div class="vendor-row-header">';
-                        html += '<div class="project-filter-container"><span>Project Name</span><button class="project-filter-btn" id="projectFilterToggle" title="Filter by Project Type"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="projectFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="projectFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="projectFilterApply">Apply</button><button class="excel-filter-clear-btn" id="projectFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-type="">All Projects</div><div class="filter-option" data-type="Architecture"><input type="checkbox"> Architecture</div><div class="filter-option" data-type="Interior"><input type="checkbox"> Interior</div><div class="filter-option" data-type="Construction"><input type="checkbox"> Construction</div></div></div></div>';
+                        html += '<div class="project-filter-container"><span>Project Name</span><button class="project-filter-btn" id="projectFilterToggle" title="Filter by Project Name"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="projectFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="projectFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="projectFilterApply">Apply</button><button class="excel-filter-clear-btn" id="projectFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-project-id="">All Projects</div></div></div></div>';
                         html += '<div class="project-filter-container"><span>Paid To</span><button class="project-filter-btn" id="vendorCategoryFilterToggle" title="Filter by Vendor Category"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="vendorCategoryFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="vendorCategoryFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="vendorCategoryFilterApply">Apply</button><button class="excel-filter-clear-btn" id="vendorCategoryFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-vendor-category="">All Categories</div></div></div></div>';
                         html += '<div class="project-filter-container"><span>Paid By</span><button class="project-filter-btn" id="paidByFilterToggle" title="Filter by User"><i class="fas fa-filter"></i></button><div class="project-filter-dropdown excel-filter-dropdown" id="paidByFilterDropdown"><div class="excel-filter-header"><input type="text" class="excel-filter-search" placeholder="Search..." id="paidByFilterSearch"><div class="excel-filter-actions"><button class="excel-filter-apply-btn" id="paidByFilterApply">Apply</button><button class="excel-filter-clear-btn" id="paidByFilterClear">Clear</button></div></div><div class="excel-filter-list"><div class="filter-option" data-paid-by="">All Users</div></div></div></div>';
                         html += '<div>Payment Date</div>';
@@ -2323,14 +2323,59 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         // Initialize expanded buttons to show chevron in rotated state
                         initializeExpandButtons();
 
-                        // Initialize Excel-style filter for Project Type
+                        // Initialize Excel-style filter for Project Name
                         const projectFilterToggle = document.getElementById('projectFilterToggle');
                         const projectFilterDropdown = document.getElementById('projectFilterDropdown');
                         const projectFilterSearch = document.getElementById('projectFilterSearch');
                         const projectFilterApply = document.getElementById('projectFilterApply');
                         const projectFilterClear = document.getElementById('projectFilterClear');
                         const projectFilterList = projectFilterDropdown.querySelector('.excel-filter-list');
-                        const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-type]');
+                        
+                        // Load project names dynamically
+                        function loadProjectFilters() {
+                            const params = new URLSearchParams({
+                                search: entriesPaginationState.search || '',
+                                status: entriesPaginationState.status || '',
+                                dateFrom: entriesPaginationState.dateFrom || '',
+                                dateTo: entriesPaginationState.dateTo || '',
+                                vendorCategory: entriesPaginationState.vendorCategory || '',
+                                paidBy: entriesPaginationState.paidBy || ''
+                            });
+                            
+                            fetch(`get_project_names.php?${params.toString()}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success && data.projects && data.projects.length > 0) {
+                                        // Clear existing options except the first one
+                                        while (projectFilterList.children.length > 1) {
+                                            projectFilterList.removeChild(projectFilterList.lastChild);
+                                        }
+                                        
+                                        // Add project options
+                                        data.projects.forEach(project => {
+                                            const option = document.createElement('div');
+                                            option.className = 'filter-option';
+                                            option.setAttribute('data-project-id', project.id);
+                                            
+                                            const checkbox = document.createElement('input');
+                                            checkbox.type = 'checkbox';
+                                            option.appendChild(checkbox);
+                                            
+                                            const label = document.createElement('span');
+                                            label.textContent = project.display_label;
+                                            option.appendChild(label);
+                                            
+                                            projectFilterList.appendChild(option);
+                                        });
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Error loading project names:', err);
+                                });
+                        }
+                        
+                        // Load projects on first load
+                        loadProjectFilters();
 
                         if (projectFilterToggle && projectFilterDropdown) {
                             // Toggle dropdown
@@ -2343,6 +2388,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             // Search functionality
                             projectFilterSearch.addEventListener('keyup', function(e) {
                                 const searchTerm = this.value.toLowerCase();
+                                const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-project-id]');
                                 projectFilterOptions.forEach(option => {
                                     const text = option.textContent.toLowerCase();
                                     option.style.display = text.includes(searchTerm) ? 'flex' : 'none';
@@ -2352,9 +2398,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             // Apply filter
                             projectFilterApply.addEventListener('click', function(e) {
                                 e.stopPropagation();
-                                const selectedTypes = Array.from(projectFilterOptions)
-                                    .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-type') !== '')
-                                    .map(opt => opt.getAttribute('data-type'))
+                                const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-project-id]');
+                                const selectedProjectIds = Array.from(projectFilterOptions)
+                                    .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-project-id') !== '')
+                                    .map(opt => opt.getAttribute('data-project-id'))
                                     .join(',');
                                 
                                 const mainSearch = entriesPaginationState.search || '';
@@ -2364,13 +2411,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                 const mainVendorCategory = entriesPaginationState.vendorCategory || '';
                                 const mainPaidBy = entriesPaginationState.paidBy || '';
                                 
-                                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, selectedTypes, mainVendorCategory, mainPaidBy);
+                                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, selectedProjectIds, mainVendorCategory, mainPaidBy);
                                 projectFilterDropdown.classList.remove('active');
                             });
 
                             // Clear filter
                             projectFilterClear.addEventListener('click', function(e) {
                                 e.stopPropagation();
+                                const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-project-id]');
                                 projectFilterOptions.forEach(opt => {
                                     opt.querySelector('input[type="checkbox"]').checked = false;
                                     opt.classList.remove('active');
@@ -2390,15 +2438,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             });
 
                             // Checkbox click handler - just toggle checkbox, don't apply yet
-                            projectFilterOptions.forEach(option => {
-                                option.addEventListener('click', function(e) {
+                            projectFilterList.addEventListener('click', function(e) {
+                                const option = e.target.closest('.filter-option[data-project-id]');
+                                if (option) {
                                     e.stopPropagation();
-                                    const checkbox = this.querySelector('input[type="checkbox"]');
+                                    const checkbox = option.querySelector('input[type="checkbox"]');
                                     if (checkbox) {
                                         checkbox.checked = !checkbox.checked;
-                                        this.classList.toggle('active');
+                                        option.classList.toggle('active');
                                     }
-                                });
+                                }
                             });
 
                             // Close dropdown when clicking outside

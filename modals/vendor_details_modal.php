@@ -535,6 +535,14 @@
             .then(data => {
                 if (data.success) {
                     displayVendorDetails(data.data);
+                    
+                    // After details are displayed, load payment records
+                    setTimeout(() => {
+                        const paymentContainer = document.querySelector('[data-payment-section-container]');
+                        if (paymentContainer && typeof injectPaymentRecordsIntoModal === 'function') {
+                            injectPaymentRecordsIntoModal(vendorId, paymentContainer);
+                        }
+                    }, 100);
                 } else {
                     showVendorDetailsError(data.message || 'Failed to load vendor details');
                 }
@@ -721,11 +729,11 @@
                     </div>
                     <span class="vendor-details-section-toggle"><i class="fas fa-chevron-down"></i></span>
                 </div>
-                <div class="vendor-details-grid">
-                    <div class="vendor-detail-item" style="grid-column: 1 / -1;">
+                <div class="vendor-details-grid" data-payment-section-container="true" style="padding: 0; border: none;">
+                    <div style="grid-column: 1 / -1; width: 100%;">
                         <div class="empty-state" style="text-align: center; padding: 30px 20px; color: #a0aec0;">
                             <i class="fas fa-history" style="font-size: 2em; color: #cbd5e0; margin-bottom: 10px; display: block;"></i>
-                            <p>No payment records found</p>
+                            <p>Loading payment records...</p>
                         </div>
                     </div>
                 </div>
@@ -898,4 +906,260 @@
             }
         }
     });
+
+    // ==================== VENDOR PAYMENT RECORDS INTEGRATION ====================
+    
+    /**
+     * Fetch vendor payment records from backend
+     */
+    async function fetchVendorPaymentRecords(vendorId) {
+        try {
+            console.log(`[Payment Records] Fetching for vendor ID: ${vendorId}`);
+            const response = await fetch(`fetch_vendor_payment_records.php?vendor_id=${vendorId}`);
+            
+            if (!response.ok) {
+                console.error(`[Payment Records] HTTP Error: ${response.status}`);
+                return { success: false, data: [], message: 'Failed to fetch payment records' };
+            }
+
+            const data = await response.json();
+            console.log(`[Payment Records] Response received:`, data);
+            console.log(`[Payment Records] Records count: ${data.count}`);
+            console.log(`[Payment Records] Debug info:`, data.debug);
+            return data;
+        } catch (error) {
+            console.error('[Payment Records] Error fetching vendor payment records:', error);
+            return { success: false, data: [], message: 'Error fetching payment records' };
+        }
+    }
+
+    /**
+     * Generate HTML for payment records - Timeline View
+     */
+    function generatePaymentRecordsHTML(paymentRecords) {
+        if (!paymentRecords || paymentRecords.length === 0) {
+            return `
+                <div class="empty-state" style="text-align: center; padding: 30px 20px; color: #9ca3af;">
+                    <i class="fas fa-history" style="font-size: 2em; color: #d1d5db; margin-bottom: 10px; display: block;"></i>
+                    <p style="color: #6b7280;">No payment records found</p>
+                </div>
+            `;
+        }
+
+        let html = `
+            <div class="payment-timeline" style="position: relative; padding: 20px 0; padding-left: 40px;">
+                <!-- Timeline Line -->
+                <div style="position: absolute; left: 14px; top: 0; bottom: 0; width: 2px; background: #d1d5db;"></div>
+        `;
+
+        paymentRecords.forEach((record, index) => {
+            const recordDate = new Date(record.payment_date_logged).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            const amount = record.line_item_amount ? 
+                parseFloat(record.line_item_amount).toFixed(2) : 
+                parseFloat(record.payment_amount_base).toFixed(2);
+
+            // Get project name with proper priority order
+            let project = 'N/A';
+            if (record.project_name && record.project_name.trim()) {
+                // Use project name from join
+                project = record.project_name;
+            } else if (record.project_name_reference && record.project_name_reference.trim() && isNaN(record.project_name_reference)) {
+                // Use project_name_reference if it's not a number
+                project = record.project_name_reference;
+            } else if (record.project_type_category && record.project_type_category.trim()) {
+                // Use category as fallback
+                project = record.project_type_category;
+            }
+            
+            const paymentMode = record.line_item_payment_mode || record.payment_mode_selected || 'N/A';
+            const status = record.entry_status_current || record.line_item_status || 'pending';
+            const statusClass = getStatusBadgeClass(status);
+            const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            // Determine timeline dot color based on status (minimalistic grayscale)
+            let dotColor = '#6b7280';
+            if (statusClass === 'approved') dotColor = '#374151';
+            else if (statusClass === 'rejected') dotColor = '#9ca3af';
+            else if (statusClass === 'pending') dotColor = '#d1d5db';
+
+            html += `
+                <!-- Timeline Item -->
+                <div style="margin-bottom: 24px; position: relative;">
+                    <!-- Timeline Dot -->
+                    <div style="position: absolute; left: -33px; top: 0; width: 30px; height: 30px; background: white; border: 3px solid ${dotColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: bold; background: ${dotColor}; z-index: 2;">
+                        ${index + 1}
+                    </div>
+
+                    <!-- Card Content -->
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)'; this.style.transform='translateY(0)';">
+                        
+                        <!-- Header: Date and Status -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: #1f2937;">
+                                    <i class="fas fa-calendar-alt" style="margin-right: 6px; color: #6b7280;"></i>
+                                    ${recordDate}
+                                </div>
+                            </div>
+                            <span class="payment-status-badge ${statusClass}" style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: capitalize;">
+                                ${statusDisplay}
+                            </span>
+                        </div>
+
+                        <!-- Project Info -->
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Project</div>
+                            <div style="font-size: 14px; color: #1f2937; font-weight: 500;">
+                                <i class="fas fa-briefcase" style="margin-right: 8px; color: #6b7280;"></i>
+                                ${project}
+                            </div>
+                        </div>
+
+                        <!-- Amount and Mode Row -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+                            <div>
+                                <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Amount</div>
+                                <div style="font-size: 16px; color: #374151; font-weight: 700;">
+                                    ₹${amount}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Mode</div>
+                                <div style="font-size: 14px; color: #1f2937;">
+                                    <i class="fas fa-credit-card" style="margin-right: 6px; color: #6b7280;"></i>
+                                    ${paymentMode}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Acceptance Methods -->
+                        ${record.acceptance_methods && record.acceptance_methods.length > 0 ? `
+                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+                            <div style="font-size: 12px; color: #9ca3af; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">
+                                <i class="fas fa-money-check" style="margin-right: 6px;"></i>Payment Methods
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${record.acceptance_methods.map(method => {
+                                    const methodAmount = parseFloat(method.amount).toFixed(2);
+                                    return `
+                                        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; font-size: 12px;">
+                                            <div style="color: #6b7280; font-weight: 600; margin-bottom: 2px;">${method.method_type}</div>
+                                            <div style="color: #374151; font-weight: 600;">₹${methodAmount}</div>
+                                            ${method.reference ? `<div style="color: #d1d5db; font-size: 11px;">Ref: ${method.reference}</div>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+            </div>
+        `;
+
+        return html;
+    }
+
+    /**
+     * Get CSS class for status badge
+     */
+    function getStatusBadgeClass(status) {
+        const statusMap = {
+            'draft': 'draft',
+            'submitted': 'submitted',
+            'pending': 'pending',
+            'approved': 'approved',
+            'rejected': 'rejected',
+            'verified': 'approved',
+            'active': 'approved',
+            'inactive': 'rejected'
+        };
+
+        return statusMap[status?.toLowerCase()] || 'pending';
+    }
+
+    /**
+     * Inject payment records into vendor details modal
+     */
+    async function injectPaymentRecordsIntoModal(vendorId, container) {
+        if (!container) {
+            console.log('[Payment Records] Container not found');
+            return;
+        }
+
+        console.log(`[Payment Records] Injecting for vendor ${vendorId}`);
+
+        // Show loading state
+        container.innerHTML = `
+            <div style="text-align: center; padding: 30px 20px;">
+                <i class="fas fa-spinner" style="font-size: 2em; color: #6b7280; animation: spin 1s linear infinite; display: block; margin-bottom: 15px;"></i>
+                <p style="color: #9ca3af;">Loading payment records...</p>
+            </div>
+        `;
+
+        // Fetch payment records
+        const result = await fetchVendorPaymentRecords(vendorId);
+
+        console.log(`[Payment Records] Inject result:`, result);
+
+        if (result.success && result.data && result.data.length > 0) {
+            console.log(`[Payment Records] Displaying ${result.data.length} records`);
+            // Generate and inject HTML
+            const html = generatePaymentRecordsHTML(result.data);
+            container.innerHTML = html;
+
+            // Inject CSS styles for payment status badges
+            if (!document.getElementById('payment-status-badge-styles')) {
+                const style = document.createElement('style');
+                style.id = 'payment-status-badge-styles';
+                style.textContent = `
+                    .payment-status-badge.draft {
+                        background-color: #f3f4f6;
+                        color: #6b7280;
+                    }
+                    
+                    .payment-status-badge.submitted {
+                        background-color: #e5e7eb;
+                        color: #4b5563;
+                    }
+                    
+                    .payment-status-badge.pending {
+                        background-color: #d1d5db;
+                        color: #374151;
+                    }
+                    
+                    .payment-status-badge.approved {
+                        background-color: #9ca3af;
+                        color: #ffffff;
+                    }
+                    
+                    .payment-status-badge.rejected {
+                        background-color: #6b7280;
+                        color: #ffffff;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        } else {
+            // Show empty state
+            container.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 30px 20px; color: #a0aec0;">
+                    <i class="fas fa-history" style="font-size: 2em; color: #cbd5e0; margin-bottom: 10px; display: block;"></i>
+                    <p>No payment records found</p>
+                </div>
+            `;
+        }
+    }
+
 </script>
+

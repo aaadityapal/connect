@@ -327,9 +327,6 @@ try {
             $workingDaysCount = $workingDays;
             $oneDaySalary = $workingDaysCount > 0 ? $baseSalary / $workingDaysCount : 0;
             
-            // DEBUG: Log calculation details
-            error_log("DEBUG fetch_monthly_analytics - User: {$employee['id']}, Salary: $baseSalary, Working Days: $workingDaysCount, One Day Salary: $oneDaySalary");
-            
             // Fetch month boundaries
             $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
             $firstDayOfMonth = "$year-$monthStr-01";
@@ -364,8 +361,6 @@ try {
             
             $leaves = $leaveDeductionStmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // DEBUG: Log leaves found
-            error_log("DEBUG fetch_monthly_analytics - Leaves found for user {$employee['id']}: " . count($leaves));
             $yearStartDate = "$year-01-01";
             $currentMonthDate = $lastDayOfMonth;
             
@@ -461,9 +456,6 @@ try {
             }
             
             $leaveDeduction = round($leaveDeduction, 2);
-            
-            // DEBUG: Log final deduction
-            error_log("DEBUG fetch_monthly_analytics - Final deduction for user {$employee['id']}: " . $leaveDeduction);
             
         } catch (PDOException $e) {
             error_log("Error calculating leave deductions for user " . $employee['id'] . ": " . $e->getMessage());

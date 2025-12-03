@@ -151,13 +151,6 @@ try {
     
     $leaves = $leaveStmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Log for debugging
-    error_log("calculate_leave_deductions.php - User: $user_id, Month: $month, Year: $year");
-    error_log("Leaves found: " . count($leaves));
-    if (count($leaves) > 0) {
-        error_log("Leaves data: " . json_encode($leaves));
-    }
-    
     // Initialize deduction tracking
     $deductions = [
         'total_deduction' => 0,

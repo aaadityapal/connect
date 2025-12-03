@@ -75,6 +75,58 @@ try {
     $stmt->execute([$userId, $firstDayOfMonth, $lastDayOfMonth, $graceTime, $oneHourLateTime]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Fetch short leaves from leave_request table for the month
+    $shortLeavesMap = [];
+    try {
+        $shortLeaveStmt = $pdo->prepare(
+            "SELECT 
+                start_date,
+                end_date,
+                lt.name as leave_type_name,
+                lr.reason
+            FROM leave_request lr
+            LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+            WHERE lr.user_id = ?
+            AND lr.status = 'approved'
+            AND (
+                (DATE(lr.start_date) BETWEEN ? AND ?) OR
+                (DATE(lr.end_date) BETWEEN ? AND ?) OR
+                (lr.start_date <= ? AND lr.end_date >= ?)
+            )
+            ORDER BY lr.start_date ASC"
+        );
+        $shortLeaveStmt->execute([
+            $userId,
+            $firstDayOfMonth, $lastDayOfMonth,
+            $firstDayOfMonth, $lastDayOfMonth,
+            $lastDayOfMonth, $firstDayOfMonth
+        ]);
+        $shortLeaves = $shortLeaveStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Create a map of short leaves by date for quick lookup
+        foreach ($shortLeaves as $sl) {
+            // For each date in the leave range, add it to the map
+            $startDate = new DateTime($sl['start_date']);
+            $endDate = new DateTime($sl['end_date']);
+            
+            while ($startDate <= $endDate) {
+                $dateStr = $startDate->format('Y-m-d');
+                if (!isset($shortLeavesMap[$dateStr])) {
+                    $shortLeavesMap[$dateStr] = [];
+                }
+                $shortLeavesMap[$dateStr][] = [
+                    'type' => $sl['leave_type_name'] ?? 'Leave',
+                    'reason' => $sl['reason'] ?? 'N/A'
+                ];
+                $startDate->modify('+1 day');
+            }
+        }
+    } catch (PDOException $e) {
+        // If query fails, continue without short leave data
+        error_log("Error fetching short leaves: " . $e->getMessage());
+        $shortLeavesMap = [];
+    }
+
     $records = [];
     foreach ($rows as $r) {
         $d = new DateTime($r['date']);
@@ -92,6 +144,12 @@ try {
         // Check if 1+ hour late
         $isOneHourLate = $punchInFormatted >= $oneHourLateTime;
 
+        // Check for short leaves on this date
+        $shortLeaveInfo = isset($shortLeavesMap[$r['date']]) ? $shortLeavesMap[$r['date']] : [];
+        $shortLeaveText = !empty($shortLeaveInfo) 
+            ? implode(', ', array_map(fn($sl) => $sl['type'], $shortLeaveInfo))
+            : 'N/A';
+
         $records[] = [
             'id' => $r['id'],
             'date' => $r['date'],
@@ -101,6 +159,7 @@ try {
             'punch_in' => $punchInFormatted,
             'minutes_late' => $minutesLate,
             'is_one_hour_late' => $isOneHourLate,
+            'short_leave' => $shortLeaveText,
             'punch_in_photo' => !empty($r['punch_in_photo']) ? $r['punch_in_photo'] : null,
         ];
     }

@@ -454,11 +454,12 @@ $selectedYear = intval($selectedYear);
             white-space: nowrap;
         }
 
-        #lateDaysTable th:nth-child(1), #lateDaysTable td:nth-child(1) { width: 18%; }
-        #lateDaysTable th:nth-child(2), #lateDaysTable td:nth-child(2) { width: 14%; }
-        #lateDaysTable th:nth-child(3), #lateDaysTable td:nth-child(3) { width: 18%; }
-        #lateDaysTable th:nth-child(4), #lateDaysTable td:nth-child(4) { width: 18%; }
-        #lateDaysTable th:nth-child(5), #lateDaysTable td:nth-child(5) { width: 32%; }
+        #lateDaysTable th:nth-child(1), #lateDaysTable td:nth-child(1) { width: 15%; }
+        #lateDaysTable th:nth-child(2), #lateDaysTable td:nth-child(2) { width: 12%; }
+        #lateDaysTable th:nth-child(3), #lateDaysTable td:nth-child(3) { width: 15%; }
+        #lateDaysTable th:nth-child(4), #lateDaysTable td:nth-child(4) { width: 15%; }
+        #lateDaysTable th:nth-child(5), #lateDaysTable td:nth-child(5) { width: 12%; }
+        #lateDaysTable th:nth-child(6), #lateDaysTable td:nth-child(6) { width: 31%; }
 
         /* 1+ Hour Late Days table styles */
         #oneHourLateDaysModal .modal-content {
@@ -506,11 +507,12 @@ $selectedYear = intval($selectedYear);
             white-space: nowrap;
         }
 
-        #oneHourLateDaysTable th:nth-child(1), #oneHourLateDaysTable td:nth-child(1) { width: 18%; }
-        #oneHourLateDaysTable th:nth-child(2), #oneHourLateDaysTable td:nth-child(2) { width: 14%; }
-        #oneHourLateDaysTable th:nth-child(3), #oneHourLateDaysTable td:nth-child(3) { width: 18%; }
-        #oneHourLateDaysTable th:nth-child(4), #oneHourLateDaysTable td:nth-child(4) { width: 18%; }
-        #oneHourLateDaysTable th:nth-child(5), #oneHourLateDaysTable td:nth-child(5) { width: 32%; }
+        #oneHourLateDaysTable th:nth-child(1), #oneHourLateDaysTable td:nth-child(1) { width: 15%; }
+        #oneHourLateDaysTable th:nth-child(2), #oneHourLateDaysTable td:nth-child(2) { width: 12%; }
+        #oneHourLateDaysTable th:nth-child(3), #oneHourLateDaysTable td:nth-child(3) { width: 15%; }
+        #oneHourLateDaysTable th:nth-child(4), #oneHourLateDaysTable td:nth-child(4) { width: 15%; }
+        #oneHourLateDaysTable th:nth-child(5), #oneHourLateDaysTable td:nth-child(5) { width: 12%; }
+        #oneHourLateDaysTable th:nth-child(6), #oneHourLateDaysTable td:nth-child(6) { width: 31%; }
 
         /* Leave Details table styles */
         #leaveDetailsModal .modal-content {
@@ -562,6 +564,64 @@ $selectedYear = intval($selectedYear);
         #leaveDetailsTable th:nth-child(2), #leaveDetailsTable td:nth-child(2) { width: 20%; }
         #leaveDetailsTable th:nth-child(3), #leaveDetailsTable td:nth-child(3) { width: 12%; }
         #leaveDetailsTable th:nth-child(4), #leaveDetailsTable td:nth-child(4) { width: 43%; }
+
+        /* Leave Deduction Modal styles */
+        #leaveDeductionModal .modal-content {
+            max-width: 1000px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 980px) {
+            #leaveDeductionModal .modal-content { max-width: 95%; width: 95%; }
+        }
+
+        #leaveDeductionModal h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100%;
+        }
+
+        #leaveDeductionTable {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        #leaveDeductionTable th,
+        #leaveDeductionTable td {
+            padding: 12px 16px;
+            text-align: left;
+            border-right: 1px solid #e2e8f0;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        #leaveDeductionTable th:last-child,
+        #leaveDeductionTable td:last-child {
+            border-right: none;
+        }
+
+        #leaveDeductionTable thead th {
+            background: #f8f9fa;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        #leaveDeductionTable tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        #leaveDeductionTable tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        #leaveDeductionTable th:nth-child(1), #leaveDeductionTable td:nth-child(1) { width: 25%; }
+        #leaveDeductionTable th:nth-child(2), #leaveDeductionTable td:nth-child(2) { width: 12%; text-align: center; }
+        #leaveDeductionTable th:nth-child(3), #leaveDeductionTable td:nth-child(3) { width: 18%; text-align: right; }
+        #leaveDeductionTable th:nth-child(4), #leaveDeductionTable td:nth-child(4) { width: 45%; }
 
         @keyframes slideDown {
             from {
@@ -1012,6 +1072,7 @@ $selectedYear = intval($selectedYear);
                             <th style="padding:8px; text-align:left;">Shift Start</th>
                             <th style="padding:8px; text-align:left;">Punch In</th>
                             <th style="padding:8px; text-align:left;">Minutes Late</th>
+                            <th style="padding:8px; text-align:left;">Short Leave</th>
                         </tr>
                     </thead>
                     <tbody id="lateDaysTbody"></tbody>
@@ -1040,6 +1101,7 @@ $selectedYear = intval($selectedYear);
                             <th style="padding:8px; text-align:left;">Shift Start</th>
                             <th style="padding:8px; text-align:left;">Punch In</th>
                             <th style="padding:8px; text-align:left;">Minutes Late</th>
+                            <th style="padding:8px; text-align:left;">Short Leave</th>
                         </tr>
                     </thead>
                     <tbody id="oneHourLateDaysTbody"></tbody>
@@ -1075,6 +1137,42 @@ $selectedYear = intval($selectedYear);
 
             <div class="modal-buttons" style="flex-shrink: 0; margin-top: 20px;">
                 <button class="btn-cancel" onclick="closeLeaveDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Deduction Details Modal -->
+    <div id="leaveDeductionModal" class="modal">
+        <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column; width: 95%; position: relative;">
+            <span class="close-modal" onclick="closeLeaveDeductionModal()" style="position: absolute; top: 12px; right: 20px; cursor: pointer;">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 15px; flex-shrink: 0; text-align: center; width: 100%;">Leave Deduction Details</h2>
+
+            <div id="leaveDeductionContainer" style="background: #f8f9fa; padding: 20px; border-radius: 6px; overflow-y: auto; flex-grow: 1; min-height: 0;">
+                <p id="leaveDeductionUserInfo" style="margin-bottom: 12px; font-weight: 600; text-align: center;"></p>
+                
+                <!-- Summary Section -->
+                <div id="deductionSummary" style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #4CAF50;">
+                    <h3 style="margin-top: 0; margin-bottom: 10px; color: #333;">Deduction Summary</h3>
+                    <p style="margin: 5px 0;"><strong>Total Deduction:</strong> <span id="totalDeductionAmount" style="color: #d32f2f; font-weight: bold;">₹0</span></p>
+                    <p style="margin: 5px 0; font-size: 12px; color: #666;">Based on approved leaves in the selected month</p>
+                </div>
+
+                <!-- Deduction Breakdown Table -->
+                <table id="leaveDeductionTable" style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:8px; text-align:left;">Leave Type</th>
+                            <th style="padding:8px; text-align:center;">Days</th>
+                            <th style="padding:8px; text-align:right;">Deduction (₹)</th>
+                            <th style="padding:8px; text-align:left;">Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaveDeductionTbody"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-buttons" style="flex-shrink: 0; margin-top: 20px;">
+                <button class="btn-cancel" onclick="closeLeaveDeductionModal()">Close</button>
             </div>
         </div>
     </div>
@@ -1189,7 +1287,13 @@ $selectedYear = intval($selectedYear);
                                 <span class="info-tooltip">Approved leave days</span>
                             </span>
                         </td>
-                        <td>₹${formatNumber(emp.leave_deduction || 0)}</td>
+                        <td>
+                            ₹${formatNumber(emp.leave_deduction || 0)}
+                            <span class="info-icon" data-type="leave-deduction" onclick="showLeaveDeductionDetails(${emp.id}, '${emp.name}', ${emp.leave_deduction || 0})" style="cursor: pointer;">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="info-tooltip">Leave deduction breakdown</span>
+                            </span>
+                        </td>
                         <td>₹${formatNumber(emp.one_hour_late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.fourth_saturday_deduction || 0)}</td>
                         <td>${(emp.salary_calculated_days || 0).toFixed(2)}</td>
@@ -1639,12 +1743,12 @@ $selectedYear = intval($selectedYear);
 
                     const tbody = document.getElementById('lateDaysTbody');
                     if (records.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="padding:12px; text-align:center; color:#718096;">No late punch-in records found for this period.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" style="padding:12px; text-align:center; color:#718096;">No late punch-in records found for this period.</td></tr>';
                     } else {
                         let html = '';
                         records.forEach(r => {
                             const highlightRow = 'background:#fef3c7;';
-                            html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlightRow}"><td style="padding:12px 16px">${r.displayDate}</td><td style="padding:12px 16px">${r.day}</td><td style="padding:12px 16px">${r.shift_start_time}</td><td style="padding:12px 16px">${r.punch_in}</td><td style="padding:12px 16px">${r.minutes_late} min</td></tr>`;
+                            html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlightRow}"><td style="padding:12px 16px">${r.displayDate}</td><td style="padding:12px 16px">${r.day}</td><td style="padding:12px 16px">${r.shift_start_time}</td><td style="padding:12px 16px">${r.punch_in}</td><td style="padding:12px 16px">${r.minutes_late} min</td><td style="padding:12px 16px">${r.short_leave}</td></tr>`;
                         });
                         tbody.innerHTML = html;
                     }
@@ -1691,11 +1795,11 @@ $selectedYear = intval($selectedYear);
 
                     const tbody = document.getElementById('oneHourLateDaysTbody');
                     if (records.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="padding:12px; text-align:center; color:#718096;">No 1+ hour late punch-in records found for this period.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" style="padding:12px; text-align:center; color:#718096;">No 1+ hour late punch-in records found for this period.</td></tr>';
                     } else {
                         let html = '';
                         records.forEach(r => {
-                            html += `<tr style="border-bottom:1px solid #e2e8f0; background:#fee2e2;"><td style="padding:12px 16px">${r.displayDate}</td><td style="padding:12px 16px">${r.day}</td><td style="padding:12px 16px">${r.shift_start_time}</td><td style="padding:12px 16px">${r.punch_in}</td><td style="padding:12px 16px">${r.minutes_late} min</td></tr>`;
+                            html += `<tr style="border-bottom:1px solid #e2e8f0; background:#fee2e2;"><td style="padding:12px 16px">${r.displayDate}</td><td style="padding:12px 16px">${r.day}</td><td style="padding:12px 16px">${r.shift_start_time}</td><td style="padding:12px 16px">${r.punch_in}</td><td style="padding:12px 16px">${r.minutes_late} min</td><td style="padding:12px 16px">${r.short_leave}</td></tr>`;
                         });
                         tbody.innerHTML = html;
                     }
@@ -1763,6 +1867,79 @@ $selectedYear = intval($selectedYear);
             document.getElementById('leaveDetailsModal').style.display = 'none';
         }
 
+        function showLeaveDeductionDetails(userId, employeeName, totalDeduction) {
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+
+            if (!month || !year) {
+                alert('Please select month and year');
+                return;
+            }
+
+            // Clear previous data
+            document.getElementById('leaveDeductionTbody').innerHTML = '';
+            document.getElementById('leaveDeductionUserInfo').innerText = `Loading leave deduction details for ${employeeName}...`;
+            document.getElementById('totalDeductionAmount').innerText = `₹${totalDeduction.toLocaleString('en-IN')}`;
+
+            fetch(`calculate_leave_deductions.php?user_id=${userId}&month=${month}&year=${year}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status !== 'success') {
+                        document.getElementById('leaveDeductionUserInfo').innerText = 'Unable to load deduction details';
+                        document.getElementById('leaveDeductionTbody').innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:#718096;">No deduction data available.</td></tr>';
+                        document.getElementById('leaveDeductionModal').style.display = 'block';
+                        return;
+                    }
+
+                    const deductions = data.deductions || {};
+                    document.getElementById('leaveDeductionUserInfo').innerText = `${employeeName} — October 2025 Leave Deductions`;
+
+                    const tbody = document.getElementById('leaveDeductionTbody');
+                    const leaveDeductions = deductions.leave_deductions || [];
+
+                    if (leaveDeductions.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:#718096;">No approved leave records found for this period.</td></tr>';
+                    } else {
+                        let html = '';
+                        leaveDeductions.forEach(item => {
+                            const deductionAmount = Number(item.deduction).toLocaleString('en-IN', { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            html += `<tr style="border-bottom:1px solid #e2e8f0;">
+                                <td style="padding:12px 16px">${item.leave_type || 'Unknown'}</td>
+                                <td style="padding:12px 16px; text-align:center;">${item.num_days}</td>
+                                <td style="padding:12px 16px; text-align:right;">₹${deductionAmount}</td>
+                                <td style="padding:12px 16px; font-size:12px; color:#666;">${item.deduction_type || 'N/A'}</td>
+                            </tr>`;
+                        });
+                        tbody.innerHTML = html;
+                    }
+
+                    // Update total deduction display
+                    const totalDeductionValue = deductions.total_deduction || 0;
+                    document.getElementById('totalDeductionAmount').innerText = `₹${Number(totalDeductionValue).toLocaleString('en-IN', { 
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}`;
+
+                    document.getElementById('leaveDeductionModal').style.display = 'block';
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('leaveDeductionUserInfo').innerText = 'Error loading deduction details';
+                    document.getElementById('leaveDeductionTbody').innerHTML = '<tr><td colspan="4" style="padding:12px; text-align:center; color:#d32f2f;">Failed to load deduction data.</td></tr>';
+                    document.getElementById('leaveDeductionModal').style.display = 'block';
+                });
+        }
+
+        function closeLeaveDeductionModal() {
+            document.getElementById('leaveDeductionModal').style.display = 'none';
+        }
+
         // Extend window.onclick to close present days modal when clicking outside
         const prevWindowOnclick = window.onclick;
         window.onclick = function(event) {
@@ -1771,6 +1948,7 @@ $selectedYear = intval($selectedYear);
                 const lateDaysModal = document.getElementById('lateDaysModal');
                 const oneHourLateDaysModal = document.getElementById('oneHourLateDaysModal');
                 const leaveDetailsModal = document.getElementById('leaveDetailsModal');
+                const leaveDeductionModal = document.getElementById('leaveDeductionModal');
                 const editModal = document.getElementById('editSalaryModal');
                 const workingDaysModal = document.getElementById('workingDaysModal');
 
@@ -1791,6 +1969,9 @@ $selectedYear = intval($selectedYear);
                 }
                 if (event.target === leaveDetailsModal) {
                     closeLeaveDetailsModal();
+                }
+                if (event.target === leaveDeductionModal) {
+                    closeLeaveDeductionModal();
                 }
             } catch (e) {
                 // ignore

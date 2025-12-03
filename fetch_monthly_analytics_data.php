@@ -320,7 +320,159 @@ try {
             $leaveTaken = 0;
         }
         
-        // Default values for salary and attendance data
+        // Calculate leave deductions directly
+        $leaveDeduction = 0;
+        try {
+            // Calculate working days
+            $workingDaysCount = $workingDays;
+            $oneDaySalary = $workingDaysCount > 0 ? $baseSalary / $workingDaysCount : 0;
+            
+            // DEBUG: Log calculation details
+            error_log("DEBUG fetch_monthly_analytics - User: {$employee['id']}, Salary: $baseSalary, Working Days: $workingDaysCount, One Day Salary: $oneDaySalary");
+            
+            // Fetch month boundaries
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+            $firstDayOfMonth = "$year-$monthStr-01";
+            $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+            
+            // Fetch all approved leaves for the month
+            $leaveDeductionStmt = $pdo->prepare("
+                SELECT 
+                    lr.id,
+                    lr.start_date,
+                    lr.end_date,
+                    lt.name as leave_type,
+                    DATEDIFF(lr.end_date, lr.start_date) + 1 as num_days
+                FROM leave_request lr
+                LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+                WHERE lr.user_id = ?
+                AND lr.status = 'approved'
+                AND (
+                    (MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?) OR
+                    (MONTH(lr.end_date) = ? AND YEAR(lr.end_date) = ?) OR
+                    (lr.start_date <= ? AND lr.end_date >= ?)
+                )
+                ORDER BY lr.start_date ASC
+            ");
+            
+            $leaveDeductionStmt->execute([
+                $employee['id'],
+                $month, $year,
+                $month, $year,
+                $lastDayOfMonth, $firstDayOfMonth
+            ]);
+            
+            $leaves = $leaveDeductionStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // DEBUG: Log leaves found
+            error_log("DEBUG fetch_monthly_analytics - Leaves found for user {$employee['id']}: " . count($leaves));
+            $yearStartDate = "$year-01-01";
+            $currentMonthDate = $lastDayOfMonth;
+            
+            $yearlyLeaveStmt = $pdo->prepare("
+                SELECT 
+                    lt.name as leave_type,
+                    SUM(DATEDIFF(lr.end_date, lr.start_date) + 1) as total_days
+                FROM leave_request lr
+                LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+                WHERE lr.user_id = ?
+                AND lr.status = 'approved'
+                AND lr.start_date >= ?
+                AND lr.start_date <= ?
+                GROUP BY lt.name
+            ");
+            
+            $yearlyLeaveStmt->execute([$employee['id'], $yearStartDate, $currentMonthDate]);
+            $yearlyLeaves = $yearlyLeaveStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $leaveUsageYearly = [
+                'sick_leave' => 0,
+                'paternity_leave' => 0,
+                'maternity_leave' => 0
+            ];
+            
+            foreach ($yearlyLeaves as $yl) {
+                $leaveType = strtolower(str_replace(' ', '_', $yl['leave_type'] ?? 'other'));
+                if ($leaveType === 'sick_leave' || $leaveType === 'sick leave') {
+                    $leaveUsageYearly['sick_leave'] = intval($yl['total_days']);
+                } elseif ($leaveType === 'paternity_leave' || $leaveType === 'paternity leave') {
+                    $leaveUsageYearly['paternity_leave'] = intval($yl['total_days']);
+                } elseif ($leaveType === 'maternity_leave' || $leaveType === 'maternity leave') {
+                    $leaveUsageYearly['maternity_leave'] = intval($yl['total_days']);
+                }
+            }
+            
+            // Calculate deductions for each leave
+            foreach ($leaves as $leave) {
+                $leaveType = strtolower(str_replace(' ', '_', $leave['leave_type'] ?? 'other'));
+                $numDays = intval($leave['num_days']);
+                $deduction = 0;
+                
+                switch ($leaveType) {
+                    case 'compensate_leave':
+                    case 'compensate leave':
+                        $deduction = 0;
+                        break;
+                    case 'casual_leave':
+                    case 'casual leave':
+                        $deduction = 0;
+                        break;
+                    case 'sick_leave':
+                    case 'sick leave':
+                        $totalSickLeavesYearly = $leaveUsageYearly['sick_leave'];
+                        if ($totalSickLeavesYearly > 6) {
+                            $excessDays = $totalSickLeavesYearly - 6;
+                            $deduction = $excessDays * $oneDaySalary;
+                        }
+                        break;
+                    case 'half_day':
+                    case 'half day':
+                        $deduction = $oneDaySalary * 0.5;
+                        break;
+                    case 'short_leave':
+                    case 'short leave':
+                        $deduction = 0;
+                        break;
+                    case 'unpaid_leave':
+                    case 'unpaid leave':
+                        $deduction = $numDays * $oneDaySalary;
+                        break;
+                    case 'paternity_leave':
+                    case 'paternity leave':
+                        $totalPaternityLeavesYearly = $leaveUsageYearly['paternity_leave'];
+                        if ($totalPaternityLeavesYearly > 7) {
+                            $excessDays = $totalPaternityLeavesYearly - 7;
+                            $deduction = $excessDays * $oneDaySalary;
+                        }
+                        break;
+                    case 'maternity_leave':
+                    case 'maternity leave':
+                        $totalMaternityLeavesYearly = $leaveUsageYearly['maternity_leave'];
+                        if ($totalMaternityLeavesYearly > 60) {
+                            $excessDays = $totalMaternityLeavesYearly - 60;
+                            $deduction = $excessDays * $oneDaySalary;
+                        }
+                        break;
+                    default:
+                        $deduction = 0;
+                }
+                
+                $leaveDeduction += $deduction;
+            }
+            
+            $leaveDeduction = round($leaveDeduction, 2);
+            
+            // DEBUG: Log final deduction
+            error_log("DEBUG fetch_monthly_analytics - Final deduction for user {$employee['id']}: " . $leaveDeduction);
+            
+        } catch (PDOException $e) {
+            error_log("Error calculating leave deductions for user " . $employee['id'] . ": " . $e->getMessage());
+            $leaveDeduction = 0;
+        } catch (Exception $e) {
+            error_log("Error in leave deduction calculation for user " . $employee['id'] . ": " . $e->getMessage());
+            $leaveDeduction = 0;
+        }
+        
         $employeeData[] = [
             'id' => $employee['id'], // Add user ID
             'employee_id' => $employee['employee_id'] ?? $employee['id'],
@@ -332,7 +484,7 @@ try {
             'late_days' => $lateDays,
             'one_hour_late' => $oneHourLateDays,
             'leave_taken' => $leaveTaken,
-            'leave_deduction' => 0,
+            'leave_deduction' => round($leaveDeduction, 2),
             'one_hour_late_deduction' => 0,
             'fourth_saturday_deduction' => 0,
             'salary_calculated_days' => $workingDays

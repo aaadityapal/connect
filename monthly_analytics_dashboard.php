@@ -918,13 +918,19 @@ $selectedYear = intval($selectedYear);
                                 <th>Late Deduction</th>
                                 <th>1+ Leave Hour Late Deduction</th>
                                 <th>4th Saturday Missing Deduction</th>
-                                <th>Salary Calculated Days</th>
+                                <th>Salary Calculated Days
+                                    <span class="info-icon" title="How it's calculated">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span class="info-tooltip">Calculated = present days + casual (full) + half-day (0.5) + compensate (0.5) - late deductions (every 3 late = 0.5 day) - 1+hr late (0.5 per) - 4th Saturday penalty (2 days)</span>
+                                    </span>
+                                </th>
+                                <th>Net Salary</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="analyticsTableBody">
                             <tr>
-                                <td colspan="14" style="text-align: center; padding: 40px;">
+                                <td colspan="15" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-spinner fa-spin"></i> Loading data...
                                 </td>
                             </tr>
@@ -938,6 +944,20 @@ $selectedYear = intval($selectedYear);
                     <p>Please select a month and year from the filters above to view the analytics data.</p>
                 </div>
             <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Salary Calculated Days Modal -->
+    <div id="salaryCalcModal" class="modal">
+        <div class="modal-content" style="max-width:800px; max-height:85vh; display:flex; flex-direction:column;">
+            <span class="close-modal" onclick="closeSalaryCalcModal()" style="position:absolute; right:18px; top:10px; cursor:pointer;">&times;</span>
+            <h2 style="margin-top:0; text-align:center;">Salary Calculated Days Breakdown</h2>
+            <div id="salaryCalcContainer" style="background:#f8f9fa; padding:18px; border-radius:6px; overflow-y:auto; flex-grow:1;">
+                <!-- Filled dynamically -->
+            </div>
+            <div class="modal-buttons" style="margin-top:12px;">
+                <button class="btn-cancel" onclick="closeSalaryCalcModal()">Close</button>
+            </div>
         </div>
     </div>
 
@@ -1247,6 +1267,9 @@ $selectedYear = intval($selectedYear);
             let html = '';
 
             employees.forEach(emp => {
+                // store employee data for modal lookups
+                window.analyticsDataById = window.analyticsDataById || {};
+                window.analyticsDataById[emp.id] = emp;
                 html += `
                     <tr data-user-id="${emp.id}">
                         <td>${emp.employee_id || 'N/A'}</td>
@@ -1298,7 +1321,15 @@ $selectedYear = intval($selectedYear);
                         <td>₹${formatNumber(emp.late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.one_hour_late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.fourth_saturday_deduction || 0)}</td>
-                        <td>${(emp.salary_calculated_days || 0).toFixed(2)}</td>
+                        <td>
+                            ${(emp.salary_calculated_days || 0).toFixed(2)}
+                            <span class="info-icon" style="cursor:pointer; margin-left:6px;" onclick="showSalaryCalcDetails(${emp.id})">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </td>
+                        <td>
+                            ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.base_salary || 0) / Number(emp.working_days || 1))).toFixed(2))}
+                        </td>
                         <td style="display: flex; gap: 10px; justify-content: center;">
                             <button type="button" class="action-btn edit-btn" title="Edit" onclick="editEmployee('${emp.employee_id}', ${emp.id})">
                                 <i class="fas fa-edit"></i>
@@ -1940,6 +1971,118 @@ $selectedYear = intval($selectedYear);
 
         function closeLeaveDeductionModal() {
             document.getElementById('leaveDeductionModal').style.display = 'none';
+        }
+
+        function showSalaryCalcDetails(userId) {
+            const emp = (window.analyticsDataById || {})[userId];
+            if (!emp) return;
+
+            const workingDays = Number(emp.working_days || 0);
+            const baseSalary = Number(emp.base_salary || 0);
+            const dailySalary = workingDays > 0 ? (baseSalary / workingDays) : 0;
+
+            const presentDays = Number(emp.present_days || 0);
+            const casual = Number(emp.casual_leave_days || 0);
+            const half = Number(emp.half_day_leave_days || 0);
+            const compensate = Number(emp.compensate_leave_days || 0);
+            const leaveTaken = Number(emp.leave_taken || 0);
+
+            const regularLateDays = Number(emp.late_days || 0);
+            const regularLateDeductionDays = Math.floor(regularLateDays / 3) * 0.5;
+            const oneHourLate = Number(emp.one_hour_late || 0);
+            const oneHourLateDeductionDays = oneHourLate * 0.5;
+
+            const fourthSatPenalty = Number(emp.fourth_saturday_deduction || 0) > 0 ? 2 : 0;
+
+            const salaryCalc = Number(emp.salary_calculated_days || 0).toFixed(2);
+
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+
+            const container = document.getElementById('salaryCalcContainer');
+            container.innerHTML = `<div style="text-align:center; padding:20px;"><div class="spinner"></div><p>Loading leave details...</p></div>`;
+
+            // Fetch detailed leave records
+            fetch(`get_leave_records.php?user_id=${userId}&month=${month}&year=${year}`)
+                .then(response => response.json())
+                .then(data => {
+                    let leaveDetailsHtml = '';
+                    
+                    if (data.status === 'success' && data.records && data.records.length > 0) {
+                        leaveDetailsHtml = '<div style="background:#f0fdf4; border:1px solid #86efac; border-radius:4px; padding:8px; margin-bottom:8px;"><strong style="color:#166534;">Leave Details:</strong><ul style="margin:6px 0 0 20px; font-size:0.9rem; color:#166534;">';
+                        
+                        data.records.forEach(record => {
+                            leaveDetailsHtml += `<li>${record.date_range} - ${record.leave_type}</li>`;
+                        });
+                        
+                        leaveDetailsHtml += '</ul></div>';
+                    } else {
+                        leaveDetailsHtml = '<div style="background:#fef3c7; border:1px solid #fcd34d; border-radius:4px; padding:8px; margin-bottom:8px; font-size:0.9rem; color:#92400e;">No leave records for this period</div>';
+                    }
+
+                    container.innerHTML = `
+                        <p style="font-weight:600; text-align:center;">${emp.name || ''} — Month: ${month} / ${year}</p>
+                        <div style="background:white; padding:12px; border-radius:6px; margin-bottom:10px;">
+                            <p style="margin:6px 0;"><strong>Base Salary:</strong> ₹${Number(baseSalary).toLocaleString('en-IN')}</p>
+                            <p style="margin:6px 0;"><strong>Working Days:</strong> ${workingDays} &middot; <strong>Daily Salary:</strong> ₹${dailySalary.toFixed(2)}</p>
+                        </div>
+
+                        <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
+                            <h3 style="margin:6px 0;">Credits</h3>
+                            <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''} ${half ? `+ <strong>${half}×0.5 (half-day)</strong>` : ''}</p>
+                            ${leaveDetailsHtml}
+                            <p style="margin:8px 0 0 0;"><strong>Total leave days (approved):</strong> ${leaveTaken}</p>
+                        </div>
+
+                        <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
+                            <h3 style="margin:6px 0;">Deductions</h3>
+                            <p style="margin:4px 0;"><strong>Regular late deduction days:</strong> ${regularLateDeductionDays} (${regularLateDays} late days)</p>
+                            <p style="margin:4px 0;"><strong>1+ hour late deduction days:</strong> ${oneHourLateDeductionDays} (${oneHourLate} 1+ hour late days)</p>
+                            <p style="margin:4px 0;"><strong>4th Saturday penalty days:</strong> ${fourthSatPenalty}</p>
+                        </div>
+
+                        <div style="background:#f8f9fa; padding:12px; border-radius:6px;">
+                            <p style="margin:6px 0;"><strong>Calculation:</strong></p>
+                            <p style="margin:4px 0; font-weight:600;">[ Credits ] - [ Deductions ] = <span style="color:#2d3748;">${salaryCalc} days</span></p>
+                            <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} + ${half}×0.5 = ${(presentDays + casual + (half*0.5)).toFixed(2)}<br>Deductions: ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${(regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error fetching leave details:', error);
+                    container.innerHTML = `
+                        <p style="font-weight:600; text-align:center;">${emp.name || ''} — Month: ${month} / ${year}</p>
+                        <div style="background:white; padding:12px; border-radius:6px; margin-bottom:10px;">
+                            <p style="margin:6px 0;"><strong>Base Salary:</strong> ₹${Number(baseSalary).toLocaleString('en-IN')}</p>
+                            <p style="margin:6px 0;"><strong>Working Days:</strong> ${workingDays} &middot; <strong>Daily Salary:</strong> ₹${dailySalary.toFixed(2)}</p>
+                        </div>
+
+                        <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
+                            <h3 style="margin:6px 0;">Credits</h3>
+                            <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''} ${half ? `+ <strong>${half}×0.5 (half-day)</strong>` : ''}</p>
+                            <p style="margin:4px 0;"><strong>Total leave days (approved):</strong> ${leaveTaken}</p>
+                        </div>
+
+                        <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
+                            <h3 style="margin:6px 0;">Deductions</h3>
+                            <p style="margin:4px 0;"><strong>Regular late deduction days:</strong> ${regularLateDeductionDays} (${regularLateDays} late days)</p>
+                            <p style="margin:4px 0;"><strong>1+ hour late deduction days:</strong> ${oneHourLateDeductionDays} (${oneHourLate} 1+ hour late days)</p>
+                            <p style="margin:4px 0;"><strong>4th Saturday penalty days:</strong> ${fourthSatPenalty}</p>
+                        </div>
+
+                        <div style="background:#f8f9fa; padding:12px; border-radius:6px;">
+                            <p style="margin:6px 0;"><strong>Calculation:</strong></p>
+                            <p style="margin:4px 0; font-weight:600;">[ Credits ] - [ Deductions ] = <span style="color:#2d3748;">${salaryCalc} days</span></p>
+                            <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} + ${half}×0.5 = ${(presentDays + casual + (half*0.5)).toFixed(2)}<br>Deductions: ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${(regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
+                        </div>
+                    `;
+                });
+
+            document.getElementById('salaryCalcModal').style.display = 'block';
+        }
+
+        function closeSalaryCalcModal() {
+            document.getElementById('salaryCalcModal').style.display = 'none';
         }
 
         // Extend window.onclick to close present days modal when clicking outside

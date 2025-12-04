@@ -227,6 +227,29 @@ try {
         $shiftStmt->execute([$employee['id']]);
         $userShift = $shiftStmt->fetch(PDO::FETCH_ASSOC);
         
+        // Fetch short leave dates for this month to exclude from late day calculations
+        $shortLeaveDates = [];
+        try {
+            $shortLeavesStmt = $pdo->prepare("
+                SELECT DISTINCT DATE(start_date) as leave_date
+                FROM leave_request
+                WHERE user_id = ?
+                AND status = 'approved'
+                AND MONTH(start_date) = ?
+                AND YEAR(start_date) = ?
+                AND leave_type IN (
+                    SELECT id FROM leave_types 
+                    WHERE LOWER(name) LIKE '%short%' OR LOWER(name) LIKE '%half%'
+                )
+            ");
+            $shortLeavesStmt->execute([$employee['id'], $month, $year]);
+            $shortLeaves = $shortLeavesStmt->fetchAll(PDO::FETCH_COLUMN);
+            $shortLeaveDates = array_flip($shortLeaves); // Convert to associative array for faster lookup
+        } catch (PDOException $e) {
+            error_log("Error fetching short leaves for user " . $employee['id'] . ": " . $e->getMessage());
+            $shortLeaveDates = [];
+        }
+        
         $lateDays = 0;
         if ($userShift && !empty($userShift['start_time'])) {
             $shiftStartTime = $userShift['start_time'];
@@ -234,8 +257,9 @@ try {
             $graceTime = date('H:i:s', strtotime($shiftStartTime . ' +15 minutes'));
             
             // Count late days: punch_in > grace_time (more than 15 minutes late)
+            // Exclude days with short leave
             $lateDaysStmt = $pdo->prepare("
-                SELECT COUNT(*) as late_days_count
+                SELECT DATE(date) as late_date
                 FROM attendance
                 WHERE user_id = ?
                 AND MONTH(date) = ?
@@ -245,8 +269,14 @@ try {
                 AND TIME(punch_in) > ?
             ");
             $lateDaysStmt->execute([$employee['id'], $month, $year, $graceTime]);
-            $lateDaysResult = $lateDaysStmt->fetch(PDO::FETCH_ASSOC);
-            $lateDays = $lateDaysResult['late_days_count'] ?? 0;
+            $lateDaysResults = $lateDaysStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Count late days excluding short leave dates
+            foreach ($lateDaysResults as $lateDate) {
+                if (!isset($shortLeaveDates[$lateDate])) {
+                    $lateDays++;
+                }
+            }
         }
         
         // Fetch 1+ hour late days from attendance table
@@ -258,8 +288,9 @@ try {
             $oneHourLateTime = date('H:i:s', strtotime($shiftStartTime . ' +1 hour'));
             
             // Count 1+ hour late days: punch_in >= 1 hour after shift start
+            // Exclude days with short leave
             $oneHourLateStmt = $pdo->prepare("
-                SELECT COUNT(*) as one_hour_late_count
+                SELECT DATE(date) as late_date
                 FROM attendance
                 WHERE user_id = ?
                 AND MONTH(date) = ?
@@ -269,8 +300,14 @@ try {
                 AND TIME(punch_in) >= ?
             ");
             $oneHourLateStmt->execute([$employee['id'], $month, $year, $oneHourLateTime]);
-            $oneHourLateResult = $oneHourLateStmt->fetch(PDO::FETCH_ASSOC);
-            $oneHourLateDays = $oneHourLateResult['one_hour_late_count'] ?? 0;
+            $oneHourLateResults = $oneHourLateStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Count 1+ hour late days excluding short leave dates
+            foreach ($oneHourLateResults as $lateDate) {
+                if (!isset($shortLeaveDates[$lateDate])) {
+                    $oneHourLateDays++;
+                }
+            }
             
             // Adjust regular late days: exclude 1+ hour late from late days count
             // 1+ hour late should not be counted in regular late days
@@ -477,6 +514,125 @@ try {
         $oneHourLateDaysDeductionDays = $oneHourLateDays * 0.5;
         $oneHourLateDeductionAmount = $oneHourLateDaysDeductionDays * $dailySalary;
         
+        // Calculate 4th Saturday missing deduction
+        // If user has not punched in on the 4th Saturday of the month, deduct 2 days salary
+        // BUT only if the 4th Saturday has already passed
+        $fourthSaturdayDeduction = 0;
+        try {
+            // Calculate month boundaries
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+            $firstDayOfMonth = "$year-$monthStr-01";
+            $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+            
+            // Find all Saturdays in the month
+            $saturdays = [];
+            $currentDate = new DateTime($firstDayOfMonth);
+            $endDate = new DateTime($lastDayOfMonth);
+            
+            while ($currentDate <= $endDate) {
+                if ($currentDate->format('N') == 6) { // 6 = Saturday
+                    $saturdays[] = $currentDate->format('Y-m-d');
+                }
+                $currentDate->modify('+1 day');
+            }
+            
+            // Get the 4th Saturday if it exists
+            if (count($saturdays) >= 4) {
+                $fourthSaturday = $saturdays[3]; // Index 3 is the 4th Saturday
+                $today = date('Y-m-d');
+                
+                // Only apply deduction if the 4th Saturday has already passed
+                if ($fourthSaturday <= $today) {
+                    // Check if user has punched in on the 4th Saturday
+                    $fourthSaturdayCheckStmt = $pdo->prepare("
+                        SELECT punch_in
+                        FROM attendance
+                        WHERE user_id = ?
+                        AND DATE(date) = ?
+                        AND punch_in IS NOT NULL
+                        AND punch_in != ''
+                        LIMIT 1
+                    ");
+                    $fourthSaturdayCheckStmt->execute([$employee['id'], $fourthSaturday]);
+                    $punchRecord = $fourthSaturdayCheckStmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    // If no punch in found on 4th Saturday, deduct 2 days salary
+                    if (!$punchRecord) {
+                        $fourthSaturdayDeduction = 2 * $dailySalary;
+                    }
+                }
+            }
+            
+            $fourthSaturdayDeduction = round($fourthSaturdayDeduction, 2);
+            
+        } catch (Exception $e) {
+            error_log("Error calculating 4th Saturday deduction for user " . $employee['id'] . ": " . $e->getMessage());
+            $fourthSaturdayDeduction = 0;
+        }
+        
+        // Calculate salary calculated days
+        // Start from present days
+        $salaryCalculatedDays = floatval($presentDays);
+
+        // Add leave credits from approved leaves fetched earlier ($leaves from leave deduction block)
+        $casualLeaveCount = 0;
+        $halfDayCount = 0;
+        $compensateCount = 0;
+        if (!empty($leaves) && is_array($leaves)) {
+            foreach ($leaves as $lv) {
+                $lt = strtolower(str_replace(' ', '_', $lv['leave_type'] ?? 'other'));
+                $numDays = intval($lv['num_days']);
+
+                switch ($lt) {
+                    case 'casual_leave':
+                    case 'casual leave':
+                        // Casual leave counts as full day(s)
+                        $salaryCalculatedDays += $numDays;
+                        $casualLeaveCount += $numDays;
+                        break;
+                    case 'half_day':
+                    case 'half day':
+                        // Half day counts as 0.5 per entry day
+                        $salaryCalculatedDays += 0.5 * $numDays;
+                        $halfDayCount += $numDays;
+                        break;
+                    case 'compensate_leave':
+                    case 'compensate leave':
+                        // Compensate leave is already counted in present days, do not add again
+                        $compensateCount += $numDays;
+                        break;
+                    default:
+                        // other leave types (short_leave, sick, unpaid etc.) generally do not add salary days here
+                        break;
+                }
+            }
+        }
+
+        // Subtract deductions due to late arrivals
+        // Regular late deduction days (every 3 late days => 0.5 day)
+        $regularLateDeductionDays = floor($lateDays / 3) * 0.5;
+        // 1+ hour late deduction days (each 1+ hour late = 0.5 day)
+        $oneHourLateDeductionDays = $oneHourLateDays * 0.5;
+
+        $salaryCalculatedDays -= $regularLateDeductionDays;
+        $salaryCalculatedDays -= $oneHourLateDeductionDays;
+
+        // Subtract 4th Saturday missing days (2 days) if penalty applied
+        $fourthSaturdayMissingDays = ($fourthSaturdayDeduction > 0) ? 2 : 0;
+        $salaryCalculatedDays -= $fourthSaturdayMissingDays;
+
+        // Ensure salary calculated days are within reasonable bounds [0, workingDays]
+        if ($salaryCalculatedDays < 0) {
+            $salaryCalculatedDays = 0;
+        }
+        if ($salaryCalculatedDays > $workingDays) {
+            // Cap to working days (can't be more than total working days)
+            $salaryCalculatedDays = floatval($workingDays);
+        }
+
+        // Round to 2 decimal places
+        $salaryCalculatedDays = round($salaryCalculatedDays, 2);
+
         $employeeData[] = [
             'id' => $employee['id'], // Add user ID
             'employee_id' => $employee['employee_id'] ?? $employee['id'],
@@ -491,8 +647,12 @@ try {
             'leave_deduction' => round($leaveDeduction, 2),
             'late_deduction' => round($lateDeductionAmount, 2),
             'one_hour_late_deduction' => round($oneHourLateDeductionAmount, 2),
-            'fourth_saturday_deduction' => 0,
-            'salary_calculated_days' => $workingDays
+            'fourth_saturday_deduction' => $fourthSaturdayDeduction,
+            'salary_calculated_days' => $salaryCalculatedDays,
+            // detailed counts used for salary calculation breakdown
+            'casual_leave_days' => $casualLeaveCount,
+            'half_day_leave_days' => $halfDayCount,
+            'compensate_leave_days' => $compensateCount
         ];
     }
 

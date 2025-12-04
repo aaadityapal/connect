@@ -915,6 +915,7 @@ $selectedYear = intval($selectedYear);
                                 <th>1+ Hour Late</th>
                                 <th>Leave Taken</th>
                                 <th>Leave Deduction</th>
+                                <th>Late Deduction</th>
                                 <th>1+ Leave Hour Late Deduction</th>
                                 <th>4th Saturday Missing Deduction</th>
                                 <th>Salary Calculated Days</th>
@@ -923,7 +924,7 @@ $selectedYear = intval($selectedYear);
                         </thead>
                         <tbody id="analyticsTableBody">
                             <tr>
-                                <td colspan="13" style="text-align: center; padding: 40px;">
+                                <td colspan="14" style="text-align: center; padding: 40px;">
                                     <i class="fas fa-spinner fa-spin"></i> Loading data...
                                 </td>
                             </tr>
@@ -1294,6 +1295,7 @@ $selectedYear = intval($selectedYear);
                                 <span class="info-tooltip">Leave deduction breakdown</span>
                             </span>
                         </td>
+                        <td>₹${formatNumber(emp.late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.one_hour_late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.fourth_saturday_deduction || 0)}</td>
                         <td>${(emp.salary_calculated_days || 0).toFixed(2)}</td>

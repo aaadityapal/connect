@@ -1216,7 +1216,10 @@ while ($row = $result->fetch_assoc()) {
                     
                     if (this.value === 'absent' || this.value === 'leave' || this.value === 'half_day' || this.value === 'holiday') {
                         inputs.forEach(input => {
-                            input.value = '';
+                            // Don't clear shift_time input, only punch_in and punch_out
+                            if (!input.name.includes('[shift_time]')) {
+                                input.value = '';
+                            }
                             input.disabled = true;
                             input.required = false;
                         });
@@ -1230,8 +1233,13 @@ while ($row = $result->fetch_assoc()) {
                         });
                         
                         const shiftTimeInput = row.querySelector('input[name$="[shift_time]"]');
+                        // Only set shift time if it doesn't have a value
                         if (shiftTimeInput && !shiftTimeInput.value && shiftTimeInput.dataset.shiftStart) {
                             shiftTimeInput.value = shiftTimeInput.dataset.shiftStart;
+                        }
+                        // Re-enable shift time input
+                        if (shiftTimeInput) {
+                            shiftTimeInput.disabled = false;
                         }
                         
                         calculateOvertime(row);

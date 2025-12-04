@@ -41,6 +41,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
     $month_end = date('Y-m-t', strtotime($month_start));
     $month_year = date('F_Y', strtotime($month_start));
     
+    // Helper function to convert overtime HH:MM:SS to decimal format
+    function formatOvertimeForExport($overtime_hours) {
+        if (empty($overtime_hours) || $overtime_hours === '00:00:00') {
+            return '';
+        }
+        
+        $overtime_parts = explode(':', $overtime_hours);
+        if (count($overtime_parts) >= 2) {
+            $hours = intval($overtime_parts[0]);
+            $minutes = intval($overtime_parts[1]);
+            
+            // Convert minutes to decimal: 30 minutes = 0.5
+            if ($minutes === 30) {
+                return $hours . '.5';
+            } else {
+                return (string)$hours;
+            }
+        }
+        
+        return '';
+    }
+    
     if ($unique_id === 'all') {
         // Export attendance for all employees
         
@@ -159,21 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
                 }
                 
                 // Get overtime hours
-                $overtime = '';
-                if ($record && !empty($record['overtime_hours']) && $record['overtime_hours'] != '00:00:00') {
-                    $overtime_parts = explode(':', $record['overtime_hours']);
-                    if (count($overtime_parts) >= 2) {
-                        // Just take hours and minutes
-                        $hours = intval($overtime_parts[0]);
-                        $minutes = intval($overtime_parts[1]);
-                        
-                        if ($minutes === 30) {
-                            $overtime = $hours . '.5';
-                        } else {
-                            $overtime = $hours;
-                        }
-                    }
-                }
+                $overtime = formatOvertimeForExport($record['overtime_hours'] ?? '00:00:00');
                 
                 // Get half-day status
                 $half_day = '';

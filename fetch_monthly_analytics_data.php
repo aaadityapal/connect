@@ -465,6 +465,18 @@ try {
             $leaveDeduction = 0;
         }
         
+        // Calculate late deductions
+        // Daily salary calculation
+        $dailySalary = $workingDays > 0 ? $baseSalary / $workingDays : 0;
+        
+        // Regular late deduction: Every 3 late days = 0.5 day deduction
+        $lateDaysDeductionDays = floor($lateDays / 3) * 0.5;
+        $lateDeductionAmount = $lateDaysDeductionDays * $dailySalary;
+        
+        // One hour late deduction: Each 1+ hour late = 0.5 day deduction
+        $oneHourLateDaysDeductionDays = $oneHourLateDays * 0.5;
+        $oneHourLateDeductionAmount = $oneHourLateDaysDeductionDays * $dailySalary;
+        
         $employeeData[] = [
             'id' => $employee['id'], // Add user ID
             'employee_id' => $employee['employee_id'] ?? $employee['id'],
@@ -477,7 +489,8 @@ try {
             'one_hour_late' => $oneHourLateDays,
             'leave_taken' => $leaveTaken,
             'leave_deduction' => round($leaveDeduction, 2),
-            'one_hour_late_deduction' => 0,
+            'late_deduction' => round($lateDeductionAmount, 2),
+            'one_hour_late_deduction' => round($oneHourLateDeductionAmount, 2),
             'fourth_saturday_deduction' => 0,
             'salary_calculated_days' => $workingDays
         ];

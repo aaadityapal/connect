@@ -174,7 +174,6 @@ $selectedYear = intval($selectedYear);
             box-shadow: none;
             min-height: 400px;
             border-top: 1px solid #f0f0f0;
-            overflow-x: auto;
         }
 
         .data-display {
@@ -210,6 +209,9 @@ $selectedYear = intval($selectedYear);
         .analytics-table thead {
             background: #f8f9fa;
             border-bottom: 2px solid #2d3748;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .analytics-table th {
@@ -220,6 +222,9 @@ $selectedYear = intval($selectedYear);
             font-size: 0.85rem;
             white-space: nowrap;
             border-right: 1px solid #2d3748;
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
         }
 
         .analytics-table th:last-child {
@@ -925,6 +930,9 @@ $selectedYear = intval($selectedYear);
                                     </span>
                                 </th>
                                 <th>Net Salary</th>
+                                <th>Overtime Hours</th>
+                                <th>Overtime Amount</th>
+                                <th>Final Salary</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -1198,6 +1206,22 @@ $selectedYear = intval($selectedYear);
         </div>
     </div>
 
+    <!-- Overtime Details Modal -->
+    <div id="overtimeDetailsModal" class="modal">
+        <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column; width: 98%; max-width: 1200px; position: relative;">
+            <span class="close-modal" onclick="closeOvertimeDetailsModal()" style="position: absolute; top: 12px; right: 20px; cursor: pointer;">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 15px; flex-shrink: 0; text-align: center; width: 100%;">Overtime Details</h2>
+
+            <div id="overtimeDetailsContainer" style="background: #f8f9fa; padding: 20px; border-radius: 6px; overflow-y: auto; flex-grow: 1; min-height: 0;">
+                <div style="text-align:center; padding:20px;"><div class="spinner"></div><p>Loading overtime details...</p></div>
+            </div>
+
+            <div class="modal-buttons" style="flex-shrink: 0; margin-top: 20px;">
+                <button class="btn-cancel" onclick="closeOvertimeDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('.filter-form');
@@ -1329,6 +1353,19 @@ $selectedYear = intval($selectedYear);
                         </td>
                         <td>
                             ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.base_salary || 0) / Number(emp.working_days || 1))).toFixed(2))}
+                        </td>
+                        <td>
+                            ${emp.overtime_hours || 0}
+                            <span class="info-icon" data-type="overtime-hours" onclick="showOvertimeDetails(${emp.id}, '${emp.name}')" style="cursor: pointer;">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="info-tooltip">Overtime hours breakdown</span>
+                            </span>
+                        </td>
+                        <td>
+                            ₹${formatNumber(emp.overtime_amount || 0)}
+                        </td>
+                        <td>
+                            ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.base_salary || 0) / Number(emp.working_days || 1)) + Number(emp.overtime_amount || 0)).toFixed(2))}
                         </td>
                         <td style="display: flex; gap: 10px; justify-content: center;">
                             <button type="button" class="action-btn edit-btn" title="Edit" onclick="editEmployee('${emp.employee_id}', ${emp.id})">
@@ -1973,6 +2010,115 @@ $selectedYear = intval($selectedYear);
             document.getElementById('leaveDeductionModal').style.display = 'none';
         }
 
+        function showOvertimeDetails(userId, employeeName) {
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+
+            const container = document.getElementById('overtimeDetailsContainer');
+            container.innerHTML = '<div style="text-align:center; padding:20px;"><div class="spinner"></div><p>Loading overtime details...</p></div>';
+
+            fetch(`fetch_user_overtime_detailed_breakdown.php?user_id=${userId}&month=${month}&year=${year}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Failed to fetch overtime details');
+                    }
+
+                    const salaryInfo = data.salary_info;
+                    const overtimeSummary = data.overtime_summary;
+                    const records = data.overtime_records || [];
+
+                    let html = `
+                        <div style="background:#fff; padding:16px; border-radius:6px; margin-bottom:15px;">
+                            <h3 style="margin:0 0 12px 0; color:#1a202c;">Employee Information</h3>
+                            <p style="margin:4px 0;"><strong>Name:</strong> ${employeeName}</p>
+                            <p style="margin:4px 0;"><strong>Base Salary:</strong> ₹${Number(salaryInfo.base_salary).toLocaleString('en-IN')}</p>
+                            <p style="margin:4px 0;"><strong>Per Hour Salary:</strong> ₹${Number(salaryInfo.per_hour_salary).toLocaleString('en-IN')}</p>
+                        </div>
+
+                        <div style="background:#fff; padding:16px; border-radius:6px; margin-bottom:15px;">
+                            <h3 style="margin:0 0 12px 0; color:#1a202c;">Salary Structure</h3>
+                            <p style="margin:4px 0;"><strong>Daily Salary:</strong> ₹${Number(salaryInfo.per_day_salary).toLocaleString('en-IN')}</p>
+                            <p style="margin:4px 0;"><strong>Shift Hours:</strong> ${Number(salaryInfo.shift_hours).toFixed(2)} hours</p>
+                            <p style="margin:4px 0;"><strong>Working Days (Month):</strong> ${salaryInfo.working_days} days</p>
+                        </div>
+
+                        <div style="background:#fff; padding:16px; border-radius:6px; margin-bottom:15px;">
+                            <h3 style="margin:0 0 12px 0; color:#1a202c;">Overtime Summary</h3>
+                            <p style="margin:4px 0;"><strong>Total Overtime Hours:</strong> ${Number(overtimeSummary.total_hours).toFixed(2)} hours</p>
+                            <p style="margin:4px 0; font-weight:600; color:#2d3748;"><strong>Total Overtime Amount:</strong> ₹${Number(overtimeSummary.total_amount).toLocaleString('en-IN')}</p>
+                        </div>
+                    `;
+
+                    if (records.length > 0) {
+                        html += `
+                            <div style="background:#fff; padding:16px; border-radius:6px;">
+                                <h3 style="margin:0 0 12px 0; color:#1a202c;">Overtime Records (${records.length} entries)</h3>
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <thead>
+                                        <tr style="background:#f8f9fa; border-bottom:2px solid #2d3748;">
+                                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#1a202c; border-right:1px solid #e2e8f0;">Date</th>
+                                            <th style="padding:10px 12px; text-align:center; font-weight:600; color:#1a202c; border-right:1px solid #e2e8f0;">Hours</th>
+                                            <th style="padding:10px 12px; text-align:right; font-weight:600; color:#1a202c; border-right:1px solid #e2e8f0;">Amount</th>
+                                            <th style="padding:10px 12px; text-align:left; font-weight:600; color:#1a202c;">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                        records.forEach((record, index) => {
+                            const dateObj = new Date(record.date);
+                            const displayDate = dateObj.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+                            const rowBg = index % 2 === 0 ? '#ffffff' : '#fafbfc';
+                            
+                            html += `
+                                <tr style="background:${rowBg}; border-bottom:1px solid #f0f0f0;">
+                                    <td style="padding:10px 12px; border-right:1px solid #e2e8f0;">${displayDate}</td>
+                                    <td style="padding:10px 12px; text-align:center; border-right:1px solid #e2e8f0;">${Number(record.hours).toFixed(2)}</td>
+                                    <td style="padding:10px 12px; text-align:right; border-right:1px solid #e2e8f0; font-weight:500;">₹${Number(record.amount).toLocaleString('en-IN')}</td>
+                                    <td style="padding:10px 12px;">
+                                        ${record.description ? `<small style="color:#666;">${record.description}</small>` : '<small style="color:#aaa;">-</small>'}
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div style="background:#fee2e2; padding:16px; border-radius:6px; text-align:center; color:#991b1b;">
+                                <p style="margin:0;">No overtime records found for this month</p>
+                            </div>
+                        `;
+                    }
+
+                    container.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error fetching overtime details:', error);
+                    container.innerHTML = `
+                        <div style="background:#fee2e2; padding:16px; border-radius:6px;">
+                            <h3 style="margin:0 0 10px 0; color:#991b1b;">Error Loading Details</h3>
+                            <p style="margin:0; color:#991b1b; font-size:0.9rem;">${error.message}</p>
+                            <p style="margin:8px 0 0 0; font-size:0.85rem; color:#7f1d1d;">Employee: ${employeeName} | Month: ${month}/${year}</p>
+                        </div>
+                    `;
+                });
+
+            document.getElementById('overtimeDetailsModal').style.display = 'block';
+        }
+
+        function closeOvertimeDetailsModal() {
+            document.getElementById('overtimeDetailsModal').style.display = 'none';
+        }
+
         function showSalaryCalcDetails(userId) {
             const emp = (window.analyticsDataById || {})[userId];
             if (!emp) return;
@@ -2029,13 +2175,14 @@ $selectedYear = intval($selectedYear);
 
                         <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
                             <h3 style="margin:6px 0;">Credits</h3>
-                            <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''} ${half ? `+ <strong>${half}×0.5 (half-day)</strong>` : ''}</p>
+                            <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''}</p>
                             ${leaveDetailsHtml}
                             <p style="margin:8px 0 0 0;"><strong>Total leave days (approved):</strong> ${leaveTaken}</p>
                         </div>
 
                         <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
                             <h3 style="margin:6px 0;">Deductions</h3>
+                            ${half ? `<p style="margin:4px 0;"><strong>Half-day deduction:</strong> ${half}×0.5 = ${(half*0.5).toFixed(2)} days</p>` : ''}
                             <p style="margin:4px 0;"><strong>Regular late deduction days:</strong> ${regularLateDeductionDays} (${regularLateDays} late days)</p>
                             <p style="margin:4px 0;"><strong>1+ hour late deduction days:</strong> ${oneHourLateDeductionDays} (${oneHourLate} 1+ hour late days)</p>
                             <p style="margin:4px 0;"><strong>4th Saturday penalty days:</strong> ${fourthSatPenalty}</p>
@@ -2044,7 +2191,7 @@ $selectedYear = intval($selectedYear);
                         <div style="background:#f8f9fa; padding:12px; border-radius:6px;">
                             <p style="margin:6px 0;"><strong>Calculation:</strong></p>
                             <p style="margin:4px 0; font-weight:600;">[ Credits ] - [ Deductions ] = <span style="color:#2d3748;">${salaryCalc} days</span></p>
-                            <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} + ${half}×0.5 = ${(presentDays + casual + (half*0.5)).toFixed(2)}<br>Deductions: ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${(regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
+                            <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} = ${(presentDays + casual).toFixed(2)}<br>Deductions: ${(half*0.5).toFixed(2)} (half-day) + ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${((half*0.5) + regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
                         </div>
                     `;
                 })
@@ -2059,12 +2206,13 @@ $selectedYear = intval($selectedYear);
 
                         <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
                             <h3 style="margin:6px 0;">Credits</h3>
-                            <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''} ${half ? `+ <strong>${half}×0.5 (half-day)</strong>` : ''}</p>
+                            <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''}</p>
                             <p style="margin:4px 0;"><strong>Total leave days (approved):</strong> ${leaveTaken}</p>
                         </div>
 
                         <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
                             <h3 style="margin:6px 0;">Deductions</h3>
+                            ${half ? `<p style="margin:4px 0;"><strong>Half-day deduction:</strong> ${half}×0.5 = ${(half*0.5).toFixed(2)} days</p>` : ''}
                             <p style="margin:4px 0;"><strong>Regular late deduction days:</strong> ${regularLateDeductionDays} (${regularLateDays} late days)</p>
                             <p style="margin:4px 0;"><strong>1+ hour late deduction days:</strong> ${oneHourLateDeductionDays} (${oneHourLate} 1+ hour late days)</p>
                             <p style="margin:4px 0;"><strong>4th Saturday penalty days:</strong> ${fourthSatPenalty}</p>
@@ -2073,7 +2221,7 @@ $selectedYear = intval($selectedYear);
                         <div style="background:#f8f9fa; padding:12px; border-radius:6px;">
                             <p style="margin:6px 0;"><strong>Calculation:</strong></p>
                             <p style="margin:4px 0; font-weight:600;">[ Credits ] - [ Deductions ] = <span style="color:#2d3748;">${salaryCalc} days</span></p>
-                            <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} + ${half}×0.5 = ${(presentDays + casual + (half*0.5)).toFixed(2)}<br>Deductions: ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${(regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
+                            <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} = ${(presentDays + casual).toFixed(2)}<br>Deductions: ${(half*0.5).toFixed(2)} (half-day) + ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${((half*0.5) + regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
                         </div>
                     `;
                 });
@@ -2094,6 +2242,7 @@ $selectedYear = intval($selectedYear);
                 const oneHourLateDaysModal = document.getElementById('oneHourLateDaysModal');
                 const leaveDetailsModal = document.getElementById('leaveDetailsModal');
                 const leaveDeductionModal = document.getElementById('leaveDeductionModal');
+                const overtimeDetailsModal = document.getElementById('overtimeDetailsModal');
                 const editModal = document.getElementById('editSalaryModal');
                 const workingDaysModal = document.getElementById('workingDaysModal');
 
@@ -2117,6 +2266,9 @@ $selectedYear = intval($selectedYear);
                 }
                 if (event.target === leaveDeductionModal) {
                     closeLeaveDeductionModal();
+                }
+                if (event.target === overtimeDetailsModal) {
+                    closeOvertimeDetailsModal();
                 }
             } catch (e) {
                 // ignore

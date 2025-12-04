@@ -569,15 +569,89 @@ try {
             error_log("Error calculating 4th Saturday deduction for user " . $employee['id'] . ": " . $e->getMessage());
             $fourthSaturdayDeduction = 0;
         }
+
+        // Calculate overtime hours (fetch from overtime_requests table where status = 'approved')
+        $overtimeHours = 0;
+        $overtimeAmount = 0;
+        try {
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+            $firstDayOfMonth = "$year-$monthStr-01";
+            $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+            
+            // Fetch user's shift hours from shifts table via user_shifts
+            $shiftHoursStmt = $pdo->prepare("
+                SELECT s.start_time, s.end_time
+                FROM user_shifts us
+                JOIN shifts s ON us.shift_id = s.id
+                WHERE us.user_id = ?
+                AND (
+                    (us.effective_from IS NULL AND us.effective_to IS NULL) OR
+                    (us.effective_from <= ? AND (us.effective_to IS NULL OR us.effective_to >= ?))
+                )
+                ORDER BY us.effective_from DESC
+                LIMIT 1
+            ");
+            $shiftHoursStmt->execute([$employee['id'], $lastDayOfMonth, $firstDayOfMonth]);
+            $shiftHoursResult = $shiftHoursStmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Calculate shift hours from start_time and end_time
+            $shiftHours = 8; // Default to 8 hours
+            if ($shiftHoursResult && $shiftHoursResult['start_time'] && $shiftHoursResult['end_time']) {
+                $startTime = new DateTime($shiftHoursResult['start_time']);
+                $endTime = new DateTime($shiftHoursResult['end_time']);
+                
+                // Handle case where end_time is next day (e.g., 22:00 to 06:00)
+                if ($endTime < $startTime) {
+                    $endTime->modify('+1 day');
+                }
+                
+                $interval = $startTime->diff($endTime);
+                $shiftHours = floatval($interval->h) + (floatval($interval->i) / 60);
+            }
+            
+            $overtimeStmt = $pdo->prepare("
+                SELECT SUM(overtime_hours) as total_overtime_hours
+                FROM overtime_requests
+                WHERE user_id = ?
+                AND DATE(date) BETWEEN ? AND ?
+                AND status = 'approved'
+            ");
+            $overtimeStmt->execute([$employee['id'], $firstDayOfMonth, $lastDayOfMonth]);
+            $overtimeResult = $overtimeStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($overtimeResult && $overtimeResult['total_overtime_hours'] !== null) {
+                $overtimeHours = floatval($overtimeResult['total_overtime_hours']);
+                // Calculate overtime amount:
+                // One day salary = base_salary / working_days
+                // One hour salary = one_day_salary / shift_hours
+                // Overtime amount = overtime_hours * one_hour_salary
+                $oneDaySalary = $baseSalary / $workingDays;
+                $oneHourSalary = $oneDaySalary / $shiftHours;
+                $overtimeAmount = round($overtimeHours * $oneHourSalary, 2);
+            }
+        } catch (PDOException $e) {
+            error_log("Error calculating overtime for user " . $employee['id'] . ": " . $e->getMessage());
+            $overtimeHours = 0;
+            $overtimeAmount = 0;
+        } catch (Exception $e) {
+            error_log("Error calculating shift hours for user " . $employee['id'] . ": " . $e->getMessage());
+            $overtimeHours = 0;
+            $overtimeAmount = 0;
+        }
         
         // Calculate salary calculated days
-        // Start from present days
-        $salaryCalculatedDays = floatval($presentDays);
+        // Start from present days - but cap present days to working days first
+        $presentDaysCapped = floatval(min($presentDays, $workingDays));
+        $salaryCalculatedDays = $presentDaysCapped;
 
-        // Add leave credits from approved leaves fetched earlier ($leaves from leave deduction block)
+        // Add/Subtract leave credits from approved leaves fetched earlier ($leaves from leave deduction block)
+        // Only add leaves that actually add to salary (casual) 
+        // Deduct leaves that reduce salary (half-day)
         $casualLeaveCount = 0;
         $halfDayCount = 0;
         $compensateCount = 0;
+        $leaveCreditsToAdd = 0;
+        
         if (!empty($leaves) && is_array($leaves)) {
             foreach ($leaves as $lv) {
                 $lt = strtolower(str_replace(' ', '_', $lv['leave_type'] ?? 'other'));
@@ -586,14 +660,14 @@ try {
                 switch ($lt) {
                     case 'casual_leave':
                     case 'casual leave':
-                        // Casual leave counts as full day(s)
-                        $salaryCalculatedDays += $numDays;
+                        // Casual leave counts as full day(s) - ADD to salary
+                        $leaveCreditsToAdd += $numDays;
                         $casualLeaveCount += $numDays;
                         break;
                     case 'half_day':
                     case 'half day':
-                        // Half day counts as 0.5 per entry day
-                        $salaryCalculatedDays += 0.5 * $numDays;
+                        // Half day is a deduction of 0.5 per day - SUBTRACT from salary
+                        $leaveCreditsToAdd -= 0.5 * $numDays;
                         $halfDayCount += $numDays;
                         break;
                     case 'compensate_leave':
@@ -607,6 +681,9 @@ try {
                 }
             }
         }
+        
+        // Add/Subtract leave credits but ensure total stays within [0, workingDays] before deductions
+        $salaryCalculatedDays = floatval(min(max($salaryCalculatedDays + $leaveCreditsToAdd, 0), $workingDays));
 
         // Subtract deductions due to late arrivals
         // Regular late deduction days (every 3 late days => 0.5 day)
@@ -649,6 +726,8 @@ try {
             'one_hour_late_deduction' => round($oneHourLateDeductionAmount, 2),
             'fourth_saturday_deduction' => $fourthSaturdayDeduction,
             'salary_calculated_days' => $salaryCalculatedDays,
+            'overtime_hours' => $overtimeHours,
+            'overtime_amount' => $overtimeAmount,
             // detailed counts used for salary calculation breakdown
             'casual_leave_days' => $casualLeaveCount,
             'half_day_leave_days' => $halfDayCount,

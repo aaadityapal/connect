@@ -1222,6 +1222,20 @@ $selectedYear = intval($selectedYear);
         </div>
     </div>
 
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 500px; text-align: center; padding: 40px 30px;">
+            <div id="notificationIcon" style="font-size: 3rem; margin-bottom: 15px;">
+                <i class="fas fa-check-circle" style="color: #22c55e;"></i>
+            </div>
+            <h2 id="notificationTitle" style="margin: 15px 0; color: #1a202c; font-size: 1.3rem;">Success</h2>
+            <p id="notificationMessage" style="color: #4a5568; font-size: 0.95rem; margin: 0; line-height: 1.6;"></p>
+            <div style="margin-top: 25px;">
+                <button onclick="closeNotificationModal()" class="btn-cancel" style="min-width: 100px; padding: 12px 24px; font-size: 1rem;">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('.filter-form');
@@ -1239,6 +1253,43 @@ $selectedYear = intval($selectedYear);
             // Optional: Auto-submit when filters change
             // monthSelect.addEventListener('change', () => form.submit());
             // yearSelect.addEventListener('change', () => form.submit());
+        });
+
+        // Notification Modal Functions
+        function showNotification(title, message, type = 'success') {
+            const modal = document.getElementById('notificationModal');
+            const icon = document.getElementById('notificationIcon');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Update icon based on type
+            if (type === 'success') {
+                icon.innerHTML = '<i class="fas fa-check-circle" style="color: #22c55e;"></i>';
+            } else if (type === 'error') {
+                icon.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>';
+            } else if (type === 'warning') {
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>';
+            } else if (type === 'info') {
+                icon.innerHTML = '<i class="fas fa-info-circle" style="color: #3b82f6;"></i>';
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function closeNotificationModal() {
+            const modal = document.getElementById('notificationModal');
+            modal.style.display = 'none';
+        }
+
+        // Close notification modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('notificationModal');
+            if (event.target === modal) {
+                closeNotificationModal();
+            }
         });
 
         function loadAnalyticsData(month, year) {
@@ -1420,7 +1471,7 @@ $selectedYear = intval($selectedYear);
                 // Show modal
                 document.getElementById('editSalaryModal').style.display = 'block';
             } else {
-                alert('Employee not found');
+                showNotification('Error', 'Employee not found', 'error');
             }
         }
 
@@ -1645,12 +1696,12 @@ $selectedYear = intval($selectedYear);
                         // Show modal
                         document.getElementById('workingDaysModal').style.display = 'block';
                     } else {
-                        alert('Error fetching working days details: ' + data.message);
+                        showNotification('Error', 'Error fetching working days details: ' + data.message, 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error loading working days details');
+                    showNotification('Error', 'Error loading working days details', 'error');
                 });
         }
 
@@ -1659,52 +1710,249 @@ $selectedYear = intval($selectedYear);
         }
 
         function markAsPaid(employeeId) {
-            alert(`Mark as paid: ${employeeId}`);
+            showNotification('Info', `Mark as paid: ${employeeId}`, 'info');
             // Add your paid marking logic here
             console.log('Paid clicked for employee:', employeeId);
         }
 
         function exportToExcel() {
-            const table = document.querySelector('.analytics-table');
             const month = document.getElementById('month').value;
             const year = document.getElementById('year').value;
             
-            if (!table) {
-                alert('No data to export');
+            if (!month || !year) {
+                showNotification('Warning', 'Please select month and year', 'warning');
                 return;
             }
 
-            let csv = [];
-            let rows = table.querySelectorAll('tr');
+            // Show loading state
+            const exportBtn = event.target.closest('button');
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            exportBtn.disabled = true;
 
-            // Get all rows
-            rows.forEach(function(row) {
-                let csvRow = [];
-                let cols = row.querySelectorAll('td, th');
-
-                cols.forEach(function(col) {
-                    csvRow.push('"' + col.innerText.replace(/"/g, '""') + '"');
-                });
-
-                csv.push(csvRow.join(','));
-            });
-
-            // Create CSV content
-            const csvContent = 'data:text/csv;charset=utf-8,' + csv.join('\n');
-            const encodedUri = encodeURI(csvContent);
+            // Use a more reliable CDN URL for XLSX
+            const xslxUrl = 'https://unpkg.com/xlsx@latest/dist/xlsx.full.min.js';
             
-            // Create filename with month and year
-            const monthName = document.querySelector('select[name="month"] option:checked').text;
-            const filename = `Analytics_${monthName}_${year}.csv`;
+            // Check if SheetJS is loaded, if not load it
+            if (!window.XLSX) {
+                const script = document.createElement('script');
+                script.src = xslxUrl;
+                script.async = true;
+                
+                script.onload = () => {
+                    console.log('XLSX library loaded successfully from:', xslxUrl);
+                    performExport(month, year, exportBtn, originalText);
+                };
+                
+                script.onerror = () => {
+                    console.error('Failed to load XLSX library from:', xslxUrl);
+                    showNotification('Error', 'Error loading Excel library. Please try again.', 'error');
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                };
+                
+                // Set a timeout to catch loading issues
+                setTimeout(() => {
+                    if (!window.XLSX) {
+                        console.error('XLSX library failed to load within timeout');
+                        showNotification('Error', 'Error: Excel library took too long to load. Please try again.', 'error');
+                        exportBtn.innerHTML = originalText;
+                        exportBtn.disabled = false;
+                    }
+                }, 15000);
+                
+                document.head.appendChild(script);
+            } else {
+                console.log('XLSX library already loaded');
+                performExport(month, year, exportBtn, originalText);
+            }
+        }
 
-            // Create download link
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
+        function performExport(month, year, exportBtn, originalText) {
+            console.log('Starting export for month:', month, 'year:', year);
+            
+            // Fetch data from the export handler
+            fetch(`export_monthly_analytics_excel_data_handler.php?month=${month}&year=${year}`)
+                .then(response => {
+                    console.log('Response received, status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+                    
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Export failed');
+                    }
+                    
+                    if (!data.data || data.data.length === 0) {
+                        throw new Error('No data available for export');
+                    }
 
-            link.click();
-            document.body.removeChild(link);
+                    console.log('Creating Excel workbook...');
+
+                    // Create workbook
+                    const wb = XLSX.utils.book_new();
+                    
+                    // Prepare data for worksheet
+                    const headers = [
+                        'Employee ID',
+                        'Name',
+                        'Role',
+                        'Base Salary',
+                        'Working Days',
+                        'Present Days',
+                        'Late Days',
+                        '1+ Hour Late',
+                        'Leave Taken',
+                        'Leave Deduction',
+                        'Late Deduction',
+                        '1+ Hour Late Deduction',
+                        '4th Saturday Deduction',
+                        'Salary Calculated Days',
+                        'Net Salary',
+                        'Overtime Hours',
+                        'Overtime Amount',
+                        'Final Salary'
+                    ];
+
+                    // Create data rows
+                    const worksheetData = [headers];
+                    data.data.forEach(emp => {
+                        worksheetData.push([
+                            emp.employee_id || '',
+                            emp.name || '',
+                            emp.role || '',
+                            emp.base_salary || 0,
+                            emp.working_days || 0,
+                            emp.present_days || 0,
+                            emp.late_days || 0,
+                            emp.one_hour_late || 0,
+                            emp.leave_taken || 0,
+                            emp.leave_deduction || 0,
+                            emp.late_deduction || 0,
+                            emp.one_hour_late_deduction || 0,
+                            emp.fourth_saturday_deduction || 0,
+                            emp.salary_calculated_days || 0,
+                            emp.net_salary || 0,
+                            emp.overtime_hours || 0,
+                            emp.overtime_amount || 0,
+                            emp.final_salary || 0
+                        ]);
+                    });
+
+                    // Add empty row and summary section
+                    worksheetData.push([]);
+                    worksheetData.push(['SUMMARY']);
+                    worksheetData.push(['Total Salary (Without Overtime)', data.summary.total_salary_without_overtime]);
+                    worksheetData.push(['Total Salary (With Overtime)', data.summary.total_salary_with_overtime]);
+                    worksheetData.push(['Total Overtime Amount', data.summary.total_overtime_amount]);
+                    worksheetData.push(['Total Employees', data.summary.employee_count]);
+
+                    console.log('Creating worksheet...');
+                    // Create worksheet
+                    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+                    console.log('Applying header styling...');
+                    // Color header row - Dark Blue (#366092)
+                    for (let i = 0; i < headers.length; i++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+                        if (ws[cellRef]) {
+                            ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: 'FF366092' } };
+                            ws[cellRef].font = { color: { rgb: 'FFFFFFFF' }, bold: true };
+                        }
+                    }
+
+                    console.log('Applying alternating row colors...');
+                    // Color data rows with alternating pattern - Light Gray
+                    for (let i = 1; i < data.data.length + 1; i++) {
+                        if (i % 2 === 0) {
+                            for (let j = 0; j < headers.length; j++) {
+                                const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
+                                if (ws[cellRef]) {
+                                    ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: 'FFF5F5F5' } };
+                                }
+                            }
+                        }
+                    }
+
+                    console.log('Applying summary styling...');
+                    // Color summary section
+                    const summaryStartRow = data.data.length + 2;
+                    
+                    // Color SUMMARY header row - Dark Blue
+                    for (let j = 0; j < headers.length; j++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: summaryStartRow, c: j });
+                        if (ws[cellRef]) {
+                            ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: 'FF366092' } };
+                            ws[cellRef].font = { color: { rgb: 'FFFFFFFF' }, bold: true };
+                        }
+                    }
+
+                    // Color summary data rows - Light Blue
+                    for (let i = summaryStartRow + 1; i < summaryStartRow + 5; i++) {
+                        for (let j = 0; j < headers.length; j++) {
+                            const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
+                            if (ws[cellRef]) {
+                                ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: 'FFE8F0F8' } };
+                            }
+                        }
+                    }
+
+                    console.log('Setting column widths...');
+                    // Set column widths
+                    ws['!cols'] = [
+                        { wch: 15 },  // Employee ID
+                        { wch: 20 },  // Name
+                        { wch: 15 },  // Role
+                        { wch: 15 },  // Base Salary
+                        { wch: 12 },  // Working Days
+                        { wch: 12 },  // Present Days
+                        { wch: 12 },  // Late Days
+                        { wch: 12 },  // 1+ Hour Late
+                        { wch: 12 },  // Leave Taken
+                        { wch: 15 },  // Leave Deduction
+                        { wch: 15 },  // Late Deduction
+                        { wch: 15 },  // 1+ Hour Late Deduction
+                        { wch: 15 },  // 4th Saturday Deduction
+                        { wch: 15 },  // Salary Calculated Days
+                        { wch: 15 },  // Net Salary
+                        { wch: 15 },  // Overtime Hours
+                        { wch: 15 },  // Overtime Amount
+                        { wch: 15 }   // Final Salary
+                    ];
+
+                    console.log('Appending sheet to workbook...');
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(wb, ws, 'Analytics');
+
+                    // Generate filename
+                    const monthName = document.querySelector('select[name="month"] option:checked').text;
+                    const filename = `Analytics_${monthName}_${year}_${new Date().getTime()}.xlsx`;
+
+                    console.log('Writing file:', filename);
+                    // Write file
+                    XLSX.writeFile(wb, filename);
+
+                    console.log('Export completed successfully');
+                    
+                    // Reset button
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+
+                    // Show success message
+                    showNotification('Success', 'Export completed successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error in export:', error);
+                    showNotification('Error', 'Error exporting data: ' + error.message, 'error');
+                    
+                    // Reset button
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                });
         }
 
         // Present Days modal logic
@@ -1713,7 +1961,7 @@ $selectedYear = intval($selectedYear);
             const year = document.getElementById('year').value;
 
             if (!month || !year) {
-                alert('Please select month and year');
+                showNotification('Warning', 'Please select month and year', 'warning');
                 return;
             }
 
@@ -1788,7 +2036,7 @@ $selectedYear = intval($selectedYear);
             const year = document.getElementById('year').value;
 
             if (!month || !year) {
-                alert('Please select month and year');
+                showNotification('Warning', 'Please select month and year', 'warning');
                 return;
             }
 
@@ -1840,7 +2088,7 @@ $selectedYear = intval($selectedYear);
             const year = document.getElementById('year').value;
 
             if (!month || !year) {
-                alert('Please select month and year');
+                showNotification('Warning', 'Please select month and year', 'warning');
                 return;
             }
 
@@ -1891,7 +2139,7 @@ $selectedYear = intval($selectedYear);
             const year = document.getElementById('year').value;
 
             if (!month || !year) {
-                alert('Please select month and year');
+                showNotification('Warning', 'Please select month and year', 'warning');
                 return;
             }
 
@@ -1942,7 +2190,7 @@ $selectedYear = intval($selectedYear);
             const year = document.getElementById('year').value;
 
             if (!month || !year) {
-                alert('Please select month and year');
+                showNotification('Warning', 'Please select month and year', 'warning');
                 return;
             }
 

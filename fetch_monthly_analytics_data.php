@@ -136,7 +136,7 @@ try {
             u.id,
             u.unique_id as employee_id,
             u.username as name,
-            u.position as role,
+            u.role as role,
             u.designation,
             u.department,
             u.status,

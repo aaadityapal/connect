@@ -318,6 +318,51 @@ $selectedYear = intval($selectedYear);
             background: #38a169;
         }
 
+        /* Penalty Button Styles */
+        .penalty-btn {
+            padding: 6px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f0f0f0;
+            color: #2d3748;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+        }
+
+        .penalty-btn:hover {
+            background: #e0e0e0;
+            border-color: #a0aec0;
+            transform: scale(1.05);
+        }
+
+        .penalty-decrease {
+            background: #fed7d7;
+            color: #c53030;
+            border-color: #fc8787;
+        }
+
+        .penalty-decrease:hover {
+            background: #fc8787;
+            color: white;
+        }
+
+        .penalty-increase {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #9ae6b4;
+        }
+
+        .penalty-increase:hover {
+            background: #9ae6b4;
+            color: white;
+        }
+
         /* Modal Styles */
         .modal {
             display: none;
@@ -923,6 +968,7 @@ $selectedYear = intval($selectedYear);
                                 <th>Late Deduction</th>
                                 <th>1+ Leave Hour Late Deduction</th>
                                 <th>4th Saturday Missing Deduction</th>
+                                <th>Penalty</th>
                                 <th>Salary Calculated Days
                                     <span class="info-icon" title="How it's calculated">
                                         <i class="fas fa-info-circle"></i>
@@ -1222,6 +1268,39 @@ $selectedYear = intval($selectedYear);
         </div>
     </div>
 
+    <!-- Penalty Adjustment Modal -->
+    <div id="penaltyModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closePenaltyModal()">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 20px; text-align: center;">Adjust Penalty Days</h2>
+            
+            <div id="penaltyInfo" style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                <p><strong>Employee:</strong> <span id="penaltyEmployeeName"></span></p>
+                <p><strong>Current Penalty Days:</strong> <span id="penaltyCurrentValue" style="font-size: 1.2rem; color: #2d3748; font-weight: bold;"></span></p>
+                <p><strong>Action:</strong> <span id="penaltyAction" style="font-size: 1.1rem; color: #4299e1; font-weight: 600;"></span></p>
+            </div>
+
+            <form id="penaltyAdjustmentForm">
+                <div class="form-group">
+                    <label for="penaltyReason">Reason for Adjustment (Minimum 10 words)</label>
+                    <textarea id="penaltyReason" name="penaltyReason" rows="4" placeholder="Please provide at least 10 words explaining the reason for this penalty adjustment..." required style="resize: vertical;"></textarea>
+                    <div style="font-size: 0.8rem; color: #718096; margin-top: 5px;">
+                        Word count: <span id="wordCount">0</span>/10
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-save" id="penaltySubmitBtn" disabled>
+                        Confirm Adjustment
+                    </button>
+                    <button type="button" class="btn-cancel" onclick="closePenaltyModal()">Cancel</button>
+                </div>
+            </form>
+
+            <div id="penaltyMessage" style="margin-top: 15px; padding: 10px; border-radius: 6px; display: none;"></div>
+        </div>
+    </div>
+
     <!-- Notification Modal -->
     <div id="notificationModal" class="modal" style="z-index: 9999;">
         <div class="modal-content" style="max-width: 500px; text-align: center; padding: 40px 30px;">
@@ -1396,6 +1475,17 @@ $selectedYear = intval($selectedYear);
                         <td>₹${formatNumber(emp.late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.one_hour_late_deduction || 0)}</td>
                         <td>₹${formatNumber(emp.fourth_saturday_deduction || 0)}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <button type="button" class="penalty-btn penalty-decrease" onclick="openPenaltyModal(${emp.id}, '${emp.name}', 'decrease')" title="Decrease by 0.5 days">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span id="penalty-value-${emp.id}" style="min-width: 40px; text-align: center; font-weight: 600;">${(emp.penalty_days || 0).toFixed(1)}</span>
+                                <button type="button" class="penalty-btn penalty-increase" onclick="openPenaltyModal(${emp.id}, '${emp.name}', 'increase')" title="Increase by 0.5 days">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </td>
                         <td>
                             ${(emp.salary_calculated_days || 0).toFixed(2)}
                             <span class="info-icon" style="cursor:pointer; margin-left:6px;" onclick="showSalaryCalcDetails(${emp.id})">
@@ -2367,6 +2457,173 @@ $selectedYear = intval($selectedYear);
             document.getElementById('overtimeDetailsModal').style.display = 'none';
         }
 
+        // Penalty Modal Functions
+        function openPenaltyModal(userId, employeeName, action) {
+            const modal = document.getElementById('penaltyModal');
+            const currentValue = document.getElementById(`penalty-value-${userId}`).innerText;
+            
+            document.getElementById('penaltyEmployeeName').innerText = employeeName;
+            document.getElementById('penaltyCurrentValue').innerText = currentValue + ' days';
+            
+            const actionText = action === 'increase' ? 'Increase by 0.5 days' : 'Decrease by 0.5 days';
+            document.getElementById('penaltyAction').innerText = actionText;
+            document.getElementById('penaltyAction').style.color = action === 'increase' ? '#22543d' : '#c53030';
+            
+            // Store user and action info for form submission
+            document.getElementById('penaltyAdjustmentForm').dataset.userId = userId;
+            document.getElementById('penaltyAdjustmentForm').dataset.action = action;
+            document.getElementById('penaltyAdjustmentForm').dataset.employeeName = employeeName;
+            
+            // Reset form
+            document.getElementById('penaltyReason').value = '';
+            document.getElementById('wordCount').innerText = '0';
+            document.getElementById('penaltySubmitBtn').disabled = true;
+            document.getElementById('penaltyMessage').style.display = 'none';
+            
+            modal.style.display = 'block';
+        }
+
+        function closePenaltyModal() {
+            document.getElementById('penaltyModal').style.display = 'none';
+            document.getElementById('penaltyAdjustmentForm').reset();
+            document.getElementById('penaltyMessage').style.display = 'none';
+        }
+
+        // Word count validation for penalty reason
+        document.addEventListener('DOMContentLoaded', function() {
+            const reasonTextarea = document.getElementById('penaltyReason');
+            const submitBtn = document.getElementById('penaltySubmitBtn');
+            const wordCountDisplay = document.getElementById('wordCount');
+            
+            if (reasonTextarea) {
+                reasonTextarea.addEventListener('input', function() {
+                    const words = this.value.trim().split(/\s+/).filter(word => word.length > 0).length;
+                    wordCountDisplay.innerText = words;
+                    
+                    // Enable submit button only if at least 10 words
+                    submitBtn.disabled = words < 10;
+                    
+                    // Change color based on word count
+                    if (words < 10) {
+                        wordCountDisplay.style.color = '#c53030';
+                    } else {
+                        wordCountDisplay.style.color = '#22543d';
+                    }
+                });
+            }
+            
+            // Handle penalty form submission
+            const penaltyForm = document.getElementById('penaltyAdjustmentForm');
+            if (penaltyForm) {
+                penaltyForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    submitPenaltyAdjustment();
+                });
+            }
+        });
+
+        function submitPenaltyAdjustment() {
+            const form = document.getElementById('penaltyAdjustmentForm');
+            const userId = form.dataset.userId;
+            const action = form.dataset.action;
+            const employeeName = form.dataset.employeeName;
+            const reason = document.getElementById('penaltyReason').value.trim();
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+            
+            // Validate word count again
+            const words = reason.split(/\s+/).filter(word => word.length > 0).length;
+            if (words < 10) {
+                showPenaltyMessage('Please provide at least 10 words for the reason', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('penaltySubmitBtn');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = 'Processing...';
+            submitBtn.disabled = true;
+            
+            // Calculate new penalty value
+            const currentValue = parseFloat(document.getElementById(`penalty-value-${userId}`).innerText);
+            const newValue = action === 'increase' ? currentValue + 0.5 : currentValue - 0.5;
+            
+            const payload = {
+                user_id: parseInt(userId),
+                action: action,
+                current_penalty: currentValue,
+                new_penalty: newValue,
+                reason: reason,
+                month: parseInt(month),
+                year: parseInt(year)
+            };
+            
+            console.log('Penalty adjustment payload:', payload);
+            
+            // Send to backend
+            fetch('save_penalty_adjustment.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                
+                if (data.status === 'success') {
+                    showPenaltyMessage(`Penalty adjustment saved successfully for ${employeeName}! New penalty: ${newValue.toFixed(1)} days`, 'success');
+                    
+                    // Update the UI immediately with new value
+                    document.getElementById(`penalty-value-${userId}`).innerText = newValue.toFixed(1);
+                    
+                    // Reset button and close modal after delay
+                    setTimeout(() => {
+                        submitBtn.innerText = originalText;
+                        submitBtn.disabled = false;
+                        // Reload data to reflect changes in salary calculated days
+                        const currentMonth = document.getElementById('month').value;
+                        const currentYear = document.getElementById('year').value;
+                        loadAnalyticsData(currentMonth, currentYear);
+                        closePenaltyModal();
+                    }, 1500);
+                } else {
+                    showPenaltyMessage(data.message || 'Error saving penalty adjustment', 'error');
+                    submitBtn.innerText = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showPenaltyMessage('Error saving penalty adjustment. Please try again.', 'error');
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        function showPenaltyMessage(message, type) {
+            const messageDiv = document.getElementById('penaltyMessage');
+            messageDiv.innerText = message;
+            messageDiv.style.display = 'block';
+            
+            if (type === 'success') {
+                messageDiv.style.background = '#c6f6d5';
+                messageDiv.style.color = '#22543d';
+                messageDiv.style.border = '1px solid #9ae6b4';
+            } else {
+                messageDiv.style.background = '#fed7d7';
+                messageDiv.style.color = '#742a2a';
+                messageDiv.style.border = '1px solid #fc8787';
+            }
+        }
+
         function showSalaryCalcDetails(userId) {
             const emp = (window.analyticsDataById || {})[userId];
             if (!emp) return;
@@ -2493,6 +2750,7 @@ $selectedYear = intval($selectedYear);
                 const overtimeDetailsModal = document.getElementById('overtimeDetailsModal');
                 const editModal = document.getElementById('editSalaryModal');
                 const workingDaysModal = document.getElementById('workingDaysModal');
+                const penaltyModal = document.getElementById('penaltyModal');
 
                 if (event.target === editModal) {
                     closeEditModal();
@@ -2517,6 +2775,9 @@ $selectedYear = intval($selectedYear);
                 }
                 if (event.target === overtimeDetailsModal) {
                     closeOvertimeDetailsModal();
+                }
+                if (event.target === penaltyModal) {
+                    closePenaltyModal();
                 }
             } catch (e) {
                 // ignore

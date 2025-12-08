@@ -698,6 +698,27 @@ try {
         $salaryCalculatedDays -= $regularLateDeductionDays;
         $salaryCalculatedDays -= $oneHourLateDeductionDays;
 
+        // Fetch and subtract penalty days from salary_penalties table
+        $penaltyDays = 0;
+        try {
+            $penaltyStmt = $pdo->prepare("
+                SELECT penalty_days FROM salary_penalties
+                WHERE user_id = ? AND penalty_month = ?
+                LIMIT 1
+            ");
+            $penaltyMonth = str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year;
+            $penaltyStmt->execute([$employee['id'], $penaltyMonth]);
+            $penaltyRecord = $penaltyStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($penaltyRecord && $penaltyRecord['penalty_days']) {
+                $penaltyDays = floatval($penaltyRecord['penalty_days']);
+                $salaryCalculatedDays -= $penaltyDays;
+            }
+        } catch (PDOException $e) {
+            error_log("Error fetching penalty days for user " . $employee['id'] . ": " . $e->getMessage());
+            $penaltyDays = 0;
+        }
+
         // Subtract 4th Saturday missing days (2 days) if penalty applied
         $fourthSaturdayMissingDays = ($fourthSaturdayDeduction > 0) ? 2 : 0;
         $salaryCalculatedDays -= $fourthSaturdayMissingDays;
@@ -729,6 +750,7 @@ try {
             'late_deduction' => round($lateDeductionAmount, 2),
             'one_hour_late_deduction' => round($oneHourLateDeductionAmount, 2),
             'fourth_saturday_deduction' => $fourthSaturdayDeduction,
+            'penalty_days' => $penaltyDays,
             'salary_calculated_days' => $salaryCalculatedDays,
             'overtime_hours' => $overtimeHours,
             'overtime_amount' => $overtimeAmount,

@@ -68,17 +68,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     
     try {
         $new_status = ($action === 'approve') ? 'approved' : 'rejected';
+        $current_user_id = $_SESSION['user_id'];
         
-        // Update the line item status in database
-        $update_query = "UPDATE tbl_payment_entry_line_items_detail 
-                        SET line_item_status = :status, modified_at_timestamp = NOW()
-                        WHERE line_item_entry_id = :line_item_id";
-        
-        $update_stmt = $pdo->prepare($update_query);
-        $result = $update_stmt->execute([
-            ':status' => $new_status,
-            ':line_item_id' => $line_item_id
-        ]);
+        if ($action === 'approve') {
+            // Update the line item status with approval tracking
+            $update_query = "UPDATE tbl_payment_entry_line_items_detail 
+                            SET line_item_status = :status,
+                                approved_by = :approved_by,
+                                approved_at = NOW(),
+                                modified_at_timestamp = NOW()
+                            WHERE line_item_entry_id = :line_item_id";
+            
+            $update_stmt = $pdo->prepare($update_query);
+            $result = $update_stmt->execute([
+                ':status' => $new_status,
+                ':approved_by' => $current_user_id,
+                ':line_item_id' => $line_item_id
+            ]);
+        } else {
+            // Update the line item status with rejection tracking
+            $rejection_reason = isset($_POST['rejection_reason']) ? $_POST['rejection_reason'] : '';
+            
+            $update_query = "UPDATE tbl_payment_entry_line_items_detail 
+                            SET line_item_status = :status,
+                                rejected_by = :rejected_by,
+                                rejected_at = NOW(),
+                                rejection_reason = :rejection_reason,
+                                modified_at_timestamp = NOW()
+                            WHERE line_item_entry_id = :line_item_id";
+            
+            $update_stmt = $pdo->prepare($update_query);
+            $result = $update_stmt->execute([
+                ':status' => $new_status,
+                ':rejected_by' => $current_user_id,
+                ':rejection_reason' => $rejection_reason,
+                ':line_item_id' => $line_item_id
+            ]);
+        }
         
         if ($result) {
             echo json_encode([
@@ -126,8 +152,11 @@ $query = "SELECT
     m.updated_by_user_id,
     m.updated_timestamp_utc,
     m.notes_admin_internal,
+    m.edited_by,
+    m.edited_at,
     uc.username as created_by_username,
     ua.username as authorized_by_username,
+    ue.username as edited_by_username,
     p.title as project_title,
     COUNT(DISTINCT l.line_item_entry_id) as total_line_items,
     COUNT(DISTINCT acc.acceptance_method_id) as total_acceptance_methods,
@@ -140,6 +169,7 @@ $query = "SELECT
 FROM tbl_payment_entry_master_records m
 LEFT JOIN users uc ON m.created_by_user_id = uc.id
 LEFT JOIN users ua ON m.authorized_user_id_fk = ua.id
+LEFT JOIN users ue ON m.edited_by = ue.id
 LEFT JOIN projects p ON m.project_id_fk = p.id
 LEFT JOIN tbl_payment_entry_line_items_detail l ON m.payment_entry_id = l.payment_entry_master_id_fk
 LEFT JOIN tbl_payment_acceptance_methods_primary acc ON m.payment_entry_id = acc.payment_entry_id_fk
@@ -464,6 +494,11 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .status-rejected {
             background: #fee2e2;
             color: #991b1b;
+        }
+
+        .status-edited {
+            background: #dbeafe;
+            color: #1e40af;
         }
 
         .entry-content {
@@ -1938,6 +1973,11 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <span class="status-badge status-<?php echo strtolower($entry['entry_status_current']); ?>">
                                         <?php echo ucfirst($entry['entry_status_current']); ?>
                                     </span>
+                                    <?php if (!empty($entry['edited_by'])): ?>
+                                        <span class="status-badge status-edited" title="Edited by <?php echo htmlspecialchars($entry['edited_by_username'] ?? 'Unknown'); ?> at <?php echo date('M j, Y H:i', strtotime($entry['edited_at'])); ?>" style="margin-left: 8px;">
+                                            <i class="fas fa-edit" style="margin-right: 4px; font-size: 0.75em;"></i> Edited
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="entry-action-cell">
                                     <button class="expand-btn" onclick="toggleExpandEntry(event, <?php echo $entry['payment_entry_id']; ?>)" title="View Details">
@@ -1959,9 +1999,16 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="entry-id-detailed"><?php echo htmlspecialchars($entry['payment_entry_id']); ?></div>
                                         </div>
                                     </div>
-                                    <span class="status-badge status-<?php echo strtolower($entry['entry_status_current']); ?>">
-                                        <?php echo strtoupper($entry['entry_status_current']); ?>
-                                    </span>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="status-badge status-<?php echo strtolower($entry['entry_status_current']); ?>">
+                                            <?php echo strtoupper($entry['entry_status_current']); ?>
+                                        </span>
+                                        <?php if (!empty($entry['edited_by'])): ?>
+                                            <span class="status-badge status-edited" title="Edited by <?php echo htmlspecialchars($entry['edited_by_username'] ?? 'Unknown'); ?> at <?php echo date('M j, Y H:i', strtotime($entry['edited_at'])); ?>">
+                                                <i class="fas fa-edit" style="margin-right: 4px; font-size: 0.75em;"></i> Edited
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                     <button class="expand-btn" onclick="toggleExpandEntry(event, <?php echo $entry['payment_entry_id']; ?>)" title="Collapse" style="margin-left: auto;">
                                         <i class="fas fa-chevron-up"></i>
                                     </button>
@@ -2067,9 +2114,24 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         l.line_item_media_filesize_bytes,
                                         l.line_item_media_mime_type,
                                         u.username as paid_via_user,
-                                        l.created_at_timestamp
+                                        l.created_at_timestamp,
+                                        l.modified_at_timestamp,
+                                        l.approved_by,
+                                        l.approved_at,
+                                        l.rejected_by,
+                                        l.rejected_at,
+                                        l.rejection_reason,
+                                        l.edited_by,
+                                        l.edited_at,
+                                        l.edit_count,
+                                        ua.username as approved_by_username,
+                                        ur.username as rejected_by_username,
+                                        ue.username as edited_by_username
                                     FROM tbl_payment_entry_line_items_detail l
                                     LEFT JOIN users u ON l.line_item_paid_via_user_id = u.id
+                                    LEFT JOIN users ua ON l.approved_by = ua.id
+                                    LEFT JOIN users ur ON l.rejected_by = ur.id
+                                    LEFT JOIN users ue ON l.edited_by = ue.id
                                     WHERE l.payment_entry_master_id_fk = :payment_entry_id
                                     ORDER BY l.line_item_sequence_number ASC";
                                     
@@ -2135,23 +2197,74 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                             </div>
                                                         </div>
                                                         
-                                                        <!-- Description -->
-                                                        <?php if ($item['payment_description_notes']): ?>
-                                                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
-                                                                <span class="detail-label-detailed">Description</span>
-                                                                <div class="detail-value-detailed" style="margin-top: 4px;">
-                                                                    <?php echo htmlspecialchars($item['payment_description_notes']); ?>
-                                                                </div>
-                                                            </div>
-                                                        <?php endif; ?>
-                                                        
-                                                        <!-- Status Badge -->
+                                        <!-- Description -->
+                                        <?php if ($item['payment_description_notes']): ?>
+                                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                                                <span class="detail-label-detailed">Description</span>
+                                                <div class="detail-value-detailed" style="margin-top: 4px;">
+                                                    <?php echo htmlspecialchars($item['payment_description_notes']); ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <!-- Approval/Rejection Tracking Info -->
+                                        <?php if ($item['line_item_status'] === 'approved' && $item['approved_by_username']): ?>
+                                            <div style="margin-top: 12px; padding: 12px; background: #ecfdf5; border-left: 3px solid #059669; border-radius: 6px;">
+                                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                                                    <div>
+                                                        <span class="detail-label-detailed" style="color: #047857;">Approved By</span>
+                                                        <div style="color: #047857; font-weight: 600; margin-top: 4px;">
+                                                            <?php echo htmlspecialchars($item['approved_by_username']); ?>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="detail-label-detailed" style="color: #047857;">Approved At</span>
+                                                        <div style="color: #047857; font-weight: 600; margin-top: 4px;">
+                                                            <?php echo date('d M Y, H:i', strtotime($item['approved_at'])); ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php elseif ($item['line_item_status'] === 'rejected' && $item['rejected_by_username']): ?>
+                                            <div style="margin-top: 12px; padding: 12px; background: #fee2e2; border-left: 3px solid #991b1b; border-radius: 6px;">
+                                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px;">
+                                                    <div>
+                                                        <span class="detail-label-detailed" style="color: #991b1b;">Rejected By</span>
+                                                        <div style="color: #991b1b; font-weight: 600; margin-top: 4px;">
+                                                            <?php echo htmlspecialchars($item['rejected_by_username']); ?>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="detail-label-detailed" style="color: #991b1b;">Rejected At</span>
+                                                        <div style="color: #991b1b; font-weight: 600; margin-top: 4px;">
+                                                            <?php echo date('d M Y, H:i', strtotime($item['rejected_at'])); ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <?php if (!empty($item['rejection_reason'])): ?>
+                                                    <div style="padding-top: 12px; border-top: 1px solid rgba(153, 27, 27, 0.2);">
+                                                        <span class="detail-label-detailed" style="color: #991b1b;">Reason for Rejection</span>
+                                                        <div style="color: #991b1b; font-weight: 500; margin-top: 6px; font-style: italic; line-height: 1.5;">
+                                                            "<?php echo htmlspecialchars($item['rejection_reason']); ?>"
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>                                                        <!-- Status Badge -->
                                                         <div style="margin-top: 12px; display: flex; align-items: center; gap: 12px; justify-content: space-between;">
                                                             <div style="display: flex; align-items: center; gap: 8px;">
                                                                 <span class="detail-label-detailed" style="margin: 0;">Status:</span>
                                                                 <span class="status-badge status-<?php echo strtolower($item['line_item_status']); ?>" style="font-size: 0.75em; padding: 4px 10px;">
                                                                     <?php echo ucfirst($item['line_item_status']); ?>
                                                                 </span>
+                                                                <?php 
+                                                                // Show "Edited" badge if the LINE ITEM has edit tracking data
+                                                                if (!empty($item['edited_by']) && !empty($item['edited_at'])): 
+                                                                ?>
+                                                                    <span class="status-badge status-edited" title="Line item edited by <?php echo htmlspecialchars($item['edited_by_username'] ?? 'Unknown'); ?> at <?php echo date('M j, Y H:i', strtotime($item['edited_at'])); ?>" style="font-size: 0.75em; padding: 4px 10px;">
+                                                                        <i class="fas fa-edit" style="margin-right: 3px; font-size: 0.7em;"></i> Edited
+                                                                    </span>
+                                                                <?php endif; ?>
                                                             </div>
                                                             
                                                             <!-- Action Icons - Edit, Accept and Reject -->
@@ -2216,6 +2329,16 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <span class="detail-label-detailed">Last Updated</span>
                                                 <span class="detail-value-detailed"><?php echo date('F j, Y \a\t g:i A', strtotime($entry['updated_timestamp_utc'])); ?></span>
                                             </div>
+                                            <?php if (!empty($entry['edited_by'])): ?>
+                                                <div class="detail-item-detailed">
+                                                    <span class="detail-label-detailed">Last Edited By</span>
+                                                    <span class="detail-value-detailed" style="color: #2563eb;"><?php echo htmlspecialchars($entry['edited_by_username'] ?? 'Unknown'); ?></span>
+                                                </div>
+                                                <div class="detail-item-detailed">
+                                                    <span class="detail-label-detailed">Last Edited On</span>
+                                                    <span class="detail-value-detailed"><?php echo date('F j, Y \a\t g:i A', strtotime($entry['edited_at'])); ?></span>
+                                                </div>
+                                            <?php endif; ?>
                                             <?php if ($entry['notes_admin_internal']): ?>
                                                 <div class="detail-item-detailed" style="grid-column: 1 / -1;">
                                                     <span class="detail-label-detailed">Admin Notes</span>
@@ -2344,13 +2467,37 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         let currentLineItemId = null;
         let currentAction = null;
 
-        // Handle Edit action - will be implemented next
+        // Handle Edit action - open edit modal
         function handleEditDistribution(event, lineItemId) {
             event.preventDefault();
             event.stopPropagation();
             
             console.log('Edit Distribution clicked for Line Item ID:', lineItemId);
-            // Implementation will be added next
+            
+            // Get the payment entry ID from the line item's parent entry card
+            // Traverse up from the button to find the entry card
+            const entryCard = event.target.closest('.entry-card');
+            if (!entryCard) {
+                console.error('Could not find entry card element');
+                return;
+            }
+            
+            const paymentEntryId = entryCard.getAttribute('data-entry-id');
+            
+            if (!paymentEntryId) {
+                console.error('Could not find payment entry ID');
+                return;
+            }
+            
+            console.log('Opening edit modal for Payment Entry ID:', paymentEntryId);
+            
+            // Open the edit modal with payment entry ID
+            if (typeof openPaymentEditModal === 'function') {
+                openPaymentEditModal(paymentEntryId);
+            } else {
+                console.error('openPaymentEditModal function not found. Modal might not be loaded yet.');
+                alert('Edit modal is not loaded. Please refresh the page.');
+            }
         }
 
         // Handle Accept action - open approval modal
@@ -2386,6 +2533,8 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             const actionTitle = document.getElementById('approvalActionTitle');
             const checkpointList = document.getElementById('checkpointsList');
             const approveBtn = document.getElementById('confirmApprovalBtn');
+            const rejectionSection = document.getElementById('rejectionReasonSection');
+            const rejectionReasonTextarea = document.getElementById('rejectionReason');
             
             // Update modal title
             const actionText = action === 'approve' ? 'Approve' : 'Reject';
@@ -2395,9 +2544,22 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             approveBtn.textContent = actionText;
             approveBtn.className = action === 'approve' ? 'checkpoint-btn approve' : 'checkpoint-btn reject';
             
+            // Show/hide rejection reason section based on action
+            if (action === 'reject') {
+                rejectionSection.style.display = 'block';
+                rejectionReasonTextarea.focus();
+            } else {
+                rejectionSection.style.display = 'none';
+            }
+            
             // Reset checkboxes
             const checkboxes = checkpointList.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(checkbox => checkbox.checked = false);
+            
+            // Reset rejection reason textarea
+            rejectionReasonTextarea.value = '';
+            document.getElementById('wordCountDisplay').textContent = 'Word count: 0 / 10';
+            document.getElementById('wordCountError').style.display = 'none';
             
             // Update button state
             updateApprovalButtonState();
@@ -2414,8 +2576,35 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         function updateApprovalButtonState() {
             const checkboxes = document.querySelectorAll('#checkpointsList input[type="checkbox"]');
             const approveBtn = document.getElementById('confirmApprovalBtn');
-            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-            approveBtn.disabled = !allChecked;
+            const rejectionReasonTextarea = document.getElementById('rejectionReason');
+            const rejectionSection = document.getElementById('rejectionReasonSection');
+            const wordCountDisplay = document.getElementById('wordCountDisplay');
+            const wordCountError = document.getElementById('wordCountError');
+            
+            const allCheckboxesChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            
+            // If rejecting, validate rejection reason
+            if (rejectionSection.style.display !== 'none') {
+                // Count words in rejection reason
+                const reasonText = rejectionReasonTextarea.value.trim();
+                const wordCount = reasonText.length > 0 ? reasonText.split(/\s+/).length : 0;
+                
+                // Update word count display
+                wordCountDisplay.textContent = `Word count: ${wordCount} / 10`;
+                
+                // Show/hide error message
+                if (wordCount < 10 && reasonText.length > 0) {
+                    wordCountError.style.display = 'inline';
+                } else {
+                    wordCountError.style.display = 'none';
+                }
+                
+                // Enable button only if all checkboxes checked AND rejection reason has 10+ words
+                approveBtn.disabled = !(allCheckboxesChecked && wordCount >= 10);
+            } else {
+                // For approve action, just check if all checkboxes are checked
+                approveBtn.disabled = !allCheckboxesChecked;
+            }
         }
 
         function confirmApproval() {
@@ -2431,6 +2620,12 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             formData.append('line_item_id', currentLineItemId);
             formData.append('action', currentAction === 'approve' ? 'approve' : 'reject');
             formData.append('update_status', '1');
+            
+            // Add rejection reason if rejecting
+            if (currentAction === 'reject') {
+                const rejectionReason = document.getElementById('rejectionReason').value.trim();
+                formData.append('rejection_reason', rejectionReason);
+            }
             
             fetch(window.location.href, {
                 method: 'POST',
@@ -2941,6 +3136,23 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <span>No discrepancies or issues found</span>
                     </label>
                 </div>
+                
+                <!-- Rejection Reason Section (Hidden by default) -->
+                <div id="rejectionReasonSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <div class="checkpoint-section-title">
+                        <i class="fas fa-exclamation-circle"></i> Rejection Reason (Required)
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <label style="display: block; font-size: 0.85em; font-weight: 600; color: #4a5568; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px;">
+                            Please explain why this payment is being rejected
+                        </label>
+                        <textarea id="rejectionReason" placeholder="Enter minimum 10 words explaining the reason for rejection..." style="width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-family: inherit; font-size: 0.9em; resize: vertical; min-height: 100px; transition: all 0.25s ease; background-color: #f9fafb;" onchange="updateApprovalButtonState()" oninput="updateApprovalButtonState()"></textarea>
+                        <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                            <span id="wordCountDisplay" style="font-size: 0.8em; color: #718096; font-weight: 500;">Word count: 0 / 10</span>
+                            <span id="wordCountError" style="font-size: 0.8em; color: #991b1b; display: none; font-weight: 600;">⚠️ Minimum 10 words required</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="approval-checkpoint-footer">
                 <button class="checkpoint-btn cancel" onclick="closeApprovalModal()">
@@ -2953,4 +3165,8 @@ $payment_entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 </body>
+<?php
+// Include the Payment Entry Edit Modal
+include 'modals/payment_entry_edit_modal_comprehensive_v2.php';
+?>
 </html>

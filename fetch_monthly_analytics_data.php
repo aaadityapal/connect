@@ -459,6 +459,8 @@ try {
                         break;
                     case 'half_day':
                     case 'half day':
+                    case 'half_day_leave':
+                    case 'half day leave':
                         $deduction = $oneDaySalary * 0.5;
                         break;
                     case 'short_leave':
@@ -666,6 +668,8 @@ try {
                         break;
                     case 'half_day':
                     case 'half day':
+                    case 'half_day_leave':
+                    case 'half day leave':
                         // Half day is a deduction of 0.5 per day - SUBTRACT from salary
                         $leaveCreditsToAdd -= 0.5 * $numDays;
                         $halfDayCount += $numDays;

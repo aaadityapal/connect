@@ -226,6 +226,22 @@
                                 </label>
                                 <input type="text" id="editPaymentCreatedBy" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
                             </div>
+
+                            <!-- Last Edited At -->
+                            <div class="payment-edit-form-group">
+                                <label class="payment-edit-form-label">
+                                    <i class="fas fa-edit"></i> Last Edited At
+                                </label>
+                                <input type="text" id="editPaymentEditedAt" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                            </div>
+
+                            <!-- Last Edited By -->
+                            <div class="payment-edit-form-group">
+                                <label class="payment-edit-form-label">
+                                    <i class="fas fa-user-edit"></i> Last Edited By
+                                </label>
+                                <input type="text" id="editPaymentEditedBy" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                            </div>
                         </div>
                     </div>
 
@@ -901,6 +917,10 @@
         document.getElementById('editPaymentCreatedAt').value = formatDateTime(entryData.created_timestamp_utc);
         document.getElementById('editPaymentUpdatedAt').value = formatDateTime(entryData.updated_timestamp_utc);
         document.getElementById('editPaymentCreatedBy').value = entryData.created_by_username || 'N/A';
+        
+        // Edit Tracking Information (Read-Only)
+        document.getElementById('editPaymentEditedAt').value = entryData.edited_at ? formatDateTime(entryData.edited_at) : 'Never edited';
+        document.getElementById('editPaymentEditedBy').value = entryData.edited_by_username ? entryData.edited_by_username : 'N/A';
 
         // Payment Proof Info
         if (entryData.payment_proof_filename_original && entryData.payment_proof_document_path) {
@@ -1838,6 +1858,12 @@
             let recipientId = null;
             let descriptionNotes = '';
             let paidViaUserId = null;
+            let approvedBy = null;
+            let approvedAt = null;
+            let rejectedBy = null;
+            let rejectedAt = null;
+            let rejectionReason = null;
+            let lineItemStatus = 'pending';
             
             // For existing line items, get data from the original entry data
             const lineItemId = container.dataset.lineItemId;
@@ -1851,6 +1877,13 @@
                     recipientId = originalLineItem.recipient_id_reference || null;
                     descriptionNotes = originalLineItem.payment_description_notes || '';
                     paidViaUserId = originalLineItem.line_item_paid_via_user_id || null;
+                    // PRESERVE approval/rejection tracking fields
+                    approvedBy = originalLineItem.approved_by || null;
+                    approvedAt = originalLineItem.approved_at || null;
+                    rejectedBy = originalLineItem.rejected_by || null;
+                    rejectedAt = originalLineItem.rejected_at || null;
+                    rejectionReason = originalLineItem.rejection_reason || null;
+                    lineItemStatus = originalLineItem.line_item_status || 'pending';
                 }
             }
             
@@ -1892,7 +1925,12 @@
                     line_item_amount: amountInput.value,
                     line_item_payment_mode: modeSelect.value,
                     line_item_paid_via_user_id: paidViaUserId,
-                    line_item_status: 'pending'
+                    line_item_status: lineItemStatus,
+                    approved_by: approvedBy,
+                    approved_at: approvedAt,
+                    rejected_by: rejectedBy,
+                    rejected_at: rejectedAt,
+                    rejection_reason: rejectionReason
                 });
             }
         });

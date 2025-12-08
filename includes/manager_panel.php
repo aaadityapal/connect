@@ -107,7 +107,10 @@
         <i class="fas fa-chart-line"></i>
         <span class="menu-text">Executive Insights</span>
     </div>
-    
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'payment_entry_reports.php' ? 'active' : ''; ?>" onclick="window.location.href='payment_entry_reports.php'">
+        <i class="fas fa-chart-pie"></i>
+        <span class="menu-text">Expenses Approval</span>
+    </div>
     <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'employee_leave.php' ? 'active' : ''; ?>" onclick="window.location.href='employee_leave.php'">
         <i class="fas fa-calendar-alt"></i>
         <span class="menu-text">Apply Leaves</span>

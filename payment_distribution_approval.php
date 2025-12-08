@@ -63,9 +63,18 @@ $line_items_query = "SELECT
     l.line_item_media_upload_path,
     l.line_item_media_original_filename,
     l.line_item_media_filesize_bytes,
-    u.username as paid_via_user
+    u.username as paid_via_user,
+    l.approved_by,
+    l.approved_at,
+    l.rejected_by,
+    l.rejected_at,
+    l.rejection_reason,
+    ua.username as approved_by_username,
+    ur.username as rejected_by_username
 FROM tbl_payment_entry_line_items_detail l
 LEFT JOIN users u ON l.line_item_paid_via_user_id = u.id
+LEFT JOIN users ua ON l.approved_by = ua.id
+LEFT JOIN users ur ON l.rejected_by = ur.id
 WHERE l.payment_entry_master_id_fk = :payment_entry_id
 ORDER BY l.line_item_sequence_number ASC";
 
@@ -96,17 +105,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     try {
         $new_status = ($action === 'approve') ? 'approved' : (($action === 'verify') ? 'verified' : 'rejected');
+        $current_user_id = $_SESSION['user_id'];
         
-        $update_query = "UPDATE tbl_payment_entry_line_items_detail 
-                        SET line_item_status = :status, modified_at_timestamp = NOW()
-                        WHERE line_item_entry_id = :line_item_id AND payment_entry_master_id_fk = :payment_entry_id";
-        
-        $update_stmt = $pdo->prepare($update_query);
-        $update_stmt->execute([
-            ':status' => $new_status,
-            ':line_item_id' => $line_item_id,
-            ':payment_entry_id' => $payment_entry_id
-        ]);
+        if ($action === 'approve') {
+            $update_query = "UPDATE tbl_payment_entry_line_items_detail 
+                            SET line_item_status = :status, 
+                                approved_by = :approved_by,
+                                approved_at = NOW(),
+                                modified_at_timestamp = NOW()
+                            WHERE line_item_entry_id = :line_item_id AND payment_entry_master_id_fk = :payment_entry_id";
+            
+            $update_stmt = $pdo->prepare($update_query);
+            $update_stmt->execute([
+                ':status' => $new_status,
+                ':approved_by' => $current_user_id,
+                ':line_item_id' => $line_item_id,
+                ':payment_entry_id' => $payment_entry_id
+            ]);
+        } else if ($action === 'reject') {
+            $update_query = "UPDATE tbl_payment_entry_line_items_detail 
+                            SET line_item_status = :status,
+                                rejected_by = :rejected_by,
+                                rejected_at = NOW(),
+                                modified_at_timestamp = NOW()
+                            WHERE line_item_entry_id = :line_item_id AND payment_entry_master_id_fk = :payment_entry_id";
+            
+            $update_stmt = $pdo->prepare($update_query);
+            $update_stmt->execute([
+                ':status' => $new_status,
+                ':rejected_by' => $current_user_id,
+                ':line_item_id' => $line_item_id,
+                ':payment_entry_id' => $payment_entry_id
+            ]);
+        } else {
+            $update_query = "UPDATE tbl_payment_entry_line_items_detail 
+                            SET line_item_status = :status, modified_at_timestamp = NOW()
+                            WHERE line_item_entry_id = :line_item_id AND payment_entry_master_id_fk = :payment_entry_id";
+            
+            $update_stmt = $pdo->prepare($update_query);
+            $update_stmt->execute([
+                ':status' => $new_status,
+                ':line_item_id' => $line_item_id,
+                ':payment_entry_id' => $payment_entry_id
+            ]);
+        }
         
         echo json_encode(['success' => true, 'status' => $new_status]);
         exit;
@@ -790,6 +832,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_entry'])) {
                                         <span class="detail-label">Paid By</span>
                                         <span class="detail-value"><?php echo htmlspecialchars($item['paid_via_user'] ?? 'N/A'); ?></span>
                                     </div>
+                                    <?php if ($item['line_item_status'] === 'approved' && $item['approved_by_username']): ?>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Approved By</span>
+                                            <span class="detail-value"><?php echo htmlspecialchars($item['approved_by_username']); ?></span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Approved At</span>
+                                            <span class="detail-value"><?php echo date('d M Y, H:i', strtotime($item['approved_at'])); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($item['line_item_status'] === 'rejected' && $item['rejected_by_username']): ?>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Rejected By</span>
+                                            <span class="detail-value"><?php echo htmlspecialchars($item['rejected_by_username']); ?></span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Rejected At</span>
+                                            <span class="detail-value"><?php echo date('d M Y, H:i', strtotime($item['rejected_at'])); ?></span>
+                                        </div>
+                                        <?php if (!empty($item['rejection_reason'])): ?>
+                                            <div class="detail-item" style="grid-column: 1 / -1;">
+                                                <span class="detail-label">Rejection Reason</span>
+                                                <span class="detail-value" style="color: #991b1b; font-style: italic;"><?php echo htmlspecialchars($item['rejection_reason']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                     <?php if ($item['payment_description_notes']): ?>
                                         <div class="detail-item" style="grid-column: 1 / -1;">
                                             <span class="detail-label">Description</span>

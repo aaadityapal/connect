@@ -236,6 +236,8 @@ try {
                 
             case 'half_day':
             case 'half day':
+            case 'half_day_leave':
+            case 'half day leave':
                 $deduction = $oneDaySalary * 0.5;
                 $deductionType = 'Deduction - Half day leave';
                 break;

@@ -98,8 +98,39 @@ try {
     $pdo->beginTransaction();
 
     // ===================================================================
-    // 1. Update Master Record
+    // 1. Fetch Current Master Status
     // ===================================================================
+    $getStatusQuery = "SELECT entry_status_current FROM tbl_payment_entry_master_records WHERE payment_entry_id = :id";
+    $statusStmt = $pdo->prepare($getStatusQuery);
+    $statusStmt->execute([':id' => $payment_entry_id]);
+    $currentStatus = $statusStmt->fetchColumn();
+    
+    // For now, keep the same status - we'll handle status changes at line item level
+    $new_status = $currentStatus;
+
+    // ===================================================================
+    // 2a. Fetch Original Line Items for Comparison (to detect actual changes)
+    // ===================================================================
+    $originalLineItemsQuery = "
+        SELECT 
+            line_item_entry_id,
+            line_item_amount,
+            line_item_payment_mode,
+            line_item_paid_via_user_id,
+            payment_description_notes,
+            line_item_status
+        FROM tbl_payment_entry_line_items_detail
+        WHERE payment_entry_master_id_fk = :payment_entry_id
+    ";
+    $originalStmt = $pdo->prepare($originalLineItemsQuery);
+    $originalStmt->execute([':payment_entry_id' => $payment_entry_id]);
+    $originalLineItems = $originalStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Create a map of original line items by ID for easy lookup
+    $originalLineItemsMap = [];
+    foreach ($originalLineItems as $origItem) {
+        $originalLineItemsMap[$origItem['line_item_entry_id']] = $origItem;
+    }
     $updateMasterQuery = "
         UPDATE tbl_payment_entry_master_records
         SET 
@@ -109,7 +140,9 @@ try {
             payment_mode_selected = :payment_mode,
             notes_admin_internal = :admin_notes,
             updated_by_user_id = :updated_by_user_id,
-            updated_timestamp_utc = NOW()
+            updated_timestamp_utc = NOW(),
+            entry_status_current = :new_status,
+            edit_count = edit_count + 1
         WHERE payment_entry_id = :payment_entry_id
     ";
 
@@ -121,15 +154,14 @@ try {
     $masterStmt->bindValue(':payment_mode', $payment_mode, PDO::PARAM_STR);
     $masterStmt->bindValue(':admin_notes', $admin_notes, PDO::PARAM_STR);
     $masterStmt->bindValue(':updated_by_user_id', $_SESSION['user_id'], PDO::PARAM_INT);
+    $masterStmt->bindValue(':new_status', $new_status, PDO::PARAM_STR);
     
     if (!$masterStmt->execute()) {
         throw new Exception('Failed to update payment entry master record: ' . implode(', ', $masterStmt->errorInfo()));
     }
 
     // ===================================================================
-    // 2. Update Acceptance Methods (if payment_mode is multiple_acceptance)
-    // ===================================================================
-    // 2. Update Acceptance Methods (if payment_mode is multiple_acceptance)
+    // 3. Update Acceptance Methods (if payment_mode is multiple_acceptance)
     // ===================================================================
     if ($payment_mode === 'multiple_acceptance' && !empty($acceptance_methods)) {
         // Delete existing acceptance methods for this payment entry
@@ -201,6 +233,14 @@ try {
                 line_item_paid_via_user_id,
                 line_item_sequence_number,
                 line_item_status,
+                approved_by,
+                approved_at,
+                rejected_by,
+                rejected_at,
+                rejection_reason,
+                edited_by,
+                edited_at,
+                edit_count,
                 created_at_timestamp,
                 modified_at_timestamp
             ) VALUES (
@@ -214,6 +254,14 @@ try {
                 :line_item_paid_via_user_id,
                 :line_item_sequence_number,
                 :line_item_status,
+                :approved_by,
+                :approved_at,
+                :rejected_by,
+                :rejected_at,
+                :rejection_reason,
+                :edited_by,
+                :edited_at,
+                :edit_count,
                 NOW(),
                 NOW()
             )
@@ -231,6 +279,57 @@ try {
                 $recipientNameDisplay = fetchRecipientName($recipientTypeCategory, $recipientIdReference, $pdo);
             }
             
+            // Get line item data from the request
+            $lineItemStatus = $item['line_item_status'] ?? 'pending';
+            $approvedBy = $item['approved_by'] ?? null;
+            $approvedAt = $item['approved_at'] ?? null;
+            $rejectedBy = $item['rejected_by'] ?? null;
+            $rejectedAt = $item['rejected_at'] ?? null;
+            $rejectionReason = $item['rejection_reason'] ?? null;
+            $lineItemEditedBy = $item['edited_by'] ?? null;
+            $lineItemEditedAt = $item['edited_at'] ?? null;
+            $lineItemEditCount = $item['edit_count'] ?? 0;
+            
+            // Check if this line item was actually modified
+            $lineItemWasModified = false;
+            $lineItemId = $item['line_item_entry_id'] ?? null;
+            
+            if ($lineItemId && isset($originalLineItemsMap[$lineItemId])) {
+                // Existing line item - compare with original
+                $origItem = $originalLineItemsMap[$lineItemId];
+                
+                // Check if any field changed
+                if ($origItem['line_item_amount'] != $item['line_item_amount'] ||
+                    $origItem['line_item_payment_mode'] != $item['line_item_payment_mode'] ||
+                    $origItem['line_item_paid_via_user_id'] != ($item['line_item_paid_via_user_id'] ?? null) ||
+                    $origItem['payment_description_notes'] != ($item['payment_description_notes'] ?? '')) {
+                    $lineItemWasModified = true;
+                }
+            } else {
+                // New line item
+                $lineItemWasModified = true;
+            }
+            
+            // KEY LOGIC: If line item is rejected, when it's edited:
+            // 1. Change status to "pending"
+            // 2. Clear rejection info (rejected_by, rejected_at, rejection_reason)
+            // 3. Set edit tracking to current user
+            if ($lineItemStatus === 'rejected') {
+                $lineItemStatus = 'pending'; // Change status from rejected to pending
+                $rejectedBy = null;           // Clear rejection info
+                $rejectedAt = null;
+                $rejectionReason = null;
+                $lineItemEditedBy = $_SESSION['user_id'];  // Track who edited it
+                $lineItemEditedAt = date('Y-m-d H:i:s');   // Track when it was edited
+                $lineItemEditCount = ($lineItemEditCount ?? 0) + 1; // Increment edit count
+            } elseif ($lineItemWasModified) {
+                // For items that were actually modified, track the edit
+                $lineItemEditedBy = $_SESSION['user_id'];
+                $lineItemEditedAt = date('Y-m-d H:i:s');
+                $lineItemEditCount = ($lineItemEditCount ?? 0) + 1;
+            }
+            // If item was NOT modified, keep original edit tracking as-is (don't change it)
+            
             $insertLineStmt->bindValue(':payment_entry_id', $payment_entry_id, PDO::PARAM_INT);
             $insertLineStmt->bindValue(':recipient_type_category', $recipientTypeCategory, PDO::PARAM_STR);
             $insertLineStmt->bindValue(':recipient_id_reference', $recipientIdReference, PDO::PARAM_INT);
@@ -240,7 +339,15 @@ try {
             $insertLineStmt->bindValue(':line_item_payment_mode', $item['line_item_payment_mode'] ?? '', PDO::PARAM_STR);
             $insertLineStmt->bindValue(':line_item_paid_via_user_id', $item['line_item_paid_via_user_id'] ?? null, PDO::PARAM_INT);
             $insertLineStmt->bindValue(':line_item_sequence_number', $index, PDO::PARAM_INT);
-            $insertLineStmt->bindValue(':line_item_status', $item['line_item_status'] ?? 'pending', PDO::PARAM_STR);
+            $insertLineStmt->bindValue(':line_item_status', $lineItemStatus, PDO::PARAM_STR);
+            $insertLineStmt->bindValue(':approved_by', $approvedBy, PDO::PARAM_INT);
+            $insertLineStmt->bindValue(':approved_at', $approvedAt, PDO::PARAM_STR);
+            $insertLineStmt->bindValue(':rejected_by', $rejectedBy, PDO::PARAM_INT);
+            $insertLineStmt->bindValue(':rejected_at', $rejectedAt, PDO::PARAM_STR);
+            $insertLineStmt->bindValue(':rejection_reason', $rejectionReason, PDO::PARAM_STR);
+            $insertLineStmt->bindValue(':edited_by', $lineItemEditedBy, PDO::PARAM_INT);
+            $insertLineStmt->bindValue(':edited_at', $lineItemEditedAt, PDO::PARAM_STR);
+            $insertLineStmt->bindValue(':edit_count', $lineItemEditCount, PDO::PARAM_INT);
 
             if (!$insertLineStmt->execute()) {
                 throw new Exception('Failed to insert line item: ' . implode(', ', $insertLineStmt->errorInfo()));

@@ -47,11 +47,13 @@ try {
             p.project_type as project_type_name,
             p.description as project_description,
             u.username as created_by_username,
-            u_auth.username as authorized_user_username
+            u_auth.username as authorized_user_username,
+            u_edited.username as edited_by_username
         FROM tbl_payment_entry_master_records m
         LEFT JOIN projects p ON m.project_id_fk = p.id
         LEFT JOIN users u ON m.created_by_user_id = u.id
         LEFT JOIN users u_auth ON m.authorized_user_id_fk = u_auth.id
+        LEFT JOIN users u_edited ON m.edited_by = u_edited.id
         WHERE m.payment_entry_id = :id
     ");
     $stmt->execute([':id' => $payment_entry_id]);
@@ -108,9 +110,23 @@ try {
             l.line_item_status,
             l.created_at_timestamp,
             l.modified_at_timestamp,
-            u.username as paid_by_username
+            l.approved_by,
+            l.approved_at,
+            l.rejected_by,
+            l.rejected_at,
+            l.rejection_reason,
+            l.edited_by,
+            l.edited_at,
+            l.edit_count,
+            u.username as paid_by_username,
+            u_approved.username as approved_by_username,
+            u_rejected.username as rejected_by_username,
+            u_edited.username as edited_by_username
         FROM tbl_payment_entry_line_items_detail l
         LEFT JOIN users u ON l.line_item_paid_via_user_id = u.id
+        LEFT JOIN users u_approved ON l.approved_by = u_approved.id
+        LEFT JOIN users u_rejected ON l.rejected_by = u_rejected.id
+        LEFT JOIN users u_edited ON l.edited_by = u_edited.id
         WHERE l.payment_entry_master_id_fk = :id
         ORDER BY l.line_item_sequence_number ASC
     ");

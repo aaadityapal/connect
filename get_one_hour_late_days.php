@@ -71,17 +71,24 @@ try {
     $stmt->execute([$userId, $firstDayOfMonth, $lastDayOfMonth, $oneHourLateTime]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch short leaves from leave_request table for the month
+    // Fetch ONLY MORNING short leaves from leave_request table for the month
+    // Evening short leaves should NOT be used to reduce 1+ hour late punch-in counts
     $shortLeavesMap = [];
     try {
         $shortLeaveStmt = $pdo->prepare(
             "SELECT 
-                start_date,
-                end_date,
+                lr.start_date,
+                lr.end_date,
+                lr.time_from,
+                lr.time_to,
                 lt.name as leave_type_name,
-                lr.reason
+                lr.reason,
+                s.start_time,
+                s.end_time
             FROM leave_request lr
             LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+            INNER JOIN user_shifts us ON us.user_id = lr.user_id
+            INNER JOIN shifts s ON s.id = us.shift_id
             WHERE lr.user_id = ?
             AND lr.status = 'approved'
             AND (
@@ -89,6 +96,8 @@ try {
                 (DATE(lr.end_date) BETWEEN ? AND ?) OR
                 (lr.start_date <= ? AND lr.end_date >= ?)
             )
+            AND (us.effective_from IS NULL OR us.effective_from <= lr.start_date)
+            AND (us.effective_to IS NULL OR us.effective_to >= lr.start_date)
             ORDER BY lr.start_date ASC"
         );
         $shortLeaveStmt->execute([
@@ -99,22 +108,37 @@ try {
         ]);
         $shortLeaves = $shortLeaveStmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Create a map of short leaves by date for quick lookup
+        // Create a map of ONLY MORNING short leaves by date for quick lookup
         foreach ($shortLeaves as $sl) {
-            // For each date in the leave range, add it to the map
-            $startDate = new DateTime($sl['start_date']);
-            $endDate = new DateTime($sl['end_date']);
+            // Check if this is a MORNING short leave
+            $timeFrom = $sl['time_from'];
+            $shiftStart = $sl['start_time'];
             
-            while ($startDate <= $endDate) {
-                $dateStr = $startDate->format('Y-m-d');
-                if (!isset($shortLeavesMap[$dateStr])) {
-                    $shortLeavesMap[$dateStr] = [];
+            // Create DateTime objects with reference date to properly compare times
+            $referenceDate = '2000-01-01';
+            $timeFromDT = new DateTime($referenceDate . ' ' . $timeFrom);
+            $shiftStartDT = new DateTime($referenceDate . ' ' . $shiftStart);
+            $shiftStart1_5HoursDT = new DateTime($referenceDate . ' ' . $shiftStart);
+            $shiftStart1_5HoursDT->add(new DateInterval('PT1H30M'));
+            
+            // Only include if it's a MORNING short leave
+            // (time_from is between shift_start and shift_start + 1.5 hours)
+            if ($timeFromDT >= $shiftStartDT && $timeFromDT <= $shiftStart1_5HoursDT) {
+                // This is a MORNING short leave - add to map
+                $startDate = new DateTime($sl['start_date']);
+                $endDate = new DateTime($sl['end_date']);
+                
+                while ($startDate <= $endDate) {
+                    $dateStr = $startDate->format('Y-m-d');
+                    if (!isset($shortLeavesMap[$dateStr])) {
+                        $shortLeavesMap[$dateStr] = [];
+                    }
+                    $shortLeavesMap[$dateStr][] = [
+                        'type' => $sl['leave_type_name'] ?? 'Leave',
+                        'reason' => $sl['reason'] ?? 'N/A'
+                    ];
+                    $startDate->modify('+1 day');
                 }
-                $shortLeavesMap[$dateStr][] = [
-                    'type' => $sl['leave_type_name'] ?? 'Leave',
-                    'reason' => $sl['reason'] ?? 'N/A'
-                ];
-                $startDate->modify('+1 day');
             }
         }
     } catch (PDOException $e) {

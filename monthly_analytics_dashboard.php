@@ -2089,7 +2089,11 @@ $selectedYear = intval($selectedYear);
 
                     for (let day = 1; day <= lastDay; day++) {
                         const dt = new Date(parseInt(year), monthIndex, day);
-                        const iso = dt.toISOString().slice(0,10);
+                        // Format date in local timezone (not UTC) to avoid off-by-one errors
+                        const year_pad = dt.getFullYear();
+                        const month_pad = String(dt.getMonth() + 1).padStart(2, '0');
+                        const day_pad = String(dt.getDate()).padStart(2, '0');
+                        const iso = `${year_pad}-${month_pad}-${day_pad}`;
                         const displayDate = (('0' + dt.getDate()).slice(-2)) + '-' + monthNames[dt.getMonth()] + '-' + dt.getFullYear();
                         const dayName = dt.toLocaleDateString('en-US', { weekday: 'long' });
                         const isWeekly = weeklyOffs.indexOf(dayName.toLowerCase()) !== -1;

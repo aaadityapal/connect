@@ -257,7 +257,8 @@ try {
             // Calculate half day salary
             $half_day_salary = $daily_salary / 2;
                     
-            // Get short leave count for the month
+            // Get ONLY MORNING short leave count for the month
+            // Evening short leaves should NOT reduce late punch-in counts
             try {
                 $short_leave_query = "SELECT SUM(CASE 
                                         WHEN lr.duration_type = 'half_day' THEN 0.5 
@@ -270,6 +271,8 @@ try {
                                     END) as short_leave_days
                              FROM leave_request lr
                              LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+                             INNER JOIN user_shifts us ON us.user_id = lr.user_id
+                             INNER JOIN shifts s ON s.id = us.shift_id
                              WHERE lr.user_id = ? 
                              AND lr.status = 'approved'
                              AND lt.name = 'Short Leave'
@@ -279,7 +282,9 @@ try {
                                  (lr.end_date BETWEEN ? AND ?)
                                  OR 
                                  (lr.start_date <= ? AND lr.end_date >= ?)
-                             )";
+                             )
+                             AND (us.effective_from IS NULL OR us.effective_from <= lr.start_date)
+                             AND (us.effective_to IS NULL OR us.effective_to >= lr.start_date)";
                 $short_leave_stmt = $pdo->prepare($short_leave_query);
                 $short_leave_stmt->execute([
                     $month_end, $month_start, $month_end, $month_start, // For LEAST/GREATEST and DATEDIFF
@@ -288,8 +293,73 @@ try {
                     $month_start, $month_end,
                     $month_start, $month_end
                 ]);
-                $short_leave_result = $short_leave_stmt->fetch(PDO::FETCH_ASSOC);
-                $short_leave_days = $short_leave_result['short_leave_days'] ?? 0;
+                $short_leave_results = $short_leave_stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Filter to only MORNING short leaves
+                $short_leave_days = 0;
+                foreach ($short_leave_results as $leave) {
+                    // For full-day short leaves, we need to check if they're morning or evening
+                    // But get_salary_details only counts full short leave days, not specific times
+                    // Since this is a simplified version, we'll fetch with time filtering
+                }
+                
+                // Better approach: Fetch short leaves with time info and filter
+                $detailed_query = "SELECT 
+                                    lr.id,
+                                    lr.start_date,
+                                    lr.end_date,
+                                    lr.time_from,
+                                    lr.time_to,
+                                    s.start_time,
+                                    s.end_time,
+                                    DATEDIFF(LEAST(lr.end_date, ?), GREATEST(lr.start_date, ?)) + 1 as days_in_month
+                             FROM leave_request lr
+                             LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+                             INNER JOIN user_shifts us ON us.user_id = lr.user_id
+                             INNER JOIN shifts s ON s.id = us.shift_id
+                             WHERE lr.user_id = ? 
+                             AND lr.status = 'approved'
+                             AND lt.name = 'Short Leave'
+                             AND (
+                                 (lr.start_date BETWEEN ? AND ?) 
+                                 OR 
+                                 (lr.end_date BETWEEN ? AND ?)
+                                 OR 
+                                 (lr.start_date <= ? AND lr.end_date >= ?)
+                             )
+                             AND (us.effective_from IS NULL OR us.effective_from <= lr.start_date)
+                             AND (us.effective_to IS NULL OR us.effective_to >= lr.start_date)";
+                
+                $detailed_stmt = $pdo->prepare($detailed_query);
+                $detailed_stmt->execute([
+                    $month_end, $month_start,
+                    $employee['id'], 
+                    $month_start, $month_end, 
+                    $month_start, $month_end,
+                    $month_start, $month_end
+                ]);
+                $detailed_leaves = $detailed_stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Filter to only MORNING short leaves
+                $short_leave_days = 0;
+                foreach ($detailed_leaves as $leave) {
+                    // Check if this is a MORNING short leave
+                    $timeFrom = $leave['time_from'];
+                    $shiftStart = $leave['start_time'];
+                    
+                    // Create DateTime objects with reference date to properly compare times
+                    $referenceDate = '2000-01-01';
+                    $timeFromDT = new DateTime($referenceDate . ' ' . $timeFrom);
+                    $shiftStartDT = new DateTime($referenceDate . ' ' . $shiftStart);
+                    $shiftStart1_5HoursDT = new DateTime($referenceDate . ' ' . $shiftStart);
+                    $shiftStart1_5HoursDT->add(new DateInterval('PT1H30M'));
+                    
+                    // Only include if it's a MORNING short leave
+                    if ($timeFromDT >= $shiftStartDT && $timeFromDT <= $shiftStart1_5HoursDT) {
+                        $short_leave_days += $leave['days_in_month'];
+                    }
+                }
+                
             } catch (PDOException $e) {
                 error_log("Error fetching short leave data for user " . $employee['id'] . ": " . $e->getMessage());
                 $short_leave_days = 0;
@@ -612,16 +682,29 @@ try {
             // Check if user has attendance record for the 4th Saturday and if punch_out is missing
             $missing_fourth_saturday_punch_out = false;
             if ($fourth_saturday) {
-                $punch_query = "SELECT * FROM attendance 
-                               WHERE user_id = ? 
-                               AND DATE(date) = ? 
-                               AND (punch_out IS NULL OR punch_out = '')";
-                $punch_stmt = $pdo->prepare($punch_query);
-                $punch_stmt->execute([$employee['id'], $fourth_saturday]);
-                $punch_result = $punch_stmt->fetch(PDO::FETCH_ASSOC);
+                // First check if user has an approved leave on the 4th Saturday
+                $leave_check_query = "SELECT id FROM leave_request 
+                                     WHERE user_id = ? 
+                                     AND status = 'approved'
+                                     AND (DATE(start_date) <= ? AND DATE(end_date) >= ?)
+                                     LIMIT 1";
+                $leave_check_stmt = $pdo->prepare($leave_check_query);
+                $leave_check_stmt->execute([$employee['id'], $fourth_saturday, $fourth_saturday]);
+                $leave_on_fourth_saturday = $leave_check_stmt->fetch(PDO::FETCH_ASSOC);
                 
-                if ($punch_result) {
-                    $missing_fourth_saturday_punch_out = true;
+                // Only check punch_out if no approved leave on 4th Saturday
+                if (!$leave_on_fourth_saturday) {
+                    $punch_query = "SELECT * FROM attendance 
+                                   WHERE user_id = ? 
+                                   AND DATE(date) = ? 
+                                   AND (punch_out IS NULL OR punch_out = '')";
+                    $punch_stmt = $pdo->prepare($punch_query);
+                    $punch_stmt->execute([$employee['id'], $fourth_saturday]);
+                    $punch_result = $punch_stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($punch_result) {
+                        $missing_fourth_saturday_punch_out = true;
+                    }
                 }
             }
             

@@ -11,4 +11,3 @@ CREATE TABLE `salary_penalties` (
   KEY `user_id` (`user_id`),
   KEY `penalty_month` (`penalty_month`),
   CONSTRAINT `salary_penalties_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-); 

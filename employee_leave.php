@@ -762,7 +762,7 @@ try {
         // Allow selecting dates up to 15 days in the past
         const _todayObj = new Date();
         const _earliestObj = new Date();
-        _earliestObj.setDate(_todayObj.getDate() - 15);
+        _earliestObj.setDate(_todayObj.getDate() - 16);
         const today = _todayObj.toISOString().split('T')[0];
         const earliestISO = _earliestObj.toISOString().split('T')[0];
         document.getElementById('fromDate').setAttribute('min', earliestISO);

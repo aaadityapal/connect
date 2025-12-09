@@ -36,6 +36,24 @@ try {
     // Format month/year for display
     $monthYear = date('F Y', strtotime($firstDayOfMonth));
     
+    // Fetch user's current shift times to determine morning/evening short leave
+    $shiftStmt = $pdo->prepare("
+        SELECT s.start_time, s.end_time
+        FROM user_shifts us
+        INNER JOIN shifts s ON us.shift_id = s.id
+        WHERE us.user_id = ?
+        AND (us.effective_from IS NULL OR us.effective_from <= ?)
+        AND (us.effective_to IS NULL OR us.effective_to >= ?)
+        ORDER BY us.effective_from DESC
+        LIMIT 1
+    ");
+    
+    $shiftStmt->execute([$user_id, $lastDayOfMonth, $firstDayOfMonth]);
+    $shiftData = $shiftStmt->fetch(PDO::FETCH_ASSOC);
+    
+    $shiftStartTime = $shiftData ? $shiftData['start_time'] : '09:00:00';
+    $shiftEndTime = $shiftData ? $shiftData['end_time'] : '18:00:00';
+    
     // Fetch approved leave records for the user in the specified month with leave type name
     $leaveStmt = $pdo->prepare("
         SELECT 
@@ -44,6 +62,8 @@ try {
             lr.end_date,
             lr.leave_type,
             lr.reason,
+            lr.time_from,
+            lr.time_to,
             DATEDIFF(lr.end_date, lr.start_date) + 1 as num_days,
             lr.status,
             lt.name as leave_type_name
@@ -74,16 +94,46 @@ try {
         $startDate = new DateTime($record['start_date']);
         $endDate = new DateTime($record['end_date']);
         
+        // Determine short leave type (morning or evening) if it's a short leave
+        $shortLeaveType = '';
+        if (stripos($record['leave_type_name'], 'short') !== false && $record['time_from'] && $record['time_to']) {
+            // Create DateTime objects for time comparison with a common reference date
+            $referenceDate = '2000-01-01'; // arbitrary date for time comparison
+            $timeFrom = new DateTime($referenceDate . ' ' . $record['time_from']);
+            $timeTo = new DateTime($referenceDate . ' ' . $record['time_to']);
+            $shiftStart = new DateTime($referenceDate . ' ' . $shiftStartTime);
+            $shiftEnd = new DateTime($referenceDate . ' ' . $shiftEndTime);
+            
+            // Calculate 1.5 hours from shift start and end
+            $morningLimit = clone $shiftStart;
+            $morningLimit->add(new DateInterval('PT1H30M')); // Add 1.5 hours
+            
+            $eveningLimit = clone $shiftEnd;
+            $eveningLimit->sub(new DateInterval('PT1H30M')); // Subtract 1.5 hours
+            
+            // Check if leave is morning short leave (time_from within shift_start to shift_start + 1.5 hrs)
+            if ($timeFrom >= $shiftStart && $timeFrom <= $morningLimit) {
+                $shortLeaveType = ' (Morning)';
+            }
+            // Check if leave is evening short leave (time_to within shift_end - 1.5 hrs to shift_end)
+            elseif ($timeTo >= $eveningLimit && $timeTo <= $shiftEnd) {
+                $shortLeaveType = ' (Evening)';
+            }
+        }
+        
+        $leaveTypeDisplay = ($record['leave_type_name'] ?? 'N/A') . $shortLeaveType;
+        
         $formattedRecords[] = [
             'start_date' => $record['start_date'],
             'end_date' => $record['end_date'],
             'start_date_display' => $startDate->format('d M Y'),
             'end_date_display' => $endDate->format('d M Y'),
             'date_range' => $startDate->format('d M Y') . ' to ' . $endDate->format('d M Y'),
-            'leave_type' => $record['leave_type_name'] ?? 'N/A',
+            'leave_type' => $leaveTypeDisplay,
             'num_days' => intval($record['num_days']),
             'reason' => $record['reason'] ?? 'No reason provided',
-            'status' => $record['status']
+            'status' => $record['status'],
+            'short_leave_type' => $shortLeaveType
         ];
     }
     

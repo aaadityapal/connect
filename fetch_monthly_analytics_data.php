@@ -227,24 +227,52 @@ try {
         $shiftStmt->execute([$employee['id']]);
         $userShift = $shiftStmt->fetch(PDO::FETCH_ASSOC);
         
-        // Fetch short leave dates for this month to exclude from late day calculations
+        // Fetch ONLY MORNING short leave dates for this month to exclude from late day calculations
+        // Evening short leaves should NOT reduce late punch-in counts
         $shortLeaveDates = [];
         try {
             $shortLeavesStmt = $pdo->prepare("
-                SELECT DISTINCT DATE(start_date) as leave_date
-                FROM leave_request
-                WHERE user_id = ?
-                AND status = 'approved'
-                AND MONTH(start_date) = ?
-                AND YEAR(start_date) = ?
-                AND leave_type IN (
+                SELECT DISTINCT DATE(lr.start_date) as leave_date, 
+                       lr.time_from, lr.time_to,
+                       s.start_time, s.end_time
+                FROM leave_request lr
+                INNER JOIN user_shifts us ON us.user_id = lr.user_id
+                INNER JOIN shifts s ON s.id = us.shift_id
+                WHERE lr.user_id = ?
+                AND lr.status = 'approved'
+                AND MONTH(lr.start_date) = ?
+                AND YEAR(lr.start_date) = ?
+                AND lr.leave_type IN (
                     SELECT id FROM leave_types 
                     WHERE LOWER(name) LIKE '%short%' OR LOWER(name) LIKE '%half%'
                 )
+                AND (us.effective_from IS NULL OR us.effective_from <= lr.start_date)
+                AND (us.effective_to IS NULL OR us.effective_to >= lr.start_date)
             ");
             $shortLeavesStmt->execute([$employee['id'], $month, $year]);
-            $shortLeaves = $shortLeavesStmt->fetchAll(PDO::FETCH_COLUMN);
-            $shortLeaveDates = array_flip($shortLeaves); // Convert to associative array for faster lookup
+            $shortLeaves = $shortLeavesStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Filter to only MORNING short leaves
+            // Morning short leave: time_from is between shift_start and shift_start + 1.5 hours
+            foreach ($shortLeaves as $shortLeave) {
+                $timeFrom = $shortLeave['time_from'];
+                $shiftStart = $shortLeave['start_time'];
+                
+                // Create DateTime objects with reference date to properly compare times
+                $referenceDate = '2000-01-01';
+                $timeFromDT = new DateTime($referenceDate . ' ' . $timeFrom);
+                $shiftStartDT = new DateTime($referenceDate . ' ' . $shiftStart);
+                $shiftStart1_5HoursDT = new DateTime($referenceDate . ' ' . $shiftStart);
+                $shiftStart1_5HoursDT->add(new DateInterval('PT1H30M'));
+                
+                // Check if this is a MORNING short leave
+                // (time_from is between shift_start and shift_start + 1.5 hours)
+                if ($timeFromDT >= $shiftStartDT && $timeFromDT <= $shiftStart1_5HoursDT) {
+                    // This is a MORNING short leave - add it to the list
+                    $leaveDate = $shortLeave['leave_date'];
+                    $shortLeaveDates[$leaveDate] = true;
+                }
+            }
         } catch (PDOException $e) {
             error_log("Error fetching short leaves for user " . $employee['id'] . ": " . $e->getMessage());
             $shortLeaveDates = [];
@@ -519,6 +547,7 @@ try {
         // Calculate 4th Saturday missing deduction
         // If user has not punched in on the 4th Saturday of the month, deduct 2 days salary
         // BUT only if the 4th Saturday has already passed
+        // AND there is NO approved leave on that date
         $fourthSaturdayDeduction = 0;
         try {
             // Calculate month boundaries
@@ -545,22 +574,39 @@ try {
                 
                 // Only apply deduction if the 4th Saturday has already passed
                 if ($fourthSaturday <= $today) {
-                    // Check if user has punched in on the 4th Saturday
-                    $fourthSaturdayCheckStmt = $pdo->prepare("
-                        SELECT punch_in
-                        FROM attendance
+                    // Check if user has an approved leave on the 4th Saturday
+                    $leaveCheckStmt = $pdo->prepare("
+                        SELECT id
+                        FROM leave_request
                         WHERE user_id = ?
-                        AND DATE(date) = ?
-                        AND punch_in IS NOT NULL
-                        AND punch_in != ''
+                        AND status = 'approved'
+                        AND (
+                            (DATE(start_date) <= ? AND DATE(end_date) >= ?)
+                        )
                         LIMIT 1
                     ");
-                    $fourthSaturdayCheckStmt->execute([$employee['id'], $fourthSaturday]);
-                    $punchRecord = $fourthSaturdayCheckStmt->fetch(PDO::FETCH_ASSOC);
+                    $leaveCheckStmt->execute([$employee['id'], $fourthSaturday, $fourthSaturday]);
+                    $leaveRecord = $leaveCheckStmt->fetch(PDO::FETCH_ASSOC);
                     
-                    // If no punch in found on 4th Saturday, deduct 2 days salary
-                    if (!$punchRecord) {
-                        $fourthSaturdayDeduction = 2 * $dailySalary;
+                    // If user has an approved leave on 4th Saturday, no deduction
+                    if (!$leaveRecord) {
+                        // Check if user has punched in on the 4th Saturday
+                        $fourthSaturdayCheckStmt = $pdo->prepare("
+                            SELECT punch_in
+                            FROM attendance
+                            WHERE user_id = ?
+                            AND DATE(date) = ?
+                            AND punch_in IS NOT NULL
+                            AND punch_in != ''
+                            LIMIT 1
+                        ");
+                        $fourthSaturdayCheckStmt->execute([$employee['id'], $fourthSaturday]);
+                        $punchRecord = $fourthSaturdayCheckStmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        // If no punch in found on 4th Saturday, deduct 2 days salary
+                        if (!$punchRecord) {
+                            $fourthSaturdayDeduction = 2 * $dailySalary;
+                        }
                     }
                 }
             }

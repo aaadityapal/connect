@@ -744,7 +744,7 @@ try {
         $salaryCalculatedDays -= $regularLateDeductionDays;
         $salaryCalculatedDays -= $oneHourLateDeductionDays;
 
-        // Fetch and subtract penalty days from salary_penalties table
+        // Fetch and subtract penalty days from salary_penalties table - FIXED BUG: Proper NULL checking
         $penaltyDays = 0;
         try {
             $penaltyStmt = $pdo->prepare("
@@ -756,7 +756,8 @@ try {
             $penaltyStmt->execute([$employee['id'], $penaltyMonth]);
             $penaltyRecord = $penaltyStmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($penaltyRecord && $penaltyRecord['penalty_days']) {
+            // FIX: Check if record exists AND penalty_days is not null (handles 0 values properly)
+            if ($penaltyRecord !== false && isset($penaltyRecord['penalty_days']) && $penaltyRecord['penalty_days'] !== null) {
                 $penaltyDays = floatval($penaltyRecord['penalty_days']);
                 $salaryCalculatedDays -= $penaltyDays;
             }

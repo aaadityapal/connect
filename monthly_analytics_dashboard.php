@@ -947,9 +947,14 @@ $selectedYear = intval($selectedYear);
         <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 style="color: #1a202c; font-size: 1.3rem; margin: 0;">Analytics for <?php echo date('F', mktime(0, 0, 0, $selectedMonth, 1)); ?> <?php echo $selectedYear; ?></h2>
-                        <button type="button" class="btn btn-filter" onclick="exportToExcel()" style="margin: 0;">
-                            <i class="fas fa-download"></i> Export to Excel
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn btn-filter" onclick="generateReport()" style="margin: 0;">
+                                <i class="fas fa-file-alt"></i> Generate Report
+                            </button>
+                            <button type="button" class="btn btn-filter" onclick="exportToExcel()" style="margin: 0;">
+                                <i class="fas fa-download"></i> Export to Excel
+                            </button>
+                        </div>
                     </div>
                     
                     <table class="analytics-table">
@@ -1609,8 +1614,8 @@ $selectedYear = intval($selectedYear);
                 return;
             }
 
-            if (baseSalary <= 0) {
-                showFormMessage('Please enter a valid salary', 'error');
+            if (isNaN(baseSalary) || baseSalary < 0) {
+                showFormMessage('Please enter a valid salary (0 or greater)', 'error');
                 return;
             }
 
@@ -1803,6 +1808,323 @@ $selectedYear = intval($selectedYear);
             showNotification('Info', `Mark as paid: ${employeeId}`, 'info');
             // Add your paid marking logic here
             console.log('Paid clicked for employee:', employeeId);
+        }
+
+        function generateReport() {
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+            
+            if (!month || !year) {
+                showNotification('Warning', 'Please select month and year', 'warning');
+                return;
+            }
+
+            // Show loading state
+            const reportBtn = event.target.closest('button');
+            const originalText = reportBtn.innerHTML;
+            reportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            reportBtn.disabled = true;
+
+            // Use a more reliable CDN URL for XLSX
+            const xslxUrl = 'https://unpkg.com/xlsx@latest/dist/xlsx.full.min.js';
+            
+            // Check if SheetJS is loaded, if not load it
+            if (!window.XLSX) {
+                const script = document.createElement('script');
+                script.src = xslxUrl;
+                script.async = true;
+                
+                script.onload = () => {
+                    console.log('XLSX library loaded successfully from:', xslxUrl);
+                    performReportGeneration(month, year, reportBtn, originalText);
+                };
+                
+                script.onerror = () => {
+                    console.error('Failed to load XLSX library from:', xslxUrl);
+                    showNotification('Error', 'Error loading Excel library. Please try again.', 'error');
+                    reportBtn.innerHTML = originalText;
+                    reportBtn.disabled = false;
+                };
+                
+                // Set a timeout to catch loading issues
+                setTimeout(() => {
+                    if (!window.XLSX) {
+                        console.error('XLSX library failed to load within timeout');
+                        showNotification('Error', 'Error: Excel library took too long to load. Please try again.', 'error');
+                        reportBtn.innerHTML = originalText;
+                        reportBtn.disabled = false;
+                    }
+                }, 15000);
+                
+                document.head.appendChild(script);
+            } else {
+                console.log('XLSX library already loaded');
+                performReportGeneration(month, year, reportBtn, originalText);
+            }
+        }
+
+        function performReportGeneration(month, year, reportBtn, originalText) {
+            console.log('Starting report generation for month:', month, 'year:', year);
+            
+            // Fetch data from the generate report handler
+            fetch(`generate_monthly_payroll_report.php?month=${month}&year=${year}`)
+                .then(response => {
+                    console.log('Response received, status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+                    
+                    if (data.status !== 'success') {
+                        throw new Error(data.message || 'Report generation failed');
+                    }
+                    
+                    if (!data.data || data.data.length === 0) {
+                        throw new Error('No data available for report');
+                    }
+
+                    console.log('Creating Excel workbook...');
+
+                    // Create workbook
+                    const wb = XLSX.utils.book_new();
+                    
+                    // Prepare data for worksheet
+                    const headers = [
+                        'Employee ID',
+                        'Name',
+                        'Role',
+                        'Base Salary',
+                        'Working Days',
+                        'Present Days',
+                        'Late Days',
+                        '1+ Hour Late',
+                        'Leave Taken',
+                        'Leave Deduction',
+                        'Late Deduction',
+                        '1+ Hour Late Deduction',
+                        '4th Saturday Deduction',
+                        'Penalty Days',
+                        'Salary Calculated Days',
+                        'Net Salary',
+                        'Overtime Hours',
+                        'Overtime Amount',
+                        'Final Salary'
+                    ];
+
+                    // Create data rows
+                    const worksheetData = [headers];
+                    data.data.forEach(emp => {
+                        worksheetData.push([
+                            emp.employee_id || '',
+                            emp.name || '',
+                            emp.role || '',
+                            emp.base_salary || 0,
+                            emp.working_days || 0,
+                            emp.present_days || 0,
+                            emp.late_days || 0,
+                            emp.one_hour_late || 0,
+                            emp.leave_taken || 0,
+                            emp.leave_deduction || 0,
+                            emp.late_deduction || 0,
+                            emp.one_hour_late_deduction || 0,
+                            emp.fourth_saturday_deduction || 0,
+                            emp.penalty_days || 0,
+                            emp.salary_calculated_days || 0,
+                            emp.net_salary || 0,
+                            emp.overtime_hours || 0,
+                            emp.overtime_amount || 0,
+                            emp.final_salary || 0
+                        ]);
+                    });
+
+                    // Add empty row and summary section
+                    worksheetData.push([]);
+                    worksheetData.push(['PAYROLL SUMMARY']);
+                    worksheetData.push(['Total Net Salary (Without Overtime)', data.summary.total_salary_without_overtime]);
+                    worksheetData.push(['Total Overtime Amount', data.summary.total_overtime_amount]);
+                    worksheetData.push(['Total Final Salary (With Overtime)', data.summary.total_salary_with_overtime]);
+                    worksheetData.push(['Total Employees', data.summary.employee_count]);
+
+                    console.log('Creating worksheet...');
+                    // Create worksheet
+                    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+                    console.log('Applying colorful header styling...');
+                    // Define color categories for headers
+                    const headerColors = {
+                        // Employee Info - Blue
+                        0: 'FF2E5090',  // Employee ID
+                        1: 'FF2E5090',  // Name
+                        2: 'FF2E5090',  // Role
+                        3: 'FF2E5090',  // Base Salary
+                        // Attendance - Green
+                        4: 'FF27AE60',  // Working Days
+                        5: 'FF27AE60',  // Present Days
+                        6: 'FFD32F2F',  // Late Days (Red)
+                        7: 'FFE64A19',  // 1+ Hour Late (Orange)
+                        8: 'FF8E44AD',  // Leave Taken (Purple)
+                        // Deductions - Red/Orange
+                        9: 'FFD32F2F',  // Leave Deduction
+                        10: 'FFE64A19', // Late Deduction
+                        11: 'FFE64A19', // 1+ Hour Late Deduction
+                        12: 'FFD32F2F', // 4th Saturday Deduction
+                        13: 'FFD32F2F', // Penalty Days
+                        // Salary Calculation - Teal
+                        14: 'FF16A085', // Salary Calculated Days
+                        15: 'FF16A085', // Net Salary
+                        // Overtime - Cyan
+                        16: 'FF0097A7', // Overtime Hours
+                        17: 'FF0097A7', // Overtime Amount
+                        18: 'FF1B5E20'  // Final Salary (Dark Green)
+                    };
+
+                    // Color header row with category colors
+                    for (let i = 0; i < headers.length; i++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+                        if (ws[cellRef]) {
+                            ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: headerColors[i] || 'FF2E5090' } };
+                            ws[cellRef].font = { color: { rgb: 'FFFFFFFF' }, bold: true, size: 14 };
+                            ws[cellRef].alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+                            ws[cellRef].border = {
+                                top: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                                bottom: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                                left: { style: 'thin', color: { rgb: 'FFFFFFFF' } },
+                                right: { style: 'thin', color: { rgb: 'FFFFFFFF' } }
+                            };
+                        }
+                    }
+
+                    console.log('Applying colorful row colors...');
+                    // Define light colors for data rows (light versions of header colors)
+                    const rowLightColors = {
+                        0: 'FFC9D6E8',  // Light Blue
+                        1: 'FFC9D6E8',  // Light Blue
+                        2: 'FFC9D6E8',  // Light Blue
+                        3: 'FFC9D6E8',  // Light Blue
+                        4: 'FFC8E6C9',  // Light Green
+                        5: 'FFC8E6C9',  // Light Green
+                        6: 'FFFFCDD2',  // Light Red
+                        7: 'FFFFE0B2',  // Light Orange
+                        8: 'FFF3E5F5',  // Light Purple
+                        9: 'FFFFCDD2',  // Light Red
+                        10: 'FFFFE0B2', // Light Orange
+                        11: 'FFFFE0B2', // Light Orange
+                        12: 'FFFFCDD2', // Light Red
+                        13: 'FFFFCDD2', // Light Red
+                        14: 'FFB2DFDB', // Light Teal
+                        15: 'FFB2DFDB', // Light Teal
+                        16: 'FFB3E5FC', // Light Cyan
+                        17: 'FFB3E5FC', // Light Cyan
+                        18: 'FFC8E6C9'  // Light Green
+                    };
+
+                    // Color data rows with light colors
+                    for (let i = 1; i < data.data.length + 1; i++) {
+                        for (let j = 0; j < headers.length; j++) {
+                            const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
+                            if (ws[cellRef]) {
+                                // Alternate between full light color and even lighter shade
+                                const baseColor = rowLightColors[j] || 'FFF5F5F5';
+                                if (i % 2 === 0) {
+                                    // Darker light shade for even rows
+                                    ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: baseColor } };
+                                } else {
+                                    // Even lighter shade for odd rows
+                                    ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: 'FFFAFAFA' } };
+                                }
+                                ws[cellRef].alignment = { horizontal: 'right', vertical: 'center' };
+                                ws[cellRef].border = {
+                                    bottom: { style: 'thin', color: { rgb: 'FFE0E0E0' } },
+                                    right: { style: 'thin', color: { rgb: 'FFE0E0E0' } }
+                                };
+                            }
+                        }
+                    }
+
+                    console.log('Applying summary styling...');
+                    // Color summary section
+                    const summaryStartRow = data.data.length + 2;
+                    
+                    // Color SUMMARY header row - Dark Gradient Purple
+                    for (let j = 0; j < headers.length; j++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: summaryStartRow, c: j });
+                        if (ws[cellRef]) {
+                            ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: 'FF6A4C93' } };
+                            ws[cellRef].font = { color: { rgb: 'FFFFFFFF' }, bold: true, size: 12 };
+                            ws[cellRef].alignment = { horizontal: 'left', vertical: 'center' };
+                            ws[cellRef].border = {
+                                top: { style: 'medium', color: { rgb: 'FF4A235A' } },
+                                bottom: { style: 'medium', color: { rgb: 'FF4A235A' } }
+                            };
+                        }
+                    }
+
+                    // Color summary data rows - Gradient pastel colors
+                    const summaryColors = ['FFE8D5F2', 'FFD4C9E8', 'FFD4C9E8', 'FFE8D5F2'];
+                    for (let i = summaryStartRow + 1; i < summaryStartRow + 5; i++) {
+                        for (let j = 0; j < headers.length; j++) {
+                            const cellRef = XLSX.utils.encode_cell({ r: i, c: j });
+                            if (ws[cellRef]) {
+                                const colorIndex = i - summaryStartRow - 1;
+                                ws[cellRef].fill = { patternType: 'solid', fgColor: { rgb: summaryColors[colorIndex] || 'FFE8D5F2' } };
+                                ws[cellRef].font = { bold: j === 0, size: 11 };
+                                ws[cellRef].alignment = { horizontal: j === 0 ? 'left' : 'right', vertical: 'center' };
+                                ws[cellRef].border = {
+                                    bottom: { style: 'thin', color: { rgb: 'FFC9B1D8' } }
+                                };
+                            }
+                        }
+                    }
+
+                    console.log('Setting column widths...');
+                    // Set column widths
+                    ws['!cols'] = [
+                        { wch: 15 },  // Employee ID
+                        { wch: 20 },  // Name
+                        { wch: 15 },  // Role
+                        { wch: 15 },  // Base Salary
+                        { wch: 14 },  // Working Days
+                        { wch: 14 },  // Present Days
+                        { wch: 12 },  // Late Days
+                        { wch: 14 },  // 1+ Hour Late
+                        { wch: 12 },  // Leave Taken
+                        { wch: 16 },  // Leave Deduction
+                        { wch: 14 },  // Late Deduction
+                        { wch: 18 },  // 1+ Hour Late Deduction
+                        { wch: 18 },  // 4th Saturday Deduction
+                        { wch: 14 },  // Penalty Days
+                        { wch: 20 },  // Salary Calculated Days
+                        { wch: 14 },  // Net Salary
+                        { wch: 16 },  // Overtime Hours
+                        { wch: 16 },  // Overtime Amount
+                        { wch: 15 }   // Final Salary
+                    ];
+
+                    console.log('Adding worksheet to workbook...');
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(wb, ws, 'Payroll Report');
+
+                    // Format the filename with month and year
+                    const monthName = new Date(year, month - 1).toLocaleString('default', { month: 'long' });
+                    const filename = `payroll_report_${monthName}_${year}.xlsx`;
+
+                    console.log('Writing file:', filename);
+                    // Write the file
+                    XLSX.writeFile(wb, filename);
+
+                    reportBtn.innerHTML = originalText;
+                    reportBtn.disabled = false;
+                    showNotification('Success', 'Report generated and downloaded successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    reportBtn.innerHTML = originalText;
+                    reportBtn.disabled = false;
+                    showNotification('Error', 'Error generating report. Please try again.', 'error');
+                });
         }
 
         function exportToExcel() {

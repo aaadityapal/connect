@@ -14,6 +14,13 @@ if (!isset($_SESSION['user_id'])) {
 // Get user role from session
 $user_role = $_SESSION['role'] ?? '';
 
+// Check if user has the required role to access this page
+if ($user_role !== 'Senior Manager (Studio)' && $user_role !== 'Senior Manager (Site)') {
+    // Redirect to unauthorized page or dashboard
+    header('Location: unauthorized.php');
+    exit();
+}
+
 // Determine default toggle based on user role
 $default_toggle = 'studio'; // Default to studio
 if ($user_role == 'Senior Manager (Site)') {

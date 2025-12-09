@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
 }
 
 // Only allow Senior Manager (Site) role to access this page
-if ($_SESSION['role'] !== 'Senior Manager (Site)' && $_SESSION['role'] !== 'Purchase Manager') {
+if ($_SESSION['role'] !== 'Senior Manager (Site)') {
     // Redirect to unauthorized page or dashboard
     header("Location: unauthorized.php");
     exit;

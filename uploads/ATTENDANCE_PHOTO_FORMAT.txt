@@ -1,0 +1,303 @@
+================================================================================
+ATTENDANCE PHOTO UPLOAD DOCUMENTATION
+================================================================================
+
+OVERVIEW:
+This folder stores attendance verification photos captured during punch-in and 
+punch-out operations. Each photo is automatically saved with a unique filename 
+based on user ID and timestamp.
+
+================================================================================
+FOLDER STRUCTURE:
+================================================================================
+
+📁 uploads/
+  └── 📁 attendance/
+       ├── 125_20231209_143052_1234.jpeg
+       ├── 125_20231209_173045_5678.jpeg
+       ├── 126_20231209_090030_2345.jpeg
+       └── [more photo files...]
+
+================================================================================
+FILENAME FORMAT:
+================================================================================
+
+Format: {USER_ID}_{DATE}_{TIME}_{MILLISECONDS}.jpeg
+
+Components:
+-----------
+1. USER_ID
+   - The unique identifier of the employee
+   - Example: 125
+
+2. DATE
+   - Format: YYYYMMDD (ISO 8601 date format)
+   - Example: 20231209 (December 9, 2023)
+
+3. TIME
+   - Format: HHMMSS (24-hour format in IST)
+   - Example: 143052 (14:30:52)
+   - Timezone: Asia/Kolkata (IST - UTC+5:30)
+
+4. MILLISECONDS
+   - 4-digit millisecond precision for uniqueness
+   - Example: 1234
+   - Ensures no two photos from same user at same second are overwritten
+
+COMPLETE FILENAME EXAMPLE:
+--------------------------
+125_20231209_143052_1234.jpeg
+
+Decoded:
+- User ID: 125
+- Date: December 9, 2023
+- Time: 14:30:52 (2:30:52 PM)
+- Milliseconds: 1234
+- Extension: .jpeg
+
+================================================================================
+PHOTO CAPTURE PROCESS:
+================================================================================
+
+1. PUNCH-IN ACTION
+   ├─ User clicks "Punch In" button
+   ├─ Camera modal opens
+   ├─ User takes selfie photo
+   ├─ Photo converted to Base64 data URL
+   ├─ Sent to server via AJAX (ajax_handlers/submit_attendance.php)
+   ├─ Base64 decoded to binary
+   ├─ Saved to uploads/attendance/ folder
+   └─ Path stored in database attendance table
+
+2. PUNCH-OUT ACTION
+   ├─ User clicks "Punch Out" button
+   ├─ Camera modal opens (same as punch-in)
+   ├─ User takes selfie photo
+   ├─ Photo converted to Base64 data URL
+   ├─ Work report submitted (min 20 words)
+   ├─ Sent to server via AJAX
+   ├─ Base64 decoded to binary
+   ├─ Saved to uploads/attendance/ folder with new timestamp
+   ├─ Path stored in database attendance table
+   └─ Work report stored in database
+
+================================================================================
+TECHNICAL DETAILS:
+================================================================================
+
+File Type: JPEG (Joint Photographic Experts Group)
+Format: image/jpeg
+Encoding: Base64 (during transmission) → Binary (on disk)
+
+Directory Permissions: 0755 (rwxr-xr-x)
+- Owner: read, write, execute
+- Group: read, execute
+- Others: read, execute
+
+Directory Creation:
+- Automatically created if it doesn't exist
+- Created with mkdir($path, 0755, true)
+
+File Storage:
+- Physical path: /Applications/XAMPP/xamppfiles/htdocs/connect/uploads/attendance/
+- Web path: uploads/attendance/
+- Database path: uploads/attendance/{filename}.jpeg
+
+================================================================================
+DATABASE STORAGE:
+================================================================================
+
+Photos are referenced in the 'attendance' table:
+
+Column: attendance_photo_punch_in (for punch-in photos)
+Column: attendance_photo_punch_out (for punch-out photos)
+
+Example database entry:
+{
+  "id": 1,
+  "user_id": 125,
+  "date": "2023-12-09",
+  "punch_in": "14:30:52",
+  "punch_out": "18:45:30",
+  "attendance_photo_punch_in": "uploads/attendance/125_20231209_143052_1234.jpeg",
+  "attendance_photo_punch_out": "uploads/attendance/125_20231209_184530_5678.jpeg",
+  "approval_status": "pending",
+  "work_report": "Completed project documentation and team meeting..."
+}
+
+================================================================================
+PHOTO METADATA CAPTURED:
+================================================================================
+
+With each photo, the following information is also stored:
+
+1. Location Data:
+   - Latitude: User's GPS location
+   - Longitude: User's GPS location
+   - Address: Reverse geocoded address (via server-side proxy)
+   - Distance from geofence: Distance in meters
+
+2. Device Information:
+   - IP Address: User's IP address
+   - User Agent: Browser and device information
+   - Device Info: Operating system, browser details
+
+3. Geofence Verification:
+   - Within Geofence: Boolean (true/false)
+   - Geofence Location: ID of the location boundary
+   - Geofence Radius: Maximum allowed distance in meters
+
+4. Time Information:
+   - Server Time: Time recorded on server (IST)
+   - Client Time: Time from user's device (IST)
+
+5. Additional Details:
+   - Outside Location Reason: Text if user punched outside allowed area
+   - Work Report: Text description of work done (punch-out only)
+
+================================================================================
+ACCESSING PHOTOS:
+================================================================================
+
+From Browser (Web Path):
+http://localhost/connect/uploads/attendance/125_20231209_143052_1234.jpeg
+
+From Server (Physical Path):
+/Applications/XAMPP/xamppfiles/htdocs/connect/uploads/attendance/125_20231209_143052_1234.jpeg
+
+From PHP Code:
+$photo_url = 'uploads/attendance/' . $filename;
+$photo_path = __DIR__ . '/../uploads/attendance/' . $filename;
+
+From Database:
+SELECT attendance_photo_punch_in, attendance_photo_punch_out 
+FROM attendance 
+WHERE user_id = 125 AND date = '2023-12-09';
+
+================================================================================
+EXAMPLE PUNCH-IN FLOW:
+================================================================================
+
+USER ACTION          |  SYSTEM PROCESS           |  FILE SAVED
+─────────────────────┼───────────────────────────┼────────────────────────────
+1. Click "Punch In"  |  Modal opens with camera  |  (no file yet)
+                     |                           |
+2. Take photo        |  Convert to Base64        |  (in memory)
+                     |                           |
+3. Detect location   |  Get GPS coordinates      |  (in memory)
+                     |  Check geofence           |  (in memory)
+                     |                           |
+4. Submit            |  Send to server           |  (uploading)
+                     |  Decode Base64            |  (in memory)
+                     |  Generate filename        |  (in memory)
+                     |  Save to disk             |  ✓ FILE SAVED
+                     |  Record in database       |  ✓ DATABASE UPDATED
+                     |                           |
+5. Success message   |  Confirm punch-in         |  (complete)
+
+Resulting file:
+📄 uploads/attendance/125_20231209_143052_1234.jpeg
+
+================================================================================
+EXAMPLE PUNCH-OUT FLOW:
+================================================================================
+
+USER ACTION           |  SYSTEM PROCESS           |  FILE SAVED
+──────────────────────┼───────────────────────────┼────────────────────────────
+1. Click "Punch Out"  |  Modal opens with camera  |  (no file yet)
+                      |                           |
+2. Take photo         |  Convert to Base64        |  (in memory)
+                      |                           |
+3. Enter work report  |  Validate min 20 words    |  (in memory)
+   (min 20 words)     |                           |
+                      |                           |
+4. Detect location    |  Get GPS coordinates      |  (in memory)
+                      |  Check geofence           |  (in memory)
+                      |                           |
+5. Submit             |  Send to server           |  (uploading)
+                      |  Decode Base64            |  (in memory)
+                      |  Generate filename        |  (in memory)
+                      |  Save photo to disk       |  ✓ PHOTO SAVED
+                      |  Save work report         |  ✓ DATABASE UPDATED
+                      |  Update attendance record |  ✓ DATABASE UPDATED
+                      |                           |
+6. Success message    |  Confirm punch-out        |  (complete)
+
+Resulting files:
+📄 uploads/attendance/125_20231209_143052_1234.jpeg (punch-in photo)
+📄 uploads/attendance/125_20231209_184530_5678.jpeg (punch-out photo)
+
+================================================================================
+IMPORTANT NOTES:
+================================================================================
+
+✓ PHOTO VERIFICATION
+  - Both punch-in and punch-out require a photo
+  - Photos are mandatory for attendance tracking
+  - Photos serve as audit trail and proof of attendance
+
+✓ TIMESTAMP ACCURACY
+  - All timestamps are in IST (Asia/Kolkata) timezone
+  - Server time is used as the authoritative timestamp
+  - Milliseconds prevent filename collisions
+
+✓ STORAGE SECURITY
+  - Photos are stored outside web root when possible
+  - File permissions ensure proper access control
+  - Database stores encrypted user sensitive data
+
+✓ GEOFENCE VERIFICATION
+  - Photos with location data verify user's physical location
+  - System detects if user is inside/outside allowed area
+  - Out-of-area punches require reason explanation
+
+✓ WORK REPORT REQUIREMENT
+  - Punch-out requires work report (min 20 words)
+  - Work report stored with punch-out photo
+  - Helps track daily productivity and accomplishments
+
+✓ BACKUP RECOMMENDATIONS
+  - Regularly backup uploads/attendance/ folder
+  - Consider cloud storage for long-term archival
+  - Maintain database backups with photo references
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Issue: Photo not saving
+├─ Check directory permissions (should be 0755)
+├─ Verify folder exists: uploads/attendance/
+├─ Check disk space available
+└─ Review error logs in server
+
+Issue: Photos showing as 404
+├─ Verify path in database matches actual file location
+├─ Check web server configuration
+├─ Ensure uploads folder is accessible from web
+└─ Check file permissions (should be readable)
+
+Issue: Incorrect timestamp
+├─ Verify server timezone is set to IST
+├─ Check database timezone setting
+├─ Review microtime() accuracy on server
+└─ Sync server time with NTP
+
+================================================================================
+RELATED FILES:
+================================================================================
+
+- Component: components/dashboard_widgets/recent_time_widget.php
+- Handler: ajax_handlers/submit_attendance.php
+- Database Table: attendance
+- Database Columns: 
+  * attendance_photo_punch_in
+  * attendance_photo_punch_out
+  * latitude, longitude
+  * address, device_info, ip_address
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
+Last Updated: December 9, 2025
+Document Version: 1.0

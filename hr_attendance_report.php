@@ -30,26 +30,22 @@ $user_id = isset($_GET['user_id']) ? $_GET['user_id'] : $_SESSION['user_id'];
 $show_all = ($is_hr && $user_id === 'all');
 
 // Fetch users for HR view
-$users = [];
-if ($is_hr) {
-    // Fixed collation issue by explicitly specifying COLLATE utf8mb4_general_ci
-    $stmt = $pdo->prepare("SELECT id, username, unique_id FROM users WHERE 
+    $users = [];
+    if ($is_hr) {
+        $stmt = $pdo->prepare("SELECT id, username, unique_id FROM users WHERE 
         deleted_at IS NULL AND 
         (status = 'active' OR 
          (status = 'inactive' AND 
-          DATE_FORMAT(status_changed_date, '%Y-%m') >= :month COLLATE utf8mb4_general_ci))
+          DATE_FORMAT(status_changed_date, '%Y-%m') >= :month))
         ORDER BY username");
-    $stmt->execute(['month' => $month]);
-    $users = $stmt->fetchAll();
-}
-
-// Fetch all active users for the dropdown
-// Fixed collation issue by explicitly specifying COLLATE utf8mb4_general_ci
+        $stmt->execute(['month' => $month]);
+        $users = $stmt->fetchAll();
+    }// Fetch all active users for the dropdown
 $users_query = "SELECT id, username, unique_id FROM users WHERE 
     deleted_at IS NULL AND 
     (status = 'active' OR 
      (status = 'inactive' AND 
-      DATE_FORMAT(status_changed_date, '%Y-%m') >= :month COLLATE utf8mb4_general_ci))
+      DATE_FORMAT(status_changed_date, '%Y-%m') >= :month))
     ORDER BY username";
 $users_stmt = $pdo->prepare($users_query);
 $users_stmt->execute(['month' => $month]);
@@ -81,7 +77,7 @@ $query = "
         AND (us.effective_to IS NULL OR a.date <= us.effective_to)
     )
     LEFT JOIN shifts s ON us.shift_id = s.id
-    WHERE DATE_FORMAT(a.date, '%Y-%m') = :month COLLATE utf8mb4_general_ci
+    WHERE DATE_FORMAT(a.date, '%Y-%m') = :month
     " . ($user_id !== 'all' ? "AND a.user_id = :user_id" : "") . "
     ORDER BY a.date DESC, u.username ASC
 ";
@@ -172,7 +168,7 @@ if ($user_id !== 'all') {
         WHERE lr.user_id = :user_id
         AND lt.name = 'Short Leave'
         AND lr.status = 'approved'
-        AND DATE_FORMAT(lr.start_date, '%Y-%m') = :month COLLATE utf8mb4_general_ci
+        AND DATE_FORMAT(lr.start_date, '%Y-%m') = :month
     ";
     
     $leave_stmt = $pdo->prepare($leave_query);

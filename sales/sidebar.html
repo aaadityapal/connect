@@ -1,0 +1,368 @@
+<style>
+    /* --- Sidebar --- */
+    .sidebar {
+        width: var(--sidebar-width);
+        background-color: var(--bg-sidebar);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        height: 100%;
+        transition: width var(--transition-speed) ease, padding var(--transition-speed) ease, transform 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+        /* Prevent shrinking */
+        z-index: 100;
+        /* High z-index for mobile overlay */
+    }
+
+    .sidebar.collapsed {
+        width: 80px;
+        padding: 1.5rem 1rem;
+    }
+
+    /* Mobile Sidebar State */
+    .sidebar.mobile-open {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        /* Fixed width on mobile */
+        height: 100%;
+        transform: translateX(0);
+        box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Mobile Responsive Styles for Sidebar */
+    @media (max-width: 768px) {
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            transform: translateX(-100%);
+            /* Hidden by default */
+            width: 260px;
+        }
+
+        /* Hide the desktop collapse toggle on mobile */
+        .sidebar-footer {
+            display: none;
+        }
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 2.5rem;
+        padding-left: 0.5rem;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .brand-logo {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        /* Prevent shrinking */
+        object-fit: contain;
+        border-radius: 4px;
+    }
+
+    .brand-name {
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--text-primary);
+        opacity: 1;
+        transition: opacity 0.2s;
+    }
+
+    .sidebar.collapsed .brand-name {
+        display: none;
+    }
+
+    .sidebar.collapsed .brand {
+        justify-content: center;
+        padding-left: 0;
+    }
+
+    .nav-menu {
+        list-style: none;
+        flex: 1;
+        overflow-y: auto;
+        /* Enable vertical scrolling */
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* IE 10+ */
+    }
+
+    .nav-menu::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
+    }
+
+    .nav-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-weight: 400;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background-color: var(--bg-hover);
+        color: var(--text-primary);
+    }
+
+    .nav-link svg {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        stroke-width: 1.5;
+    }
+
+    .sidebar.collapsed .nav-link span {
+        display: none;
+    }
+
+    .sidebar.collapsed .nav-link {
+        justify-content: center;
+        padding: 0.85rem 0;
+    }
+
+    /* Sidebar Toggle Button */
+    .sidebar-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: flex-end;
+        padding-bottom: 1rem;
+    }
+
+    .sidebar-toggle {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sidebar-toggle:hover {
+        color: var(--text-primary);
+        background-color: var(--bg-hover);
+    }
+
+    .sidebar.collapsed .sidebar-toggle {
+        transform: rotate(180deg);
+        margin: 0 auto;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+        overflow: hidden;
+        white-space: nowrap;
+        margin-top: auto;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .user-profile:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        border-color: var(--border-light);
+    }
+
+    .sidebar.collapsed .user-profile {
+        justify-content: center;
+        padding: 1rem;
+        flex-direction: column;
+    }
+
+    .avatar {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-color) 0%, rgba(255, 255, 255, 0.8) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-inverse);
+        font-weight: 700;
+        font-size: 1rem;
+        border: 2px solid var(--border-light);
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar .initials {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        opacity: 1;
+        transition: opacity 0.2s;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sidebar.collapsed .user-info {
+        display: none;
+    }
+
+    .user-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .user-role {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+<div class="brand">
+    <img src="logo.png" alt="ArchitectsHive" class="brand-logo">
+    <div class="brand-name">ArchitectsHive</div>
+</div>
+
+<ul class="nav-menu">
+    <li class="nav-item">
+        <a href="dashboard.html" class="nav-link active">
+            <i data-feather="grid"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="products.html" class="nav-link">
+            <i data-feather="shopping-bag"></i>
+            <span>Products</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="users"></i>
+            <span>Leads</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="calendar"></i>
+            <span>Calendar</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="message-square"></i>
+            <span>Messages</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="bar-chart-2"></i>
+            <span>Reports</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="check-square"></i>
+            <span>Tasks</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="file-text"></i>
+            <span>Documents</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="briefcase"></i>
+            <span>Team</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="settings"></i>
+            <span>Settings</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <i data-feather="help-circle"></i>
+            <span>Help & Support</span>
+        </a>
+    </li>
+    <li class="nav-item" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+        <a href="../logout.php" class="nav-link" style="color: var(--status-lost);">
+            <i data-feather="log-out"></i>
+            <span>Logout</span>
+        </a>
+    </li>
+</ul>
+
+<div class="sidebar-footer">
+    <button id="sidebarToggle" class="sidebar-toggle">
+        <i data-feather="chevrons-left"></i>
+    </button>
+</div>
+
+<div class="user-profile">
+    <div class="avatar">
+        <img id="profileImg" src="" alt="Profile" style="display: none;">
+        <div class="initials" id="userInitials">JD</div>
+    </div>
+    <div class="user-info">
+        <span class="user-name" id="sidebarUsername">John Doe</span>
+        <span class="user-role" id="sidebarUserRole">Senior Sales Exec</span>
+    </div>
+</div>
+
+<script>
+    // Note: User profile data is updated in index.php after sidebar is loaded
+    // This script is kept as backup/fallback
+</script>

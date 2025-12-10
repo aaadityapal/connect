@@ -16,14 +16,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker</title>
-    
+
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+
     <style>
         * {
             margin: 0;
@@ -584,6 +585,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -673,7 +675,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             z-index: 10;
         }
 
-        .vendor-row-header > div:last-child {
+        .vendor-row-header>div:last-child {
             text-align: center;
         }
 
@@ -799,8 +801,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .pagination-container {
@@ -1002,6 +1009,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1263,6 +1271,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Include the side panel -->
@@ -1373,23 +1382,27 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             <div class="recent-records-section">
                 <div class="recent-records-header-container">
                     <div class="recent-records-title-wrapper">
-                        <button class="recent-records-toggle-btn" id="recentRecordsToggleBtn" title="Collapse/Expand Records">
+                        <button class="recent-records-toggle-btn" id="recentRecordsToggleBtn"
+                            title="Collapse/Expand Records">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <h3 class="recent-records-header">Recently Added Records</h3>
                     </div>
-                    
+
                     <!-- Minimalist Date Range Filter -->
                     <div class="records-date-filter-minimal">
-                        <input type="date" id="recordsDateFrom" name="recordsDateFrom" class="mini-date-input" placeholder="From">
-                        <input type="date" id="recordsDateTo" name="recordsDateTo" class="mini-date-input" placeholder="To">
+                        <input type="date" id="recordsDateFrom" name="recordsDateFrom" class="mini-date-input"
+                            placeholder="From">
+                        <input type="date" id="recordsDateTo" name="recordsDateTo" class="mini-date-input"
+                            placeholder="To">
                         <button class="mini-filter-btn apply" id="applyRecordsFilterBtn" title="Apply Filter">
                             <i class="fas fa-check"></i>
                         </button>
                         <button class="mini-filter-btn reset" id="resetRecordsFilterBtn" title="Reset Filter">
                             <i class="fas fa-times"></i>
                         </button>
-                        <button class="mini-filter-btn export" id="exportToExcelBtn" title="Export Payment Entries to Excel">
+                        <button class="mini-filter-btn export" id="exportToExcelBtn"
+                            title="Export Payment Entries to Excel">
                             <i class="fas fa-file-excel"></i> Export to Excel
                         </button>
                     </div>
@@ -1415,22 +1428,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
             <div class="content-section" style="margin-top: 40px;">
                 <h3>Quick Actions</h3>
-                
+
                 <!-- Quick Action Buttons -->
                 <div class="quick-actions-grid">
-                    <button class="quick-action-btn" onclick="scrollToTab('vendors-tab')" title="View all vendors in the system">
+                    <button class="quick-action-btn" onclick="scrollToTab('vendors-tab')"
+                        title="View all vendors in the system">
                         <i class="fas fa-users"></i>
                         <span>View Vendors</span>
                     </button>
-                    <button class="quick-action-btn" onclick="scrollToTab('labours-tab')" title="View all labour records">
+                    <button class="quick-action-btn" onclick="scrollToTab('labours-tab')"
+                        title="View all labour records">
                         <i class="fas fa-hard-hat"></i>
                         <span>View Labours</span>
                     </button>
-                    <button class="quick-action-btn" onclick="scrollToTab('entries-tab')" title="View recent payment entries">
+                    <button class="quick-action-btn" onclick="scrollToTab('entries-tab')"
+                        title="View recent payment entries">
                         <i class="fas fa-receipt"></i>
                         <span>View Payment Entries</span>
                     </button>
-                    <button class="quick-action-btn" onclick="alert('Budget Overview feature coming soon')" title="View budget and spending analytics">
+                    <button class="quick-action-btn" onclick="alert('Budget Overview feature coming soon')"
+                        title="View budget and spending analytics">
                         <i class="fas fa-chart-pie"></i>
                         <span>Budget Overview</span>
                     </button>
@@ -1542,19 +1559,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     },
                     body: JSON.stringify({ vendor_id: vendorId })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Vendor deleted successfully');
-                        loadVendors(10, 0, '', ''); // Reload vendors
-                    } else {
-                        alert('Error deleting vendor: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting vendor');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Vendor deleted successfully');
+                            loadVendors(10, 0, '', ''); // Reload vendors
+                        } else {
+                            alert('Error deleting vendor: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error deleting vendor');
+                    });
             }
         }
 
@@ -1581,19 +1598,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     },
                     body: JSON.stringify({ labour_id: labourId })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Labour record deleted successfully');
-                        loadLabours(10, 1, '', ''); // Reload labours
-                    } else {
-                        alert('Error deleting labour record: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting labour record');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Labour record deleted successfully');
+                            loadLabours(10, 1, '', ''); // Reload labours
+                        } else {
+                            alert('Error deleting labour record: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error deleting labour record');
+                    });
             }
         }
 
@@ -1638,7 +1655,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
             const offset = (page - 1) * limit;
             const vendorsContainer = document.getElementById('vendorsContainer');
-            
+
             // Show loading state
             vendorsContainer.innerHTML = `
                 <div class="loading-spinner">
@@ -1696,7 +1713,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         if (data.pagination.totalPages > 1) {
                             html += '<div class="pagination-container">';
                             html += `<div class="pagination-info">Page ${data.pagination.currentPage} of ${data.pagination.totalPages} (Total: ${data.pagination.total} vendors)</div>`;
-                            
+
                             // Previous button
                             html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="loadVendors(10, ${page > 1 ? page - 1 : 1})">
                                 <i class="fas fa-chevron-left"></i> Prev
@@ -1770,7 +1787,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
             const offset = (page - 1) * limit;
             const laboursContainer = document.getElementById('laboursContainer');
-            
+
             // Show loading state
             laboursContainer.innerHTML = `
                 <div class="loading-spinner">
@@ -1829,7 +1846,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         if (data.pagination.totalPages > 1) {
                             html += '<div class="pagination-container">';
                             html += `<div class="pagination-info">Page ${data.pagination.currentPage} of ${data.pagination.totalPages} (Total: ${data.pagination.total} labours)</div>`;
-                            
+
                             // Previous button
                             html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} onclick="loadLabours(10, ${page > 1 ? page - 1 : 1})">
                                 <i class="fas fa-chevron-left"></i> Prev
@@ -1917,7 +1934,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
 
             // Toggle dropdown visibility
-            vendorCategoryFilterToggle.addEventListener('click', function(e) {
+            vendorCategoryFilterToggle.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 vendorCategoryDropdown.classList.toggle('active');
@@ -1928,28 +1945,28 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             });
 
             // Search functionality
-            vendorCategoryFilterSearch.addEventListener('keyup', function(e) {
+            vendorCategoryFilterSearch.addEventListener('keyup', function (e) {
                 e.stopPropagation();
                 const searchTerm = this.value.toLowerCase();
                 const options = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
                 const optgroups = vendorCategoryFilterList.querySelectorAll('.filter-optgroup');
-                
+
                 let anyVisibleInGroup;
                 optgroups.forEach(optgroup => {
                     anyVisibleInGroup = false;
                     const groupOptions = optgroup.querySelectorAll('.filter-option[data-vendor-category]');
-                    
+
                     groupOptions.forEach(option => {
                         const text = option.textContent.toLowerCase();
                         const isVisible = text.includes(searchTerm);
                         option.style.display = isVisible ? 'flex' : 'none';
                         if (isVisible) anyVisibleInGroup = true;
                     });
-                    
+
                     // Hide optgroup if no options match
                     optgroup.style.display = anyVisibleInGroup ? 'flex' : 'none';
                 });
-                
+
                 // Also handle standalone options (if any)
                 options.forEach(option => {
                     if (!option.closest('.filter-optgroup')) {
@@ -1960,23 +1977,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             });
 
             // Apply filter
-            vendorCategoryFilterApply.addEventListener('click', function(e) {
+            vendorCategoryFilterApply.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const vendorCategoryFilterOptions = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
-                // Get category types (group types) instead of contractor names
-                const selectedCategories = Array.from(vendorCategoryFilterOptions)
+                // Get individual contractor IDs (these are the specific vendor/labour IDs)
+                const selectedContractors = Array.from(vendorCategoryFilterOptions)
                     .filter(opt => {
                         const checkbox = opt.querySelector('input[type="checkbox"]');
                         return checkbox && checkbox.checked;
                     })
-                    .map(opt => opt.getAttribute('data-group-type'))
-                    .filter((type, index, self) => type && type !== '' && self.indexOf(type) === index) // Remove duplicates
+                    .map(opt => opt.getAttribute('data-vendor-category'))
                     .join(',');
 
-                // Store selected categories in pagination state for later reference
-                entriesPaginationState.selectedVendorCategories = selectedCategories;
+                // Store selected contractors in pagination state for UI restoration
+                entriesPaginationState.selectedVendorCategories = selectedContractors;
+
+                // Also store in vendorCategory for API filtering (send contractor IDs, not category types)
+                entriesPaginationState.vendorCategory = selectedContractors;
 
                 // Get current filter state
                 const mainSearch = entriesPaginationState.search || '';
@@ -1986,31 +2005,31 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 const mainProjectType = entriesPaginationState.projectType || '';
                 const mainPaidBy = entriesPaginationState.paidBy || '';
 
-                // Reload payment entries with category filter
-                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, selectedCategories, mainPaidBy);
+                // Reload payment entries with specific contractor IDs (not category types)
+                loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, selectedContractors, mainPaidBy);
                 vendorCategoryDropdown.classList.remove('active');
             });
 
             // Clear filter
-            vendorCategoryFilterClear.addEventListener('click', function(e) {
+            vendorCategoryFilterClear.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const vendorCategoryFilterOptions = vendorCategoryFilterList.querySelectorAll('.filter-option[data-vendor-category]');
                 const optgroups = vendorCategoryFilterList.querySelectorAll('.filter-optgroup');
-                
+
                 vendorCategoryFilterOptions.forEach(opt => {
                     const checkbox = opt.querySelector('input[type="checkbox"]');
                     if (checkbox) checkbox.checked = false;
                     opt.classList.remove('active');
                     opt.style.display = 'flex';
                 });
-                
+
                 // Show all optgroups
                 optgroups.forEach(optgroup => {
                     optgroup.style.display = 'flex';
                 });
-                
+
                 vendorCategoryFilterSearch.value = '';
 
                 // Get current filter state
@@ -2021,17 +2040,21 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 const mainProjectType = entriesPaginationState.projectType || '';
                 const mainPaidBy = entriesPaginationState.paidBy || '';
 
+                // Clear vendor category from state
+                entriesPaginationState.selectedVendorCategories = '';
+                entriesPaginationState.vendorCategory = '';
+
                 // Reload without vendor category filter
                 loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, '', mainPaidBy);
                 vendorCategoryDropdown.classList.remove('active');
             });
 
             // Checkbox/Option click handler using event delegation
-            vendorCategoryFilterList.addEventListener('click', function(e) {
+            vendorCategoryFilterList.addEventListener('click', function (e) {
                 e.stopPropagation();
                 const option = e.target.closest('.filter-option[data-vendor-category]');
                 if (!option) return;
-                
+
                 const checkbox = option.querySelector('input[type="checkbox"]');
                 if (checkbox) {
                     checkbox.checked = !checkbox.checked;
@@ -2040,10 +2063,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             });
 
             // Close dropdown when clicking outside
-            const closeDropdownHandler = function(e) {
+            const closeDropdownHandler = function (e) {
                 const isClickInsideDropdown = e.target.closest('#vendorCategoryFilterDropdown');
                 const isClickOnToggle = e.target.closest('.project-filter-btn') && filterContainer.contains(e.target);
-                
+
                 if (!isClickInsideDropdown && !isClickOnToggle) {
                     vendorCategoryDropdown.classList.remove('active');
                 }
@@ -2068,7 +2091,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
             const offset = (page - 1) * limit;
             const entriesContainer = document.getElementById('entriesContainer');
-            
+
             // Show loading state
             entriesContainer.innerHTML = `
                 <div class="loading-spinner">
@@ -2111,32 +2134,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         data.data.forEach(entry => {
                             const statusClass = entry.status.toLowerCase();
                             const grandTotal = '₹' + parseFloat(entry.grand_total).toFixed(2);
-                            const paymentDate = entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A';
-                            
+                            const paymentDate = entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }) : 'N/A';
+
                             // Build Paid To list - filter by current vendor category filter if applied
                             let paidToHtml = '<div class="paid-to-list">';
                             if (entry.paid_to && entry.paid_to.length > 0) {
                                 // Filter recipients based on current filter state
                                 let filteredRecipients = entry.paid_to;
-                                
+
                                 if (entriesPaginationState.vendorCategory && entriesPaginationState.vendorCategory.length > 0) {
                                     const selectedCategories = entriesPaginationState.vendorCategory.split(',').map(c => c.trim());
                                     filteredRecipients = entry.paid_to.filter(recipient => {
-                                        // Check if recipient's vendor_category matches any selected category
-                                        return selectedCategories.some(category => {
-                                            // For vendors: direct match with vendor_category
-                                            if (recipient.type === 'vendor' && recipient.vendor_category === category) {
-                                                return true;
-                                            }
-                                            // For labour: check if vendor_category (formatted as "Type Labour") matches
-                                            if (recipient.type === 'labour' && recipient.vendor_category === category) {
-                                                return true;
-                                            }
-                                            return false;
+                                        // Check if recipient's ID matches any selected ID
+                                        return selectedCategories.some(selectedId => {
+                                            // Compare recipient ID with selected filter ID
+                                            // Convert both to string to ensure type safety
+                                            return recipient.id && recipient.id.toString() === selectedId.toString();
                                         });
                                     });
                                 }
-                                
+
                                 if (filteredRecipients.length > 0) {
                                     filteredRecipients.forEach(recipient => {
                                         const categoryBracket = recipient.vendor_category ? ` [${recipient.vendor_category}]` : '';
@@ -2149,7 +2166,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                 paidToHtml += '<div class="paid-to-item" style="border-left-color: #a0aec0;">No data</div>';
                             }
                             paidToHtml += '</div>';
-                            
+
                             html += '<div class="vendor-row">';
                             html += `<div class="vendor-cell">${entry.project_name}</div>`;
                             html += `<div class="vendor-cell">${paidToHtml}</div>`;
@@ -2166,103 +2183,114 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += `<button class="delete-btn" title="Delete" onclick="deletePaymentEntry(${entry.payment_entry_id})" style="background: #fff5f5; color: #e53e3e; padding: 8px 12px; border-radius: 6px;"><i class="fas fa-trash"></i></button>`;
                             html += '</div>';
                             html += '</div>';
-                            
+
                             // Add expandable details row - Minimalistic Design
                             html += `<div class="entry-details-container" id="entry-details-${entry.payment_entry_id}" style="display: grid; grid-column: 1 / -1; background: #f9fafb; border: 3px solid #2a4365; border-radius: 8px; padding: 20px; margin: 8px 0; box-shadow: 0 2px 8px rgba(42, 67, 101, 0.1);">`;
-                            
+
                             // Top row with main details
                             html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;">';
-                            
+
                             // Project Name
                             html += '<div style="border-left: 3px solid #3182ce; padding: 8px 12px; background: white; border-radius: 3px;">';
                             html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PROJECT NAME</div>`;
                             html += `<div style="font-weight: 700; color: #1a365d; font-size: 0.9em;">${entry.project_name || 'N/A'}</div>`;
                             html += '</div>';
-                            
+
                             // Project Type
                             html += '<div style="border-left: 3px solid #38a169; padding: 8px 12px; background: white; border-radius: 3px;">';
                             html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PROJECT TYPE</div>`;
                             html += `<div style="font-weight: 700; color: #276749; font-size: 0.9em; text-transform: capitalize;">${entry.project_type || 'N/A'}</div>`;
                             html += '</div>';
-                            
+
                             // Main Amount
                             html += '<div style="border-left: 3px solid #d69e2e; padding: 8px 12px; background: white; border-radius: 3px;">';
                             html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">MAIN AMOUNT</div>`;
-                            html += `<div style="font-weight: 700; color: #7c2d12; font-size: 0.9em;">₹${parseFloat(entry.grand_total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+                            html += `<div style="font-weight: 700; color: #7c2d12; font-size: 0.9em;">₹${parseFloat(entry.grand_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
                             html += '</div>';
-                            
+
                             // Payment Date
                             html += '<div style="border-left: 3px solid #d53f8c; padding: 8px 12px; background: white; border-radius: 3px;">';
                             html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">PAYMENT DATE</div>`;
-                            html += `<div style="font-weight: 700; color: #6b2142; font-size: 0.9em;">${entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', {year: 'numeric', month: '2-digit', day: '2-digit'}) : 'N/A'}</div>`;
+                            html += `<div style="font-weight: 700; color: #6b2142; font-size: 0.9em;">${entry.payment_date ? new Date(entry.payment_date).toLocaleDateString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }) : 'N/A'}</div>`;
                             html += '</div>';
-                            
+
                             // Status
                             html += '<div style="border-left: 3px solid #9333ea; padding: 8px 12px; background: white; border-radius: 3px;">';
                             html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">STATUS</div>`;
                             html += `<div><span class="vendor-status ${statusClass}" style="display: inline-block;">${entry.status.toUpperCase()}</span></div>`;
                             html += '</div>';
-                            
+
                             html += '</div>';
-                            
+
                             // Paid To section with small items
                             if (entry.paid_to && entry.paid_to.length > 0) {
-                                entry.paid_to.forEach((recipient, index) => {
+                                // Filter recipients for detailed view if filter is active
+                                let detailsRecipients = entry.paid_to;
+                                if (entriesPaginationState.vendorCategory && entriesPaginationState.vendorCategory.length > 0) {
+                                    const selectedCategoriesDetails = entriesPaginationState.vendorCategory.split(',').map(c => c.trim());
+                                    detailsRecipients = entry.paid_to.filter(recipient => {
+                                        return selectedCategoriesDetails.some(selectedId => {
+                                            return recipient.id && recipient.id.toString() === selectedId.toString();
+                                        });
+                                    });
+                                }
+
+                                detailsRecipients.forEach((recipient, index) => {
                                     html += '<div style="display: grid; grid-template-columns: 1fr 0.8fr 1.2fr 0.9fr 0.8fr 0.9fr 0.7fr; gap: 12px; margin-bottom: 12px; align-items: center; background: white; padding: 12px; border-radius: 6px; border: 2px solid #e2e8f0; transition: all 0.2s ease;">';
-                                    
+
                                     // Paid To Name
                                     html += '<div style="border-left: 4px solid #6b5b95; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
                                     html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PAID TO</div>`;
                                     html += `<div style="font-weight: 700; color: #2d1b3d; font-size: 0.9em;">${recipient.name || 'N/A'}</div>`;
                                     html += '</div>';
-                                    
+
                                     // Type
                                     html += '<div style="border-left: 4px solid #0284c7; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
                                     html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TYPE</div>`;
                                     html += `<div style="font-weight: 700; color: #0a4a6f; font-size: 0.9em; text-transform: capitalize;">${recipient.type || 'N/A'}</div>`;
                                     html += '</div>';
-                                    
+
                                     // Amount
                                     html += '<div style="border-left: 4px solid #16a34a; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
                                     html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">AMOUNT PAID</div>`;
-                                    html += `<div style="font-weight: 700; color: #15803d; font-size: 0.95em;">₹${parseFloat(recipient.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+                                    html += `<div style="font-weight: 700; color: #15803d; font-size: 0.95em;">₹${parseFloat(recipient.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>`;
                                     html += '</div>';
-                                    
+
                                     // Category
                                     html += '<div style="border-left: 4px solid #d53f8c; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
                                     html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">CATEGORY</div>`;
                                     html += `<div style="font-weight: 700; color: #6b2142; font-size: 0.9em; text-transform: capitalize;">${recipient.category || recipient.vendor_category || 'N/A'}</div>`;
                                     html += '</div>';
-                                    
+
                                     // Payment Mode - Show acceptance methods if multiple, otherwise main mode
-                                    const paymentModes = (recipient.acceptance_methods && recipient.acceptance_methods.length > 0) 
-                                        ? recipient.acceptance_methods.join(', ') 
+                                    const paymentModes = (recipient.acceptance_methods && recipient.acceptance_methods.length > 0)
+                                        ? recipient.acceptance_methods.join(', ')
                                         : (entry.payment_mode ? entry.payment_mode.replace(/_/g, ' ') : 'N/A');
-                                    
+
                                     html += '<div style="border-left: 4px solid #ea580c; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
                                     html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PAYMENT MODE</div>`;
                                     html += `<div style="font-weight: 700; color: #7c2d12; font-size: 0.9em; text-transform: capitalize;">${paymentModes}</div>`;
                                     html += '</div>';
-                                    
+
                                     // Paid By User
                                     html += '<div style="border-left: 4px solid #7c3aed; padding: 10px 12px; background: #f9fafb; border-radius: 4px;">';
                                     html += `<div style="font-size: 0.65em; color: #2a4365; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PAID BY</div>`;
                                     html += `<div style="font-weight: 700; color: #5b21b6; font-size: 0.9em;">${recipient.paid_by_user || 'N/A'}</div>`;
                                     html += '</div>';
-                                    
+
                                     // View Proofs Button
                                     html += '<div style="padding: 8px; text-align: center;">';
                                     const recipientJsonStr = JSON.stringify(recipient).replace(/"/g, '&quot;');
                                     html += `<button onclick="openRecipientFilesModal(${entry.payment_entry_id}, ${index}, '${recipientJsonStr}');" style="background: #fbbf24; color: #78350f; border: 2px solid #f59e0b; padding: 8px 12px; border-radius: 4px; font-size: 0.8em; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);"><i class="fas fa-paperclip"></i> Proofs</button>`;
                                     html += '</div>';
-                                    
+
                                     html += '</div>';
                                 });
                             }
-                            
+
                             // Payment Mode (kept for reference, but hidden in expanded view since it's now per recipient)
                             // Removed from here as it's now displayed for each recipient
-                            
+
                             html += '</div>';
                         });
 
@@ -2272,7 +2300,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         if (data.pagination.totalPages > 1) {
                             html += '<div class="pagination-container">';
                             html += `<div class="pagination-info"><strong>Page ${data.pagination.currentPage} of ${data.pagination.totalPages}</strong> (Total: <strong>${data.pagination.total}</strong> entries)</div>`;
-                            
+
                             // Encode filter parameters safely
                             const encodedSearch = encodeURIComponent(search || '');
                             const encodedStatus = encodeURIComponent(status || '');
@@ -2281,7 +2309,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             const encodedProjectType = encodeURIComponent(projectType || '');
                             const encodedVendorCategory = encodeURIComponent(vendorCategory || '');
                             const encodedPaidBy = encodeURIComponent(paidBy || '');
-                            
+
                             // Previous button
                             html += `<button class="pagination-btn" ${page === 1 ? 'disabled' : ''} data-page="${page > 1 ? page - 1 : 1}" data-search="${encodedSearch}" data-status="${encodedStatus}" data-datefrom="${encodedDateFrom}" data-dateto="${encodedDateTo}" data-projecttype="${encodedProjectType}" data-vendorcategory="${encodedVendorCategory}" data-paidby="${encodedPaidBy}" class="pagination-btn pagination-prev">
                                 <i class="fas fa-chevron-left"></i> Prev
@@ -2330,7 +2358,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         const projectFilterApply = document.getElementById('projectFilterApply');
                         const projectFilterClear = document.getElementById('projectFilterClear');
                         const projectFilterList = projectFilterDropdown.querySelector('.excel-filter-list');
-                        
+
                         // Load project names dynamically
                         function loadProjectFilters() {
                             const params = new URLSearchParams({
@@ -2341,7 +2369,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                 vendorCategory: entriesPaginationState.vendorCategory || '',
                                 paidBy: entriesPaginationState.paidBy || ''
                             });
-                            
+
                             fetch(`get_project_names.php?${params.toString()}`)
                                 .then(response => response.json())
                                 .then(data => {
@@ -2350,21 +2378,21 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                         while (projectFilterList.children.length > 1) {
                                             projectFilterList.removeChild(projectFilterList.lastChild);
                                         }
-                                        
+
                                         // Add project options
                                         data.projects.forEach(project => {
                                             const option = document.createElement('div');
                                             option.className = 'filter-option';
                                             option.setAttribute('data-project-id', project.id);
-                                            
+
                                             const checkbox = document.createElement('input');
                                             checkbox.type = 'checkbox';
                                             option.appendChild(checkbox);
-                                            
+
                                             const label = document.createElement('span');
                                             label.textContent = project.display_label;
                                             option.appendChild(label);
-                                            
+
                                             projectFilterList.appendChild(option);
                                         });
                                     }
@@ -2373,20 +2401,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                     console.error('Error loading project names:', err);
                                 });
                         }
-                        
+
                         // Load projects on first load
                         loadProjectFilters();
 
                         if (projectFilterToggle && projectFilterDropdown) {
                             // Toggle dropdown
-                            projectFilterToggle.addEventListener('click', function(e) {
+                            projectFilterToggle.addEventListener('click', function (e) {
                                 e.stopPropagation();
                                 projectFilterDropdown.classList.toggle('active');
                                 projectFilterSearch.focus();
                             });
 
                             // Search functionality
-                            projectFilterSearch.addEventListener('keyup', function(e) {
+                            projectFilterSearch.addEventListener('keyup', function (e) {
                                 const searchTerm = this.value.toLowerCase();
                                 const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-project-id]');
                                 projectFilterOptions.forEach(option => {
@@ -2396,27 +2424,27 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             });
 
                             // Apply filter
-                            projectFilterApply.addEventListener('click', function(e) {
+                            projectFilterApply.addEventListener('click', function (e) {
                                 e.stopPropagation();
                                 const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-project-id]');
                                 const selectedProjectIds = Array.from(projectFilterOptions)
                                     .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-project-id') !== '')
                                     .map(opt => opt.getAttribute('data-project-id'))
                                     .join(',');
-                                
+
                                 const mainSearch = entriesPaginationState.search || '';
                                 const mainStatus = entriesPaginationState.status || '';
                                 const mainDateFrom = entriesPaginationState.dateFrom || '';
                                 const mainDateTo = entriesPaginationState.dateTo || '';
                                 const mainVendorCategory = entriesPaginationState.vendorCategory || '';
                                 const mainPaidBy = entriesPaginationState.paidBy || '';
-                                
+
                                 loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, selectedProjectIds, mainVendorCategory, mainPaidBy);
                                 projectFilterDropdown.classList.remove('active');
                             });
 
                             // Clear filter
-                            projectFilterClear.addEventListener('click', function(e) {
+                            projectFilterClear.addEventListener('click', function (e) {
                                 e.stopPropagation();
                                 const projectFilterOptions = projectFilterList.querySelectorAll('.filter-option[data-project-id]');
                                 projectFilterOptions.forEach(opt => {
@@ -2425,20 +2453,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                     opt.style.display = 'flex';
                                 });
                                 projectFilterSearch.value = '';
-                                
+
                                 const mainSearch = entriesPaginationState.search || '';
                                 const mainStatus = entriesPaginationState.status || '';
                                 const mainDateFrom = entriesPaginationState.dateFrom || '';
                                 const mainDateTo = entriesPaginationState.dateTo || '';
                                 const mainVendorCategory = entriesPaginationState.vendorCategory || '';
                                 const mainPaidBy = entriesPaginationState.paidBy || '';
-                                
+
                                 loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, '', mainVendorCategory, mainPaidBy);
                                 projectFilterDropdown.classList.remove('active');
                             });
 
                             // Checkbox click handler - just toggle checkbox, don't apply yet
-                            projectFilterList.addEventListener('click', function(e) {
+                            projectFilterList.addEventListener('click', function (e) {
                                 const option = e.target.closest('.filter-option[data-project-id]');
                                 if (option) {
                                     e.stopPropagation();
@@ -2451,7 +2479,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             });
 
                             // Close dropdown when clicking outside
-                            document.addEventListener('click', function(e) {
+                            document.addEventListener('click', function (e) {
                                 if (!e.target.closest('.project-filter-container') && e.target.id !== 'projectFilterToggle') {
                                     projectFilterDropdown.classList.remove('active');
                                 }
@@ -2466,13 +2494,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             .then(data => {
                                 if (data.success && data.groups && data.groups.length > 0) {
                                     const vendorCategoryDropdown = document.getElementById('vendorCategoryFilterDropdown');
-                                    
+
                                     if (!vendorCategoryDropdown) {
                                         return;
                                     }
-                                    
+
                                     const vendorCategoryFilterList = vendorCategoryDropdown.querySelector('.excel-filter-list');
-                                    
+
                                     if (!vendorCategoryFilterList) {
                                         return;
                                     }
@@ -2487,7 +2515,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                         const groupDiv = document.createElement('div');
                                         groupDiv.className = 'filter-optgroup';
                                         groupDiv.setAttribute('data-group-type', group.type);
-                                        
+
                                         const groupLabel = document.createElement('div');
                                         groupLabel.className = 'filter-optgroup-label';
                                         groupLabel.textContent = `${group.icon} ${group.display_name.toUpperCase()}`;
@@ -2500,18 +2528,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                             option.setAttribute('data-vendor-category', contractor.id);
                                             option.setAttribute('data-contractor-name', contractor.name);
                                             option.setAttribute('data-group-type', group.type);
+                                            option.setAttribute('data-category-type', group.type); // Store actual category type for API
                                             option.innerHTML = `<input type="checkbox"> ${contractor.name}`;
-                                            
-                                            // Restore checked state if this category is in the current filter
+
+                                            // Restore checked state if this specific contractor ID is in the current filter
                                             const selectedCategories = entriesPaginationState.selectedVendorCategories || '';
-                                            if (selectedCategories && selectedCategories.includes(group.type)) {
-                                                const checkbox = option.querySelector('input[type="checkbox"]');
-                                                if (checkbox) {
-                                                    checkbox.checked = true;
-                                                    option.classList.add('active');
+                                            if (selectedCategories) {
+                                                // Split by comma and check for EXACT match (not substring)
+                                                const selectedIds = selectedCategories.split(',').map(id => id.trim());
+                                                const isSelected = selectedIds.find(id => id === contractor.id.toString());
+
+                                                if (isSelected) {
+                                                    const checkbox = option.querySelector('input[type="checkbox"]');
+                                                    if (checkbox) {
+                                                        checkbox.checked = true;
+                                                        option.classList.add('active');
+                                                    }
                                                 }
                                             }
-                                            
+
                                             groupDiv.appendChild(option);
                                         });
 
@@ -2556,14 +2591,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
                                     if (paidByFilterToggle) {
                                         // Toggle dropdown
-                                        paidByFilterToggle.addEventListener('click', function(e) {
+                                        paidByFilterToggle.addEventListener('click', function (e) {
                                             e.stopPropagation();
                                             paidByFilterDropdown.classList.toggle('active');
                                             paidByFilterSearch.focus();
                                         });
 
                                         // Search functionality
-                                        paidByFilterSearch.addEventListener('keyup', function(e) {
+                                        paidByFilterSearch.addEventListener('keyup', function (e) {
                                             const searchTerm = this.value.toLowerCase();
                                             paidByFilterOptions.forEach(option => {
                                                 const text = option.textContent.toLowerCase();
@@ -2572,26 +2607,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                         });
 
                                         // Apply filter
-                                        paidByFilterApply.addEventListener('click', function(e) {
+                                        paidByFilterApply.addEventListener('click', function (e) {
                                             e.stopPropagation();
                                             const selectedUsers = Array.from(paidByFilterOptions)
                                                 .filter(opt => opt.querySelector('input[type="checkbox"]')?.checked && opt.getAttribute('data-paid-by') !== '')
                                                 .map(opt => opt.getAttribute('data-paid-by'))
                                                 .join(',');
-                                            
+
                                             const mainSearch = entriesPaginationState.search || '';
                                             const mainStatus = entriesPaginationState.status || '';
                                             const mainDateFrom = entriesPaginationState.dateFrom || '';
                                             const mainDateTo = entriesPaginationState.dateTo || '';
                                             const mainProjectType = entriesPaginationState.projectType || '';
                                             const mainVendorCategory = entriesPaginationState.vendorCategory || '';
-                                            
+
                                             loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, mainVendorCategory, selectedUsers);
                                             paidByFilterDropdown.classList.remove('active');
                                         });
 
                                         // Clear filter
-                                        paidByFilterClear.addEventListener('click', function(e) {
+                                        paidByFilterClear.addEventListener('click', function (e) {
                                             e.stopPropagation();
                                             paidByFilterOptions.forEach(opt => {
                                                 opt.querySelector('input[type="checkbox"]').checked = false;
@@ -2599,21 +2634,21 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                                 opt.style.display = 'flex';
                                             });
                                             paidByFilterSearch.value = '';
-                                            
+
                                             const mainSearch = entriesPaginationState.search || '';
                                             const mainStatus = entriesPaginationState.status || '';
                                             const mainDateFrom = entriesPaginationState.dateFrom || '';
                                             const mainDateTo = entriesPaginationState.dateTo || '';
                                             const mainProjectType = entriesPaginationState.projectType || '';
                                             const mainVendorCategory = entriesPaginationState.vendorCategory || '';
-                                            
+
                                             loadPaymentEntries(10, 1, mainSearch, mainStatus, mainDateFrom, mainDateTo, mainProjectType, mainVendorCategory, '');
                                             paidByFilterDropdown.classList.remove('active');
                                         });
 
                                         // Checkbox click handler - just toggle checkbox, don't apply yet
                                         paidByFilterOptions.forEach(option => {
-                                            option.addEventListener('click', function(e) {
+                                            option.addEventListener('click', function (e) {
                                                 e.stopPropagation();
                                                 const checkbox = this.querySelector('input[type="checkbox"]');
                                                 if (checkbox) {
@@ -2624,7 +2659,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                         });
 
                                         // Close dropdown when clicking outside
-                                        document.addEventListener('click', function(e) {
+                                        document.addEventListener('click', function (e) {
                                             if (!e.target.closest('.project-filter-container') && e.target.id !== 'paidByFilterToggle') {
                                                 paidByFilterDropdown.classList.remove('active');
                                             }
@@ -2638,7 +2673,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
                         // Add event listeners for pagination buttons
                         document.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
-                            btn.addEventListener('click', function(e) {
+                            btn.addEventListener('click', function (e) {
                                 e.preventDefault();
                                 const pageNum = parseInt(this.getAttribute('data-page'));
                                 const searchVal = decodeURIComponent(this.getAttribute('data-search') || '');
@@ -2648,24 +2683,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                                 const projectTypeVal = decodeURIComponent(this.getAttribute('data-projecttype') || '');
                                 const vendorCategoryVal = decodeURIComponent(this.getAttribute('data-vendorcategory') || '');
                                 const paidByVal = decodeURIComponent(this.getAttribute('data-paidby') || '');
-                                
-                                loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal, paidByVal);
-                            });
-                        });
-                    } else if (data.success) {
-                        // Add event listeners for pagination buttons
-                        document.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
-                            btn.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const pageNum = parseInt(this.getAttribute('data-page'));
-                                const searchVal = decodeURIComponent(this.getAttribute('data-search') || '');
-                                const statusVal = decodeURIComponent(this.getAttribute('data-status') || '');
-                                const dateFromVal = decodeURIComponent(this.getAttribute('data-datefrom') || '');
-                                const dateToVal = decodeURIComponent(this.getAttribute('data-dateto') || '');
-                                const projectTypeVal = decodeURIComponent(this.getAttribute('data-projecttype') || '');
-                                const vendorCategoryVal = decodeURIComponent(this.getAttribute('data-vendorcategory') || '');
-                                const paidByVal = decodeURIComponent(this.getAttribute('data-paidby') || '');
-                                
+
                                 loadPaymentEntries(10, pageNum, searchVal, statusVal, dateFromVal, dateToVal, projectTypeVal, vendorCategoryVal, paidByVal);
                             });
                         });
@@ -2674,7 +2692,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         entriesContainer.innerHTML = `
                             <div class="empty-state">
                                 <i class="fas fa-receipt"></i>
-                                <p>No payment entries added yet. Click "Add Payment Entry" to get started.</p>
+                                <p>No payment entries found matching your criteria.</p>
                             </div>
                         `;
                     } else {
@@ -2703,10 +2721,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         function togglePaymentEntryExpand(entryId) {
             const detailsContainer = document.getElementById(`entry-details-${entryId}`);
             const expandBtn = event.target.closest('.expand-btn');
-            
+
             if (detailsContainer) {
                 const isHidden = detailsContainer.style.display === 'none';
-                
+
                 if (isHidden) {
                     // Expand
                     detailsContainer.style.display = 'grid';
@@ -2758,29 +2776,29 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     },
                     body: JSON.stringify({ payment_entry_id: entryId })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Payment entry deleted successfully');
-                        // Reload entries with current filter state
-                        loadPaymentEntries(
-                            entriesPaginationState.limit,
-                            entriesPaginationState.currentPage,
-                            entriesPaginationState.search,
-                            entriesPaginationState.status,
-                            entriesPaginationState.dateFrom,
-                            entriesPaginationState.dateTo,
-                            entriesPaginationState.projectType,
-                            entriesPaginationState.vendorCategory
-                        );
-                    } else {
-                        alert('Error deleting payment entry: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting payment entry');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Payment entry deleted successfully');
+                            // Reload entries with current filter state
+                            loadPaymentEntries(
+                                entriesPaginationState.limit,
+                                entriesPaginationState.currentPage,
+                                entriesPaginationState.search,
+                                entriesPaginationState.status,
+                                entriesPaginationState.dateFrom,
+                                entriesPaginationState.dateTo,
+                                entriesPaginationState.projectType,
+                                entriesPaginationState.vendorCategory
+                            );
+                        } else {
+                            alert('Error deleting payment entry: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error deleting payment entry');
+                    });
             }
         }
 
@@ -2790,12 +2808,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             const modalWrapper = document.createElement('div');
             modalWrapper.id = 'paymentModeAttachmentsWrapper';
             modalWrapper.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
-            
+
             // Create modal content
             const modalContent = document.createElement('div');
             modalContent.id = 'paymentModeAttachmentsModal';
             modalContent.style.cssText = 'background: white; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);';
-            
+
             modalContent.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="margin: 0; color: #1a365d; font-size: 1.3em;">
@@ -2810,19 +2828,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     <p style="color: #718096; margin-top: 10px;">Loading attachments...</p>
                 </div>
             `;
-            
+
             modalWrapper.appendChild(modalContent);
             document.body.appendChild(modalWrapper);
-            
+
             // Add close button event listener
-            document.getElementById('paymentModeAttachmentsCloseBtn').addEventListener('click', function(e) {
+            document.getElementById('paymentModeAttachmentsCloseBtn').addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 closePaymentModeAttachmentsModal();
             });
-            
+
             // Close modal when clicking outside the content
-            modalWrapper.addEventListener('click', function(e) {
+            modalWrapper.addEventListener('click', function (e) {
                 if (e.target === modalWrapper) {
                     closePaymentModeAttachmentsModal();
                 }
@@ -2833,10 +2851,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 .then(response => response.json())
                 .then(data => {
                     const contentDiv = document.getElementById('paymentModeAttachmentsContent');
-                    
+
                     let html = '';
                     let hasContent = false;
-                    
+
                     // Display acceptance methods first
                     if (data.acceptance_methods && data.acceptance_methods.length > 0) {
                         hasContent = true;
@@ -2872,14 +2890,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             `;
                         });
                     }
-                    
+
                     // Display file attachments from registry
                     if (data.file_attachments && data.file_attachments.length > 0) {
                         hasContent = true;
                         data.file_attachments.forEach((file, index) => {
                             const fileIcon = getFileIcon(file.attachment_file_extension);
                             const fileTypeLabel = file.attachment_type_category === 'proof_image' ? 'Payment Proof' : 'Supporting Document';
-                            
+
                             html += `
                                 <div style="background: #f7fafc; border-radius: 8px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #10b981; text-align: left;">
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
@@ -2907,7 +2925,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             `;
                         });
                     }
-                    
+
                     if (!hasContent) {
                         contentDiv.innerHTML = `
                             <div style="text-align: center; padding: 20px;">
@@ -2982,9 +3000,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             const recentRecordsSection = document.querySelector('.recent-records-section');
             if (recentRecordsSection) {
                 recentRecordsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                
+
                 // Wait for scroll to complete, then activate the tab
-                setTimeout(function() {
+                setTimeout(function () {
                     const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
                     if (tabBtn) {
                         // Trigger click to activate the tab
@@ -2994,44 +3012,44 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Recently Added Records Toggle Functionality
             const recentRecordsToggleBtn = document.getElementById('recentRecordsToggleBtn');
             if (recentRecordsToggleBtn) {
                 // Track toggle state
                 let entriesExpanded = true;
-                
-                recentRecordsToggleBtn.addEventListener('click', function() {
+
+                recentRecordsToggleBtn.addEventListener('click', function () {
                     const recordsSection = this.closest('.recent-records-section');
                     if (recordsSection) {
                         const expandedRecords = recordsSection.querySelectorAll('.entry-details-container');
                         const expandButtons = recordsSection.querySelectorAll('.expand-entry-btn');
-                        
+
                         if (entriesExpanded) {
                             // Close all expanded records
                             expandedRecords.forEach(record => {
                                 record.style.display = 'none';
                             });
-                            
+
                             // Close all expand buttons
                             expandButtons.forEach(btn => {
                                 btn.classList.remove('expanded');
                                 btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
                             });
-                            
+
                             entriesExpanded = false;
                         } else {
                             // Expand all records
                             expandedRecords.forEach(record => {
                                 record.style.display = 'grid';
                             });
-                            
+
                             // Open all expand buttons
                             expandButtons.forEach(btn => {
                                 btn.classList.add('expanded');
                                 btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
                             });
-                            
+
                             entriesExpanded = true;
                         }
                     }
@@ -3044,20 +3062,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             // Attach click event listeners to all tabs
             const allTabBtns = document.querySelectorAll('.tab-btn');
             allTabBtns.forEach(btn => {
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', function (e) {
                     e.preventDefault();
                     const tabName = this.getAttribute('data-tab');
-                    
+
                     // Find the parent section for this tab
                     const parentSection = this.closest('.recent-records-section');
                     if (!parentSection) return;
-                    
+
                     // Remove active class from all buttons and contents in this section only
                     parentSection.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     parentSection.querySelectorAll('.tab-content').forEach(content => {
                         content.classList.remove('active');
                     });
-                    
+
                     // Add active class to clicked button and corresponding content
                     this.classList.add('active');
                     const tabElement = document.getElementById(tabName);
@@ -3074,7 +3092,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         }
                         tabElement.classList.add('active');
                     }
-                    
+
                     // Load data based on tab name
                     if (tabName === 'vendors-tab') {
                         loadVendors(10, 1, '', '', '', '');
@@ -3092,13 +3110,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             const resetFilterBtn = document.getElementById('resetFilterBtn');
 
             // Toggle filter section visibility
-            toggleFilterBtn.addEventListener('click', function() {
+            toggleFilterBtn.addEventListener('click', function () {
                 filterContent.classList.toggle('collapsed');
                 toggleFilterBtn.classList.toggle('active');
             });
 
             // Apply filter functionality
-            applyFilterBtn.addEventListener('click', function() {
+            applyFilterBtn.addEventListener('click', function () {
                 const dateFrom = document.getElementById('dateFrom').value;
                 const dateTo = document.getElementById('dateTo').value;
                 const paymentType = document.getElementById('paymentType').value;
@@ -3117,7 +3135,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             });
 
             // Reset filter functionality
-            resetFilterBtn.addEventListener('click', function() {
+            resetFilterBtn.addEventListener('click', function () {
                 document.getElementById('dateFrom').value = '';
                 document.getElementById('dateTo').value = '';
                 document.getElementById('paymentType').value = '';
@@ -3132,7 +3150,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             const recordsContent = document.getElementById('recordsContent');
 
             if (toggleRecordsBtn) {
-                toggleRecordsBtn.addEventListener('click', function() {
+                toggleRecordsBtn.addEventListener('click', function () {
                     recordsContent.classList.toggle('collapsed');
                     toggleRecordsBtn.classList.toggle('active');
                 });
@@ -3145,7 +3163,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             const viewReportBtn = document.getElementById('viewReportBtn');
 
             if (addVendorBtn) {
-                addVendorBtn.addEventListener('click', function() {
+                addVendorBtn.addEventListener('click', function () {
                     console.log('Add Vendor clicked');
                     const modal = document.getElementById('addVendorModal');
                     if (modal) {
@@ -3155,7 +3173,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
 
             if (addLabourBtn) {
-                addLabourBtn.addEventListener('click', function() {
+                addLabourBtn.addEventListener('click', function () {
                     console.log('Add Labour clicked');
                     // Try to open the Add Labour modal (provided by modals/add_labour_modal.php)
                     const modal = document.getElementById('addLabourModal');
@@ -3173,7 +3191,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
 
             if (addPaymentBtn) {
-                addPaymentBtn.addEventListener('click', function() {
+                addPaymentBtn.addEventListener('click', function () {
                     console.log('Add Payment Entry clicked');
                     if (typeof window.openPaymentEntryModal === 'function') {
                         window.openPaymentEntryModal();
@@ -3184,7 +3202,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
 
             if (viewReportBtn) {
-                viewReportBtn.addEventListener('click', function() {
+                viewReportBtn.addEventListener('click', function () {
                     console.log('View Report clicked');
                     alert('Redirecting to View Report page');
                     // window.location.href = 'view_report.php';
@@ -3198,7 +3216,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             const recordsDateToInput = document.getElementById('recordsDateTo');
 
             if (applyRecordsFilterBtn) {
-                applyRecordsFilterBtn.addEventListener('click', function() {
+                applyRecordsFilterBtn.addEventListener('click', function () {
                     const dateFrom = recordsDateFromInput.value;
                     const dateTo = recordsDateToInput.value;
 
@@ -3216,7 +3234,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     const activeTab = document.querySelector('.tab-btn.active');
                     if (activeTab) {
                         const tabName = activeTab.getAttribute('data-tab');
-                        
+
                         if (tabName === 'vendors-tab') {
                             loadVendors(10, 1, '', '', dateFrom, dateTo);
                         } else if (tabName === 'labours-tab') {
@@ -3231,7 +3249,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
 
             if (resetRecordsFilterBtn) {
-                resetRecordsFilterBtn.addEventListener('click', function() {
+                resetRecordsFilterBtn.addEventListener('click', function () {
                     recordsDateFromInput.value = '';
                     recordsDateToInput.value = '';
 
@@ -3242,7 +3260,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     const activeTab = document.querySelector('.tab-btn.active');
                     if (activeTab) {
                         const tabName = activeTab.getAttribute('data-tab');
-                        
+
                         if (tabName === 'vendors-tab') {
                             loadVendors(10, 1, '', '', '', '');
                         } else if (tabName === 'labours-tab') {
@@ -3259,22 +3277,22 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             // Export to Excel functionality
             const exportToExcelBtn = document.getElementById('exportToExcelBtn');
             if (exportToExcelBtn) {
-                exportToExcelBtn.addEventListener('click', function() {
+                exportToExcelBtn.addEventListener('click', function () {
                     // Get date range from filter inputs
                     const dateFrom = document.getElementById('recordsDateFrom').value;
                     const dateTo = document.getElementById('recordsDateTo').value;
-                    
+
                     // Validate dates
                     if (dateFrom && dateTo && dateFrom > dateTo) {
                         alert('From Date cannot be after To Date');
                         return;
                     }
-                    
+
                     // Show loading state
                     const originalText = exportToExcelBtn.innerHTML;
                     exportToExcelBtn.innerHTML = '<i class="fas fa-spinner"></i> Exporting...';
                     exportToExcelBtn.disabled = true;
-                    
+
                     // Build query parameters
                     let params = 'export_payment_entries_excel.php?';
                     if (dateFrom) {
@@ -3283,15 +3301,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     if (dateTo) {
                         params += 'dateTo=' + encodeURIComponent(dateTo) + '&';
                     }
-                    
+
                     // Remove trailing &
                     params = params.replace(/&$/, '');
-                    
+
                     // Initiate download
                     window.location.href = params;
-                    
+
                     // Reset button after download starts
-                    setTimeout(function() {
+                    setTimeout(function () {
                         exportToExcelBtn.innerHTML = originalText;
                         exportToExcelBtn.disabled = false;
                     }, 1000);

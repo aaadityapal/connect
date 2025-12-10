@@ -32,12 +32,17 @@ if (!$vendor_id) {
 try {
     // Debug: Log the vendor ID being searched
     error_log("Searching for payment records for vendor ID: " . $vendor_id);
-    
+
     // Query to fetch all payment records for the vendor
     // Search by recipient_id_reference (vendor ID) in line items
     // Note: recipient_type_category contains values like "supplier_sand_aggregate", "material_cement", etc.
     // So we search by ID regardless of type
     // Join with project table to get project names instead of IDs
+    // First, get the vendor name to verify and allows for name-based matching (fallback for creating robust history)
+    $name_stmt = $pdo->prepare("SELECT vendor_full_name FROM pm_vendor_registry_master WHERE vendor_id = ?");
+    $name_stmt->execute([$vendor_id]);
+    $vendor_name = $name_stmt->fetchColumn();
+
     $query = "
         SELECT 
             m.payment_entry_id,
@@ -73,6 +78,7 @@ try {
             projects p ON m.project_name_reference = p.id
         WHERE 
             l.recipient_id_reference = :vendor_id
+            " . ($vendor_name ? "OR (l.recipient_name_display LIKE :vendor_name AND (l.recipient_id_reference = 0 OR l.recipient_id_reference IS NULL))" : "") . "
         GROUP BY 
             m.payment_entry_id, l.line_item_entry_id, 
             m.project_type_category, m.project_name_reference, p.title, p.id,
@@ -87,12 +93,17 @@ try {
     ";
 
     $stmt = $pdo->prepare($query);
-    
+
     if (!$stmt) {
         throw new Exception("Prepare failed");
     }
 
-    if (!$stmt->execute([':vendor_id' => $vendor_id])) {
+    $params = [':vendor_id' => $vendor_id];
+    if ($vendor_name) {
+        $params[':vendor_name'] = $vendor_name;
+    }
+
+    if (!$stmt->execute($params)) {
         throw new Exception("Execute failed");
     }
 
@@ -127,88 +138,9 @@ try {
         }
     }
 
-    // If no line items found, try fetching from main payment entries where vendor is authorized user
+    // Fallback query removed as it was incorrectly matching User IDs to Vendor IDs
     if (empty($payment_records)) {
-        error_log("No records from query 1, trying fallback query...");
-        $alt_query = "
-            SELECT 
-                m.payment_entry_id,
-                m.project_type_category,
-                m.project_name_reference,
-                COALESCE(p.title, m.project_name_reference) as project_name,
-                m.payment_amount_base,
-                m.payment_date_logged,
-                m.payment_mode_selected,
-                m.entry_status_current,
-                m.created_timestamp_utc,
-                NULL as line_item_entry_id,
-                NULL as recipient_id_reference,
-                NULL as recipient_type_category,
-                NULL as recipient_name_display,
-                NULL as payment_description_notes,
-                NULL as line_item_amount,
-                NULL as line_item_payment_mode,
-                NULL as line_item_status,
-                NULL as line_item_sequence_number,
-                COUNT(DISTINCT ap.acceptance_method_id) as acceptance_methods_count,
-                SUM(ap.amount_received_value) as total_acceptance_amount,
-                s.total_amount_grand_aggregate
-            FROM 
-                tbl_payment_entry_master_records m
-            LEFT JOIN 
-                tbl_payment_acceptance_methods_primary ap ON m.payment_entry_id = ap.payment_entry_id_fk
-            LEFT JOIN 
-                tbl_payment_entry_summary_totals s ON m.payment_entry_id = s.payment_entry_master_id_fk
-            LEFT JOIN 
-                projects p ON m.project_name_reference = p.id
-            WHERE 
-                m.authorized_user_id_fk = :vendor_id1 
-                OR m.created_by_user_id = :vendor_id2
-            GROUP BY 
-                m.payment_entry_id, m.project_type_category, m.project_name_reference, 
-                p.title, p.id, m.payment_amount_base, m.payment_date_logged, 
-                m.payment_mode_selected, m.entry_status_current, m.created_timestamp_utc,
-                s.total_amount_grand_aggregate
-            ORDER BY 
-                m.payment_date_logged DESC
-            LIMIT 100
-        ";
-
-        $alt_stmt = $pdo->prepare($alt_query);
-        
-        if ($alt_stmt) {
-            if ($alt_stmt->execute([':vendor_id1' => $vendor_id, ':vendor_id2' => $vendor_id])) {
-                $alt_results = $alt_stmt->fetchAll(PDO::FETCH_ASSOC);
-                error_log("Query 2 (fallback) returned: " . count($alt_results) . " records");
-                
-                if (!empty($alt_results)) {
-                    foreach ($alt_results as $row) {
-                        $payment_records[] = [
-                            'payment_entry_id' => $row['payment_entry_id'],
-                            'project_type_category' => $row['project_type_category'],
-                            'project_name_reference' => $row['project_name_reference'],
-                            'project_name' => $row['project_name'],
-                            'payment_date_logged' => $row['payment_date_logged'],
-                            'payment_amount_base' => floatval($row['payment_amount_base']),
-                            'payment_mode_selected' => $row['payment_mode_selected'],
-                            'entry_status_current' => $row['entry_status_current'],
-                            'created_timestamp_utc' => $row['created_timestamp_utc'],
-                            'line_item_entry_id' => null,
-                            'recipient_type_category' => null,
-                            'recipient_name_display' => null,
-                            'payment_description_notes' => null,
-                            'line_item_amount' => null,
-                            'line_item_payment_mode' => null,
-                            'line_item_status' => null,
-                            'line_item_sequence_number' => null,
-                            'acceptance_methods_count' => intval($row['acceptance_methods_count']),
-                            'total_acceptance_amount' => floatval($row['total_acceptance_amount'] ?? 0),
-                            'total_amount_grand_aggregate' => floatval($row['total_amount_grand_aggregate'] ?? 0)
-                        ];
-                    }
-                }
-            }
-        }
+        error_log("No payment line items found for vendor ID: " . $vendor_id);
     }
 
     // Fetch acceptance methods for each payment if exists
@@ -232,12 +164,12 @@ try {
                 ";
 
                 $methods_stmt = $pdo->prepare($methods_query);
-                
+
                 if ($methods_stmt) {
                     if ($methods_stmt->execute([':line_item_id' => $payment['line_item_entry_id']])) {
                         $methods_results = $methods_stmt->fetchAll(PDO::FETCH_ASSOC);
                         $payment['acceptance_methods'] = [];
-                        
+
                         foreach ($methods_results as $method_row) {
                             $payment['acceptance_methods'][] = [
                                 'method_type' => $method_row['method_type_category'],
@@ -267,12 +199,12 @@ try {
                 ";
 
                 $methods_stmt = $pdo->prepare($methods_query);
-                
+
                 if ($methods_stmt) {
                     if ($methods_stmt->execute([':payment_id' => $payment['payment_entry_id']])) {
                         $methods_results = $methods_stmt->fetchAll(PDO::FETCH_ASSOC);
                         $payment['acceptance_methods'] = [];
-                        
+
                         foreach ($methods_results as $method_row) {
                             $payment['acceptance_methods'][] = [
                                 'method_type' => $method_row['payment_method_type'],
@@ -290,7 +222,7 @@ try {
 
     // Debug: Log final results
     error_log("Final payment records count: " . count($payment_records));
-    
+
     // Return success response with debug info if empty
     $response = [
         'success' => true,
@@ -302,7 +234,7 @@ try {
             'query_executed' => 'Yes'
         ]
     ];
-    
+
     echo json_encode($response);
 
 } catch (Exception $e) {

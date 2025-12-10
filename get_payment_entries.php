@@ -68,7 +68,7 @@ try {
         // Handle multiple project IDs (comma-separated)
         $projectIds = array_map('trim', explode(',', $projectType));
         $projectIds = array_filter($projectIds); // Remove empty values
-        
+
         if (!empty($projectIds)) {
             $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
             $count_query .= " AND m.project_id_fk IN ($placeholders)";
@@ -77,18 +77,18 @@ try {
     }
 
     if (!empty($vendorCategory)) {
-        // Handle multiple vendor categories (comma-separated) - filter by vendor_type_category OR labour_type
-        $categories = array_map('trim', explode(',', $vendorCategory));
-        $categories = array_filter($categories); // Remove empty values
-        
-        if (!empty($categories)) {
-            $placeholders = implode(',', array_fill(0, count($categories), '?'));
-            // Match vendor_type_category from vendor table OR labour_type (as "Type Labour") from labour_records
+        // Handle multiple contractor IDs (comma-separated) - filter by specific vendor_id OR labour id
+        $contractorIds = array_map('trim', explode(',', $vendorCategory));
+        $contractorIds = array_filter($contractorIds); // Remove empty values
+
+        if (!empty($contractorIds)) {
+            $placeholders = implode(',', array_fill(0, count($contractorIds), '?'));
+            // Match specific vendor_id from vendor table OR labour id from labour_records
             $count_query .= " AND (";
-            $count_query .= "v.vendor_type_category IN ($placeholders)";
-            $count_query .= " OR CONCAT(UCASE(SUBSTRING(lr.labour_type, 1, 1)), SUBSTRING(LOWER(lr.labour_type), 2), ' Labour') IN ($placeholders)";
+            $count_query .= "v.vendor_id IN ($placeholders)";
+            $count_query .= " OR lr.id IN ($placeholders)";
             $count_query .= " )";
-            $count_params = array_merge($count_params, $categories, $categories);
+            $count_params = array_merge($count_params, $contractorIds, $contractorIds);
         }
     }
 
@@ -96,7 +96,7 @@ try {
         // Handle multiple users (comma-separated) - filter by authorized_user_id_fk
         $users = array_map('trim', explode(',', $paidBy));
         $users = array_filter($users); // Remove empty values
-        
+
         if (!empty($users)) {
             $placeholders = implode(',', array_fill(0, count($users), '?'));
             $count_query .= " AND au.username IN ($placeholders)";
@@ -108,8 +108,18 @@ try {
         $count_query .= " AND (
             m.project_name_reference LIKE ?
             OR m.payment_entry_id LIKE ?
+            OR v.vendor_full_name LIKE ?
+            OR v.vendor_unique_code LIKE ?
+            OR lr.full_name LIKE ?
+            OR lr.labour_unique_code LIKE ?
+            OR l.recipient_name_display LIKE ?
         )";
         $search_term = '%' . $search . '%';
+        $count_params[] = $search_term;
+        $count_params[] = $search_term;
+        $count_params[] = $search_term;
+        $count_params[] = $search_term;
+        $count_params[] = $search_term;
         $count_params[] = $search_term;
         $count_params[] = $search_term;
     }
@@ -117,7 +127,7 @@ try {
     try {
         error_log('Count query: ' . $count_query);
         error_log('Count params: ' . json_encode($count_params));
-        
+
         $count_stmt = $pdo->prepare($count_query);
         $count_stmt->execute($count_params);
         $count_result = $count_stmt->fetch(PDO::FETCH_ASSOC);
@@ -192,7 +202,7 @@ try {
         // Handle multiple project IDs (comma-separated)
         $projectIds = array_map('trim', explode(',', $projectType));
         $projectIds = array_filter($projectIds); // Remove empty values
-        
+
         if (!empty($projectIds)) {
             $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
             $query .= " AND m.project_id_fk IN ($placeholders)";
@@ -201,18 +211,18 @@ try {
     }
 
     if (!empty($vendorCategory)) {
-        // Handle multiple vendor categories (comma-separated) - filter by vendor_type_category OR labour_type
-        $categories = array_map('trim', explode(',', $vendorCategory));
-        $categories = array_filter($categories); // Remove empty values
-        
-        if (!empty($categories)) {
-            $placeholders = implode(',', array_fill(0, count($categories), '?'));
-            // Match vendor_type_category from vendor table OR labour_type (as "Type Labour") from labour_records
+        // Handle multiple contractor IDs (comma-separated) - filter by specific vendor_id OR labour id
+        $contractorIds = array_map('trim', explode(',', $vendorCategory));
+        $contractorIds = array_filter($contractorIds); // Remove empty values
+
+        if (!empty($contractorIds)) {
+            $placeholders = implode(',', array_fill(0, count($contractorIds), '?'));
+            // Match specific vendor_id from vendor table OR labour id from labour_records
             $query .= " AND (";
-            $query .= "v.vendor_type_category IN ($placeholders)";
-            $query .= " OR CONCAT(UCASE(SUBSTRING(lr.labour_type, 1, 1)), SUBSTRING(LOWER(lr.labour_type), 2), ' Labour') IN ($placeholders)";
+            $query .= "v.vendor_id IN ($placeholders)";
+            $query .= " OR lr.id IN ($placeholders)";
             $query .= " )";
-            $stmt_params = array_merge($stmt_params, $categories, $categories);
+            $stmt_params = array_merge($stmt_params, $contractorIds, $contractorIds);
         }
     }
 
@@ -220,7 +230,7 @@ try {
         // Handle multiple users (comma-separated) - filter by authorized_user_id_fk
         $users = array_map('trim', explode(',', $paidBy));
         $users = array_filter($users); // Remove empty values
-        
+
         if (!empty($users)) {
             $placeholders = implode(',', array_fill(0, count($users), '?'));
             $query .= " AND au.username IN ($placeholders)";
@@ -232,8 +242,18 @@ try {
         $query .= " AND (
             m.project_name_reference LIKE ?
             OR m.payment_entry_id LIKE ?
+            OR v.vendor_full_name LIKE ?
+            OR v.vendor_unique_code LIKE ?
+            OR lr.full_name LIKE ?
+            OR lr.labour_unique_code LIKE ?
+            OR l.recipient_name_display LIKE ?
         )";
         $search_term = '%' . $search . '%';
+        $stmt_params[] = $search_term;
+        $stmt_params[] = $search_term;
+        $stmt_params[] = $search_term;
+        $stmt_params[] = $search_term;
+        $stmt_params[] = $search_term;
         $stmt_params[] = $search_term;
         $stmt_params[] = $search_term;
     }
@@ -243,7 +263,7 @@ try {
         ORDER BY m.created_timestamp_utc DESC
         LIMIT ? OFFSET ?
     ";
-    
+
     $stmt_params[] = $limit;
     $stmt_params[] = $offset;
 
@@ -252,7 +272,7 @@ try {
         $stmt = $pdo->prepare($query);
         $stmt->execute($stmt_params);
         $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         if (!is_array($entries)) {
             $entries = [];
         }
@@ -268,7 +288,7 @@ try {
     foreach ($entries as $entry) {
         // Fetch vendors and labours for this payment entry from line items
         $paid_to = [];
-        
+
         try {
             $paid_to_query = "
                 SELECT 
@@ -291,19 +311,19 @@ try {
                 GROUP BY l.recipient_id_reference, l.recipient_type_category
                 ORDER BY l.line_item_sequence_number ASC
             ";
-            
+
             $paid_to_stmt = $pdo->prepare($paid_to_query);
             $paid_to_stmt->bindParam(':payment_entry_id', $entry['payment_entry_id']);
             $paid_to_stmt->execute();
-            
+
             $recipients = $paid_to_stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             foreach ($recipients as $recipient) {
                 $recipient_type = $recipient['recipient_type'];
                 $recipient_name = $recipient['recipient_name_display'];
                 $recipient_id = $recipient['recipient_id_reference'];
                 $vendor_category = $recipient['vendor_type_category'] ?? '';
-                
+
                 // Fetch the user who made the payment
                 $paid_by_user = 'N/A';
                 if (!empty($recipient['line_item_paid_via_user_id'])) {
@@ -320,7 +340,7 @@ try {
                         error_log('Error fetching paid_by user: ' . $ue->getMessage());
                     }
                 }
-                
+
                 // Try to fetch full details from vendor or labour tables if ID exists
                 if ($recipient_id) {
                     // First, check if it's a vendor in pm_vendor_registry_master
@@ -334,7 +354,7 @@ try {
                     $vendor_stmt->bindParam(':id', $recipient_id);
                     $vendor_stmt->execute();
                     $vendor = $vendor_stmt->fetch(PDO::FETCH_ASSOC);
-                    
+
                     if ($vendor && $vendor['vendor_full_name']) {
                         // Found in vendor table
                         $recipient_name = $vendor['vendor_full_name'];
@@ -365,7 +385,7 @@ try {
                         }
                     }
                 }
-                
+
                 // Fetch acceptance methods for this recipient
                 $acceptance_methods = [];
                 try {
@@ -388,7 +408,7 @@ try {
                 } catch (Exception $e) {
                     error_log('Error fetching acceptance methods: ' . $e->getMessage());
                 }
-                
+
                 $paid_to[] = [
                     'type' => $recipient_type,
                     'name' => $recipient_name,
@@ -404,7 +424,7 @@ try {
             error_log('Error fetching paid_to details for payment ' . $entry['payment_entry_id'] . ': ' . $e->getMessage());
             // Continue without paid_to data if query fails
         }
-        
+
         $formatted_entries[] = [
             'payment_entry_id' => $entry['payment_entry_id'],
             'project_type' => $entry['project_type_category'],
@@ -446,7 +466,7 @@ try {
             'limit' => $limit,
             'offset' => $offset
         ]
-    ],JSON_PRETTY_PRINT);
+    ], JSON_PRETTY_PRINT);
 
 } catch (Exception $e) {
     // Log error with full details

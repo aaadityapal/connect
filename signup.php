@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Generate unique ID based on role
         $prefix = '';
-        switch($role) {
+        switch ($role) {
             case 'admin':
                 $prefix = 'ADM';
                 break;
@@ -150,6 +150,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             case 'Purchase':
                 $prefix = 'PR';
                 break;
+            case 'Maid Back Office':
+                $prefix = 'MBO';
+                break;
             default:
                 $prefix = 'EMP';
         }
@@ -159,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt = $pdo->prepare("SELECT unique_id FROM users WHERE unique_id LIKE ? ORDER BY unique_id DESC LIMIT 1");
             $stmt->execute([$prefix . '%']);
             $result = $stmt->fetch();
-            
+
             if ($result) {
                 $last_id = $result['unique_id'];
                 $number = intval(substr($last_id, strlen($prefix)));
@@ -167,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } else {
                 $next_id = 1;
             }
-            
+
             $unique_id = $prefix . str_pad($next_id, 3, '0', STR_PAD_LEFT);
         } catch (Exception $e) {
             error_log("Error generating unique ID: " . $e->getMessage());
@@ -217,9 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     'active',
                     :created_at
                 )";
-        
+
         $current_time = date('Y-m-d H:i:s');
-        
+
         $params = [
             ':username' => $username,
             ':email' => $email,
@@ -244,14 +247,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Debug: Check the result
         if ($result) {
             error_log("Insert successful");
-            
+
             // After successful insert, verify the data
             $verify_stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
             $verify_stmt->execute([$email]);
             $new_user = $verify_stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             error_log("Verification of new user: " . print_r($new_user, true));
-            
+
             // Set session variables based on your table structure
             $_SESSION['user_id'] = $new_user['id'];
             $_SESSION['username'] = $new_user['username'];
@@ -261,14 +264,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Set current timestamp for created_at and last_login
             $current_time = date('Y-m-d H:i:s');
-            
+
             // Update the user record with additional details
             $update_sql = "UPDATE users SET 
                           created_at = :created_at,
                           last_login = :last_login,
                           status = 'active'
                           WHERE id = :id";
-            
+
             $update_stmt = $pdo->prepare($update_sql);
             $update_stmt->execute([
                 ':created_at' => $current_time,
@@ -278,11 +281,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Redirect based on role
             $senior_roles = [
-                'admin', 
-                'HR', 
-                'Senior Manager (Studio)', 
-                'Senior Manager (Site)', 
-                'Senior Manager (Marketing)', 
+                'admin',
+                'HR',
+                'Senior Manager (Studio)',
+                'Senior Manager (Site)',
+                'Senior Manager (Marketing)',
                 'Senior Manager (Sales)',
                 'Senior Manager (Purchase)'
             ];
@@ -300,11 +303,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             throw new Exception("Failed to create user account");
         }
 
-    } catch(PDOException $e) {
+    } catch (PDOException $e) {
         error_log("PDO Database Error: " . $e->getMessage());
         error_log("Error Code: " . $e->getCode());
         $_SESSION['error'] = "Database error: " . $e->getMessage();
-    } catch(Exception $e) {
+    } catch (Exception $e) {
         error_log("General Error: " . $e->getMessage());
         $_SESSION['error'] = $e->getMessage();
     }
@@ -314,6 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <!-- HTML Form -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -402,7 +406,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             gap: 0.75rem;
         }
 
-        .nav-link:hover, 
+        .nav-link:hover,
         .nav-link.active {
             color: var(--primary-color);
             background-color: #F3F4FF;
@@ -445,8 +449,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .toggle-sidebar:hover {
@@ -610,7 +614,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .signup-container {
                 max-width: 100%;
             }
-            
+
             .card {
                 max-width: 100%;
             }
@@ -634,7 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .card-body {
                 padding: 20px;
             }
-            
+
             .signup-container {
                 margin: 0 auto;
                 width: 100%;
@@ -647,11 +651,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             form {
                 grid-template-columns: 1fr;
             }
-            
+
             .card-header {
                 padding: 20px;
             }
-            
+
             .card-header h3 {
                 font-size: 24px;
             }
@@ -671,13 +675,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
 
-        .form-group:nth-child(1) { animation-delay: 0.1s; }
-        .form-group:nth-child(2) { animation-delay: 0.2s; }
-        .form-group:nth-child(3) { animation-delay: 0.3s; }
-        .form-group:nth-child(4) { animation-delay: 0.4s; }
-        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .form-group:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .form-group:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .form-group:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .form-group:nth-child(5) {
+            animation-delay: 0.5s;
+        }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -685,7 +704,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <i class="bi bi-hexagon-fill"></i>
             HR Portal
         </div>
-        
+
         <nav>
             <a href="hr_dashboard.php" class="nav-link">
                 <i class="bi bi-grid-1x2-fill"></i>
@@ -752,12 +771,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <h3><i class="fas fa-user-plus mr-2"></i>Create Account</h3>
                 </div>
                 <div class="card-body">
-                    <?php if(isset($_SESSION['error'])): ?>
+                    <?php if (isset($_SESSION['error'])): ?>
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-circle mr-2"></i>
-                            <?php 
-                                echo $_SESSION['error'];
-                                unset($_SESSION['error']);
+                            <?php
+                            echo $_SESSION['error'];
+                            unset($_SESSION['error']);
                             ?>
                         </div>
                     <?php endif; ?>
@@ -807,22 +826,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Design Team">Design Team</option>
                                     <option value="Working Team">Working Team</option>
                                     <option value="Interior Designer">Interior Designer</option>
-                                 <option value="Senior Interior Designer">Senior Interior Designer</option>
-                                 <option value="Junior Interior Designer">Junior Interior Designer</option>
-                                 <option value="Lead Interior Designer">Lead Interior Designer</option>
-                                 <option value="Associate Interior Designer">Associate Interior Designer</option>
-                                 <option value="Interior Design Coordinator">Interior Design Coordinator</option>
-                                 <option value="Interior Design Assistant">Interior Design Assistant</option>
-                                 <option value="FF&E Designer">FF&E Designer</option>
-                                 <option value="Interior Stylist">Interior Stylist</option>
-                                 <option value="Interior Design Intern">Interior Design Intern</option>
+                                    <option value="Senior Interior Designer">Senior Interior Designer</option>
+                                    <option value="Junior Interior Designer">Junior Interior Designer</option>
+                                    <option value="Lead Interior Designer">Lead Interior Designer</option>
+                                    <option value="Associate Interior Designer">Associate Interior Designer</option>
+                                    <option value="Interior Design Coordinator">Interior Design Coordinator</option>
+                                    <option value="Interior Design Assistant">Interior Design Assistant</option>
+                                    <option value="FF&E Designer">FF&E Designer</option>
+                                    <option value="Interior Stylist">Interior Stylist</option>
+                                    <option value="Interior Design Intern">Interior Design Intern</option>
                                     <option value="Draughtsman">Draughtsman</option>
                                     <option value="3D Designing Team">3D Designing Team</option>
                                     <option value="Studio Trainees">Studio Trainees</option>
-                                 <option value="Graphic Designer">Graphic Designer</option>
+                                    <option value="Graphic Designer">Graphic Designer</option>
                                     <option value="Business Developer">Business Developer</option>
-                                 <option value="Social Media Manager">Social Media Manager</option>
-                                 <option value="Social Media Marketing">Social Media Marketing</option>
+                                    <option value="Social Media Manager">Social Media Manager</option>
+                                    <option value="Social Media Marketing">Social Media Marketing</option>
                                     <option value="Site Manager">Site Manager</option>
                                     <option value="Site Coordinator">Site Coordinator</option>
                                     <option value="Site Supervisor">Site Supervisor</option>
@@ -835,6 +854,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Purchase Executive">Purchase Executive</option>
                                     <option value="Sales">Sales</option>
                                     <option value="Purchase">Purchase</option>
+                                    <option value="Maid Back Office">Maid Back Office</option>
                                 </select>
                             </div>
                         </div>
@@ -850,8 +870,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <select class="form-control" id="reporting_manager" name="reporting_manager">
                                     <option value="">Select Manager...</option>
                                     <option value="Sr. Manager (Studio)">Sr. Manager (Studio)</option>
-                                    <option value="Sr. Manager (Business Developer)">Sr. Manager (Business Developer)</option>
-                                    <option value="Sr. Manager (Relationship Manager)">Sr. Manager (Relationship Manager)</option>
+                                    <option value="Sr. Manager (Business Developer)">Sr. Manager (Business Developer)
+                                    </option>
+                                    <option value="Sr. Manager (Relationship Manager)">Sr. Manager (Relationship
+                                        Manager)</option>
                                     <option value="Sr. Manager (Operations)">Sr. Manager (Operations)</option>
                                     <option value="Sr. Manager (HR)">Sr. Manager (HR)</option>
                                 </select>
@@ -892,21 +914,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
             const sidebarToggle = document.getElementById('sidebarToggle');
-            
+
             // Handle sidebar toggle click
-            sidebarToggle.addEventListener('click', function() {
+            sidebarToggle.addEventListener('click', function () {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
                 sidebarToggle.classList.toggle('collapsed');
-                
+
                 // Store the state in localStorage
                 localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
             });
-            
+
             // Check if sidebar was collapsed previously
             const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
             if (sidebarCollapsed) {
@@ -914,7 +936,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 mainContent.classList.add('expanded');
                 sidebarToggle.classList.add('collapsed');
             }
-            
+
             // Add mobile detection for sidebar
             function checkMobile() {
                 if (window.innerWidth <= 768) {
@@ -927,38 +949,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     sidebarToggle.classList.remove('collapsed');
                 }
             }
-            
+
             // Initial check
             checkMobile();
-            
+
             // Listen for window resize
             window.addEventListener('resize', checkMobile);
         });
 
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelector('form').addEventListener('submit', function (e) {
             const role = document.getElementById('role').value;
             if (!role) {
                 e.preventDefault();
                 alert('Please select a role');
                 return false;
             }
-            
+
             // Log the form data before submission
             console.log('Submitting form with role:', role);
         });
 
         // Show/hide reporting manager based on role
-        $('#role').change(function() {
+        $('#role').change(function () {
             const role = $(this).val();
             console.log('Selected role:', role); // Debug log
-            
-            const seniorRoles = ['admin', 'HR', 'Senior Manager (Studio)', 'Senior Manager (Site)', 
-                               'Senior Manager (Marketing)', 'Senior Manager (Sales)', 'Senior Manager (Purchase)'];
-            
+
+            const seniorRoles = ['admin', 'HR', 'Senior Manager (Studio)', 'Senior Manager (Site)',
+                'Senior Manager (Marketing)', 'Senior Manager (Sales)', 'Senior Manager (Purchase)'];
+
             if (!seniorRoles.includes(role)) {
                 $('#reportingManagerDiv').show();
                 $('#reporting_manager').prop('required', true);
-                
+
                 // Auto-select reporting manager based on role
                 let manager = '';
                 if ([
@@ -975,12 +997,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     manager = 'Sr. Manager (Relationship Manager)';
                 } else if (['Site Manager', 'Site Coordinator', 'Site Supervisor', 'Site Trainee'].includes(role)) {
                     manager = 'Sr. Manager (Operations)';
-                } else if (['Social Media Manager', 'Social Media Marketing'].includes(role)) {
+                } else if (['Social Media Manager', 'Social Media Marketing', 'Maid Back Office'].includes(role)) {
                     manager = 'Sr. Manager (HR)';
                 } else if (['Purchase Manager', 'Purchase Executive', 'Purchase'].includes(role)) {
                     manager = 'Sr. Manager (Purchase)';
                 }
-                
+
                 $('#reporting_manager').val(manager);
             } else {
                 $('#reportingManagerDiv').hide();
@@ -989,4 +1011,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         });
     </script>
 </body>
+
 </html>

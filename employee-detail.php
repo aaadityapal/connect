@@ -43,24 +43,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Get existing documents
         $existingDocs = json_decode($employee['documents'] ?? '{}', true) ?: [];
-        
+
         // Handle file uploads
         if (!empty($_FILES['documents']['name'])) {
             foreach ($_FILES['documents']['name'] as $docType => $filename) {
                 if (!empty($filename)) {
                     $tmpName = $_FILES['documents']['tmp_name'][$docType];
                     $fileExt = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                    
+
                     // Validate file extension
                     $allowedExts = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
                     if (!in_array($fileExt, $allowedExts)) {
                         throw new Exception("Invalid file type for $docType");
                     }
-                    
+
                     // Generate unique filename
                     $newFilename = uniqid($employeeId . '_' . $docType . '_') . '.' . $fileExt;
                     $destination = $uploadDir . $newFilename;
-                    
+
                     // Delete old file if exists
                     if (isset($existingDocs[$docType]['filename'])) {
                         $oldFile = $uploadDir . $existingDocs[$docType]['filename'];
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             unlink($oldFile);
                         }
                     }
-                    
+
                     // Move uploaded file
                     if (move_uploaded_file($tmpName, $destination)) {
                         $existingDocs[$docType] = [
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Update database with new document information
         $documentsJson = json_encode($existingDocs);
-        
+
         // Add documents to your existing UPDATE query
         $sql = "UPDATE users SET 
             username = :username,
@@ -124,18 +124,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             allowances = :allowances,
             deductions = :deductions
             WHERE id = :id";
-            
+
         $stmt = $pdo->prepare($sql);
         $params = [
             'username' => $_POST['username'],
             'email' => $_POST['email'],
             'phone' => $_POST['phone'],
-            'dob' => $_POST['dob'],
+            'dob' => !empty($_POST['dob']) ? $_POST['dob'] : null,
             'gender' => $_POST['gender'],
             'role' => $_POST['role'],
             'position' => $_POST['position'],
             'designation' => $_POST['designation'],
-            'joining_date' => $_POST['joining_date'],
+            'joining_date' => !empty($_POST['joining_date']) ? $_POST['joining_date'] : null,
             'reporting_manager' => $_POST['reporting_manager'],
             'address' => $_POST['address'],
             'city' => $_POST['city'],
@@ -169,6 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -256,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             gap: 0.75rem;
         }
 
-        .nav-link:hover, 
+        .nav-link:hover,
         .nav-link.active {
             color: var(--primary-color);
             background-color: #F3F4FF;
@@ -281,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: auto;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             padding-top: 1rem;
-            color: black!important;
+            color: black !important;
             background-color: #D22B2B;
         }
 
@@ -306,8 +307,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .toggle-sidebar:hover {
@@ -484,7 +485,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .sidebar.show {
                 transform: translateX(0);
             }
-            
+
             .profile-header {
                 flex-direction: column;
                 text-align: center;
@@ -494,7 +495,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .detail-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .detail-section {
                 padding: var(--spacing-md);
             }
@@ -744,7 +745,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .section-header {
@@ -804,7 +805,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .document-info {
             flex: 1;
-            min-width: 0; /* Prevents text overflow */
+            min-width: 0;
+            /* Prevents text overflow */
         }
 
         .document-name {
@@ -940,6 +942,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -947,7 +950,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <i class="bi bi-hexagon-fill"></i>
             HR Portal
         </div>
-        
+
         <nav>
             <a href="hr_dashboard.php" class="nav-link">
                 <i class="bi bi-grid-1x2-fill"></i>
@@ -1008,498 +1011,521 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
-    <div class="container">
-        <?php if (isset($success_message)): ?>
-            <div class="message success-message"><?php echo $success_message; ?></div>
-        <?php endif; ?>
+        <div class="container">
+            <?php if (isset($success_message)): ?>
+                <div class="message success-message"><?php echo $success_message; ?></div>
+            <?php endif; ?>
 
-        <?php if (isset($error_message)): ?>
-            <div class="message error-message"><?php echo $error_message; ?></div>
-        <?php endif; ?>
+            <?php if (isset($error_message)): ?>
+                <div class="message error-message"><?php echo $error_message; ?></div>
+            <?php endif; ?>
 
-        <a href="employee.php" class="back-button">
-            <i class="fas fa-arrow-left"></i>
-            Back to Employee List
-        </a>
+            <a href="employee.php" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                Back to Employee List
+            </a>
 
-        <form method="POST" enctype="multipart/form-data">
-            <!-- Profile Header Section -->
-            <div class="profile-header">
-                <img src="<?php echo $employee['profile_picture'] ?? 'default-avatar.png'; ?>" 
-                     alt="Profile" class="profile-image">
-                <div class="profile-info">
-                    <h1><?php echo htmlspecialchars($employee['username']); ?></h1>
-                    <p><?php echo htmlspecialchars($employee['designation']); ?></p>
-                    <span class="status-badge status-<?php echo $employee['status'] === 'active' ? 'active' : 'inactive'; ?>">
-                        <?php echo ucfirst($employee['status']); ?>
-                    </span>
-                </div>
-            </div>
-
-            <div class="detail-grid">
-                <!-- Basic Information Section -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-user"></i>
-                        Basic Information
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Employee ID</div>
-                        <div class="info-value"><?php echo htmlspecialchars($employee['unique_id']); ?></div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Username</div>
-                        <div class="info-value">
-                            <input type="text" name="username" value="<?php echo htmlspecialchars($employee['username']); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Email</div>
-                        <div class="info-value">
-                            <input type="email" name="email" value="<?php echo htmlspecialchars($employee['email']); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Phone</div>
-                        <div class="info-value">
-                            <input type="tel" name="phone" value="<?php echo htmlspecialchars($employee['phone']); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Date of Birth</div>
-                        <div class="info-value">
-                            <input type="date" name="dob" value="<?php echo $employee['dob'] ? date('Y-m-d', strtotime($employee['dob'])) : ''; ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Gender</div>
-                        <div class="info-value">
-                            <select name="gender">
-                                <option value="Male" <?php echo $employee['gender'] === 'Male' ? 'selected' : ''; ?>>Male</option>
-                                <option value="Female" <?php echo $employee['gender'] === 'Female' ? 'selected' : ''; ?>>Female</option>
-                                <option value="Other" <?php echo $employee['gender'] === 'Other' ? 'selected' : ''; ?>>Other</option>
-                            </select>
-                        </div>
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Profile Header Section -->
+                <div class="profile-header">
+                    <img src="<?php echo $employee['profile_picture'] ?? 'default-avatar.png'; ?>" alt="Profile"
+                        class="profile-image">
+                    <div class="profile-info">
+                        <h1><?php echo htmlspecialchars($employee['username']); ?></h1>
+                        <p><?php echo htmlspecialchars($employee['designation']); ?></p>
+                        <span
+                            class="status-badge status-<?php echo $employee['status'] === 'active' ? 'active' : 'inactive'; ?>">
+                            <?php echo ucfirst($employee['status']); ?>
+                        </span>
                     </div>
                 </div>
 
-                <!-- Work Information Section -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-briefcase"></i>
-                        Work Information
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Role</div>
-                        <div class="info-value">
-                            <select name="role" class="form-control">
-                                <option value="">Select Role...</option>
-                                <option value="admin" <?php echo $employee['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
-                                <option value="HR" <?php echo $employee['role'] === 'HR' ? 'selected' : ''; ?>>HR</option>
-                                <option value="Senior Manager (Studio)" <?php echo $employee['role'] === 'Senior Manager (Studio)' ? 'selected' : ''; ?>>Senior Manager (Studio)</option>
-                                <option value="Senior Manager (Site)" <?php echo $employee['role'] === 'Senior Manager (Site)' ? 'selected' : ''; ?>>Senior Manager (Site)</option>
-                                <option value="Senior Manager (Marketing)" <?php echo $employee['role'] === 'Senior Manager (Marketing)' ? 'selected' : ''; ?>>Senior Manager (Marketing)</option>
-                                <option value="Senior Manager (Sales)" <?php echo $employee['role'] === 'Senior Manager (Sales)' ? 'selected' : ''; ?>>Senior Manager (Sales)</option>
-                                <option value="Senior Manager (Purchase)" <?php echo $employee['role'] === 'Senior Manager (Purchase)' ? 'selected' : ''; ?>>Senior Manager (Purchase)</option>
-                                <option value="Design Team" <?php echo $employee['role'] === 'Design Team' ? 'selected' : ''; ?>>Design Team</option>
-                                <option value="Working Team" <?php echo $employee['role'] === 'Working Team' ? 'selected' : ''; ?>>Working Team</option>
-                                <option value="Draughtsman" <?php echo $employee['role'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
-                                <option value="3D Designing Team" <?php echo $employee['role'] === '3D Designing Team' ? 'selected' : ''; ?>>3D Designing Team</option>
-                                <option value="Studio Trainees" <?php echo $employee['role'] === 'Studio Trainees' ? 'selected' : ''; ?>>Studio Trainees</option>
-                                <option value="Business Developer" <?php echo $employee['role'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
-                                <option value="Social Media Manager" <?php echo $employee['role'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
-                                <option value="Site Manager" <?php echo $employee['role'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
-                                <option value="Site Coordinator" <?php echo $employee['role'] === 'Site Coordinator' ? 'selected' : ''; ?>>Site Coordinator</option>
-                                <option value="Site Supervisor" <?php echo $employee['role'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
-                                <option value="Site Trainee" <?php echo $employee['role'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
-                                <option value="Relationship Manager" <?php echo $employee['role'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
-                                <option value="Sales Manager" <?php echo $employee['role'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
-                                <option value="Sales Consultant" <?php echo $employee['role'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
-                                <option value="Field Sales Representative" <?php echo $employee['role'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
-                                <option value="Purchase Manager" <?php echo $employee['role'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
-                                <option value="Purchase Executive" <?php echo $employee['role'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
-                                <option value="Sales" <?php echo $employee['role'] === 'Sales' ? 'selected' : ''; ?>>Sales</option>
-                                <option value="Purchase" <?php echo $employee['role'] === 'Purchase' ? 'selected' : ''; ?>>Purchase</option>
-                                <option value="Social Media Marketing" <?php echo $employee['role'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
-                                <option value="Graphic Designer" <?php echo $employee['role'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
-                            </select>
+                <div class="detail-grid">
+                    <!-- Basic Information Section -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-user"></i>
+                            Basic Information
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Employee ID</div>
+                            <div class="info-value"><?php echo htmlspecialchars($employee['unique_id']); ?></div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Username</div>
+                            <div class="info-value">
+                                <input type="text" name="username"
+                                    value="<?php echo htmlspecialchars($employee['username']); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">
+                                <input type="email" name="email"
+                                    value="<?php echo htmlspecialchars($employee['email']); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value">
+                                <input type="tel" name="phone"
+                                    value="<?php echo htmlspecialchars($employee['phone']); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Date of Birth</div>
+                            <div class="info-value">
+                                <input type="date" name="dob"
+                                    value="<?php echo $employee['dob'] ? date('Y-m-d', strtotime($employee['dob'])) : ''; ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Gender</div>
+                            <div class="info-value">
+                                <select name="gender">
+                                    <option value="Male" <?php echo $employee['gender'] === 'Male' ? 'selected' : ''; ?>>
+                                        Male</option>
+                                    <option value="Female" <?php echo $employee['gender'] === 'Female' ? 'selected' : ''; ?>>Female</option>
+                                    <option value="Other" <?php echo $employee['gender'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="info-group">
-                        <div class="info-label">Position</div>
-                        <div class="info-value">
-                            <select name="position" class="form-control">
-                                <option value="">Select Position...</option>
-                                <option value="Executive" <?php echo $employee['position'] === 'Executive' ? 'selected' : ''; ?>>Executive</option>
-                                <option value="Manager" <?php echo $employee['position'] === 'Manager' ? 'selected' : ''; ?>>Manager</option>
-                                <option value="Senior Manager" <?php echo $employee['position'] === 'Senior Manager' ? 'selected' : ''; ?>>Senior Manager</option>
-                                <option value="Team Lead" <?php echo $employee['position'] === 'Team Lead' ? 'selected' : ''; ?>>Team Lead</option>
-                                <option value="Supervisor" <?php echo $employee['position'] === 'Supervisor' ? 'selected' : ''; ?>>Supervisor</option>
-                                <option value="Trainee" <?php echo $employee['position'] === 'Trainee' ? 'selected' : ''; ?>>Trainee</option>
-                                <option value="Consultant" <?php echo $employee['position'] === 'Consultant' ? 'selected' : ''; ?>>Consultant</option>
-                                <option value="Representative" <?php echo $employee['position'] === 'Representative' ? 'selected' : ''; ?>>Representative</option>
-                                <option value="Developer" <?php echo $employee['position'] === 'Developer' ? 'selected' : ''; ?>>Developer</option>
-                                <option value="Designer" <?php echo $employee['position'] === 'Designer' ? 'selected' : ''; ?>>Designer</option>
-                                <option value="Administrator" <?php echo $employee['position'] === 'Administrator' ? 'selected' : ''; ?>>Administrator</option>
-                                <option value="Graphic Designer" <?php echo $employee['position'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
-                                <option value="Social Media Marketing" <?php echo $employee['position'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
-                                <option value="Other" <?php echo $employee['position'] === 'Other' ? 'selected' : ''; ?>>Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Designation</div>
-                        <div class="info-value">
-                            <select name="designation" class="form-control">
-                                <option value="">Select Designation...</option>
-                                <option value="Admin" <?php echo $employee['designation'] === 'Admin' ? 'selected' : ''; ?>>Admin</option>
-                                <option value="HR Manager" <?php echo $employee['designation'] === 'HR Manager' ? 'selected' : ''; ?>>HR Manager</option>
-                                <option value="Studio Manager" <?php echo $employee['designation'] === 'Studio Manager' ? 'selected' : ''; ?>>Studio Manager</option>
-                                <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
-                                <option value="Marketing Manager" <?php echo $employee['designation'] === 'Marketing Manager' ? 'selected' : ''; ?>>Marketing Manager</option>
-                                <option value="Sales Manager" <?php echo $employee['designation'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
-                                <option value="Design Team Member" <?php echo $employee['designation'] === 'Design Team Member' ? 'selected' : ''; ?>>Design Team Member</option>
-                                <option value="Working Team Member" <?php echo $employee['designation'] === 'Working Team Member' ? 'selected' : ''; ?>>Working Team Member</option>
-                                <option value="Draughtsman" <?php echo $employee['designation'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
-                                <option value="3D Designer" <?php echo $employee['designation'] === '3D Designer' ? 'selected' : ''; ?>>3D Designer</option>
-                                <option value="Studio Trainee" <?php echo $employee['designation'] === 'Studio Trainee' ? 'selected' : ''; ?>>Studio Trainee</option>
-                                <option value="Business Developer" <?php echo $employee['designation'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
-                                <option value="Social Media Manager" <?php echo $employee['designation'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
-                                <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
-                                <option value="Site Coordinator" <?php echo $employee['designation'] === 'Site Coordinator' ? 'selected' : ''; ?>>Site Coordinator</option>
-                                <option value="Site Supervisor" <?php echo $employee['designation'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
-                                <option value="Site Trainee" <?php echo $employee['designation'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
-                                <option value="Relationship Manager" <?php echo $employee['designation'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
-                                <option value="Sales Consultant" <?php echo $employee['designation'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
-                                <option value="Field Sales Representative" <?php echo $employee['designation'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
-                                <option value="Purchase Manager" <?php echo $employee['designation'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
-                                <option value="Purchase Executive" <?php echo $employee['designation'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
-                                <option value="Sales Executive" <?php echo $employee['designation'] === 'Sales Executive' ? 'selected' : ''; ?>>Sales Executive</option>
-                                <option value="Graphic Designer" <?php echo $employee['designation'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
-                                <option value="Social Media Marketing" <?php echo $employee['designation'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
-                                <option value="Other" <?php echo $employee['designation'] === 'Other' ? 'selected' : ''; ?>>Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Joining Date</div>
-                        <div class="info-value">
-                            <input type="date" name="joining_date" value="<?php echo $employee['joining_date'] ? date('Y-m-d', strtotime($employee['joining_date'])) : ''; ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Reporting Manager</div>
-                        <div class="info-value">
-                            <input type="text" name="reporting_manager" value="<?php echo htmlspecialchars($employee['reporting_manager'] ?? ''); ?>">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Contact Information Section -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-address-card"></i>
-                        Contact Information
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Address</div>
-                        <div class="info-value">
-                            <input type="text" name="address" value="<?php echo htmlspecialchars($employee['address'] ?? ''); ?>">
+                    <!-- Work Information Section -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-briefcase"></i>
+                            Work Information
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Role</div>
+                            <div class="info-value">
+                                <select name="role" class="form-control">
+                                    <option value="">Select Role...</option>
+                                    <option value="admin" <?php echo $employee['role'] === 'admin' ? 'selected' : ''; ?>>
+                                        Admin</option>
+                                    <option value="HR" <?php echo $employee['role'] === 'HR' ? 'selected' : ''; ?>>HR
+                                    </option>
+                                    <option value="Senior Manager (Studio)" <?php echo $employee['role'] === 'Senior Manager (Studio)' ? 'selected' : ''; ?>>Senior Manager (Studio)</option>
+                                    <option value="Senior Manager (Site)" <?php echo $employee['role'] === 'Senior Manager (Site)' ? 'selected' : ''; ?>>Senior Manager (Site)</option>
+                                    <option value="Senior Manager (Marketing)" <?php echo $employee['role'] === 'Senior Manager (Marketing)' ? 'selected' : ''; ?>>Senior Manager (Marketing)</option>
+                                    <option value="Senior Manager (Sales)" <?php echo $employee['role'] === 'Senior Manager (Sales)' ? 'selected' : ''; ?>>Senior Manager (Sales)</option>
+                                    <option value="Senior Manager (Purchase)" <?php echo $employee['role'] === 'Senior Manager (Purchase)' ? 'selected' : ''; ?>>Senior Manager (Purchase)</option>
+                                    <option value="Design Team" <?php echo $employee['role'] === 'Design Team' ? 'selected' : ''; ?>>Design Team</option>
+                                    <option value="Working Team" <?php echo $employee['role'] === 'Working Team' ? 'selected' : ''; ?>>Working Team</option>
+                                    <option value="Draughtsman" <?php echo $employee['role'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
+                                    <option value="3D Designing Team" <?php echo $employee['role'] === '3D Designing Team' ? 'selected' : ''; ?>>3D Designing Team</option>
+                                    <option value="Studio Trainees" <?php echo $employee['role'] === 'Studio Trainees' ? 'selected' : ''; ?>>Studio Trainees</option>
+                                    <option value="Business Developer" <?php echo $employee['role'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
+                                    <option value="Social Media Manager" <?php echo $employee['role'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
+                                    <option value="Site Manager" <?php echo $employee['role'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                    <option value="Site Coordinator" <?php echo $employee['role'] === 'Site Coordinator' ? 'selected' : ''; ?>>Site Coordinator</option>
+                                    <option value="Site Supervisor" <?php echo $employee['role'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
+                                    <option value="Site Trainee" <?php echo $employee['role'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
+                                    <option value="Relationship Manager" <?php echo $employee['role'] === 'Relationship Manager' ? 'selected' : ''; ?>>Relationship Manager</option>
+                                    <option value="Sales Manager" <?php echo $employee['role'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
+                                    <option value="Sales Consultant" <?php echo $employee['role'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
+                                    <option value="Field Sales Representative" <?php echo $employee['role'] === 'Field Sales Representative' ? 'selected' : ''; ?>>Field Sales Representative</option>
+                                    <option value="Purchase Manager" <?php echo $employee['role'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
+                                    <option value="Purchase Executive" <?php echo $employee['role'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
+                                    <option value="Sales" <?php echo $employee['role'] === 'Sales' ? 'selected' : ''; ?>>
+                                        Sales</option>
+                                    <option value="Purchase" <?php echo $employee['role'] === 'Purchase' ? 'selected' : ''; ?>>Purchase</option>
+                                    <option value="Social Media Marketing" <?php echo $employee['role'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
+                                    <option value="Graphic Designer" <?php echo $employee['role'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
+                                    <option value="Maid Back Office" <?php echo $employee['role'] === 'Maid Back Office' ? 'selected' : ''; ?>>Maid Back Office</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Position</div>
+                            <div class="info-value">
+                                <select name="position" class="form-control">
+                                    <option value="">Select Position...</option>
+                                    <option value="Executive" <?php echo $employee['position'] === 'Executive' ? 'selected' : ''; ?>>Executive</option>
+                                    <option value="Manager" <?php echo $employee['position'] === 'Manager' ? 'selected' : ''; ?>>Manager</option>
+                                    <option value="Senior Manager" <?php echo $employee['position'] === 'Senior Manager' ? 'selected' : ''; ?>>Senior Manager</option>
+                                    <option value="Team Lead" <?php echo $employee['position'] === 'Team Lead' ? 'selected' : ''; ?>>Team Lead</option>
+                                    <option value="Supervisor" <?php echo $employee['position'] === 'Supervisor' ? 'selected' : ''; ?>>Supervisor</option>
+                                    <option value="Trainee" <?php echo $employee['position'] === 'Trainee' ? 'selected' : ''; ?>>Trainee</option>
+                                    <option value="Consultant" <?php echo $employee['position'] === 'Consultant' ? 'selected' : ''; ?>>Consultant</option>
+                                    <option value="Representative" <?php echo $employee['position'] === 'Representative' ? 'selected' : ''; ?>>Representative</option>
+                                    <option value="Developer" <?php echo $employee['position'] === 'Developer' ? 'selected' : ''; ?>>Developer</option>
+                                    <option value="Designer" <?php echo $employee['position'] === 'Designer' ? 'selected' : ''; ?>>Designer</option>
+                                    <option value="Administrator" <?php echo $employee['position'] === 'Administrator' ? 'selected' : ''; ?>>Administrator</option>
+                                    <option value="Graphic Designer" <?php echo $employee['position'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
+                                    <option value="Social Media Marketing" <?php echo $employee['position'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
+                                    <option value="Other" <?php echo $employee['position'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Designation</div>
+                            <div class="info-value">
+                                <select name="designation" class="form-control">
+                                    <option value="">Select Designation...</option>
+                                    <option value="Admin" <?php echo $employee['designation'] === 'Admin' ? 'selected' : ''; ?>>Admin</option>
+                                    <option value="HR Manager" <?php echo $employee['designation'] === 'HR Manager' ? 'selected' : ''; ?>>HR Manager</option>
+                                    <option value="Studio Manager" <?php echo $employee['designation'] === 'Studio Manager' ? 'selected' : ''; ?>>Studio Manager</option>
+                                    <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                    <option value="Marketing Manager" <?php echo $employee['designation'] === 'Marketing Manager' ? 'selected' : ''; ?>>Marketing Manager</option>
+                                    <option value="Sales Manager" <?php echo $employee['designation'] === 'Sales Manager' ? 'selected' : ''; ?>>Sales Manager</option>
+                                    <option value="Design Team Member" <?php echo $employee['designation'] === 'Design Team Member' ? 'selected' : ''; ?>>Design Team Member</option>
+                                    <option value="Working Team Member" <?php echo $employee['designation'] === 'Working Team Member' ? 'selected' : ''; ?>>Working Team Member</option>
+                                    <option value="Draughtsman" <?php echo $employee['designation'] === 'Draughtsman' ? 'selected' : ''; ?>>Draughtsman</option>
+                                    <option value="3D Designer" <?php echo $employee['designation'] === '3D Designer' ? 'selected' : ''; ?>>3D Designer</option>
+                                    <option value="Studio Trainee" <?php echo $employee['designation'] === 'Studio Trainee' ? 'selected' : ''; ?>>Studio Trainee</option>
+                                    <option value="Business Developer" <?php echo $employee['designation'] === 'Business Developer' ? 'selected' : ''; ?>>Business Developer</option>
+                                    <option value="Social Media Manager" <?php echo $employee['designation'] === 'Social Media Manager' ? 'selected' : ''; ?>>Social Media Manager</option>
+                                    <option value="Site Manager" <?php echo $employee['designation'] === 'Site Manager' ? 'selected' : ''; ?>>Site Manager</option>
+                                    <option value="Site Coordinator" <?php echo $employee['designation'] === 'Site Coordinator' ? 'selected' : ''; ?>>Site Coordinator</option>
+                                    <option value="Site Supervisor" <?php echo $employee['designation'] === 'Site Supervisor' ? 'selected' : ''; ?>>Site Supervisor</option>
+                                    <option value="Site Trainee" <?php echo $employee['designation'] === 'Site Trainee' ? 'selected' : ''; ?>>Site Trainee</option>
+                                    <option value="Relationship Manager" <?php echo $employee['designation'] === 'Relationship Manager' ? 'selected' : ''; ?>>
+                                        Relationship Manager</option>
+                                    <option value="Sales Consultant" <?php echo $employee['designation'] === 'Sales Consultant' ? 'selected' : ''; ?>>Sales Consultant</option>
+                                    <option value="Field Sales Representative" <?php echo $employee['designation'] === 'Field Sales Representative' ? 'selected' : ''; ?>>
+                                        Field Sales Representative</option>
+                                    <option value="Purchase Manager" <?php echo $employee['designation'] === 'Purchase Manager' ? 'selected' : ''; ?>>Purchase Manager</option>
+                                    <option value="Purchase Executive" <?php echo $employee['designation'] === 'Purchase Executive' ? 'selected' : ''; ?>>Purchase Executive</option>
+                                    <option value="Sales Executive" <?php echo $employee['designation'] === 'Sales Executive' ? 'selected' : ''; ?>>Sales Executive</option>
+                                    <option value="Graphic Designer" <?php echo $employee['designation'] === 'Graphic Designer' ? 'selected' : ''; ?>>Graphic Designer</option>
+                                    <option value="Social Media Marketing" <?php echo $employee['designation'] === 'Social Media Marketing' ? 'selected' : ''; ?>>Social Media Marketing</option>
+                                    <option value="Other" <?php echo $employee['designation'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Joining Date</div>
+                            <div class="info-value">
+                                <input type="date" name="joining_date"
+                                    value="<?php echo $employee['joining_date'] ? date('Y-m-d', strtotime($employee['joining_date'])) : ''; ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Reporting Manager</div>
+                            <div class="info-value">
+                                <input type="text" name="reporting_manager"
+                                    value="<?php echo htmlspecialchars($employee['reporting_manager'] ?? ''); ?>">
+                            </div>
                         </div>
                     </div>
-                    <div class="info-group">
-                        <div class="info-label">City</div>
-                        <div class="info-value">
-                            <input type="text" name="city" value="<?php echo htmlspecialchars($employee['city'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">State</div>
-                        <div class="info-value">
-                            <input type="text" name="state" value="<?php echo htmlspecialchars($employee['state'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Country</div>
-                        <div class="info-value">
-                            <input type="text" name="country" value="<?php echo htmlspecialchars($employee['country'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Postal Code</div>
-                        <div class="info-value">
-                            <input type="text" name="postal_code" value="<?php echo htmlspecialchars($employee['postal_code'] ?? ''); ?>">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Emergency Contact Section -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-phone-alt"></i>
-                        Emergency Contact
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Emergency Contact Name</div>
-                        <div class="info-value">
-                            <input type="text" name="emergency_contact_name" value="<?php echo htmlspecialchars($employee['emergency_contact_name'] ?? ''); ?>">
+                    <!-- Contact Information Section -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-address-card"></i>
+                            Contact Information
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Address</div>
+                            <div class="info-value">
+                                <input type="text" name="address"
+                                    value="<?php echo htmlspecialchars($employee['address'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">City</div>
+                            <div class="info-value">
+                                <input type="text" name="city"
+                                    value="<?php echo htmlspecialchars($employee['city'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">State</div>
+                            <div class="info-value">
+                                <input type="text" name="state"
+                                    value="<?php echo htmlspecialchars($employee['state'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Country</div>
+                            <div class="info-value">
+                                <input type="text" name="country"
+                                    value="<?php echo htmlspecialchars($employee['country'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Postal Code</div>
+                            <div class="info-value">
+                                <input type="text" name="postal_code"
+                                    value="<?php echo htmlspecialchars($employee['postal_code'] ?? ''); ?>">
+                            </div>
                         </div>
                     </div>
-                    <div class="info-group">
-                        <div class="info-label">Emergency Contact Phone</div>
-                        <div class="info-value">
-                            <input type="tel" name="emergency_contact_phone" value="<?php echo htmlspecialchars($employee['emergency_contact_phone'] ?? ''); ?>">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Bank Account Details Section -->
-                <div class="detail-section">
-                    <div class="section-title">
-                        <i class="fas fa-university"></i>
-                        Bank Account Details
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Account Holder Name</div>
-                        <div class="info-value">
-                            <input type="text" 
-                                   name="bank_details[account_holder]" 
-                                   value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['account_holder'] ?? ''); ?>">
+                    <!-- Emergency Contact Section -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-phone-alt"></i>
+                            Emergency Contact
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Emergency Contact Name</div>
+                            <div class="info-value">
+                                <input type="text" name="emergency_contact_name"
+                                    value="<?php echo htmlspecialchars($employee['emergency_contact_name'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Emergency Contact Phone</div>
+                            <div class="info-value">
+                                <input type="tel" name="emergency_contact_phone"
+                                    value="<?php echo htmlspecialchars($employee['emergency_contact_phone'] ?? ''); ?>">
+                            </div>
                         </div>
                     </div>
-                    <div class="info-group">
-                        <div class="info-label">Bank Name</div>
-                        <div class="info-value">
-                            <input type="text" 
-                                   name="bank_details[bank_name]" 
-                                   value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['bank_name'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Account Number</div>
-                        <div class="info-value">
-                            <input type="text" 
-                                   name="bank_details[account_number]" 
-                                   value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['account_number'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">IFSC Code</div>
-                        <div class="info-value">
-                            <input type="text" 
-                                   name="bank_details[ifsc_code]" 
-                                   value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['ifsc_code'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Branch Name</div>
-                        <div class="info-value">
-                            <input type="text" 
-                                   name="bank_details[branch_name]" 
-                                   value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['branch_name'] ?? ''); ?>">
-                        </div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Account Type</div>
-                        <div class="info-value">
-                            <select name="bank_details[account_type]">
-                                <?php 
-                                $accountType = json_decode($employee['bank_details'] ?? '{}', true)['account_type'] ?? '';
-                                ?>
-                                <option value="savings" <?php echo $accountType === 'savings' ? 'selected' : ''; ?>>Savings</option>
-                                <option value="current" <?php echo $accountType === 'current' ? 'selected' : ''; ?>>Current</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="edit-controls">
-                    <button type="submit" class="btn-save">Save Changes</button>
+                    <!-- Bank Account Details Section -->
+                    <div class="detail-section">
+                        <div class="section-title">
+                            <i class="fas fa-university"></i>
+                            Bank Account Details
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Account Holder Name</div>
+                            <div class="info-value">
+                                <input type="text" name="bank_details[account_holder]"
+                                    value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['account_holder'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Bank Name</div>
+                            <div class="info-value">
+                                <input type="text" name="bank_details[bank_name]"
+                                    value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['bank_name'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Account Number</div>
+                            <div class="info-value">
+                                <input type="text" name="bank_details[account_number]"
+                                    value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['account_number'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">IFSC Code</div>
+                            <div class="info-value">
+                                <input type="text" name="bank_details[ifsc_code]"
+                                    value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['ifsc_code'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Branch Name</div>
+                            <div class="info-value">
+                                <input type="text" name="bank_details[branch_name]"
+                                    value="<?php echo htmlspecialchars(json_decode($employee['bank_details'] ?? '{}', true)['branch_name'] ?? ''); ?>">
+                            </div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label">Account Type</div>
+                            <div class="info-value">
+                                <select name="bank_details[account_type]">
+                                    <?php
+                                    $accountType = json_decode($employee['bank_details'] ?? '{}', true)['account_type'] ?? '';
+                                    ?>
+                                    <option value="savings" <?php echo $accountType === 'savings' ? 'selected' : ''; ?>>
+                                        Savings</option>
+                                    <option value="current" <?php echo $accountType === 'current' ? 'selected' : ''; ?>>
+                                        Current</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="edit-controls">
+                        <button type="submit" class="btn-save">Save Changes</button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
         </div>
     </div>
 
     <!-- Add SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <!-- Add JavaScript for Sidebar functionality -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        
-        // Handle sidebar toggle click
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-            sidebarToggle.classList.toggle('collapsed');
-            
-            // Store the state in localStorage
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
-        
-        // Check if sidebar was collapsed previously
-        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (sidebarCollapsed) {
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('expanded');
-            sidebarToggle.classList.add('collapsed');
-        }
-        
-        // Add mobile detection for sidebar
-        function checkMobile() {
-            if (window.innerWidth <= 768) {
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+
+            // Handle sidebar toggle click
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+
+                // Store the state in localStorage
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            // Check if sidebar was collapsed previously
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
                 sidebar.classList.add('collapsed');
                 mainContent.classList.add('expanded');
                 sidebarToggle.classList.add('collapsed');
-            } else if (!sidebarCollapsed) {
-                sidebar.classList.remove('collapsed');
-                mainContent.classList.remove('expanded');
-                sidebarToggle.classList.remove('collapsed');
             }
-        }
-        
-        // Initial check
-        checkMobile();
-        
-        // Listen for window resize
-        window.addEventListener('resize', checkMobile);
-        
-        // Role-Position-Designation Relationship
-        const roleSelect = document.querySelector('select[name="role"]');
-        const positionSelect = document.querySelector('select[name="position"]');
-        const designationSelect = document.querySelector('select[name="designation"]');
-        
-        if (roleSelect && positionSelect && designationSelect) {
-            // Map roles to appropriate positions and designations
-            const roleMapping = {
-                'admin': {
-                    position: 'Administrator',
-                    designation: 'Admin'
-                },
-                'HR': {
-                    position: 'Manager',
-                    designation: 'HR Manager'
-                },
-                'Senior Manager (Studio)': {
-                    position: 'Senior Manager',
-                    designation: 'Studio Manager'
-                },
-                'Senior Manager (Site)': {
-                    position: 'Senior Manager',
-                    designation: 'Site Manager'
-                },
-                'Senior Manager (Marketing)': {
-                    position: 'Senior Manager',
-                    designation: 'Marketing Manager'
-                },
-                'Senior Manager (Sales)': {
-                    position: 'Senior Manager',
-                    designation: 'Sales Manager'
-                },
-                'Design Team': {
-                    position: 'Designer',
-                    designation: 'Design Team Member'
-                },
-                'Working Team': {
-                    position: 'Executive',
-                    designation: 'Working Team Member'
-                },
-                'Draughtsman': {
-                    position: 'Designer',
-                    designation: 'Draughtsman'
-                },
-                '3D Designing Team': {
-                    position: 'Designer',
-                    designation: '3D Designer'
-                },
-                'Studio Trainees': {
-                    position: 'Trainee',
-                    designation: 'Studio Trainee'
-                },
-                'Business Developer': {
-                    position: 'Developer',
-                    designation: 'Business Developer'
-                },
-                'Social Media Manager': {
-                    position: 'Manager',
-                    designation: 'Social Media Manager'
-                },
-                'Site Manager': {
-                    position: 'Manager',
-                    designation: 'Site Manager'
-                },
-                'Site Coordinator': {
-                    position: 'Coordinator',
-                    designation: 'Site Coordinator'
-                },
-                'Site Supervisor': {
-                    position: 'Supervisor',
-                    designation: 'Site Supervisor'
-                },
-                'Site Trainee': {
-                    position: 'Trainee',
-                    designation: 'Site Trainee'
-                },
-                'Relationship Manager': {
-                    position: 'Manager',
-                    designation: 'Relationship Manager'
-                },
-                'Sales Manager': {
-                    position: 'Manager',
-                    designation: 'Sales Manager'
-                },
-                'Sales Consultant': {
-                    position: 'Consultant',
-                    designation: 'Sales Consultant'
-                },
-                'Field Sales Representative': {
-                    position: 'Representative',
-                    designation: 'Field Sales Representative'
-                },
-                'Purchase Manager': {
-                    position: 'Manager',
-                    designation: 'Purchase Manager'
-                },
-                'Purchase Executive': {
-                    position: 'Executive',
-                    designation: 'Purchase Executive'
-                },
-                'Sales': {
-                    position: 'Executive',
-                    designation: 'Sales Executive'
-                },
-                'Purchase': {
-                    position: 'Executive',
-                    designation: 'Purchase Executive'
-                },
-                'Senior Manager (Purchase)': {
-                    position: 'Senior Manager',
-                    designation: 'Purchase Manager'
-                }
-            };
-            
-            // Function to update position and designation based on role
-            function updatePositionAndDesignation() {
-                const selectedRole = roleSelect.value;
-                if (selectedRole && roleMapping[selectedRole]) {
-                    positionSelect.value = roleMapping[selectedRole].position;
-                    designationSelect.value = roleMapping[selectedRole].designation;
+
+            // Add mobile detection for sidebar
+            function checkMobile() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                    sidebarToggle.classList.add('collapsed');
+                } else if (!sidebarCollapsed) {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                    sidebarToggle.classList.remove('collapsed');
                 }
             }
-            
-            // Add event listener to role select
-            roleSelect.addEventListener('change', updatePositionAndDesignation);
-            
-            // Initial update if role is already selected
-            if (roleSelect.value) {
-                updatePositionAndDesignation();
+
+            // Initial check
+            checkMobile();
+
+            // Listen for window resize
+            window.addEventListener('resize', checkMobile);
+
+            // Role-Position-Designation Relationship
+            const roleSelect = document.querySelector('select[name="role"]');
+            const positionSelect = document.querySelector('select[name="position"]');
+            const designationSelect = document.querySelector('select[name="designation"]');
+
+            if (roleSelect && positionSelect && designationSelect) {
+                // Map roles to appropriate positions and designations
+                const roleMapping = {
+                    'admin': {
+                        position: 'Administrator',
+                        designation: 'Admin'
+                    },
+                    'HR': {
+                        position: 'Manager',
+                        designation: 'HR Manager'
+                    },
+                    'Senior Manager (Studio)': {
+                        position: 'Senior Manager',
+                        designation: 'Studio Manager'
+                    },
+                    'Senior Manager (Site)': {
+                        position: 'Senior Manager',
+                        designation: 'Site Manager'
+                    },
+                    'Senior Manager (Marketing)': {
+                        position: 'Senior Manager',
+                        designation: 'Marketing Manager'
+                    },
+                    'Senior Manager (Sales)': {
+                        position: 'Senior Manager',
+                        designation: 'Sales Manager'
+                    },
+                    'Design Team': {
+                        position: 'Designer',
+                        designation: 'Design Team Member'
+                    },
+                    'Working Team': {
+                        position: 'Executive',
+                        designation: 'Working Team Member'
+                    },
+                    'Draughtsman': {
+                        position: 'Designer',
+                        designation: 'Draughtsman'
+                    },
+                    '3D Designing Team': {
+                        position: 'Designer',
+                        designation: '3D Designer'
+                    },
+                    'Studio Trainees': {
+                        position: 'Trainee',
+                        designation: 'Studio Trainee'
+                    },
+                    'Business Developer': {
+                        position: 'Developer',
+                        designation: 'Business Developer'
+                    },
+                    'Social Media Manager': {
+                        position: 'Manager',
+                        designation: 'Social Media Manager'
+                    },
+                    'Site Manager': {
+                        position: 'Manager',
+                        designation: 'Site Manager'
+                    },
+                    'Site Coordinator': {
+                        position: 'Coordinator',
+                        designation: 'Site Coordinator'
+                    },
+                    'Site Supervisor': {
+                        position: 'Supervisor',
+                        designation: 'Site Supervisor'
+                    },
+                    'Site Trainee': {
+                        position: 'Trainee',
+                        designation: 'Site Trainee'
+                    },
+                    'Relationship Manager': {
+                        position: 'Manager',
+                        designation: 'Relationship Manager'
+                    },
+                    'Sales Manager': {
+                        position: 'Manager',
+                        designation: 'Sales Manager'
+                    },
+                    'Sales Consultant': {
+                        position: 'Consultant',
+                        designation: 'Sales Consultant'
+                    },
+                    'Field Sales Representative': {
+                        position: 'Representative',
+                        designation: 'Field Sales Representative'
+                    },
+                    'Purchase Manager': {
+                        position: 'Manager',
+                        designation: 'Purchase Manager'
+                    },
+                    'Purchase Executive': {
+                        position: 'Executive',
+                        designation: 'Purchase Executive'
+                    },
+                    'Sales': {
+                        position: 'Executive',
+                        designation: 'Sales Executive'
+                    },
+                    'Purchase': {
+                        position: 'Executive',
+                        designation: 'Purchase Executive'
+                    },
+                    'Senior Manager (Purchase)': {
+                        position: 'Senior Manager',
+                        designation: 'Purchase Manager'
+                    },
+                    'Maid Back Office': {
+                        position: 'Executive',
+                        designation: 'Maid Back Office'
+                    }
+                };
+
+                // Function to update position and designation based on role
+                function updatePositionAndDesignation() {
+                    const selectedRole = roleSelect.value;
+                    if (selectedRole && roleMapping[selectedRole]) {
+                        positionSelect.value = roleMapping[selectedRole].position;
+                        designationSelect.value = roleMapping[selectedRole].designation;
+                    }
+                }
+
+                // Add event listener to role select
+                roleSelect.addEventListener('change', updatePositionAndDesignation);
+
+                // Initial update if role is already selected
+                if (roleSelect.value) {
+                    updatePositionAndDesignation();
+                }
             }
-        }
-    });
+        });
     </script>
 </body>
-</html> 
+
+</html>

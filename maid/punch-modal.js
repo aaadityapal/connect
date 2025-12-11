@@ -29,9 +29,8 @@ class PunchInModal {
     init() {
         this.createModal();
         this.setupEventListeners();
-        this.checkPunchStatus();
-        // Trigger button state update on initialization
-        this.updateButtonState();
+        // Fetch real status from server instead of trusting local storage blindly
+        this.fetchServerStatus();
     }
 
     /**
@@ -46,6 +45,58 @@ class PunchInModal {
     /**
      * Check if user already punched in today
      */
+    /**
+     * Fetch punch status from server to truth-check local storage
+     */
+    async fetchServerStatus() {
+        try {
+            const response = await fetch('api_check_status.php');
+            const data = await response.json();
+
+            if (data.success) {
+                // Determine actual state
+                const isPunchedInServer = data.has_record && !data.punch_out_time;
+
+                // Update internal state
+                this.isPunchedIn = isPunchedInServer;
+
+                // Construct punch data object compatible with local storage structure
+                if (data.has_record) {
+                    const punchData = {
+                        date: data.date, // Server returned valid format
+                        time: data.punch_in_time,
+                        attendance_id: data.attendance_id,
+                        status: 'success',
+                        punchOutTime: data.punch_out_time || null
+                    };
+
+                    this.currentPunchData = punchData;
+                    localStorage.setItem('lastPunchIn', JSON.stringify(punchData));
+                } else {
+                    // No record for today
+                    this.currentPunchData = null;
+                    localStorage.removeItem('lastPunchIn');
+                }
+
+                // Dispatch event to update external UI (buttons in index.php)
+                const eventName = isPunchedInServer ? 'punchInSuccess' : 'punchOutSuccess';
+                const event = new CustomEvent(eventName, {
+                    detail: this.currentPunchData || {}
+                });
+                document.dispatchEvent(event);
+
+                console.log('Synced with server status:', isPunchedInServer ? 'Punched In' : 'Punched Out');
+            }
+        } catch (error) {
+            console.error('Error fetching server status:', error);
+            // Fallback to local storage if server check fails
+            this.checkPunchStatus();
+        }
+    }
+
+    /**
+     * Check if user already punched in today (Local Storage Fallback)
+     */
     checkPunchStatus() {
         const lastPunchIn = localStorage.getItem('lastPunchIn');
         if (lastPunchIn) {
@@ -56,6 +107,10 @@ class PunchInModal {
                 if (punchData.date === today && !punchData.punchOutTime) {
                     this.isPunchedIn = true;
                     this.currentPunchData = punchData;
+                    // Dispatch event for UI
+                    document.dispatchEvent(new CustomEvent('punchInSuccess', { detail: punchData }));
+                } else {
+                    document.dispatchEvent(new CustomEvent('punchOutSuccess', { detail: {} }));
                 }
             } catch (e) {
                 console.error('Error parsing punch data:', e);
@@ -1033,7 +1088,7 @@ class PunchInModal {
                 // Store locally for reference (without the huge photo)
                 const localData = {
                     date: new Date().toLocaleDateString('en-IN'),
-                    time: new Date().toLocaleTimeString('en-IN'),
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
                     timestamp: Date.now(),
                     camera: this.isFrontCamera ? 'front' : 'back',
                     attendance_id: result.attendance_id,

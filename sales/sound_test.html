@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f9ff;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            flex: 1;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-in {
+            background-color: #10b981;
+        }
+
+        .btn-in:hover {
+            background-color: #059669;
+        }
+
+        .btn-out {
+            background-color: #ef4444;
+        }
+
+        .btn-out:hover {
+            background-color: #dc2626;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6b7280;
+            min-height: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>🔊 Audio Test</h2>
+        <p>Test the MP3 notification sounds for Punch In and Punch Out.</p>
+
+        <div class="btn-group">
+            <button class="btn-in" onclick="playPunchSound('in')">Punch In</button>
+            <button class="btn-out" onclick="playPunchSound('out')">Punch Out</button>
+        </div>
+
+        <div class="status" id="status">Ready to test</div>
+    </div>
+
+    <script>
+        function playPunchSound(type) {
+            const statusEl = document.getElementById('status');
+            const filename = type === 'in' ? 'punch_in.mp3' : 'punch_out.mp3';
+            const audioPath = `../notification/${filename}`;
+
+            statusEl.textContent = `Attempting to play ${filename}...`;
+
+            try {
+                const audio = new Audio(audioPath);
+
+                audio.addEventListener('canplaythrough', () => {
+                    statusEl.textContent = `Playing ${filename}...`;
+                });
+
+                audio.addEventListener('ended', () => {
+                    statusEl.textContent = 'Playback finished';
+                    setTimeout(() => {
+                        statusEl.textContent = 'Ready to test';
+                    }, 1000);
+                });
+
+                audio.addEventListener('error', (e) => {
+                    console.error('Audio error:', e);
+                    statusEl.textContent = `Error loading ${filename}. Check console.`;
+                    statusEl.style.color = '#ef4444';
+                });
+
+                const playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error('Play failed:', error);
+                        statusEl.textContent = `Play failed: ${error.message}`;
+                        statusEl.style.color = '#ef4444';
+                    });
+                }
+
+            } catch (error) {
+                console.error('System error:', error);
+                statusEl.textContent = `System error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

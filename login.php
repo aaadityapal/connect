@@ -5,7 +5,7 @@ require_once 'config.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $login_identifier = $_POST['login_identifier'];
     $password = $_POST['password'];
-    
+
     try {
         // Check for email, username, or unique_id
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR username = ? OR unique_id = ?");
@@ -43,23 +43,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Redirect based on role
             $senior_roles = [
-                'admin', 
-                'HR', 
-                'Senior Manager (Studio)', 
-                'Senior Manager (Site)', 
-                'Senior Manager (Marketing)', 
+                'admin',
+                'HR',
+                'Senior Manager (Studio)',
+                'Senior Manager (Site)',
+                'Senior Manager (Marketing)',
                 'Senior Manager (Sales)',
                 'Senior Manager (Purchase)',
                 'Site Supervisor',
                 'Site Coordinator',
                 'Site Manager',
                 'Purchase Manager',
-                'Sales'
+                'Sales',
+                'Maid Back Office'
             ];
 
             if (in_array($user['role'], $senior_roles)) {
                 // Redirect senior roles to their respective dashboards
-                switch($user['role']) {
+                switch ($user['role']) {
                     case 'admin':
                         header('Location: admin_dashboard.php');
                         break;
@@ -68,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         break;
                     case 'Senior Manager (Studio)':
                         header('Location: real.php');
-                        break;  
+                        break;
                     case 'Senior Manager (Site)':
                         header('Location: site_manager_dashboard.php');
                         break;
@@ -96,6 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     case 'Sales':
                         header('Location: sales/index.php');
                         break;
+                    case 'Maid Back Office':
+                        header('Location: maid/index.php');
+                        break;
                 }
             } else {
                 // All other roles go to similar_dashboard.php
@@ -107,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Location: login.php');
             exit();
         }
-    } catch(PDOException $e) {
+    } catch (PDOException $e) {
         $_SESSION['error'] = "Database Error: " . $e->getMessage();
         header('Location: login.php');
         exit();
@@ -117,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -124,7 +129,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="description" content="Login to ArchitectsHive - The premium platform for architects.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon" href="images/logo.png" type="image/x-icon">
     <style>
         :root {
@@ -519,6 +526,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </style>
 </head>
 </head>
+
 <body>
     <div class="split-layout">
         <!-- Left Side: Form -->
@@ -539,20 +547,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <p class="subtitle">Conneqts | Integrated Ecosystem</p>
                 </header>
 
-                <?php if(isset($_SESSION['error'])): ?>
+                <?php if (isset($_SESSION['error'])): ?>
                     <div class="alert-box alert-danger">
-                        <?php 
-                            echo $_SESSION['error'];
-                            unset($_SESSION['error']);
+                        <?php
+                        echo $_SESSION['error'];
+                        unset($_SESSION['error']);
                         ?>
                     </div>
                 <?php endif; ?>
 
-                <?php if(isset($_SESSION['success'])): ?>
+                <?php if (isset($_SESSION['success'])): ?>
                     <div class="alert-box alert-success">
-                        <?php 
-                            echo $_SESSION['success'];
-                            unset($_SESSION['success']);
+                        <?php
+                        echo $_SESSION['success'];
+                        unset($_SESSION['success']);
                         ?>
                     </div>
                 <?php endif; ?>
@@ -560,15 +568,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <form class="login-form" action="login.php" method="POST">
                     <div class="input-group">
                         <label for="login_identifier">ID / EMAIL / USERNAME</label>
-                        <input type="text" id="login_identifier" name="login_identifier" placeholder="example@gmail.com" required autocomplete="email">
+                        <input type="text" id="login_identifier" name="login_identifier" placeholder="example@gmail.com"
+                            required autocomplete="email">
                         <div class="input-line"></div>
                     </div>
 
                     <div class="input-group">
                         <label for="password">PASSWORD</label>
-                        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-                        <button type="button" id="togglePassword" class="password-toggle" aria-label="Toggle password visibility">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required
+                            autocomplete="current-password">
+                        <button type="button" id="togglePassword" class="password-toggle"
+                            aria-label="Toggle password visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
@@ -642,4 +655,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         });
     </script>
 </body>
+
 </html>

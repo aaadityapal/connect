@@ -111,10 +111,10 @@
         <span class="menu-text">Projects List</span>
     </div>
 
-    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'equipment_allocation.php' ? 'active' : ''; ?>"
-        onclick="window.location.href='equipment_allocation.php'">
+    <div class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'workforce.php' ? 'active' : ''; ?>"
+        onclick="window.location.href='workforce.php'">
         <i class="fas fa-tools"></i>
-        <span class="menu-text">Equipment Allocation</span>
+        <span class="menu-text">Work Allocation</span>
     </div>
 
     <!-- Reports Section -->

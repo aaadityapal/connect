@@ -835,6 +835,20 @@ try {
 
                 // Sidebar Toggle Logic
                 const sidebar = document.getElementById('sidebarContainer');
+                if (typeof feather !== 'undefined') feather.replace();
+
+                // Highlight active link (Dashboard)
+                setTimeout(() => {
+                    const links = sidebar.querySelectorAll('.nav-link');
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        // Check for 'index.php' or empty path which usually implies index
+                        if (href === 'index.php' || href === './' || (href === '' && window.location.pathname.endsWith('/'))) {
+                            link.classList.add('active');
+                        }
+                    });
+                }, 100);
+
                 const toggleBtn = document.getElementById('sidebarToggle');
                 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
                 const sidebarOverlay = document.getElementById('sidebarOverlay');

@@ -2,7 +2,7 @@ class TaskOverviewManager {
     constructor() {
         // Get user role safely
         this.userRole = document.body?.dataset?.userRole || 'default'; // Provide a default role
-        
+
         // Initialize only if DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.initialize());
@@ -17,7 +17,7 @@ class TaskOverviewManager {
         this.selectedYear = 2001; // Set default to 2001 since that's what we see in the data
         this.selectedMonth = 'all'; // Default to 'all'
         this.initializeFilters();
-        
+
         // Set default display text for month filter to "All Months"
         const monthFilter = document.getElementById('monthFilter');
         if (monthFilter) {
@@ -40,7 +40,7 @@ class TaskOverviewManager {
 
         // Add this to your initialization
         this.fetchForwardedTasks();
-        
+
         // Optionally, set up periodic refresh
         setInterval(() => this.fetchForwardedTasks(), 300000); // Refresh every 5 minutes
     }
@@ -52,14 +52,14 @@ class TaskOverviewManager {
         this.dateTo = document.getElementById('dateTo');
         this.applyFilterBtn = document.querySelector('.apply-filter-btn');
         this.clearFilterBtn = document.querySelector('.clear-filter-btn');
-        
+
         this.attachEventListeners();
         this.initializeProgressBars();
         this.updateCardTitles();
         this.fetchAllotedProjects();
         this.fetchProjectStages();
         this.fetchProjectSubstages();
-        
+
         this.attachCardClickHandlers();
         this.initializeSubstageToggles();
         // Initialize forwarded tasks section (placeholder for future functionality)
@@ -152,7 +152,7 @@ class TaskOverviewManager {
             if (projectsData.error) {
                 throw new Error(projectsData.error);
             }
-            
+
             this.updateProjectsCard(projectsData);
         } catch (error) {
             console.error('Error fetching alloted projects:', error);
@@ -181,15 +181,15 @@ class TaskOverviewManager {
         }
 
         // Count projects by status
-        const pendingProjects = projectsData.filter(project => 
+        const pendingProjects = projectsData.filter(project =>
             project.status === 'pending'
         ).length;
-        
-        const notStartedProjects = projectsData.filter(project => 
+
+        const notStartedProjects = projectsData.filter(project =>
             project.status === 'not_started'
         ).length;
 
-        const completedProjects = projectsData.filter(project => 
+        const completedProjects = projectsData.filter(project =>
             project.status === 'completed'
         ).length;
 
@@ -223,10 +223,10 @@ class TaskOverviewManager {
 
         if (upcomingDeadline) {
             const formattedDate = new Date(upcomingDeadline.end_date)
-                .toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                .toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                 });
             dueDateElement.innerHTML = `
                 <i class="far fa-calendar"></i>
@@ -278,13 +278,13 @@ class TaskOverviewManager {
                 credentials: 'include'
             });
 
-            
+
 
             let stagesData;
             try {
                 stagesData = JSON.parse(responseText);
             } catch (e) {
-                
+
                 throw new Error('Invalid JSON response from server');
             }
 
@@ -296,7 +296,7 @@ class TaskOverviewManager {
             if (stagesData.error) {
                 throw new Error(stagesData.error);
             }
-            
+
             this.updateStagesCard(stagesData);
         } catch (error) {
             console.error('Error fetching project stages:', error);
@@ -325,11 +325,11 @@ class TaskOverviewManager {
         }
 
         // Count stages by status
-        const pendingStages = stagesData.filter(stage => 
+        const pendingStages = stagesData.filter(stage =>
             stage.status === 'pending'
         ).length;
-        
-        const notStartedStages = stagesData.filter(stage => 
+
+        const notStartedStages = stagesData.filter(stage =>
             stage.status === 'not_started'
         ).length;
 
@@ -363,10 +363,10 @@ class TaskOverviewManager {
 
         if (upcomingDeadline) {
             const formattedDate = new Date(upcomingDeadline.end_date)
-                .toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                .toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                 });
             dueDateElement.innerHTML = `
                 <i class="far fa-calendar"></i>
@@ -423,7 +423,7 @@ class TaskOverviewManager {
             if (substagesData.error) {
                 throw new Error(substagesData.error);
             }
-            
+
             this.updateSubstagesCard(substagesData);
         } catch (error) {
             console.error('Error fetching project substages:', error);
@@ -467,11 +467,11 @@ class TaskOverviewManager {
         }
 
         // Count substages by status
-        const pendingSubstages = substagesData.filter(substage => 
+        const pendingSubstages = substagesData.filter(substage =>
             substage.status === 'pending'
         ).length;
-        
-        const notStartedSubstages = substagesData.filter(substage => 
+
+        const notStartedSubstages = substagesData.filter(substage =>
             substage.status === 'not_started'
         ).length;
 
@@ -504,10 +504,10 @@ class TaskOverviewManager {
 
         if (upcomingDeadline) {
             const formattedDate = new Date(upcomingDeadline.end_date)
-                .toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                .toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                 });
             dueDateElement.innerHTML = `
                 <i class="far fa-calendar"></i>
@@ -575,14 +575,14 @@ class TaskOverviewManager {
         console.log('Showing project details for ID:', projectId); // Debug log
         try {
             // Create a path that works both locally and on server
-            const baseUrl = window.location.pathname.includes('/index.php') 
-                ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) 
+            const baseUrl = window.location.pathname.includes('/index.php')
+                ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))
                 : window.location.pathname;
-                
+
             let apiPath = `${baseUrl}/dashboard/handlers/get_project_details.php?project_id=${projectId}`;
-            
+
             console.log('First attempt API path:', apiPath); // Debug log
-            
+
             try {
                 // First attempt with calculated path
                 const response = await fetch(apiPath, {
@@ -593,29 +593,29 @@ class TaskOverviewManager {
                     },
                     credentials: 'include'
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Project details data:', data); // Debug log
-                    
+
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to fetch project details');
                     }
-                    
+
                     // If we get here, the request was successful
                     this.renderProjectDetails(data.project);
                     return;
                 }
-                
+
                 console.warn('First API path attempt failed, trying alternative path');
             } catch (firstAttemptError) {
                 console.warn('First attempt failed with error:', firstAttemptError);
             }
-            
+
             // Second attempt with direct path
             apiPath = `dashboard/handlers/get_project_details.php?project_id=${projectId}`;
             console.log('Second attempt API path:', apiPath); // Debug log
-            
+
             const response = await fetch(apiPath, {
                 method: 'GET',
                 headers: {
@@ -632,11 +632,11 @@ class TaskOverviewManager {
 
             const data = await response.json();
             console.log('Project details data:', data); // Debug log
-            
+
             if (!data.success) {
                 throw new Error(data.message || 'Failed to fetch project details');
             }
-            
+
             this.renderProjectDetails(data.project);
         } catch (error) {
             console.error('Error fetching project details:', error);
@@ -647,7 +647,7 @@ class TaskOverviewManager {
                 mainContent.style.filter = 'none';
                 mainContent.classList.remove('blurred');
             }
-            
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -655,7 +655,7 @@ class TaskOverviewManager {
             });
         }
     }
-    
+
     renderProjectDetails(project) {
         const mainContent = document.querySelector('main');
 
@@ -679,7 +679,7 @@ class TaskOverviewManager {
                 mainContent.style.pointerEvents = 'auto';
             }
         };
-        
+
         // Create and show dialog using SweetAlert2
         Swal.fire({
             title: `<div class="dialog-header">
@@ -724,8 +724,8 @@ class TaskOverviewManager {
     generateProjectDetailsHTML(project) {
         const stagesHTML = project.stages.map(stage => {
             const isDisabled = stage.status === 'freezed' || stage.status === 'sent_to_client';
-            const disabledReason = stage.status === 'freezed' ? 
-                'This stage is currently frozen' : 
+            const disabledReason = stage.status === 'freezed' ?
+                'This stage is currently frozen' :
                 'This stage has been sent to client';
 
             const substagesHTML = stage.substages.map(substage => {
@@ -854,11 +854,11 @@ class TaskOverviewManager {
                                 <span class="date-label">From</span>
                                 <span class="date-value">
                                     <i class="far fa-calendar-alt"></i>
-                                    ${new Date(project.start_date).toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'short', 
-                                        day: 'numeric' 
-                                    })}
+                                    ${new Date(project.start_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        })}
                                 </span>
                             </div>
                             <div class="timeline-separator">
@@ -868,11 +868,11 @@ class TaskOverviewManager {
                                 <span class="date-label">To</span>
                                 <span class="date-value">
                                     <i class="far fa-calendar-alt"></i>
-                                    ${new Date(project.end_date).toLocaleDateString('en-US', { 
-                                        year: 'numeric', 
-                                        month: 'short', 
-                                        day: 'numeric' 
-                                    })}
+                                    ${new Date(project.end_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        })}
                                 </span>
                             </div>
                         </div>
@@ -894,7 +894,7 @@ class TaskOverviewManager {
 
     generateFilesTable(files = [], isDisabled) {
         console.log('Generating files table with:', files);
-        
+
         // Safety check for files array
         if (!Array.isArray(files)) {
             console.error('Files is not an array:', files);
@@ -990,7 +990,7 @@ class TaskOverviewManager {
         const uploadFormRow = row.nextElementSibling;
         const substageItem = row.closest('.substage-item');
         const substageId = substageItem.dataset.substageId;
-        
+
         // Hide any other open forms
         document.querySelectorAll('.upload-form-row').forEach(form => {
             if (form !== uploadFormRow) {
@@ -1010,7 +1010,7 @@ class TaskOverviewManager {
 
     async handleFileUpload(event) {
         event.preventDefault();
-        
+
         const form = event.target;
         const formData = new FormData(form);
         const substageId = form.querySelector('input[name="substageId"]').value;
@@ -1100,7 +1100,7 @@ class TaskOverviewManager {
             'sent_to_client': '📨',
 
         };
-        
+
         // Return the full icon HTML or a default icon if status not found
         return icons[status.toLowerCase()] || '📋';
     }
@@ -1140,16 +1140,16 @@ class TaskOverviewManager {
 
                 const details = substageItem.querySelector('.substage-details');
                 const buttonText = button.querySelector('span');
-                
+
                 const isExpanded = details.style.display === 'block';
-                
+
                 if (isExpanded) {
                     details.style.display = 'none';
                     buttonText.textContent = 'Show Details';
                 } else {
                     const files = await this.fetchSubstageFiles(substageId);
                     const tableContent = this.generateFilesTable(files);
-                    
+
                     details.innerHTML = `
                         <div class="details-content">
                             <table class="substage-files-table">
@@ -1167,7 +1167,7 @@ class TaskOverviewManager {
                             </table>
                         </div>
                     `;
-                    
+
                     details.style.display = 'block';
                     buttonText.textContent = 'Hide Details';
                 }
@@ -1185,7 +1185,7 @@ class TaskOverviewManager {
         window.updateSubstageStatus = async (selectElement, substageId) => {
             const newStatus = selectElement.value;
             const substageItem = selectElement.closest('.substage-item');
-            
+
             try {
                 const response = await fetch('dashboard/handlers/update_substage_status.php', {
                     method: 'POST',
@@ -1201,22 +1201,22 @@ class TaskOverviewManager {
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success) {
                     // Update the status attribute for color band
                     const substageElement = document.querySelector(`[data-substage-id="${substageId}"]`);
                     if (substageElement) {
                         substageElement.setAttribute('data-status', newStatus);
                     }
-                    
+
                     // Update the status badge
                     const statusBadge = substageItem.querySelector('.substage-status');
                     statusBadge.className = `substage-status status-${newStatus.toLowerCase()}`;
                     statusBadge.innerHTML = `${this.getStatusIcon(newStatus)} ${this.formatStatus(newStatus)}`;
-                    
+
                     // Update the data-status attribute
                     substageItem.dataset.status = newStatus;
-                    
+
                     // Show success message
                     Swal.fire({
                         icon: 'success',
@@ -1245,7 +1245,7 @@ class TaskOverviewManager {
     async updateStageStatus(selectElement, stageId) {
         const newStatus = selectElement.value;
         const stageItem = selectElement.closest('.stage-item');
-        
+
         try {
             const response = await fetch('dashboard/handlers/update_stage_status.php', {
                 method: 'POST',
@@ -1261,16 +1261,16 @@ class TaskOverviewManager {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 // Update the status badge
                 const statusBadge = stageItem.querySelector('.stage-status');
                 statusBadge.className = `stage-status status-${newStatus.toLowerCase()}`;
                 statusBadge.innerHTML = `${this.getStatusIcon(newStatus)} ${this.formatStatus(newStatus)}`;
-                
+
                 // Update the data-status attribute
                 stageItem.dataset.status = newStatus;
-                
+
                 // Show success message
                 Swal.fire({
                     icon: 'success',
@@ -1325,7 +1325,7 @@ class TaskOverviewManager {
             try {
                 data = JSON.parse(responseText);
             } catch (e) {
-                
+
                 throw new Error('Invalid JSON response');
             }
 
@@ -1356,12 +1356,12 @@ class TaskOverviewManager {
             yearFilter.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // Close month dropdown if open
                 document.getElementById('monthDropdown').style.display = 'none';
-                
+
                 // Toggle year dropdown
-                yearDropdown.style.cssText = yearDropdown.style.display === 'block' ? 
+                yearDropdown.style.cssText = yearDropdown.style.display === 'block' ?
                     'display: none;' : `
                     display: block;
                     position: absolute;
@@ -1378,10 +1378,10 @@ class TaskOverviewManager {
                     e.stopPropagation();
                     this.selectedYear = parseInt(option.dataset.year);
                     yearFilter.querySelector('span').textContent = this.selectedYear;
-                    
+
                     yearOptions.forEach(opt => opt.classList.remove('selected'));
                     option.classList.add('selected');
-                    
+
                     yearDropdown.style.display = 'none';
                     this.filterTasks();
                 });
@@ -1397,12 +1397,12 @@ class TaskOverviewManager {
             monthFilter.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 // Close year dropdown if open
                 document.getElementById('yearDropdown').style.display = 'none';
-                
+
                 // Toggle month dropdown
-                monthDropdown.style.cssText = monthDropdown.style.display === 'block' ? 
+                monthDropdown.style.cssText = monthDropdown.style.display === 'block' ?
                     'display: none;' : `
                     display: block;
                     position: absolute;
@@ -1419,10 +1419,10 @@ class TaskOverviewManager {
                     e.stopPropagation();
                     this.selectedMonth = option.dataset.month === 'all' ? 'all' : parseInt(option.dataset.month);
                     monthFilter.querySelector('span').textContent = option.textContent;
-                    
+
                     monthOptions.forEach(opt => opt.classList.remove('selected'));
                     option.classList.add('selected');
-                    
+
                     monthDropdown.style.display = 'none';
                     this.filterTasks();
                 });
@@ -1506,13 +1506,13 @@ class TaskOverviewManager {
     async handleForward(e) {
         try {
             e.preventDefault();
-            
+
             const stageElement = e.target.closest('.stage-item');
             const substageElement = e.target.closest('.substage-item');
-            
+
             // Try multiple possible parent containers
             const projectContainer = e.target.closest('[data-project-id], .project-details, .project-item, .project');
-            
+
             // Debug logs
             console.log('Elements found:', {
                 target: e.target,
@@ -1549,12 +1549,12 @@ class TaskOverviewManager {
                 if (isNaN(substageId)) {
                     throw new Error('Invalid substage ID');
                 }
-                
+
                 console.log('Fetching substage details:', { substageId, projectId });
-                
+
                 const response = await fetch(`dashboard/handlers/get_substage_details.php?substage_id=${substageId}&project_id=${projectId}`);
                 const data = await response.json();
-                
+
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to fetch substage details');
                 }
@@ -1574,12 +1574,12 @@ class TaskOverviewManager {
                 if (isNaN(stageId)) {
                     throw new Error('Invalid stage ID');
                 }
-                
+
                 console.log('Fetching stage details:', { stageId, projectId });
-                
+
                 const response = await fetch(`dashboard/handlers/get_stage_details.php?stage_id=${stageId}&project_id=${projectId}`);
                 const data = await response.json();
-                
+
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to fetch stage details');
                 }
@@ -1641,7 +1641,7 @@ class TaskOverviewManager {
             }
 
             const data = await response.json();
-            
+
             if (data.success) {
                 // Show success message using your notification system
                 if (typeof this.showNotification === 'function') {
@@ -1696,9 +1696,9 @@ class TaskOverviewManager {
                         <div class="forward-info">
                             <p class="project-info">Project: ${itemData.projectTitle || 'N/A'}</p>
                             <p>Forward "${itemData.title}" to:</p>
-                            ${itemData.currentAssignee ? 
-                                `<p class="current-assignee">Currently assigned to: User ID ${itemData.currentAssignee}</p>` 
-                                : ''}
+                            ${itemData.currentAssignee ?
+                        `<p class="current-assignee">Currently assigned to: User ID ${itemData.currentAssignee}</p>`
+                        : ''}
                         </div>
                         <div class="managers-list">
                             ${userListHTML}
@@ -1711,7 +1711,7 @@ class TaskOverviewManager {
                 preConfirm: () => {
                     const selectedUsers = Array.from(document.querySelectorAll('.manager-checkbox:checked'))
                         .map(checkbox => parseInt(checkbox.value));
-                    
+
                     if (selectedUsers.length === 0) {
                         Swal.showValidationMessage('Please select at least one user');
                         return false;
@@ -1754,12 +1754,12 @@ class TaskOverviewManager {
                     <div class="department-title">${department}</div>
                     <div class="users-grid">
                         ${users.map(user => {
-                            if (!user || typeof user !== 'object') {
-                                console.error('Invalid user object:', user);
-                                return '';
-                            }
+                if (!user || typeof user !== 'object') {
+                    console.error('Invalid user object:', user);
+                    return '';
+                }
 
-                            return `
+                return `
                                 <div class="user-item">
                                     <div class="user-checkbox-wrapper">
                                         <input type="checkbox" 
@@ -1785,7 +1785,7 @@ class TaskOverviewManager {
                                     </div>
                                 </div>
                             `;
-                        }).join('')}
+            }).join('')}
                     </div>
                 </div>
             `;
@@ -1813,7 +1813,7 @@ class TaskOverviewManager {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 this.renderForwardedTasks(data.tasks);
             } else {
@@ -1880,7 +1880,7 @@ class TaskOverviewManager {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 // Create detailed popup content based on task type
                 let detailsHtml = `
@@ -2015,7 +2015,7 @@ class TaskOverviewManager {
 }
 
 // Initialize the TaskOverviewManager
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     window.taskManager = new TaskOverviewManager();
     // Fetch forwarded tasks when the page loads
     taskManager.fetchForwardedTasks();
@@ -2082,7 +2082,7 @@ window.sendFile = async (fileId) => {
         });
 
         const managersData = await managersResponse.json();
-        
+
         if (!managersData.success) {
             throw new Error(managersData.message || 'Failed to fetch managers');
         }
@@ -2154,7 +2154,7 @@ window.sendFile = async (fileId) => {
                 const fileRow = document.querySelector(`tr[data-file-id="${fileId}"]`);
                 if (fileRow) {
                     fileRow.classList.add('file-sent-for-approval');
-                    
+
                     // Update file status cell
                     const statusCell = fileRow.querySelector('td:nth-child(3)');
                     if (statusCell) {
@@ -2185,7 +2185,7 @@ window.sendFile = async (fileId) => {
                     const statusDropdown = substageHeader.querySelector('select');
                     if (statusDropdown) {
                         statusDropdown.value = 'sent_for_approval';
-                        
+
                         // Create and dispatch a change event
                         const event = new Event('change', { bubbles: true });
                         statusDropdown.dispatchEvent(event);
@@ -2216,7 +2216,7 @@ window.sendFile = async (fileId) => {
 window.approveFile = async (fileId) => {
     console.log('=== START MANAGER APPROVE FILE PROCESS ===');
     console.log('FileID:', fileId);
-    
+
     try {
         const taskManager = window.taskOverviewManager;
         if (!taskManager) {
@@ -2225,10 +2225,10 @@ window.approveFile = async (fileId) => {
 
         const fileRow = document.querySelector(`tr[data-file-id="${fileId}"]`);
         console.log('File row found:', !!fileRow);
-        
+
         const substageItem = fileRow?.closest('.substage-item');
         console.log('Substage item found:', !!substageItem);
-        
+
         const substageId = substageItem?.dataset?.substageId;
         console.log('Substage ID:', substageId);
 
@@ -2245,7 +2245,7 @@ window.approveFile = async (fileId) => {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 file_id: fileId,
                 substage_id: substageId,
                 action: 'manager_approve'
@@ -2288,7 +2288,7 @@ window.approveFile = async (fileId) => {
 
                 if (allApproved) {
                     console.log('All files are approved, updating substage status...');
-                    
+
                     // Update the substage status in the UI first
                     const substageHeader = substageItem.querySelector('.substage-header');
                     console.log('Found substage header:', !!substageHeader);
@@ -2336,7 +2336,7 @@ window.approveFile = async (fileId) => {
 
                         if (statusData.success) {
                             console.log('Successfully updated substage status to completed');
-                            
+
                             // Refresh the page after a short delay
                             setTimeout(() => {
                                 window.location.reload();
@@ -2416,61 +2416,61 @@ function updateFileStatus(fileId, action) {
             action: action
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update the main status dropdown in the header
-            const statusDropdown = document.querySelector('.status-dropdown select, .status-dropdown button');
-            if (statusDropdown && data.all_files_approved) {
-                if (statusDropdown.tagName === 'SELECT') {
-                    statusDropdown.value = 'completed';
-                } else {
-                    statusDropdown.textContent = 'Completed';
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the main status dropdown in the header
+                const statusDropdown = document.querySelector('.status-dropdown select, .status-dropdown button');
+                if (statusDropdown && data.all_files_approved) {
+                    if (statusDropdown.tagName === 'SELECT') {
+                        statusDropdown.value = 'completed';
+                    } else {
+                        statusDropdown.textContent = 'Completed';
+                    }
                 }
-            }
 
-            // Force update the visible status in the UI
-            const statusElements = document.querySelectorAll(`[data-substage-id="${data.substage_id}"] .status-text, 
+                // Force update the visible status in the UI
+                const statusElements = document.querySelectorAll(`[data-substage-id="${data.substage_id}"] .status-text, 
                                                            [data-substage-id="${data.substage_id}"] .substage-status`);
-            statusElements.forEach(element => {
-                if (data.all_files_approved) {
-                    element.textContent = 'Completed';
-                    element.className = element.className.replace('in-review', 'completed');
+                statusElements.forEach(element => {
+                    if (data.all_files_approved) {
+                        element.textContent = 'Completed';
+                        element.className = element.className.replace('in-review', 'completed');
+                    }
+                });
+
+                // Update the dropdown if it exists
+                const dropdown = document.querySelector('.status-dropdown .dropdown-toggle');
+                if (dropdown && data.all_files_approved) {
+                    dropdown.textContent = 'Completed';
                 }
-            });
 
-            // Update the dropdown if it exists
-            const dropdown = document.querySelector('.status-dropdown .dropdown-toggle');
-            if (dropdown && data.all_files_approved) {
-                dropdown.textContent = 'Completed';
+                // Refresh the page if needed (optional)
+                // if (data.all_files_approved) {
+                //     location.reload();
+                // }
             }
-
-            // Refresh the page if needed (optional)
-            // if (data.all_files_approved) {
-            //     location.reload();
-            // }
-        }
-    })
-    .catch(error => console.error('Error:', error));
+        })
+        .catch(error => console.error('Error:', error));
 }
 
 // Add this to ensure the status is checked on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const substages = document.querySelectorAll('[data-substage-id]');
     substages.forEach(substage => {
         const substageId = substage.dataset.substageId;
         const fileStatuses = substage.querySelectorAll('.status-badge');
-        const allApproved = Array.from(fileStatuses).every(status => 
+        const allApproved = Array.from(fileStatuses).every(status =>
             status.textContent.trim().toLowerCase() === 'approved'
         );
-        
+
         if (allApproved && fileStatuses.length > 0) {
             const statusElements = substage.querySelectorAll('.status-text, .substage-status');
             statusElements.forEach(element => {
                 element.textContent = 'Completed';
                 element.className = element.className.replace('in-review', 'completed');
             });
-            
+
             const dropdown = document.querySelector('.status-dropdown .dropdown-toggle');
             if (dropdown) {
                 dropdown.textContent = 'Completed';

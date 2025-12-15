@@ -199,7 +199,7 @@ $stats = [
 
 // Get current date and time in IST (Indian Standard Time)
 date_default_timezone_set('Asia/Kolkata');
-$currentHour = (int)date('H');
+$currentHour = (int) date('H');
 $currentMinute = date('i');
 $currentSecond = date('s');
 $currentTime = date('h:i A'); // Format with leading zero for hour
@@ -223,11 +223,12 @@ if ($currentHour < 12) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Site Manager Dashboard</title>
-    
+
     <!-- Include CSS files -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -278,14 +279,14 @@ if ($currentHour < 12) {
             z-index: 900;
             flex-wrap: wrap;
         }
-        
+
         .greeting-text {
             flex: 1;
             min-width: 280px;
             margin-right: 20px;
             z-index: 900;
         }
-        
+
         .greeting-text h1 {
             font-size: 1.7rem;
             font-weight: 600;
@@ -294,18 +295,18 @@ if ($currentHour < 12) {
             align-items: center;
             word-break: break-word;
         }
-        
+
         .greeting-text p {
             color: var(--text-muted);
             font-size: 1rem;
             margin: 0 0 12px 0;
         }
-        
+
         .greeting-icon {
             margin-right: 15px;
             font-size: 1.5rem;
         }
-        
+
         .time-info {
             display: flex;
             align-items: center;
@@ -315,18 +316,18 @@ if ($currentHour < 12) {
             font-size: 0.9rem;
             color: var(--text-muted);
         }
-        
+
         .time-item {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        
+
         .time-item i {
             color: var(--primary-color);
             font-size: 1rem;
         }
-        
+
         .time-label {
             background-color: rgba(13, 110, 253, 0.1);
             color: var(--primary-color);
@@ -336,30 +337,30 @@ if ($currentHour < 12) {
             border-radius: 12px;
             margin-left: 5px;
         }
-        
+
         @media (max-width: 768px) {
-        .main-content {
+            .main-content {
                 margin-left: 0;
-            padding: 20px;
-        }
+                padding: 20px;
+            }
 
             #leftPanel {
                 width: 0;
-            overflow: hidden;
-        }
+                overflow: hidden;
+            }
 
             #leftPanel.mobile-open {
                 width: 250px;
             }
-            
+
             .greeting-text h1 {
                 font-size: 1.5rem;
             }
-            
+
             .user-actions {
                 margin-top: 15px;
                 justify-content: flex-start;
-            width: 100%;
+                width: 100%;
             }
         }
 
@@ -374,7 +375,8 @@ if ($currentHour < 12) {
         }
 
         /* Notification Bell */
-        .notification-dropdown, .profile-dropdown {
+        .notification-dropdown,
+        .profile-dropdown {
             position: relative;
             z-index: 10000 !important;
         }
@@ -563,7 +565,7 @@ if ($currentHour < 12) {
             display: flex;
             align-items: center;
         }
-        
+
         .greeting-section {
             background-color: #fff;
             border-radius: 10px;
@@ -575,21 +577,21 @@ if ($currentHour < 12) {
             width: 100%;
             box-sizing: border-box;
             /* Diwali Theme Background */
-            background-image: 
+            background-image:
                 radial-gradient(circle at 10% 20%, rgba(255, 215, 0, 0.1) 0px, transparent 2px),
                 radial-gradient(circle at 20% 80%, rgba(255, 69, 0, 0.1) 0px, transparent 2px),
                 radial-gradient(circle at 80% 30%, rgba(255, 215, 0, 0.1) 0px, transparent 2px),
                 radial-gradient(circle at 60% 70%, rgba(255, 69, 0, 0.1) 0px, transparent 2px);
             background-size: 100px 100px;
         }
-        
+
         /* Diwali Decorations */
         .diwali-decoration {
             position: absolute;
             z-index: 1;
             pointer-events: none;
         }
-        
+
         .diya {
             width: 24px;
             height: 30px;
@@ -599,7 +601,7 @@ if ($currentHour < 12) {
             box-shadow: 0 0 8px #FFD700, 0 0 20px #FF8C00;
             animation: diyaGlow 2s infinite alternate;
         }
-        
+
         .diya::before {
             content: '';
             position: absolute;
@@ -610,7 +612,7 @@ if ($currentHour < 12) {
             height: 12px;
             background: #8B4513;
         }
-        
+
         .diya::after {
             content: '';
             position: absolute;
@@ -624,7 +626,7 @@ if ($currentHour < 12) {
             box-shadow: 0 0 10px #FFD700, 0 0 20px #FF8C00;
             animation: flameFlicker 0.5s infinite alternate;
         }
-        
+
         .firecracker {
             position: absolute;
             width: 6px;
@@ -633,7 +635,7 @@ if ($currentHour < 12) {
             border-radius: 3px;
             animation: firecrackerExplode 3s infinite;
         }
-        
+
         .firecracker::before {
             content: '';
             position: absolute;
@@ -646,7 +648,7 @@ if ($currentHour < 12) {
             border-radius: 50%;
             box-shadow: 0 0 5px #FFD700;
         }
-        
+
         .sparkle {
             position: absolute;
             width: 4px;
@@ -656,32 +658,61 @@ if ($currentHour < 12) {
             box-shadow: 0 0 8px #FFD700;
             animation: sparkleTwinkle 1.5s infinite alternate;
         }
-        
+
         @keyframes diyaGlow {
-            0% { box-shadow: 0 0 8px #FFD700, 0 0 20px #FF8C00; }
-            100% { box-shadow: 0 0 12px #FFD700, 0 0 25px #FF8C00, 0 0 35px #FF8C00; }
+            0% {
+                box-shadow: 0 0 8px #FFD700, 0 0 20px #FF8C00;
+            }
+
+            100% {
+                box-shadow: 0 0 12px #FFD700, 0 0 25px #FF8C00, 0 0 35px #FF8C00;
+            }
         }
-        
+
         @keyframes flameFlicker {
-            0% { box-shadow: 0 0 10px #FFD700, 0 0 20px #FF8C00; }
-            100% { box-shadow: 0 0 15px #FFD700, 0 0 25px #FF8C00, 0 0 35px #FF8C00; }
+            0% {
+                box-shadow: 0 0 10px #FFD700, 0 0 20px #FF8C00;
+            }
+
+            100% {
+                box-shadow: 0 0 15px #FFD700, 0 0 25px #FF8C00, 0 0 35px #FF8C00;
+            }
         }
-        
+
         @keyframes firecrackerExplode {
-            0% { transform: translateY(0); opacity: 1; }
-            50% { transform: translateY(-20px); opacity: 0.8; }
-            100% { transform: translateY(-100px); opacity: 0; }
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translateY(-20px);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
         }
-        
+
         @keyframes sparkleTwinkle {
-            0% { opacity: 0.3; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1.2); }
+            0% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
         }
+
         .notification-icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 12px; 
+            margin-right: 12px;
             color: white;
             flex-shrink: 0;
         }
@@ -771,6 +802,7 @@ if ($currentHour < 12) {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -782,7 +814,7 @@ if ($currentHour < 12) {
             .greeting-container {
                 flex-direction: column;
             }
-            
+
             .user-actions {
                 margin-left: 0;
                 margin-top: 20px;
@@ -792,7 +824,7 @@ if ($currentHour < 12) {
 
         /* Add or update overlay styles in your CSS */
         .overlay {
-                position: fixed;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -804,9 +836,9 @@ if ($currentHour < 12) {
 
         .overlay.active {
             display: block;
-            }
-            
-            .main-container {
+        }
+
+        .main-container {
             display: flex;
             height: 100vh;
             overflow: hidden;
@@ -819,7 +851,8 @@ if ($currentHour < 12) {
             overflow-y: auto;
             height: 100vh;
             box-sizing: border-box;
-            margin-left: 250px; /* Match the width of the left panel */
+            margin-left: 250px;
+            /* Match the width of the left panel */
             position: relative;
             transition: margin-left 0.3s;
         }
@@ -831,7 +864,8 @@ if ($currentHour < 12) {
         /* Collapsed left panel styles */
         #leftPanel.collapsed {
             width: 70px;
-            overflow: visible; /* Important to keep the toggle button visible */
+            overflow: visible;
+            /* Important to keep the toggle button visible */
         }
 
         body {
@@ -979,7 +1013,7 @@ if ($currentHour < 12) {
             height: 100vh;
             overflow-y: auto;
             overflow-x: hidden;
-                position: fixed;
+            position: fixed;
             left: 0;
             top: 0;
         }
@@ -1002,7 +1036,8 @@ if ($currentHour < 12) {
             background-color: rgba(255, 255, 255, 0.3);
         }
 
-        .profile-menu, .notification-menu {
+        .profile-menu,
+        .notification-menu {
             z-index: 10001 !important;
         }
 
@@ -1028,19 +1063,19 @@ if ($currentHour < 12) {
             .hamburger-menu {
                 display: flex;
             }
-            
+
             .main-content {
                 margin-left: 0;
                 padding: 20px;
             }
-            
+
             #leftPanel {
                 width: 0;
                 overflow: hidden;
                 transform: translateX(-100%);
                 transition: transform 0.3s, width 0.3s;
             }
-            
+
             #leftPanel.mobile-open {
                 width: 250px;
                 transform: translateX(0);
@@ -1075,7 +1110,8 @@ if ($currentHour < 12) {
         /* Prevent the panel from completely disappearing */
         #leftPanel.collapsed {
             width: 70px;
-            overflow: visible; /* Important to keep the toggle button visible */
+            overflow: visible;
+            /* Important to keep the toggle button visible */
         }
 
         /* Hide text but keep icons when collapsed */
@@ -1160,7 +1196,8 @@ if ($currentHour < 12) {
             position: relative;
             width: 100%;
             height: 0;
-            padding-bottom: 75%; /* 4:3 aspect ratio */
+            padding-bottom: 75%;
+            /* 4:3 aspect ratio */
             background-color: #000;
             border-radius: 8px;
             overflow: hidden;
@@ -1180,7 +1217,8 @@ if ($currentHour < 12) {
             position: relative;
             width: 100%;
             height: 0;
-            padding-bottom: 75%; /* 4:3 aspect ratio */
+            padding-bottom: 75%;
+            /* 4:3 aspect ratio */
             background-color: #f1f1f1;
             border-radius: 8px;
             overflow: hidden;
@@ -1288,12 +1326,12 @@ if ($currentHour < 12) {
                 width: 95%;
                 max-height: 90vh;
             }
-            
+
             .camera-controls {
                 flex-direction: column;
                 width: 100%;
             }
-            
+
             .camera-btn {
                 width: 100%;
                 justify-content: center;
@@ -1320,19 +1358,19 @@ if ($currentHour < 12) {
             width: 20px;
             text-align: center;
         }
-        
+
         .location-item.success i {
             color: #28a745;
         }
-        
+
         .location-item.warning i {
             color: #ffc107;
         }
-        
+
         .location-item.danger i {
             color: #dc3545;
         }
-        
+
         /* Outside Location Reason Container */
         .outside-location-reason {
             background-color: #fff3cd;
@@ -1341,21 +1379,21 @@ if ($currentHour < 12) {
             padding: 15px;
             margin-top: 15px;
         }
-        
+
         .outside-location-reason label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
             color: #856404;
         }
-        
+
         .word-count-display {
             font-size: 12px;
             color: #6c757d;
             text-align: right;
             margin-top: 5px;
         }
-        
+
         /* Shift Info Styles */
         .shift-info-container {
             background-color: #f8f9fa;
@@ -1364,7 +1402,7 @@ if ($currentHour < 12) {
             margin-top: 15px;
             font-size: 0.9rem;
         }
-        
+
         .shift-info-container h4 {
             margin-top: 0;
             margin-bottom: 10px;
@@ -1374,29 +1412,29 @@ if ($currentHour < 12) {
             align-items: center;
             gap: 8px;
         }
-        
+
         .shift-info-container h4 i {
             color: #0d6efd;
         }
-        
+
         .shift-details {
             display: flex;
             flex-direction: column;
             gap: 5px;
         }
-        
+
         .shift-item {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
+
         .shift-item i {
             color: #0d6efd;
             width: 20px;
             text-align: center;
         }
-        
+
         /* Camera Controls */
         .rotate-camera-btn {
             position: absolute;
@@ -1420,12 +1458,12 @@ if ($currentHour < 12) {
                 width: 95%;
                 max-height: 90vh;
             }
-            
+
             .camera-controls {
                 flex-direction: column;
                 width: 100%;
             }
-            
+
             .camera-btn {
                 width: 100%;
                 justify-content: center;
@@ -1446,7 +1484,7 @@ if ($currentHour < 12) {
             align-items: center;
             flex-direction: column;
         }
-        
+
         .preloader-content {
             background-color: white;
             padding: 30px;
@@ -1454,12 +1492,12 @@ if ($currentHour < 12) {
             text-align: center;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
-        
+
         .preloader-content .spinner-border {
             width: 3rem;
             height: 3rem;
         }
-        
+
         #preloaderMessage {
             font-size: 1.1rem;
             margin-top: 15px;
@@ -1467,10 +1505,11 @@ if ($currentHour < 12) {
         }
     </style>
 </head>
+
 <body>
     <!-- Overlay for mobile menu -->
     <div class="overlay" id="overlay"></div>
-    
+
     <!-- Hamburger menu for mobile -->
     <div class="hamburger-menu" id="hamburgerMenu">
         <i class="fas fa-bars"></i>
@@ -1483,7 +1522,7 @@ if ($currentHour < 12) {
                 <h3 class="camera-title" id="cameraTitle">Take Selfie for Punch In</h3>
                 <button class="close-camera-btn" id="closeCameraBtn">
                     <i class="fas fa-times"></i>
-            </button>
+                </button>
             </div>
             <div class="camera-body">
                 <div class="video-container" id="videoContainer">
@@ -1517,7 +1556,8 @@ if ($currentHour < 12) {
                         </div>
                     </div>
                 </div>
-                <div class="shift-info-container" style="margin-top: 15px; background-color: #f8f9fa; border-radius: 8px; padding: 12px;">
+                <div class="shift-info-container"
+                    style="margin-top: 15px; background-color: #f8f9fa; border-radius: 8px; padding: 12px;">
                     <h4><i class="fas fa-business-time"></i> Your Shift</h4>
                     <div class="shift-details" id="shiftDetails">
                         <div class="shift-item">
@@ -1534,87 +1574,91 @@ if ($currentHour < 12) {
                         </div>
                     </div>
                 </div>
-                        <!-- Outside location reason container -->
-        <div class="outside-location-reason" id="outsideLocationReasonContainer" style="display: none; margin-top: 15px;">
-            <label for="outsideLocationReason">Please provide a reason for being outside assigned location:</label>
-            <textarea id="outsideLocationReason" class="form-control" rows="3" placeholder="Enter reason here..."></textarea>
-            <div id="outsideLocationWordCount" class="word-count-display">Words: 0 (minimum 5)</div>
-        </div>
-        <script>
-            // Initialize word counter when the document is ready
-            document.addEventListener('DOMContentLoaded', function() {
-                const outsideLocationReason = document.getElementById('outsideLocationReason');
-                const outsideLocationWordCount = document.getElementById('outsideLocationWordCount');
-                
-                if (outsideLocationReason && outsideLocationWordCount) {
-                    outsideLocationReason.addEventListener('input', function() {
-                        updateWordCount(this, outsideLocationWordCount);
+                <!-- Outside location reason container -->
+                <div class="outside-location-reason" id="outsideLocationReasonContainer"
+                    style="display: none; margin-top: 15px;">
+                    <label for="outsideLocationReason">Please provide a reason for being outside assigned
+                        location:</label>
+                    <textarea id="outsideLocationReason" class="form-control" rows="3"
+                        placeholder="Enter reason here..."></textarea>
+                    <div id="outsideLocationWordCount" class="word-count-display">Words: 0 (minimum 5)</div>
+                </div>
+                <script>
+                    // Initialize word counter when the document is ready
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const outsideLocationReason = document.getElementById('outsideLocationReason');
+                        const outsideLocationWordCount = document.getElementById('outsideLocationWordCount');
+
+                        if (outsideLocationReason && outsideLocationWordCount) {
+                            outsideLocationReason.addEventListener('input', function () {
+                                updateWordCount(this, outsideLocationWordCount);
+                            });
+                        }
                     });
-                }
-            });
-            
-            // Function to update word count
-function updateWordCount(textarea, displayElement) {
-    if (!textarea || !displayElement) return;
-    
-    const text = textarea.value.trim();
-    // Split by whitespace, filter out empty strings and strings with only special characters
-    const wordCount = text ? text.split(/\s+/)
-        .filter(word => word.length > 0)
-        .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
-        .length : 0;
-    
-    // Update the display
-    displayElement.textContent = `Words: ${wordCount} (minimum 5)`;
-    
-    // Change color based on word count
-    if (wordCount < 5) {
-        displayElement.style.color = '#dc3545'; // Red for less than minimum
-    } else {
-        displayElement.style.color = '#28a745'; // Green for meeting minimum
-    }
-}
-        </script>
-                        <div class="work-report-container" id="workReportContainer" style="display: none; margin-top: 15px;">
-            <h4><i class="fas fa-clipboard-list"></i> Work Report</h4>
-            <textarea id="workReportText" class="form-control" rows="3" placeholder="Please summarize what you worked on today..."></textarea>
-            <div id="workReportWordCount" class="word-count-display">Words: 0 (minimum 20)</div>
-        </div>
-        <script>
-            // Initialize work report word counter when the document is ready
-            document.addEventListener('DOMContentLoaded', function() {
-                const workReportText = document.getElementById('workReportText');
-                const workReportWordCount = document.getElementById('workReportWordCount');
-                
-                if (workReportText && workReportWordCount) {
-                    workReportText.addEventListener('input', function() {
-                        updateWorkReportWordCount(this, workReportWordCount);
+
+                    // Function to update word count
+                    function updateWordCount(textarea, displayElement) {
+                        if (!textarea || !displayElement) return;
+
+                        const text = textarea.value.trim();
+                        // Split by whitespace, filter out empty strings and strings with only special characters
+                        const wordCount = text ? text.split(/\s+/)
+                            .filter(word => word.length > 0)
+                            .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
+                            .length : 0;
+
+                        // Update the display
+                        displayElement.textContent = `Words: ${wordCount} (minimum 5)`;
+
+                        // Change color based on word count
+                        if (wordCount < 5) {
+                            displayElement.style.color = '#dc3545'; // Red for less than minimum
+                        } else {
+                            displayElement.style.color = '#28a745'; // Green for meeting minimum
+                        }
+                    }
+                </script>
+                <div class="work-report-container" id="workReportContainer" style="display: none; margin-top: 15px;">
+                    <h4><i class="fas fa-clipboard-list"></i> Work Report</h4>
+                    <textarea id="workReportText" class="form-control" rows="3"
+                        placeholder="Please summarize what you worked on today..."></textarea>
+                    <div id="workReportWordCount" class="word-count-display">Words: 0 (minimum 20)</div>
+                </div>
+                <script>
+                    // Initialize work report word counter when the document is ready
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const workReportText = document.getElementById('workReportText');
+                        const workReportWordCount = document.getElementById('workReportWordCount');
+
+                        if (workReportText && workReportWordCount) {
+                            workReportText.addEventListener('input', function () {
+                                updateWorkReportWordCount(this, workReportWordCount);
+                            });
+                        }
                     });
-                }
-            });
-            
-            // Function to update work report word count
-function updateWorkReportWordCount(textarea, displayElement) {
-    if (!textarea || !displayElement) return;
-    
-    const text = textarea.value.trim();
-    // Split by whitespace, filter out empty strings and strings with only special characters
-    const wordCount = text ? text.split(/\s+/)
-        .filter(word => word.length > 0)
-        .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
-        .length : 0;
-    
-    // Update the display
-    displayElement.textContent = `Words: ${wordCount} (minimum 20)`;
-    
-    // Change color based on word count
-    if (wordCount < 20) {
-        displayElement.style.color = '#dc3545'; // Red for less than minimum
-    } else {
-        displayElement.style.color = '#28a745'; // Green for meeting minimum
-    }
-}
-        </script>
+
+                    // Function to update work report word count
+                    function updateWorkReportWordCount(textarea, displayElement) {
+                        if (!textarea || !displayElement) return;
+
+                        const text = textarea.value.trim();
+                        // Split by whitespace, filter out empty strings and strings with only special characters
+                        const wordCount = text ? text.split(/\s+/)
+                            .filter(word => word.length > 0)
+                            .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
+                            .length : 0;
+
+                        // Update the display
+                        displayElement.textContent = `Words: ${wordCount} (minimum 20)`;
+
+                        // Change color based on word count
+                        if (wordCount < 20) {
+                            displayElement.style.color = '#dc3545'; // Red for less than minimum
+                        } else {
+                            displayElement.style.color = '#28a745'; // Green for meeting minimum
+                        }
+                    }
+                </script>
                 <div class="camera-controls">
                     <button class="camera-btn camera-btn-primary" id="captureBtn">
                         <i class="fas fa-camera"></i> Capture Photo
@@ -1632,7 +1676,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
 
     <div class="main-container">
         <!-- Include left panel -->
-        <?php include_once('includes/manager_panel.php'); ?> 
+        <?php include_once('includes/manager_panel.php'); ?>
         <!-- Main Content Area -->
         <div class="main-content" id="mainContent">
             <!-- Greeting Section -->
@@ -1659,19 +1703,22 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 <div class="greeting-container">
                     <div class="greeting-text">
                         <h1>
-                            <i class="fas fa-<?php echo $greetingIcon; ?> greeting-icon" style="color: <?php echo $greetingColor; ?>"></i>
+                            <i class="fas fa-<?php echo $greetingIcon; ?> greeting-icon"
+                                style="color: <?php echo $greetingColor; ?>"></i>
                             <?php echo $greeting; ?>, <?php echo $siteManagerName; ?>!
                         </h1>
                         <p>Welcome to your dashboard. Here's an overview of your projects and tasks.</p>
-                        
+
                         <div class="time-info">
-                            <span class="time-item"><i class="far fa-clock"></i> <span class="time-text"><?php echo $currentTime; ?></span> <span class="time-label">IST</span></span>
+                            <span class="time-item"><i class="far fa-clock"></i> <span
+                                    class="time-text"><?php echo $currentTime; ?></span> <span
+                                    class="time-label">IST</span></span>
                             <span class="time-item">
-                                <i class="far fa-calendar-alt"></i> 
+                                <i class="far fa-calendar-alt"></i>
                                 <span class="date-container">
-                                    <span class="weekday-text"><?php echo date('l'); ?></span>, 
-                                    <span class="day-text"><?php echo date('d'); ?></span> 
-                                    <span class="month-text"><?php echo date('F'); ?></span> 
+                                    <span class="weekday-text"><?php echo date('l'); ?></span>,
+                                    <span class="day-text"><?php echo date('d'); ?></span>
+                                    <span class="month-text"><?php echo date('F'); ?></span>
                                     <span class="year-text"><?php echo date('Y'); ?></span>
                                 </span>
                             </span>
@@ -1681,16 +1728,17 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 <i class="fas fa-business-time" style="color: #0d6efd;"></i>
                                 <span>Shift remaining: <span id="shift-remaining-time">--:--:--</span></span>
                             </div>
-                            <div class="shift-info" id="greeting-shift-info" style="margin-top: 5px; font-size: 0.85rem; color: #6c757d;"></div>
+                            <div class="shift-info" id="greeting-shift-info"
+                                style="margin-top: 5px; font-size: 0.85rem; color: #6c757d;"></div>
+                        </div>
                     </div>
-                </div>
 
                     <div class="user-actions">
                         <!-- Punch In Button -->
                         <button class="punch-button" id="punchButton">
                             <i class="fas fa-sign-in-alt"></i> Punch In
                         </button>
-                        
+
                         <!-- Notification Bell -->
                         <div class="notification-dropdown">
                             <div class="notification-bell" id="notificationBell">
@@ -1701,49 +1749,51 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 <div class="dropdown-header">
                                     <h6>Notifications</h6>
                                     <span class="mark-all">Mark all read</span>
-                        </div>
+                                </div>
                                 <div class="notification-items-container">
                                     <div class="notification-item unread">
                                         <div class="notification-icon bg-primary">
                                             <i class="fas fa-file-alt"></i>
-                    </div>
+                                        </div>
                                         <div class="notification-content">
                                             <p class="notification-text">New report is available</p>
                                             <p class="notification-time">2 hours ago</p>
-                            </div>
-                        </div>
+                                        </div>
+                                    </div>
                                     <div class="notification-item unread">
                                         <div class="notification-icon bg-success">
                                             <i class="fas fa-check-circle"></i>
-                    </div>
+                                        </div>
                                         <div class="notification-content">
                                             <p class="notification-text">Project "Commercial Complex" approved</p>
                                             <p class="notification-time">5 hours ago</p>
-                            </div>
-                        </div>
+                                        </div>
+                                    </div>
                                     <div class="notification-item unread">
                                         <div class="notification-icon bg-warning">
                                             <i class="fas fa-exclamation-triangle"></i>
-                    </div>
+                                        </div>
                                         <div class="notification-content">
                                             <p class="notification-text">Deadline approaching: Township Development</p>
                                             <p class="notification-time">1 day ago</p>
-                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="dropdown-footer">
                                     <a href="#">View all notifications</a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
                         <!-- User Profile -->
                         <div class="profile-dropdown">
                             <div class="profile-avatar" id="profileAvatar">
-                                <?php if(isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])): ?>
-                                    <img src="<?php echo $_SESSION['profile_picture']; ?>" alt="<?php echo $siteManagerName; ?>">
+                                <?php if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])): ?>
+                                    <img src="<?php echo $_SESSION['profile_picture']; ?>"
+                                        alt="<?php echo $siteManagerName; ?>">
                                 <?php else: ?>
-                                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($siteManagerName); ?>&background=0D8ABC&color=fff" alt="<?php echo $siteManagerName; ?>">
+                                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($siteManagerName); ?>&background=0D8ABC&color=fff"
+                                        alt="<?php echo $siteManagerName; ?>">
                                 <?php endif; ?>
                             </div>
                             <div class="dropdown-menu profile-menu" id="profileMenu">
@@ -1767,13 +1817,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Site Overview Dashboard -->
             <div class="site-overview-section">
                 <div class="site-overview-header">
                     <h2>Site Overview Dashboard</h2>
                     <div class="d-flex align-items-center">
-                        <button id="refreshSiteOverview" class="btn btn-sm btn-outline-primary mr-2" title="Refresh Data">
+                        <button id="refreshSiteOverview" class="btn btn-sm btn-outline-primary mr-2"
+                            title="Refresh Data">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                         <a href="site_details.php" class="view-all">
@@ -1781,7 +1832,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="site-overview-cards">
                     <!-- Safety Card -->
                     <div class="site-card" data-card-type="supervisors">
@@ -1810,7 +1861,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                     <div class="site-card-stat-label">Total</div>
                                 </div>
                             </div>
-                            
+
                             <!-- Site Supervisors Present Today -->
                             <div class="supervisors-present">
                                 <h4>Today's Supervisors</h4>
@@ -1828,13 +1879,15 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             <span>Click on card to view all supervisors</span>
                         </div>
                     </div>
-                    
+
                     <!-- Supervisor Details Modal -->
-                    <div class="modal fade" id="supervisorModal" tabindex="-1" role="dialog" aria-labelledby="supervisorModalLabel" aria-hidden="true">
+                    <div class="modal fade" id="supervisorModal" tabindex="-1" role="dialog"
+                        aria-labelledby="supervisorModalLabel" aria-hidden="true">
                         <div class="modal-dialog modal-lg" role="document">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="supervisorModalLabel">Site Supervisors Present Today</h5>
+                                    <h5 class="modal-title" id="supervisorModalLabel">Site Supervisors Present Today
+                                    </h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -1844,7 +1897,8 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <!-- Supervisor details will be loaded here dynamically -->
                                         <div class="col-12">
                                             <div class="text-center py-5">
-                                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                                <div class="spinner-border text-primary" role="status"
+                                                    style="width: 3rem; height: 3rem;">
                                                     <span class="sr-only">Loading...</span>
                                                 </div>
                                                 <p class="mt-3 text-muted">Loading supervisor details...</p>
@@ -1854,12 +1908,13 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-primary" id="viewAllSupervisorsBtn">View All Supervisors</button>
+                                    <button type="button" class="btn btn-primary" id="viewAllSupervisorsBtn">View All
+                                        Supervisors</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Productivity Card -->
                     <div class="site-card" data-card-type="productivity">
                         <div class="site-card-header">
@@ -1875,7 +1930,8 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 <span>Loading data...</span>
                             </div>
                             <div class="site-card-progress">
-                                <div class="site-card-progress-bar bg-productivity" data-width="0" style="width: 0%"></div>
+                                <div class="site-card-progress-bar bg-productivity" data-width="0" style="width: 0%">
+                                </div>
                             </div>
                             <div class="site-card-stats">
                                 <div class="site-card-stat" data-stat="tasks">
@@ -1892,7 +1948,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             Click to view labor attendance details
                         </div>
                     </div>
-                    
+
                     <!-- Site Supervisors on Leave Card -->
                     <div class="site-card" data-card-type="supervisors-leave">
                         <div class="site-card-header">
@@ -1908,7 +1964,8 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 <span>Currently on leave</span>
                             </div>
                             <div class="site-card-progress">
-                                <div class="site-card-progress-bar bg-warning" id="supervisorLeaveProgressBar" style="width: 0%"></div>
+                                <div class="site-card-progress-bar bg-warning" id="supervisorLeaveProgressBar"
+                                    style="width: 0%"></div>
                             </div>
                             <div class="supervisors-on-leave mt-3">
                                 <h4>Supervisors on Leave</h4>
@@ -1926,7 +1983,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             <span>Click to view all leave details</span>
                         </div>
                     </div>
-                    
+
                     <!-- Pending Leave Requests Card - Only visible to Senior Manager (Site) -->
                     <div id="pendingLeaveCardContainer" style="display: none;">
                         <div class="site-card" data-card-type="pending-leave">
@@ -1943,44 +2000,49 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                     <span>Awaiting approval</span>
                                 </div>
                                 <div class="site-card-progress">
-                                    <div class="site-card-progress-bar bg-danger" id="pendingLeaveProgressBar" style="width: 0%"></div>
+                                    <div class="site-card-progress-bar bg-danger" id="pendingLeaveProgressBar"
+                                        style="width: 0%"></div>
                                 </div>
-                                                            <div class="pending-leave-requests mt-3">
-                                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
-                            <h4 class="mb-2 mb-md-0">Recent Requests</h4>
-                            <div class="d-flex flex-wrap w-100 w-md-auto">
-                                <div class="mr-2 mb-2 mb-md-0" style="min-width: 120px;">
-                                    <select id="leaveMonthYearFilter" class="form-control form-control-sm w-100">
-                                        <option value="">All Dates</option>
-                                        <!-- Month options will be added by JavaScript -->
-                                    </select>
-                                </div>
-                                <div style="min-width: 100px;">
-                                    <select id="leaveStatusFilter" class="form-control form-control-sm w-100">
-                                        <option value="pending" selected>Pending</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="rejected">Rejected</option>
-                                        <option value="all">All</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                                <div class="pending-leave-list" id="pendingLeaveList" style="max-height: 180px; overflow-y: auto; scrollbar-width: thin; border-radius: 4px; -webkit-overflow-scrolling: touch;">
-                                    <div class="text-center py-2">
-                                        <div class="spinner-border spinner-border-sm text-secondary" role="status">
-                                            <span class="sr-only">Loading...</span>
+                                <div class="pending-leave-requests mt-3">
+                                    <div
+                                        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
+                                        <h4 class="mb-2 mb-md-0">Recent Requests</h4>
+                                        <div class="d-flex flex-wrap w-100 w-md-auto">
+                                            <div class="mr-2 mb-2 mb-md-0" style="min-width: 120px;">
+                                                <select id="leaveMonthYearFilter"
+                                                    class="form-control form-control-sm w-100">
+                                                    <option value="">All Dates</option>
+                                                    <!-- Month options will be added by JavaScript -->
+                                                </select>
+                                            </div>
+                                            <div style="min-width: 100px;">
+                                                <select id="leaveStatusFilter"
+                                                    class="form-control form-control-sm w-100">
+                                                    <option value="pending" selected>Pending</option>
+                                                    <option value="approved">Approved</option>
+                                                    <option value="rejected">Rejected</option>
+                                                    <option value="all">All</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <span class="ml-2">Loading data...</span>
+                                    </div>
+                                    <div class="pending-leave-list" id="pendingLeaveList"
+                                        style="max-height: 180px; overflow-y: auto; scrollbar-width: thin; border-radius: 4px; -webkit-overflow-scrolling: touch;">
+                                        <div class="text-center py-2">
+                                            <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                            <span class="ml-2">Loading data...</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             </div>
                             <div class="site-card-footer">
                                 <span>Click to view all leave requests</span>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Travel Expenses Card (Replacing Workforce Card) - Hidden for Senior Manager (Site) -->
                     <div class="site-card" data-card-type="travel-expenses" id="travelExpensesCardContainer">
                         <div class="site-card-header">
@@ -2020,13 +2082,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Calendar Stats Section -->
             <div class="calendar-stats-section">
                 <div class="calendar-stats-header">
                     <h2>Calendar Stats</h2>
                     <div class="d-flex align-items-center">
-                        <button id="refreshCalendarStats" class="btn btn-sm btn-outline-primary mr-2" title="Refresh Calendar">
+                        <button id="refreshCalendarStats" class="btn btn-sm btn-outline-primary mr-2"
+                            title="Refresh Calendar">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                         <a href="calendar_view.php" class="view-all">
@@ -2034,7 +2097,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="dashboard-card">
                     <div class="row">
                         <div class="col-md-8">
@@ -2042,12 +2105,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 <div class="calendar-header">
                                     <h3 class="mb-3"><?php echo date('F Y'); ?></h3>
                                     <div class="calendar-nav">
-                                        <button class="btn btn-sm btn-outline-secondary" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                                        <button class="btn btn-sm btn-outline-secondary" id="prevMonth"><i
+                                                class="fas fa-chevron-left"></i></button>
                                         <button class="btn btn-sm btn-outline-primary" id="currentMonth">Today</button>
-                                        <button class="btn btn-sm btn-outline-secondary" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                                        <button class="btn btn-sm btn-outline-secondary" id="nextMonth"><i
+                                                class="fas fa-chevron-right"></i></button>
                                     </div>
                                 </div>
-                                
+
                                 <div class="calendar-grid-container">
                                     <div class="calendar-grid">
                                         <!-- Weekday Headers -->
@@ -2058,39 +2123,41 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <div class="calendar-weekday">Thu</div>
                                         <div class="calendar-weekday">Fri</div>
                                         <div class="calendar-weekday">Sat</div>
-                                        
+
                                         <?php
                                         // Get current month and year
                                         $month = date('m');
                                         $year = date('Y');
-                                        
+
                                         // Calculate the first day of the month
                                         $firstDayOfMonth = date('w', strtotime("$year-$month-01"));
-                                        
+
                                         // Get the number of days in the month
                                         $daysInMonth = date('t', strtotime("$year-$month-01"));
-                                        
+
                                         // Add empty cells for days before the 1st
                                         for ($i = 0; $i < $firstDayOfMonth; $i++) {
                                             echo '<div class="calendar-day empty"></div>';
                                         }
-                                        
+
                                         // Output all days of the month
                                         for ($day = 1; $day <= $daysInMonth; $day++) {
                                             $date = "$year-$month-" . sprintf('%02d', $day);
                                             $isToday = ($date == date('Y-m-d'));
-                                            
+
                                             // Sample data - in a real app, you would fetch events from database
                                             $hasEvents = in_array($day, [3, 8, 12, 15, 20, 25]);
                                             $eventCount = $hasEvents ? rand(1, 3) : 0;
-                                            
+
                                             $classes = 'calendar-day';
-                                            if ($isToday) $classes .= ' today';
-                                            if ($hasEvents) $classes .= ' has-events';
-                                            
+                                            if ($isToday)
+                                                $classes .= ' today';
+                                            if ($hasEvents)
+                                                $classes .= ' has-events';
+
                                             echo '<div class="' . $classes . '">';
                                             echo '<div class="day-number">' . $day . '</div>';
-                                            
+
                                             if ($eventCount > 0) {
                                                 echo '<div class="event-indicator">';
                                                 echo '<span class="event-dot"></span>';
@@ -2099,10 +2166,10 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                                 }
                                                 echo '</div>';
                                             }
-                                            
+
                                             echo '</div>';
                                         }
-                                        
+
                                         // Add empty cells for days after the last day of the month to complete the grid
                                         $cellsAfterMonth = 42 - ($firstDayOfMonth + $daysInMonth); // 42 = 6 rows × 7 days
                                         for ($i = 0; $i < $cellsAfterMonth; $i++) {
@@ -2113,7 +2180,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-4">
                             <div class="calendar-stats">
                                 <h4>Month Overview</h4>
@@ -2126,7 +2193,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <div class="stats-label">Total Events</div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="stats-item">
                                     <div class="stats-icon bg-success">
                                         <i class="fas fa-tasks"></i>
@@ -2136,7 +2203,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <div class="stats-label">Completed Tasks</div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="stats-item">
                                     <div class="stats-icon bg-warning">
                                         <i class="fas fa-exclamation-circle"></i>
@@ -2146,7 +2213,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <div class="stats-label">Pending Tasks</div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="stats-item">
                                     <div class="stats-icon bg-info">
                                         <i class="fas fa-users"></i>
@@ -2156,36 +2223,42 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <div class="stats-label">Team Meetings</div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="upcoming-events">
                                     <h4>Upcoming Events</h4>
                                     <div class="event-list">
                                         <div class="event-item">
                                             <div class="event-date">
-                                                <span class="event-day"><?php echo date('d', strtotime('+2 days')); ?></span>
-                                                <span class="event-month"><?php echo date('M', strtotime('+2 days')); ?></span>
+                                                <span
+                                                    class="event-day"><?php echo date('d', strtotime('+2 days')); ?></span>
+                                                <span
+                                                    class="event-month"><?php echo date('M', strtotime('+2 days')); ?></span>
                                             </div>
                                             <div class="event-details">
                                                 <h5>Site Inspection</h5>
                                                 <p><i class="fas fa-clock"></i> 10:00 AM - 12:00 PM</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="event-item">
                                             <div class="event-date">
-                                                <span class="event-day"><?php echo date('d', strtotime('+5 days')); ?></span>
-                                                <span class="event-month"><?php echo date('M', strtotime('+5 days')); ?></span>
+                                                <span
+                                                    class="event-day"><?php echo date('d', strtotime('+5 days')); ?></span>
+                                                <span
+                                                    class="event-month"><?php echo date('M', strtotime('+5 days')); ?></span>
                                             </div>
                                             <div class="event-details">
                                                 <h5>Progress Review Meeting</h5>
                                                 <p><i class="fas fa-clock"></i> 2:00 PM - 4:00 PM</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="event-item">
                                             <div class="event-date">
-                                                <span class="event-day"><?php echo date('d', strtotime('+8 days')); ?></span>
-                                                <span class="event-month"><?php echo date('M', strtotime('+8 days')); ?></span>
+                                                <span
+                                                    class="event-day"><?php echo date('d', strtotime('+8 days')); ?></span>
+                                                <span
+                                                    class="event-month"><?php echo date('M', strtotime('+8 days')); ?></span>
                                             </div>
                                             <div class="event-details">
                                                 <h5>Material Delivery</h5>
@@ -2199,57 +2272,57 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     </div>
                 </div>
             </div>
-            
+
             <style>
                 /* Calendar Stats Section Styles */
                 .calendar-stats-section {
                     margin-bottom: 30px;
                 }
-                
+
                 .calendar-stats-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 20px;
                 }
-                
+
                 .calendar-stats-header h2 {
                     font-size: 1.5rem;
                     margin: 0;
                 }
-                
+
                 .calendar-container {
                     padding: 10px;
                 }
-                
+
                 .calendar-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 15px;
                 }
-                
+
                 .calendar-header h3 {
                     margin: 0;
                     font-weight: 600;
                 }
-                
+
                 .calendar-nav {
                     display: flex;
                     gap: 10px;
                 }
-                
+
                 .calendar-grid-container {
                     overflow-x: auto;
                 }
-                
+
                 .calendar-grid {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
                     gap: 5px;
                     min-width: 100%;
                 }
-                
+
                 .calendar-weekday {
                     text-align: center;
                     font-weight: 600;
@@ -2259,7 +2332,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     background-color: #f8f9fa;
                     border-radius: 4px;
                 }
-                
+
                 .calendar-day {
                     aspect-ratio: 1/1;
                     border-radius: 4px;
@@ -2271,58 +2344,58 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     display: flex;
                     flex-direction: column;
                 }
-                
+
                 .calendar-day.empty {
                     background-color: #f8f9fa;
                     border: 1px dashed #dee2e6;
                 }
-                
+
                 .calendar-day.today {
                     background-color: rgba(13, 110, 253, 0.1);
                     border: 2px solid #0d6efd;
                 }
-                
+
                 .calendar-day.has-events {
                     background-color: rgba(40, 167, 69, 0.05);
                 }
-                
+
                 .day-number {
                     font-weight: 600;
                     font-size: 0.9rem;
                 }
-                
+
                 .event-indicator {
                     display: flex;
                     align-items: center;
                     gap: 3px;
                     margin-top: 3px;
                 }
-                
+
                 .event-dot {
                     width: 6px;
                     height: 6px;
                     background-color: #0d6efd;
                     border-radius: 50%;
                 }
-                
+
                 .event-count {
                     font-size: 0.7rem;
                     color: #6c757d;
                 }
-                
+
                 /* Calendar Stats Styles */
                 .calendar-stats {
                     height: 100%;
                     display: flex;
                     flex-direction: column;
                 }
-                
+
                 .calendar-stats h4 {
                     font-size: 1.1rem;
                     margin-bottom: 15px;
                     font-weight: 600;
                 }
-                
+
                 .stats-item {
                     display: flex;
                     align-items: center;
@@ -2332,12 +2405,12 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     border-radius: 8px;
                     transition: transform 0.2s;
                 }
-                
+
                 .stats-item:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
                 }
-                
+
                 .stats-icon {
                     width: 40px;
                     height: 40px;
@@ -2348,32 +2421,32 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     margin-right: 15px;
                     color: white;
                 }
-                
+
                 .stats-content {
                     flex: 1;
                 }
-                
+
                 .stats-value {
                     font-size: 1.2rem;
                     font-weight: 600;
                 }
-                
+
                 .stats-label {
                     font-size: 0.8rem;
                     color: #6c757d;
                 }
-                
+
                 /* Upcoming Events Styles */
                 .upcoming-events {
                     margin-top: 20px;
                 }
-                
+
                 .event-list {
                     display: flex;
                     flex-direction: column;
                     gap: 10px;
                 }
-                
+
                 .event-item {
                     display: flex;
                     background-color: #f8f9fa;
@@ -2381,12 +2454,12 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     padding: 10px;
                     transition: transform 0.2s;
                 }
-                
+
                 .event-item:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
                 }
-                
+
                 .event-date {
                     display: flex;
                     flex-direction: column;
@@ -2399,48 +2472,48 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     border-radius: 6px;
                     padding: 5px;
                 }
-                
+
                 .event-day {
                     font-size: 1.2rem;
                     font-weight: 600;
                     line-height: 1;
                 }
-                
+
                 .event-month {
                     font-size: 0.7rem;
                     text-transform: uppercase;
                 }
-                
+
                 .event-details {
                     flex: 1;
                 }
-                
+
                 .event-details h5 {
                     font-size: 0.9rem;
                     margin: 0 0 5px 0;
                 }
-                
+
                 .event-details p {
                     font-size: 0.8rem;
                     color: #6c757d;
                     margin: 0;
                 }
-                
+
                 .event-details p i {
                     margin-right: 5px;
                 }
-                
+
                 @media (max-width: 768px) {
                     .calendar-grid {
                         grid-template-columns: repeat(7, minmax(40px, 1fr));
                     }
-                    
+
                     .calendar-day {
                         min-height: 30px;
                     }
                 }
             </style>
-            
+
             <!-- Dashboard Header -->
             <div class="dashboard-header">
                 <div class="welcome-section">
@@ -2456,26 +2529,26 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     </div>
                 </div>
             </div>
-            
+
             <!-- Stats Overview Row -->
-                <div class="row mb-4">
+            <div class="row mb-4">
                 <?php foreach ($stats as $stat): ?>
-                <div class="col-lg-1-5 col-md-4 col-sm-6 mb-3">
-                    <div class="dashboard-card stat-card">
-                        <div class="stat-icon bg-<?php echo $stat['color']; ?>">
-                            <i class="fas fa-<?php echo $stat['icon']; ?>"></i>
+                    <div class="col-lg-1-5 col-md-4 col-sm-6 mb-3">
+                        <div class="dashboard-card stat-card">
+                            <div class="stat-icon bg-<?php echo $stat['color']; ?>">
+                                <i class="fas fa-<?php echo $stat['icon']; ?>"></i>
                             </div>
-                        <div class="stat-content">
-                            <h4><?php echo $stat['value']; ?></h4>
-                            <p><?php echo $stat['title']; ?></p>
+                            <div class="stat-content">
+                                <h4><?php echo $stat['value']; ?></h4>
+                                <p><?php echo $stat['title']; ?></p>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
-                    </div>
+            </div>
 
             <!-- Quick Actions -->
-                <div class="row mb-4">
+            <div class="row mb-4">
                 <div class="col-12">
                     <div class="dashboard-card">
                         <h3 class="card-title">Quick Actions</h3>
@@ -2483,15 +2556,15 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             <div class="quick-action-card">
                                 <div class="quick-action-icon">
                                     <i class="fas fa-plus-circle"></i>
-                            </div>
-                                <div class="quick-action-title">New Project</div>
                                 </div>
+                                <div class="quick-action-title">New Project</div>
+                            </div>
                             <div class="quick-action-card">
                                 <div class="quick-action-icon">
                                     <i class="fas fa-user-plus"></i>
                                 </div>
                                 <div class="quick-action-title">Add Supervisor</div>
-                                </div>
+                            </div>
                             <div class="quick-action-card">
                                 <div class="quick-action-icon">
                                     <i class="fas fa-clipboard-list"></i>
@@ -2501,7 +2574,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             <div class="quick-action-card">
                                 <div class="quick-action-icon">
                                     <i class="fas fa-calendar-plus"></i>
-                        </div>
+                                </div>
                                 <div class="quick-action-title">Schedule Meeting</div>
                             </div>
                             <div class="quick-action-card">
@@ -2512,79 +2585,84 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             </div>
                         </div>
                     </div>
-                    </div>
                 </div>
+            </div>
 
             <!-- Main Dashboard Content -->
-                <div class="row">
+            <div class="row">
                 <!-- Projects Overview -->
                 <div class="col-lg-8 mb-4">
                     <div class="dashboard-card">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="card-title mb-0">Project Overview</h3>
                             <a href="project_overview.php" class="btn btn-sm btn-outline-primary">View All</a>
-                            </div>
+                        </div>
 
                         <!-- Project Cards -->
                         <?php foreach ($projects as $project): ?>
-                        <div class="project-card">
-                            <div class="project-header">
-                                <h4 class="project-title"><?php echo $project['title']; ?></h4>
-                                <span class="project-status status-<?php echo $project['status']; ?>">
-                                    <?php 
-                                    switch ($project['status']) {
-                                        case 'pending':
-                                            echo 'Pending';
-                                            break;
-                                        case 'progress':
-                                            echo 'In Progress';
-                                            break;
-                                        case 'hold':
-                                            echo 'On Hold';
-                                            break;
-                                        case 'completed':
-                                            echo 'Completed';
-                                            break;
-                                        case 'delayed':
-                                            echo 'Delayed';
-                                            break;
-                                        default:
-                                            echo 'Unknown';
-                                    }
-                                    ?>
-                                </span>
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <h4 class="project-title"><?php echo $project['title']; ?></h4>
+                                    <span class="project-status status-<?php echo $project['status']; ?>">
+                                        <?php
+                                        switch ($project['status']) {
+                                            case 'pending':
+                                                echo 'Pending';
+                                                break;
+                                            case 'progress':
+                                                echo 'In Progress';
+                                                break;
+                                            case 'hold':
+                                                echo 'On Hold';
+                                                break;
+                                            case 'completed':
+                                                echo 'Completed';
+                                                break;
+                                            case 'delayed':
+                                                echo 'Delayed';
+                                                break;
+                                            default:
+                                                echo 'Unknown';
+                                        }
+                                        ?>
+                                    </span>
+                                </div>
+                                <div class="project-details">
+                                    <i class="fas fa-map-marker-alt"></i> <?php echo $project['location']; ?>
+                                </div>
+                                <div class="progress-container">
+                                    <div class="progress-header">
+                                        <span>Progress</span>
+                                        <span><?php echo $project['progress']; ?>%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill bg-<?php echo $project['status'] == 'hold' ? 'warning' : ($project['status'] == 'completed' ? 'success' : 'primary'); ?>"
+                                            style="width: <?php echo $project['progress']; ?>%"></div>
+                                    </div>
+                                </div>
+                                <div class="project-stats mt-3">
+                                    <div class="project-stat">
+                                        <div class="project-stat-value"><?php echo $project['budget']; ?></div>
+                                        <div class="project-stat-label">Budget</div>
+                                    </div>
+                                    <div class="project-stat">
+                                        <div class="project-stat-value">
+                                            <?php echo date('M j, Y', strtotime($project['start_date'])); ?>
+                                        </div>
+                                        <div class="project-stat-label">Start Date</div>
+                                    </div>
+                                    <div class="project-stat">
+                                        <div class="project-stat-value">
+                                            <?php echo date('M j, Y', strtotime($project['end_date'])); ?>
+                                        </div>
+                                        <div class="project-stat-label">End Date</div>
+                                    </div>
+                                    <div class="project-stat">
+                                        <div class="project-stat-value"><?php echo count($project['supervisors']); ?></div>
+                                        <div class="project-stat-label">Supervisors</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="project-details">
-                                <i class="fas fa-map-marker-alt"></i> <?php echo $project['location']; ?>
-                            </div>
-                            <div class="progress-container">
-                                <div class="progress-header">
-                                    <span>Progress</span>
-                                    <span><?php echo $project['progress']; ?>%</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill bg-<?php echo $project['status'] == 'hold' ? 'warning' : ($project['status'] == 'completed' ? 'success' : 'primary'); ?>" style="width: <?php echo $project['progress']; ?>%"></div>
-                                </div>
-                            </div>
-                            <div class="project-stats mt-3">
-                                <div class="project-stat">
-                                    <div class="project-stat-value"><?php echo $project['budget']; ?></div>
-                                    <div class="project-stat-label">Budget</div>
-                                </div>
-                                <div class="project-stat">
-                                    <div class="project-stat-value"><?php echo date('M j, Y', strtotime($project['start_date'])); ?></div>
-                                    <div class="project-stat-label">Start Date</div>
-                                </div>
-                                <div class="project-stat">
-                                    <div class="project-stat-value"><?php echo date('M j, Y', strtotime($project['end_date'])); ?></div>
-                                    <div class="project-stat-label">End Date</div>
-                                </div>
-                                <div class="project-stat">
-                                    <div class="project-stat-value"><?php echo count($project['supervisors']); ?></div>
-                                    <div class="project-stat-label">Supervisors</div>
-                                </div>
-                            </div>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -2609,7 +2687,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             <div class="calendar-weekday">Thu</div>
                             <div class="calendar-weekday">Fri</div>
                             <div class="calendar-weekday">Sat</div>
-                            
+
                             <!-- Placeholder for calendar days (would be generated dynamically) -->
                             <?php
                             // Generate days for sample calendar
@@ -2621,25 +2699,27 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                     'has_events' => in_array($i, [3, 8, 12, 15, 20, 25])
                                 ];
                             }
-                            
+
                             // Add empty cells for days before the 1st
                             $firstDayOfMonth = date('w', strtotime('2023-05-01')); // 0 for Sunday
                             for ($i = 0; $i < $firstDayOfMonth; $i++) {
                                 echo '<div class="calendar-day"></div>';
                             }
-                            
+
                             // Output all days
                             foreach ($days as $day) {
                                 $classes = 'calendar-day';
-                                if ($day['is_today']) $classes .= ' today';
-                                if ($day['has_events']) $classes .= ' has-events';
-                                
+                                if ($day['is_today'])
+                                    $classes .= ' today';
+                                if ($day['has_events'])
+                                    $classes .= ' has-events';
+
                                 echo '<div class="' . $classes . '">' . $day['day'] . '</div>';
                             }
                             ?>
                         </div>
                     </div>
-                    
+
                     <!-- Tasks Widget -->
                     <div class="dashboard-card mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -2648,22 +2728,23 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         </div>
                         <ul class="task-list">
                             <?php foreach ($tasks as $task): ?>
-                            <li class="task-item">
-                                <div class="task-checkbox">
-                                    <input type="checkbox" id="task-<?php echo $task['id']; ?>">
-                                </div>
-                                <div class="task-content">
-                                    <div class="task-title"><?php echo $task['title']; ?></div>
-                                    <div class="task-due">
-                                        Due: <?php echo $task['due']; ?>
-                                        <span class="task-priority priority-<?php echo $task['priority']; ?>"><?php echo ucfirst($task['priority']); ?></span>
+                                <li class="task-item">
+                                    <div class="task-checkbox">
+                                        <input type="checkbox" id="task-<?php echo $task['id']; ?>">
                                     </div>
-                            </div>
-                                    </li>
+                                    <div class="task-content">
+                                        <div class="task-title"><?php echo $task['title']; ?></div>
+                                        <div class="task-due">
+                                            Due: <?php echo $task['due']; ?>
+                                            <span
+                                                class="task-priority priority-<?php echo $task['priority']; ?>"><?php echo ucfirst($task['priority']); ?></span>
+                                        </div>
+                                    </div>
+                                </li>
                             <?php endforeach; ?>
-                                </ul>
-                            </div>
-                    
+                        </ul>
+                    </div>
+
                     <!-- Recent Activities -->
                     <div class="dashboard-card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -2672,18 +2753,18 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         </div>
                         <ul class="activity-list">
                             <?php foreach ($activities as $activity): ?>
-                            <li class="activity-item">
-                                <div class="activity-icon bg-<?php echo $activity['color']; ?>">
-                                    <i class="fas fa-<?php echo $activity['icon']; ?>"></i>
-                    </div>
-                                <div class="activity-content">
-                                    <div class="activity-title"><?php echo $activity['title']; ?></div>
-                                    <div class="activity-meta">
-                                        <span><i class="far fa-clock"></i> <?php echo $activity['time']; ?></span>
-                                        <span><i class="far fa-user"></i> <?php echo $activity['user']; ?></span>
-                            </div>
-                            </div>
-                            </li>
+                                <li class="activity-item">
+                                    <div class="activity-icon bg-<?php echo $activity['color']; ?>">
+                                        <i class="fas fa-<?php echo $activity['icon']; ?>"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title"><?php echo $activity['title']; ?></div>
+                                        <div class="activity-meta">
+                                            <span><i class="far fa-clock"></i> <?php echo $activity['time']; ?></span>
+                                            <span><i class="far fa-user"></i> <?php echo $activity['user']; ?></span>
+                                        </div>
+                                    </div>
+                                </li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
@@ -2706,14 +2787,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
         window.travelExpenseEndpoint = 'save_travel_expenses.php';
     </script>
     <script src="js/supervisor/new-travel-expense-modal.js"></script>
-    
+
     <!-- Include manager password update modal with unique name -->
     <?php include_once('include_manager_pwd_update.php'); ?>
     <script>
         // Variables to track punch status
         let isPunchedIn = false;
         let isCompletedForToday = false;
-        
+
         // DOM elements
         const punchButton = document.getElementById('punchButton');
         const cameraModal = document.getElementById('cameraModal');
@@ -2741,24 +2822,24 @@ function updateWorkReportWordCount(textarea, displayElement) {
         const preloaderOverlay = document.getElementById('preloaderOverlay');
         const preloaderProgress = document.getElementById('preloaderProgress');
         const preloaderMessage = document.getElementById('preloaderMessage');
-        
+
         // Camera variables
         let stream = null;
         let facingMode = 'user'; // Default to front camera
         let capturedPhotoData = null;
         let userLocation = null;
         let userShiftInfo = null;
-        
+
         // Geofence variables
         let geofenceLocations = [];
         let isWithinGeofence = false;
         let closestLocationName = "";
-        
+
         // Initialize components when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Check punch status
             checkPunchStatus();
-            
+
             // Use either the new updateDateTime function or the legacy updateTime function, but not both
             if (typeof updateDateTime === 'function') {
                 // Start updating date and time with the new function
@@ -2768,69 +2849,69 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 updateTime();
                 setInterval(updateTime, 1000);
             }
-            
+
             // No need to set interval since updateDateTime calls itself
         });
-        
+
         // Punch button click handler
-        punchButton.addEventListener('click', function() {
+        punchButton.addEventListener('click', function () {
             // Check if already completed for today
             if (isCompletedForToday) {
                 showNotification('Attendance already completed for today', 'warning');
                 return;
             }
-            
+
             // Update camera title
             cameraTitle.textContent = isPunchedIn ? 'Take Selfie for Punch Out' : 'Take Selfie for Punch In';
-            
+
             // Show/hide work report based on punch type
             workReportContainer.style.display = isPunchedIn ? 'block' : 'none';
-            
+
             // Open camera modal
             openCameraModal();
-            
+
             // Initialize camera
             initCamera();
-            
+
             // Get user location
             getUserLocation();
-            
+
             // Fetch geofence locations
             fetchGeofenceLocations();
         });
-        
+
         // Close camera button click handler
         closeCameraBtn.addEventListener('click', closeCameraModal);
-        
+
         // Capture photo button click handler
         captureBtn.addEventListener('click', capturePhoto);
-        
+
         // Retake photo button click handler
-        retakeBtn.addEventListener('click', function() {
+        retakeBtn.addEventListener('click', function () {
             // Show video container and hide image container
             videoContainer.style.display = 'block';
             capturedImageContainer.style.display = 'none';
-            
+
             // Show capture button and hide retake/confirm buttons
             captureBtn.style.display = 'block';
             retakeBtn.style.display = 'none';
             confirmPunchBtn.style.display = 'none';
-            
+
             // Reset captured photo data
             capturedPhotoData = null;
         });
-        
+
         // Rotate camera button click handler
-        rotateCameraBtn.addEventListener('click', function() {
+        rotateCameraBtn.addEventListener('click', function () {
             // Toggle facing mode
             facingMode = facingMode === 'user' ? 'environment' : 'user';
-            
+
             // Reinitialize camera with new facing mode
             initCamera();
         });
-        
+
         // Confirm punch button click handler
-        confirmPunchBtn.addEventListener('click', function() {
+        confirmPunchBtn.addEventListener('click', function () {
             // Check if work report is provided for punch out
             if (isPunchedIn && workReportContainer.style.display === 'block') {
                 if (!workReportText.value.trim()) {
@@ -2838,21 +2919,21 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     workReportText.focus();
                     return;
                 }
-                
+
                 // Check if work report has at least 20 words
                 const workText = workReportText.value.trim();
                 const workReportWordCount = workText ? workText.split(/\s+/)
                     .filter(word => word.length > 0)
                     .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
                     .length : 0;
-                    
+
                 if (workReportWordCount < 20) {
                     showNotification('Please provide a more detailed work report (minimum 20 valid words)', 'warning');
                     workReportText.focus();
                     return;
                 }
             }
-            
+
             // Check if outside location reason is provided when outside geofence
             if (!isWithinGeofence && outsideLocationReasonContainer.style.display !== 'none') {
                 if (!outsideLocationReason.value.trim()) {
@@ -2860,29 +2941,29 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     outsideLocationReason.focus();
                     return;
                 }
-                
+
                 // Check if reason has at least 5 words
                 const text = outsideLocationReason.value.trim();
                 const reasonWordCount = text ? text.split(/\s+/)
                     .filter(word => word.length > 0)
                     .filter(word => /[a-zA-Z0-9\u0900-\u097F]/.test(word)) // Ensure word has at least one alphanumeric or Hindi character
                     .length : 0;
-                    
+
                 if (reasonWordCount < 5) {
                     showNotification('Please provide a more detailed reason (minimum 5 valid words)', 'warning');
                     outsideLocationReason.focus();
                     return;
                 }
             }
-            
+
             // Set button to loading state
             confirmPunchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             confirmPunchBtn.disabled = true;
-            
+
             // Prepare form data
             const formData = new FormData();
             formData.append('punch_type', isPunchedIn ? 'out' : 'in');
-            
+
             // Add photo data if available
             if (capturedPhotoData) {
                 formData.append('photo_data', capturedPhotoData);
@@ -2893,7 +2974,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 confirmPunchBtn.disabled = false;
                 return;
             }
-            
+
             // Add location data if available
             if (userLocation) {
                 formData.append('latitude', userLocation.latitude);
@@ -2902,18 +2983,18 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 if (userLocation.address) {
                     formData.append('address', userLocation.address);
                 }
-                
+
                 // Add geofence information - using column names exactly as in the database
                 formData.append('within_geofence', isWithinGeofence ? '1' : '0');
                 // Also send as is_within_geofence for backward compatibility
                 formData.append('is_within_geofence', isWithinGeofence ? '1' : '0');
                 formData.append('closest_location', closestLocationName || '');
-                
+
                 // Add geofence ID if available
                 if (userLocation.geofenceId) {
                     formData.append('geofence_id', userLocation.geofenceId);
                 }
-                
+
                 // Add distance from geofence if available
                 if (typeof userLocation.distanceFromGeofence !== 'undefined') {
                     formData.append('distance_from_geofence', userLocation.distanceFromGeofence);
@@ -2925,14 +3006,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 confirmPunchBtn.disabled = false;
                 return;
             }
-            
+
             // Add work report for punch out
             if (isPunchedIn && workReportText.value.trim()) {
                 formData.append('work_report', workReportText.value.trim());
                 // Also send as punch_out_work_report for newer implementations
                 formData.append('punch_out_work_report', workReportText.value.trim());
             }
-            
+
             // Add outside location reason if not within geofence - using specific column names for punch in vs punch out
             if (!isWithinGeofence && outsideLocationReason.value.trim()) {
                 if (isPunchedIn) {
@@ -2943,112 +3024,112 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     formData.append('punch_in_outside_reason', outsideLocationReason.value.trim());
                 }
             }
-            
+
             // Add shift information if available
             if (userShiftInfo && userShiftInfo.shift_id) {
                 formData.append('shift_id', userShiftInfo.shift_id);
             }
-            
+
             // Get IP address and device info
             formData.append('ip_address', '<?php echo $_SERVER['REMOTE_ADDR']; ?>');
             formData.append('device_info', navigator.userAgent);
-            
+
             console.log('Submitting punch data. Type:', isPunchedIn ? 'out' : 'in'); // Debug log
-            
+
             // Send request to process_punch.php
             fetch('process_punch.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status} ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Punch response:', data); // Debug log
-                
-                if (data.status === 'success') {
-                    // Close camera modal
-                    closeCameraModal();
-                    
-                    // Update button state
-                    checkPunchStatus();
-                    
-                    // Show success notification
-                    let successMessage = isPunchedIn ? 
-                        `Punched out successfully at ${data.time}` : 
-                        `Punched in successfully at ${data.time}`;
-                    
-                    // Add working hours info for punch out
-                    if (isPunchedIn && data.working_hours) {
-                        // Format the hours:minutes:seconds nicely
-                        let workingHoursDisplay = '';
-                        const parts = data.working_hours.split(':');
-                        if (parts.length === 3) {
-                            const hours = parseInt(parts[0]);
-                            const minutes = parseInt(parts[1]);
-                            const seconds = parseInt(parts[2]);
-                            
-                            if (hours > 0) {
-                                workingHoursDisplay += `${hours}h `;
-                            }
-                            if (minutes > 0 || hours > 0) {
-                                workingHoursDisplay += `${minutes}m `;
-                            }
-                            workingHoursDisplay += `${seconds}s`;
-                        } else {
-                            workingHoursDisplay = data.working_hours;
-                        }
-                        
-                        successMessage += `<br>Hours worked: ${workingHoursDisplay}`;
-                        
-                        // Format and add overtime if exists
-                        if (data.overtime_hours && data.overtime_hours !== '00:00:00') {
-                            // Format the overtime nicely
-                            let overtimeDisplay = '';
-                            const overtimeParts = data.overtime_hours.split(':');
-                            if (overtimeParts.length === 3) {
-                                const overtimeHours = parseInt(overtimeParts[0]);
-                                const overtimeMinutes = parseInt(overtimeParts[1]);
-                                const overtimeSeconds = parseInt(overtimeParts[2]);
-                                
-                                if (overtimeHours > 0) {
-                                    overtimeDisplay += `${overtimeHours}h `;
-                                }
-                                if (overtimeMinutes > 0 || overtimeHours > 0) {
-                                    overtimeDisplay += `${overtimeMinutes}m `;
-                                }
-                                overtimeDisplay += `${overtimeSeconds}s`;
-                            } else {
-                                overtimeDisplay = data.overtime_hours;
-                            }
-                            
-                            successMessage += ` (including ${overtimeDisplay} overtime)`;
-                        }
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server returned ${response.status} ${response.statusText}`);
                     }
-                    
-                    showNotification(successMessage, 'success');
-                } else {
-                    // Show error notification
-                    showNotification(data.message || 'Error processing punch', 'error');
-                    
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Punch response:', data); // Debug log
+
+                    if (data.status === 'success') {
+                        // Close camera modal
+                        closeCameraModal();
+
+                        // Update button state
+                        checkPunchStatus();
+
+                        // Show success notification
+                        let successMessage = isPunchedIn ?
+                            `Punched out successfully at ${data.time}` :
+                            `Punched in successfully at ${data.time}`;
+
+                        // Add working hours info for punch out
+                        if (isPunchedIn && data.working_hours) {
+                            // Format the hours:minutes:seconds nicely
+                            let workingHoursDisplay = '';
+                            const parts = data.working_hours.split(':');
+                            if (parts.length === 3) {
+                                const hours = parseInt(parts[0]);
+                                const minutes = parseInt(parts[1]);
+                                const seconds = parseInt(parts[2]);
+
+                                if (hours > 0) {
+                                    workingHoursDisplay += `${hours}h `;
+                                }
+                                if (minutes > 0 || hours > 0) {
+                                    workingHoursDisplay += `${minutes}m `;
+                                }
+                                workingHoursDisplay += `${seconds}s`;
+                            } else {
+                                workingHoursDisplay = data.working_hours;
+                            }
+
+                            successMessage += `<br>Hours worked: ${workingHoursDisplay}`;
+
+                            // Format and add overtime if exists
+                            if (data.overtime_hours && data.overtime_hours !== '00:00:00') {
+                                // Format the overtime nicely
+                                let overtimeDisplay = '';
+                                const overtimeParts = data.overtime_hours.split(':');
+                                if (overtimeParts.length === 3) {
+                                    const overtimeHours = parseInt(overtimeParts[0]);
+                                    const overtimeMinutes = parseInt(overtimeParts[1]);
+                                    const overtimeSeconds = parseInt(overtimeParts[2]);
+
+                                    if (overtimeHours > 0) {
+                                        overtimeDisplay += `${overtimeHours}h `;
+                                    }
+                                    if (overtimeMinutes > 0 || overtimeHours > 0) {
+                                        overtimeDisplay += `${overtimeMinutes}m `;
+                                    }
+                                    overtimeDisplay += `${overtimeSeconds}s`;
+                                } else {
+                                    overtimeDisplay = data.overtime_hours;
+                                }
+
+                                successMessage += ` (including ${overtimeDisplay} overtime)`;
+                            }
+                        }
+
+                        showNotification(successMessage, 'success');
+                    } else {
+                        // Show error notification
+                        showNotification(data.message || 'Error processing punch', 'error');
+
+                        // Reset button state
+                        confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
+                        confirmPunchBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Connection error: ' + error.message, 'error');
+
                     // Reset button state
                     confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
                     confirmPunchBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Connection error: ' + error.message, 'error');
-                
-                // Reset button state
-                confirmPunchBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Punch';
-                confirmPunchBtn.disabled = false;
-            });
+                });
         });
-        
+
         /**
          * Opens the camera modal
          */
@@ -3056,17 +3137,17 @@ function updateWorkReportWordCount(textarea, displayElement) {
             cameraModal.classList.add('open');
             document.body.style.overflow = 'hidden'; // Prevent scrolling
         }
-        
+
         /**
          * Closes the camera modal and cleans up resources
          */
         function closeCameraModal() {
             cameraModal.classList.remove('open');
             document.body.style.overflow = 'auto'; // Restore scrolling
-            
+
             // Stop camera stream
             stopCamera();
-            
+
             // Reset UI
             videoContainer.style.display = 'block';
             capturedImageContainer.style.display = 'none';
@@ -3077,11 +3158,11 @@ function updateWorkReportWordCount(textarea, displayElement) {
             workReportText.value = '';
             outsideLocationReasonContainer.style.display = 'none';
             outsideLocationReason.value = '';
-            
+
             // Reset data
             capturedPhotoData = null;
         }
-        
+
         /**
          * Initializes the camera
          */
@@ -3091,10 +3172,10 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 locationStatus.textContent = 'Camera not supported in this browser';
                 return;
             }
-            
+
             // Stop any existing stream
             stopCamera();
-            
+
             // Set up camera constraints
             const constraints = {
                 video: {
@@ -3104,10 +3185,10 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 },
                 audio: false
             };
-            
+
             // Get camera stream
             navigator.mediaDevices.getUserMedia(constraints)
-                .then(function(mediaStream) {
+                .then(function (mediaStream) {
                     stream = mediaStream;
                     cameraVideo.srcObject = mediaStream;
                     cameraVideo.play()
@@ -3115,12 +3196,12 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             console.error('Error playing video:', error);
                         });
                 })
-                .catch(function(error) {
+                .catch(function (error) {
                     console.error('Error accessing camera:', error);
                     locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Camera access denied or not available';
                 });
         }
-        
+
         /**
          * Stops the camera stream
          */
@@ -3130,38 +3211,38 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 stream = null;
             }
         }
-        
+
         /**
          * Captures a photo from the camera
          */
         function capturePhoto() {
             if (!stream) return;
-            
+
             // Create a canvas element
             const canvas = document.createElement('canvas');
             canvas.width = cameraVideo.videoWidth;
             canvas.height = cameraVideo.videoHeight;
-            
+
             // Draw video frame to canvas
             const context = canvas.getContext('2d');
             context.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
-            
+
             // Get image data as base64
             capturedPhotoData = canvas.toDataURL('image/jpeg');
-            
+
             // Display captured image
             capturedImage.src = capturedPhotoData;
-            
+
             // Show image container and hide video container
             videoContainer.style.display = 'none';
             capturedImageContainer.style.display = 'block';
-            
+
             // Show retake and confirm buttons, hide capture button
             captureBtn.style.display = 'none';
             retakeBtn.style.display = 'block';
             confirmPunchBtn.style.display = 'block';
         }
-        
+
         /**
          * Gets the user's current location
          */
@@ -3171,38 +3252,38 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Geolocation not supported';
                 return;
             }
-            
+
             // Update status
             locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
-            
+
             // Get current position
             navigator.geolocation.getCurrentPosition(
                 // Success callback
-                function(position) {
+                function (position) {
                     userLocation = {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy
                     };
-                    
+
                     // Update location info
                     locationStatus.innerHTML = `<i class="fas fa-check-circle"></i> Location found (Accuracy: ${Math.round(position.coords.accuracy)}m)`;
                     locationCoords.innerHTML = `<i class="fas fa-compass"></i> Coordinates: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                    
+
                     // Get address from coordinates
                     getAddressFromCoordinates(position.coords.latitude, position.coords.longitude);
-                    
+
                     // Check if within geofence
                     if (geofenceLocations.length > 0) {
                         checkGeofence(position.coords.latitude, position.coords.longitude);
                     }
                 },
                 // Error callback
-                function(error) {
+                function (error) {
                     console.error('Geolocation error:', error);
-                    
+
                     let errorMessage = 'Error getting location';
-                    switch(error.code) {
+                    switch (error.code) {
                         case error.PERMISSION_DENIED:
                             errorMessage = 'Location permission denied';
                             break;
@@ -3213,7 +3294,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             errorMessage = 'Location request timed out';
                             break;
                     }
-                    
+
                     locationStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMessage}`;
                     locationCoords.innerHTML = '<i class="fas fa-compass"></i> Coordinates: Not available';
                     locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Not available';
@@ -3228,44 +3309,44 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 }
             );
         }
-        
+
         /**
          * Gets address from coordinates using reverse geocoding
          */
         function getAddressFromCoordinates(latitude, longitude) {
             // Update status
             locationAddress.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting address...';
-            
+
             // Use our server-side proxy to avoid CORS issues
             const url = `ajax_handlers/get_address.php?lat=${latitude}&lon=${longitude}`;
-            
+
             fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success' && data.address) {
-                    locationAddress.innerHTML = `<i class="fas fa-map"></i> Address: ${data.address}`;
-                    userLocation.address = data.address;
-                } else {
-                    locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Could not determine address';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching address:', error);
-                locationAddress.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Address: Error retrieving address';
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success' && data.address) {
+                        locationAddress.innerHTML = `<i class="fas fa-map"></i> Address: ${data.address}`;
+                        userLocation.address = data.address;
+                    } else {
+                        locationAddress.innerHTML = '<i class="fas fa-map"></i> Address: Could not determine address';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching address:', error);
+                    locationAddress.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Address: Error retrieving address';
+                });
         }
-        
+
         /**
          * Fetches geofence locations from the server
          */
         function fetchGeofenceLocations() {
             geofenceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading geofence data...';
-            
+
             fetch('api/get_geofence_locations.php')
                 .then(response => {
                     if (!response.ok) {
@@ -3277,7 +3358,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     if (data.status === 'success') {
                         geofenceLocations = data.locations;
                         console.log('Geofence locations loaded:', geofenceLocations);
-                        
+
                         // If we already have location data, check geofence
                         if (userLocation && userLocation.latitude && userLocation.longitude) {
                             checkGeofence(userLocation.latitude, userLocation.longitude);
@@ -3292,77 +3373,77 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     geofenceStatus.style.color = '#dc3545'; // Red color for error
                 });
         }
-        
+
         /**
          * Checks if the user's location is within any geofence
          */
         function checkGeofence(latitude, longitude) {
             geofenceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking location boundaries...';
-            
+
             // If no geofence locations available yet, try to fetch them
             if (geofenceLocations.length === 0) {
                 fetchGeofenceLocations();
                 return;
             }
-            
+
             let minDistance = Infinity;
             let closestLocation = null;
-            
+
             // Check distance to each geofence location
             geofenceLocations.forEach(location => {
                 const distance = calculateDistance(
-                    latitude, 
-                    longitude, 
-                    parseFloat(location.latitude), 
+                    latitude,
+                    longitude,
+                    parseFloat(location.latitude),
                     parseFloat(location.longitude)
                 );
-                
+
                 if (distance < minDistance) {
                     minDistance = distance;
                     closestLocation = location;
                 }
             });
-            
+
             // If we found a closest location
             if (closestLocation) {
                 closestLocationName = closestLocation.name;
                 const locationRadius = parseInt(closestLocation.radius);
-                
+
                 // Store geofence ID if available
                 if (closestLocation.id) {
                     userLocation.geofenceId = closestLocation.id;
                 }
-                
+
                 // Check if within radius
                 if (minDistance <= locationRadius) {
                     isWithinGeofence = true;
                     geofenceStatus.innerHTML = `<i class="fas fa-check-circle"></i> Within ${closestLocation.name} (${Math.round(minDistance)}m from center)`;
                     geofenceStatus.style.color = '#28a745'; // Green color for success
-                    
+
                     // Hide outside location reason container
                     outsideLocationReasonContainer.style.display = 'none';
-                    
+
                     userLocation.distanceFromGeofence = 0; // Inside geofence, so distance is 0
                 } else {
                     isWithinGeofence = false;
                     geofenceStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Outside ${closestLocation.name} (${Math.round(minDistance)}m from center)`;
                     geofenceStatus.style.color = '#dc3545'; // Red color for error
-                    
+
                     // Show outside location reason container
                     outsideLocationReasonContainer.style.display = 'block';
-                    
+
                     userLocation.distanceFromGeofence = Math.round(minDistance - locationRadius); // Distance beyond the geofence boundary
                 }
             } else {
                 isWithinGeofence = false;
                 geofenceStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No registered locations found';
                 geofenceStatus.style.color = '#ffc107'; // Yellow/warning color
-                
+
                 // Show outside location reason container
                 outsideLocationReasonContainer.style.display = 'block';
             }
         }
-        
+
         /**
          * Calculates the distance between two coordinates in meters using the Haversine formula
          */
@@ -3372,15 +3453,15 @@ function updateWorkReportWordCount(textarea, displayElement) {
             const φ2 = lat2 * Math.PI / 180;
             const Δφ = (lat2 - lat1) * Math.PI / 180;
             const Δλ = (lon2 - lon1) * Math.PI / 180;
-            
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                    Math.cos(φ1) * Math.cos(φ2) *
-                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
             return R * c; // Distance in meters
         }
-        
+
         /**
          * Check current punch status from the server
          */
@@ -3388,7 +3469,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
             // Set button to loading state
             punchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             punchButton.disabled = true;
-            
+
             // Fetch status from server
             fetch('api/check_punch_status.php')
                 .then(response => {
@@ -3399,11 +3480,11 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 })
                 .then(data => {
                     console.log('Punch status data:', data); // Debug log
-                    
+
                     // Update variables
                     isPunchedIn = data.is_punched_in || false;
                     isCompletedForToday = data.is_completed || false;
-                    
+
                     // Save shift info
                     userShiftInfo = data.shift_info || {
                         shift_id: null,
@@ -3414,22 +3495,22 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         end_time_formatted: '06:00 PM',
                         weekly_offs: 'Saturday,Sunday'
                     };
-                    
+
                     // Update shift information display
                     updateShiftDisplay();
-                    
+
                     // Update button UI
                     updatePunchButton();
-                    
+
                     // Update display of punch time if available
                     const buttonContainer = punchButton.closest('.user-actions');
-                    
+
                     // Remove any existing time display
                     const existingPunchTime = document.querySelector('.punch-time');
                     if (existingPunchTime) {
                         existingPunchTime.remove();
                     }
-                    
+
                     // Add time display if available
                     if (isPunchedIn && data.last_punch_in) {
                         const punchTimeElem = document.createElement('div');
@@ -3451,17 +3532,17 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 })
                 .catch(error => {
                     console.error('Error checking punch status:', error);
-                    
+
                     // Set default state on error
                     punchButton.classList.remove('btn-danger', 'btn-secondary');
                     punchButton.classList.add('btn-success');
                     punchButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Punch In';
                     punchButton.disabled = false;
-                    
+
                     showNotification('Failed to check punch status', 'error');
                 });
         }
-        
+
         /**
          * Update the punch button appearance based on current status
          */
@@ -3486,7 +3567,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 punchButton.disabled = false;
             }
         }
-        
+
         /**
          * Update the shift information display
          */
@@ -3496,7 +3577,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 shiftName.textContent = userShiftInfo.shift_name || 'Default Shift';
                 shiftTiming.textContent = `${userShiftInfo.start_time_formatted || '09:00 AM'} - ${userShiftInfo.end_time_formatted || '06:00 PM'}`;
                 shiftWeeklyOffs.textContent = userShiftInfo.weekly_offs ? `Weekly offs: ${userShiftInfo.weekly_offs}` : 'Weekly offs: Saturday, Sunday';
-                
+
                 // Update the greeting section shift info
                 const greetingShiftInfo = document.getElementById('greeting-shift-info');
                 if (greetingShiftInfo) {
@@ -3511,14 +3592,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         </span>
                     `;
                 }
-                
+
                 // Start updating shift time
                 updateShiftTime();
             } else {
                 shiftName.textContent = 'Default Shift';
                 shiftTiming.textContent = '09:00 AM - 06:00 PM';
                 shiftWeeklyOffs.textContent = 'Weekly offs: Saturday, Sunday';
-                
+
                 // Default greeting section shift info
                 const greetingShiftInfo = document.getElementById('greeting-shift-info');
                 if (greetingShiftInfo) {
@@ -3535,7 +3616,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 }
             }
         }
-        
+
         /**
          * Updates the shift remaining time
          */
@@ -3544,12 +3625,12 @@ function updateWorkReportWordCount(textarea, displayElement) {
             if (!shiftRemainingTimeEl || !userShiftInfo || !userShiftInfo.end_time) {
                 return;
             }
-            
+
             const now = new Date();
-            
+
             // Parse shift end time
             const [endHours, endMinutes, endSeconds] = userShiftInfo.end_time.split(':').map(Number);
-            
+
             // Create shift end date for today
             const shiftEndDate = new Date(
                 now.getFullYear(),
@@ -3559,7 +3640,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 endMinutes,
                 endSeconds || 0
             );
-            
+
             // If current time is after shift end time, the shift has ended for today
             if (now > shiftEndDate) {
                 // Only update if text has changed to avoid flickering
@@ -3569,71 +3650,71 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 }
                 return;
             }
-            
+
             // Calculate time difference
             let timeDiff = shiftEndDate - now;
-            
+
             // Convert time difference to hours, minutes, seconds
             const hours = Math.floor(timeDiff / (1000 * 60 * 60));
             timeDiff -= hours * (1000 * 60 * 60);
-            
+
             const minutes = Math.floor(timeDiff / (1000 * 60));
             timeDiff -= minutes * (1000 * 60);
-            
+
             const seconds = Math.floor(timeDiff / 1000);
-            
+
             // Format the countdown string
             const countdownText = `${hours}h ${minutes}m ${seconds}s`;
-            
+
             // Only update if text has changed to avoid flickering
             if (shiftRemainingTimeEl.textContent !== countdownText) {
                 shiftRemainingTimeEl.textContent = countdownText;
-                
+
                 // Only set color if it's not already blue
                 if (shiftRemainingTimeEl.style.color !== '#0d6efd') {
                     shiftRemainingTimeEl.style.color = '#0d6efd'; // Blue color
                 }
             }
-            
+
             // Schedule next update in 1 second
             setTimeout(updateShiftTime, 1000);
         }
-        
+
         /**
          * Shows a notification message
          */
         function showNotification(message, type) {
             // Check if the notification container exists
             let notificationContainer = document.querySelector('.notification-container');
-            
+
             // Create notification container if it doesn't exist
             if (!notificationContainer) {
                 notificationContainer = document.createElement('div');
                 notificationContainer.className = 'notification-container';
                 document.body.appendChild(notificationContainer);
             }
-            
+
             // Create notification element
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
-            
+
             // Set icon based on notification type
             let icon = 'fa-info-circle';
             if (type === 'success') icon = 'fa-check-circle';
             if (type === 'error') icon = 'fa-exclamation-circle';
             if (type === 'warning') icon = 'fa-exclamation-triangle';
-            
+
             notification.innerHTML = `
                 <i class="fas ${icon}"></i>
                 <div class="notification-message">${message}</div>
             `;
-            
+
             // Add to container
             notificationContainer.appendChild(notification);
-            
+
             // Show notification
             setTimeout(() => notification.classList.add('show'), 10);
-            
+
             // Remove after 3 seconds
             setTimeout(() => {
                 notification.classList.remove('show');
@@ -3646,7 +3727,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
          */
         function updateDateTime() {
             const now = new Date();
-            
+
             // Options for formatting date and time with consistent format
             const dateOptions = {
                 weekday: 'long',
@@ -3655,21 +3736,21 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 year: 'numeric',
                 timeZone: 'Asia/Kolkata' // IST timezone
             };
-            
+
             const timeOptions = {
                 hour: '2-digit',  // Use 2-digit to ensure leading zeros
                 minute: '2-digit', // Use 2-digit to ensure leading zeros
                 hour12: true,
                 timeZone: 'Asia/Kolkata' // IST timezone
             };
-            
+
             // Format date and time using Intl.DateTimeFormat with specific parts
             const formattedTime = new Intl.DateTimeFormat('en-US', timeOptions).format(now);
-            
+
             // Format date components separately to avoid inconsistencies
             const formatter = new Intl.DateTimeFormat('en-US', dateOptions);
             const dateParts = formatter.formatToParts(now);
-            
+
             // Extract individual date components
             let weekday = '', day = '', month = '', year = '';
             dateParts.forEach(part => {
@@ -3678,7 +3759,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 if (part.type === 'month') month = part.value;
                 if (part.type === 'year') year = part.value;
             });
-            
+
             // Cache current values to avoid unnecessary updates
             if (!window.lastTimeValues) {
                 window.lastTimeValues = {
@@ -3689,7 +3770,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     year: ''
                 };
             }
-            
+
             // Find the time display elements
             const timeElements = document.querySelectorAll('.time-item');
             if (timeElements && timeElements.length >= 2) {
@@ -3706,10 +3787,10 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     }
                     window.lastTimeValues.time = formattedTime;
                 }
-                
+
                 // Update date components individually to avoid flickering
                 const dateEl = timeElements[1];
-                
+
                 // Create date structure if not exists
                 if (!dateEl.querySelector('.weekday-text')) {
                     dateEl.innerHTML = `
@@ -3727,31 +3808,31 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         dateEl.querySelector('.weekday-text').textContent = weekday;
                         window.lastTimeValues.weekday = weekday;
                     }
-                    
+
                     if (window.lastTimeValues.day !== day) {
                         dateEl.querySelector('.day-text').textContent = day;
                         window.lastTimeValues.day = day;
                     }
-                    
+
                     if (window.lastTimeValues.month !== month) {
                         dateEl.querySelector('.month-text').textContent = month;
                         window.lastTimeValues.month = month;
                     }
-                    
+
                     if (window.lastTimeValues.year !== year) {
                         dateEl.querySelector('.year-text').textContent = year;
                         window.lastTimeValues.year = year;
                     }
                 }
             }
-            
+
             // Update greeting based on time of day
             updateGreeting(now);
-            
+
             // Schedule next update in 1 second
             setTimeout(updateDateTime, 1000);
         }
-        
+
         /**
          * Update the greeting based on the time of day
          */
@@ -3760,7 +3841,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
             let greeting = '';
             let iconClass = '';
             let iconColor = '';
-            
+
             if (hour >= 5 && hour < 12) {
                 greeting = 'Good morning';
                 iconClass = 'fa-sun';
@@ -3778,7 +3859,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 iconClass = 'fa-moon';
                 iconColor = '#34495e'; // dark blue
             }
-            
+
             // Update the greeting text
             const greetingEl = document.querySelector('.greeting-text h1');
             if (greetingEl) {
@@ -3796,7 +3877,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         userName = afterComma.trim();
                     }
                 }
-                
+
                 // Set the greeting with exactly one exclamation mark
                 greetingEl.innerHTML = `
                     <i class="fas ${iconClass} greeting-icon" style="color: ${iconColor}"></i>
@@ -3814,7 +3895,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
             preloaderProgress.style.width = '0%';
             preloaderOverlay.style.display = 'flex';
         }
-        
+
         /**
          * Updates the preloader progress
          * @param {number} percent - Progress percentage (0-100)
@@ -3826,20 +3907,20 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 preloaderMessage.textContent = message;
             }
         }
-        
+
         /**
          * Hides the preloader overlay
          */
         function hidePreloader() {
             preloaderOverlay.style.display = 'none';
         }
-        
+
         // Function to fetch missing punches and populate notification dropdown
         function fetchMissingPunches() {
             // Clear existing notifications except header and footer
             const notificationContainer = document.querySelector('.notification-items-container');
             if (!notificationContainer) return;
-            
+
             // Clear existing items
             notificationContainer.innerHTML = `
                 <div class="notification-item">
@@ -3848,7 +3929,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     </div>
                 </div>
             `;
-            
+
             // Fetch missing punches from the server
             fetch('ajax_handlers/get_missing_punches.php', {
                 method: 'POST',
@@ -3856,92 +3937,92 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Clear the container
-                    notificationContainer.innerHTML = '';
-                    
-                    // Update notification badge
-                    const notificationBadge = document.querySelector('.notification-badge');
-                    if (notificationBadge) {
-                        notificationBadge.textContent = data.count;
-                        notificationBadge.style.display = data.count > 0 ? 'block' : 'none';
-                    }
-                    
-                    if (data.count === 0) {
-                        // No missing punches
-                        notificationContainer.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear the container
+                        notificationContainer.innerHTML = '';
+
+                        // Update notification badge
+                        const notificationBadge = document.querySelector('.notification-badge');
+                        if (notificationBadge) {
+                            notificationBadge.textContent = data.count;
+                            notificationBadge.style.display = data.count > 0 ? 'block' : 'none';
+                        }
+
+                        if (data.count === 0) {
+                            // No missing punches
+                            notificationContainer.innerHTML = `
                             <div class="notification-item">
                                 <div class="notification-content">
                                     <p class="notification-text">No missing attendance records</p>
                                 </div>
                             </div>
                         `;
-                    } else {
-                        // Get all unique dates for checking read status
-                        const dates = [...new Set(data.data.map(punch => punch.date))];
-                        
-                        // Check read status for all dates
-                        return fetch('ajax_handlers/check_notification_read_status.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: 'dates[]=' + dates.join('&dates[]=')
-                        })
-                        .then(response => response.json())
-                        .then(statusData => {
-                            // Process the missing punches data
-                            data.data.forEach(punch => {
-                                // Format the date for display
-                                const dateObj = new Date(punch.date);
-                                const formattedDate = dateObj.toLocaleDateString('en-US', { 
-                                    weekday: 'short', 
-                                    month: 'short', 
-                                    day: 'numeric' 
-                                });
-                                
-                                // Determine notification type and message
-                                let title, message;
-                                if (punch.type === 'punch_in') {
-                                    title = "Missing Punch In";
-                                    message = "Punch in not recorded";
-                                } else if (punch.type === 'punch_out') {
-                                    title = "Missing Punch Out";
-                                    message = "Punch out not recorded";
-                                } else {
-                                    // Fallback for old format
-                                    title = "Missing Attendance";
-                                    message = "Attendance record incomplete";
-                                }
-                                
-                                // Check if this notification is read
-                                const isRead = statusData.read_dates && statusData.read_dates.includes(punch.date);
-                                
-                                // Check if this notification is submitted
-                                let isSubmitted = false;
-                                if (punch.type === 'punch_in') {
-                                    isSubmitted = statusData.submitted_punch_in_dates && statusData.submitted_punch_in_dates.includes(punch.date);
-                                } else if (punch.type === 'punch_out') {
-                                    isSubmitted = statusData.submitted_punch_out_dates && statusData.submitted_punch_out_dates.includes(punch.date);
-                                }
-                                
-                                // Create notification item
-                                const notificationItem = document.createElement('div');
-                                notificationItem.className = 'notification-item ' + (isRead ? '' : 'unread');
-                                notificationItem.setAttribute('data-date', punch.date);
-                                notificationItem.setAttribute('data-type', punch.type);
-                                
-                                // Add status tags
-                                let statusTags = '';
-                                if (isSubmitted) {
-                                    statusTags = '<span class="badge badge-success ml-2">Submitted</span>';
-                                } else if (isRead) {
-                                    statusTags = '<span class="badge badge-secondary ml-2">Read</span>';
-                                }
-                                
-                                notificationItem.innerHTML = `
+                        } else {
+                            // Get all unique dates for checking read status
+                            const dates = [...new Set(data.data.map(punch => punch.date))];
+
+                            // Check read status for all dates
+                            return fetch('ajax_handlers/check_notification_read_status.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: 'dates[]=' + dates.join('&dates[]=')
+                            })
+                                .then(response => response.json())
+                                .then(statusData => {
+                                    // Process the missing punches data
+                                    data.data.forEach(punch => {
+                                        // Format the date for display
+                                        const dateObj = new Date(punch.date);
+                                        const formattedDate = dateObj.toLocaleDateString('en-US', {
+                                            weekday: 'short',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        });
+
+                                        // Determine notification type and message
+                                        let title, message;
+                                        if (punch.type === 'punch_in') {
+                                            title = "Missing Punch In";
+                                            message = "Punch in not recorded";
+                                        } else if (punch.type === 'punch_out') {
+                                            title = "Missing Punch Out";
+                                            message = "Punch out not recorded";
+                                        } else {
+                                            // Fallback for old format
+                                            title = "Missing Attendance";
+                                            message = "Attendance record incomplete";
+                                        }
+
+                                        // Check if this notification is read
+                                        const isRead = statusData.read_dates && statusData.read_dates.includes(punch.date);
+
+                                        // Check if this notification is submitted
+                                        let isSubmitted = false;
+                                        if (punch.type === 'punch_in') {
+                                            isSubmitted = statusData.submitted_punch_in_dates && statusData.submitted_punch_in_dates.includes(punch.date);
+                                        } else if (punch.type === 'punch_out') {
+                                            isSubmitted = statusData.submitted_punch_out_dates && statusData.submitted_punch_out_dates.includes(punch.date);
+                                        }
+
+                                        // Create notification item
+                                        const notificationItem = document.createElement('div');
+                                        notificationItem.className = 'notification-item ' + (isRead ? '' : 'unread');
+                                        notificationItem.setAttribute('data-date', punch.date);
+                                        notificationItem.setAttribute('data-type', punch.type);
+
+                                        // Add status tags
+                                        let statusTags = '';
+                                        if (isSubmitted) {
+                                            statusTags = '<span class="badge badge-success ml-2">Submitted</span>';
+                                        } else if (isRead) {
+                                            statusTags = '<span class="badge badge-secondary ml-2">Read</span>';
+                                        }
+
+                                        notificationItem.innerHTML = `
                                     <div class="notification-icon bg-warning">
                                         <i class="fas fa-exclamation-triangle"></i>
                                     </div>
@@ -3951,58 +4032,58 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                         <p class="notification-time">${punch.date}</p>
                                     </div>
                                 `;
-                                
-                                // Add click event to handle notification
-                                notificationItem.addEventListener('click', function() {
-                                    // Mark as read when clicked (if not already read or submitted)
-                                    if (!isRead && !isSubmitted) {
-                                        this.classList.remove('unread');
-                                        
-                                        // Mark notification as read on server
-                                        markNotificationAsRead(punch.date);
-                                    }
-                                    
-                                    // Open appropriate modal based on notification type
-                                    if (isSubmitted) {
-                                        // Show message for already submitted requests
-                                        alert(`${title} on ${punch.date} has already been submitted.`);
-                                    } else {
-                                        // Open the appropriate modal
-                                        if (punch.type === 'punch_in') {
-                                            openMissingPunchModal(punch.date);
-                                        } else if (punch.type === 'punch_out') {
-                                            openMissingPunchOutModal(punch.date);
-                                        }
-                                    }
+
+                                        // Add click event to handle notification
+                                        notificationItem.addEventListener('click', function () {
+                                            // Mark as read when clicked (if not already read or submitted)
+                                            if (!isRead && !isSubmitted) {
+                                                this.classList.remove('unread');
+
+                                                // Mark notification as read on server
+                                                markNotificationAsRead(punch.date);
+                                            }
+
+                                            // Open appropriate modal based on notification type
+                                            if (isSubmitted) {
+                                                // Show message for already submitted requests
+                                                alert(`${title} on ${punch.date} has already been submitted.`);
+                                            } else {
+                                                // Open the appropriate modal
+                                                if (punch.type === 'punch_in') {
+                                                    openMissingPunchModal(punch.date);
+                                                } else if (punch.type === 'punch_out') {
+                                                    openMissingPunchOutModal(punch.date);
+                                                }
+                                            }
+                                        });
+
+                                        notificationContainer.appendChild(notificationItem);
+                                    });
                                 });
-                                
-                                notificationContainer.appendChild(notificationItem);
-                            });
-                        });
-                    }
-                } else {
-                    // Error fetching data
-                    notificationContainer.innerHTML = `
+                        }
+                    } else {
+                        // Error fetching data
+                        notificationContainer.innerHTML = `
                         <div class="notification-item">
                             <div class="notification-content">
                                 <p class="notification-text">Error loading notifications: ${data.message}</p>
                             </div>
                         </div>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching missing punches:', error);
-                notificationContainer.innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching missing punches:', error);
+                    notificationContainer.innerHTML = `
                     <div class="notification-item">
                         <div class="notification-content">
                             <p class="notification-text">Error loading notifications</p>
                         </div>
                     </div>
                 `;
-            });
+                });
         }
-        
+
         // Function to mark a notification as read
         function markNotificationAsRead(date) {
             // Send request to mark the notification as read
@@ -4013,29 +4094,29 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 },
                 body: 'date=' + encodeURIComponent(date)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Notification for date ' + date + ' marked as read');
-                } else {
-                    console.error('Error marking notification as read: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error marking notification as read: ' + error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Notification for date ' + date + ' marked as read');
+                    } else {
+                        console.error('Error marking notification as read: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read: ' + error);
+                });
         }
     </script>
     <script>
         // Toggle Panel Function
         function togglePanel() {
             const leftPanel = document.getElementById('leftPanel');
-        const mainContent = document.getElementById('mainContent');
+            const mainContent = document.getElementById('mainContent');
             const toggleIcon = document.getElementById('toggleIcon');
-            
+
             leftPanel.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
-            
+
             if (leftPanel.classList.contains('collapsed')) {
                 toggleIcon.classList.remove('fa-chevron-left');
                 toggleIcon.classList.add('fa-chevron-right');
@@ -4046,40 +4127,40 @@ function updateWorkReportWordCount(textarea, displayElement) {
                 mainContent.style.marginLeft = '250px';
             }
         }
-        
+
         // Mobile menu functions
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const hamburgerMenu = document.getElementById('hamburgerMenu');
             const leftPanel = document.getElementById('leftPanel');
             const overlay = document.getElementById('overlay');
-            
+
             // Initialize notification badge count
             if (typeof updateNotificationBadge === 'function') {
                 updateNotificationBadge();
             }
-            
+
             // Make travel expenses card clickable
             const travelExpensesCard = document.querySelector('.site-card[data-card-type="travel-expenses"]');
             if (travelExpensesCard) {
-                travelExpensesCard.addEventListener('click', function(e) {
+                travelExpensesCard.addEventListener('click', function (e) {
                     // Don't navigate if the click was on the Add Expense button (it has its own handler)
                     if (!e.target.closest('#addTravelExpenseBtn')) {
                         // Navigate to travel expenses page
                         window.location.href = 'travel_expenses.php';
                     }
                 });
-                
+
                 // Add click handler for the Add Expense button
                 const addTravelExpenseBtn = document.getElementById('addTravelExpenseBtn');
                 if (addTravelExpenseBtn) {
-                    addTravelExpenseBtn.addEventListener('click', function(e) {
+                    addTravelExpenseBtn.addEventListener('click', function (e) {
                         e.preventDefault();
                         e.stopPropagation();
                         $('#newTravelExpenseModal').modal('show');
                     });
                 }
             }
-            
+
             // Check if we should enable scrolling based on screen height
             function checkPanelScrolling() {
                 if (window.innerHeight < 700 || window.innerWidth <= 768) {
@@ -4088,37 +4169,37 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     leftPanel.classList.remove('needs-scrolling');
                 }
             }
-            
+
             // Hamburger menu click handler
-            hamburgerMenu.addEventListener('click', function() {
+            hamburgerMenu.addEventListener('click', function () {
                 leftPanel.classList.toggle('mobile-open');
                 overlay.classList.toggle('active');
                 checkPanelScrolling();
             });
-            
+
             // Overlay click handler (close menu when clicking outside)
-            overlay.addEventListener('click', function() {
+            overlay.addEventListener('click', function () {
                 leftPanel.classList.remove('mobile-open');
                 overlay.classList.remove('active');
-                
+
                 // Also close any open dropdowns
                 document.querySelectorAll('.dropdown-menu').forEach(menu => {
                     menu.classList.remove('show');
                 });
             });
-            
+
             // Handle window resize
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 if (window.innerWidth > 768) {
                     leftPanel.classList.remove('mobile-open');
                     overlay.classList.remove('active');
                 }
                 checkPanelScrolling();
             });
-            
+
             // Initial check for scrolling
             checkPanelScrolling();
-            
+
             // Update time every second
             function updateTime() {
                 // Initialize cache for values if not exists
@@ -4128,14 +4209,14 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         date: ''
                     };
                 }
-                
+
                 // Get the current time in IST directly from the server via AJAX
                 fetch('get_ist_time.php')
                     .then(response => response.json())
                     .then(data => {
                         // Update the DOM with the server time
                         const timeElements = document.querySelectorAll('.time-item');
-                        
+
                         if (timeElements && timeElements.length >= 2) {
                             // Only update time if changed
                             if (window.lastTimeValues.time !== data.time) {
@@ -4150,7 +4231,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 }
                                 window.lastTimeValues.time = data.time;
                             }
-                            
+
                             // Only update date if changed
                             if (window.lastTimeValues.date !== data.date) {
                                 // Find or create date text element
@@ -4168,12 +4249,12 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     })
                     .catch(error => {
                         console.error('Error fetching IST time:', error);
-                        
+
                         // Fallback to client-side calculation if server fetch fails
                         const now = new Date();
-                        
+
                         // Format as IST string with consistent format
-                        const options = { 
+                        const options = {
                             timeZone: 'Asia/Kolkata',
                             hour: '2-digit',
                             minute: '2-digit',
@@ -4186,17 +4267,17 @@ function updateWorkReportWordCount(textarea, displayElement) {
                             month: 'long',
                             year: 'numeric'
                         };
-                        
+
                         // Use Intl.DateTimeFormat for correct timezone formatting
                         const timeFormatter = new Intl.DateTimeFormat('en-US', options);
                         const dateFormatter = new Intl.DateTimeFormat('en-US', dateOptions);
-                        
+
                         const formattedTime = timeFormatter.format(now);
                         const formattedDate = dateFormatter.format(now);
-                        
+
                         // Update the DOM
                         const timeElements = document.querySelectorAll('.time-item');
-                        
+
                         if (timeElements && timeElements.length >= 2) {
                             // Only update time if changed
                             if (window.lastTimeValues.time !== formattedTime) {
@@ -4211,7 +4292,7 @@ function updateWorkReportWordCount(textarea, displayElement) {
                                 }
                                 window.lastTimeValues.time = formattedTime;
                             }
-                            
+
                             // Only update date if changed
                             if (window.lastTimeValues.date !== formattedDate) {
                                 // Find or create date text element
@@ -4228,26 +4309,26 @@ function updateWorkReportWordCount(textarea, displayElement) {
                         }
                     });
             }
-            
+
             // Update time immediately and then every second
             updateTime();
             setInterval(updateTime, 1000);
-            
+
             // Function to ensure the menu is completely visible within the viewport
             function ensureMenuVisible(menu, trigger) {
                 // Get trigger position
                 const triggerRect = trigger.getBoundingClientRect();
-                
+
                 // Calculate menu width
                 const menuWidth = 250; // Fixed width from CSS
-                
+
                 // Different positioning based on which dropdown
                 const isProfileDropdown = menu.classList.contains('profile-menu');
-                
+
                 // Position menu relative to trigger - directly below it
                 menu.style.position = 'fixed';
                 menu.style.top = (triggerRect.bottom + 5) + 'px';
-                
+
                 if (isProfileDropdown) {
                     // Profile menu aligns to the right
                     const rightPosition = window.innerWidth - triggerRect.right;
@@ -4258,25 +4339,25 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     menu.style.left = triggerRect.left + 'px';
                     menu.style.right = 'auto';
                 }
-                
+
                 // After positioning, check viewport constraints
                 setTimeout(() => {
                     const menuRect = menu.getBoundingClientRect();
                     const windowHeight = window.innerHeight;
                     const windowWidth = window.innerWidth;
-                    
+
                     // Check if menu is too far to the right
                     if (menuRect.right > windowWidth - 10) {
                         menu.style.left = 'auto';
                         menu.style.right = '10px';
                     }
-                    
+
                     // Check if menu is too far to the left
                     if (menuRect.left < 10) {
                         menu.style.left = '10px';
                         menu.style.right = 'auto';
                     }
-                    
+
                     // Check if menu is too far to the bottom
                     if (menuRect.bottom > windowHeight - 10) {
                         // Position above trigger element instead
@@ -4285,500 +4366,504 @@ function updateWorkReportWordCount(textarea, displayElement) {
                     }
                 }, 0);
             }
-            
+
             // Notification Bell Dropdown
             const notificationBell = document.getElementById('notificationBell');
             const notificationMenu = document.getElementById('notificationMenu');
-            
-            notificationBell.addEventListener('click', function(e) {
+
+            notificationBell.addEventListener('click', function (e) {
                 e.stopPropagation();
-                
+
                 // Close profile menu if open
                 profileMenu.classList.remove('show');
-                
+
                 // Toggle notification menu
                 const isVisible = notificationMenu.classList.toggle('show');
-                
+
                 if (isVisible) {
                     // Fetch missing punches when opening the dropdown
                     fetchMissingPunches();
-                    
+
                     // Make sure menu is completely visible
                     ensureMenuVisible(notificationMenu, notificationBell);
-                    
+
                     // Bring to front
                     notificationMenu.style.zIndex = '10001';
                     if (profileMenu) profileMenu.style.zIndex = '10000';
                 }
             });
-            
+
             // Profile Avatar Dropdown
             const profileAvatar = document.getElementById('profileAvatar');
             const profileMenu = document.getElementById('profileMenu');
-            
-            profileAvatar.addEventListener('click', function(e) {
+
+            profileAvatar.addEventListener('click', function (e) {
                 e.stopPropagation();
-                
+
                 // Close notification menu if open
                 notificationMenu.classList.remove('show');
-                
+
                 // Toggle profile menu
                 const isVisible = profileMenu.classList.toggle('show');
-                
+
                 if (isVisible) {
                     // Make sure menu is completely visible
                     ensureMenuVisible(profileMenu, profileAvatar);
-                    
+
                     // Bring to front
                     profileMenu.style.zIndex = '10001';
                     if (notificationMenu) notificationMenu.style.zIndex = '10000';
                 }
             });
-            
+
             // Close dropdowns when clicking outside
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!notificationBell.contains(e.target) && !notificationMenu.contains(e.target)) {
                     notificationMenu.classList.remove('show');
                 }
-                
+
                 if (!profileAvatar.contains(e.target) && !profileMenu.contains(e.target)) {
                     profileMenu.classList.remove('show');
                 }
+            });
         });
-    });
     </script>
-</body>
+    <?php include_once('modals/travel_expense_modal_new.php'); ?>
+    <?php include_once('modals/missing_punch_modal.php'); ?>
+    <?php include_once('modals/missing_punch_out_modal.php'); ?>
 
-<?php include_once('modals/travel_expense_modal_new.php'); ?>
-<?php include_once('modals/missing_punch_modal.php'); ?>
-<?php include_once('modals/missing_punch_out_modal.php'); ?>
-
-<!-- Event Details Modal -->
-<div id="eventDetailsModal" class="event-details-modal">
-  <div class="event-details-modal-content">
-    <div class="event-details-modal-header">
-      <h5 class="event-details-modal-title">Event Details</h5>
-      <button type="button" class="event-details-modal-close" id="closeEventDetailsModal">&times;</button>
-    </div>
-    <div class="event-details-modal-body">
-      <div class="event-details-loader">
-        <div class="spinner-border text-primary" role="status">
-          <span class="sr-only">Loading...</span>
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="event-details-modal">
+        <div class="event-details-modal-content">
+            <div class="event-details-modal-header">
+                <h5 class="event-details-modal-title">Event Details</h5>
+                <button type="button" class="event-details-modal-close" id="closeEventDetailsModal">&times;</button>
+            </div>
+            <div class="event-details-modal-body">
+                <div class="event-details-loader">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div id="eventDetailsContent"></div>
+            </div>
+            <div class="event-details-modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeEventDetailsModalBtn">Close</button>
+            </div>
         </div>
-      </div>
-      <div id="eventDetailsContent"></div>
     </div>
-    <div class="event-details-modal-footer">
-      <button type="button" class="btn btn-secondary" id="closeEventDetailsModalBtn">Close</button>
+
+    <!-- Add this right before the closing body tag -->
+    <div class="image-viewer-overlay" id="imageViewerOverlay">
+        <div class="image-viewer-container">
+            <img src="" alt="Full size image" class="image-viewer-image" id="imageViewerImage">
+            <button class="image-viewer-close" id="imageViewerClose">&times;</button>
+            <div class="image-viewer-caption" id="imageViewerCaption"></div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- Add this right before the closing body tag -->
-<div class="image-viewer-overlay" id="imageViewerOverlay">
-  <div class="image-viewer-container">
-    <img src="" alt="Full size image" class="image-viewer-image" id="imageViewerImage">
-    <button class="image-viewer-close" id="imageViewerClose">&times;</button>
-    <div class="image-viewer-caption" id="imageViewerCaption"></div>
-  </div>
-</div>
-
-<!-- Include Instant Modal for Missing Punch Records -->
+    <!-- Include Instant Modal for Missing Punch Records -->
     <?php include 'instant_modal.php'; ?>
-    
+
     <!-- Fix for Instant Modal positioning -->
     <style>
-    #instantModal {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background-color: rgba(0, 0, 0, 0.7) !important;
-        z-index: 3000 !important;
-        justify-content: center !important;
-        align-items: center !important;
-        display: none !important;
-        backdrop-filter: blur(3px);
-    }
-    
-    #instantModal.active {
-        display: flex !important;
-    }
-    
-    .work-report-content {
-        background: #ffffff;
-        width: 90%;
-        max-width: 600px;
-        border-radius: 10px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        animation: modalSlideIn 0.3s ease forwards;
-        overflow: hidden;
-        border: none;
-    }
-    
-    @keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px) scale(0.97);
+        #instantModal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            z-index: 3000 !important;
+            justify-content: center !important;
+            align-items: center !important;
+            display: none !important;
+            backdrop-filter: blur(3px);
         }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-    
-    .work-report-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #eef2f7;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: linear-gradient(135deg, #4a6cf7, #6a11cb);
-        color: white;
-    }
-    
-    .work-report-header h3 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .work-report-header h3 i {
-        font-size: 1.2rem;
-    }
-    
-    .close-modal {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: white;
-        font-size: 1rem;
-    }
-    
-    .close-modal:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: rotate(90deg);
-    }
-    
-    .work-report-body {
-        padding: 20px;
-        max-height: 50vh;
-        overflow-y: auto;
-    }
-    
-    .work-report-footer {
-        padding: 16px 20px;
-        border-top: 1px solid #eef2f7;
-        display: flex;
-        flex-direction: column;
-        background: #f8fafc;
-    }
-    
-    .modal-suppression-checkbox {
-        margin-bottom: 16px;
-    }
-    
-    .modal-suppression-checkbox label {
-        font-size: 0.85rem;
-        color: #475569;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-    }
-    
-    .modal-suppression-checkbox input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        margin-right: 8px;
-        accent-color: #4a6cf7;
-        cursor: pointer;
-    }
-    
-    .submit-btn {
-        background: linear-gradient(135deg, #4a6cf7, #6a11cb);
-        border: none;
-        color: white;
-        padding: 10px 16px;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        box-shadow: 0 3px 5px rgba(74, 108, 247, 0.3);
-    }
-    
-    .submit-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 10px rgba(74, 108, 247, 0.4);
-    }
-    
-    .submit-btn:active {
-        transform: translateY(0);
-    }
-    
-    /* Enhanced styles for missing punch items */
-    .missing-punch-item {
-        display: flex;
-        align-items: center;
-        padding: 14px;
-        background: #f8fafc;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        border-left: 3px solid #4a6cf7;
-        transition: all 0.3s ease;
-        position: relative;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    
-    .missing-punch-item:hover {
-        background: #ffffff;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        border-left-width: 4px;
-    }
-    
-    .missing-punch-item.punch-out {
-        border-left-color: #10b981;
-    }
-    
-    .missing-punch-item i {
-        font-size: 1.1rem;
-        margin-right: 12px;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        background: rgba(74, 108, 247, 0.1);
-        color: #4a6cf7;
-    }
-    
-    .missing-punch-item.punch-out i {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-    }
-    
-    .missing-punch-details {
-        flex: 1;
-    }
-    
-    .missing-punch-date {
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 4px;
-        font-size: 0.95rem;
-    }
-    
-    .missing-punch-type {
-        font-size: 0.8rem;
-        color: #64748b;
-        margin-bottom: 6px;
-    }
-    
-    .missing-punch-status {
-        font-weight: 600;
-        color: #ef4444;
-        font-size: 0.8rem;
-        background: rgba(239, 68, 68, 0.1);
-        padding: 3px 8px;
-        border-radius: 20px;
-    }
-    
-    .missing-punch-timer {
-        font-size: 0.75rem;
-        color: #ef4444;
-        font-weight: 500;
-        background: rgba(254, 226, 226, 0.7);
-        padding: 5px 10px;
-        border-radius: 20px;
-        margin-top: 6px;
-        display: inline-block;
-    }
-    
-    .missing-punch-timer.warning {
-        color: #f59e0b;
-        background: rgba(255, 243, 205, 0.7);
-    }
-    
-    .missing-punch-timer.safe {
-        color: #10b981;
-        background: rgba(209, 250, 229, 0.7);
-    }
-    
-    /* Alert box styling */
-    .alert-box {
-        margin-bottom: 20px;
-        padding: 16px;
-        background: linear-gradient(135deg, #fffbeb, #fef3c7);
-        border-radius: 8px;
-        border: 1px solid #fde68a;
-        color: #92400e;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    
-    .alert-box i {
-        margin-right: 8px;
-        font-size: 1rem;
-    }
-    
-    /* Scrollable content */
-    .scrollable-content {
-        max-height: 350px;
-        overflow-y: auto;
-        padding-right: 8px;
-    }
-    
-    /* Custom scrollbar */
-    .scrollable-content::-webkit-scrollbar {
-        width: 5px;
-    }
-    
-    .scrollable-content::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 8px;
-    }
-    
-    .scrollable-content::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 8px;
-    }
-    
-    .scrollable-content::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-    
-    /* Loading content */
-    .loading-content {
-        text-align: center;
-        padding: 30px 16px;
-    }
-    
-    .loading-content i {
-        font-size: 2.5rem;
-        color: #4a6cf7;
-        margin-bottom: 16px;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .loading-content h4 {
-        margin-bottom: 12px;
-        color: #1e293b;
-        font-weight: 600;
-        font-size: 1rem;
-    }
-    
-    .loading-content p {
-        color: #64748b;
-        font-size: 0.85rem;
-    }
-    
-    /* Error message */
-    .error-message {
-        text-align: center;
-        padding: 30px 16px;
-        background: #fef2f2;
-        border-radius: 8px;
-        border: 1px solid #fecaca;
-        color: #b91c1c;
-    }
-    
-    .error-message i {
-        font-size: 2.5rem;
-        color: #ef4444;
-        margin-bottom: 16px;
-    }
-    
-    .error-message h4 {
-        margin-bottom: 12px;
-        color: #b91c1c;
-        font-weight: 600;
-        font-size: 1rem;
-    }
-    
-    .error-message p {
-        font-size: 0.9rem;
-        margin-bottom: 16px;
-    }
-    
-    /* No missing punches */
-    .no-missing-punches {
-        text-align: center;
-        padding: 40px 16px;
-        background: #f0fdf4;
-        border-radius: 8px;
-    }
-    
-    .no-missing-punches i {
-        font-size: 2.5rem;
-        color: #10b981;
-        margin-bottom: 16px;
-    }
-    
-    .no-missing-punches h4 {
-        margin-bottom: 12px;
-        color: #047857;
-        font-weight: 600;
-        font-size: 1rem;
-    }
-    
-    .no-missing-punches p {
-        color: #065f46;
-        font-size: 0.85rem;
-    }
-    </style>
 
-</body>
-</html>
+        #instantModal.active {
+            display: flex !important;
+        }
+
+        .work-report-content {
+            background: #ffffff;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease forwards;
+            overflow: hidden;
+            border: none;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .work-report-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eef2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+            color: white;
+        }
+
+        .work-report-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .work-report-header h3 i {
+            font-size: 1.2rem;
+        }
+
+        .close-modal {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .work-report-body {
+            padding: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .work-report-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+        }
+
+        .modal-suppression-checkbox {
+            margin-bottom: 16px;
+        }
+
+        .modal-suppression-checkbox label {
+            font-size: 0.85rem;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .modal-suppression-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            accent-color: #4a6cf7;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4a6cf7, #6a11cb);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 3px 5px rgba(74, 108, 247, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(74, 108, 247, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Enhanced styles for missing punch items */
+        .missing-punch-item {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #4a6cf7;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .missing-punch-item:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border-left-width: 4px;
+        }
+
+        .missing-punch-item.punch-out {
+            border-left-color: #10b981;
+        }
+
+        .missing-punch-item i {
+            font-size: 1.1rem;
+            margin-right: 12px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(74, 108, 247, 0.1);
+            color: #4a6cf7;
+        }
+
+        .missing-punch-item.punch-out i {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .missing-punch-details {
+            flex: 1;
+        }
+
+        .missing-punch-date {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+
+        .missing-punch-type {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .missing-punch-status {
+            font-weight: 600;
+            color: #ef4444;
+            font-size: 0.8rem;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        .missing-punch-timer {
+            font-size: 0.75rem;
+            color: #ef4444;
+            font-weight: 500;
+            background: rgba(254, 226, 226, 0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-top: 6px;
+            display: inline-block;
+        }
+
+        .missing-punch-timer.warning {
+            color: #f59e0b;
+            background: rgba(255, 243, 205, 0.7);
+        }
+
+        .missing-punch-timer.safe {
+            color: #10b981;
+            background: rgba(209, 250, 229, 0.7);
+        }
+
+        /* Alert box styling */
+        .alert-box {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-radius: 8px;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert-box i {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        /* Scrollable content */
+        .scrollable-content {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        /* Custom scrollbar */
+        .scrollable-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Loading content */
+        .loading-content {
+            text-align: center;
+            padding: 30px 16px;
+        }
+
+        .loading-content i {
+            font-size: 2.5rem;
+            color: #4a6cf7;
+            margin-bottom: 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-content h4 {
+            margin-bottom: 12px;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .loading-content p {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        /* Error message */
+        .error-message {
+            text-align: center;
+            padding: 30px 16px;
+            background: #fef2f2;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+
+        .error-message i {
+            font-size: 2.5rem;
+            color: #ef4444;
+            margin-bottom: 16px;
+        }
+
+        .error-message h4 {
+            margin-bottom: 12px;
+            color: #b91c1c;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .error-message p {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        /* No missing punches */
+        .no-missing-punches {
+            text-align: center;
+            padding: 40px 16px;
+            background: #f0fdf4;
+            border-radius: 8px;
+        }
+
+        .no-missing-punches i {
+            font-size: 2.5rem;
+            color: #10b981;
+            margin-bottom: 16px;
+        }
+
+        .no-missing-punches h4 {
+            margin-bottom: 12px;
+            color: #047857;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .no-missing-punches p {
+            color: #065f46;
+            font-size: 0.85rem;
+        }
+    </style>
 
 <!-- Add this before the closing body tag of site_manager_dashboard.php -->
 <script src="js/manager/event-details-modal.js"></script>
 
 <!-- Add this right before the closing body tag -->
 <script>
-  // Additional event listeners for closing the event details modal
-  document.addEventListener('DOMContentLoaded', function() {
-    // Get close buttons
-    const closeEventDetailsBtn = document.getElementById('closeEventDetailsModal');
-    const closeEventDetailsModalBtn = document.getElementById('closeEventDetailsModalBtn');
-    
-    // Add click handlers
-    if (closeEventDetailsBtn) {
-      closeEventDetailsBtn.onclick = function() {
-        const modal = document.getElementById('eventDetailsModal');
-        if (modal) modal.classList.remove('show');
-      };
-    }
-    
-    if (closeEventDetailsModalBtn) {
-      closeEventDetailsModalBtn.onclick = function() {
-        const modal = document.getElementById('eventDetailsModal');
-        if (modal) modal.classList.remove('show');
-      };
-    }
-  });
+    // Additional event listeners for closing the event details modal
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get close buttons
+        const closeEventDetailsBtn = document.getElementById('closeEventDetailsModal');
+        const closeEventDetailsModalBtn = document.getElementById('closeEventDetailsModalBtn');
+
+        // Add click handlers
+        if (closeEventDetailsBtn) {
+            closeEventDetailsBtn.onclick = function () {
+                const modal = document.getElementById('eventDetailsModal');
+                if (modal) modal.classList.remove('show');
+            };
+        }
+
+        if (closeEventDetailsModalBtn) {
+            closeEventDetailsModalBtn.onclick = function () {
+                const modal = document.getElementById('eventDetailsModal');
+                if (modal) modal.classList.remove('show');
+            };
+        }
+    });
 </script>
 
 <!-- Add SheetJS library for Excel export -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+</body>
+
+</html>

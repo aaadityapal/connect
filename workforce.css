@@ -287,9 +287,31 @@ body {
     /* Collapse borders */
     padding: 8px;
     min-height: 130px;
+    max-height: 180px;
+    /* Limit height */
+    overflow-y: auto;
+    /* Enable scrolling */
     position: relative;
     cursor: pointer;
     transition: background 0.2s;
+}
+
+/* Custom scrollbar for calendar day */
+.calendar-day::-webkit-scrollbar {
+    width: 4px;
+}
+
+.calendar-day::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.calendar-day::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+.calendar-day::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
 }
 
 .calendar-day.empty {
@@ -348,6 +370,18 @@ body {
     cursor: pointer;
     transition: all 0.15s ease;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.task-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.task-chip svg {
+    flex-shrink: 0;
 }
 
 .task-chip:hover {
@@ -430,6 +464,43 @@ body {
     justify-content: center;
 }
 
+/* Task Counter Badge */
+.task-count-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+/* More Tasks Indicator */
+.more-tasks-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.more-tasks-indicator:hover {
+    background: #e2e8f0;
+    color: #475569;
+    border-color: #94a3b8;
+}
 
 /* Modal */
 .modal-overlay {
@@ -633,85 +704,548 @@ textarea:focus {
     border: 0;
 }
 
-/* File Upload Styles */
-.file-upload-wrapper {
-    position: relative;
-    border: 2px dashed var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 20px;
+/* Custom Alert Styles */
+.alert-content {
+    max-width: 400px;
+    padding: 32px;
     text-align: center;
-    cursor: pointer;
-    background-color: #fafafa;
-    transition: all 0.2s;
-}
-
-.file-upload-wrapper:hover {
-    border-color: var(--primary-color);
-    background-color: #f0f9ff;
-}
-
-.file-input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.upload-placeholder {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
 }
 
-.image-preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.preview-item {
-    position: relative;
-    width: 100%;
-    padding-top: 100%;
-    /* Square aspect ratio */
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-}
-
-.preview-item img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.remove-btn {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    border: none;
+.alert-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
 }
 
-.remove-btn:hover {
-    background: rgba(239, 68, 68, 0.9);
+.alert-icon.success {
+    background-color: #ecfdf5;
+    color: #10b981;
+}
+
+.alert-icon.success::after {
+    content: '';
+    width: 24px;
+    height: 12px;
+    border-left: 4px solid currentColor;
+    border-bottom: 4px solid currentColor;
+    transform: rotate(-45deg) translate(2px, -2px);
+}
+
+.alert-icon.error {
+    background-color: #fef2f2;
+    color: #ef4444;
+}
+
+.alert-icon.error::after {
+    content: '×';
+    font-size: 48px;
+    line-height: 1;
+    font-weight: 300;
+}
+
+#alertTitle {
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+#alertMessage {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.alert-footer {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+    justify-content: center;
+    width: 100%;
+}
+
+.alert-footer .btn {
+    min-width: 100px;
+    justify-content: center;
+}
+
+/* ============================================
+   RESPONSIVE STYLES FOR MOBILE DEVICES
+   ============================================ */
+
+/* Tablets and smaller (iPad, etc.) */
+@media (max-width: 1024px) {
+    .app-header {
+        padding: 0 16px;
+    }
+
+    .calendar-container {
+        padding: 16px;
+    }
+
+    .calendar-grid {
+        grid-auto-rows: minmax(110px, 1fr);
+    }
+
+    .calendar-day {
+        min-height: 110px;
+        max-height: 150px;
+    }
+}
+
+/* Mobile devices (iPhone XR, etc.) */
+@media (max-width: 768px) {
+    :root {
+        --header-height: auto;
+    }
+
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
+
+    .app-header {
+        flex-wrap: wrap;
+        padding: 12px;
+        gap: 12px;
+        height: auto;
+        min-height: 60px;
+    }
+
+    /* Logo area - full width on mobile */
+    .logo-area {
+        order: 1;
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .logo-area h1 {
+        font-size: 1rem;
+    }
+
+    /* Header actions - move to top right */
+    .header-actions {
+        order: 2;
+    }
+
+    /* Site selector - full width row */
+    .site-selector-wrapper {
+        order: 3;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        flex: 1 1 100%;
+    }
+
+    /* Calendar controls - full width row */
+    .header-controls {
+        order: 4;
+        width: 100%;
+        justify-content: space-between;
+        flex: 1 1 100%;
+        gap: 8px;
+    }
+
+    .current-date-display h2 {
+        font-size: 0.9rem;
+        min-width: auto;
+        flex: 1;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    #todayBtn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Calendar container */
+    .calendar-container {
+        padding: 12px;
+        height: calc(100vh - 160px);
+    }
+
+    /* Calendar grid - 7 columns but smaller cells */
+    .calendar-grid {
+        grid-auto-rows: minmax(100px, 1fr);
+        gap: 0;
+    }
+
+    .calendar-day {
+        min-height: 100px;
+        max-height: 140px;
+        padding: 6px 4px 4px 4px;
+        border-width: 2px;
+        margin: -2px 0 0 -2px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Improve scrollbar on mobile */
+    .calendar-day::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .calendar-day::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .day-number {
+        font-size: 0.75rem;
+        width: 22px;
+        height: 22px;
+        margin-bottom: 6px;
+    }
+
+    /* Day headers */
+    .day-head {
+        font-size: 0.7rem;
+        padding: 8px 2px;
+    }
+
+    /* Task chips - optimized for mobile readability */
+    .task-chip {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+        margin-bottom: 3px;
+        gap: 0;
+        width: 100%;
+        display: flex;
+        min-height: 26px;
+        border-radius: 12px;
+        white-space: normal;
+        line-height: 1.3;
+    }
+
+    .task-chip span {
+        font-size: 0.8rem;
+        line-height: 1.3;
+        max-width: 100%;
+        white-space: normal;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        word-break: break-word;
+    }
+
+    /* Hide icons on mobile to save space */
+    .task-chip svg {
+        display: none;
+    }
+
+    .task-chip.delayed {
+        padding-right: 22px;
+    }
+
+    .task-chip.delayed::after {
+        width: 14px;
+        height: 14px;
+        font-size: 9px;
+        right: 4px;
+    }
+
+    .task-count-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        top: 3px;
+        right: 3px;
+        min-width: 18px;
+        text-align: center;
+    }
+
+    .more-tasks-indicator {
+        font-size: 0.7rem;
+        padding: 4px 6px;
+        width: 100%;
+        min-height: 22px;
+        gap: 3px;
+    }
+
+    .more-tasks-indicator svg {
+        width: 10px;
+        height: 10px;
+        flex-shrink: 0;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        max-width: calc(100% - 24px);
+        max-height: 85vh;
+        margin: 12px;
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+    }
+
+    .modal-header h3 {
+        font-size: 1rem;
+    }
+
+    form {
+        padding: 16px;
+        max-height: calc(85vh - 60px);
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    label {
+        font-size: 0.75rem;
+    }
+
+    input,
+    select,
+    textarea {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Alert modal */
+    .alert-content {
+        padding: 24px;
+        max-width: calc(100% - 24px);
+    }
+
+    .alert-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    #alertTitle {
+        font-size: 1rem;
+    }
+
+    #alertMessage {
+        font-size: 0.85rem;
+    }
+
+    .alert-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Small mobile devices (iPhone SE, etc.) */
+@media (max-width: 414px) {
+    .app-header {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .logo-area h1 {
+        font-size: 0.95rem;
+    }
+
+    .site-selector-wrapper {
+        height: 32px;
+        padding: 0 10px;
+    }
+
+    .site-select {
+        font-size: 0.85rem;
+    }
+
+    .current-date-display h2 {
+        font-size: 0.85rem;
+    }
+
+    .icon-btn {
+        padding: 4px;
+    }
+
+    .icon-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .calendar-container {
+        padding: 8px;
+    }
+
+    .calendar-grid {
+        grid-auto-rows: minmax(80px, 1fr);
+    }
+
+    .calendar-day {
+        min-height: 80px;
+        max-height: 100px;
+        padding: 3px;
+    }
+
+    .day-number {
+        font-size: 0.65rem;
+        width: 20px;
+        height: 20px;
+        margin-bottom: 3px;
+    }
+
+    .day-head {
+        font-size: 0.6rem;
+        padding: 6px 1px;
+    }
+
+    .task-chip {
+        padding: 5px 7px;
+        font-size: 0.75rem;
+        margin-bottom: 3px;
+    }
+
+    .task-chip svg {
+        display: none;
+    }
+
+    .btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    #todayBtn {
+        padding: 5px 8px;
+        font-size: 0.7rem;
+    }
+}
+
+/* Extra small devices (iPhone SE 1st gen, etc.) */
+@media (max-width: 375px) {
+    .logo-area h1 {
+        font-size: 0.9rem;
+    }
+
+    .current-date-display h2 {
+        font-size: 0.8rem;
+    }
+
+    .calendar-grid {
+        grid-auto-rows: minmax(70px, 1fr);
+    }
+
+    .calendar-day {
+        min-height: 70px;
+        max-height: 90px;
+        padding: 2px;
+    }
+
+    .day-number {
+        font-size: 0.6rem;
+        width: 18px;
+        height: 18px;
+        margin-bottom: 2px;
+    }
+
+    .day-head {
+        font-size: 0.55rem;
+        padding: 5px 0;
+    }
+
+    .task-chip {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+        margin-bottom: 2px;
+        border-radius: 12px;
+    }
+
+    .task-chip svg {
+        display: none;
+    }
+
+    .task-chip.delayed {
+        padding-right: 20px;
+    }
+
+    .task-chip.delayed::after {
+        width: 12px;
+        height: 12px;
+        font-size: 8px;
+        right: 3px;
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .modal-header {
+        padding: 10px 12px;
+    }
+
+    form {
+        padding: 12px;
+    }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+    .calendar-container {
+        height: calc(100vh - 120px);
+    }
+
+    .calendar-grid {
+        grid-auto-rows: minmax(60px, 1fr);
+    }
+
+    .calendar-day {
+        min-height: 60px;
+        max-height: 80px;
+    }
+
+    .modal-content {
+        max-height: 90vh;
+    }
+
+    form {
+        max-height: calc(90vh - 60px);
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+
+    .icon-btn,
+    .btn,
+    .task-chip,
+    .close-modal {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .task-chip {
+        min-height: 32px;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
 }

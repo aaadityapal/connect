@@ -9,8 +9,12 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Check if user has required role
-$requiredRoles = ['Senior Manager (Site)', 'Site Coordinator'];
+$requiredRoles = ['Senior Manager (Site)', 'Site Coordinator', 'Site Supervisor'];
 $userRole = $_SESSION['role'] ?? '';
+$isSupervisor = (trim($userRole) === 'Site Supervisor');
+$canAdd = !$isSupervisor;
+$onlyMyTasks = $isSupervisor;
+$requireDesc = $isSupervisor;
 
 if (!in_array($userRole, $requiredRoles)) {
     // User doesn't have required role
@@ -31,13 +35,20 @@ if (!in_array($userRole, $requiredRoles)) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="workforce.css">
+    <link rel="stylesheet" href="workforce.css?v=<?php echo time(); ?>">
+    <script>
+        window.PERMISSIONS = {
+            canAdd: <?php echo $canAdd ? 'true' : 'false'; ?>,
+            onlyMyTasks: <?php echo $onlyMyTasks ? 'true' : 'false'; ?>,
+            requireDesc: <?php echo $requireDesc ? 'true' : 'false'; ?>
+        };
+    </script>
 </head>
 
 <body class="light-theme">
 
     <!-- Include Manager Panel -->
-    <?php include 'includes/manager_panel.php'; ?>
+    <?php include 'includes/supervisor_panel.php'; ?>
 
     <div class="app-container">
         <div class="main-content">
@@ -90,14 +101,16 @@ if (!in_array($userRole, $requiredRoles)) {
                 </div>
 
                 <div class="header-actions">
-                    <button id="addTaskBtn" class="btn btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        New Task
-                    </button>
+                    <?php if ($canAdd): ?>
+                        <button id="addTaskBtn" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            New Task
+                        </button>
+                    <?php endif; ?>
                 </div>
             </header>
 
@@ -176,8 +189,11 @@ if (!in_array($userRole, $requiredRoles)) {
                 </div>
 
                 <div class="form-group">
-                    <label for="taskDesc">Description</label>
+                    <label for="taskDesc">Work Description</label>
                     <textarea id="taskDesc" name="description" rows="3" placeholder="Additional details..."></textarea>
+                    <div id="descriptionWordCount"
+                        style="font-size: 0.75rem; color: #6b7280; text-align: right; margin-top: 4px; display: none;">
+                        Words: 0/15</div>
                 </div>
 
 

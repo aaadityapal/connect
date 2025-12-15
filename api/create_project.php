@@ -16,10 +16,10 @@ try {
 
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     // Debug log
     error_log('Received project data: ' . json_encode($data));
-    
+
     // Validate category ID
     if (empty($data['projectCategory'])) {
         throw new Exception('Category ID is required');
@@ -29,14 +29,14 @@ try {
     $userQuery = "SELECT id FROM users WHERE id = :user_id AND status = 'active'";
     $stmt = $pdo->prepare($userQuery);
     $stmt->execute([':user_id' => $_SESSION['user_id']]);
-    
+
     if (!$stmt->fetch()) {
         throw new Exception('Invalid user');
     }
-    
+
     // Start transaction
     $pdo->beginTransaction();
-    
+
     // Insert into projects table
     $projectQuery = "INSERT INTO projects (
         title, 
@@ -71,10 +71,10 @@ try {
         :plot_area,
         :contact_number
     )";
-    
+
     // Convert assignTo value 0 to NULL for database storage
     $assignedTo = (!empty($data['assignTo']) && $data['assignTo'] !== '0') ? $data['assignTo'] : null;
-    
+
     $stmt = $pdo->prepare($projectQuery);
     $result = $stmt->execute([
         ':title' => $data['projectTitle'],
@@ -95,9 +95,9 @@ try {
     if (!$result) {
         throw new Exception('Failed to insert project: ' . json_encode($stmt->errorInfo()));
     }
-    
+
     $projectId = $pdo->lastInsertId();
-    
+
     // Log in project_activity_log
     $activityQuery = "INSERT INTO project_activity_log (
         project_id,
@@ -107,18 +107,18 @@ try {
         performed_at
     ) VALUES (
         :project_id,
-        'create',
+        'other',
         'Project created',
         :performed_by,
         NOW()
     )";
-    
+
     $stmt = $pdo->prepare($activityQuery);
     $stmt->execute([
         ':project_id' => $projectId,
         ':performed_by' => $_SESSION['user_id']  // Use session user ID
     ]);
-    
+
     // Log in project_history
     $historyQuery = "INSERT INTO project_history (
         project_id,
@@ -128,39 +128,39 @@ try {
         changed_at
     ) VALUES (
         :project_id,
-        'create',
+        'created',
         :new_value,
         :changed_by,
         NOW()
     )";
-    
+
     $stmt = $pdo->prepare($historyQuery);
     $stmt->execute([
         ':project_id' => $projectId,
         ':new_value' => json_encode($data),
         ':changed_by' => $_SESSION['user_id']  // Use session user ID
     ]);
-    
+
     // Commit transaction
     $pdo->commit();
-    
+
     echo json_encode([
         'status' => 'success',
         'message' => 'Project created successfully',
         'project_id' => $projectId
     ]);
-    
+
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    
+
     error_log('Error creating project: ' . $e->getMessage());
-    
+
     http_response_code(500);
     echo json_encode([
         'status' => 'error',
         'message' => 'Failed to create project: ' . $e->getMessage()
     ]);
 }
-exit; 
+exit;

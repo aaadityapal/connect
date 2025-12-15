@@ -25,17 +25,23 @@ function init() {
         render();
     });
 
-    document.getElementById('addTaskBtn').addEventListener('click', () => openModal());
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    if (addTaskBtn) {
+        addTaskBtn.addEventListener('click', () => openModal());
+    }
     document.getElementById('closeModal').addEventListener('click', closeModal);
     document.getElementById('cancelModal').addEventListener('click', closeModal);
 
     document.getElementById('taskForm').addEventListener('submit', handleFormSubmit);
 
-    // Image Upload Listener
-    const fileInput = document.getElementById('taskImages');
-    if (fileInput) {
-        fileInput.addEventListener('change', handleImageSelect);
+    // Word Count Listener
+    const descInput = document.getElementById('taskDesc');
+    if (descInput) {
+        descInput.addEventListener('input', updateWordCount);
     }
+
+    // Close Alert Listener
+    document.getElementById('closeAlertBtn').addEventListener('click', closeAlert);
 
     // Site Selector Listener - Load projects from API
     const siteSelect = document.getElementById('siteSelect');
@@ -54,6 +60,15 @@ function init() {
         render();
     }
 
+    // Window resize listener to re-render calendar for responsive task display
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            renderCalendar(); // Re-render only the calendar, not fetch tasks again
+        }, 250); // Debounce for 250ms
+    });
+
     // Initial Load removed - now called after projects load
 }
 
@@ -61,24 +76,24 @@ async function loadProjectsFromAPI() {
     try {
         const response = await fetch('site/get_projects.php');
         const result = await response.json();
-        
+
         if (result.success && result.data.length > 0) {
             const siteSelect = document.getElementById('siteSelect');
             siteSelect.innerHTML = ''; // Clear loading option
-            
+
             result.data.forEach((project) => {
                 const option = document.createElement('option');
                 option.value = project.id;
                 option.textContent = project.title;
                 siteSelect.appendChild(option);
             });
-            
+
             // Set first project as default
             if (result.data.length > 0) {
                 state.currentSite = result.data[0].id;
                 siteSelect.value = state.currentSite;
             }
-            
+
             // Store projects for later use
             window.projectsData = result.data;
         } else {
@@ -94,13 +109,13 @@ async function loadUsersForAssignee() {
     try {
         const response = await fetch('site/get_users.php');
         const result = await response.json();
-        
+
         if (result.success && result.data && result.data.length > 0) {
             const assignToSelect = document.getElementById('taskAssignTo');
-            
+
             // Keep the default option
             assignToSelect.innerHTML = '<option value="">Select an assignee...</option>';
-            
+
             result.data.forEach((user) => {
                 const option = document.createElement('option');
                 option.value = user.username;
@@ -108,7 +123,7 @@ async function loadUsersForAssignee() {
                 option.textContent = user.username;
                 assignToSelect.appendChild(option);
             });
-            
+
             // Store users for later use
             window.usersData = result.data;
         } else {
@@ -119,53 +134,7 @@ async function loadUsersForAssignee() {
     }
 }
 
-// Image state
-let currentTaskImages = [];
 
-function handleImageSelect(e) {
-    const files = e.target.files;
-    if (!files.length) return;
-
-    Array.from(files).forEach(file => {
-        // Store file objects instead of base64
-        currentTaskImages.push({
-            name: file.name,
-            file: file,
-            type: file.type
-        });
-        renderImagePreviews();
-    });
-
-    // reset input
-    e.target.value = '';
-}
-
-function renderImagePreviews() {
-    const container = document.getElementById('imagePreviewContainer');
-    container.innerHTML = '';
-
-    currentTaskImages.forEach((img, index) => {
-        const div = document.createElement('div');
-        div.className = 'preview-item';
-        
-        // Check if it's a file object or a URL string
-        const imgSrc = img.file ? URL.createObjectURL(img.file) : img;
-        
-        div.innerHTML = `
-            <img src="${imgSrc}" alt="Attachment">
-            <button type="button" class="remove-btn" onclick="removeImage(${index})">&times;</button>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function removeImage(index) {
-    currentTaskImages.splice(index, 1);
-    renderImagePreviews();
-}
-
-// Ensure removeImage is global
-window.removeImage = removeImage;
 
 function changeMonth(delta) {
     state.currentDate.setMonth(state.currentDate.getMonth() + delta);
@@ -189,11 +158,15 @@ async function fetchTasks() {
         state.tasks = [];
         return;
     }
-    
+
     try {
-        const response = await fetch(`site/get_tasks.php?project_id=${state.currentSite}`);
+        let url = `site/get_tasks.php?project_id=${state.currentSite}`;
+        if (window.PERMISSIONS && window.PERMISSIONS.onlyMyTasks) {
+            url += '&my_tasks=true';
+        }
+        const response = await fetch(url);
         const result = await response.json();
-        
+
         if (result.success && result.data) {
             state.tasks = result.data;
         } else {
@@ -263,7 +236,27 @@ function renderCalendar() {
             return 0;
         });
 
-        dayTasks.forEach(task => {
+        // Add task counter badge if there are multiple tasks
+        if (dayTasks.length > 1) {
+            const badge = document.createElement('div');
+            badge.className = 'task-count-badge';
+            badge.textContent = dayTasks.length;
+            badge.title = `${dayTasks.length} tasks on this day`;
+            cell.appendChild(badge);
+        }
+
+        // Determine how many tasks to show based on screen size
+        const isMobile = window.innerWidth <= 768;
+        const maxVisibleTasks = isMobile ? 2 : dayTasks.length;
+        const visibleTasks = dayTasks.slice(0, maxVisibleTasks);
+        const hiddenTasksCount = dayTasks.length - maxVisibleTasks;
+
+        // Debug logging (remove in production)
+        if (dayTasks.length > 0) {
+            console.log(`Day ${day}: ${dayTasks.length} tasks, showing ${visibleTasks.length}, mobile: ${isMobile}, width: ${window.innerWidth}`);
+        }
+
+        visibleTasks.forEach(task => {
             const chip = document.createElement('div');
 
             // Determine if delayed: End date is in past AND status is NOT completed
@@ -289,8 +282,29 @@ function renderCalendar() {
             cell.appendChild(chip);
         });
 
+        // Add "more tasks" indicator if there are hidden tasks
+        if (hiddenTasksCount > 0) {
+            const moreIndicator = document.createElement('div');
+            moreIndicator.className = 'more-tasks-indicator';
+            moreIndicator.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+            </svg> <span>+${hiddenTasksCount} more</span>`;
+            moreIndicator.title = `Click to view all ${dayTasks.length} tasks`;
+
+            moreIndicator.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Show all tasks for this day in a modal or expand inline
+                showAllTasksForDay(dayTasks, new Date(year, month, day));
+            });
+            cell.appendChild(moreIndicator);
+        }
+
         // Click on empty cell to add task starting that day
         cell.addEventListener('click', () => {
+            // Check permission (default to true if undefined)
+            if (window.PERMISSIONS && window.PERMISSIONS.canAdd === false) {
+                return;
+            }
             openModal(new Date(year, month, day));
         });
 
@@ -322,12 +336,15 @@ function openModal(date = null, task = null) {
     // Reset form & images
     form.reset();
     document.getElementById('taskId').value = '';
-    currentTaskImages = []; // reset images
-    renderImagePreviews();
+
 
     if (task) {
         // Edit Mode
-        title.textContent = 'Edit Task';
+        if (window.PERMISSIONS && window.PERMISSIONS.canAdd === false) {
+            title.textContent = 'Task Details';
+        } else {
+            title.textContent = 'Edit Task';
+        }
         modal.setAttribute('data-mode', 'edit');
         document.getElementById('taskId').value = task.id;
         document.getElementById('taskTitle').value = task.title;
@@ -335,17 +352,287 @@ function openModal(date = null, task = null) {
         document.getElementById('taskEnd').value = task.end_date;
         document.getElementById('taskStatus').value = task.status;
         document.getElementById('taskDesc').value = task.description || '';
+        document.getElementById('taskDesc').value = task.description || '';
         document.getElementById('taskAssignTo').value = task.assign_to || '';
 
-        // Load existing images if any
-        if (task.images && Array.isArray(task.images)) {
-            currentTaskImages = [...task.images];
-            renderImagePreviews();
+        // Populate Detail View Elements (if they exist)
+        const detailContainer = document.getElementById('taskDetailView');
+        if (detailContainer) {
+            document.getElementById('detailTitle').textContent = task.title;
+            // Format Created At
+            const createdDate = new Date(task.created_at);
+            const allottedWhen = createdDate.toLocaleDateString() + ' ' + createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('detailAllottedWhen').textContent = allottedWhen;
+
+            // Whom (Assigned by)
+            const allottedBy = task.creator_name ? `${task.creator_name} (${task.creator_role || 'Manager'})` : 'Unknown';
+            document.getElementById('detailAllottedBy').textContent = allottedBy;
+
+            // Description
+            document.getElementById('detailDesc').textContent = task.description || 'No description provided.';
         }
+
+        // Store original status for validation
+        document.getElementById('taskForm').setAttribute('data-original-status', task.status);
+
+        // Check permissions for restricted edit
+        if (window.PERMISSIONS && window.PERMISSIONS.canAdd === false) {
+            // Disable all fields except status AND description (description required for status change)
+            document.getElementById('taskTitle').disabled = true;
+            document.getElementById('taskStart').disabled = true;
+            document.getElementById('taskEnd').disabled = true;
+            document.getElementById('taskAssignTo').disabled = true;
+            // Ensure status and description are enabled
+            document.getElementById('taskDesc').disabled = false;
+            document.getElementById('taskStatus').disabled = false;
+
+            // Disable all fields except status AND description (description required for status change)
+            // actually we want to HIDE everything and show the new flow
+            document.getElementById('taskTitle').closest('.form-group').style.display = 'none';
+            document.getElementById('taskStart').closest('.form-group').style.display = 'none';
+            document.getElementById('taskEnd').closest('.form-group').style.display = 'none';
+            document.getElementById('taskAssignTo').closest('.form-group').style.display = 'none';
+
+            // HIDE the standard Status and Description fields for this new flow
+            document.getElementById('taskStatus').closest('.form-group').style.display = 'none';
+            document.getElementById('taskDesc').closest('.form-group').style.display = 'none';
+
+            // Hide the default modal footer (Save Task button)
+            const defaultFooter = document.querySelector('.modal-footer');
+            if (defaultFooter) defaultFooter.style.display = 'none';
+
+            let detailView = document.getElementById('taskDetailView');
+            if (!detailView) {
+                // Create Detail View if not exists
+                const form = document.getElementById('taskForm');
+                detailView = document.createElement('div');
+                detailView.id = 'taskDetailView';
+                detailView.className = 'task-detail-view';
+                // Inline styles for minimalistic card look
+                detailView.style.padding = '20px';
+                detailView.style.marginBottom = '20px';
+                detailView.style.backgroundColor = '#f8fafc'; // Very light gray/blue
+                detailView.style.borderRadius = '8px';
+                detailView.style.border = '1px solid #e2e8f0';
+
+                detailView.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                         <h4 id="detailTitle" style="font-size: 1.25rem; font-weight: 700; color: #1e293b; line-height: 1.4; flex:1;"></h4>
+                         <button id="btnTaskTimeline" style="background:none; border:none; color:#64748b; cursor:pointer; padding:4px;" title="View Timeline">
+                            <i class="fas fa-history" style="font-size:1.1rem;"></i>
+                         </button>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <div style="color: #64748b; margin-top: 2px;"><i class="far fa-calendar-alt"></i></div>
+                            <div>
+                                <span style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600;">Allotted On</span>
+                                <span id="detailAllottedWhen" style="font-size: 0.95rem; color: #334155; font-weight: 500;"></span>
+                            </div>
+                        </div>
+
+                         <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <div style="color: #64748b; margin-top: 2px;"><i class="far fa-user"></i></div>
+                            <div>
+                                <span style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600;">Allotted By</span>
+                                <span id="detailAllottedBy" style="font-size: 0.95rem; color: #334155; font-weight: 500;"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                            <div style="color: #64748b;"><i class="far fa-file-alt"></i></div>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 600;">Description</span>
+                        </div>
+                        <p id="detailDesc" style="font-size: 0.95rem; color: #334155; line-height: 1.6; background: #fff; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0;"></p>
+                    </div>
+                `;
+                form.insertBefore(detailView, form.firstChild);
+
+                // Create Supervisor Actions Container
+                const actionsContainer = document.createElement('div');
+                actionsContainer.id = 'supervisorActionsContainer';
+                actionsContainer.style.marginTop = '20px';
+
+                // Review Input Area (Initially Hidden)
+                const reviewArea = document.createElement('div');
+                reviewArea.id = 'supervisorReviewArea';
+                reviewArea.style.display = 'none';
+                reviewArea.style.marginBottom = '20px';
+                reviewArea.innerHTML = `
+                    <label style="display:block; margin-bottom:8px; font-weight:600; color:#374151;">Write Review <span id="reviewActionText"></span></label>
+                    <textarea id="supervisorReviewText" name="supervisor_notes" rows="3" style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:10px;" placeholder="Write your review here..."></textarea>
+                    <div id="supWordCount" style="text-align:right; font-size:0.75rem; color:#6b7280; margin-top:4px;">Words: 0/15</div>
+                `;
+
+                // Buttons Area
+                const buttonsGrid = document.createElement('div');
+                buttonsGrid.id = 'supervisorButtonsGrid';
+                buttonsGrid.style.display = 'flex';
+                buttonsGrid.style.gap = '15px';
+                buttonsGrid.style.borderTop = '1px solid #e5e7eb';
+                buttonsGrid.style.paddingTop = '15px';
+
+                buttonsGrid.innerHTML = `
+                    <button type="button" id="btnActionNotDone" style="flex:1; padding:12px; background:#fff; border:1px solid #ef4444; color:#ef4444; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                        <i class="fas fa-times me-2"></i> Not Done
+                    </button>
+                    <button type="button" id="btnActionDone" style="flex:1; padding:12px; background:#10b981; border:none; color:#fff; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                        <i class="fas fa-check me-2"></i> Done
+                    </button>
+                    <button type="button" id="btnSubmitReview" style="display:none; flex:1; padding:12px; background:#3b82f6; border:none; color:#fff; border-radius:6px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                        Submit Review
+                    </button>
+                `;
+
+                actionsContainer.appendChild(reviewArea);
+                actionsContainer.appendChild(buttonsGrid);
+                form.appendChild(actionsContainer);
+
+                // --- Event Handlers for New Buttons ---
+
+                // Helper to setup review mode
+                const setupReviewMode = (status, actionText) => {
+                    // Set hidden standard inputs
+                    document.getElementById('taskStatus').value = status;
+
+                    // Show Review Box
+                    document.getElementById('supervisorReviewArea').style.display = 'block';
+                    document.getElementById('reviewActionText').textContent = actionText;
+
+                    // Hide original Action Buttons
+                    document.getElementById('btnActionNotDone').style.display = 'none';
+                    document.getElementById('btnActionDone').style.display = 'none';
+
+                    // Show Submit Button
+                    const submitBtn = document.getElementById('btnSubmitReview');
+                    submitBtn.style.display = 'block';
+                    submitBtn.textContent = 'Submit ' + (status === 'completed' ? 'Completion' : 'Report');
+
+                    // Focus textarea
+                    document.getElementById('supervisorReviewText').focus();
+                };
+
+                document.getElementById('btnActionDone').addEventListener('click', () => {
+                    setupReviewMode('completed', '(Completion)');
+                });
+
+                document.getElementById('btnActionNotDone').addEventListener('click', () => {
+                    setupReviewMode('in_progress', '(Issue/Hold)');
+                });
+
+                // Sync Review Text to hidden standard description field
+                document.getElementById('supervisorReviewText').addEventListener('input', function () {
+                    const val = this.value;
+                    // document.getElementById('taskDesc').value = val;
+
+                    // Word Count Logic
+                    const wcDisplay = document.getElementById('supWordCount');
+                    const words = val.match(/[a-zA-Z0-9]+/g) || [];
+                    const count = words.length;
+                    wcDisplay.textContent = `Words: ${count}/15`;
+                    wcDisplay.style.color = count < 15 ? '#ef4444' : '#10b981';
+                });
+
+                document.getElementById('btnSubmitReview').addEventListener('click', () => {
+                    // Trigger the standard form submit
+                    const fakeEvent = new Event('submit', { cancelable: true });
+                    document.getElementById('taskForm').dispatchEvent(fakeEvent);
+                });
+            }
+
+            // --- Reset State on Open ---
+            detailView.style.display = 'block';
+            document.getElementById('supervisorActionsContainer').style.display = 'block';
+            document.getElementById('supervisorReviewArea').style.display = 'none';
+            document.getElementById('btnActionNotDone').style.display = 'block';
+            document.getElementById('btnActionDone').style.display = 'block';
+            document.getElementById('btnSubmitReview').style.display = 'none';
+            document.getElementById('supervisorReviewText').value = '';
+            document.getElementById('supWordCount').textContent = 'Words: 0/15';
+
+            // Re-populate Detail View
+            if (task) {
+                document.getElementById('detailTitle').textContent = task.title;
+                const createdDate = new Date(task.created_at);
+                const allottedWhen = createdDate.toLocaleDateString() + ' ' + createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('detailAllottedWhen').textContent = allottedWhen;
+                const allottedBy = task.creator_name ? `${task.creator_name}` : 'Unknown';
+                document.getElementById('detailAllottedBy').textContent = allottedBy;
+                document.getElementById('detailDesc').textContent = task.description || 'No description.';
+
+                // Attach Timeline Handler
+                const btnTimeline = document.getElementById('btnTaskTimeline');
+                if (btnTimeline) {
+                    btnTimeline.onclick = (e) => {
+                        e.preventDefault();
+                        openTaskHistory(task.id);
+                    };
+                }
+            }
+            // Ensure standard hidden Status and Description are enabled so they post
+            document.getElementById('taskDesc').disabled = false;
+            document.getElementById('taskStatus').disabled = false;
+            // Clear standard desc so it takes new review
+            // document.getElementById('taskDesc').value = '';
+
+        } else {
+            // Manager View: Show Form Fields, Hide Detail View & Supervisor Actions
+            if (document.getElementById('taskDetailView')) {
+                document.getElementById('taskDetailView').style.display = 'none';
+            }
+            if (document.getElementById('supervisorActionsContainer')) {
+                document.getElementById('supervisorActionsContainer').style.display = 'none';
+            }
+            // Restore Default Footer
+            const defaultFooter = document.querySelector('.modal-footer');
+            if (defaultFooter) defaultFooter.style.display = 'flex';
+
+            // Show all standard fields
+            document.getElementById('taskTitle').closest('.form-group').style.display = 'block';
+            document.getElementById('taskStart').closest('.form-group').style.display = 'block';
+            document.getElementById('taskEnd').closest('.form-group').style.display = 'block';
+            document.getElementById('taskAssignTo').closest('.form-group').style.display = 'block';
+            document.getElementById('taskDesc').closest('.form-group').style.display = 'block';
+            document.getElementById('taskStatus').closest('.form-group').style.display = 'block';
+
+            document.querySelector("label[for='taskDesc']").textContent = "Work Description";
+
+            // Enable all fields (reset)
+            document.getElementById('taskTitle').disabled = false;
+            document.getElementById('taskStart').disabled = false;
+            document.getElementById('taskEnd').disabled = false;
+            document.getElementById('taskAssignTo').disabled = false;
+            document.getElementById('taskDesc').disabled = false;
+            document.getElementById('taskStatus').disabled = false;
+
+            // Hide word count for managers (optional, but requested context implies it's for the mandatory part)
+            const wc = document.getElementById('descriptionWordCount');
+            if (wc) wc.style.display = 'block';
+        }
+
+        // Initialize word count
+        updateWordCount();
+
+
     } else {
         // Add Mode
         title.textContent = 'Add New Task';
         modal.setAttribute('data-mode', 'add');
+
+        // Ensure standard fields visible for Add Mode (Managers only usually)
+        if (document.getElementById('taskDetailView')) document.getElementById('taskDetailView').style.display = 'none';
+        if (document.getElementById('supervisorActionsContainer')) document.getElementById('supervisorActionsContainer').style.display = 'none';
+
+        const defaultFooter = document.querySelector('.modal-footer');
+        if (defaultFooter) defaultFooter.style.display = 'flex';
+
+        // Show fields (in case they were hidden by Supervisor view previously)
+        document.querySelectorAll('.form-group').forEach(el => el.style.display = 'block');
+
+
         if (date) {
             const dateStr = formatDate(date);
             document.getElementById('taskStart').value = dateStr;
@@ -369,69 +656,41 @@ function handleFormSubmit(e) {
 
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-    
+
+    // Validation: Require Description on Status Change for Supervisors
+    if (window.PERMISSIONS && window.PERMISSIONS.requireDesc) {
+        const form = document.getElementById('taskForm');
+        // If we are in supervisor mode (checked by window permissions normally, but logic is robust enough)
+        // We enforce the 15 word count if description is changed
+
+        // For Supervisor, the 'review' is now in 'supervisor_notes' (from supervisorReviewText)
+        // The standard 'description' field holds the original description.
+
+        const review = data.supervisor_notes || '';
+        // Count words excluding special characters and emojis (alphanumeric sequences only)
+        const words = review.match(/[a-zA-Z0-9]+/g) || [];
+
+        if (words.length < 15) {
+            showCustomAlert(`Review/Description must contain at least 15 words. Current count: ${words.length}`, 'error');
+            return;
+        }
+    }
+
     // Add project ID
     data.project_id = state.currentSite;
-    
+
     // Remove empty taskId for new tasks
     if (!data.id || data.id === '') {
         delete data.id;
     }
 
-    // Upload images first if any exist
-    if (currentTaskImages.length > 0) {
-        uploadImages().then((uploadedImages) => {
-            // Add uploaded image paths to data
-            data.images = uploadedImages;
-            // Send to database API
-            saveTaskToDatabase(data);
-        }).catch((error) => {
-            alert('Error uploading images: ' + error);
-        });
-    } else {
-        // No images to upload
-        data.images = [];
-        saveTaskToDatabase(data);
-    }
-}
-
-async function uploadImages() {
-    if (currentTaskImages.length === 0) {
-        return [];
-    }
-    
-    const formData = new FormData();
-    
-    // Add only file objects (new images)
-    currentTaskImages.forEach((img) => {
-        if (img.file) {
-            formData.append('images[]', img.file);
-        }
-    });
-    
-    try {
-        const response = await fetch('site/upload_images.php', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Return array of file paths
-            return result.files.map(f => f.path);
-        } else {
-            throw new Error(result.error || 'Upload failed');
-        }
-    } catch (error) {
-        throw error;
-    }
+    saveTaskToDatabase(data);
 }
 
 async function saveTaskToDatabase(data) {
     try {
         console.log('Saving task data:', data); // Debug log
-        
+
         const response = await fetch('site/save_task.php', {
             method: 'POST',
             headers: {
@@ -446,14 +705,133 @@ async function saveTaskToDatabase(data) {
         if (result.success) {
             closeModal();
             render();
-            alert('Task saved successfully!');
+            // Play notification sound immediately
+            const soundFile = data.id ? 'notification/task_update_real.mp3' : 'notification/task_update.mp3';
+            const audio = new Audio(soundFile);
+            audio.play().catch(e => console.log('Audio play failed:', e));
+
+            showCustomAlert('Task saved successfully!');
         } else {
-            alert('Error saving task: ' + (result.error || 'Unknown error'));
+            showCustomAlert('Error saving task: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error saving task:', error);
-        alert('Error saving task. Please check the console for details.');
+        showCustomAlert('Error saving task. Please check the console for details.', 'error');
     }
+}
+
+function showCustomAlert(message, type = 'success') {
+    const modal = document.getElementById('alertModal');
+    const icon = document.getElementById('alertIcon');
+    const title = document.getElementById('alertTitle');
+    const msg = document.getElementById('alertMessage');
+
+    // Set content
+    msg.textContent = message;
+
+    // Set style based on type
+    icon.className = 'alert-icon ' + type;
+    title.textContent = type === 'success' ? 'Success' : 'Error';
+
+    // Show modal
+    modal.classList.add('active');
+}
+
+function closeAlert() {
+    document.getElementById('alertModal').classList.remove('active');
+}
+
+function showAllTasksForDay(tasks, date) {
+    const modal = document.getElementById('alertModal');
+    const icon = document.getElementById('alertIcon');
+    const title = document.getElementById('alertTitle');
+    const msg = document.getElementById('alertMessage');
+
+    // Format the date nicely
+    const dateStr = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    // Set title
+    title.textContent = `Tasks on ${dateStr}`;
+    icon.style.display = 'none'; // Hide the icon for this use case
+
+    // Build task list HTML
+    let tasksHTML = '<div style="text-align: left; max-height: 400px; overflow-y: auto;">';
+
+    tasks.forEach((task, index) => {
+        const statusColors = {
+            'planned': '#60a5fa',
+            'in_progress': '#f59e0b',
+            'completed': '#10b981',
+            'blocked': '#ef4444',
+            'on_hold': '#8b5cf6',
+            'review': '#06b6d4',
+            'cancelled': '#6b7280'
+        };
+
+        const color = statusColors[task.status] || '#6b7280';
+        const todayStr = formatDate(new Date());
+        const isDelayed = task.status !== 'completed' && task.end_date < todayStr;
+
+        tasksHTML += `
+            <div style="
+                margin-bottom: 12px; 
+                padding: 12px; 
+                background: #f8fafc; 
+                border-left: 4px solid ${color}; 
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s;
+            " 
+            onclick="document.getElementById('alertModal').classList.remove('active'); openModal(null, ${JSON.stringify(task).replace(/"/g, '&quot;')});"
+            onmouseover="this.style.background='#f1f5f9'"
+            onmouseout="this.style.background='#f8fafc'"
+            >
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                    <strong style="color: #1e293b; font-size: 0.95rem;">${task.title}</strong>
+                    ${isDelayed ? '<span style="color: #ef4444; font-size: 0.75rem; font-weight: 600;">⚠ DELAYED</span>' : ''}
+                </div>
+                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 4px;">
+                    Status: <span style="
+                        background: ${color}; 
+                        color: white; 
+                        padding: 2px 8px; 
+                        border-radius: 12px; 
+                        font-size: 0.7rem;
+                        font-weight: 600;
+                    ">${task.status.replace('_', ' ').toUpperCase()}</span>
+                </div>
+                ${task.description ? `<div style="font-size: 0.8rem; color: #475569; margin-top: 6px;">${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}</div>` : ''}
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 6px;">
+                    ${task.start_date} → ${task.end_date}
+                    ${task.assign_to ? ` • Assigned to: ${task.assign_to}` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    tasksHTML += '</div>';
+    msg.innerHTML = tasksHTML;
+
+    // Modify the close button text
+    const closeBtn = document.getElementById('closeAlertBtn');
+    closeBtn.textContent = 'Close';
+
+    // Show modal
+    modal.classList.add('active');
+
+    // Reset icon display when modal closes
+    modal.addEventListener('transitionend', function resetIcon() {
+        if (!modal.classList.contains('active')) {
+            icon.style.display = 'flex';
+            closeBtn.textContent = 'OK';
+            modal.removeEventListener('transitionend', resetIcon);
+        }
+    });
 }
 
 function formatDate(date) {
@@ -464,6 +842,208 @@ function formatDate(date) {
 
     if (month.length < 2) month = '0' + month;
     if (day.length < 2) day = '0' + day;
-
     return [year, month, day].join('-');
+}
+
+function updateWordCount() {
+    const desc = document.getElementById('taskDesc').value || '';
+    const wcDisplay = document.getElementById('descriptionWordCount');
+    if (!wcDisplay) return;
+
+    // Count words excluding special characters and emojis
+    const words = desc.match(/[a-zA-Z0-9]+/g) || [];
+    const count = words.length;
+
+    wcDisplay.textContent = `Words: ${count}/15`;
+
+    if (count < 15) {
+        wcDisplay.style.color = '#ef4444'; // Red
+    } else {
+        wcDisplay.style.color = '#10b981'; // Green
+    }
+}
+
+// --- Timeline / History Logic ---
+
+function openTaskHistory(taskId) {
+    let drawer = document.getElementById('timelineDrawer');
+    if (!drawer) {
+        createTimelineDrawer();
+        drawer = document.getElementById('timelineDrawer');
+    }
+
+    // Show drawer (slide in)
+    drawer.classList.add('active');
+
+    const overlay = document.getElementById('timelineOverlay');
+    if (overlay) overlay.style.display = 'block';
+
+    // Show loading state
+    const container = document.getElementById('timelineContent');
+    container.innerHTML = '<div style="padding:20px; text-align:center; color:#64748b;">Loading history...</div>';
+
+    // Fetch Data
+    fetch(`site/get_task_history.php?task_id=${taskId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                renderTimeline(data.data);
+            } else {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error loading history.</div>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Connection error.</div>';
+        });
+}
+
+function closeTimelinedrawer() {
+    const drawer = document.getElementById('timelineDrawer');
+    if (drawer) drawer.classList.remove('active');
+    const overlay = document.getElementById('timelineOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function createTimelineDrawer() {
+    // Inject Styles if needed
+    if (!document.getElementById('timelineStyles')) {
+        const style = document.createElement('style');
+        style.id = 'timelineStyles';
+        style.textContent = `
+            .timeline-drawer {
+                position: fixed;
+                top: 0;
+                right: -400px;
+                width: 350px;
+                height: 100vh;
+                background: white;
+                box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+                z-index: 2000;
+                transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                display: flex;
+                flex-direction: column;
+                border-left: 1px solid #e2e8f0;
+            }
+            .timeline-drawer.active {
+                right: 0;
+            }
+            .timeline-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.2);
+                z-index: 1999;
+                display: none;
+            }
+            .timeline-drawer.active + .timeline-overlay, 
+            .timeline-overlay.active { 
+                display: block; 
+            }
+            .timeline-item {
+                position: relative;
+                padding-left: 24px;
+                margin-bottom: 20px;
+            }
+            .timeline-item::before {
+                content: '';
+                position: absolute;
+                left: 6px;
+                top: 24px;
+                bottom: -24px;
+                width: 2px;
+                background: #e2e8f0;
+            }
+            .timeline-item:last-child::before {
+                display: none;
+            }
+            .timeline-dot {
+                position: absolute;
+                left: 0;
+                top: 4px;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                border: 2px solid #fff;
+                box-shadow: 0 0 0 1px #cbd5e1;
+            }
+            .timeline-date {
+                font-size: 0.75rem;
+                color: #94a3b8;
+                margin-bottom: 2px;
+            }
+            .timeline-content {
+                background: #f8fafc;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid #f1f5f9;
+                font-size: 0.85rem;
+                color: #334155;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'timelineOverlay';
+    overlay.className = 'timeline-overlay';
+    overlay.onclick = closeTimelinedrawer;
+    document.body.appendChild(overlay);
+
+    // Drawer
+    const drawer = document.createElement('div');
+    drawer.id = 'timelineDrawer';
+    drawer.className = 'timeline-drawer';
+    drawer.innerHTML = `
+        <div style="padding: 16px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+            <h3 style="font-weight: 700; color: #1e293b; margin:0;">Task History</h3>
+            <button onclick="closeTimelinedrawer()" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:1.2rem;">&times;</button>
+        </div>
+        <div id="timelineContent" style="flex: 1; overflow-y: auto; padding: 20px;">
+            <!-- Content goes here -->
+        </div>
+    `;
+    document.body.appendChild(drawer);
+
+    document.body.appendChild(drawer);
+
+    // Patch removed
+}
+
+function renderTimeline(logs) {
+    const container = document.getElementById('timelineContent');
+    if (!logs || logs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:20px;">No history available.</div>';
+        return;
+    }
+
+    let html = '';
+    logs.forEach(log => {
+        const date = new Date(log.created_at);
+        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        let dotColor = '#cbd5e1'; // gray
+        if (log.action_type === 'CREATED') dotColor = '#10b981';
+        if (log.action_type === 'STATUS_CHANGE') dotColor = '#3b82f6';
+        if (log.action_type === 'UPDATED') dotColor = '#f59e0b';
+
+        html += `
+            <div class="timeline-item">
+                <div class="timeline-dot" style="background-color: ${dotColor}; box-shadow: 0 0 0 1px ${dotColor};"></div>
+                <div class="timeline-date">${dateStr}</div>
+                <div style="font-weight:600; color:#1e293b; font-size:0.85rem; margin-bottom:2px;">
+                    ${log.action_type.replace('_', ' ')}
+                    <span style="font-weight:400; color:#64748b; font-size:0.75rem;">by ${log.performed_by_name || 'Unknown'}</span>
+                </div>
+                <div class="timeline-content">
+                    ${log.details || 'No details'}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
 }

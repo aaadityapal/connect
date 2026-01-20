@@ -12,6 +12,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,12 +25,13 @@ error_log("Session Data: " . print_r($_SESSION, true));
     <link rel="stylesheet" href="css/fingerprint_button.css">
     <link rel="stylesheet" href="css/fingerprint_notification.css">
 </head>
+
 <body>
     <div class="dashboard">
         <?php include 'components/sidebar.php'; ?>
-        
+
         <div class="main-content">
-            
+
             <!-- Updated greeting section with notification icon and gradient background -->
             <div class="greeting-section">
                 <div class="greeting-content">
@@ -51,7 +53,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="actions-container">
                         <!-- Replace the existing notification button with this -->
                         <div class="notification-container">
@@ -62,38 +64,36 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- New Avatar with Dropdown -->
                         <div class="avatar-container">
                             <button class="avatar-btn" id="avatarBtn">
-                                <?php 
+                                <?php
                                 // Debug: Print profile picture path
                                 error_log("Profile Picture Path: " . (isset($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : 'No profile picture set'));
                                 ?>
-                                <img src="<?php 
+                                <img src="<?php
+                                if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])) {
+                                    echo htmlspecialchars($_SESSION['profile_picture']);
+                                } else {
+                                    echo 'assets/default-avatar.png';
+                                }
+                                ?>" alt="Profile" class="avatar-img">
+                            </button>
+                            <div class="avatar-dropdown" id="avatarDropdown">
+                                <div class="dropdown-header">
+                                    <img src="<?php
                                     if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])) {
                                         echo htmlspecialchars($_SESSION['profile_picture']);
                                     } else {
                                         echo 'assets/default-avatar.png';
                                     }
-                                ?>" 
-                                alt="Profile" 
-                                class="avatar-img">
-                            </button>
-                            <div class="avatar-dropdown" id="avatarDropdown">
-                                <div class="dropdown-header">
-                                    <img src="<?php 
-                                        if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])) {
-                                            echo htmlspecialchars($_SESSION['profile_picture']);
-                                        } else {
-                                            echo 'assets/default-avatar.png';
-                                        }
-                                    ?>" 
-                                    alt="Profile" 
-                                    class="dropdown-avatar">
+                                    ?>" alt="Profile" class="dropdown-avatar">
                                     <div class="user-info">
-                                        <span class="user-name"><?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User'; ?></span>
-                                        <span class="user-role"><?php echo isset($_SESSION['role']) ? htmlspecialchars($_SESSION['role']) : 'Role'; ?></span>
+                                        <span
+                                            class="user-name"><?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'User'; ?></span>
+                                        <span
+                                            class="user-role"><?php echo isset($_SESSION['role']) ? htmlspecialchars($_SESSION['role']) : 'Role'; ?></span>
                                     </div>
                                 </div>
                                 <div class="dropdown-divider"></div>
@@ -113,7 +113,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 </ul>
                             </div>
                         </div>
-                        
+
                         <!-- Existing punch-in container -->
                         <div class="punch-in-container">
                             <button id="punch-button" class="punch-button">
@@ -127,15 +127,15 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     </div>
                 </div>
             </div>
-            
+
             <div class="content">
                 <div class="dashboard-sections-wrapper">
                     <!-- Existing Employee Overview Section -->
-                <div class="employee-overview">
-                    <div class="section-header">
+                    <div class="employee-overview">
+                        <div class="section-header">
                             <div class="section-title">
-                        <i class="fas fa-users"></i>
-                        <h2>Employees Overview</h2>
+                                <i class="fas fa-users"></i>
+                                <h2>Employees Overview</h2>
                             </div>
                             <div class="date-filter">
                                 <button class="filter-btn">
@@ -144,114 +144,115 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                     <i class="fas fa-chevron-down"></i>
                                 </button>
                             </div>
-                    </div>
-                    
-                    <div class="employee-dashboard-layout">
-                        <!-- Left side: stat cards in a 2x2 grid -->
-                        <div class="stat-cards-container">
-                            <!-- First row -->
-                            <div class="stat-row">
-                                <!-- Present Today -->
-                                <div class="stat-card" data-tooltip="present-details">
-                                    <div class="stat-card-icon present-icon">
-                                        <i class="fas fa-user-check"></i>
+                        </div>
+
+                        <div class="employee-dashboard-layout">
+                            <!-- Left side: stat cards in a 2x2 grid -->
+                            <div class="stat-cards-container">
+                                <!-- First row -->
+                                <div class="stat-row">
+                                    <!-- Present Today -->
+                                    <div class="stat-card" data-tooltip="present-details">
+                                        <div class="stat-card-icon present-icon">
+                                            <i class="fas fa-user-check"></i>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <h3>Present Today</h3>
+                                            <div class="stat-number" id="present-count">0</div>
+                                            <div class="stat-label" id="present-total">/ 0 Total Employees</div>
+                                        </div>
                                     </div>
-                                    <div class="stat-card-content">
-                                        <h3>Present Today</h3>
-                                        <div class="stat-number" id="present-count">0</div>
-                                        <div class="stat-label" id="present-total">/ 0 Total Employees</div>
+
+                                    <!-- Pending Leaves -->
+                                    <div class="stat-card" data-tooltip="pending-details">
+                                        <div class="stat-card-icon pending-icon">
+                                            <i class="fas fa-hourglass-half"></i>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <h3>Pending Leaves</h3>
+                                            <div class="stat-number" id="pending-count">0</div>
+                                            <div class="stat-label">Awaiting Approval</div>
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Pending Leaves -->
-                                <div class="stat-card" data-tooltip="pending-details">
-                                    <div class="stat-card-icon pending-icon">
-                                        <i class="fas fa-hourglass-half"></i>
+
+                                <!-- Second row -->
+                                <div class="stat-row">
+                                    <!-- Short Leave -->
+                                    <div class="stat-card" data-tooltip="short-leave-details">
+                                        <div class="stat-card-icon short-leave-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <h3>Short Leave</h3>
+                                            <div class="stat-number" id="short-leave-count">0</div>
+                                            <div class="stat-label" id="short-leave-total">/ 0 Today's Short Leaves
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="stat-card-content">
-                                        <h3>Pending Leaves</h3>
-                                        <div class="stat-number" id="pending-count">0</div>
-                                        <div class="stat-label">Awaiting Approval</div>
+
+                                    <!-- On Leave -->
+                                    <div class="stat-card" data-tooltip="on-leave-details">
+                                        <div class="stat-card-icon on-leave-icon">
+                                            <i class="fas fa-calendar-day"></i>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <h3>On Leave</h3>
+                                            <div class="stat-number" id="on-leave-count">0</div>
+                                            <div class="stat-label" id="on-leave-total">Full Day Leave</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Second row -->
-                            <div class="stat-row">
-                                <!-- Short Leave -->
-                                <div class="stat-card" data-tooltip="short-leave-details">
-                                    <div class="stat-card-icon short-leave-icon">
-                                        <i class="fas fa-clock"></i>
+
+                            <!-- Right side: Calendar -->
+                            <div class="calendar-wrapper">
+                                <div class="calendar-container">
+                                    <div class="calendar-header">
+                                        <div class="calendar-navigation">
+                                            <button class="calendar-nav prev">
+                                                <i class="fas fa-chevron-left"></i>
+                                            </button>
+                                            <h3 id="calendar-month">March 2025</h3>
+                                            <button class="calendar-nav next">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                        <div class="calendar-legend">
+                                            <div class="legend-item">
+                                                <span class="legend-dot present"></span>
+                                                <span>Present</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <span class="legend-dot leave"></span>
+                                                <span>On Leave</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <span class="legend-dot holiday"></span>
+                                                <span>Holiday</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="stat-card-content">
-                                        <h3>Short Leave</h3>
-                                        <div class="stat-number" id="short-leave-count">0</div>
-                                        <div class="stat-label" id="short-leave-total">/ 0 Today's Short Leaves</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- On Leave -->
-                                <div class="stat-card" data-tooltip="on-leave-details">
-                                    <div class="stat-card-icon on-leave-icon">
-                                        <i class="fas fa-calendar-day"></i>
-                                    </div>
-                                    <div class="stat-card-content">
-                                        <h3>On Leave</h3>
-                                        <div class="stat-number" id="on-leave-count">0</div>
-                                        <div class="stat-label" id="on-leave-total">Full Day Leave</div>
+
+                                    <div class="calendar-body">
+                                        <div class="calendar-weekdays">
+                                            <div>Sun</div>
+                                            <div>Mon</div>
+                                            <div>Tue</div>
+                                            <div>Wed</div>
+                                            <div>Thu</div>
+                                            <div>Fri</div>
+                                            <div>Sat</div>
+                                        </div>
+                                        <div class="calendar-days" id="calendar-days">
+                                            <!-- Days will be inserted by JavaScript -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Right side: Calendar -->
-                        <div class="calendar-wrapper">
-                            <div class="calendar-container">
-                                <div class="calendar-header">
-                                    <div class="calendar-navigation">
-                                        <button class="calendar-nav prev">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </button>
-                                        <h3 id="calendar-month">March 2025</h3>
-                                        <button class="calendar-nav next">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                    </div>
-                                    <div class="calendar-legend">
-                                        <div class="legend-item">
-                                            <span class="legend-dot present"></span>
-                                            <span>Present</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <span class="legend-dot leave"></span>
-                                            <span>On Leave</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <span class="legend-dot holiday"></span>
-                                            <span>Holiday</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="calendar-body">
-                                    <div class="calendar-weekdays">
-                                        <div>Sun</div>
-                                        <div>Mon</div>
-                                        <div>Tue</div>
-                                        <div>Wed</div>
-                                        <div>Thu</div>
-                                        <div>Fri</div>
-                                        <div>Sat</div>
-                                    </div>
-                                    <div class="calendar-days" id="calendar-days">
-                                        <!-- Days will be inserted by JavaScript -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                </div>
-                
+
                     <!-- Leaves Section -->
                     <div class="leaves-section">
                         <div class="section-header">
@@ -268,7 +269,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="leaves-content">
                             <!-- Scrollable container for leave cards -->
                             <div class="leaves-scroll-container" id="leavesContainer">
@@ -276,13 +277,13 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                     <!-- Leave cards will be inserted here -->
                                 </div>
                             </div>
-                            
+
                             <!-- Empty state -->
                             <div class="leaves-empty-state" style="display: none;">
                                 <i class="fas fa-calendar-xmark"></i>
                                 <p>No leave requests found</p>
                             </div>
-                            
+
                             <!-- Loading state -->
                             <div class="leaves-loading">
                                 <div class="spinner"></div>
@@ -301,14 +302,14 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <i class="fas fa-project-diagram"></i>
                                 <h2>Project Overview</h2>
                             </div>
-                            
+
                             <!-- Add Project Button (next to title) -->
                             <button class="add-project-btn-minimal" id="openProjectModal">
                                 <i class="fas fa-plus"></i>
                                 Add Project
                             </button>
                         </div>
-                        
+
                         <!-- Center: Toggle Switch -->
                         <div class="project-view-toggle">
                             <span class="toggle-label active" id="projectViewStatusLabel">Quick View</span>
@@ -318,14 +319,15 @@ error_log("Session Data: " . print_r($_SESSION, true));
                             </label>
                             <span class="toggle-label" id="projectViewDeptLabel">Calendar View</span>
                         </div>
-                        
+
                         <!-- Right side: Date Filter -->
                         <div class="project-date-filter">
                             <div class="date-range-inputs">
                                 <div class="date-input-group">
                                     <label>From</label>
                                     <div class="date-input-wrapper">
-                                        <input type="text" class="date-input" id="project-date-from" value="01-03-2025" readonly>
+                                        <input type="text" class="date-input" id="project-date-from" value="01-03-2025"
+                                            readonly>
                                         <button class="date-picker-button">
                                             <i class="fas fa-calendar-alt small-calendar"></i>
                                         </button>
@@ -334,7 +336,8 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="date-input-group">
                                     <label>To</label>
                                     <div class="date-input-wrapper">
-                                        <input type="text" class="date-input" id="project-date-to" value="31-03-2025" readonly>
+                                        <input type="text" class="date-input" id="project-date-to" value="31-03-2025"
+                                            readonly>
                                         <button class="date-picker-button">
                                             <i class="fas fa-calendar-alt small-calendar"></i>
                                         </button>
@@ -344,7 +347,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                             <button class="apply-filter-btn">Apply</button>
                         </div>
                     </div>
-                    
+
                     <!-- Project Stats View (default view) -->
                     <div class="project-stats-container" id="projectStatisticsView">
                         <!-- Total Projects Card -->
@@ -358,7 +361,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="project-stat-label">Active + Completed</div>
                             </div>
                         </div>
-                        
+
                         <!-- In Progress Card -->
                         <div class="project-stat-card" data-tooltip="in-progress-details">
                             <div class="project-stat-icon in-progress-icon">
@@ -370,7 +373,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="project-stat-label">Projects underway</div>
                             </div>
                         </div>
-                        
+
                         <!-- Completed Card -->
                         <div class="project-stat-card" data-tooltip="completed-details">
                             <div class="project-stat-icon completed-icon">
@@ -382,7 +385,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="project-stat-label">Projects delivered</div>
                             </div>
                         </div>
-                        
+
                         <!-- Overdue Card -->
                         <div class="project-stat-card" data-tooltip="overdue-details">
                             <div class="project-stat-icon overdue-icon">
@@ -394,7 +397,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="project-stat-label">Past deadline</div>
                             </div>
                         </div>
-                        
+
                         <!-- Stages Pending Card -->
                         <div class="project-stat-card" data-tooltip="stages-pending-details">
                             <div class="project-stat-icon stages-pending-icon">
@@ -406,7 +409,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div class="project-stat-label">Awaiting completion</div>
                             </div>
                         </div>
-                        
+
                         <!-- Substages Pending Card -->
                         <div class="project-stat-card" data-tooltip="substages-pending-details">
                             <div class="project-stat-icon substages-pending-icon">
@@ -419,7 +422,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Project Calendar View (hidden by default) -->
                     <div class="project-calendar-view" id="projectDepartmentCalendarView" style="display: none;">
                         <!-- Calendar header -->
@@ -435,7 +438,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <button class="project-calendar-view-btn" data-view="day">Day</button>
                             </div>
                         </div>
-                        
+
                         <!-- Calendar grid -->
                         <div class="project-calendar-grid">
                             <!-- Calendar weekdays -->
@@ -448,13 +451,13 @@ error_log("Session Data: " . print_r($_SESSION, true));
                                 <div>Fri</div>
                                 <div>Sat</div>
                             </div>
-                            
+
                             <!-- Calendar days -->
                             <div class="project-calendar-days">
                                 <!-- Will be populated by JavaScript -->
                             </div>
                         </div>
-                        
+
                         <!-- Project Type legend -->
                         <div class="project-department-legend">
                             <h4>Project Types</h4>
@@ -638,12 +641,14 @@ error_log("Session Data: " . print_r($_SESSION, true));
         <div class="work-report-content">
             <div class="work-report-header">
                 <h3>Change Password</h3>
-                <button class="close-modal" id="closePasswordModal" disabled title="You must update your password to continue.">
+                <button class="close-modal" id="closePasswordModal" disabled
+                    title="You must update your password to continue.">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="work-report-body">
-                <div id="passwordChangeError" style="display:none;color:#c0392b;margin-bottom:10px;font-size:14px;"></div>
+                <div id="passwordChangeError" style="display:none;color:#c0392b;margin-bottom:10px;font-size:14px;">
+                </div>
                 <div class="form-group">
                     <label for="recentPassword">Recent Password</label>
                     <input type="password" id="recentPassword" placeholder="Enter your recent password">
@@ -658,7 +663,8 @@ error_log("Session Data: " . print_r($_SESSION, true));
                 </div>
             </div>
             <div class="work-report-footer">
-                <button class="cancel-btn" id="cancelPasswordChange" disabled title="You must update your password to continue.">Cancel</button>
+                <button class="cancel-btn" id="cancelPasswordChange" disabled
+                    title="You must update your password to continue.">Cancel</button>
                 <button class="submit-btn" id="submitPasswordChange">Update Password</button>
             </div>
         </div>
@@ -668,15 +674,15 @@ error_log("Session Data: " . print_r($_SESSION, true));
     <!-- Add project form script -->
     <script src="modals/scripts/project_form_handler_v1.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Load the project modal HTML
             fetch('modals/project_form.php')
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('modalContainer').innerHTML = html;
-                    
+
                     // Set up event listener for opening the modal
-                    document.getElementById('openProjectModal').addEventListener('click', function() {
+                    document.getElementById('openProjectModal').addEventListener('click', function () {
                         const projectModal = document.getElementById('projectModal');
                         projectModal.style.display = 'flex';
                         setTimeout(() => {
@@ -685,7 +691,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
                     });
                 })
                 .catch(error => console.error('Error loading project modal:', error));
-                
+
             // Add project form styles
             const projectFormStyles = document.createElement('link');
             projectFormStyles.rel = 'stylesheet';
@@ -695,44 +701,164 @@ error_log("Session Data: " . print_r($_SESSION, true));
     </script>
     <script src="assets/js/notification-handler.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Load notification modal
-        fetch('components/notification-modal.php')
-            .then(response => response.text())
-            .then(html => {
-                document.body.insertAdjacentHTML('beforeend', html);
-                // Initialize notification system
-                window.notificationSystem = new NotificationSystem();
-            })
-            .catch(error => {
-                console.error('Error loading notification modal:', error);
-            });
-    });
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load notification modal
+            fetch('components/notification-modal.php')
+                .then(response => response.text())
+                .then(html => {
+                    document.body.insertAdjacentHTML('beforeend', html);
+                    // Initialize notification system
+                    window.notificationSystem = new NotificationSystem();
+                })
+                .catch(error => {
+                    console.error('Error loading notification modal:', error);
+                });
+        });
     </script>
     <style>
         /* Password Change Modal – ensure proper modal look on this page */
-        .work-report-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .work-report-modal.active { display: flex; }
-        .work-report-content { background: #fff; width: 90%; max-width: 520px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; animation: modalSlideIn 0.25s ease; }
-        .work-report-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .work-report-body { padding: 16px 20px; }
-        .work-report-body .form-group label { margin-bottom: 8px; font-weight: 600; color: #333; }
-        .work-report-body input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color .2s, box-shadow .2s; }
-        .work-report-body input[type="password"]:focus { outline: none; border-color: #4a6cf7; box-shadow: 0 0 0 2px rgba(74,108,247,.12); }
-        .work-report-footer { padding: 16px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 12px; }
-        .close-modal { background: none; border: none; font-size: 18px; color: #666; cursor: pointer; }
-        .close-modal:disabled { opacity: .6; cursor: not-allowed; }
-        .cancel-btn { background: #f5f5f5; border: 1px solid #ddd; color: #666; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
-        .cancel-btn:hover { background: #eee; }
-        .cancel-btn:disabled { opacity: .6; cursor: not-allowed; }
-        .submit-btn { background: #4a6cf7; border: none; color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
-        .submit-btn:hover { background: #3a5cdc; }
-        .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
-        #passwordChangeError { background: #fdecea; border: 1px solid #f5c2c7; color: #b02a37; padding: 10px 12px; border-radius: 8px; }
-        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .work-report-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .work-report-modal.active {
+            display: flex;
+        }
+
+        .work-report-content {
+            background: #fff;
+            width: 90%;
+            max-width: 520px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: modalSlideIn 0.25s ease;
+        }
+
+        .work-report-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .work-report-body {
+            padding: 16px 20px;
+        }
+
+        .work-report-body .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .work-report-body input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .work-report-body input[type="password"]:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 2px rgba(74, 108, 247, .12);
+        }
+
+        .work-report-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .close-modal:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .cancel-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background: #eee;
+        }
+
+        .cancel-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn {
+            background: #4a6cf7;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background: #3a5cdc;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #passwordChangeError {
+            background: #fdecea;
+            border: 1px solid #f5c2c7;
+            color: #b02a37;
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const passwordModal = document.getElementById('passwordChangeModal');
             const closeBtn = document.getElementById('closePasswordModal');
             const cancelBtn = document.getElementById('cancelPasswordChange');
@@ -744,7 +870,7 @@ error_log("Session Data: " . print_r($_SESSION, true));
 
             function showModal() {
                 passwordModal.style.display = 'flex';
-                setTimeout(function() { passwordModal.classList.add('active'); }, 10);
+                setTimeout(function () { passwordModal.classList.add('active'); }, 10);
             }
 
             function blockClosing() {
@@ -772,18 +898,18 @@ error_log("Session Data: " . print_r($_SESSION, true));
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({ action: 'check_password_change' })
             })
-            .then(r => r.json())
-            .then(data => {
-                // If required, show the modal; otherwise keep it hidden
-                if (data && data.success && data.password_change_required) {
-                    showModal();
-                }
-            })
-            .catch(() => { /* fail silently */ });
+                .then(r => r.json())
+                .then(data => {
+                    // If required, show the modal; otherwise keep it hidden
+                    if (data && data.success && data.password_change_required) {
+                        showModal();
+                    }
+                })
+                .catch(() => { /* fail silently */ });
 
             // Handle submit
             if (submitBtn) {
-                submitBtn.addEventListener('click', function() {
+                submitBtn.addEventListener('click', function () {
                     setError('');
                     const recent = recentInput.value.trim();
                     const next = newInput.value.trim();
@@ -808,19 +934,19 @@ error_log("Session Data: " . print_r($_SESSION, true));
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body
                     })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data && data.success) {
-                            // Allow closing and hide modal
-                            allowClosing();
-                            passwordModal.classList.remove('active');
-                            passwordModal.style.display = 'none';
-                        } else {
-                            setError((data && data.message) ? data.message : 'Failed to update password.');
-                        }
-                    })
-                    .catch(() => setError('Network error. Please try again.'))
-                    .finally(() => { submitBtn.disabled = false; });
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                // Allow closing and hide modal
+                                allowClosing();
+                                passwordModal.classList.remove('active');
+                                passwordModal.style.display = 'none';
+                            } else {
+                                setError((data && data.message) ? data.message : 'Failed to update password.');
+                            }
+                        })
+                        .catch(() => setError('Network error. Please try again.'))
+                        .finally(() => { submitBtn.disabled = false; });
                 });
             }
         });
@@ -828,4 +954,5 @@ error_log("Session Data: " . print_r($_SESSION, true));
     <script src="assets/js/stage-chat.js"></script>
     <script src="js/fingerprint_download.js"></script>
 </body>
+
 </html>

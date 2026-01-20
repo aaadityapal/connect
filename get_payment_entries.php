@@ -343,29 +343,12 @@ try {
 
                 // Try to fetch full details from vendor or labour tables if ID exists
                 if ($recipient_id) {
-                    // First, check if it's a vendor in pm_vendor_registry_master
-                    $vendor_query = "
-                        SELECT vendor_full_name, vendor_type_category
-                        FROM pm_vendor_registry_master 
-                        WHERE vendor_id = :id 
-                        LIMIT 1
-                    ";
-                    $vendor_stmt = $pdo->prepare($vendor_query);
-                    $vendor_stmt->bindParam(':id', $recipient_id);
-                    $vendor_stmt->execute();
-                    $vendor = $vendor_stmt->fetch(PDO::FETCH_ASSOC);
+                    // Determine which table to check based on recipient_type_category
+                    $is_labour = stripos($recipient['recipient_type_category'], 'labour') !== false
+                        || in_array(strtolower($recipient['recipient_type_category']), ['permanent', 'temporary', 'vendor']);
 
-                    if ($vendor && $vendor['vendor_full_name']) {
-                        // Found in vendor table
-                        $recipient_name = $vendor['vendor_full_name'];
-                        $vendor_category = $vendor['vendor_type_category'] ?? '';
-                        // If vendor_type_category is empty, use the line item's recipient_type_category as fallback
-                        if (!$vendor_category) {
-                            $vendor_category = $recipient['recipient_type_category'];
-                        }
-                        $recipient_type = 'vendor';
-                    } else {
-                        // Not found in vendor table, check labour_records
+                    if ($is_labour) {
+                        // Check labour_records table FIRST for labour types
                         $labour_query = "
                             SELECT full_name, labour_type
                             FROM labour_records 
@@ -376,12 +359,43 @@ try {
                         $labour_stmt->bindParam(':id', $recipient_id);
                         $labour_stmt->execute();
                         $labour = $labour_stmt->fetch(PDO::FETCH_ASSOC);
+
                         if ($labour && $labour['full_name']) {
+                            // Found in labour table
                             $recipient_name = $labour['full_name'];
                             $recipient_type = 'labour';
                             // Set vendor_category from labour_type formatted as "Type Labour"
                             $labour_type_formatted = ucfirst(strtolower($labour['labour_type'])) . ' Labour';
                             $vendor_category = $labour_type_formatted;
+                        } else {
+                            // Fallback: use the display name from line item if labour not found
+                            error_log("Labour ID {$recipient_id} not found in labour_records table");
+                        }
+                    } else {
+                        // Check vendor table for non-labour types
+                        $vendor_query = "
+                            SELECT vendor_full_name, vendor_type_category
+                            FROM pm_vendor_registry_master 
+                            WHERE vendor_id = :id 
+                            LIMIT 1
+                        ";
+                        $vendor_stmt = $pdo->prepare($vendor_query);
+                        $vendor_stmt->bindParam(':id', $recipient_id);
+                        $vendor_stmt->execute();
+                        $vendor = $vendor_stmt->fetch(PDO::FETCH_ASSOC);
+
+                        if ($vendor && $vendor['vendor_full_name']) {
+                            // Found in vendor table
+                            $recipient_name = $vendor['vendor_full_name'];
+                            $vendor_category = $vendor['vendor_type_category'] ?? '';
+                            // If vendor_type_category is empty, use the line item's recipient_type_category as fallback
+                            if (!$vendor_category) {
+                                $vendor_category = $recipient['recipient_type_category'];
+                            }
+                            $recipient_type = 'vendor';
+                        } else {
+                            // Fallback: use the display name from line item if vendor not found
+                            error_log("Vendor ID {$recipient_id} not found in pm_vendor_registry_master table");
                         }
                     }
                 }

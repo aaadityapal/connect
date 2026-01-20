@@ -398,6 +398,134 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             border-bottom: 1px solid #e2e8f0;
         }
 
+        .management-search-container {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .management-search-wrapper {
+            position: relative;
+            width: 320px;
+        }
+
+        .management-search-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .management-search-input {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .management-search-input:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .management-search-results {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .management-search-results.active {
+            display: block;
+        }
+
+        .search-result-category {
+            padding: 8px 12px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #4a5568;
+            letter-spacing: 0.5px;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f7fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-result-item:hover {
+            background: #ebf8ff;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .search-result-icon.vendor {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .search-result-icon.labour {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .search-result-details {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .search-no-results {
+            padding: 20px;
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+        }
+
         .recent-records-title-wrapper {
             display: flex;
             align-items: center;
@@ -675,6 +803,119 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             z-index: 10;
         }
 
+        .filter-header-cell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-icon {
+            cursor: pointer;
+            color: #718096;
+            font-size: 11px;
+            padding: 3px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .filter-icon:hover {
+            background-color: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .filter-icon.active {
+            color: #3182ce;
+            background-color: #bee3f8;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 220px;
+            max-width: 300px;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+
+        .filter-search-box {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .filter-search-box input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .filter-options {
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 5px 0;
+        }
+
+        .filter-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .filter-option:hover {
+            background-color: #f7fafc;
+        }
+
+        .filter-option input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .filter-actions {
+            padding: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .filter-actions button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-actions button:first-child {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .filter-actions button:first-child:hover {
+            background-color: #2c5282;
+        }
+
+        .filter-actions button:last-child {
+            background-color: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .filter-actions button:last-child:hover {
+            background-color: #cbd5e0;
+        }
+
         .vendor-row-header>div:last-child {
             text-align: center;
         }
@@ -787,6 +1028,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
         .vendor-actions .delete-btn:hover {
             background-color: #fff5f5;
+        }
+
+        .vendor-actions .excel-btn {
+            color: #10b981;
+        }
+
+        .vendor-actions .excel-btn:hover {
+            background-color: #d1fae5;
         }
 
         .loading-spinner {
@@ -1458,6 +1707,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             <div class="recent-records-section" style="margin-top: 40px;">
                 <div class="recent-records-header-container">
                     <h3 class="recent-records-header">Management</h3>
+                    <!-- Smart Search Box -->
+                    <div class="management-search-container">
+                        <div class="management-search-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="managementSearchInput" class="management-search-input"
+                                placeholder="Search vendors or labours..." autocomplete="off">
+                            <div id="managementSearchResults" class="management-search-results"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tabs Navigation -->
@@ -1614,13 +1872,49 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             }
         }
 
+        // Export Vendor Payment History to Excel
+        function exportVendorPaymentHistory(vendorId, vendorName) {
+            // Show loading indicator
+            const loadingMsg = document.createElement('div');
+            loadingMsg.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; font-size: 16px; font-weight: 600;';
+            loadingMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Excel file...';
+            document.body.appendChild(loadingMsg);
+
+            // Call export API
+            window.location.href = `export_vendor_payment_history.php?vendor_id=${vendorId}&vendor_name=${encodeURIComponent(vendorName)}`;
+
+            // Remove loading message after a delay
+            setTimeout(() => {
+                document.body.removeChild(loadingMsg);
+            }, 2000);
+        }
+
+        // Export Labour Payment History to Excel
+        function exportLabourPaymentHistory(labourId, labourName) {
+            // Show loading indicator
+            const loadingMsg = document.createElement('div');
+            loadingMsg.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; font-size: 16px; font-weight: 600;';
+            loadingMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Excel file...';
+            document.body.appendChild(loadingMsg);
+
+            // Call export API
+            window.location.href = `export_labour_payment_history.php?labour_id=${labourId}&labour_name=${encodeURIComponent(labourName)}`;
+
+            // Remove loading message after a delay
+            setTimeout(() => {
+                document.body.removeChild(loadingMsg);
+            }, 2000);
+        }
+
         // Global state for pagination
         let vendorPaginationState = {
             currentPage: 1,
             limit: 10,
             totalPages: 1,
             search: '',
-            status: ''
+            status: '',
+            nameFilter: [],
+            typeFilter: []
         };
 
         // Global state for labour pagination
@@ -1629,7 +1923,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             limit: 10,
             totalPages: 1,
             search: '',
-            status: ''
+            status: '',
+            nameFilter: [],
+            typeFilter: []
         };
 
         // Global state for payment entries pagination
@@ -1682,15 +1978,66 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         let html = '<div class="vendor-table-wrapper">';
                         html += '<div class="vendor-row-header">';
                         html += '<div>Vendor Code</div>';
-                        html += '<div>Name</div>';
+                        html += `
+                            <div class="filter-header-cell">
+                                Name
+                                <span class="filter-icon" onclick="toggleVendorNameFilter(event)">
+                                    <i class="fas fa-filter"></i>
+                                </span>
+                                <div id="vendorNameFilterDropdown" class="filter-dropdown" style="display: none;">
+                                    <div class="filter-search-box">
+                                        <input type="text" id="vendorNameFilterSearch" placeholder="Search names..." onkeyup="filterVendorNameOptions()">
+                                    </div>
+                                    <div class="filter-options" id="vendorNameFilterOptions"></div>
+                                    <div class="filter-actions">
+                                        <button onclick="applyVendorNameFilter()">Apply</button>
+                                        <button onclick="clearVendorNameFilter()">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                         html += '<div>Email</div>';
                         html += '<div>Phone</div>';
-                        html += '<div>Type</div>';
+                        html += `
+                            <div class="filter-header-cell">
+                                Type
+                                <span class="filter-icon" onclick="toggleVendorTypeFilter(event)">
+                                    <i class="fas fa-filter"></i>
+                                </span>
+                                <div id="vendorTypeFilterDropdown" class="filter-dropdown" style="display: none;">
+                                    <div class="filter-search-box">
+                                        <input type="text" id="vendorTypeFilterSearch" placeholder="Search types..." onkeyup="filterVendorTypeOptions()">
+                                    </div>
+                                    <div class="filter-options" id="vendorTypeFilterOptions"></div>
+                                    <div class="filter-actions">
+                                        <button onclick="applyVendorTypeFilter()">Apply</button>
+                                        <button onclick="clearVendorTypeFilter()">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                         html += '<div>Status</div>';
                         html += '<div>Actions</div>';
                         html += '</div>';
 
-                        data.data.forEach(vendor => {
+                        // Apply client-side filters
+                        let filteredVendors = data.data;
+
+                        // Filter by name
+                        if (vendorPaginationState.nameFilter && vendorPaginationState.nameFilter.length > 0) {
+                            filteredVendors = filteredVendors.filter(vendor =>
+                                vendorPaginationState.nameFilter.includes(vendor.vendor_full_name)
+                            );
+                        }
+
+                        // Filter by type
+                        if (vendorPaginationState.typeFilter && vendorPaginationState.typeFilter.length > 0) {
+                            filteredVendors = filteredVendors.filter(vendor =>
+                                vendorPaginationState.typeFilter.includes(vendor.vendor_type_category)
+                            );
+                        }
+
+                        filteredVendors.forEach(vendor => {
                             const statusClass = vendor.vendor_status.toLowerCase();
                             html += '<div class="vendor-row">';
                             html += `<div class="vendor-cell">${vendor.vendor_unique_code}</div>`;
@@ -1703,6 +2050,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += `<button class="view-btn" title="View Details" onclick="viewVendor(${vendor.vendor_id})"><i class="fas fa-eye"></i></button>`;
                             html += `<button class="edit-btn" title="Edit" onclick="editVendor(${vendor.vendor_id})"><i class="fas fa-edit"></i></button>`;
                             html += `<button class="delete-btn" title="Delete" onclick="deleteVendor(${vendor.vendor_id})"><i class="fas fa-trash"></i></button>`;
+                            html += `<button class="excel-btn" title="Export Payment History" onclick="exportVendorPaymentHistory(${vendor.vendor_id}, '${vendor.vendor_full_name.replace(/'/g, "\\'")}')"><i class="fas fa-file-excel"></i></button>`;
                             html += '</div>';
                             html += '</div>';
                         });
@@ -1814,15 +2162,66 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         let html = '<div class="vendor-table-wrapper">';
                         html += '<div class="vendor-row-header">';
                         html += '<div>Labour Code</div>';
-                        html += '<div>Name</div>';
+                        html += `
+                            <div class="filter-header-cell">
+                                Name
+                                <span class="filter-icon" onclick="toggleLabourNameFilter(event)">
+                                    <i class="fas fa-filter"></i>
+                                </span>
+                                <div id="labourNameFilterDropdown" class="filter-dropdown" style="display: none;">
+                                    <div class="filter-search-box">
+                                        <input type="text" id="labourNameFilterSearch" placeholder="Search names..." onkeyup="filterLabourNameOptions()">
+                                    </div>
+                                    <div class="filter-options" id="labourNameFilterOptions"></div>
+                                    <div class="filter-actions">
+                                        <button onclick="applyLabourNameFilter()">Apply</button>
+                                        <button onclick="clearLabourNameFilter()">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                         html += '<div>Contact</div>';
-                        html += '<div>Labour Type</div>';
+                        html += `
+                            <div class="filter-header-cell">
+                                Labour Type
+                                <span class="filter-icon" onclick="toggleLabourTypeFilter(event)">
+                                    <i class="fas fa-filter"></i>
+                                </span>
+                                <div id="labourTypeFilterDropdown" class="filter-dropdown" style="display: none;">
+                                    <div class="filter-search-box">
+                                        <input type="text" id="labourTypeFilterSearch" placeholder="Search types..." onkeyup="filterLabourTypeOptions()">
+                                    </div>
+                                    <div class="filter-options" id="labourTypeFilterOptions"></div>
+                                    <div class="filter-actions">
+                                        <button onclick="applyLabourTypeFilter()">Apply</button>
+                                        <button onclick="clearLabourTypeFilter()">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                         html += '<div>Salary/Day</div>';
                         html += '<div>Status</div>';
                         html += '<div>Actions</div>';
                         html += '</div>';
 
-                        data.data.forEach(labour => {
+                        // Apply client-side filters
+                        let filteredLabours = data.data;
+                        
+                        // Filter by name
+                        if (labourPaginationState.nameFilter && labourPaginationState.nameFilter.length > 0) {
+                            filteredLabours = filteredLabours.filter(labour => 
+                                labourPaginationState.nameFilter.includes(labour.full_name)
+                            );
+                        }
+                        
+                        // Filter by type
+                        if (labourPaginationState.typeFilter && labourPaginationState.typeFilter.length > 0) {
+                            filteredLabours = filteredLabours.filter(labour => 
+                                labourPaginationState.typeFilter.includes(labour.labour_type)
+                            );
+                        }
+
+                        filteredLabours.forEach(labour => {
                             const statusClass = labour.status.toLowerCase();
                             const salary = labour.daily_salary ? '₹' + parseFloat(labour.daily_salary).toFixed(2) : 'N/A';
                             html += '<div class="vendor-row">';
@@ -1836,6 +2235,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                             html += `<button class="view-btn" title="View Details" onclick="viewLabour(${labour.id})"><i class="fas fa-eye"></i></button>`;
                             html += `<button class="edit-btn" title="Edit" onclick="editLabour(${labour.id})"><i class="fas fa-edit"></i></button>`;
                             html += `<button class="delete-btn" title="Delete" onclick="deleteLabour(${labour.id})"><i class="fas fa-trash"></i></button>`;
+                            html += `<button class="excel-btn" title="Export Payment History" onclick="exportLabourPaymentHistory(${labour.id}, '${labour.full_name.replace(/'/g, "\\'")}')"><i class="fas fa-file-excel"></i></button>`;
                             html += '</div>';
                             html += '</div>';
                         });
@@ -3013,6 +3413,129 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Management Search Functionality
+            let searchTimeout;
+            const managementSearchInput = document.getElementById('managementSearchInput');
+            const managementSearchResults = document.getElementById('managementSearchResults');
+
+            if (managementSearchInput) {
+                // Search on input with debounce
+                managementSearchInput.addEventListener('input', function () {
+                    clearTimeout(searchTimeout);
+                    const query = this.value.trim();
+
+                    if (query.length < 2) {
+                        managementSearchResults.classList.remove('active');
+                        managementSearchResults.innerHTML = '';
+                        return;
+                    }
+
+                    // Debounce search
+                    searchTimeout = setTimeout(() => {
+                        performManagementSearch(query);
+                    }, 300);
+                });
+
+                // Close results when clicking outside
+                document.addEventListener('click', function (e) {
+                    if (!managementSearchInput.contains(e.target) && !managementSearchResults.contains(e.target)) {
+                        managementSearchResults.classList.remove('active');
+                    }
+                });
+
+                // Focus input shows results if they exist
+                managementSearchInput.addEventListener('focus', function () {
+                    if (managementSearchResults.innerHTML) {
+                        managementSearchResults.classList.add('active');
+                    }
+                });
+            }
+
+            function performManagementSearch(query) {
+                // Show loading
+                managementSearchResults.innerHTML = '<div class="search-no-results"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+                managementSearchResults.classList.add('active');
+
+                // Search API
+                fetch(`search_management.php?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            displayManagementSearchResults(data.vendors, data.labours);
+                        } else {
+                            managementSearchResults.innerHTML = '<div class="search-no-results">Error searching. Please try again.</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        managementSearchResults.innerHTML = '<div class="search-no-results">Error searching. Please try again.</div>';
+                    });
+            }
+
+            function displayManagementSearchResults(vendors, labours) {
+                let html = '';
+
+                if (vendors.length === 0 && labours.length === 0) {
+                    html = '<div class="search-no-results"><i class="fas fa-search"></i> No results found</div>';
+                } else {
+                    // Vendors section
+                    if (vendors.length > 0) {
+                        html += '<div class="search-result-category"><i class="fas fa-user-tie"></i> Vendors</div>';
+                        vendors.forEach(vendor => {
+                            html += `
+                                <div class="search-result-item" onclick="selectVendor(${vendor.vendor_id})">
+                                    <div class="search-result-icon vendor">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    <div class="search-result-info">
+                                        <div class="search-result-name">${vendor.vendor_full_name}</div>
+                                        <div class="search-result-details">${vendor.vendor_unique_code} • ${vendor.vendor_type_category}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    // Labours section
+                    if (labours.length > 0) {
+                        html += '<div class="search-result-category"><i class="fas fa-hard-hat"></i> Labours</div>';
+                        labours.forEach(labour => {
+                            html += `
+                                <div class="search-result-item" onclick="selectLabour(${labour.id})">
+                                    <div class="search-result-icon labour">
+                                        <i class="fas fa-hard-hat"></i>
+                                    </div>
+                                    <div class="search-result-info">
+                                        <div class="search-result-name">${labour.full_name}</div>
+                                        <div class="search-result-details">${labour.labour_unique_code} • ${labour.labour_type}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+
+                managementSearchResults.innerHTML = html;
+            }
+
+            window.selectVendor = function (vendorId) {
+                // Close search results
+                managementSearchResults.classList.remove('active');
+                managementSearchInput.value = '';
+
+                // Open vendor details modal
+                viewVendor(vendorId);
+            };
+
+            window.selectLabour = function (labourId) {
+                // Close search results
+                managementSearchResults.classList.remove('active');
+                managementSearchInput.value = '';
+
+                // Open labour details modal
+                viewLabour(labourId);
+            };
+
             // Recently Added Records Toggle Functionality
             const recentRecordsToggleBtn = document.getElementById('recentRecordsToggleBtn');
             if (recentRecordsToggleBtn) {
@@ -3318,3 +3841,4 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         });
 
     </script>
+    <script src="js/management_filters.js"></script>

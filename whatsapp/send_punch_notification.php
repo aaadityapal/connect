@@ -637,7 +637,16 @@ function getPunchOutStatsByTeam($pdo, $date, $teamType)
         // Actually, the error said "Param text cannot have new-line". This applies to the WHOLE param.
         // So we MUST remove all newlines from the final string.
 
-        $listFormatted = implode("  ///  ", $listLines);
+        // Join multiple entries with a clearly visible separator
+        // We use " // " as a separator which is more readable than "///" or single lines
+        $listFormatted = implode("\n\n--------------------\n\n", $listLines);
+
+        // WhatsApp API often rejects pure newlines in header parameters, but body parameters are usually fine.
+        // If the previous issue was due to the Template Variable restrictions, we must stick to single line.
+        // Let's try a very distinct text separator first if Newlines were the cause of failure.
+        // Given your screenshot shows "///" working but looking bad, let's try emojis and spacing.
+        $listFormatted = implode("\n\n👉 ", $listLines);
+        $listFormatted = "👉 " . $listFormatted; // Add one to the start
 
         // Return empty string if no punch outs, so template doesn't break? 
         // Or handle "None" - but requirement didn't specify "None". 

@@ -1,4 +1,4 @@
-create_admin_notification_table.php
+create_admin_notifications_table.php
 cron_admin_daily_summary.php
 cron_punchout_summary.php
 cron_scheduled_admin_summary.php
@@ -12,3 +12,7 @@ whatsapp.log
 check_missing_punches.php
 cron_missing_punch_alerts.php
 cron_alerts.log
+generate_monthly_report.php
+cron_monthly_report.php
+cron_monthly_stats.log
+test_monthly_report.php

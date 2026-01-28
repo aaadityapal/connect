@@ -9,3 +9,6 @@ whatsapp_router.php
 WhatsAppService.php
 webhook.log
 whatsapp.log
+check_missing_punches.php
+cron_missing_punch_alerts.php
+cron_alerts.log

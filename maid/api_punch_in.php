@@ -174,11 +174,27 @@ try {
     ]);
 
     if ($success) {
+        $attendanceId = $pdo->lastInsertId();
+
+        // Send WhatsApp notification to user after successful punch in
+        try {
+            require_once __DIR__ . '/../whatsapp/send_punch_notification.php';
+            $whatsapp_sent = sendPunchNotification($userId, $pdo);
+            if ($whatsapp_sent) {
+                error_log("WhatsApp punch in notification sent successfully for maid user ID: $userId");
+            } else {
+                error_log("WhatsApp punch in notification failed for maid user ID: $userId");
+            }
+        } catch (Exception $whatsappError) {
+            // Log the error but don't fail the punch in
+            error_log("WhatsApp notification error for maid: " . $whatsappError->getMessage());
+        }
+
         http_response_code(200);
         echo json_encode([
             'success' => true,
             'message' => 'Punch-in recorded successfully',
-            'attendance_id' => $pdo->lastInsertId(),
+            'attendance_id' => $attendanceId,
             'punch_in_time' => $punchInTime,
             'date' => $date
         ]);

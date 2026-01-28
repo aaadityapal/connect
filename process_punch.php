@@ -45,33 +45,33 @@ $response = [
 
 // Check if it's a POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     // Get punch type (in or out)
     $punch_type = isset($_POST['punch_type']) ? $_POST['punch_type'] : '';
-    
+
     // Validate punch type
     if ($punch_type !== 'in' && $punch_type !== 'out') {
         echo json_encode(['status' => 'error', 'message' => 'Invalid punch type']);
         exit;
     }
-    
+
     // Process photo if provided (base64 encoded image)
     $photo_filename = null;
     if (isset($_POST['photo_data']) && !empty($_POST['photo_data'])) {
         $photo_data = $_POST['photo_data'];
-        
+
         // Remove the data:image/jpeg;base64, part if present
         if (strpos($photo_data, 'data:image/jpeg;base64,') === 0) {
             $photo_data = substr($photo_data, 23);
         }
-        
+
         // Validate base64 data
         $decoded_data = base64_decode($photo_data, true);
         if (!$decoded_data) {
             echo json_encode(['status' => 'error', 'message' => 'Invalid image data']);
             exit;
         }
-        
+
         // Create uploads directory if it doesn't exist
         $upload_dir = 'uploads/attendance/';
         if (!file_exists($upload_dir)) {
@@ -81,23 +81,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         }
-        
+
         // Generate unique filename
         $photo_filename = $upload_dir . $user_id . '_' . $punch_type . '_' . $timestamp . '.jpg';
-        
+
         // Save the image to file
         if (!file_put_contents($photo_filename, $decoded_data)) {
             echo json_encode(['status' => 'error', 'message' => 'Failed to save image']);
             exit;
         }
     }
-    
+
     // Process location data
     $latitude = isset($_POST['latitude']) ? $_POST['latitude'] : null;
     $longitude = isset($_POST['longitude']) ? $_POST['longitude'] : null;
     $accuracy = isset($_POST['accuracy']) ? $_POST['accuracy'] : null;
     $address = isset($_POST['address']) ? $_POST['address'] : null;
-    
+
     // Location data as JSON
     $location_json = json_encode([
         'latitude' => $latitude,
@@ -105,22 +105,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'accuracy' => $accuracy,
         'address' => $address
     ]);
-    
+
     // Check if there's already an attendance record for today
     $check_query = "SELECT * FROM attendance WHERE user_id = ? AND date = ?";
     $check_stmt = $conn->prepare($check_query);
-    
+
     if (!$check_stmt) {
         echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $conn->error]);
         exit;
     }
-    
+
     $check_stmt->bind_param("is", $user_id, $current_date);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $existing_record = $result->fetch_assoc();
     $check_stmt->close();
-    
+
     // Get user's shift information from user_shifts table
     $shift_query = "SELECT us.*, s.start_time, s.end_time 
                    FROM user_shifts us
@@ -130,9 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    AND (us.effective_to IS NULL OR us.effective_to >= ?)
                    ORDER BY us.effective_from DESC 
                    LIMIT 1";
-    
+
     $shift_stmt = $conn->prepare($shift_query);
-    
+
     if (!$shift_stmt) {
         error_log("Failed to prepare shift query: " . $conn->error);
         // Continue with default shift if query fails
@@ -143,12 +143,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $shift_stmt->bind_param("iss", $user_id, $current_date, $current_date);
         $shift_stmt->execute();
         $shift_result = $shift_stmt->get_result();
-        
+
         if ($shift_result->num_rows > 0) {
             $shift_data = $shift_result->fetch_assoc();
             $shift_id = $shift_data['shift_id'];
             $weekly_offs = $shift_data['weekly_offs'];
-            
+
             // Calculate standard hours from shift start and end times
             $shift_start = strtotime($shift_data['start_time']);
             $shift_end = strtotime($shift_data['end_time']);
@@ -163,10 +163,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $weekly_offs = 'Saturday,Sunday';
             $standard_hours = 8; // Default
         }
-        
+
         $shift_stmt->close();
     }
-    
+
     // Process punch in
     if ($punch_type === 'in') {
         if ($existing_record) {
@@ -204,16 +204,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 distance_from_geofence,
                 punch_in_outside_reason
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            
+
             $insert_stmt = $conn->prepare($insert_query);
-            
+
             if (!$insert_stmt) {
                 echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $conn->error]);
                 exit;
             }
-            
+
             $status = 'present';
-            
+
             // Get geofence data
             $within_geofence = isset($_POST['within_geofence']) ? intval($_POST['within_geofence']) : 0;
             $geofence_id = isset($_POST['geofence_id']) ? intval($_POST['geofence_id']) : null;
@@ -233,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log("Invalid geofence_id value: " . print_r($_POST['geofence_id'], true));
                 $geofence_id = null;
             }
-            
+
             $insert_stmt->bind_param(
                 "isssssssssssssssiiiis",
                 $user_id,
@@ -258,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $distance_from_geofence,
                 $punch_in_outside_reason
             );
-            
+
             if ($insert_stmt->execute()) {
                 $response = [
                     'status' => 'success',
@@ -266,7 +266,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'time' => date('h:i A', strtotime($current_time)),
                     'date' => date('d M Y', strtotime($current_date))
                 ];
-                
+
+                // Send WhatsApp notification to user after successful punch in
+                try {
+                    require_once __DIR__ . '/whatsapp/send_punch_notification.php';
+                    $whatsapp_sent = sendPunchNotification($user_id, $pdo);
+                    if ($whatsapp_sent) {
+                        error_log("WhatsApp punch in notification sent successfully for site manager user ID: $user_id");
+                    } else {
+                        error_log("WhatsApp punch in notification failed for site manager user ID: $user_id");
+                    }
+                } catch (Exception $whatsappError) {
+                    // Log the error but don't fail the punch in
+                    error_log("WhatsApp notification error for site manager: " . $whatsappError->getMessage());
+                }
+
                 // Update session state to reflect the punch-in
                 $_SESSION['punched_in'] = true;
                 $_SESSION['attendance_completed'] = false;
@@ -276,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'message' => 'Database error: ' . $insert_stmt->error
                 ];
             }
-            
+
             $insert_stmt->close();
         }
     }
@@ -288,43 +302,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['status' => 'error', 'message' => 'Already punched out today']);
                 exit;
             }
-            
+
             // Get work report if provided
             $work_report = isset($_POST['work_report']) ? $_POST['work_report'] : 'Punched out';
-            
+
             // Calculate working hours
             $punch_in_time = strtotime($existing_record['date'] . ' ' . $existing_record['punch_in']);
             $punch_out_time = strtotime($current_date . ' ' . $current_time);
             $seconds_worked = $punch_out_time - $punch_in_time;
-            
+
             // Format working hours as HH:MM:SS for better precision
             $hours = floor($seconds_worked / 3600);
             $minutes = floor(($seconds_worked % 3600) / 60);
             $seconds = $seconds_worked % 60;
             $working_hours_formatted = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
-            
+
             // Also calculate decimal hours for compatibility
             $working_hours_decimal = round($seconds_worked / 3600, 2);
-            
+
             // Use shift information if available, otherwise use default
             if (!empty($existing_record['shifts_id'])) {
                 // If there's already a shift ID in the record, use that one
                 $existing_shift_id = $existing_record['shifts_id'];
-                
+
                 // Query to get shift details
                 $shift_details_query = "SELECT s.start_time, s.end_time 
                                       FROM shifts s
                                       WHERE s.id = ?";
                 $shift_details_stmt = $conn->prepare($shift_details_query);
-                
+
                 if ($shift_details_stmt) {
                     $shift_details_stmt->bind_param("i", $existing_shift_id);
                     $shift_details_stmt->execute();
                     $shift_details_result = $shift_details_stmt->get_result();
-                    
+
                     if ($shift_details_result->num_rows > 0) {
                         $shift_details = $shift_details_result->fetch_assoc();
-                        
+
                         // Calculate standard hours from shift
                         $shift_start = strtotime($shift_details['start_time']);
                         $shift_end = strtotime($shift_details['end_time']);
@@ -334,21 +348,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         $standard_hours = ($shift_end - $shift_start) / 3600;
                     }
-                    
+
                     $shift_details_stmt->close();
                 }
             }
-            
+
             // Calculate overtime based on standard hours
             $overtime_seconds = max(0, $seconds_worked - ($standard_hours * 3600));
             $overtime_hours = floor($overtime_seconds / 3600);
             $overtime_minutes = floor(($overtime_seconds % 3600) / 60);
             $overtime_seconds_remainder = $overtime_seconds % 60;
             $overtime_hours_formatted = sprintf('%02d:%02d:%02d', $overtime_hours, $overtime_minutes, $overtime_seconds_remainder);
-            
+
             // Also calculate decimal overtime for compatibility
             $overtime_hours_decimal = round($overtime_seconds / 3600, 2);
-            
+
             // Update the attendance record
             $update_query = "UPDATE attendance SET 
                 punch_out = ?, 
@@ -366,14 +380,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 distance_from_geofence = ?,
                 punch_out_outside_reason = ?
                 WHERE user_id = ? AND date = ?";
-            
+
             $update_stmt = $conn->prepare($update_query);
-            
+
             if (!$update_stmt) {
                 echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $conn->error]);
                 exit;
             }
-            
+
             // Get geofence data for punch out
             $within_geofence = isset($_POST['within_geofence']) ? intval($_POST['within_geofence']) : 0;
             $geofence_id = isset($_POST['geofence_id']) ? intval($_POST['geofence_id']) : null;
@@ -396,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log("Invalid geofence_id value: " . print_r($_POST['geofence_id'], true));
                 $geofence_id = null;
             }
-            
+
             // Fix the parameter binding to match the SQL query
             // s=string, d=double, i=integer
             $update_stmt->bind_param(
@@ -418,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user_id,
                 $current_date
             );
-            
+
             if ($update_stmt->execute()) {
                 $response = [
                     'status' => 'success',
@@ -430,7 +444,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'overtime_hours' => $overtime_hours_formatted,
                     'overtime_hours_decimal' => $overtime_hours_decimal
                 ];
-                
+
+                // Send WhatsApp notification to user after successful punch out
+                try {
+                    require_once __DIR__ . '/whatsapp/send_punch_notification.php';
+                    $whatsapp_sent = sendPunchOutNotification($user_id, $pdo);
+                    if ($whatsapp_sent) {
+                        error_log("WhatsApp punch out notification sent successfully for site manager user ID: $user_id");
+                    } else {
+                        error_log("WhatsApp punch out notification failed for site manager user ID: $user_id");
+                    }
+                } catch (Exception $whatsappError) {
+                    // Log the error but don't fail the punch out
+                    error_log("WhatsApp punch out notification error for site manager: " . $whatsappError->getMessage());
+                }
+
                 // Update session state to reflect the punch-out
                 $_SESSION['punched_in'] = false;
                 $_SESSION['attendance_completed'] = true;
@@ -440,7 +468,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'message' => 'Database error: ' . $update_stmt->error
                 ];
             }
-            
+
             $update_stmt->close();
         } else {
             echo json_encode(['status' => 'error', 'message' => 'No punch in record found for today']);
@@ -452,4 +480,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Return JSON response
 header('Content-Type: application/json');
 echo json_encode($response);
-?> 
+?>

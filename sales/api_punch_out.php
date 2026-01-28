@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Get JSON data
     $input = file_get_contents('php://input');
-    
+
     $data = json_decode($input, true);
 
     if (!$data) {
@@ -84,11 +84,11 @@ try {
         try {
             // Remove data URL prefix
             $photoData = preg_replace('/^data:image\/\w+;base64,/', '', $photoData);
-            
+
             // Create directory
             $connectRoot = dirname(__DIR__);
             $photoDir = $connectRoot . '/uploads/attendance/';
-            
+
             if (!file_exists($photoDir)) {
                 @mkdir($photoDir, 0755, true);
             }
@@ -99,14 +99,14 @@ try {
             $milliseconds = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
             $fileName = $userId . '_' . $dateFormat . '_' . $timeFormat . '_out_' . $milliseconds . '.jpeg';
             $filePath = $photoDir . $fileName;
-            
+
             $decodedPhoto = base64_decode($photoData, true);
             if ($decodedPhoto === false) {
                 throw new Exception('Invalid photo data encoding');
             }
 
             $bytes_written = @file_put_contents($filePath, $decodedPhoto);
-            
+
             if ($bytes_written !== false && $bytes_written > 0) {
                 $photoPaths = 'uploads/attendance/' . $fileName;
             }
@@ -124,7 +124,7 @@ try {
         AND punch_out IS NULL
         LIMIT 1
     ";
-    
+
     $checkStmt = $pdo->prepare($checkQuery);
     $checkStmt->execute([':user_id' => $userId, ':date' => $date]);
 
@@ -174,6 +174,20 @@ try {
     ]);
 
     if ($success) {
+        // Send WhatsApp notification to user after successful punch out
+        try {
+            require_once __DIR__ . '/../whatsapp/send_punch_notification.php';
+            $whatsapp_sent = sendPunchOutNotification($userId, $pdo);
+            if ($whatsapp_sent) {
+                error_log("WhatsApp punch out notification sent successfully for sales user ID: $userId");
+            } else {
+                error_log("WhatsApp punch out notification failed for sales user ID: $userId");
+            }
+        } catch (Exception $whatsappError) {
+            // Log the error but don't fail the punch out
+            error_log("WhatsApp punch out notification error for sales: " . $whatsappError->getMessage());
+        }
+
         http_response_code(200);
         echo json_encode([
             'success' => true,

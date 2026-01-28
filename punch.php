@@ -1,12 +1,14 @@
 <?php
 session_start();
 require_once 'config/db_connect.php';
+require_once __DIR__ . '/whatsapp/send_punch_notification.php';
 date_default_timezone_set('Asia/Kolkata');
 
 header('Content-Type: application/json');
 
 // Function to get user's IP address
-function getUserIP() {
+function getUserIP()
+{
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
         return $_SERVER['HTTP_CLIENT_IP'];
     } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -17,49 +19,52 @@ function getUserIP() {
 }
 
 // Function to get device info
-function getDeviceInfo() {
+function getDeviceInfo()
+{
     return $_SERVER['HTTP_USER_AGENT'];
 }
 
 // Function to get address from coordinates using reverse geocoding
-function getAddressFromCoordinates($latitude, $longitude) {
+function getAddressFromCoordinates($latitude, $longitude)
+{
     if (!$latitude || !$longitude) {
         return "Unknown location";
     }
-    
+
     $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1";
-    
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_USERAGENT, 'HR Attendance System');
-    
+
     $response = curl_exec($ch);
     curl_close($ch);
-    
+
     $data = json_decode($response, true);
-    
+
     if (isset($data['display_name'])) {
         return $data['display_name'];
     }
-    
+
     return "Unknown location";
 }
 
 // Function to calculate working hours and overtime
-function calculateWorkingHours($punch_in, $punch_out, $shift_end_time) {
+function calculateWorkingHours($punch_in, $punch_out, $shift_end_time)
+{
     $in_time = strtotime($punch_in);
     $out_time = strtotime($punch_out);
-    
+
     // Get today's date
     $today = date('Y-m-d');
-    
+
     // Convert shift end time to full datetime for today
     $shift_end = strtotime($today . ' ' . $shift_end_time);
-    
+
     // Calculate total working duration
     $total_seconds = max(0, $out_time - $in_time);
-    
+
     // Check if punch in was after shift end
     if ($in_time > $shift_end) {
         // All time is overtime when punched in after shift end
@@ -71,31 +76,34 @@ function calculateWorkingHours($punch_in, $punch_out, $shift_end_time) {
         // Calculate overtime only if punched out after shift end
         $overtime_seconds = ($out_time > $shift_end) ? ($out_time - max($shift_end, $in_time)) : 0;
     }
-    
+
     // Format regular hours
     $regular_hours = floor($regular_seconds / 3600);
     $regular_minutes = floor(($regular_seconds % 3600) / 60);
     $regular_seconds = $regular_seconds % 60;
-    
+
     // Format overtime
     $overtime_hours = floor($overtime_seconds / 3600);
     $overtime_minutes = floor(($overtime_seconds % 3600) / 60);
     $overtime_seconds = $overtime_seconds % 60;
-    
+
     return [
-        'total_time' => sprintf("%02d:%02d:%02d", 
+        'total_time' => sprintf(
+            "%02d:%02d:%02d",
             floor($total_seconds / 3600),
             floor(($total_seconds % 3600) / 60),
             $total_seconds % 60
         ),
-        'regular_time' => sprintf("%02d:%02d:%02d", 
-            $regular_hours, 
-            $regular_minutes, 
+        'regular_time' => sprintf(
+            "%02d:%02d:%02d",
+            $regular_hours,
+            $regular_minutes,
             $regular_seconds
         ),
-        'overtime' => sprintf("%02d:%02d:%02d", 
-            $overtime_hours, 
-            $overtime_minutes, 
+        'overtime' => sprintf(
+            "%02d:%02d:%02d",
+            $overtime_hours,
+            $overtime_minutes,
             $overtime_seconds
         ),
         'has_overtime' => $overtime_seconds > 0
@@ -103,9 +111,10 @@ function calculateWorkingHours($punch_in, $punch_out, $shift_end_time) {
 }
 
 // Function to get user's current shift and weekly offs
-function getUserShiftDetails($conn, $user_id) {
+function getUserShiftDetails($conn, $user_id)
+{
     $current_date = date('Y-m-d');
-    
+
     $query = "SELECT us.*, s.shift_name, s.start_time, s.end_time 
               FROM user_shifts us
               JOIN shifts s ON us.shift_id = s.id
@@ -114,12 +123,12 @@ function getUserShiftDetails($conn, $user_id) {
               AND (us.effective_to >= ? OR us.effective_to IS NULL)
               ORDER BY us.effective_from DESC 
               LIMIT 1";
-              
+
     $stmt = $conn->prepare($query);
     $stmt->bind_param("iss", $user_id, $current_date, $current_date);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows > 0) {
         $shift_data = $result->fetch_assoc();
         return [
@@ -129,7 +138,7 @@ function getUserShiftDetails($conn, $user_id) {
             'weekly_offs' => $shift_data['weekly_offs']
         ];
     }
-    
+
     // Return default shift if no specific shift is assigned
     return [
         'shift_name' => 'Default Shift',
@@ -142,7 +151,7 @@ function getUserShiftDetails($conn, $user_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_status') {
     $user_id = $_SESSION['user_id'];
     $current_date = date('Y-m-d');
-    
+
     try {
         // Check if user has punched in today
         $query = "SELECT punch_in FROM attendance 
@@ -151,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         $stmt->bind_param("is", $user_id, $current_date);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
             echo json_encode([
@@ -183,26 +192,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $device_info = getDeviceInfo();
     $status = 'present';
     $created_at = $current_datetime;
-    
+
     // Get user's shift details
     $shift_details = getUserShiftDetails($conn, $user_id);
-    
+
     try {
         if ($data['action'] === 'punch_in') {
             // Check if it's a weekly off
             $current_day = date('l'); // Gets the current day name
             $weekly_offs = explode(',', $shift_details['weekly_offs']);
-            
+
             // Set is_weekly_off flag
             $is_weekly_off = in_array($current_day, $weekly_offs) ? 1 : 0;
-            
+
             // Check if already punched in today
             $check_query = "SELECT id FROM attendance WHERE user_id = ? AND date = ?";
             $check_stmt = $conn->prepare($check_query);
             $check_stmt->bind_param("is", $user_id, $current_date);
             $check_stmt->execute();
             $result = $check_stmt->get_result();
-            
+
             if ($result->num_rows > 0) {
                 echo json_encode(['success' => false, 'message' => 'Already punched in for today']);
                 exit;
@@ -215,61 +224,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $accuracy = null;
             $address = null;  // Initialize address variable
             $image_file_path = null; // Initialize image_file_path variable
-            
+
             if (isset($data['latitude']) && isset($data['longitude'])) {
                 $latitude = $data['latitude'];
                 $longitude = $data['longitude'];
-                
+
                 try {
                     // Form a basic location string from coordinates
                     $location = "Lat: $latitude, Long: $longitude";
-                    
+
                     // Get address from coordinates using reverse geocoding
                     $address = getAddressFromCoordinates($latitude, $longitude);
-                    
+
                 } catch (Exception $e) {
                     // If geocoding fails, just use the coordinates
                     error_log("Geocoding failed: " . $e->getMessage());
                 }
-                
+
                 // Get accuracy if available
                 if (isset($data['accuracy'])) {
                     $accuracy = $data['accuracy'];
                 }
             }
-            
+
             // Use address from request if provided, otherwise use the one from geocoding
             if (isset($data['address']) && !empty($data['address'])) {
                 $address = $data['address'];
             }
-            
+
             // Handle selfie image if available
             if (isset($data['punch_in_photo']) && !empty($data['punch_in_photo'])) {
                 // The image comes as base64 data URL, need to extract just the base64 string
                 $image_base64 = '';
-                
+
                 if (strpos($data['punch_in_photo'], 'data:image') !== false) {
                     // Extract the base64 part and image type from the data URL
                     $image_parts = explode(',', $data['punch_in_photo']);
                     $image_base64 = $image_parts[1];
-                    
+
                     // Get image type (jpg, png) from the data URL
                     preg_match('/data:image\/(.*);base64/', $data['punch_in_photo'], $matches);
                     $image_type = $matches[1] ?? 'jpeg'; // Default to jpeg if can't determine
-                    
+
                     // Create unique filename - user_id_date_timestamp.jpg
                     $filename = $user_id . '_' . date('Ymd') . '_' . time() . '.' . $image_type;
                     $upload_dir = 'uploads/attendance/';
-                    
+
                     // Make sure the directory exists
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0755, true);
                     }
-                    
+
                     // Save the decoded image to the uploads directory
                     $image_data = base64_decode($image_base64);
                     $file_path = $upload_dir . $filename;
-                    
+
                     if (file_put_contents($file_path, $image_data)) {
                         // Use the relative file path to store in database
                         $image_file_path = $file_path;
@@ -279,18 +288,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     $image_base64 = $data['punch_in_photo'];
-                    
+
                     // Similar process for non-data URLs
                     $filename = $user_id . '_' . date('Ymd') . '_' . time() . '.jpg';
                     $upload_dir = 'uploads/attendance/';
-                    
+
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0755, true);
                     }
-                    
+
                     $image_data = base64_decode($image_base64);
                     $file_path = $upload_dir . $filename;
-                    
+
                     if (file_put_contents($file_path, $image_data)) {
                         $image_file_path = $file_path;
                     } else {
@@ -298,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            
+
             // Get device info from request if available, otherwise use server function
             if (isset($data['device_info']) && !empty($data['device_info'])) {
                 $device_info = $data['device_info'];
@@ -342,23 +351,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?,
                 ?
             )";
-            
+
             $stmt = $conn->prepare($query);
             $shift_time = $shift_details['start_time'] . '-' . $shift_details['end_time'];
             $weekly_offs = $shift_details['weekly_offs'];
             $auto_punch_out = $shift_details['end_time'];
-            
+
             // Log the punch in time to debug the issue
             error_log("Punch In Debug - Current Time: " . $current_time);
-            
-            $stmt->bind_param("issssssssssisddds", 
-                $user_id, 
-                $current_date, 
+
+            $stmt->bind_param(
+                "issssssssssisddds",
+                $user_id,
+                $current_date,
                 $current_time,
-                $location, 
-                $ip_address, 
-                $device_info, 
-                $status, 
+                $location,
+                $ip_address,
+                $device_info,
+                $status,
                 $created_at,
                 $shift_time,
                 $weekly_offs,
@@ -370,7 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $accuracy,
                 $address
             );
-            
+
             try {
                 if (!$stmt->execute()) {
                     $error_message = "MySQL Error: " . $stmt->error . " (Code: " . $stmt->errno . ")";
@@ -378,24 +388,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo json_encode([
                         'success' => false,
                         'message' => $error_message,
-                        'query' => $query 
+                        'query' => $query
                     ]);
                     exit;
                 }
-                
+
+                // Send WhatsApp notification after successful punch in
+                try {
+                    global $pdo; // Use the PDO connection from db_connect.php
+                    if ($pdo) {
+                        $notificationSent = sendPunchNotification($user_id, $pdo);
+                        if ($notificationSent) {
+                            error_log("WhatsApp punch in notification sent successfully for user ID: $user_id");
+                        } else {
+                            error_log("WhatsApp punch in notification failed for user ID: $user_id");
+                        }
+                    } else {
+                        error_log("PDO connection not available for WhatsApp notification");
+                    }
+                } catch (Exception $whatsappError) {
+                    // Log the error but don't fail the punch in
+                    error_log("WhatsApp notification error: " . $whatsappError->getMessage());
+                }
+
                 // Format response message
                 $message = 'Punched in successfully at ' . date('h:i:s A', strtotime($current_time));
                 if ($is_weekly_off) {
                     $message .= ' (Working on Weekly Off)';
                 }
-                
+
                 echo json_encode([
-                    'success' => true, 
+                    'success' => true,
                     'message' => $message,
                     'punch_time' => $current_time,
-                    'shift_time' => "Shift: " . $shift_details['shift_name'] . " (" . 
-                                  date('h:i A', strtotime($shift_details['start_time'])) . 
-                                  " - " . date('h:i A', strtotime($shift_details['end_time'])) . ")"
+                    'shift_time' => "Shift: " . $shift_details['shift_name'] . " (" .
+                        date('h:i A', strtotime($shift_details['start_time'])) .
+                        " - " . date('h:i A', strtotime($shift_details['end_time'])) . ")"
                 ]);
             } catch (Exception $e) {
                 error_log("Punch In Error: " . $e->getMessage());
@@ -422,15 +450,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($data['latitude']) && isset($data['longitude'])) {
                 $latitude = $data['latitude'];
                 $longitude = $data['longitude'];
-                
+
                 // Get address from coordinates
                 $punch_out_address = getAddressFromCoordinates($latitude, $longitude);
-                
+
                 if (isset($data['accuracy'])) {
                     $accuracy = $data['accuracy'];
                 }
             }
-            
+
             // Use address from request if provided, otherwise use the one from geocoding
             if (isset($data['address']) && !empty($data['address'])) {
                 $punch_out_address = $data['address'];
@@ -440,33 +468,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($data['punch_out_photo']) && !empty($data['punch_out_photo'])) {
                 // Log the incoming punch_out_photo data
                 error_log("Received punch_out_photo data. Length: " . strlen($data['punch_out_photo']));
-                
+
                 // The image comes as base64 data URL, need to extract just the base64 string
                 $image_base64 = '';
-                
+
                 if (strpos($data['punch_out_photo'], 'data:image') !== false) {
                     // Extract the base64 part and image type from the data URL
                     $image_parts = explode(',', $data['punch_out_photo']);
                     $image_base64 = $image_parts[1];
-                    
+
                     // Get image type (jpg, png) from the data URL
                     preg_match('/data:image\/(.*);base64/', $data['punch_out_photo'], $matches);
                     $image_type = $matches[1] ?? 'jpeg'; // Default to jpeg if can't determine
-                    
+
                     // Create unique filename - user_id_date_timestamp_out.jpg
                     $filename = $user_id . '_' . date('Ymd') . '_' . time() . '_out.' . $image_type;
                     $upload_dir = 'uploads/attendance/';
-                    
+
                     // Make sure the directory exists
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0755, true);
                         error_log("Created directory: " . $upload_dir);
                     }
-                    
+
                     // Save the decoded image to the uploads directory
                     $image_data = base64_decode($image_base64);
                     $file_path = $upload_dir . $filename;
-                    
+
                     if (file_put_contents($file_path, $image_data)) {
                         // Use the relative file path to store in database
                         $punch_out_photo = $file_path;
@@ -477,19 +505,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     $image_base64 = $data['punch_out_photo'];
-                    
+
                     // Similar process for non-data URLs
                     $filename = $user_id . '_' . date('Ymd') . '_' . time() . '_out.jpg';
                     $upload_dir = 'uploads/attendance/';
-                    
+
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0755, true);
                         error_log("Created directory: " . $upload_dir);
                     }
-                    
+
                     $image_data = base64_decode($image_base64);
                     $file_path = $upload_dir . $filename;
-                    
+
                     if (file_put_contents($file_path, $image_data)) {
                         $punch_out_photo = $file_path;
                         error_log("Successfully saved punch out photo to: " . $file_path);
@@ -497,7 +525,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         error_log("Failed to save punch out photo to: " . $file_path);
                     }
                 }
-                
+
                 error_log("Final punch_out_photo value: " . ($punch_out_photo ?: "NULL"));
             } else {
                 error_log("No punch_out_photo data received in request");
@@ -510,7 +538,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check_stmt->execute();
             $check_result = $check_stmt->get_result();
             $attendance = $check_result->fetch_assoc();
-            
+
             if (!$attendance) {
                 $error_message = "No punch-in record found to update. Make sure you punched in first.";
                 error_log($error_message);
@@ -520,7 +548,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 exit;
             }
-            
+
             // Check if already punched out
             if ($attendance['punch_out'] !== null) {
                 echo json_encode([
@@ -529,7 +557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 exit;
             }
-            
+
             // Check if already auto punched out
             if ($attendance['auto_punch_out'] == 1) {
                 echo json_encode([
@@ -552,29 +580,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_details->execute();
             $result = $stmt_details->get_result();
             $row = $result->fetch_assoc();
-            
+
             if (!$row) {
                 throw new Exception("No punch-in record found for today");
             }
-            
+
             $punch_in_time = $row['punch_in'];
             $shift_end_time = $row['end_time'];
-            
+
             // Calculate working hours and overtime
             $time_details = calculateWorkingHours($punch_in_time, $current_time, $shift_end_time);
-            
+
             // Update attendance record with punch out time, working hours, overtime and work report
             $query = "UPDATE attendance SET punch_out = ?, working_hours = ?, overtime_hours = ?, work_report = ?, modified_at = ?, modified_by = ?, punch_out_photo = ?, punch_out_latitude = ?, punch_out_longitude = ?, punch_out_accuracy = ?, punch_out_address = ? WHERE user_id = ? AND date = ? AND punch_out IS NULL";
-            
+
             $stmt = $conn->prepare($query);
             $modified_at = $current_datetime;
             $work_report = trim($data['work_report']);
-            
+
             // Get location data if provided
             $punch_out_latitude = isset($data['latitude']) ? $data['latitude'] : null;
             $punch_out_longitude = isset($data['longitude']) ? $data['longitude'] : null;
             $punch_out_accuracy = isset($data['accuracy']) ? $data['accuracy'] : null;
-            
+
             // Add debugging information
             error_log("Punch Out Debug - Query: " . $query);
             error_log("Punch Out Debug - Current Time: " . $current_time);
@@ -582,13 +610,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Punch Out Debug - Photo Path: " . ($punch_out_photo ? $punch_out_photo : "None"));
             error_log("Punch Out Debug - Location: Lat: " . ($punch_out_latitude ?? 'NULL') . ", Long: " . ($punch_out_longitude ?? 'NULL') . ", Accuracy: " . ($punch_out_accuracy ?? 'NULL'));
             error_log("Punch Out Debug - Address: " . ($punch_out_address ?? 'NULL'));
-            error_log("Punch Out Debug - Values: current_time=" . $current_time . 
-                      ", total_time=" . $time_details['total_time'] . 
-                      ", overtime=" . $time_details['overtime'] . 
-                      ", modified_at=" . $modified_at . 
-                      ", user_id=" . $user_id . 
-                      ", current_date=" . $current_date);
-            
+            error_log("Punch Out Debug - Values: current_time=" . $current_time .
+                ", total_time=" . $time_details['total_time'] .
+                ", overtime=" . $time_details['overtime'] .
+                ", modified_at=" . $modified_at .
+                ", user_id=" . $user_id .
+                ", current_date=" . $current_date);
+
             // Fix any potential issues with data types and make sure all parameters are properly set
             $current_time = $current_time;
             $total_time = $time_details['total_time'];
@@ -596,11 +624,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $work_report = $work_report;
             $modified_by = $user_id;
             $photo_path = $punch_out_photo ?: null;
-            
+
             // Make sure we have correct parameter types for bind_param
             // s=string, i=integer, d=double, b=blob
             try {
-                $stmt->bind_param("sssssisdddsis", 
+                $stmt->bind_param(
+                    "sssssisdddsis",
                     $current_time,
                     $total_time,
                     $overtime,
@@ -615,7 +644,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $user_id,
                     $current_date
                 );
-                
+
                 error_log("Punch Out Debug - After bind_param setup");
             } catch (Exception $bind_error) {
                 error_log("Bind Param Error: " . $bind_error->getMessage());
@@ -625,27 +654,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 exit;
             }
-            
+
             try {
                 $result = $stmt->execute();
                 error_log("Execute result: " . ($result ? "Success" : "Failure"));
-                
+
                 if (!$result) {
                     $error_message = "MySQL Error: " . $stmt->error . " (Code: " . $stmt->errno . ")";
                     error_log($error_message);
                     echo json_encode([
                         'success' => false,
                         'message' => $error_message,
-                        'query' => $query 
+                        'query' => $query
                     ]);
                     exit;
                 }
-                
+
                 // Check if punch-out location differs significantly from punch-in location
                 $location_changed = false;
                 $distance_km = 0;
                 $location_message = '';
-                
+
                 // Get punch-in location from the database
                 $get_punchin_loc = "SELECT latitude, longitude FROM attendance WHERE user_id = ? AND date = ?";
                 $loc_stmt = $conn->prepare($get_punchin_loc);
@@ -653,33 +682,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $loc_stmt->execute();
                 $loc_result = $loc_stmt->get_result();
                 $punch_in_loc = $loc_result->fetch_assoc();
-                
-                if ($punch_in_loc && $punch_in_loc['latitude'] && $punch_in_loc['longitude'] && 
-                    $punch_out_latitude && $punch_out_longitude) {
-                    
+
+                if (
+                    $punch_in_loc && $punch_in_loc['latitude'] && $punch_in_loc['longitude'] &&
+                    $punch_out_latitude && $punch_out_longitude
+                ) {
+
                     // Calculate distance between punch-in and punch-out locations using Haversine formula
                     $earth_radius = 6371; // Radius of the earth in km
                     $lat_diff = deg2rad($punch_out_latitude - $punch_in_loc['latitude']);
                     $lon_diff = deg2rad($punch_out_longitude - $punch_in_loc['longitude']);
-                    
-                    $a = sin($lat_diff/2) * sin($lat_diff/2) +
-                         cos(deg2rad($punch_in_loc['latitude'])) * cos(deg2rad($punch_out_latitude)) * 
-                         sin($lon_diff/2) * sin($lon_diff/2);
-                    
-                    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+
+                    $a = sin($lat_diff / 2) * sin($lat_diff / 2) +
+                        cos(deg2rad($punch_in_loc['latitude'])) * cos(deg2rad($punch_out_latitude)) *
+                        sin($lon_diff / 2) * sin($lon_diff / 2);
+
+                    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
                     $distance_km = $earth_radius * $c; // Distance in km
-                    
+
                     // Consider significant location change if distance is more than 100 meters
                     if ($distance_km > 0.1) {
                         $location_changed = true;
                         $location_message = sprintf(
-                            "Location change detected. Distance: %.1f km from punch-in location.", 
+                            "Location change detected. Distance: %.1f km from punch-in location.",
                             $distance_km
                         );
                         error_log("Location difference detected: " . $location_message);
                     }
                 }
-                
+
                 // Format response message
                 $message = 'Punched out successfully at ' . date('h:i:s A', strtotime($current_time));
                 $time_message = sprintf(
@@ -687,9 +718,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $time_details['regular_time'],
                     $time_details['has_overtime'] ? "Overtime: " . $time_details['overtime'] : ""
                 );
-                
+
                 echo json_encode([
-                    'success' => true, 
+                    'success' => true,
                     'message' => $message,
                     'punch_time' => $current_time,
                     'working_hours' => $time_message,
@@ -704,7 +735,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
         }
-        
+
     } catch (Exception $e) {
         error_log("Punch Error: " . $e->getMessage());
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);

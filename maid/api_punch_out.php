@@ -174,6 +174,20 @@ try {
     ]);
 
     if ($success) {
+        // Send WhatsApp notification to user after successful punch out
+        try {
+            require_once __DIR__ . '/../whatsapp/send_punch_notification.php';
+            $whatsapp_sent = sendPunchOutNotification($userId, $pdo);
+            if ($whatsapp_sent) {
+                error_log("WhatsApp punch out notification sent successfully for maid user ID: $userId");
+            } else {
+                error_log("WhatsApp punch out notification failed for maid user ID: $userId");
+            }
+        } catch (Exception $whatsappError) {
+            // Log the error but don't fail the punch out
+            error_log("WhatsApp punch out notification error for maid: " . $whatsappError->getMessage());
+        }
+
         http_response_code(200);
         echo json_encode([
             'success' => true,

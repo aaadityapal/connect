@@ -36,18 +36,22 @@
                             <!-- Project Type -->
                             <div class="payment-edit-form-group">
                                 <label for="editPaymentProjectType" class="payment-edit-form-label">
-                                    <i class="fas fa-folder-open"></i> Project Type <span class="payment-edit-required">*</span>
+                                    <i class="fas fa-folder-open"></i> Project Type <span
+                                        class="payment-edit-required">*</span>
                                 </label>
-                                <input type="text" id="editPaymentProjectType" name="projectType" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                                <input type="text" id="editPaymentProjectType" name="projectType"
+                                    class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
                                 <span class="payment-edit-error-message" id="editPaymentProjectTypeError"></span>
                             </div>
 
                             <!-- Project Name -->
                             <div class="payment-edit-form-group">
                                 <label for="editPaymentProjectName" class="payment-edit-form-label">
-                                    <i class="fas fa-tasks"></i> Project Name <span class="payment-edit-required">*</span>
+                                    <i class="fas fa-tasks"></i> Project Name <span
+                                        class="payment-edit-required">*</span>
                                 </label>
-                                <select id="editPaymentProjectName" name="projectName" class="payment-edit-select-field" required>
+                                <select id="editPaymentProjectName" name="projectName" class="payment-edit-select-field"
+                                    required>
                                     <option value="">Select Project Name</option>
                                 </select>
                                 <span class="payment-edit-error-message" id="editPaymentProjectNameError"></span>
@@ -56,27 +60,34 @@
                             <!-- Payment Date -->
                             <div class="payment-edit-form-group">
                                 <label for="editPaymentDate" class="payment-edit-form-label">
-                                    <i class="fas fa-calendar-alt"></i> Date <span class="payment-edit-required">*</span>
+                                    <i class="fas fa-calendar-alt"></i> Date <span
+                                        class="payment-edit-required">*</span>
                                 </label>
-                                <input type="date" id="editPaymentDate" name="paymentDate" class="payment-edit-text-input" required>
+                                <input type="date" id="editPaymentDate" name="paymentDate"
+                                    class="payment-edit-text-input" required>
                                 <span class="payment-edit-error-message" id="editPaymentDateError"></span>
                             </div>
 
                             <!-- Main Amount -->
                             <div class="payment-edit-form-group">
                                 <label for="editPaymentAmount" class="payment-edit-form-label">
-                                    <i class="fas fa-rupee-sign"></i> Amount <span class="payment-edit-required">*</span>
+                                    <i class="fas fa-rupee-sign"></i> Amount <span
+                                        class="payment-edit-required">*</span>
                                 </label>
-                                <input type="number" id="editPaymentAmount" name="amount" class="payment-edit-text-input" placeholder="Enter amount" step="0.01" min="0" required>
+                                <input type="number" id="editPaymentAmount" name="amount"
+                                    class="payment-edit-text-input" placeholder="Enter amount" step="0.01" min="0"
+                                    required>
                                 <span class="payment-edit-error-message" id="editPaymentAmountError"></span>
                             </div>
 
                             <!-- Authorized User -->
                             <div class="payment-edit-form-group">
                                 <label for="editPaymentAuthorizedUser" class="payment-edit-form-label">
-                                    <i class="fas fa-user-check"></i> Payment Done By <span class="payment-edit-required">*</span>
+                                    <i class="fas fa-user-check"></i> Payment Done By <span
+                                        class="payment-edit-required">*</span>
                                 </label>
-                                <select id="editPaymentAuthorizedUser" name="authorizedUserId" class="payment-edit-select-field" required>
+                                <select id="editPaymentAuthorizedUser" name="authorizedUserId"
+                                    class="payment-edit-select-field" required>
                                     <option value="">Select Authorized User</option>
                                 </select>
                                 <span class="payment-edit-error-message" id="editPaymentAuthorizedUserError"></span>
@@ -85,9 +96,11 @@
                             <!-- Payment Mode -->
                             <div class="payment-edit-form-group">
                                 <label for="editPaymentMode" class="payment-edit-form-label">
-                                    <i class="fas fa-credit-card"></i> Payment Mode <span class="payment-edit-required">*</span>
+                                    <i class="fas fa-credit-card"></i> Payment Mode <span
+                                        class="payment-edit-required">*</span>
                                 </label>
-                                <select id="editPaymentMode" name="paymentMode" class="payment-edit-select-field" required>
+                                <select id="editPaymentMode" name="paymentMode" class="payment-edit-select-field"
+                                    required>
                                     <option value="">Select Payment Method</option>
                                     <option value="split_payment">Split Payment</option>
                                     <option value="multiple_acceptance">Multiple Acceptance</option>
@@ -103,7 +116,8 @@
                         </div>
 
                         <!-- Payment Proof Attachment -->
-                        <div id="editPaymentProofSection" style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <div id="editPaymentProofSection"
+                            style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <i class="fas fa-paperclip" style="color: #d97706; font-size: 1.1em;"></i>
@@ -113,15 +127,21 @@
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 8px;">
-                                    <button type="button" id="editPaymentProofViewBtn" class="payment-edit-attachment-btn-view" onclick="viewPaymentProof()" title="View proof" style="display: none;">
+                                    <button type="button" id="editPaymentProofViewBtn"
+                                        class="payment-edit-attachment-btn-view" onclick="viewPaymentProof()"
+                                        title="View proof" style="display: none;">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button type="button" id="editPaymentProofUploadBtn" class="payment-edit-attachment-btn-view" onclick="document.getElementById('editPaymentProofUpload').click()" title="Upload/Replace proof">
+                                    <button type="button" id="editPaymentProofUploadBtn"
+                                        class="payment-edit-attachment-btn-view"
+                                        onclick="document.getElementById('editPaymentProofUpload').click()"
+                                        title="Upload/Replace proof">
                                         <i class="fas fa-cloud-upload-alt"></i>
                                     </button>
                                 </div>
                             </div>
-                            <input type="file" id="editPaymentProofUpload" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.mp4,.mov,.avi" style="display: none;">
+                            <input type="file" id="editPaymentProofUpload"
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.mp4,.mov,.avi" style="display: none;">
                         </div>
                     </div>
 
@@ -136,24 +156,41 @@
                             <!-- Payment methods will be loaded here -->
                         </div>
 
-                        <button type="button" class="payment-edit-btn-add-method" id="editAddAcceptanceMethodBtn" style="margin-top: 15px;">
+                        <button type="button" class="payment-edit-btn-add-method" id="editAddAcceptanceMethodBtn"
+                            style="margin-top: 15px;">
                             <i class="fas fa-plus"></i> Add Payment Method
                         </button>
 
                         <!-- Total Acceptance Summary -->
-                        <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div
+                            style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 8px; border: 1px solid #e2e8f0;">
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                                <div style="padding: 12px; background: white; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-                                    <div style="font-size: 0.75em; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Total Amount</div>
-                                    <div style="font-size: 1.2em; font-weight: 800; color: #2d3748; margin-top: 5px;">₹ <span id="editAcceptanceTotalAmount">0.00</span></div>
+                                <div
+                                    style="padding: 12px; background: white; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+                                    <div
+                                        style="font-size: 0.75em; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Total Amount</div>
+                                    <div style="font-size: 1.2em; font-weight: 800; color: #2d3748; margin-top: 5px;">₹
+                                        <span id="editAcceptanceTotalAmount">0.00</span>
+                                    </div>
                                 </div>
-                                <div style="padding: 12px; background: white; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-                                    <div style="font-size: 0.75em; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Amount Received</div>
-                                    <div style="font-size: 1.2em; font-weight: 800; color: #22863a; margin-top: 5px;">₹ <span id="editAcceptanceReceivedAmount">0.00</span></div>
+                                <div
+                                    style="padding: 12px; background: white; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+                                    <div
+                                        style="font-size: 0.75em; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Amount Received</div>
+                                    <div style="font-size: 1.2em; font-weight: 800; color: #22863a; margin-top: 5px;">₹
+                                        <span id="editAcceptanceReceivedAmount">0.00</span>
+                                    </div>
                                 </div>
-                                <div style="padding: 12px; background: white; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-                                    <div style="font-size: 0.75em; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Difference</div>
-                                    <div style="font-size: 1.2em; font-weight: 800; color: #e53e3e; margin-top: 5px;">₹ <span id="editAcceptanceDifference">0.00</span></div>
+                                <div
+                                    style="padding: 12px; background: white; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+                                    <div
+                                        style="font-size: 0.75em; color: #a0aec0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Difference</div>
+                                    <div style="font-size: 1.2em; font-weight: 800; color: #e53e3e; margin-top: 5px;">₹
+                                        <span id="editAcceptanceDifference">0.00</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -169,27 +206,33 @@
                             <!-- Line items will be loaded here -->
                         </div>
 
-                        <button type="button" class="payment-edit-btn-add-method" id="editAddLineItemBtn" style="margin-top: 15px;">
+                        <button type="button" class="payment-edit-btn-add-method" id="editAddLineItemBtn"
+                            style="margin-top: 15px;">
                             <i class="fas fa-plus"></i> Add Line Item
                         </button>
 
                         <!-- Validation Warning (initially hidden) -->
-                        <div id="editLineItemsValidationWarning" style="margin-top: 15px; padding: 12px; background: #fed7d7; border-radius: 6px; border-left: 4px solid #c53030; display: none;">
+                        <div id="editLineItemsValidationWarning"
+                            style="margin-top: 15px; padding: 12px; background: #fed7d7; border-radius: 6px; border-left: 4px solid #c53030; display: none;">
                             <div style="font-size: 0.85em; color: #742a2a; font-weight: 600;">
-                                <i class="fas fa-exclamation-triangle"></i> <span id="editLineItemsWarningText">Line items total exceeds the main payment amount!</span>
+                                <i class="fas fa-exclamation-triangle"></i> <span id="editLineItemsWarningText">Line
+                                    items total exceeds the main payment amount!</span>
                             </div>
                         </div>
 
                         <!-- Line Items Total -->
-                        <div style="margin-top: 15px; padding: 12px; background: #c6f6d5; border-radius: 6px; border-left: 4px solid #22863a;">
+                        <div
+                            style="margin-top: 15px; padding: 12px; background: #c6f6d5; border-radius: 6px; border-left: 4px solid #22863a;">
                             <div style="font-size: 0.85em; color: #22543d; font-weight: 600;">
-                                <i class="fas fa-calculator"></i> Total Line Items Amount: <strong>₹ <span id="editLineItemsTotalAmount">0.00</span></strong>
+                                <i class="fas fa-calculator"></i> Total Line Items Amount: <strong>₹ <span
+                                        id="editLineItemsTotalAmount">0.00</span></strong>
                             </div>
                         </div>
                     </div>
 
                     <!-- Status Information (Read-Only) - Moved to Last -->
-                    <div class="payment-edit-form-section" style="background-color: #f0f4f8; border-left-color: #3182ce;">
+                    <div class="payment-edit-form-section"
+                        style="background-color: #f0f4f8; border-left-color: #3182ce;">
                         <h3 class="payment-edit-section-title">
                             <i class="fas fa-history"></i> Status Information (Read-Only)
                         </h3>
@@ -200,7 +243,8 @@
                                 <label class="payment-edit-form-label">
                                     <i class="fas fa-badge-check"></i> Current Status
                                 </label>
-                                <input type="text" id="editPaymentStatus" class="payment-edit-text-input" readonly style="background-color: #e6f2ff; color: #3182ce; font-weight: 600;">
+                                <input type="text" id="editPaymentStatus" class="payment-edit-text-input" readonly
+                                    style="background-color: #e6f2ff; color: #3182ce; font-weight: 600;">
                             </div>
 
                             <!-- Created At -->
@@ -208,7 +252,8 @@
                                 <label class="payment-edit-form-label">
                                     <i class="fas fa-calendar-check"></i> Created At
                                 </label>
-                                <input type="text" id="editPaymentCreatedAt" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                                <input type="text" id="editPaymentCreatedAt" class="payment-edit-text-input" readonly
+                                    style="background-color: #f0f4f8;">
                             </div>
 
                             <!-- Updated At -->
@@ -216,7 +261,8 @@
                                 <label class="payment-edit-form-label">
                                     <i class="fas fa-calendar-times"></i> Last Updated At
                                 </label>
-                                <input type="text" id="editPaymentUpdatedAt" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                                <input type="text" id="editPaymentUpdatedAt" class="payment-edit-text-input" readonly
+                                    style="background-color: #f0f4f8;">
                             </div>
 
                             <!-- Created By -->
@@ -224,7 +270,8 @@
                                 <label class="payment-edit-form-label">
                                     <i class="fas fa-user"></i> Created By
                                 </label>
-                                <input type="text" id="editPaymentCreatedBy" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                                <input type="text" id="editPaymentCreatedBy" class="payment-edit-text-input" readonly
+                                    style="background-color: #f0f4f8;">
                             </div>
 
                             <!-- Last Edited At -->
@@ -232,7 +279,8 @@
                                 <label class="payment-edit-form-label">
                                     <i class="fas fa-edit"></i> Last Edited At
                                 </label>
-                                <input type="text" id="editPaymentEditedAt" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                                <input type="text" id="editPaymentEditedAt" class="payment-edit-text-input" readonly
+                                    style="background-color: #f0f4f8;">
                             </div>
 
                             <!-- Last Edited By -->
@@ -240,7 +288,8 @@
                                 <label class="payment-edit-form-label">
                                     <i class="fas fa-user-edit"></i> Last Edited By
                                 </label>
-                                <input type="text" id="editPaymentEditedBy" class="payment-edit-text-input" readonly style="background-color: #f0f4f8;">
+                                <input type="text" id="editPaymentEditedBy" class="payment-edit-text-input" readonly
+                                    style="background-color: #f0f4f8;">
                             </div>
                         </div>
                     </div>
@@ -263,7 +312,7 @@
 
 <style>
     /* Payment Edit Modal Styles */
-    
+
     .payment-edit-overlay {
         display: none;
         position: fixed;
@@ -288,6 +337,7 @@
         from {
             opacity: 0;
         }
+
         to {
             opacity: 1;
         }
@@ -309,6 +359,7 @@
             transform: translateY(50px);
             opacity: 0;
         }
+
         to {
             transform: translateY(0);
             opacity: 1;
@@ -377,8 +428,13 @@
     }
 
     @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .payment-edit-form-wrapper {
@@ -788,7 +844,7 @@
 
 <script>
     // Payment Entry Edit Modal Functions
-    
+
     let paymentEditModalOverlay;
     let paymentEditForm;
     let closePaymentEditModalBtn;
@@ -807,10 +863,10 @@
         submitPaymentEditBtn = document.getElementById('submitPaymentEditBtn');
         paymentEditLoadingSpinner = document.getElementById('paymentEditLoadingSpinner');
         paymentEditContent = document.getElementById('paymentEditContent');
-        
+
         // Load vendor categories from database
         loadVendorCategories();
-        
+
         attachPaymentEditEventListeners();
     }
 
@@ -821,17 +877,17 @@
             console.error('Modal overlay not found!');
             return;
         }
-        
+
         currentEditingPaymentEntryId = entryId;
-        
+
         paymentEditModalOverlay.classList.add('active');
-        
+
         document.body.style.overflow = 'hidden';
-        
+
         // Show loading spinner
         paymentEditLoadingSpinner.style.display = 'block';
         paymentEditContent.style.display = 'none';
-        
+
         // Fetch payment entry details
         fetchPaymentEntryDetails(entryId);
     }
@@ -864,7 +920,7 @@
             .then(data => {
                 if (data.success && data.entry) {
                     populateEditForm(data.entry);
-                    
+
                     // Hide spinner and show content
                     paymentEditLoadingSpinner.style.display = 'none';
                     paymentEditContent.style.display = 'block';
@@ -900,7 +956,7 @@
             projectOption.setAttribute('data-type', entryData.project_type_name || '');
             document.getElementById('editPaymentProjectName').appendChild(projectOption);
         }
-        
+
         // Set project type immediately from API response
         if (entryData.project_type_name) {
             document.getElementById('editPaymentProjectType').value = entryData.project_type_name;
@@ -917,7 +973,7 @@
         document.getElementById('editPaymentCreatedAt').value = formatDateTime(entryData.created_timestamp_utc);
         document.getElementById('editPaymentUpdatedAt').value = formatDateTime(entryData.updated_timestamp_utc);
         document.getElementById('editPaymentCreatedBy').value = entryData.created_by_username || 'N/A';
-        
+
         // Edit Tracking Information (Read-Only)
         document.getElementById('editPaymentEditedAt').value = entryData.edited_at ? formatDateTime(entryData.edited_at) : 'Never edited';
         document.getElementById('editPaymentEditedBy').value = entryData.edited_by_username ? entryData.edited_by_username : 'N/A';
@@ -926,7 +982,7 @@
         if (entryData.payment_proof_filename_original && entryData.payment_proof_document_path) {
             // Store proof path globally
             window.currentPaymentProofPath = entryData.payment_proof_document_path;
-            
+
             const fileSizeKB = entryData.payment_proof_filesize_bytes ? Math.round(entryData.payment_proof_filesize_bytes / 1024) : 0;
             document.getElementById('editPaymentProofInfo').textContent = entryData.payment_proof_filename_original + ' (' + fileSizeKB + ' KB)';
             document.getElementById('editPaymentProofViewBtn').style.display = 'inline-flex';
@@ -969,10 +1025,10 @@
             .then(data => {
                 if (data.success && data.projects && data.projects.length > 0) {
                     const projectDropdown = document.getElementById('editPaymentProjectName');
-                    
+
                     // Get existing options (including the pre-added current project)
                     const existingOptions = Array.from(projectDropdown.options).map(opt => opt.value);
-                    
+
                     // Add other projects that aren't already in the dropdown
                     data.projects.forEach(project => {
                         if (!existingOptions.includes(String(project.id))) {
@@ -983,9 +1039,9 @@
                             projectDropdown.appendChild(option);
                         }
                     });
-                    
+
                     // Add event listener for project change to update type
-                    projectDropdown.addEventListener('change', function() {
+                    projectDropdown.addEventListener('change', function () {
                         const selectedOption = this.options[this.selectedIndex];
                         if (selectedOption && selectedOption.dataset.type) {
                             document.getElementById('editPaymentProjectType').value = selectedOption.dataset.type;
@@ -1005,7 +1061,7 @@
             const methodRow = document.createElement('div');
             methodRow.className = 'payment-edit-acceptance-method-row';
             methodRow.dataset.rowIndex = index;
-            
+
             methodRow.innerHTML = `
                 <select class="payment-edit-text-input edit-acceptance-method" data-row="${index}" style="width: 100%;">
                     <option value="">Select Payment Method</option>
@@ -1048,17 +1104,17 @@
             if (item.line_item_media_upload_path) {
                 const fileName = item.line_item_media_original_filename || 'Attached File';
                 const fileSize = item.line_item_media_filesize_bytes ? (Math.round(item.line_item_media_filesize_bytes / 1024)) + ' KB' : 'Unknown size';
-                
+
                 // Fix the path to be relative - extract just the filename
                 let fixedPath = item.line_item_media_upload_path;
-                
+
                 // Extract filename from path (get the last part)
                 const pathParts = fixedPath.split('/');
                 const justFilename = pathParts[pathParts.length - 1];
-                
+
                 // Construct correct path
                 fixedPath = 'uploads/entry_media/' + justFilename;
-                
+
                 attachmentHTML = `
                     <div style="margin-top: 15px; padding: 12px; background: #e6f7ff; border-radius: 6px; border-left: 4px solid #1890ff;">
                         <div style="display: flex; align-items: center; justify-content: space-between; color: #0050b3; font-size: 0.9em;">
@@ -1094,11 +1150,15 @@
                 <div class="payment-edit-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                     <div class="payment-edit-form-group">
                         <label class="payment-edit-form-label">Recipient Type</label>
-                        <input type="text" class="payment-edit-text-input" value="${item.recipient_type_category || ''}" readonly style="background-color: #f0f4f8;">
+                        <select class="payment-edit-text-input edit-line-item-type" data-item-id="${item.line_item_entry_id}" required>
+                            <option value="">Loading...</option>
+                        </select>
                     </div>
                     <div class="payment-edit-form-group">
                         <label class="payment-edit-form-label">Recipient Name</label>
-                        <input type="text" class="payment-edit-text-input" value="${item.recipient_name_display || ''}" readonly style="background-color: #f0f4f8;">
+                        <select class="payment-edit-text-input edit-line-item-name" data-item-id="${item.line_item_entry_id}" required>
+                            <option value="">Select Recipient Name</option>
+                        </select>
                     </div>
                     <div class="payment-edit-form-group">
                         <label class="payment-edit-form-label">Amount</label>
@@ -1158,6 +1218,28 @@
             `;
 
             container.appendChild(itemDiv);
+
+            // Populate Recipient Type dropdown
+            const typeSelect = itemDiv.querySelector('.edit-line-item-type');
+            if (typeSelect) {
+                populateRecipientTypeDropdown(typeSelect);
+                if (item.recipient_type_category) {
+                    typeSelect.value = item.recipient_type_category;
+                }
+
+                const nameSelect = itemDiv.querySelector('.edit-line-item-name');
+
+                // Event listener for type change
+                typeSelect.addEventListener('change', function () {
+                    const selectedType = this.value;
+                    loadRecipientNamesByType(selectedType, nameSelect);
+                });
+
+                // Initial load of recipient names
+                if (item.recipient_type_category) {
+                    loadRecipientNamesByType(item.recipient_type_category, nameSelect, item.recipient_id_reference);
+                }
+            }
         });
 
         // Add event listeners for amount changes
@@ -1167,7 +1249,7 @@
 
         // Add event listeners for payment mode changes to show/hide acceptance methods
         container.querySelectorAll('.edit-line-item-mode').forEach(modeSelect => {
-            modeSelect.addEventListener('change', function() {
+            modeSelect.addEventListener('change', function () {
                 const lineItemId = this.getAttribute('data-item-id');
                 const acceptanceSection = document.querySelector(`.edit-line-item-acceptance-section[data-item-id="${lineItemId}"]`);
                 if (this.value === 'multiple_acceptance') {
@@ -1192,7 +1274,7 @@
                         methodRow.className = 'payment-edit-acceptance-method-row';
                         methodRow.dataset.rowIndex = index;
                         methodRow.dataset.itemId = item.line_item_entry_id;
-                        
+
                         methodRow.innerHTML = `
                             <div>
                                 <select class="payment-edit-text-input edit-line-item-acceptance-method" data-row="${index}" data-item-id="${item.line_item_entry_id}" required>
@@ -1215,7 +1297,7 @@
                                 <i class="fas fa-trash"></i>
                             </button>
                         `;
-                        
+
                         methodsContainer.appendChild(methodRow);
                     });
                 }
@@ -1231,22 +1313,22 @@
                     data.users.forEach(user => {
                         usersHTML += `<option value="${user.id}">${user.username}</option>`;
                     });
-                    
+
                     // Update all "Payment Done Via" dropdowns for existing line items
                     document.querySelectorAll('.edit-line-item-via').forEach(select => {
                         const lineItemId = select.getAttribute('data-item-id');
                         const currentValue = select.value;
-                        
+
                         select.innerHTML = usersHTML;
-                        
+
                         // Restore previous selection if it exists
                         if (currentValue) {
                             select.value = currentValue;
                         }
-                        
+
                         // Set pre-selected value from original data if available
                         if (window.currentEntryData && window.currentEntryData.line_items) {
-                            const originalLineItem = window.currentEntryData.line_items.find(item => 
+                            const originalLineItem = window.currentEntryData.line_items.find(item =>
                                 item.line_item_entry_id == lineItemId
                             );
                             if (originalLineItem && originalLineItem.line_item_paid_via_user_id) {
@@ -1290,13 +1372,13 @@
         });
 
         const mainPaymentAmount = parseFloat(document.getElementById('editPaymentAmount').value) || 0;
-        
+
         document.getElementById('editLineItemsTotalAmount').textContent = totalAmount.toFixed(2);
-        
+
         // Validation: Check if line items total exceeds main payment amount
         const warningBox = document.getElementById('editLineItemsValidationWarning');
         const warningText = document.getElementById('editLineItemsWarningText');
-        
+
         if (totalAmount > mainPaymentAmount && mainPaymentAmount > 0) {
             warningBox.style.display = 'block';
             warningText.textContent = `⚠️ Line items total (₹ ${totalAmount.toFixed(2)}) exceeds main payment amount (₹ ${mainPaymentAmount.toFixed(2)})!`;
@@ -1351,7 +1433,7 @@
             alert('No file attached');
             return;
         }
-        
+
         // File path should already be in correct format: uploads/entry_media/filename.ext
         window.open(filePath, '_blank');
     }
@@ -1382,14 +1464,14 @@
         }
 
         let proofPath = window.currentPaymentProofPath;
-        
+
         // Extract just the filename from the path
         const pathParts = proofPath.split('/');
         const justFilename = pathParts[pathParts.length - 1];
-        
+
         // Construct correct path - proof files are in payment_proofs folder
         proofPath = 'uploads/payment_proofs/' + justFilename;
-        
+
         window.open(proofPath, '_blank');
     }
 
@@ -1400,11 +1482,11 @@
             const file = fileInput.files[0];
             const fileName = file.name;
             const fileSize = Math.round(file.size / 1024);
-            
+
             // Update the display
             document.getElementById('editPaymentProofInfo').textContent = fileName + ' (' + fileSize + ' KB)';
             document.getElementById('editPaymentProofViewBtn').style.display = 'inline-flex';
-            
+
             // Store the file for upload when form is submitted
             window.newPaymentProofFile = file;
         }
@@ -1421,7 +1503,7 @@
         }
 
         if (paymentEditModalOverlay) {
-            paymentEditModalOverlay.addEventListener('click', function(event) {
+            paymentEditModalOverlay.addEventListener('click', function (event) {
                 if (event.target === paymentEditModalOverlay) {
                     closePaymentEditModal();
                 }
@@ -1431,7 +1513,7 @@
         // Handle project selection to update project type
         const projectNameSelect = document.getElementById('editPaymentProjectName');
         if (projectNameSelect) {
-            projectNameSelect.addEventListener('change', function() {
+            projectNameSelect.addEventListener('change', function () {
                 const selectedOption = this.options[this.selectedIndex];
                 const projectType = selectedOption.getAttribute('data-type') || '';
                 const projectTypeField = document.getElementById('editPaymentProjectType');
@@ -1444,7 +1526,7 @@
         // Handle payment mode change to show/hide multiple acceptance section
         const paymentModeSelect = document.getElementById('editPaymentMode');
         if (paymentModeSelect) {
-            paymentModeSelect.addEventListener('change', function() {
+            paymentModeSelect.addEventListener('change', function () {
                 const multipleAcceptanceSection = document.getElementById('editMultipleAcceptanceSection');
                 if (this.value === 'multiple_acceptance') {
                     if (multipleAcceptanceSection) {
@@ -1467,7 +1549,7 @@
         // Handle Add Payment Method button
         const addAcceptanceMethodBtn = document.getElementById('editAddAcceptanceMethodBtn');
         if (addAcceptanceMethodBtn) {
-            addAcceptanceMethodBtn.addEventListener('click', function(e) {
+            addAcceptanceMethodBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 addEditAcceptanceMethod();
             });
@@ -1475,7 +1557,7 @@
 
         // Handle form submission
         if (paymentEditForm) {
-            paymentEditForm.addEventListener('submit', function(e) {
+            paymentEditForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 submitPaymentEditForm();
             });
@@ -1498,11 +1580,11 @@
     function addEditAcceptanceMethod() {
         const container = document.getElementById('editAcceptanceMethodsContainer');
         const rowIndex = container.querySelectorAll('.payment-edit-acceptance-method-row').length;
-        
+
         const methodRow = document.createElement('div');
         methodRow.className = 'payment-edit-acceptance-method-row';
         methodRow.dataset.rowIndex = rowIndex;
-        
+
         methodRow.innerHTML = `
             <div>
                 <select class="payment-edit-text-input edit-acceptance-method" data-row="${rowIndex}" required>
@@ -1525,9 +1607,9 @@
                 <i class="fas fa-trash"></i>
             </button>
         `;
-        
+
         container.appendChild(methodRow);
-        
+
         // Add event listener to amount input
         const amountInput = methodRow.querySelector('.edit-acceptance-amount');
         if (amountInput) {
@@ -1539,7 +1621,7 @@
     function addNewEditLineItem() {
         const container = document.getElementById('editLineItemsContainer');
         const lineItemsSection = document.getElementById('editLineItemsSection');
-        
+
         // Show the section if hidden
         if (lineItemsSection) {
             lineItemsSection.style.display = 'block';
@@ -1654,8 +1736,8 @@
 
         // Add event listener for recipient type change to load recipient names
         const nameSelect = itemDiv.querySelector('.edit-line-item-name');
-        
-        typeSelect.addEventListener('change', function() {
+
+        typeSelect.addEventListener('change', function () {
             const selectedType = this.value;
             if (selectedType) {
                 loadRecipientNamesByType(selectedType, nameSelect);
@@ -1666,7 +1748,7 @@
 
         // Add event listener for payment mode change to show/hide acceptance methods
         const modeSelect = itemDiv.querySelector('.edit-line-item-mode');
-        modeSelect.addEventListener('change', function() {
+        modeSelect.addEventListener('change', function () {
             const acceptanceSection = itemDiv.querySelector('.edit-line-item-acceptance-section');
             if (this.value === 'multiple_acceptance') {
                 if (acceptanceSection) {
@@ -1689,12 +1771,12 @@
         if (!methodsContainer) return;
 
         const rowIndex = methodsContainer.querySelectorAll('.payment-edit-acceptance-method-row').length;
-        
+
         const methodRow = document.createElement('div');
         methodRow.className = 'payment-edit-acceptance-method-row';
         methodRow.dataset.rowIndex = rowIndex;
         methodRow.dataset.itemId = lineItemId;
-        
+
         methodRow.innerHTML = `
             <div>
                 <select class="payment-edit-text-input edit-line-item-acceptance-method" data-row="${rowIndex}" data-item-id="${lineItemId}" required>
@@ -1717,7 +1799,7 @@
                 <i class="fas fa-trash"></i>
             </button>
         `;
-        
+
         methodsContainer.appendChild(methodRow);
     }
 
@@ -1780,19 +1862,22 @@
     }
 
     // Load recipient names by type
-    function loadRecipientNamesByType(recipientType, selectElement) {
-        fetch(`fetch_recipient_names_by_type_comprehensive.php?recipient_type=${encodeURIComponent(recipientType)}`)
+    function loadRecipientNamesByType(recipientType, selectElement, selectedValue = null) {
+        return fetch(`fetch_recipient_names_by_type_comprehensive.php?recipient_type=${encodeURIComponent(recipientType)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.recipients && data.recipients.length > 0) {
                     let html = '<option value="">Select Recipient Name</option>';
                     data.recipients.forEach(recipient => {
                         const displayName = recipient.full_name || recipient.vendor_full_name || 'Unknown';
-                        const code = recipient.labour_unique_code || recipient.vendor_unique_code || '';
-                        const codeDisplay = code ? ` (${code})` : '';
-                        html += `<option value="${recipient.recipient_id}">${displayName}${codeDisplay}</option>`;
+                        // Display only the name, without the ID/code
+                        html += `<option value="${recipient.recipient_id}">${displayName}</option>`;
                     });
                     selectElement.innerHTML = html;
+
+                    if (selectedValue) {
+                        selectElement.value = selectedValue;
+                    }
                 } else {
                     selectElement.innerHTML = '<option value="">No recipients found for this type</option>';
                 }
@@ -1851,7 +1936,7 @@
             const modeSelect = container.querySelector('.edit-line-item-mode');
             const descriptionInput = container.querySelector('.edit-line-item-description');
             const viaSelect = container.querySelector('.edit-line-item-via');
-            
+
             // Get recipient type and name from the line item container data
             let recipientType = '';
             let recipientName = '';
@@ -1864,11 +1949,11 @@
             let rejectedAt = null;
             let rejectionReason = null;
             let lineItemStatus = 'pending';
-            
+
             // For existing line items, get data from the original entry data
             const lineItemId = container.dataset.lineItemId;
             if (window.currentEntryData && window.currentEntryData.line_items) {
-                const originalLineItem = window.currentEntryData.line_items.find(item => 
+                const originalLineItem = window.currentEntryData.line_items.find(item =>
                     item.line_item_entry_id == lineItemId
                 );
                 if (originalLineItem) {
@@ -1886,30 +1971,29 @@
                     lineItemStatus = originalLineItem.line_item_status || 'pending';
                 }
             }
-            
-            // For new line items, try to get from form fields
-            if (!recipientType || !recipientId) {
-                const typeSelect = container.querySelector('.edit-line-item-type');
-                const nameSelect = container.querySelector('.edit-line-item-name');
-                
-                if (typeSelect) {
-                    recipientType = typeSelect.value || '';
-                }
-                if (nameSelect) {
-                    recipientId = nameSelect.value || null;
-                    // Get the display text from the selected option
-                    const selectedOption = nameSelect.options[nameSelect.selectedIndex];
-                    if (selectedOption) {
-                        recipientName = selectedOption.text || '';
-                    }
+
+            // Overwrite/Set Recipient Type and Name from form keys if they exist (allows editing existing items)
+            const typeSelect = container.querySelector('.edit-line-item-type');
+            const nameSelect = container.querySelector('.edit-line-item-name');
+
+            if (typeSelect && typeSelect.value) {
+                recipientType = typeSelect.value;
+            }
+
+            if (nameSelect && nameSelect.value) {
+                recipientId = nameSelect.value;
+                // Get the display text from the selected option
+                const selectedOption = nameSelect.options[nameSelect.selectedIndex];
+                if (selectedOption) {
+                    recipientName = selectedOption.text || '';
                 }
             }
-            
+
             // Get description from the textarea - always check the form for updated values
             if (descriptionInput) {
                 descriptionNotes = descriptionInput.value || descriptionNotes;
             }
-            
+
             // Get Payment Done Via from dropdown - always check for updated values
             if (viaSelect) {
                 paidViaUserId = viaSelect.value ? parseInt(viaSelect.value) : null;
@@ -1950,37 +2034,37 @@
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Payment entry updated successfully!');
-                closePaymentEditModal();
-                // Reload payment entries with current filters
-                if (typeof loadPaymentEntries === 'function') {
-                    loadPaymentEntries(
-                        entriesPaginationState.limit,
-                        entriesPaginationState.currentPage,
-                        entriesPaginationState.search,
-                        entriesPaginationState.status,
-                        entriesPaginationState.dateFrom,
-                        entriesPaginationState.dateTo,
-                        entriesPaginationState.projectType,
-                        entriesPaginationState.vendorCategory,
-                        entriesPaginationState.paidBy
-                    );
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Payment entry updated successfully!');
+                    closePaymentEditModal();
+                    // Reload payment entries with current filters
+                    if (typeof loadPaymentEntries === 'function') {
+                        loadPaymentEntries(
+                            entriesPaginationState.limit,
+                            entriesPaginationState.currentPage,
+                            entriesPaginationState.search,
+                            entriesPaginationState.status,
+                            entriesPaginationState.dateFrom,
+                            entriesPaginationState.dateTo,
+                            entriesPaginationState.projectType,
+                            entriesPaginationState.vendorCategory,
+                            entriesPaginationState.paidBy
+                        );
+                    }
+                } else {
+                    alert('Error updating payment entry: ' + (data.message || 'Unknown error'));
                 }
-            } else {
-                alert('Error updating payment entry: ' + (data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error updating payment entry: ' + error.message);
-        })
-        .finally(() => {
-            submitPaymentEditBtn.disabled = false;
-            submitPaymentEditBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-        });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating payment entry: ' + error.message);
+            })
+            .finally(() => {
+                submitPaymentEditBtn.disabled = false;
+                submitPaymentEditBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            });
     }
 
     // Initialize when DOM is ready

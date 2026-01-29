@@ -399,8 +399,150 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
         }
 
         .management-search-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            /* Allow it to grow */
+            justify-content: flex-end;
+            /* Push to right */
+        }
+
+        .management-site-filter {
+            padding: 10px 32px 10px 16px;
+            /* Right padding for arrow */
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #4a5568;
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+            min-width: 180px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px;
+        }
+
+        .management-site-filter:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .management-type-filter-container {
             position: relative;
-            flex: 0 0 auto;
+            margin-right: 0;
+            min-width: 180px;
+        }
+
+        .type-filter-btn {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            color: #4a5568;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            height: 42px;
+            /* Match search input height if possible */
+            transition: all 0.3s ease;
+        }
+
+        .type-filter-btn:hover,
+        .type-filter-btn.active {
+            border-color: #cbd5e0;
+        }
+
+        .type-filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            margin-top: 5px;
+            padding: 12px;
+        }
+
+        .type-filter-dropdown.active {
+            display: block;
+        }
+
+        .type-filter-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .type-filter-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .type-filter-option {
+            display: flex;
+            align-items: center;
+            padding: 6px 4px;
+            font-size: 13px;
+            color: #2d3748;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .type-filter-option:hover {
+            background-color: #f7fafc;
+        }
+
+        .type-filter-option input {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+        }
+
+        .type-filter-actions {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid #edf2f7;
+        }
+
+        .type-filter-actions button {
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .type-filter-actions .clear-btn {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .type-filter-actions .apply-btn {
+            background: #3182ce;
+            color: white;
+        }
+
+        .type-filter-actions .apply-btn:hover {
+            background: #2c5282;
         }
 
         .management-search-wrapper {
@@ -1709,12 +1851,44 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                     <h3 class="recent-records-header">Management</h3>
                     <!-- Smart Search Box -->
                     <div class="management-search-container">
+                        <select id="managementSiteFilter" class="management-site-filter">
+                            <option value="">All Sites</option>
+                        </select>
+
+                        <!-- New Type Filter -->
+                        <div class="management-type-filter-container" id="managementTypeFilterContainer">
+                            <button class="type-filter-btn" id="managementTypeFilterBtn">
+                                <span id="managementTypeFilterLabel">All Types</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="type-filter-dropdown" id="managementTypeFilterDropdown">
+                                <div class="type-filter-search">
+                                    <input type="text" placeholder="Search types..." id="typeFilterSearchInput">
+                                </div>
+                                <div class="type-filter-list" id="managementTypeFilterList">
+                                    <!-- Options populated by JS -->
+                                    <div style="padding: 10px; color: #718096; text-align: center;">Loading types...
+                                    </div>
+                                </div>
+                                <div class="type-filter-actions">
+                                    <button class="clear-btn" id="clearTypeFilterBtn">Clear</button>
+                                    <button class="apply-btn" id="applyTypeFilterBtn">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="management-search-wrapper">
                             <i class="fas fa-search"></i>
                             <input type="text" id="managementSearchInput" class="management-search-input"
                                 placeholder="Search vendors or labours..." autocomplete="off">
                             <div id="managementSearchResults" class="management-search-results"></div>
                         </div>
+                        <button class="mini-filter-btn reset" id="clearManagementFiltersBtn" title="Clear All Filters">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="mini-filter-btn export" id="exportManagementBtn" title="Export to Excel">
+                            <i class="fas fa-file-excel"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -1970,6 +2144,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 dateTo: dateTo
             });
 
+            // Add server-side filters from global state
+            if (vendorPaginationState.nameFilter && vendorPaginationState.nameFilter.length > 0) {
+                params.append('nameFilter', JSON.stringify(vendorPaginationState.nameFilter));
+            }
+            if (vendorPaginationState.typeFilter && vendorPaginationState.typeFilter.length > 0) {
+                params.append('typeFilter', JSON.stringify(vendorPaginationState.typeFilter));
+            }
+
+            // Add site filter
+            const siteFilter = document.getElementById('managementSiteFilter');
+            if (siteFilter && siteFilter.value) {
+                params.append('siteFilter', siteFilter.value);
+            }
+
             // Fetch vendors from API
             fetch(`get_vendors.php?${params.toString()}`)
                 .then(response => response.json())
@@ -2020,22 +2208,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         html += '<div>Actions</div>';
                         html += '</div>';
 
-                        // Apply client-side filters
-                        let filteredVendors = data.data;
-
-                        // Filter by name
-                        if (vendorPaginationState.nameFilter && vendorPaginationState.nameFilter.length > 0) {
-                            filteredVendors = filteredVendors.filter(vendor =>
-                                vendorPaginationState.nameFilter.includes(vendor.vendor_full_name)
-                            );
-                        }
-
-                        // Filter by type
-                        if (vendorPaginationState.typeFilter && vendorPaginationState.typeFilter.length > 0) {
-                            filteredVendors = filteredVendors.filter(vendor =>
-                                vendorPaginationState.typeFilter.includes(vendor.vendor_type_category)
-                            );
-                        }
+                        // Apply client-side filters REMOVED - Using Server-Side Filtering
+                        const filteredVendors = data.data;
 
                         filteredVendors.forEach(vendor => {
                             const statusClass = vendor.vendor_status.toLowerCase();
@@ -2154,6 +2328,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                 dateTo: dateTo
             });
 
+            // Add server-side filters from global state
+            if (labourPaginationState.nameFilter && labourPaginationState.nameFilter.length > 0) {
+                params.append('nameFilter', JSON.stringify(labourPaginationState.nameFilter));
+            }
+            if (labourPaginationState.typeFilter && labourPaginationState.typeFilter.length > 0) {
+                params.append('typeFilter', JSON.stringify(labourPaginationState.typeFilter));
+            }
+
+            // Add site filter
+            const siteFilter = document.getElementById('managementSiteFilter');
+            if (siteFilter && siteFilter.value) {
+                params.append('siteFilter', siteFilter.value);
+            }
+
             // Fetch labours from API
             fetch(`get_labours.php?${params.toString()}`)
                 .then(response => response.json())
@@ -2204,22 +2392,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
                         html += '<div>Actions</div>';
                         html += '</div>';
 
-                        // Apply client-side filters
-                        let filteredLabours = data.data;
-                        
-                        // Filter by name
-                        if (labourPaginationState.nameFilter && labourPaginationState.nameFilter.length > 0) {
-                            filteredLabours = filteredLabours.filter(labour => 
-                                labourPaginationState.nameFilter.includes(labour.full_name)
-                            );
-                        }
-                        
-                        // Filter by type
-                        if (labourPaginationState.typeFilter && labourPaginationState.typeFilter.length > 0) {
-                            filteredLabours = filteredLabours.filter(labour => 
-                                labourPaginationState.typeFilter.includes(labour.labour_type)
-                            );
-                        }
+                        // Apply client-side filters REMOVED - Using Server-Side Filtering
+                        const filteredLabours = data.data;
 
                         filteredLabours.forEach(labour => {
                             const statusClass = labour.status.toLowerCase();
@@ -3417,6 +3591,300 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             let searchTimeout;
             const managementSearchInput = document.getElementById('managementSearchInput');
             const managementSearchResults = document.getElementById('managementSearchResults');
+
+            // Management Site Filter initialization
+            const managementSiteFilter = document.getElementById('managementSiteFilter');
+            if (managementSiteFilter) {
+                // Load sites
+                fetch('get_project_names.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.projects) {
+                            const sortedProjects = data.projects.sort((a, b) => a.title.localeCompare(b.title));
+                            sortedProjects.forEach(project => {
+                                const option = document.createElement('option');
+                                option.value = project.id;
+                                option.textContent = project.title;
+                                managementSiteFilter.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(err => console.error('Error loading sites:', err));
+
+                // Handle change
+                managementSiteFilter.addEventListener('change', function () {
+                    // Check specifically for active management tabs to avoid conflict with other tabs
+                    const activeVendorTab = document.querySelector('button[data-tab="vendors-tab"].active');
+                    const activeLabourTab = document.querySelector('button[data-tab="labours-tab"].active');
+
+                    if (activeVendorTab) {
+                        // Reset to page 1 when filter changes
+                        loadVendors(10, 1);
+                    } else if (activeLabourTab) {
+                        loadLabours(10, 1);
+                    }
+                });
+            }
+
+            // --- HEADER TYPE FILTER INITIALIZATION ---
+            const typeFilterBtn = document.getElementById('managementTypeFilterBtn');
+            const typeFilterDropdown = document.getElementById('managementTypeFilterDropdown');
+            const typeFilterList = document.getElementById('managementTypeFilterList');
+            const typeFilterSearch = document.getElementById('typeFilterSearchInput');
+            const applyTypeFilterBtn = document.getElementById('applyTypeFilterBtn');
+            const clearTypeFilterBtn = document.getElementById('clearTypeFilterBtn');
+            const typeFilterLabel = document.getElementById('managementTypeFilterLabel');
+            let selectedTypes = [];
+
+            if (typeFilterBtn && typeFilterDropdown) {
+                // Toggle Dropdown
+                typeFilterBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    typeFilterDropdown.classList.toggle('active');
+                    if (typeFilterDropdown.classList.contains('active')) {
+                        typeFilterSearch.focus();
+                    }
+                });
+
+                // Close on click outside
+                document.addEventListener('click', function (e) {
+                    if (!typeFilterBtn.contains(e.target) && !typeFilterDropdown.contains(e.target)) {
+                        typeFilterDropdown.classList.remove('active');
+                    }
+                });
+
+                // Stop propagation inside dropdown
+                typeFilterDropdown.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+
+                // Fetch Types
+                fetch('get_workforce_types.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.grouped_types) {
+                            renderTypeFilterOptions(data.grouped_types);
+                        } else {
+                            typeFilterList.innerHTML = '<div style="padding:10px;text-align:center;">Failed to load types</div>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching types:', err);
+                        typeFilterList.innerHTML = '<div style="padding:10px;text-align:center;">Error loading types</div>';
+                    });
+
+                // Render Options
+                function renderTypeFilterOptions(groupedTypes) {
+                    typeFilterList.innerHTML = '';
+
+                    // 1. Render Labours Group
+                    if (groupedTypes['Labours'] && groupedTypes['Labours'].length > 0) {
+                        const labourHeader = document.createElement('div');
+                        labourHeader.style.cssText = 'padding: 8px 10px; font-weight: bold; background: #ebf8ff; color: #2c5282; font-size: 13px; margin-top: 5px; border-radius: 4px;';
+                        labourHeader.textContent = 'LABOURS';
+                        typeFilterList.appendChild(labourHeader);
+
+                        groupedTypes['Labours'].forEach(type => {
+                            createOption(type);
+                        });
+                    }
+
+                    // 2. Render Vendors Group
+                    if (groupedTypes['Vendors'] && groupedTypes['Vendors'].length > 0) {
+                        const vendorHeader = document.createElement('div');
+                        vendorHeader.style.cssText = 'padding: 8px 10px; font-weight: bold; background: #ebf8ff; color: #2c5282; font-size: 13px; margin-top: 10px; border-radius: 4px;';
+                        vendorHeader.textContent = 'VENDORS';
+                        typeFilterList.appendChild(vendorHeader);
+
+                        groupedTypes['Vendors'].forEach(type => {
+                            createOption(type);
+                        });
+                    }
+
+                    function createOption(type) {
+                        const display = type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        const div = document.createElement('div');
+                        div.className = 'type-filter-option';
+                        div.innerHTML = `
+                            <label style="display:flex;align-items:center;width:100%;cursor:pointer;">
+                                <input type="checkbox" value="${type}">
+                                <span>${display}</span>
+                            </label>
+                        `;
+                        typeFilterList.appendChild(div);
+                    }
+                }
+
+                // Search Filter
+                if (typeFilterSearch) {
+                    typeFilterSearch.addEventListener('keyup', function () {
+                        const term = this.value.toLowerCase();
+                        const options = typeFilterList.querySelectorAll('.type-filter-option');
+                        options.forEach(opt => {
+                            const text = opt.innerText.toLowerCase();
+                            opt.style.display = text.includes(term) ? 'flex' : 'none';
+                        });
+                    });
+                }
+
+                // Apply Filter
+                if (applyTypeFilterBtn) {
+                    applyTypeFilterBtn.addEventListener('click', function () {
+                        const checked = typeFilterList.querySelectorAll('input:checked');
+                        selectedTypes = Array.from(checked).map(cb => cb.value);
+
+                        // Update Label
+                        if (selectedTypes.length === 0) {
+                            typeFilterLabel.textContent = 'All Types';
+                        } else if (selectedTypes.length === 1) {
+                            typeFilterLabel.textContent = selectedTypes[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        } else {
+                            typeFilterLabel.textContent = selectedTypes.length + ' Types Selected';
+                        }
+                        typeFilterBtn.classList.toggle('active', selectedTypes.length > 0);
+
+                        // Update Global Pagination States
+                        if (typeof vendorPaginationState !== 'undefined') {
+                            vendorPaginationState.typeFilter = selectedTypes;
+                        }
+                        if (typeof labourPaginationState !== 'undefined') {
+                            labourPaginationState.typeFilter = selectedTypes;
+                        }
+
+                        // Close dropdown and reload
+                        typeFilterDropdown.classList.remove('active');
+
+                        const activeVendorTab = document.querySelector('button[data-tab="vendors-tab"].active');
+                        const activeLabourTab = document.querySelector('button[data-tab="labours-tab"].active');
+
+                        if (activeVendorTab) {
+                            loadVendors(10, 1);
+                        } else if (activeLabourTab) {
+                            loadLabours(10, 1);
+                        }
+                    });
+                }
+
+                // Clear Filter
+                if (clearTypeFilterBtn) {
+                    clearTypeFilterBtn.addEventListener('click', function () {
+                        const checkboxes = typeFilterList.querySelectorAll('input');
+                        checkboxes.forEach(cb => cb.checked = false);
+                        selectedTypes = [];
+                        typeFilterLabel.textContent = 'All Types';
+                        typeFilterBtn.classList.remove('active');
+
+                        // Reset Search
+                        typeFilterSearch.value = '';
+                        typeFilterList.querySelectorAll('.type-filter-option').forEach(opt => opt.style.display = 'flex');
+
+                        // Update Global States
+                        if (typeof vendorPaginationState !== 'undefined') {
+                            vendorPaginationState.typeFilter = [];
+                        }
+                        if (typeof labourPaginationState !== 'undefined') {
+                            labourPaginationState.typeFilter = [];
+                        }
+
+                        // Close dropdown and reload
+                        typeFilterDropdown.classList.remove('active');
+
+                        const activeVendorTab = document.querySelector('button[data-tab="vendors-tab"].active');
+                        const activeLabourTab = document.querySelector('button[data-tab="labours-tab"].active');
+
+                        if (activeVendorTab) {
+                            loadVendors(10, 1);
+                        } else if (activeLabourTab) {
+                            loadLabours(10, 1);
+                        }
+                    });
+                }
+            }
+            // --- END HEADER TYPE FILTER INITIALIZATION ---
+
+            // Clear Management Filters
+            const clearManagementFiltersBtn = document.getElementById('clearManagementFiltersBtn');
+            if (clearManagementFiltersBtn) {
+                clearManagementFiltersBtn.addEventListener('click', function () {
+                    // Clear Site Filter
+                    if (managementSiteFilter) managementSiteFilter.value = "";
+
+                    // Clear Search
+                    if (managementSearchInput) managementSearchInput.value = "";
+                    if (managementSearchResults) {
+                        managementSearchResults.innerHTML = "";
+                        managementSearchResults.classList.remove('active');
+                    }
+
+                    // Clear Global States
+                    // Clear Type Filter
+                    if (typeof selectedTypes !== 'undefined') {
+                        selectedTypes = [];
+                        const typeCheckboxes = document.querySelectorAll('#managementTypeFilterList input');
+                        typeCheckboxes.forEach(cb => cb.checked = false);
+                        const label = document.getElementById('managementTypeFilterLabel');
+                        if (label) label.textContent = 'All Types';
+                        const btn = document.getElementById('managementTypeFilterBtn');
+                        if (btn) btn.classList.remove('active');
+                    }
+
+                    // Clear Global States
+                    if (typeof vendorPaginationState !== 'undefined') {
+                        vendorPaginationState.nameFilter = [];
+                        vendorPaginationState.typeFilter = [];
+                        vendorPaginationState.search = "";
+                    }
+                    if (typeof labourPaginationState !== 'undefined') {
+                        labourPaginationState.nameFilter = [];
+                        labourPaginationState.typeFilter = [];
+                        labourPaginationState.search = "";
+                    }
+
+                    // Clear Global Arrays (if accessible)
+                    if (typeof selectedVendorNames !== 'undefined') selectedVendorNames = [];
+                    if (typeof selectedVendorTypes !== 'undefined') selectedVendorTypes = [];
+                    if (typeof selectedLabourNames !== 'undefined') selectedLabourNames = [];
+                    if (typeof selectedLabourTypes !== 'undefined') selectedLabourTypes = [];
+
+                    // Uncheck all checkboxes in filter dropdowns
+                    document.querySelectorAll('.filter-dropdown input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+                    // Reload Data based on active tab
+                    const activeVendorTab = document.querySelector('button[data-tab="vendors-tab"].active');
+                    const activeLabourTab = document.querySelector('button[data-tab="labours-tab"].active');
+
+                    if (activeVendorTab) {
+                        loadVendors(10, 1);
+                    } else if (activeLabourTab) {
+                        loadLabours(10, 1);
+                    }
+                });
+            }
+
+            // Export Management Data Button
+            const exportManagementBtn = document.getElementById('exportManagementBtn');
+            if (exportManagementBtn) {
+                exportManagementBtn.addEventListener('click', function () {
+                    const siteFilter = document.getElementById('managementSiteFilter');
+                    let url = 'export_project_workforce_financials_2026.php?';
+
+                    let params = [];
+
+                    if (siteFilter && siteFilter.value !== "") {
+                        params.push('siteFilter=' + encodeURIComponent(siteFilter.value));
+                    }
+
+                    if (typeof selectedTypes !== 'undefined' && selectedTypes.length > 0) {
+                        params.push('typeFilter=' + encodeURIComponent(JSON.stringify(selectedTypes)));
+                    }
+
+                    if (params.length > 0) {
+                        url += params.join('&');
+                    }
+
+                    window.location.href = url;
+                });
+            }
 
             if (managementSearchInput) {
                 // Search on input with debounce

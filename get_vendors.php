@@ -73,6 +73,47 @@ try {
         $params[':status'] = $status;
     }
 
+    // Add name filter (server-side)
+    if (isset($_GET['nameFilter']) && !empty($_GET['nameFilter'])) {
+        $nameFilter = json_decode($_GET['nameFilter'], true);
+        if (json_last_error() === JSON_ERROR_NONE && !empty($nameFilter)) {
+            $placeholders = [];
+            foreach ($nameFilter as $key => $name) {
+                $placeholder = ":name_" . $key;
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = $name;
+            }
+            $query .= " AND vendor_full_name IN (" . implode(',', $placeholders) . ")";
+        }
+    }
+
+    // Add type filter (server-side)
+    if (isset($_GET['typeFilter']) && !empty($_GET['typeFilter'])) {
+        $typeFilter = json_decode($_GET['typeFilter'], true);
+        if (json_last_error() === JSON_ERROR_NONE && !empty($typeFilter)) {
+            $placeholders = [];
+            foreach ($typeFilter as $key => $type) {
+                $placeholder = ":type_" . $key;
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = $type;
+            }
+            $query .= " AND vendor_type_category IN (" . implode(',', $placeholders) . ")";
+        }
+    }
+
+    // Add site filter
+    if (isset($_GET['siteFilter']) && $_GET['siteFilter'] !== '') {
+        $query .= " AND EXISTS (
+            SELECT 1 
+            FROM tbl_payment_entry_line_items_detail l
+            JOIN tbl_payment_entry_master_records m ON l.payment_entry_master_id_fk = m.payment_entry_id
+            WHERE l.recipient_id_reference = pm_vendor_registry_master.vendor_id
+            AND m.project_id_fk = :siteFilter
+            AND (l.recipient_type_category NOT LIKE '%labour%' OR l.recipient_type_category IS NULL)
+        )";
+        $params[':siteFilter'] = $_GET['siteFilter'];
+    }
+
     // Add ordering and pagination
     $query .= " ORDER BY created_date_time DESC LIMIT :limit OFFSET :offset";
 
@@ -110,6 +151,47 @@ try {
     if (!empty($status)) {
         $countQuery .= " AND vendor_status = :status";
         $countParams[':status'] = $status;
+    }
+
+    // Add name filter to count
+    if (isset($_GET['nameFilter']) && !empty($_GET['nameFilter'])) {
+        $nameFilter = json_decode($_GET['nameFilter'], true);
+        if (json_last_error() === JSON_ERROR_NONE && !empty($nameFilter)) {
+            $placeholders = [];
+            foreach ($nameFilter as $key => $name) {
+                $placeholder = ":name_" . $key;
+                $placeholders[] = $placeholder;
+                $countParams[$placeholder] = $name;
+            }
+            $countQuery .= " AND vendor_full_name IN (" . implode(',', $placeholders) . ")";
+        }
+    }
+
+    // Add type filter to count
+    if (isset($_GET['typeFilter']) && !empty($_GET['typeFilter'])) {
+        $typeFilter = json_decode($_GET['typeFilter'], true);
+        if (json_last_error() === JSON_ERROR_NONE && !empty($typeFilter)) {
+            $placeholders = [];
+            foreach ($typeFilter as $key => $type) {
+                $placeholder = ":type_" . $key;
+                $placeholders[] = $placeholder;
+                $countParams[$placeholder] = $type;
+            }
+            $countQuery .= " AND vendor_type_category IN (" . implode(',', $placeholders) . ")";
+        }
+    }
+
+    // Add site filter to count
+    if (isset($_GET['siteFilter']) && $_GET['siteFilter'] !== '') {
+        $countQuery .= " AND EXISTS (
+            SELECT 1 
+            FROM tbl_payment_entry_line_items_detail l
+            JOIN tbl_payment_entry_master_records m ON l.payment_entry_master_id_fk = m.payment_entry_id
+            WHERE l.recipient_id_reference = pm_vendor_registry_master.vendor_id
+            AND m.project_id_fk = :siteFilter
+            AND (l.recipient_type_category NOT LIKE '%labour%' OR l.recipient_type_category IS NULL)
+        )";
+        $countParams[':siteFilter'] = $_GET['siteFilter'];
     }
 
     $countStmt = $pdo->prepare($countQuery);

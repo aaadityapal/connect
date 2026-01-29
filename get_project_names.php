@@ -65,7 +65,7 @@ try {
     if (!empty($vendorCategory)) {
         $categories = array_map('trim', explode(',', $vendorCategory));
         $categories = array_filter($categories);
-        
+
         if (!empty($categories)) {
             $placeholders = implode(',', array_fill(0, count($categories), '?'));
             $query .= " AND (";
@@ -80,7 +80,7 @@ try {
     if (!empty($paidBy)) {
         $users = array_map('trim', explode(',', $paidBy));
         $users = array_filter($users);
-        
+
         if (!empty($users)) {
             $placeholders = implode(',', array_fill(0, count($users), '?'));
             $query .= " AND m.authorized_user_id_fk IN ($placeholders)";
@@ -108,7 +108,7 @@ try {
         $projectId = $project['project_id_fk'];
         $projectName = $project['project_name_reference'] ?: 'Unnamed Project';
         $projectTitle = $project['project_title'] ?: $projectName;
-        
+
         // Use project ID as the data attribute value for filtering
         $projectOptions[] = [
             'id' => $projectId,

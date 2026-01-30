@@ -511,7 +511,7 @@ function getPunchInStatsByTeam($pdo, $date, $teamType)
 
 /**
  * Send Scheduled Punch-Out Summary for Specific Team
- * Sends punch-out summary to all admins for a specific team
+ * Sends punch-out summary to all admins for a specific team with PDF attachment
  * 
  * @param PDO $pdo Database connection
  * @param string $date Date for which to send summary (Y-m-d format)
@@ -521,6 +521,9 @@ function getPunchInStatsByTeam($pdo, $date, $teamType)
 function sendScheduledPunchOutSummary($pdo, $date, $teamType)
 {
     try {
+        // Load PDF generation function
+        require_once __DIR__ . '/generate_punchout_summary_pdf.php';
+
         // 1. Fetch all active admin phone numbers
         $adminStmt = $pdo->prepare("SELECT id, admin_name, phone FROM admin_notifications WHERE is_active = 1");
         $adminStmt->execute();
@@ -531,46 +534,59 @@ function sendScheduledPunchOutSummary($pdo, $date, $teamType)
             return false;
         }
 
-        // 2. Get statistics for the specified team
-        $stats = getPunchOutStatsByTeam($pdo, $date, $teamType);
+        // 2. Get detailed punch-out data for the specified team
+        $punchOutData = getPunchOutDataByTeam($pdo, $date, $teamType);
 
-        // Debug logging
-        error_log("Punch-out stats for {$teamType}: Total={$stats['total']}, List length=" . strlen($stats['list_formatted']));
+        // 3. Generate PDF (even if no data, create empty report)
+        $pdfResult = generatePunchOutSummaryPDF($punchOutData, $date, $teamType);
 
-        // If list is empty, ensure it has a default message
-        if (empty($stats['list_formatted'])) {
-            $stats['list_formatted'] = "No punch-outs recorded yet for today.";
+        if (!$pdfResult['success']) {
+            error_log("Failed to generate PDF for {$teamType} team: " . ($pdfResult['error'] ?? 'Unknown error'));
+            return false;
         }
 
-        // 3. Send notifications to each admin
+        // 4. Prepare summary text for template
+        $currentTime = date('h:i A'); // Current time like "06:20 PM"
+        $totalCount = count($punchOutData);
+
+        if ($totalCount > 0) {
+            $summaryText = "Total employees punched out: {$totalCount}. Please see attached PDF for detailed work reports.";
+        } else {
+            $summaryText = "No punch-outs recorded yet for today.";
+        }
+
+        // 5. Send notifications to each admin with PDF attachment
         $waService = new WhatsAppService();
         $successCount = 0;
-        $currentTime = date('h:i A'); // Current time in 12-hour format
 
         // Determine template name based on team type
         $templateName = ($teamType === 'Studio')
-            ? 'admin_studioteam_punchout_summary'
-            : 'admin_fieldteam_punchout_summary';
+            ? 'admin_punchout_summary_studio'
+            : 'admin_punchout_summary_field';
 
         foreach ($admins as $admin) {
             $params = [
-                $currentTime,             // {{1}} Time
-                $stats['list_formatted']  // {{2}} List of punch-outs with reports
+                $currentTime,    // {{1}} Time (e.g., "06:20 PM")
+                $summaryText     // {{2}} Summary text
             ];
 
-            $result = $waService->sendTemplateMessage(
+            $result = $waService->sendTemplateMessageWithDocument(
                 $admin['phone'],
                 $templateName,
                 'en_US',
-                $params
+                $params,
+                $pdfResult['url'],
+                $pdfResult['file_name']
             );
 
             if ($result['success']) {
                 $successCount++;
+            } else {
+                error_log("Failed to send punch-out summary to {$admin['phone']}: " . ($result['response'] ?? 'Unknown error'));
             }
         }
 
-        error_log("Scheduled {$teamType} punch-out summary sent successfully. Total messages: $successCount");
+        error_log("Scheduled {$teamType} punch-out summary sent successfully. Total messages: $successCount, PDF: {$pdfResult['file_name']}");
         return true;
 
     } catch (Exception $e) {
@@ -666,5 +682,50 @@ function getPunchOutStatsByTeam($pdo, $date, $teamType)
             'list_formatted' => 'Error fetching data',
             'total' => 0
         ];
+    }
+}
+
+/**
+ * Get Detailed Punch-Out Data by Team Type (for PDF generation)
+ * 
+ * @param PDO $pdo Database connection
+ * @param string $date Date to check (Y-m-d format)
+ * @param string $teamType 'Studio' or 'Field'
+ * @return array Array of punch-out records with username, punch_out, work_report
+ */
+function getPunchOutDataByTeam($pdo, $date, $teamType)
+{
+    try {
+        // Determine role filter based on team type
+        $roleCondition = '';
+        if ($teamType === 'Studio') {
+            // Studio team - exclude field roles
+            $roleCondition = "AND u.role NOT IN ('Site Supervisor', 'site coordinator', 'purchase manager')";
+        } else {
+            // Field team - only field roles
+            $roleCondition = "AND u.role IN ('Site Supervisor', 'site coordinator', 'purchase manager')";
+        }
+
+        // Get all employees who punched OUT today for this team type
+        $query = "SELECT 
+                    u.username,
+                    a.punch_out,
+                    a.work_report
+                FROM attendance a
+                JOIN users u ON a.user_id = u.id
+                WHERE a.date = ?
+                AND a.punch_out IS NOT NULL
+                $roleCondition
+                ORDER BY a.punch_out DESC"; // Most recent punch-outs first
+
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$date]);
+        $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $employees;
+
+    } catch (Exception $e) {
+        error_log("Get Punch-Out Data Exception: " . $e->getMessage());
+        return [];
     }
 }

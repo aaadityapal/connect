@@ -155,6 +155,99 @@ try {
             'duration' => $duration,
             'leave_type' => $leave_type['name']
         ]);
+
+        // -------------------------------------------------------------------------
+        // WhatsApp Notification Logic
+        // -------------------------------------------------------------------------
+        try {
+            require_once '../whatsapp/WhatsAppService.php';
+            $waService = new WhatsAppService();
+
+            // 1. Fetch User Details
+            $uStmt = $pdo->prepare("SELECT username, unique_id, phone, role FROM users WHERE id = ?");
+            $uStmt->execute([$user_id]);
+            $user = $uStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && !empty($user['phone'])) {
+                $userName = $user['username'] ?: $user['unique_id'];
+                $startDateStr = date('d M Y', strtotime($start_date));
+                $endDateStr = date('d M Y', strtotime($end_date));
+
+                // Formulate Leave Type Name and Admin details
+                $leaveTypeName = $leave_type['name'];
+                $conditionalLine = "⏰ Leave Time: Full Day";
+                $adminLeaveType = $leaveTypeName;
+
+                // Handle Half Day Display
+                if ($duration_type === 'half_day') {
+                    $conditionalLine = "⏰ Leave Time: Half Day";
+                    $adminLeaveType .= " (Half Day)";
+
+                    if (!empty($day_type)) {
+                        $timeDesc = ($day_type === 'first_half') ? 'Morning Half' : 'Afternoon Half';
+                        $conditionalLine = "⏰ Leave Time: " . $timeDesc;
+                        $adminLeaveType = $leaveTypeName . " ($timeDesc)";
+                    }
+                }
+
+                // A. Send Confirmation to Employee
+                $waService->sendTemplateMessage(
+                    $user['phone'],
+                    'leave_submission_confirmation',
+                    'en_US',
+                    [
+                        $userName,        // {{1}}
+                        $startDateStr,    // {{2}}
+                        $endDateStr,      // {{3}}
+                        $leaveTypeName,   // {{4}}
+                        $conditionalLine  // {{5}}
+                    ]
+                );
+
+                // B. Send Notification to admins (HR + Manager)
+                // Determine Manager based on role (Senior Manager Site/Studio)
+                $siteRoles = [
+                    'Site Supervisor',
+                    'Site Coordinator',
+                    'Purchase Manager',
+                    'Maid Back Office',
+                    'Social Media Marketing',
+                    'Sales',
+                    'Graphic Designer'
+                ];
+
+                $targetRoles = ['HR'];
+                if (in_array($user['role'], $siteRoles)) {
+                    $targetRoles[] = 'Senior Manager (Site)';
+                } else {
+                    $targetRoles[] = 'Senior Manager (Studio)';
+                }
+
+                $inQuery = implode(',', array_fill(0, count($targetRoles), '?'));
+                $adminStmt = $pdo->prepare("SELECT username, phone FROM users WHERE role IN ($inQuery)");
+                $adminStmt->execute($targetRoles);
+
+                while ($admin = $adminStmt->fetch(PDO::FETCH_ASSOC)) {
+                    if (!empty($admin['phone'])) {
+                        $waService->sendTemplateMessage(
+                            $admin['phone'],
+                            'admin_leave_action_required',
+                            'en_US',
+                            [
+                                $admin['username'], // {{1}} Manager Name
+                                $userName,          // {{2}} Employee Name
+                                $startDateStr,      // {{3}} Start
+                                $endDateStr,        // {{4}} End
+                                $adminLeaveType,    // {{5}} Type (with time info)
+                                $reason             // {{6}} Reason
+                            ]
+                        );
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            error_log("Sales Leave Notification Error: " . $e->getMessage());
+        }
     } else {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Failed to submit leave request. Please try again.']);

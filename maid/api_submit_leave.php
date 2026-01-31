@@ -138,6 +138,109 @@ try {
 
         if ($result) {
             echo json_encode(['success' => true, 'message' => 'Leave request submitted successfully']);
+
+            // -------------------------------------------------------------
+            // WhatsApp Notifications Logic
+            // -------------------------------------------------------------
+            try {
+                require_once '../whatsapp/WhatsAppService.php';
+                $waService = new WhatsAppService();
+
+                // 1. Fetch User & Leave Type Details
+                $uStmt = $pdo->prepare("SELECT username, unique_id, phone, role FROM users WHERE id = ?");
+                $uStmt->execute([$user_id]);
+                $user = $uStmt->fetch(PDO::FETCH_ASSOC);
+
+                $lStmt = $pdo->prepare("SELECT name FROM leave_types WHERE id = ?");
+                $lStmt->execute([$leave_type_id]);
+                $leaveType = $lStmt->fetchColumn();
+
+                if ($user && !empty($user['phone'])) {
+                    // Prepare Data
+                    $userName = $user['username'] ?: $user['unique_id'];
+                    $startDateStr = date('d M Y', strtotime($startDate));
+                    $endDateStr = date('d M Y', strtotime($endDate));
+
+                    // Conditional Time Line
+                    $conditionalLine = " ";
+                    if (!empty($time_from) && !empty($time_to)) {
+                        $t1 = date('h:i A', strtotime($time_from));
+                        $t2 = date('h:i A', strtotime($time_to));
+                        $conditionalLine = "⏰ Time: $t1 - $t2";
+                    } elseif ($totalDays >= 1) {
+                        $conditionalLine = "⏰ Duration: Full Day";
+                    }
+
+                    // Prepare Admin Leave Type (Include Time)
+                    $adminLeaveType = $leaveType;
+                    if (!empty($time_from) && !empty($time_to)) {
+                        $t1 = date('h:i A', strtotime($time_from));
+                        $t2 = date('h:i A', strtotime($time_to));
+                        $adminLeaveType .= " ($t1 - $t2)";
+                    }
+
+                    // Send CONFIRMATION to Employee
+                    $waService->sendTemplateMessage(
+                        $user['phone'],
+                        'leave_submission_confirmation',
+                        'en_US',
+                        [
+                            $userName,        // {{1}}
+                            $startDateStr,    // {{2}}
+                            $endDateStr,      // {{3}}
+                            $leaveType,       // {{4}}
+                            $conditionalLine  // {{5}}
+                        ]
+                    );
+
+                    // 2. Send To Selected Manager
+                    if (!empty($manager_id)) {
+                        $mStmt = $pdo->prepare("SELECT username, phone FROM users WHERE id = ?");
+                        $mStmt->execute([$manager_id]);
+                        $manager = $mStmt->fetch(PDO::FETCH_ASSOC);
+
+                        if ($manager && !empty($manager['phone'])) {
+                            $waService->sendTemplateMessage(
+                                $manager['phone'],
+                                'admin_leave_action_required',
+                                'en_US',
+                                [
+                                    $manager['username'], // {{1}} Manager Name
+                                    $userName,            // {{2}} Employee Name
+                                    $startDateStr,        // {{3}} Start
+                                    $endDateStr,          // {{4}} End
+                                    $adminLeaveType,      // {{5}} Type
+                                    $reason               // {{6}} Reason
+                                ]
+                            );
+                        }
+                    }
+
+                    // 3. Send to HR (Fixed Addition)
+                    $hrStmt = $pdo->query("SELECT username, phone FROM users WHERE role = 'HR'");
+                    while ($hr = $hrStmt->fetch(PDO::FETCH_ASSOC)) {
+                        if (!empty($hr['phone'])) {
+                            $waService->sendTemplateMessage(
+                                $hr['phone'],
+                                'admin_leave_action_required',
+                                'en_US',
+                                [
+                                    $hr['username'],      // {{1}} HR Name
+                                    $userName,            // {{2}} Employee Name
+                                    $startDateStr,        // {{3}} Start
+                                    $endDateStr,          // {{4}} End
+                                    $adminLeaveType,      // {{5}} Type
+                                    $reason               // {{6}} Reason
+                                ]
+                            );
+                        }
+                    }
+                }
+            } catch (Throwable $waEx) {
+                // Log error but don't stop the success response
+                error_log('Maid Leave Notification Error: ' . $waEx->getMessage());
+            }
+            // -------------------------------------------------------------
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to submit request']);
         }

@@ -192,7 +192,7 @@ function generatePunchOutSummaryPDF($punchOutData, $date, $teamType)
             mkdir($uploadDir, 0777, true);
         }
 
-        $fileName = "PunchOut_Summary_{$teamType}_" . date('Y-m-d_His', strtotime($date)) . ".pdf";
+        $fileName = "PunchOut_Summary_{$teamType}_" . date('Y-m-d', strtotime($date)) . "_" . date('His') . ".pdf";
         $filePath = $uploadDir . '/' . $fileName;
 
         $pdf->Output($filePath, 'F'); // Save to file

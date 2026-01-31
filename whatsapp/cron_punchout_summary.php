@@ -34,17 +34,37 @@ try {
 
     // Send based on team type
     if ($teamType === 'field' || $teamType === 'both') {
-        $result = sendScheduledPunchOutSummary($pdo, $date, 'Field');
-        $msg = $result ? "Field team punch-out summary sent successfully" : "Failed to send field team punch-out summary";
-        file_put_contents($logFile, "[{$timestamp}] {$msg}\n", FILE_APPEND);
-        echo $msg . "\n";
+        $lockFile = __DIR__ . '/last_run_punchout_field.lock';
+        $lastRun = file_exists($lockFile) ? file_get_contents($lockFile) : 0;
+
+        if (time() - $lastRun > 300) { // 5 minutes debounce
+            file_put_contents($lockFile, time());
+            $result = sendScheduledPunchOutSummary($pdo, $date, 'Field');
+            $msg = $result ? "Field team punch-out summary sent successfully" : "Failed to send field team punch-out summary";
+            file_put_contents($logFile, "[{$timestamp}] {$msg}\n", FILE_APPEND);
+            echo $msg . "\n";
+        } else {
+            $msg = "Skipping Field team summary (Already ran within last 5 minutes)";
+            file_put_contents($logFile, "[{$timestamp}] {$msg}\n", FILE_APPEND);
+            echo $msg . "\n";
+        }
     }
 
     if ($teamType === 'studio' || $teamType === 'both') {
-        $result = sendScheduledPunchOutSummary($pdo, $date, 'Studio');
-        $msg = $result ? "Studio team punch-out summary sent successfully" : "Failed to send studio team punch-out summary";
-        file_put_contents($logFile, "[{$timestamp}] {$msg}\n", FILE_APPEND);
-        echo $msg . "\n";
+        $lockFile = __DIR__ . '/last_run_punchout_studio.lock';
+        $lastRun = file_exists($lockFile) ? file_get_contents($lockFile) : 0;
+
+        if (time() - $lastRun > 300) { // 5 minutes debounce
+            file_put_contents($lockFile, time());
+            $result = sendScheduledPunchOutSummary($pdo, $date, 'Studio');
+            $msg = $result ? "Studio team punch-out summary sent successfully" : "Failed to send studio team punch-out summary";
+            file_put_contents($logFile, "[{$timestamp}] {$msg}\n", FILE_APPEND);
+            echo $msg . "\n";
+        } else {
+            $msg = "Skipping Studio team summary (Already ran within last 5 minutes)";
+            file_put_contents($logFile, "[{$timestamp}] {$msg}\n", FILE_APPEND);
+            echo $msg . "\n";
+        }
     }
 
 } catch (Exception $e) {

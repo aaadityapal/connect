@@ -11,6 +11,4 @@ try {
 } catch (Throwable $e) {
     echo 'Error: ' . $e->getMessage() . "\n";
 }
-<?php
-
-
+?>

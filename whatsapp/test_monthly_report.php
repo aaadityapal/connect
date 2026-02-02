@@ -7,7 +7,7 @@
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/WhatsAppService.php';
-require_once __DIR__ . '/generate_monthly_report.php';
+require_once __DIR__ . '/generate_monthly_report_v2.php';
 
 // 1. Get User ID
 // Check GET, then CLI Argument

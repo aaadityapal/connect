@@ -113,6 +113,11 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
         $leaveCount = 0;
         $reportData = [];
 
+        // Track detailed information for summary sections
+        $holidayDetails = []; // [date => name]
+        $weeklyOffDetails = []; // [date => day_name]
+        $leaveDetails = []; // [date => leave_info]
+
         for ($d = 1; $d <= $daysInMonth; $d++) {
             $currentDate = sprintf("%04d-%02d-%02d", $year, $month, $d);
             $dayName = date('l', strtotime($currentDate));
@@ -131,6 +136,7 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
                 $remarks = $holidays[$currentDate];
                 $rowColor = [240, 248, 255]; // Light Blue
                 $holidayCount++;
+                $holidayDetails[$currentDate] = $holidays[$currentDate];
             }
             // Weekly Off
             // Weekly Off
@@ -138,25 +144,83 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
                 // Check if user worked on Weekly Off
                 if (isset($attendanceRecords[$currentDate])) {
                     $att = $attendanceRecords[$currentDate];
-                    $status = '(Weekly Off) Present';
-                    $presentCount++; // Count as present
-                    $rowColor = [255, 255, 255]; // Normal Present Color
 
-                    $inTime = '-';
-                    // Allow TIME format (H:i:s is 8 chars)
-                    if (!empty($att['punch_in']) && strlen($att['punch_in']) >= 5 && substr($att['punch_in'], 0, 4) != '0000') {
-                        $inTime = date('H:i', strtotime($att['punch_in']));
-                    }
+                    // Verify actual attendance exists (not just empty record)
+                    $hasValidPunchIn = !empty($att['punch_in'])
+                        && $att['punch_in'] != '0000-00-00 00:00:00'
+                        && $att['punch_in'] != '00:00:00';
 
-                    $outTime = '-';
-                    if (!empty($att['punch_out']) && strlen($att['punch_out']) >= 5 && substr($att['punch_out'], 0, 4) != '0000') {
-                        $outTime = date('H:i', strtotime($att['punch_out']));
+                    if ($hasValidPunchIn) {
+                        // User actually worked on weekly off
+                        $status = '(Weekly Off) Present';
+                        $presentCount++; // Count as present
+                        $rowColor = [255, 255, 255]; // Normal Present Color
+
+                        $inTime = '-';
+                        // Robust Time Check (Weekly Off)
+                        $ts = strtotime($att['punch_in']);
+                        if ($ts && date('Y', $ts) > 1970) {
+                            $inTime = date('H:i', $ts);
+                        } elseif (strlen($att['punch_in']) >= 5) {
+                            $inTime = substr($att['punch_in'], 0, 5);
+                        }
+
+                        $outTime = '-';
+                        if (!empty($att['punch_out']) && $att['punch_out'] != '0000-00-00 00:00:00' && $att['punch_out'] != '00:00:00') {
+                            $ts = strtotime($att['punch_out']);
+                            if ($ts && date('Y', $ts) > 1970) {
+                                $outTime = date('H:i', $ts);
+                            } elseif (strlen($att['punch_out']) >= 5) {
+                                $outTime = substr($att['punch_out'], 0, 5);
+                            }
+                        }
+                        $report = $att['work_report'];
+
+                        // Late Check for Weekly Off (same logic as working days)
+                        $punchInStr = (strlen($att['punch_in']) <= 8) ? $currentDate . ' ' . $att['punch_in'] : $att['punch_in'];
+                        $punchInTs = strtotime($punchInStr);
+
+                        $currentDayShiftStart = null;
+
+                        // Find applicable shift for this specific date
+                        foreach ($allUserShifts as $us) {
+                            $effFrom = strtotime($us['effective_from']);
+                            $effTo = $us['effective_to'] ? strtotime($us['effective_to']) : strtotime('2099-12-31');
+                            $currDateTs = strtotime($currentDate);
+
+                            if ($currDateTs >= $effFrom && $currDateTs <= $effTo) {
+                                $currentDayShiftStart = $us['start_time'];
+                                break;
+                            }
+                        }
+
+                        if (!$currentDayShiftStart && !empty($allUserShifts)) {
+                            $currentDayShiftStart = $allUserShifts[0]['start_time'];
+                        }
+
+                        if ($currentDayShiftStart) {
+                            $dayShiftStart = strtotime($currentDate . ' ' . $currentDayShiftStart);
+
+                            // Grace Period: 15 minutes inclusive.
+                            $graceTime = $dayShiftStart + (15 * 60) + 59;
+
+                            if ($punchInTs > $graceTime) {
+                                $remarks = 'Late In';
+                                $rowColor = [255, 249, 196]; // Yellow for late
+                            }
+                        }
+                    } else {
+                        // Empty attendance record on weekly off
+                        $status = 'Weekly Off';
+                        $rowColor = [240, 240, 240]; // Light Grey
+                        $weeklyOffCount++;
+                        $weeklyOffDetails[$currentDate] = $dayName;
                     }
-                    $report = $att['work_report'];
                 } else {
                     $status = 'Weekly Off';
                     $rowColor = [240, 240, 240]; // Light Grey
                     $weeklyOffCount++;
+                    $weeklyOffDetails[$currentDate] = $dayName;
                 }
             } else {
                 // It's a working day
@@ -171,15 +235,24 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
                     $status = 'Present';
                     $rowColor = [255, 255, 255]; // Reset to White
 
-                    // Safe formatting helper
-                    $inTime = '-';
-                    if (!empty($att['punch_in']) && strlen($att['punch_in']) >= 5 && substr($att['punch_in'], 0, 4) != '0000') {
-                        $inTime = date('H:i', strtotime($att['punch_in']));
+                    // Robust Time Check (Working Day)
+                    if (!empty($att['punch_in']) && $att['punch_in'] != '0000-00-00 00:00:00' && $att['punch_in'] != '00:00:00') {
+                        $ts = strtotime($att['punch_in']);
+                        if ($ts && date('Y', $ts) > 1970) {
+                            $inTime = date('H:i', $ts);
+                        } elseif (strlen($att['punch_in']) >= 5) {
+                            $inTime = substr($att['punch_in'], 0, 5);
+                        }
                     }
 
                     $outTime = '-';
-                    if (!empty($att['punch_out']) && strlen($att['punch_out']) >= 5 && substr($att['punch_out'], 0, 4) != '0000') {
-                        $outTime = date('H:i', strtotime($att['punch_out']));
+                    if (!empty($att['punch_out']) && $att['punch_out'] != '0000-00-00 00:00:00' && $att['punch_out'] != '00:00:00') {
+                        $ts = strtotime($att['punch_out']);
+                        if ($ts && date('Y', $ts) > 1970) {
+                            $outTime = date('H:i', $ts);
+                        } elseif (strlen($att['punch_out']) >= 5) {
+                            $outTime = substr($att['punch_out'], 0, 5);
+                        }
                     }
                     $report = $att['work_report'];
 
@@ -223,6 +296,7 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
                     $status = 'Leave';
                     $remarks = $leaveDays[$currentDate]; // Show Leave Name (e.g., "Sick Leave")
                     $rowColor = [225, 245, 254]; // Light Blue
+                    $leaveDetails[$currentDate] = $leaveDays[$currentDate];
                     // Fix: Decrement working days, as approved leave is not a "Working Day" in some contexts,
                     // OR keep it as working day but status is Leave.
                     // User request: "in status show leaves".
@@ -234,9 +308,17 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
                     // But 'Working Days' usually means 'Possible Working Days'. Leave implies you missed a working day validly.
                     // Let's keep it simple: If Status = Leave, it is NOT 'Absent', NOT 'Present'.
                 } else {
-                    // Start date check: Don't mark absent if before joining? (Optional refinement)
-                    // For now, simple logic.
-                    $absentCount++;
+                    // Check if this is a future date
+                    $today = date('Y-m-d');
+                    if ($currentDate > $today) {
+                        // Future date - not yet occurred
+                        $status = 'Upcoming';
+                        $rowColor = [250, 250, 250]; // Very Light Grey
+                        $workingDaysCount--; // Don't count future days as working days
+                    } else {
+                        // Past date with no attendance - truly absent
+                        $absentCount++;
+                    }
                 }
             }
 
@@ -299,7 +381,100 @@ function generateMonthlyReportPDF($userId, $month, $year, $pdo)
         $pdf->Cell(25, 8, $leaveCount, 1, 0, 'C');
         $pdf->Cell(25, 8, $holidayCount, 1, 0, 'C');
         $pdf->Cell(25, 8, $weeklyOffCount, 1, 1, 'C');
-        $pdf->Ln(8);
+        $pdf->Ln(5);
+
+        // ========== DETAILED SECTIONS ==========
+
+        // 1. Holidays Detail
+        if (!empty($holidayDetails)) {
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->SetFillColor(240, 248, 255);
+            $pdf->Cell(0, 7, 'Holidays:', 0, 1, 'L', 1);
+            $pdf->SetFont('helvetica', '', 9);
+            foreach ($holidayDetails as $date => $holidayName) {
+                $formattedDate = date('d M Y (l)', strtotime($date));
+                $pdf->Cell(10, 5, '•', 0, 0, 'L');
+                $pdf->Cell(0, 5, "$formattedDate - $holidayName", 0, 1, 'L');
+            }
+            $pdf->Ln(3);
+        }
+
+        // 2. Weekly Offs Taken Detail
+        if (!empty($weeklyOffDetails)) {
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->SetFillColor(240, 240, 240);
+            $pdf->Cell(0, 7, 'Weekly Offs Taken:', 0, 1, 'L', 1);
+            $pdf->SetFont('helvetica', '', 9);
+            foreach ($weeklyOffDetails as $date => $dayName) {
+                $formattedDate = date('d M Y', strtotime($date));
+                $pdf->Cell(10, 5, '•', 0, 0, 'L');
+                $pdf->Cell(0, 5, "$formattedDate ($dayName)", 0, 1, 'L');
+            }
+            $pdf->Ln(3);
+        }
+
+        // 3. Leaves Detail (with leave type and duration)
+        if (!empty($leaveDetails)) {
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->SetFillColor(225, 245, 254);
+            $pdf->Cell(0, 7, 'Leaves Taken:', 0, 1, 'L', 1);
+            $pdf->SetFont('helvetica', '', 9);
+
+            // Group consecutive leave dates by leave type
+            $leaveGroups = [];
+            foreach ($leaves as $leave) {
+                $leaveType = $leave['leave_name'];
+                $startDate = $leave['start_date'];
+                $endDate = $leave['end_date'];
+                $reason = $leave['reason'];
+
+                // Calculate days in this month
+                $current = strtotime($startDate);
+                $end = strtotime($endDate);
+                $daysInLeave = 0;
+
+                while ($current <= $end) {
+                    $d = date('Y-m-d', $current);
+                    if (date('m', $current) == $month && date('Y', $current) == $year) {
+                        $daysInLeave++;
+                    }
+                    $current = strtotime('+1 day', $current);
+                }
+
+                $leaveGroups[] = [
+                    'type' => $leaveType,
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'days' => $daysInLeave,
+                    'reason' => $reason
+                ];
+            }
+
+            foreach ($leaveGroups as $leaveGroup) {
+                $startFormatted = date('d M Y', strtotime($leaveGroup['start']));
+                $endFormatted = date('d M Y', strtotime($leaveGroup['end']));
+                $dayText = $leaveGroup['days'] == 1 ? 'day' : 'days';
+
+                if ($leaveGroup['start'] == $leaveGroup['end']) {
+                    $dateRange = $startFormatted;
+                } else {
+                    $dateRange = "$startFormatted to $endFormatted";
+                }
+
+                $pdf->Cell(10, 5, '•', 0, 0, 'L');
+                $pdf->MultiCell(0, 5, "{$leaveGroup['type']} - $dateRange ({$leaveGroup['days']} $dayText)", 0, 'L');
+
+                if (!empty($leaveGroup['reason'])) {
+                    $pdf->Cell(15, 5, '', 0, 0, 'L'); // Indent
+                    $pdf->SetFont('helvetica', 'I', 8);
+                    $pdf->MultiCell(0, 4, "Reason: {$leaveGroup['reason']}", 0, 'L');
+                    $pdf->SetFont('helvetica', '', 9);
+                }
+            }
+            $pdf->Ln(3);
+        }
+
+        $pdf->Ln(3);
 
         // Main Table Header
         $colWidths = [25, 25, 25, 20, 20, 30, 40, 90]; // Date, Day, Status, In, Out, Remarks, Report

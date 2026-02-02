@@ -4,20 +4,14 @@
  * 
  * This script sends admin notifications at specific times:
  * 
- * Punch-In Reminders:
- * - 09:00 AM (Field team - First reminder)
- * - 09:30 AM (Both teams - Second reminder)
- * - 12:00 PM (Both teams - Final reminder)
+ * Punch-In Summary:
+ * - 10:45 AM (Both teams - Studio and Field)
  * 
- * Setup cron jobs (IST):
- * 0 9 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php field
- * 30 9 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php both
- * 0 12 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php both
+ * Setup cron job (IST):
+ * 45 10 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php both
  * 
  * Production (UTC - subtract 5:30 from IST):
- * 30 3 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php field
- * 0 4 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php both
- * 30 6 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php both
+ * 15 5 * * * /usr/bin/php /path/to/cron_scheduled_admin_summary.php both
  */
 
 require_once __DIR__ . '/../config.php';
